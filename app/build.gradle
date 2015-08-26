@@ -1,4 +1,4 @@
-apply plugin: 'com.android.model.library'
+apply plugin: 'com.android.model.application'
 
 model {
     android {
@@ -54,7 +54,9 @@ model {
         create("mips-64") {
             ndk.abiFilters += "mips64"
         }
-        // To include all cpu architectures, leaves abiFilters empty
-        create("all")
+        create("fat") {
+            // If ndk.abiFilters is not configured, the application
+            // compile and package all suppported ABI.
+        }
     }
 }
