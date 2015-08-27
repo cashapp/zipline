@@ -10,24 +10,8 @@ model {
       targetSdkVersion.apiLevel = 23
     }
   }
-  /*
-   * native build settings
-   */
   android.ndk {
-    moduleName = "hello-jni"
-    /*
-     * Other ndk flags configurable here are
-     * cppFlags += "-fno-rtti"
-     * cppFlags += "-fno-exceptions"
-     * ldLibs    = ["android", "log"]
-     * stl       = "system"
-     */
-  }
-  android.buildTypes {
-    release {
-      minifyEnabled = false
-      proguardFiles += file('proguard-rules.txt')
-    }
+    moduleName = "duktape"
   }
   android.productFlavors {
     // for detailed abiFilter descriptions, refer to "Supported ABIs" @

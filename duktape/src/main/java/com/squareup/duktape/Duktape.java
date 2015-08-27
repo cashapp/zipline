@@ -1,17 +1,24 @@
-
+/*
+ * Copyright (C) 2015 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package com.squareup.duktape;
 
 import java.io.Closeable;
 import java.util.logging.Logger;
 
-/**
- * To execute on your Mac,
- *
- *   1. run build.sh
- *   2. run with the java.library.path set to <project-root>/duktape/src/main/jni
- *      For example -Djava.library.path=/Users/jwilson/Square/duktape-android/duktape/src/main/jni/
- */
-public class Duktape implements Closeable {
+public final class Duktape implements Closeable {
   static {
     System.loadLibrary("duktape");
   }
@@ -25,30 +32,11 @@ public class Duktape implements Closeable {
     }
   }
 
-  public static void main(String[] args) {
-    for (int i = 0; i < 1000000; i++) {
-      example();
-    }
-  }
-
-  public static void example() {
-    Duktape duktape = new Duktape();
-    try {
-      System.out.println(duktape.evaluate("var a = function(b) { return b.toUpperCase();  };"));
-      System.out.println(duktape.evaluate("a('hello world');"));
-    } catch (Exception e) {
-      System.err.print(e);
-    } finally {
-      duktape.close();
-    }
-  }
-
   public synchronized String evaluate(String s) {
     return evaluate(context, s);
   }
 
-  @Override
-  public synchronized void close() {
+  @Override public synchronized void close() {
     if (context != 0) {
       long contextToClose = context;
       context = 0;
@@ -56,8 +44,7 @@ public class Duktape implements Closeable {
     }
   }
 
-  @Override
-  protected synchronized void finalize() throws Throwable {
+  @Override protected synchronized void finalize() throws Throwable {
     if (context != 0) {
       Logger.getLogger(getClass().getName()).warning("Duktape instance leaked!");
     }

@@ -1,0 +1,13 @@
+#!/bin/bash
+# This builds a dynamic library for Mac OS X.
+mkdir -p build
+gcc \
+  -shared \
+  -std=c99 \
+  -Isrc/ \
+  -lm \
+  -o build/libduktape.dylib \
+  -I$JAVA_HOME/include/ \
+  -I$JAVA_HOME/include/darwin/ \
+  duktape/src/main/jni/duktape.c \
+  duktape/src/main/jni/duktape-jni.c
