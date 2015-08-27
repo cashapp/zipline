@@ -15,52 +15,42 @@
  */
 package com.example.hellojni;
 
-import android.app.Activity;
-import android.widget.TextView;
-import android.os.Bundle;
+/**
+ * To execute on your Mac,
+ *
+ *   1. run build.sh
+ *   2. run with the java.library.path set to <project-root>/duktape/src/main/jni
+ *      For example -Djava.library.path=/Users/jwilson/Square/duktape-android/duktape/src/main/jni/
+ */
+public class HelloJni {
+  public static void main(String[] args) {
+    System.out.println(new HelloJni().stringFromJNI());
+  }
 
+  /* A native method that is implemented by the
+   * 'hello-jni' native library, which is packaged
+   * with this application.
+   */
+  public native String stringFromJNI();
 
-public class HelloJni extends Activity
-{
-    /** Called when the activity is first created. */
-    @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
-        super.onCreate(savedInstanceState);
+  /* This is another native method declaration that is *not*
+   * implemented by 'hello-jni'. This is simply to show that
+   * you can declare as many native methods in your Java code
+   * as you want, their implementation is searched in the
+   * currently loaded native libraries only the first time
+   * you call them.
+   *
+   * Trying to call this function will result in a
+   * java.lang.UnsatisfiedLinkError exception !
+   */
+  public native String unimplementedStringFromJNI();
 
-        /* Create a TextView and set its content.
-         * the text is retrieved by calling a native
-         * function.
-         */
-        TextView  tv = new TextView(this);
-        tv.setText( stringFromJNI() );
-        setContentView(tv);
-    }
-
-    /* A native method that is implemented by the
-     * 'hello-jni' native library, which is packaged
-     * with this application.
-     */
-    public native String  stringFromJNI();
-
-    /* This is another native method declaration that is *not*
-     * implemented by 'hello-jni'. This is simply to show that
-     * you can declare as many native methods in your Java code
-     * as you want, their implementation is searched in the
-     * currently loaded native libraries only the first time
-     * you call them.
-     *
-     * Trying to call this function will result in a
-     * java.lang.UnsatisfiedLinkError exception !
-     */
-    public native String  unimplementedStringFromJNI();
-
-    /* this is used to load the 'hello-jni' library on application
-     * startup. The library has already been unpacked into
-     * /data/data/com.example.hellojni/lib/libhello-jni.so at
-     * installation time by the package manager.
-     */
-    static {
-        System.loadLibrary("hello-jni");
-    }
+  /* this is used to load the 'hello-jni' library on application
+   * startup. The library has already been unpacked into
+   * /data/data/com.example.hellojni/lib/libhello-jni.so at
+   * installation time by the package manager.
+   */
+  static {
+    System.loadLibrary("duktape");
+  }
 }
