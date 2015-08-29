@@ -6,8 +6,7 @@ model {
     buildToolsVersion = "23.0.0"
 
     defaultConfig.with {
-      minSdkVersion.apiLevel = 3
-      targetSdkVersion.apiLevel = 23
+      minSdkVersion.apiLevel = 4
     }
   }
   android.ndk {
