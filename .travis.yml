@@ -4,11 +4,18 @@ android:
   components:
     - build-tools-23.0.1
     - android-23
-    - ndk-bundle
 
 jdk:
   - oraclejdk7
   - oraclejdk8
+
+before_script:
+  - pushd ~
+  - wget http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
+  - chmod +x android-ndk-r10e-linux-x86_64.bin
+  - ./android-ndk-r10e-linux-x86_64.bin 1> /dev/null
+  - export ANDROID_NDK_HOME="$HOME/android-ndk-r10e"
+  - popd
 
 script:
   - ./gradlew clean check
