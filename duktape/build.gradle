@@ -3,7 +3,7 @@ apply plugin: 'com.android.model.library'
 model {
   android {
     compileSdkVersion = 23
-    buildToolsVersion = '23.0.0'
+    buildToolsVersion = '23.0.1'
 
     defaultConfig.with {
       minSdkVersion.apiLevel = 4
@@ -12,35 +12,87 @@ model {
   android.ndk {
     moduleName = 'duktape'
   }
-  android.productFlavors {
-    // for detailed abiFilter descriptions, refer to "Supported ABIs" @
-    // https://developer.android.com/ndk/guides/abis.html#sa
-    create('arm') {
-      ndk.abiFilters += 'armeabi'
+}
+
+// TODO move all this nonsense to a standalone file
+import com.android.build.gradle.managed.AndroidConfig
+import com.android.build.gradle.model.AndroidComponentSpec
+import org.gradle.model.Finalize
+import org.gradle.model.ModelMap
+import org.gradle.model.Mutate
+import org.gradle.model.Path
+import org.gradle.model.RuleSource
+import org.gradle.platform.base.BinarySpec
+import org.gradle.platform.base.BinaryType
+import org.gradle.platform.base.BinaryTypeBuilder
+import org.gradle.platform.base.ComponentBinaries
+import org.gradle.platform.base.binary.BaseBinarySpec
+
+interface JavadocBinary extends BinarySpec {}
+class DefaultJavadocBinary extends BaseBinarySpec implements JavadocBinary {}
+interface SourcesBinary extends BinarySpec {}
+class DefaultSourcesBinary extends BaseBinarySpec implements SourcesBinary {}
+
+/** Creates source and javadoc jars per Maven Central requirements. Hold on to your butts... */
+class MavenCentralArtifactRules extends RuleSource {
+  @Mutate
+  void createJavadocTask(ModelMap<Task> tasks, @Path('android') AndroidConfig android) {
+    tasks.create('androidJavadocGenerate', Javadoc) {
+      source = android.sources.getByName('main').java.source
     }
-    create('arm7') {
-      ndk.abiFilters += 'armeabi-v7a'
+  }
+
+  @Mutate
+  void createJavadocJarTask(ModelMap<Task> tasks) {
+    tasks.create('androidJavadocJar', Jar) {
+      classifier = 'javadoc'
     }
-    create('arm8') {
-      ndk.abiFilters += 'arm64-v8a'
+  }
+
+  @Mutate
+  void configureJavadocJarTask(@Path('tasks.androidJavadocJar') Jar jar,
+      @Path('tasks.androidJavadocGenerate') Javadoc javadoc) {
+    jar.from javadoc.destinationDir
+  }
+
+  @Mutate
+  void createSourceJarTask(ModelMap<Task> tasks,
+      @Path('android') AndroidConfig android) {
+    tasks.create('androidSourcesJar', Jar) {
+      classifier = 'sources'
+      from android.sources.getByName('main').java.source
     }
-    create('x86') {
-      ndk.abiFilters += 'x86'
-    }
-    create('x86-64') {
-      ndk.abiFilters += 'x86_64'
-    }
-    create('mips') {
-      ndk.abiFilters += 'mips'
-    }
-    create('mips-64') {
-      ndk.abiFilters += 'mips64'
-    }
-    create('fat') {
-      // If ndk.abiFilters is not configured, the application
-      // compile and package all suppported ABI.
-    }
+  }
+
+  @BinaryType
+  void defineJavadocBinaryType(BinaryTypeBuilder<JavadocBinary> builder) {
+    builder.defaultImplementation(DefaultJavadocBinary.class);
+  }
+
+  @BinaryType
+  void defineSourcesBinaryType(BinaryTypeBuilder<SourcesBinary> builder) {
+    builder.defaultImplementation(DefaultSourcesBinary.class);
+  }
+
+  @ComponentBinaries
+  void createJavadocBinary(ModelMap<JavadocBinary> binaries, AndroidComponentSpec spec) {
+    binaries.create('javadoc')
+  }
+
+  @ComponentBinaries
+  void createSourcesBinary(ModelMap<SourcesBinary> binaries, AndroidComponentSpec spec) {
+    binaries.create('sources')
+  }
+
+  @Finalize
+  void associateJavadocTaskWithBinary(ModelMap<JavadocBinary> binaries) {
+    binaries.afterEach { it.buildTask.dependsOn 'androidJavadocJar' }
+  }
+
+  @Finalize
+  void associateSourcesTaskWithBinary(ModelMap<SourcesBinary> binaries) {
+    binaries.afterEach { it.buildTask.dependsOn 'androidSourcesJar' }
   }
 }
 
-apply from: 'gradle-mvn-push.gradle'
+apply plugin: MavenCentralArtifactRules
