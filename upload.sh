@@ -2,7 +2,7 @@
 
 GROUPID=com.squareup.duktape
 ARTIFACTID=duktape-android
-VERSION=0.9.0-SNAPSHOT
+VERSION=0.9.0
 PACKAGING=aar
 
 AAR=duktape/build/outputs/aar/duktape-release.aar
