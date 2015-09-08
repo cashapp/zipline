@@ -8,7 +8,7 @@ Usage
 -----
 
 ```java
-Duktape duktape = new Duktape();
+Duktape duktape = Duktape.create();
 try {
   Log.d("Greeting", duktape.evaluate("'hello world'.toUpperCase();"));
 } finally {

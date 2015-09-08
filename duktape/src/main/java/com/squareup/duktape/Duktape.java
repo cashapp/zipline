@@ -18,24 +18,39 @@ package com.squareup.duktape;
 import java.io.Closeable;
 import java.util.logging.Logger;
 
+/** A simple EMCAScript (Javascript) interpreter. */
 public final class Duktape implements Closeable {
   static {
     System.loadLibrary("duktape");
   }
 
+  /**
+   * Create a new interpreter instance. Calls to this method <strong>must</strong> matched with
+   * calls to {@link #close()} on the returned instance to avoid leaking native memory.
+   */
+  public static Duktape create() {
+    long context = createContext();
+    if (context == 0) {
+      throw new OutOfMemoryError("Cannot create Duktape instance");
+    }
+    return new Duktape(context);
+  }
+
   private long context;
 
-  public Duktape() {
-    this.context = createContext();
-    if (this.context == 0) {
-      throw new OutOfMemoryError("Cannot create Duktape");
-    }
+  private Duktape(long context) {
+    this.context = context;
   }
 
-  public synchronized String evaluate(String s) {
-    return evaluate(context, s);
+  /** Evaluate {@code script} and return any result. */
+  public synchronized String evaluate(String script) {
+    return evaluate(context, script);
   }
 
+  /**
+   * Release the native resources associated with this object. You <strong>must</strong> call this
+   * method for each instance to avoid leaking native memory.
+   */
   @Override public synchronized void close() {
     if (context != 0) {
       long contextToClose = context;
