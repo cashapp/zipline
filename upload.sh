@@ -11,7 +11,26 @@ JAVADOC=duktape/build/libs/duktape-javadoc.jar
 
 set -e
 
-./gradlew clean build
+CLEAN=1
+while [ $# -ne 0 ]; do
+  case "$1" in
+    "--no-clean" )
+      CLEAN=0
+    ;;
+    * )
+      echo "Unknown command line argument '$1'."
+      exit 1
+    ;;
+  esac
+
+  shift
+done
+
+if [ $CLEAN -ne 0 ]; then
+  ./gradlew clean
+fi
+
+./gradlew build
 
 if [ ! -f $AAR -o ! -f $SOURCES -o ! -f $JAVADOC ]; then
   echo "Missing one of:\n* $AAR\n* $SOURCES\n* $JAVADOC"
