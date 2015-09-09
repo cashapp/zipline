@@ -1,10 +1,5 @@
 #!/bin/bash
 
-GROUPID=com.squareup.duktape
-ARTIFACTID=duktape-android
-VERSION=0.9.0
-PACKAGING=aar
-
 AAR=duktape/build/outputs/aar/duktape-release.aar
 SOURCES=duktape/build/libs/duktape-sources.jar
 JAVADOC=duktape/build/libs/duktape-javadoc.jar
@@ -42,22 +37,20 @@ if [[ $VERSION == *"-SNAPSHOT" ]]; then
   TASK=org.apache.maven.plugins:maven-deploy-plugin:2.8.2:deploy-file
   REPO_URL=https://oss.sonatype.org/content/repositories/snapshots/
   REPO_ID=sonatype-nexus-snapshots
+  EXTRAS="--settings=\".buildscript/settings.xml\""
 else
   echo "Deploying to Sonatype OSS release staging repo..."
   TASK=org.apache.maven.plugins:maven-gpg-plugin:1.6:sign-and-deploy-file
   REPO_URL=https://oss.sonatype.org/service/local/staging/deploy/maven2/
   REPO_ID=sonatype-nexus-staging
+  EXTRAS=""
 fi
 
-mvn $TASK \
-    --settings=".buildscript/settings.xml" \
-    -DgroupId=$GROUPID \
-    -DartifactId=$ARTIFACTID \
-    -Dversion=$VERSION \
-    -DgeneratePom=true \
-    -Dpackaging=$PACKAGING \
+mvn $TASK $EXTRAS \
+    -DgeneratePom=false \
     -DrepositoryId=$REPO_ID \
     -Durl=$REPO_URL \
+    -DpomFile=upload-pom.xml \
     -Dfile=$AAR \
     -Djavadoc=$JAVADOC \
     -Dsources=$SOURCES
