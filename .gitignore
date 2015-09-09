@@ -10,5 +10,8 @@ local.properties
 reports
 jacoco.exec
 
+# upload.sh signing
+/*.asc
+
 # Steve Jobs
 .DS_Store
