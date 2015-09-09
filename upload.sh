@@ -32,7 +32,8 @@ if [ ! -f $AAR -o ! -f $SOURCES -o ! -f $JAVADOC ]; then
   exit 1
 fi
 
-if [[ $VERSION == *"-SNAPSHOT" ]]; then
+POM=`cat upload-pom.xml`
+if [[ "$POM" == *"-SNAPSHOT"* ]]; then
   echo "Deploying to Sonatype OSS snapshots repo..."
   TASK=org.apache.maven.plugins:maven-deploy-plugin:2.8.2:deploy-file
   REPO_URL=https://oss.sonatype.org/content/repositories/snapshots/
