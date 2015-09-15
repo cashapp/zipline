@@ -42,7 +42,11 @@ public final class Duktape implements Closeable {
     this.context = context;
   }
 
-  /** Evaluate {@code script} and return any result. */
+  /**
+   * Evaluate {@code script} and return any result.
+   *
+   * @throws DuktapeException if there is an error evaluating the script.
+   */
   public synchronized String evaluate(String script) {
     return evaluate(context, script);
   }
