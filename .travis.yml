@@ -18,7 +18,7 @@ before_script:
   - popd
 
 script:
-  - ./gradlew clean check
+  - ./gradlew clean build
 
 after_success:
   - .buildscript/deploy_snapshot.sh
