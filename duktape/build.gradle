@@ -11,6 +11,15 @@ model {
   }
   android.ndk {
     moduleName = 'duktape'
+
+    CFlags += ['-std=c99', '-fstrict-aliasing']
+  }
+  android.buildTypes {
+    release {
+      ndk.with {
+        CFlags += ['-Os', '-fomit-frame-pointer']
+      }
+    }
   }
 }
 
