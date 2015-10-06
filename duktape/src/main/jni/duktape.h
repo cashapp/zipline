@@ -1219,6 +1219,13 @@ typedef duk_uint_t duk_ucodepoint_t;
 /* IEEE double typedef. */
 typedef double duk_double_t;
 
+/*
+ * DUKTAPE-ANDROID MODIFIED:
+ *
+ * Use an Android-specific method to get the local timezone.
+ */
+duk_int_t android__get_local_tzoffset(duk_double_t d);
+
 /* We're generally assuming that we're working on a platform with a 32-bit
  * address space.  If DUK_SIZE_MAX is a typecast value (which is necessary
  * if SIZE_MAX is missing), the check must be avoided because the

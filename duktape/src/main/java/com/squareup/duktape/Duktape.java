@@ -16,6 +16,8 @@
 package com.squareup.duktape;
 
 import java.io.Closeable;
+import java.util.TimeZone;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /** A simple EMCAScript (Javascript) interpreter. */
@@ -72,4 +74,10 @@ public final class Duktape implements Closeable {
   private static native long createContext();
   private static native void destroyContext(long context);
   private static native String evaluate(long context, String s);
+
+  /** Returns the timezone offset in seconds given system time millis. */
+  private static int getLocalTimeZoneOffset(double t) {
+    int offsetMillis = TimeZone.getDefault().getOffset((long) t);
+    return (int) TimeUnit.MILLISECONDS.toSeconds(offsetMillis);
+  }
 }

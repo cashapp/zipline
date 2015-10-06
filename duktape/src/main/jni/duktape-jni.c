@@ -2,8 +2,17 @@
 #include <jni.h>
 #include "duktape.h"
 
+static JavaVM *jvm = NULL;
+static jclass duktape = NULL;
+static jmethodID getLocalTimeZoneOffset = NULL;
+
 JNIEXPORT jlong JNICALL
 Java_com_squareup_duktape_Duktape_createContext(JNIEnv *env, jclass type) {
+  if (jvm == NULL) {
+    (*env)->GetJavaVM(env, &jvm);
+    duktape = type;
+    getLocalTimeZoneOffset = (*env)->GetStaticMethodID(env, type, "getLocalTimeZoneOffset", "(D)I");
+  }
   return (jlong) duk_create_heap_default();
 }
 
@@ -32,4 +41,10 @@ Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2(JNIEnv *env,
   duk_pop(ctx);
   (*env)->ReleaseStringUTFChars(env, s_, s);
   return result;
+}
+
+duk_int_t android__get_local_tzoffset(duk_double_t time) {
+  JNIEnv* env;
+  (*jvm)->AttachCurrentThread(jvm, &env, NULL);
+  return (*env)->CallStaticIntMethod(env, duktape, getLocalTimeZoneOffset, time);
 }
