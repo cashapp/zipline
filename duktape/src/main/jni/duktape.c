@@ -20588,7 +20588,13 @@ DUK_INTERNAL duk_ret_t duk_bi_buffer_prototype_tostring_shared(duk_context *ctx)
  */
 
 #define DUK__GET_NOW_TIMEVAL      duk_bi_date_get_now
-#define DUK__GET_LOCAL_TZOFFSET   duk__get_local_tzoffset
+
+/*
+ * DUKTAPE-ANDROID MODIFIED:
+ *
+ * Use an Android-specific method to get the local timezone.
+ */
+#define DUK__GET_LOCAL_TZOFFSET   android__get_local_tzoffset
 
 /* Buffer sizes for some UNIX calls.  Larger than strictly necessary
  * to avoid Valgrind errors.
