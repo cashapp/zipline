@@ -10,8 +10,8 @@ JNIEXPORT jlong JNICALL
 Java_com_squareup_duktape_Duktape_createContext(JNIEnv *env, jclass type) {
   if (jvm == NULL) {
     (*env)->GetJavaVM(env, &jvm);
-    duktape = type;
-    getLocalTimeZoneOffset = (*env)->GetStaticMethodID(env, type, "getLocalTimeZoneOffset", "(D)I");
+    duktape = (*env)->NewGlobalRef(env, type);
+    getLocalTimeZoneOffset = (*env)->GetStaticMethodID(env, duktape, "getLocalTimeZoneOffset", "(D)I");
   }
   return (jlong) duk_create_heap_default();
 }
