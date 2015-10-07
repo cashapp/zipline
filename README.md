@@ -21,7 +21,7 @@ Download
 --------
 
 ```groovy
-compile 'com.squareup.duktape:duktape-android:0.9.1'
+compile 'com.squareup.duktape:duktape-android:0.9.3'
 ```
 
 This library is provided as a "fat" aar with native binaries for all available architectures. To
