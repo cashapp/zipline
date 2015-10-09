@@ -2,23 +2,34 @@ language: android
 
 android:
   components:
+    - platform-tools
     - build-tools-23.0.1
     - android-23
+    - extra-android-m2repository
+    - sys-img-armeabi-v7a-android-18
 
 jdk:
   - oraclejdk7
   - oraclejdk8
 
 before_script:
+  # Install the NDK.
   - pushd ~
   - wget http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
   - chmod +x android-ndk-r10e-linux-x86_64.bin
   - ./android-ndk-r10e-linux-x86_64.bin 1> /dev/null
   - export ANDROID_NDK_HOME="$HOME/android-ndk-r10e"
   - popd
+  # Create and start an emulator for instrumentation tests.
+  - echo no | android create avd --force -n test -t android-18 --abi armeabi-v7a
+  - emulator -avd test -no-skin -no-audio -no-window &
+  - android-wait-for-emulator
+  - adb shell input keyevent 82
 
 script:
-  - ./gradlew clean build
+  # We have to explicitly specify connectedCheck on the 'tests' module as it will fail if it is run
+  # on the 'duktape' module, despite not actually having any androidTest sources.
+  - ./gradlew clean build :tests:connectedCheck
 
 after_success:
   - .buildscript/deploy_snapshot.sh

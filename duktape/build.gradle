@@ -1,13 +1,23 @@
+buildscript {
+  dependencies {
+    classpath 'com.android.tools.build:gradle-experimental:0.3.0-alpha7'
+  }
+}
+
 apply plugin: 'com.android.model.library'
 
 model {
   android {
-    compileSdkVersion = 23
-    buildToolsVersion = '23.0.1'
+    compileSdkVersion = rootProject.ext.compileSdkVersion
+    buildToolsVersion = rootProject.ext.buildToolsVersion
 
     defaultConfig.with {
       minSdkVersion.apiLevel = 4
     }
+  }
+  android.lintOptions {
+    textReport = true
+    textOutput('stdout')
   }
   android.ndk {
     moduleName = 'duktape'
