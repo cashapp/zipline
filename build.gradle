@@ -1,14 +1,15 @@
-buildscript {
+allprojects {
+  buildscript {
+    repositories {
+      jcenter()
+    }
+  }
   repositories {
     jcenter()
-  }
-  dependencies {
-    classpath 'com.android.tools.build:gradle-experimental:0.3.0-alpha2'
   }
 }
 
-allprojects {
-  repositories {
-    jcenter()
-  }
+ext {
+  compileSdkVersion = 23
+  buildToolsVersion = '23.0.1'
 }

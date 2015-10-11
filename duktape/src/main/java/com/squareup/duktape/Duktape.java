@@ -76,6 +76,7 @@ public final class Duktape implements Closeable {
   private static native String evaluate(long context, String s);
 
   /** Returns the timezone offset in seconds given system time millis. */
+  @SuppressWarnings("unused") // Called from native code.
   private static int getLocalTimeZoneOffset(double t) {
     int offsetMillis = TimeZone.getDefault().getOffset((long) t);
     return (int) TimeUnit.MILLISECONDS.toSeconds(offsetMillis);
