@@ -33,7 +33,15 @@ Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2(JNIEnv *env,
 
   if (duk_peval_string(ctx, s) != 0) {
     jclass Exception = (*env)->FindClass(env, "com/squareup/duktape/DuktapeException");
-    (*env)->ThrowNew(env, Exception, duk_safe_to_string(ctx, -1));
+
+    // If it's a duktape error object, try to pull out the full stacktrace.
+    if (duk_is_error(ctx, -1) && duk_get_prop_string(ctx, -1, "stack")) {
+      (*env)->ThrowNew(env, Exception, duk_safe_to_string(ctx, -1));
+      duk_pop(ctx);
+    } else {
+      // Not an error or no stacktrace, just convert to a string.
+      (*env)->ThrowNew(env, Exception, duk_safe_to_string(ctx, -1));
+    }
   } else {
     result = (*env)->NewStringUTF(env, duk_get_string(ctx, -1));
   }
