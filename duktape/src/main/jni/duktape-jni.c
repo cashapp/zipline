@@ -21,17 +21,25 @@ Java_com_squareup_duktape_Duktape_destroyContext(JNIEnv *env, jclass type, jlong
   duk_destroy_heap((void*) context);
 }
 
-JNIEXPORT jstring JNICALL
-Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2(JNIEnv *env,
-                                                                 jclass type,
-                                                                 jlong context,
-                                                                 jstring s_) {
-  void* ctx = (void*) context;
-  const char *s = (*env)->GetStringUTFChars(env, s_, 0);
+static duk_int_t eval_string_with_filename(void* ctx, const char* src, const char* fileName) {
+  duk_push_string(ctx, fileName);
+  return duk_eval_raw(ctx, src, 0, DUK_COMPILE_EVAL | DUK_COMPILE_SAFE |
+                                   DUK_COMPILE_NOSOURCE | DUK_COMPILE_STRLEN);
+}
 
+JNIEXPORT jstring JNICALL
+Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv *env,
+                                                                                    jclass type,
+                                                                                    jlong context,
+                                                                                    jstring sourceCode_,
+                                                                                    jstring fileName_) {
+  const char* sourceCode = (*env)->GetStringUTFChars(env, sourceCode_, 0);
+  const char* fileName = (*env)->GetStringUTFChars(env, fileName_, 0);
+
+  void* ctx = (void*) context;
   jstring result = NULL;
 
-  if (duk_peval_string(ctx, s) != 0) {
+  if (eval_string_with_filename(ctx, sourceCode, fileName) != 0) {
     jclass Exception = (*env)->FindClass(env, "com/squareup/duktape/DuktapeException");
 
     // If it's a duktape error object, try to pull out the full stacktrace.
@@ -47,7 +55,10 @@ Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2(JNIEnv *env,
   }
 
   duk_pop(ctx);
-  (*env)->ReleaseStringUTFChars(env, s_, s);
+
+  (*env)->ReleaseStringUTFChars(env, sourceCode_, sourceCode);
+  (*env)->ReleaseStringUTFChars(env, fileName_, fileName);
+
   return result;
 }
 

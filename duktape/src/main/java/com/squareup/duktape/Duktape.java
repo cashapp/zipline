@@ -45,12 +45,21 @@ public final class Duktape implements Closeable {
   }
 
   /**
+   * Evaluate {@code script} and return any result.  {@code fileName} will be used in error
+   * reporting.
+   *
+   * @throws DuktapeException if there is an error evaluating the script.
+   */
+  public synchronized String evaluate(String script, String fileName) {
+    return evaluate(context, script, fileName);
+  }
+  /**
    * Evaluate {@code script} and return any result.
    *
    * @throws DuktapeException if there is an error evaluating the script.
    */
-  public synchronized String evaluate(String script) {
-    return evaluate(context, script);
+  public String evaluate(String script) {
+    return evaluate(script, "?");
   }
 
   /**
@@ -73,7 +82,7 @@ public final class Duktape implements Closeable {
 
   private static native long createContext();
   private static native void destroyContext(long context);
-  private static native String evaluate(long context, String s);
+  private static native String evaluate(long context, String sourceCode, String fileName);
 
   /** Returns the timezone offset in seconds given system time millis. */
   @SuppressWarnings("unused") // Called from native code.
