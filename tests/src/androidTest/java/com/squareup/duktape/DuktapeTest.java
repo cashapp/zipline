@@ -63,15 +63,15 @@ public final class DuktapeTest {
             + "\n"
             + "function f2() {\n"
             + "  nope();\n"       // Line 10.
-            + "}\n");
+            + "}\n", "test.js");
       fail();
     } catch (DuktapeException e) {
       // The first line is the error type and message.
       assertThat(e.getMessage()).startsWith("ReferenceError: identifier 'nope' undefined");
       // Each following line in the stacktrace is <function> <filename>:<linenumber>.
-      assertThat(e.getMessage()).containsMatch("f2 .*:10");
-      assertThat(e.getMessage()).containsMatch("f1 .*:5");
-      assertThat(e.getMessage()).containsMatch("eval .*:2");
+      assertThat(e.getMessage()).contains("f2 test.js:10");
+      assertThat(e.getMessage()).contains("f1 test.js:5");
+      assertThat(e.getMessage()).contains("eval test.js:2");
     }
   }
 
