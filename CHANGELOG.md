@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+Version 0.9.4 *(2015-11-02)*
+----------------------------
+
+ * New: expose JavaScript stacktraces when things fail.
+
 Version 0.9.3 *(2015-10-07)*
 ----------------------------
 
