@@ -22,7 +22,7 @@ model {
   android.ndk {
     moduleName = 'duktape'
 
-    CFlags += ['-std=c99', '-fstrict-aliasing']
+    CFlags += ['-std=c99', '-fstrict-aliasing', '-DDUK_OPT_HAVE_CUSTOM_H']
   }
   android.buildTypes {
     release {
