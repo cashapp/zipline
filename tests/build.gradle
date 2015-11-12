@@ -18,19 +18,19 @@ android {
   defaultConfig {
     minSdkVersion 8
     targetSdkVersion 23
-    applicationId 'com.example.duktape'
+    applicationId 'com.squareup.duktape.tests'
 
     testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
   }
 
   lintOptions {
-    textReport true
-    textOutput 'stdout'
+    abortOnError false
   }
 }
 
 dependencies {
   compile project(':duktape')
+  compile 'com.squareup.okio:okio:1.6.0'
 
   androidTestCompile 'com.android.support.test:runner:0.4'
   androidTestCompile 'com.google.truth:truth:0.27'
