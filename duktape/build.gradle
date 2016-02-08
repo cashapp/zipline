@@ -19,14 +19,17 @@ model {
       release {
         ndk {
           CFlags.addAll(['-Os', '-fomit-frame-pointer'])
+          cppFlags.addAll(['-Os', '-fomit-frame-pointer'])
         }
       }
     }
 
     ndk {
       moduleName = 'duktape'
+      stl = "c++_static"
 
       CFlags.addAll(['-std=c99', '-fstrict-aliasing', '-DDUK_OPT_HAVE_CUSTOM_H'])
+      cppFlags.addAll(['-std=c++11', '-fstrict-aliasing', '-DDUK_OPT_HAVE_CUSTOM_H'])
     }
   }
   android.lintOptions {

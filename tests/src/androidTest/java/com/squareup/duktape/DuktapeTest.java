@@ -86,4 +86,110 @@ public final class DuktapeTest {
       TimeZone.setDefault(original);
     }
   }
+
+  @Test public void bindNonInterface() {
+    try {
+      duktape.bind("s", String.class, "foo");
+      fail();
+    } catch (UnsupportedOperationException expected) {
+      assertThat(expected)
+          .hasMessage("Only interfaces can be bound. Received: class java.lang.String");
+    }
+  }
+
+  interface TestInterface {
+    String getValue();
+  }
+
+  @Test public void callMethodOnJavaObject() {
+    duktape.bind("value", TestInterface.class, new TestInterface() {
+      @Override
+      public String getValue() {
+        return "8675309";
+      }
+    });
+    assertThat(duktape.evaluate("value.getValue();")).isEqualTo("8675309");
+  }
+
+  @Test public void callMissingMethodOnJavaObjectFails() {
+    duktape.bind("value", TestInterface.class, new TestInterface() {
+      @Override public String getValue() {
+        return "bar";
+      }
+    });
+    try {
+      duktape.evaluate("value.increment()");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("TypeError: not callable");
+    }
+  }
+
+  interface TestInterfaceArgs {
+    String foo(String a, String b, String c);
+  }
+
+  @Test public void callMethodOnJavaObjectThrowsJavaException() {
+    duktape.bind("value", TestInterface.class, new TestInterface() {
+      @Override public String getValue() {
+        throw new UnsupportedOperationException("This is an error message.");
+      }
+    });
+    try {
+      duktape.evaluate("value.getValue()");
+      fail();
+    } catch (UnsupportedOperationException expected) {
+      assertThat(expected).hasMessage("This is an error message.");
+    }
+  }
+
+  @Test public void callMethodWithArgsOnJavaObject() {
+    duktape.bind("value", TestInterfaceArgs.class, new TestInterfaceArgs() {
+      @Override public String foo(String a, String b, String c) {
+        return a + b + c;
+      }
+    });
+
+    assertThat(duktape.evaluate("value.foo('This', ' is a ', 'test')")).isEqualTo("This is a test");
+
+    try {
+      duktape.evaluate("value.foo('This')");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Error: wrong number of arguments");
+    }
+    try {
+      duktape.evaluate("value.foo('This', ' is ', 'too ', 'many ', 'arguments')");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected.getMessage()).isEqualTo("Error: wrong number of arguments");
+    }
+    try {
+      duktape.evaluate("value.foo('1', '2', 3)");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected.getMessage()).isEqualTo("TypeError: not string");
+    }
+  }
+
+  interface TestInterfaceVoids {
+    void func();
+    String getResult();
+  }
+
+  @Test public void callVoidJavaMethod() {
+    duktape.bind("value", TestInterfaceVoids.class, new TestInterfaceVoids() {
+      String result = "not called";
+      @Override public void func() {
+        result = "called";
+      }
+      @Override public String getResult() {
+        return result;
+      }
+    });
+
+    assertThat(duktape.evaluate("value.getResult()")).isEqualTo("not called");
+    assertThat(duktape.evaluate("value.func()")).isNull();
+    assertThat(duktape.evaluate("value.getResult()")).isEqualTo("called");
+  }
 }
