@@ -1,6 +1,6 @@
 buildscript {
   dependencies {
-    classpath 'com.android.tools.build:gradle-experimental:0.3.0-alpha7'
+    classpath 'com.android.tools.build:gradle-experimental:0.6.0-beta2'
   }
 }
 
@@ -11,41 +11,33 @@ model {
     compileSdkVersion = rootProject.ext.compileSdkVersion
     buildToolsVersion = rootProject.ext.buildToolsVersion
 
-    defaultConfig.with {
+    defaultConfig {
       minSdkVersion.apiLevel = 4
+    }
+
+    buildTypes {
+      release {
+        ndk {
+          CFlags.addAll(['-Os', '-fomit-frame-pointer'])
+        }
+      }
+    }
+
+    ndk {
+      moduleName = 'duktape'
+
+      CFlags.addAll(['-std=c99', '-fstrict-aliasing', '-DDUK_OPT_HAVE_CUSTOM_H'])
     }
   }
   android.lintOptions {
     textReport = true
     textOutput('stdout')
   }
-  android.ndk {
-    moduleName = 'duktape'
-
-    CFlags += ['-std=c99', '-fstrict-aliasing', '-DDUK_OPT_HAVE_CUSTOM_H']
-  }
-  android.buildTypes {
-    release {
-      ndk.with {
-        CFlags += ['-Os', '-fomit-frame-pointer']
-      }
-    }
-  }
 }
 
 // TODO move all this nonsense to a standalone file
 import com.android.build.gradle.managed.AndroidConfig
 import com.android.build.gradle.model.AndroidComponentSpec
-import org.gradle.model.Finalize
-import org.gradle.model.ModelMap
-import org.gradle.model.Mutate
-import org.gradle.model.Path
-import org.gradle.model.RuleSource
-import org.gradle.platform.base.BinarySpec
-import org.gradle.platform.base.BinaryType
-import org.gradle.platform.base.BinaryTypeBuilder
-import org.gradle.platform.base.ComponentBinaries
-import org.gradle.platform.base.binary.BaseBinarySpec
 
 interface JavadocBinary extends BinarySpec {}
 class DefaultJavadocBinary extends BaseBinarySpec implements JavadocBinary {}
@@ -57,7 +49,7 @@ class MavenCentralArtifactRules extends RuleSource {
   @Mutate
   void createJavadocTask(ModelMap<Task> tasks, @Path('android') AndroidConfig android) {
     tasks.create('androidJavadocGenerate', Javadoc) {
-      source = android.sources.getByName('main').java.source
+      source = android.sources.main.java.source
     }
   }
 
@@ -79,7 +71,7 @@ class MavenCentralArtifactRules extends RuleSource {
       @Path('android') AndroidConfig android) {
     tasks.create('androidSourcesJar', Jar) {
       classifier = 'sources'
-      from android.sources.getByName('main').java.source
+      from android.sources.main.java.source
     }
   }
 
