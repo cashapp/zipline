@@ -16,6 +16,8 @@
 package com.squareup.duktape;
 
 import java.io.Closeable;
+import java.lang.reflect.Method;
+import java.util.LinkedHashMap;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
@@ -63,6 +65,32 @@ public final class Duktape implements Closeable {
   }
 
   /**
+   * Binds {@code object} to {@code name} for use in JavaScript as a global object. {@code type}
+   * defines the interface implemented by {@code object} that will be accessible to JavaScript.
+   * {@code type} must be an interface that does not extend any other interfaces, and cannot define
+   * any overloaded methods.
+   */
+  public <T> void bind(String name, Class<T> type, T object) {
+    if (!type.isInterface()) {
+      throw new UnsupportedOperationException("Only interfaces can be bound. Received: " + type);
+    }
+    if (type.getInterfaces().length > 0) {
+      throw new UnsupportedOperationException(type + " must not extend other interfaces.");
+    }
+    if (!type.isInstance(object)) {
+      throw new IllegalArgumentException(object.getClass() + " is not an instance of " + type);
+    }
+    LinkedHashMap<String, Method> methods = new LinkedHashMap<>();
+    for (Method method : type.getMethods()) {
+      checkSignatureSupported(method);
+      if (methods.put(method.getName(), method) != null) {
+        throw new UnsupportedOperationException(method.getName() + " is overloaded in " + type);
+      }
+    }
+    bind(context, name, object, methods.values().toArray());
+  }
+
+  /**
    * Release the native resources associated with this object. You <strong>must</strong> call this
    * method for each instance to avoid leaking native memory.
    */
@@ -80,9 +108,31 @@ public final class Duktape implements Closeable {
     }
   }
 
+  private static void checkSignatureSupported(Method method) {
+    if (!isSupportedType(method.getReturnType())) {
+      throw new UnsupportedOperationException(
+          String.format("Return type %s on %s is not supported",
+              method.getReturnType().toString(), method.getName()));
+    }
+    for (Class<?> parameterType : method.getParameterTypes()) {
+      if (!isSupportedType(parameterType)) {
+        throw new UnsupportedOperationException(
+            String.format("Parameter type %s on %s is not supported",
+                parameterType.toString(), method.getName()));
+      }
+    }
+  }
+
+  /** Returns true if we support {@code: type} in calls from JavaScript. */
+  private static boolean isSupportedType(Class<?> type) {
+    // TODO: support some more types.
+    return void.class.equals(type) || String.class.equals(type);
+  }
+
   private static native long createContext();
   private static native void destroyContext(long context);
   private static native String evaluate(long context, String sourceCode, String fileName);
+  private static native void bind(long context, String name, Object object, Object[] methods);
 
   /** Returns the timezone offset in seconds given system time millis. */
   @SuppressWarnings("unused") // Called from native code.
