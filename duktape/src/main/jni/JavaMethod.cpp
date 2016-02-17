@@ -14,124 +14,168 @@
  * limitations under the License.
  */
 #include "JavaMethod.h"
-#include <algorithm>
 #include "JString.h"
 
 namespace {
 
-JavaMethod::Type getType(JNIEnv* env, jobject typeObject) {
-  if (env->IsSameObject(typeObject, env->FindClass("java/lang/String"))) {
-    return JavaMethod::String;
-  }
-  // TODO: support some more types.
-  return JavaMethod::Void;
-}
-
-/**
- * Convert the duktape value at the top of the stack to the given Java type.
- * throws a JavaScript TypeError if the JS type is not {@code type}.
- */
-jvalue popJavaType(JNIEnv* env, duk_context* ctx, JavaMethod::Type type) {
-  const duk_idx_t index = -1;
-  jvalue value;
-  switch (type) {
-    case JavaMethod::String:
-      // Check if the caller passed in a null string.
-      value.l = duk_get_type(ctx, index) != DUK_TYPE_NULL
-                ? env->NewStringUTF(duk_require_string(ctx, index))
-                : nullptr;
-      break;
-
-    case JavaMethod::Void:
-    default:
-      duk_error(ctx, DUK_ERR_API_ERROR, "unsupported argument type: %d", type);
-      // unreachable - duk_error never returns.
-      break;
-  }
-  duk_pop(ctx);
-  return value;
-}
-
-/**
- * Convert the given {@code value} to a duktape type and push it onto the stack (for a function
- * call return).
- * Returns the number of entries pushed to the duktape stack.
- */
-duk_ret_t pushJavaScriptType(JNIEnv* env, duk_context *ctx, JavaMethod::Type type, jvalue value) {
-  switch (type) {
-    case JavaMethod::Void:
-      return 0;
-
-    case JavaMethod::String: {
-      const JString result(env, static_cast<jstring>(value.l));
-      duk_push_string(ctx, result);
-      return 1;
-    }
-
-    default:
-      duk_error(ctx, DUK_ERR_API_ERROR, "unsupported return type: %d", type);
-      // unreachable - duk_error never returns.
-      return DUK_RET_INTERNAL_ERROR;
-  }
-}
+JavaMethod::ArgumentLoader getArgumentLoader(JNIEnv *env, jobject typeObject);
+JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject returnType);
 
 } // anonymous namespace
 
-JavaMethod::JavaMethod(JNIEnv* env, jobject method)
-    : m_methodId(env->FromReflectedMethod(method)) {
+JavaMethod::JavaMethod(JNIEnv* env, jobject method) {
   jclass methodClass = env->GetObjectClass(method);
-
-  const jmethodID getName = env->GetMethodID(methodClass, "getName", "()Ljava/lang/String;");
-  const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(method, getName)));
-  m_name = methodName;
-
-  const jmethodID getReturnType =
-      env->GetMethodID(methodClass, "getReturnType", "()Ljava/lang/Class;");
-  jobject returnType = env->CallObjectMethod(method, getReturnType);
-  m_returnType = getType(env, returnType);
 
   const jmethodID getParameterTypes =
       env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
   jobjectArray parameterTypes =
       static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
   const jsize numArgs = env->GetArrayLength(parameterTypes);
-  m_parameterTypes.reserve(numArgs);
+  m_argumentLoaders.reserve(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
-    m_parameterTypes.push_back(getType(env, env->GetObjectArrayElement(parameterTypes, i)));
+    m_argumentLoaders.push_back(
+        getArgumentLoader(env, env->GetObjectArrayElement(parameterTypes, i)));
   }
+
+  const jmethodID getReturnType =
+      env->GetMethodID(methodClass, "getReturnType", "()Ljava/lang/Class;");
+  jobject returnType = env->CallObjectMethod(method, getReturnType);
+
+  jmethodID methodId = env->FromReflectedMethod(method);
+  m_methodBody = getMethodBody(env, methodId, returnType);
 }
 
-duk_ret_t JavaMethod::invoke(duk_context *ctx, JNIEnv *env, jobject javaThis) const {
-  if (duk_get_top(ctx) != m_parameterTypes.size()) {
+duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) const {
+  if (duk_get_top(ctx) != m_argumentLoaders.size()) {
+    // Wrong number of arguments given - throw an error.
     duk_error(ctx, DUK_ERR_API_ERROR, "wrong number of arguments");
-  }
-  std::vector<jvalue> args(m_parameterTypes.size());
-  std::transform(m_parameterTypes.begin(), m_parameterTypes.end(), args.rbegin(),
-                 [env, ctx](Type t) { return popJavaType(env, ctx, t); });
-
-  jvalue returnValue;
-  switch (m_returnType) {
-    case Void:
-      returnValue.l = nullptr;
-      env->CallVoidMethodA(javaThis, m_methodId, args.data());
-      break;
-
-    case String:
-      returnValue.l = env->CallObjectMethodA(javaThis, m_methodId, args.data());
-      break;
-
-    default:
-      return DUK_RET_INTERNAL_ERROR;
+    // unreachable - duk_error never returns.
+    return DUK_RET_API_ERROR;
   }
 
-  // If the Java call threw an exception, it should be propagated back through the JavaScript.
+  std::vector<jvalue> args(m_argumentLoaders.size());
+  // Load the arguments off the stack and convert to java types.
+  // Note we're going backwards since the last argument is at the top of the stack.
+  for (ssize_t i = m_argumentLoaders.size() - 1; i >= 0; --i) {
+    args[i] = m_argumentLoaders[i](ctx, env);
+  }
+
+  return m_methodBody(ctx, env, javaThis, args.data());
+}
+
+namespace {
+
+/**
+ * Loads the (primitive) TYPE member of {@code boxedClassName}.
+ * For example, given java/lang/Integer, this function will return int.class.
+ */
+jobject getPrimitiveType(JNIEnv* env, const char* boxedClassName) {
+  jclass boxedClass = env->FindClass(boxedClassName);
+  const jfieldID typeField = env->GetStaticFieldID(boxedClass, "TYPE", "Ljava/lang/Class;");
+  return env->GetStaticObjectField(boxedClass, typeField);
+}
+
+/**
+ * Get a functor that pops the object off the top of the stack and converts it to an instance of
+ * {@code typeObject}.  Duktape may throw if the argument is not the correct type.
+ */
+JavaMethod::ArgumentLoader getArgumentLoader(JNIEnv *env, jobject typeObject) {
+  if (env->IsSameObject(typeObject, env->FindClass("java/lang/String"))) {
+    return [](duk_context* ctx, JNIEnv* jniEnv) {
+      jvalue value;
+      // Check if the caller passed in a null string.
+      value.l = duk_get_type(ctx, -1) != DUK_TYPE_NULL
+                ? jniEnv->NewStringUTF(duk_require_string(ctx, -1))
+                : nullptr;
+      duk_pop(ctx);
+      return value;
+    };
+  }
+  if (env->IsSameObject(typeObject, getPrimitiveType(env, "java/lang/Boolean"))) {
+    return [](duk_context* ctx, JNIEnv*) {
+      jvalue value;
+      value.z = duk_require_boolean(ctx, -1);
+      duk_pop(ctx);
+      return value;
+    };
+  }
+  if (env->IsSameObject(typeObject, getPrimitiveType(env, "java/lang/Integer"))) {
+    return [](duk_context* ctx, JNIEnv*) {
+      jvalue value;
+      value.i = duk_require_int(ctx, -1);
+      duk_pop(ctx);
+      return value;
+    };
+  }
+  assert(env->IsSameObject(typeObject, getPrimitiveType(env, "java/lang/Double")));
+  return [](duk_context* ctx, JNIEnv*) {
+    jvalue value;
+    value.d = duk_require_number(ctx, -1);
+    duk_pop(ctx);
+    return value;
+  };
+}
+
+/**
+ * Determines if an exception has been thrown in this JNI thread.  If so, creates a duktape error
+ * with the Java exception embedded in it, and throws it.
+ */
+void checkRethrowException(duk_context* ctx, JNIEnv* env) {
   if (env->ExceptionCheck()) {
+    // The Java call threw an exception - it should be propagated back through JavaScript.
     duk_push_error_object(ctx, DUK_ERR_API_ERROR, "Java Exception");
     duk_push_pointer(ctx, env->ExceptionOccurred());
     env->ExceptionClear();
-    duk_put_prop_string(ctx, -2, JAVA_EXCEPTION_PROP_NAME);
+    duk_put_prop_string(ctx, -2, JavaMethod::JAVA_EXCEPTION_PROP_NAME);
     duk_throw(ctx);
   }
-
-  return pushJavaScriptType(env, ctx, m_returnType, returnValue);
 }
+
+/**
+ * Returns a functor that will invoke the proper JNI function to get the matching {@code returnType}
+ * and convert the result to a JS type then push it to the stack.  The functor returns the number
+ * of entries pushed to the stack to be returned to the duktape caller.
+ */
+JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject returnType) {
+  if (env->IsSameObject(returnType, env->FindClass("java/lang/String"))) {
+    return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
+      jobject returnValue = jniEnv->CallObjectMethodA(javaThis, methodId, args);
+      checkRethrowException(ctx, jniEnv);
+      const JString result(jniEnv, static_cast<jstring>(returnValue));
+      duk_push_string(ctx, result);
+      return 1;
+    };
+  }
+  if (env->IsSameObject(returnType, getPrimitiveType(env, "java/lang/Boolean"))) {
+    return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
+      jboolean returnValue = jniEnv->CallBooleanMethodA(javaThis, methodId, args);
+      checkRethrowException(ctx, jniEnv);
+      duk_push_boolean(ctx, returnValue == JNI_TRUE);
+      return 1;
+    };
+  }
+  if (env->IsSameObject(returnType, getPrimitiveType(env, "java/lang/Integer"))) {
+    return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
+      jint returnValue = jniEnv->CallIntMethodA(javaThis, methodId, args);
+      checkRethrowException(ctx, jniEnv);
+      duk_push_int(ctx, returnValue);
+      return 1;
+    };
+  }
+  if (env->IsSameObject(returnType, getPrimitiveType(env, "java/lang/Double"))) {
+    return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
+      jdouble returnValue = jniEnv->CallDoubleMethodA(javaThis, methodId, args);
+      checkRethrowException(ctx, jniEnv);
+      duk_push_number(ctx, returnValue);
+      return 1;
+    };
+  }
+  assert(env->IsSameObject(returnType, getPrimitiveType(env, "java/lang/Void")));
+  return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
+    jniEnv->CallVoidMethodA(javaThis, methodId, args);
+    checkRethrowException(ctx, jniEnv);
+    return 0;
+  };
+}
+
+} // anonymous namespace

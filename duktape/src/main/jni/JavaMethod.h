@@ -17,12 +17,16 @@
 #define DUKTAPE_ANDROID_JAVAMETHOD_H
 
 #include <vector>
-#include <string>
+#include <functional>
 #include <jni.h>
 #include "duktape.h"
 
 class JavaMethod {
 public:
+  /**
+   * Internal name used for storing a thrown Java exception as a property of a duktape error object.
+   * The \xff\xff part keeps the variable hidden from JavaScript (visible through C API only).
+   */
   static constexpr const char* JAVA_EXCEPTION_PROP_NAME = "\xff\xffjava_exception";
 
   JavaMethod(JNIEnv* env, jobject method);
@@ -33,20 +37,23 @@ public:
    */
   duk_ret_t invoke(duk_context *ctx, JNIEnv *env, jobject javaThis) const;
 
-  const char* getName() const {
-    return m_name.c_str();
-  }
-
-  enum Type {
-    Void,
-    String
-  };
+  /**
+   * Defines a functor to use to pop a value off the duktape stack and convert it to the required
+   * Java type.
+   */
+  typedef std::function<jvalue(duk_context*, JNIEnv*)> ArgumentLoader;
+  /**
+   * Defines a functor to invoke the correct JNI method that will return the required Java type,
+   * convert the return value to a JavaScript type and push it to the duktape stack.  Returns the
+   * number of entries pushed to the stack.
+   * If the Java method throws an exception, the functor will throw a duktape error with the
+   * exception inside.
+   */
+  typedef std::function<duk_ret_t(duk_context*, JNIEnv*, jobject, jvalue*)> MethodBody;
 
 private:
-  std::string m_name;
-  const jmethodID m_methodId;
-  Type m_returnType;
-  std::vector<Type> m_parameterTypes;
+  std::vector<ArgumentLoader> m_argumentLoaders;
+  MethodBody m_methodBody;
 };
 
 #endif //DUKTAPE_ANDROID_JAVAMETHOD_H

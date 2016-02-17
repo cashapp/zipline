@@ -16,11 +16,13 @@
 package com.squareup.duktape;
 
 import android.support.test.runner.AndroidJUnit4;
-import java.util.TimeZone;
+
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import java.util.TimeZone;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
@@ -191,5 +193,47 @@ public final class DuktapeTest {
     assertThat(duktape.evaluate("value.getResult()")).isEqualTo("not called");
     assertThat(duktape.evaluate("value.func()")).isNull();
     assertThat(duktape.evaluate("value.getResult()")).isEqualTo("called");
+  }
+
+  interface TestPrimitiveTypes {
+    boolean b(boolean b);
+    int i(int i);
+    double d(double d);
+  }
+
+  // Verify that primitive types can be used as both arguments and return values from java methods.
+  @Test public void callJavaMethodWithPrimitiveTypes() {
+    duktape.bind("value", TestPrimitiveTypes.class, new TestPrimitiveTypes() {
+      @Override public boolean b(boolean b) {
+        return !b;
+      }
+      @Override public int i(int i) {
+        return i * i;
+      }
+      @Override public double d(double d) {
+        return d / 2.0;
+      }
+    });
+
+    // TODO: add an evaluate interface that supports other types.
+    assertThat(duktape.evaluate("value.b(false).toString()")).isEqualTo("true");
+    assertThat(duktape.evaluate("value.i(4).toString()")).isEqualTo("16");
+    assertThat(duktape.evaluate("value.d(6.28318).toString()")).isEqualTo("3.14159");
+  }
+
+  interface TestMultipleArgTypes {
+    String print(boolean b, int i, double d);
+  }
+
+  // Double check that arguments of different types are processed in the correct order from the
+  // duktape stack.
+  @Test public void callJavaMethodWithAllArgTypes() {
+    duktape.bind("printer", TestMultipleArgTypes.class, new TestMultipleArgTypes() {
+      @Override public String print(boolean b, int i, double d) {
+        return String.format("boolean: %s, int: %s, double: %s", b, i, d);
+      }
+    });
+    assertThat(duktape.evaluate("printer.print(true, 42, 2.718281828459)"))
+        .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
   }
 }

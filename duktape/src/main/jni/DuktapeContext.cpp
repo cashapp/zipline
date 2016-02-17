@@ -155,7 +155,8 @@ void DuktapeContext::bindInstance(JNIEnv *env, jstring instance, jobject object,
 
   const jsize numMethods = env->GetArrayLength(methods);
   for (jsize i = 0; i < numMethods; ++i) {
-    JavaMethod* javaMethod = new JavaMethod(env, env->GetObjectArrayElement(methods, i));
+    jobject method = env->GetObjectArrayElement(methods, i);
+    JavaMethod* javaMethod = new JavaMethod(env, method);
 
     // Use VARARGS here to allow us to manually validate that the proper number of arguments are
     // given in the call.  If we specify the actual number of arguments needed, duktape will try to
@@ -165,7 +166,11 @@ void DuktapeContext::bindInstance(JNIEnv *env, jstring instance, jobject object,
     duk_push_pointer(m_context, javaMethod);
     duk_put_prop_string(m_context, func, JAVA_METHOD_PROP_NAME);
 
-    duk_put_prop_string(m_context, objIndex, javaMethod->getName());
+    const jmethodID getName =
+        env->GetMethodID(env->GetObjectClass(method), "getName", "()Ljava/lang/String;");
+    const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(method, getName)));
+
+    duk_put_prop_string(m_context, objIndex, methodName);
   }
 
   const JString instanceName(env, instance);

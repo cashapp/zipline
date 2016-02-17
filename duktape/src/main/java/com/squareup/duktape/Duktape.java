@@ -109,13 +109,14 @@ public final class Duktape implements Closeable {
   }
 
   private static void checkSignatureSupported(Method method) {
-    if (!isSupportedType(method.getReturnType())) {
+    if (!isSupportedParameterType(method.getReturnType())
+        && !void.class.equals(method.getReturnType())) {
       throw new UnsupportedOperationException(
           String.format("Return type %s on %s is not supported",
               method.getReturnType().toString(), method.getName()));
     }
     for (Class<?> parameterType : method.getParameterTypes()) {
-      if (!isSupportedType(parameterType)) {
+      if (!isSupportedParameterType(parameterType)) {
         throw new UnsupportedOperationException(
             String.format("Parameter type %s on %s is not supported",
                 parameterType.toString(), method.getName()));
@@ -123,10 +124,12 @@ public final class Duktape implements Closeable {
     }
   }
 
-  /** Returns true if we support {@code: type} in calls from JavaScript. */
-  private static boolean isSupportedType(Class<?> type) {
-    // TODO: support some more types.
-    return void.class.equals(type) || String.class.equals(type);
+  /** Returns true if we support {@code: type} as parameters in calls from JavaScript. */
+  private static boolean isSupportedParameterType(Class<?> type) {
+    return boolean.class.equals(type)
+        || int.class.equals(type)
+        || double.class.equals(type)
+        || String.class.equals(type);
   }
 
   private static native long createContext();
