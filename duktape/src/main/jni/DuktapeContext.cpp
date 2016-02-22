@@ -16,6 +16,7 @@
 #include "DuktapeContext.h"
 #include "JString.h"
 #include "JavaMethod.h"
+#include "GlobalRef.h"
 
 namespace {
 
@@ -31,9 +32,7 @@ JNIEnv* getJNIEnv(duk_context *ctx) {
   JavaVM* javaVM = static_cast<JavaVM*>(duk_require_pointer(ctx, -1));
   duk_pop_2(ctx);
 
-  JNIEnv* env;
-  javaVM->AttachCurrentThread(&env, nullptr);
-  return env;
+  return getEnvFromJavaVM(javaVM);
 }
 
 jobject getJavaThis(duk_context* ctx) {

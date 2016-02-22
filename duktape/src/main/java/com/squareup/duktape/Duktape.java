@@ -127,8 +127,11 @@ public final class Duktape implements Closeable {
   /** Returns true if we support {@code: type} as parameters in calls from JavaScript. */
   private static boolean isSupportedParameterType(Class<?> type) {
     return boolean.class.equals(type)
+        || Boolean.class.equals(type)
         || int.class.equals(type)
+        || Integer.class.equals(type)
         || double.class.equals(type)
+        || Double.class.equals(type)
         || String.class.equals(type);
   }
 
