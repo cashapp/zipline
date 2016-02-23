@@ -43,6 +43,10 @@ GlobalRef::~GlobalRef() {
   getEnvFromJavaVM(m_javaVM)->DeleteGlobalRef(m_object);
 }
 
+JNIEnv* GlobalRef::getJniEnv() const {
+  return getEnvFromJavaVM(m_javaVM);
+}
+
 JNIEnv* getEnvFromJavaVM(JavaVM* javaVM) {
   if (javaVM == nullptr) {
     return nullptr;

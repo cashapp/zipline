@@ -16,6 +16,9 @@
 #ifndef DUKTAPE_ANDROID_JSTRING_H
 #define DUKTAPE_ANDROID_JSTRING_H
 
+#include <string>
+#include <jni.h>
+
 class JString {
 public:
   JString(JNIEnv* env, jstring s)
@@ -29,6 +32,10 @@ public:
   }
 
   operator const char* () const {
+    return m_str;
+  }
+
+  std::string str() const {
     return m_str;
   }
 

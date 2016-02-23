@@ -15,6 +15,7 @@
  */
 #include "JavaMethod.h"
 #include <string>
+#include <stdexcept>
 #include "JString.h"
 #include "GlobalRef.h"
 
@@ -35,15 +36,15 @@ JavaMethod::JavaMethod(JNIEnv* env, jobject method) {
   const jsize numArgs = env->GetArrayLength(parameterTypes);
   m_argumentLoaders.reserve(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
-    m_argumentLoaders.push_back(
-        getArgumentLoader(env, env->GetObjectArrayElement(parameterTypes, i)));
+    auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
+    m_argumentLoaders.push_back(getArgumentLoader(env, parameterType));
   }
 
   const jmethodID getReturnType =
       env->GetMethodID(methodClass, "getReturnType", "()Ljava/lang/Class;");
   jobject returnType = env->CallObjectMethod(method, getReturnType);
 
-  jmethodID methodId = env->FromReflectedMethod(method);
+  const jmethodID methodId = env->FromReflectedMethod(method);
   m_methodBody = getMethodBody(env, methodId, returnType);
 }
 
@@ -72,7 +73,7 @@ std::string toString(JNIEnv* env, jobject object) {
   const jmethodID method =
       env->GetMethodID(env->GetObjectClass(object), "toString", "()Ljava/lang/String;");
   const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(object, method)));
-  return std::string(static_cast<const char*>(methodName));
+  return methodName.str();
 }
 
 /**
@@ -184,15 +185,7 @@ JavaMethod::ArgumentLoader getArgumentLoader(JNIEnv *env, jobject typeObject) {
     };
   }
 
-  // TODO: throw a C++ exception here, and forward as a Java exception in duktape-jni.cpp.
-  return [typeObject](duk_context* ctx, JNIEnv* jniEnv) {
-    const auto name = toString(jniEnv, typeObject);
-    duk_push_error_object(ctx, DUK_ERR_API_ERROR, "Unable to marshal %s", name.c_str());
-    duk_throw(ctx);
-    // duk_throw never returns, but the functor has to specify a return value.
-    jvalue unused;
-    return unused;
-  };
+  throw std::invalid_argument("Unable to marshal " + toString(env, typeObject));
 }
 
 /**
@@ -232,12 +225,12 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
     return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
       jobject returnValue = jniEnv->CallObjectMethodA(javaThis, methodId, args);
       checkRethrowException(ctx, jniEnv);
-      if (returnValue == nullptr) {
+      if (returnValue != nullptr) {
+        const JString result(jniEnv, static_cast<jstring>(returnValue));
+        duk_push_string(ctx, result);
+      } else {
         duk_push_null(ctx);
-        return 1;
       }
-      const JString result(jniEnv, static_cast<jstring>(returnValue));
-      duk_push_string(ctx, result);
       return 1;
     };
   }
@@ -298,14 +291,7 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
     };
   }
 
-  // TODO: throw a C++ exception here, and forward as a Java exception in duktape-jni.cpp.
-  return [returnType](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
-    const auto name = toString(jniEnv, returnType);
-    duk_push_error_object(ctx, DUK_ERR_API_ERROR, "Unable to unmarshal %s", name.c_str());
-    duk_throw(ctx);
-    // duk_throw never returns, but the functor has to specify a return value.
-    return DUK_RET_API_ERROR;
-  };
+  throw std::invalid_argument("Unable to unmarshal " + toString(env, returnType));
 }
 
 } // anonymous namespace

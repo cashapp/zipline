@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <memory>
 #include <jni.h>
 #include "DuktapeContext.h"
 #include "GlobalRef.h"
 
 namespace {
 
-static JavaVM *jvm = nullptr;
-static jclass duktapeClass = nullptr;
+std::unique_ptr<GlobalRef> duktapeClass;
 static jmethodID getLocalTimeZoneOffset = nullptr;
 
 } // anonymous namespace
@@ -28,18 +28,30 @@ static jmethodID getLocalTimeZoneOffset = nullptr;
 extern "C" {
 
 duk_int_t android__get_local_tzoffset(duk_double_t time) {
-  JNIEnv* env = getEnvFromJavaVM(jvm);
-  return env->CallStaticIntMethod(duktapeClass, getLocalTimeZoneOffset, time);
+  if (!duktapeClass) {
+    return 0;
+  }
+  JNIEnv* env = duktapeClass->getJniEnv();
+  return env->CallStaticIntMethod(static_cast<jclass>(duktapeClass->get()),
+                                  getLocalTimeZoneOffset,
+                                  time);
 }
 
 JNIEXPORT jlong JNICALL
 Java_com_squareup_duktape_Duktape_createContext(JNIEnv* env, jclass type) {
-  if (jvm == nullptr) {
-    env->GetJavaVM(&jvm);
-    duktapeClass = reinterpret_cast<jclass>(env->NewGlobalRef(type));
-    getLocalTimeZoneOffset = env->GetStaticMethodID(duktapeClass, "getLocalTimeZoneOffset", "(D)I");
+  if (!duktapeClass) {
+    duktapeClass.reset(new GlobalRef(env, type));
+    getLocalTimeZoneOffset = env->GetStaticMethodID(static_cast<jclass>(duktapeClass->get()),
+                                                    "getLocalTimeZoneOffset",
+                                                    "(D)I");
   }
-  return reinterpret_cast<jlong>(new DuktapeContext(jvm));
+  JavaVM* javaVM;
+  env->GetJavaVM(&javaVM);
+  try {
+    return reinterpret_cast<jlong>(new DuktapeContext(javaVM));
+  } catch (std::bad_alloc&) {
+    return 0L;
+  }
 }
 
 JNIEXPORT void JNICALL

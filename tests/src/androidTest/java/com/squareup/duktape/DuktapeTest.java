@@ -127,6 +127,24 @@ public final class DuktapeTest {
     }
   }
 
+  @Test public void bindSameNameTwiceFails() {
+    duktape.bind("value", TestInterface.class, new TestInterface() {
+      @Override public String getValue() {
+        return "foo";
+      }
+    });
+    try {
+      duktape.bind("value", TestInterface.class, new TestInterface() {
+        @Override public String getValue() {
+          return "bar";
+        }
+      });
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("A global object called value already exists");
+    }
+  }
+
   interface TestInterfaceArgs {
     String foo(String a, String b, String c);
   }
