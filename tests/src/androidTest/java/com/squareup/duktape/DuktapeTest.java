@@ -148,11 +148,12 @@ public final class DuktapeTest {
   @Test public void callMethodWithArgsOnJavaObject() {
     duktape.bind("value", TestInterfaceArgs.class, new TestInterfaceArgs() {
       @Override public String foo(String a, String b, String c) {
-        return a + b + c;
+        return a != null ? a + b + c : null;
       }
     });
 
     assertThat(duktape.evaluate("value.foo('This', ' is a ', 'test')")).isEqualTo("This is a test");
+    assertThat(duktape.evaluate("value.foo(null, null, null)")).isNull();
 
     try {
       duktape.evaluate("value.foo('This')");
@@ -235,5 +236,34 @@ public final class DuktapeTest {
     });
     assertThat(duktape.evaluate("printer.print(true, 42, 2.718281828459)"))
         .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
+  }
+
+  interface TestBoxedPrimitiveArgTypes {
+    Boolean b(Boolean b);
+    Integer i(Integer i);
+    Double d(Double d);
+  }
+
+  @Test public void callJavaMethodWithBoxedPrimitiveTypes() {
+    duktape.bind("value", TestBoxedPrimitiveArgTypes.class, new TestBoxedPrimitiveArgTypes() {
+      @Override public Boolean b(Boolean b) {
+        return b != null ? !b : null;
+      }
+      @Override public Integer i(Integer i) {
+        return i != null ? i * i : null;
+      }
+      @Override public Double d(Double d) {
+        return d != null ? d / 2.0 : null;
+      }
+    });
+
+    // TODO: add an evaluate interface that supports other types.
+    assertThat(duktape.evaluate("value.b(false).toString()")).isEqualTo("true");
+    assertThat(duktape.evaluate("value.i(4).toString()")).isEqualTo("16");
+    assertThat(duktape.evaluate("value.d(6.28318).toString()")).isEqualTo("3.14159");
+
+    assertThat(duktape.evaluate("value.b(null)")).isNull();
+    assertThat(duktape.evaluate("value.i(null)")).isNull();
+    assertThat(duktape.evaluate("value.d(null)")).isNull();
   }
 }
