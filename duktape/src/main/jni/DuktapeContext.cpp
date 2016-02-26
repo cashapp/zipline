@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 #include "DuktapeContext.h"
+#include <memory>
+#include <string>
+#include <stdexcept>
 #include "JString.h"
 #include "JavaMethod.h"
 #include "GlobalRef.h"
@@ -72,11 +75,12 @@ duk_ret_t javaObjectFinalizer(duk_context *ctx) {
   }
 
   // Remove the global reference from the bound java object.
-  jobject thisObject = static_cast<jobject>(duk_require_pointer(ctx, -1));
-  getJNIEnv(ctx)->DeleteGlobalRef(thisObject);
+  getJNIEnv(ctx)->DeleteGlobalRef(static_cast<jobject>(duk_require_pointer(ctx, -1)));
+  duk_pop(ctx);
+  duk_del_prop_string(ctx, -1, JAVA_METHOD_PROP_NAME);
 
   // Iterate over all of the properties, deleting all the JavaMethod objects we attached.
-  duk_enum(ctx, -2, DUK_ENUM_OWN_PROPERTIES_ONLY);
+  duk_enum(ctx, -1, DUK_ENUM_OWN_PROPERTIES_ONLY);
   while (duk_next(ctx, -1, true)) {
     if (!duk_get_prop_string(ctx, -1, JAVA_METHOD_PROP_NAME)) {
       duk_pop_2(ctx);
@@ -86,7 +90,8 @@ duk_ret_t javaObjectFinalizer(duk_context *ctx) {
     duk_pop_3(ctx);
   }
 
-  duk_pop_3(ctx);
+  // Pop the enum and the object passed in as an argument.
+  duk_pop_2(ctx);
   return 0;
 }
 
@@ -94,6 +99,10 @@ duk_ret_t javaObjectFinalizer(duk_context *ctx) {
 
 DuktapeContext::DuktapeContext(JavaVM* javaVM)
     : m_context(duk_create_heap_default()) {
+  if (!m_context) {
+    throw std::bad_alloc();
+  }
+
   // Stash the JVM object in the context, so we can find our way back from a duktape C callback.
   duk_push_global_stash(m_context);
   duk_push_pointer(m_context, javaVM);
@@ -141,39 +150,61 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
   return result;
 }
 
-void DuktapeContext::bindInstance(JNIEnv *env, jstring instance, jobject object,
-                                  jobjectArray methods) {
+void DuktapeContext::bindInstance(JNIEnv *env, jstring name, jobject object, jobjectArray methods) {
   duk_push_global_object(m_context);
+  const JString instanceName(env, name);
+  if (duk_has_prop_string(m_context, -1, instanceName)) {
+    duk_pop(m_context);
+    const jclass illegalArgumentException = env->FindClass("java/lang/IllegalArgumentException");
+    const std::string message = "A global object called " + instanceName.str() + " already exists";
+    env->ThrowNew(illegalArgumentException, message.c_str());
+    return;
+  }
   const duk_idx_t objIndex = duk_require_normalize_index(m_context, duk_push_object(m_context));
 
   // Keep a reference in JavaScript to the object being bound.
   duk_push_pointer(m_context, env->NewGlobalRef(object));
   duk_put_prop_string(m_context, objIndex, JAVA_THIS_PROP_NAME);
+
+  // Hook up a finalizer to decrement the refcount and clean up our JavaMethods.
   duk_push_c_function(m_context, javaObjectFinalizer, 1);
   duk_set_finalizer(m_context, objIndex);
 
   const jsize numMethods = env->GetArrayLength(methods);
   for (jsize i = 0; i < numMethods; ++i) {
     jobject method = env->GetObjectArrayElement(methods, i);
-    JavaMethod* javaMethod = new JavaMethod(env, method);
+
+    const jmethodID getName =
+        env->GetMethodID(env->GetObjectClass(method), "getName", "()Ljava/lang/String;");
+    const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(method, getName)));
+
+    std::unique_ptr<JavaMethod> javaMethod;
+    try {
+      javaMethod.reset(new JavaMethod(env, method));
+    } catch (std::invalid_argument& invalidArgument) {
+      const jclass illegalArgumentException = env->FindClass("java/lang/IllegalArgumentException");
+      const std::string message = "In bound method \"" + instanceName.str() + "." + methodName.str()
+                                  + "\": " + invalidArgument.what();
+      env->ThrowNew(illegalArgumentException, message.c_str());
+      // Pop the object being bound and the duktape global object.
+      duk_pop_2(m_context);
+      return;
+    }
 
     // Use VARARGS here to allow us to manually validate that the proper number of arguments are
     // given in the call.  If we specify the actual number of arguments needed, duktape will try to
     // be helpful by discarding extra or providing missing arguments. That's not quite what we want.
     // See http://duktape.org/api.html#duk_push_c_function for details.
     const duk_idx_t func = duk_push_c_function(m_context, javaMethodHandler, DUK_VARARGS);
-    duk_push_pointer(m_context, javaMethod);
+    duk_push_pointer(m_context, javaMethod.release());
     duk_put_prop_string(m_context, func, JAVA_METHOD_PROP_NAME);
 
-    const jmethodID getName =
-        env->GetMethodID(env->GetObjectClass(method), "getName", "()Ljava/lang/String;");
-    const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(method, getName)));
-
+    // Add this method to the bound object.
     duk_put_prop_string(m_context, objIndex, methodName);
   }
 
-  const JString instanceName(env, instance);
+  // Make our bound java object a property of the duktape global object (so it's a JS global).
   duk_put_prop_string(m_context, -2, instanceName);
-
+  // Pop the duktape global object off the stack.
   duk_pop(m_context);
 }

@@ -33,6 +33,8 @@ public:
     return m_object;
   }
 
+  JNIEnv* getJniEnv() const;
+
 private:
   JavaVM* m_javaVM;
   jobject m_object;

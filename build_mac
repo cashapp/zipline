@@ -13,4 +13,5 @@ g++ \
   duktape/src/main/jni/duktape.c \
   duktape/src/main/jni/duktape-jni.cpp \
   duktape/src/main/jni/DuktapeContext.cpp \
-  duktape/src/main/jni/JavaMethod.cpp
+  duktape/src/main/jni/JavaMethod.cpp \
+  duktape/src/main/jni/GlobalRef.cpp
