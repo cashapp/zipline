@@ -22,6 +22,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Date;
 import java.util.TimeZone;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -220,7 +221,7 @@ public final class DuktapeTest {
     double d(double d);
   }
 
-  // Verify that primitive types can be used as both arguments and return values from java methods.
+  // Verify that primitive types can be used as both arguments and return values from Java methods.
   @Test public void callJavaMethodWithPrimitiveTypes() {
     duktape.bind("value", TestPrimitiveTypes.class, new TestPrimitiveTypes() {
       @Override public boolean b(boolean b) {
@@ -245,7 +246,7 @@ public final class DuktapeTest {
   }
 
   // Double check that arguments of different types are processed in the correct order from the
-  // duktape stack.
+  // Duktape stack.
   @Test public void callJavaMethodWithAllArgTypes() {
     duktape.bind("printer", TestMultipleArgTypes.class, new TestMultipleArgTypes() {
       @Override public String print(boolean b, int i, double d) {
@@ -283,5 +284,98 @@ public final class DuktapeTest {
     assertThat(duktape.evaluate("value.b(null)")).isNull();
     assertThat(duktape.evaluate("value.i(null)")).isNull();
     assertThat(duktape.evaluate("value.d(null)")).isNull();
+  }
+
+  interface UnsupportedReturnType {
+    Date get();
+  }
+
+  @Test public void bindUnsupportedReturnType() {
+    try {
+      duktape.bind("value", UnsupportedReturnType.class, new UnsupportedReturnType() {
+        @Override public Date get() {
+          return null;
+        }
+      });
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage(
+          "In bound method \"value.get\": Unsupported return type class java.util.Date");
+    }
+  }
+
+  interface UnsupportedArgumentType {
+    void set(Date d);
+  }
+
+  @Test public void bindUnsupportedArgumentType() {
+    try {
+      duktape.bind("value", UnsupportedArgumentType.class, new UnsupportedArgumentType() {
+        @Override public void set(Date d) {
+        }
+      });
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage(
+          "In bound method \"value.set\": Unsupported parameter type class java.util.Date");
+    }
+  }
+
+  interface OverloadedMethod {
+    void foo(int i);
+    void foo(double d);
+  }
+
+  @Test public void bindOverloadedMethod() {
+    try {
+      duktape.bind("value", OverloadedMethod.class, new OverloadedMethod() {
+        @Override public void foo(int i) {
+        }
+        @Override public void foo(double d) {
+        }
+      });
+      fail();
+    } catch (UnsupportedOperationException expected) {
+      assertThat(expected).hasMessage("foo is overloaded in " + OverloadedMethod.class.toString());
+    }
+  }
+
+  interface ExtendedInterface extends TestInterface {
+  }
+
+  @Test public void bindExtendedInterface() {
+    try {
+      duktape.bind("value", ExtendedInterface.class, new ExtendedInterface() {
+        @Override public String getValue() {
+          return "nope";
+        }
+      });
+      fail();
+    } catch (UnsupportedOperationException expected) {
+      assertThat(expected)
+          .hasMessage(ExtendedInterface.class.toString() + " must not extend other interfaces");
+    }
+  }
+
+  @Test public void bindFailureLeavesDuktapeConsistent() {
+    duktape.bind("value", TestInterface.class, new TestInterface() {
+      @Override public String getValue() {
+        return "8675309";
+      }
+    });
+    duktape.evaluate("var localVar = 42;");
+
+    try {
+      duktape.bind("illegal", UnsupportedArgumentType.class, new UnsupportedArgumentType() {
+        @Override public void set(Date d) {
+        }
+      });
+      fail();
+    } catch (IllegalArgumentException expected) {
+    }
+
+    // The state of our Duktape context is still valid, containing what was there before.
+    assertThat(duktape.evaluate("value.getValue();")).isEqualTo("8675309");
+    assertThat(duktape.evaluate("localVar.toString();")).isEqualTo("42");
   }
 }

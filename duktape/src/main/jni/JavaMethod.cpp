@@ -57,7 +57,7 @@ duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) co
   }
 
   std::vector<jvalue> args(m_argumentLoaders.size());
-  // Load the arguments off the stack and convert to java types.
+  // Load the arguments off the stack and convert to Java types.
   // Note we're going backwards since the last argument is at the top of the stack.
   for (ssize_t i = m_argumentLoaders.size() - 1; i >= 0; --i) {
     args[i] = m_argumentLoaders[i](ctx, env);
@@ -185,11 +185,11 @@ JavaMethod::ArgumentLoader getArgumentLoader(JNIEnv *env, jobject typeObject) {
     };
   }
 
-  throw std::invalid_argument("Unable to marshal " + toString(env, typeObject));
+  throw std::invalid_argument("Unsupported parameter type " + toString(env, typeObject));
 }
 
 /**
- * Determines if an exception has been thrown in this JNI thread.  If so, creates a duktape error
+ * Determines if an exception has been thrown in this JNI thread.  If so, creates a Duktape error
  * with the Java exception embedded in it, and throws it.
  */
 void checkRethrowException(duk_context* ctx, JNIEnv* env) {
@@ -218,7 +218,7 @@ duk_ret_t unboxAndPushPrimitive(duk_context* ctx, JNIEnv* jniEnv,
 /**
  * Returns a functor that will invoke the proper JNI function to get the matching {@code returnType}
  * and convert the result to a JS type then push it to the stack.  The functor returns the number
- * of entries pushed to the stack to be returned to the duktape caller.
+ * of entries pushed to the stack to be returned to the Duktape caller.
  */
 JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject returnType) {
   if (env->IsSameObject(returnType, env->FindClass("java/lang/String"))) {
@@ -291,7 +291,7 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
     };
   }
 
-  throw std::invalid_argument("Unable to unmarshal " + toString(env, returnType));
+  throw std::invalid_argument("Unsupported return type " + toString(env, returnType));
 }
 
 } // anonymous namespace

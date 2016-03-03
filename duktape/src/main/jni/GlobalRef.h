@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DUKTAPE_ANDROID_SCOPEDGLOBALREF_H
-#define DUKTAPE_ANDROID_SCOPEDGLOBALREF_H
+#ifndef DUKTAPE_ANDROID_GLOBALREF_H
+#define DUKTAPE_ANDROID_GLOBALREF_H
 
 #include <jni.h>
 
@@ -42,4 +42,4 @@ private:
 
 JNIEnv* getEnvFromJavaVM(JavaVM* javaVM);
 
-#endif //DUKTAPE_ANDROID_SCOPEDGLOBALREF_H
+#endif //DUKTAPE_ANDROID_GLOBALREF_H
