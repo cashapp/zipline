@@ -69,20 +69,24 @@ public final class Duktape implements Closeable {
    * defines the interface implemented by {@code object} that will be accessible to JavaScript.
    * {@code type} must be an interface that does not extend any other interfaces, and cannot define
    * any overloaded methods.
+   * <p>
+   * Methods of the interface may return {@code void} or any of the following supported argument
+   * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
+   * {@link Double}, {@link String}.
+   * </p>
    */
   public <T> void bind(String name, Class<T> type, T object) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be bound. Received: " + type);
     }
     if (type.getInterfaces().length > 0) {
-      throw new UnsupportedOperationException(type + " must not extend other interfaces.");
+      throw new UnsupportedOperationException(type + " must not extend other interfaces");
     }
     if (!type.isInstance(object)) {
       throw new IllegalArgumentException(object.getClass() + " is not an instance of " + type);
     }
     LinkedHashMap<String, Method> methods = new LinkedHashMap<>();
     for (Method method : type.getMethods()) {
-      checkSignatureSupported(method);
       if (methods.put(method.getName(), method) != null) {
         throw new UnsupportedOperationException(method.getName() + " is overloaded in " + type);
       }
@@ -106,33 +110,6 @@ public final class Duktape implements Closeable {
     if (context != 0) {
       Logger.getLogger(getClass().getName()).warning("Duktape instance leaked!");
     }
-  }
-
-  private static void checkSignatureSupported(Method method) {
-    if (!isSupportedParameterType(method.getReturnType())
-        && !void.class.equals(method.getReturnType())) {
-      throw new UnsupportedOperationException(
-          String.format("Return type %s on %s is not supported",
-              method.getReturnType().toString(), method.getName()));
-    }
-    for (Class<?> parameterType : method.getParameterTypes()) {
-      if (!isSupportedParameterType(parameterType)) {
-        throw new UnsupportedOperationException(
-            String.format("Parameter type %s on %s is not supported",
-                parameterType.toString(), method.getName()));
-      }
-    }
-  }
-
-  /** Returns true if we support {@code: type} as parameters in calls from JavaScript. */
-  private static boolean isSupportedParameterType(Class<?> type) {
-    return boolean.class.equals(type)
-        || Boolean.class.equals(type)
-        || int.class.equals(type)
-        || Integer.class.equals(type)
-        || double.class.equals(type)
-        || Double.class.equals(type)
-        || String.class.equals(type);
   }
 
   private static native long createContext();

@@ -24,7 +24,7 @@
 class JavaMethod {
 public:
   /**
-   * Internal name used for storing a thrown Java exception as a property of a duktape error object.
+   * Internal name used for storing a thrown Java exception as a property of a Duktape error object.
    * The \xff\xff part keeps the variable hidden from JavaScript (visible through C API only).
    */
   static constexpr const char* JAVA_EXCEPTION_PROP_NAME = "\xff\xffjava_exception";
@@ -33,20 +33,20 @@ public:
 
   /**
    * Invokes this method using {@code javaThis}, with the arguments on the stack given in {@ctx}.
-   * Returns the number of results pushed to the duktape stack, or a negative status code.
+   * Returns the number of results pushed to the Duktape stack, or a negative status code.
    */
   duk_ret_t invoke(duk_context *ctx, JNIEnv *env, jobject javaThis) const;
 
   /**
-   * Defines a functor to use to pop a value off the duktape stack and convert it to the required
+   * Defines a functor to use to pop a value off the Duktape stack and convert it to the required
    * Java type.
    */
   typedef std::function<jvalue(duk_context*, JNIEnv*)> ArgumentLoader;
   /**
    * Defines a functor to invoke the correct JNI method that will return the required Java type,
-   * convert the return value to a JavaScript type and push it to the duktape stack.  Returns the
+   * convert the return value to a JavaScript type and push it to the Duktape stack.  Returns the
    * number of entries pushed to the stack.
-   * If the Java method throws an exception, the functor will throw a duktape error with the
+   * If the Java method throws an exception, the functor will throw a Duktape error with the
    * exception inside.
    */
   typedef std::function<duk_ret_t(duk_context*, JNIEnv*, jobject, jvalue*)> MethodBody;
