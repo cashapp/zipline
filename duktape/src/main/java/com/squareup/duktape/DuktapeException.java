@@ -34,21 +34,40 @@ public final class DuktapeException extends RuntimeException {
 
   public DuktapeException(String detailMessage) {
     super(getErrorMessage(detailMessage));
+    addDuktapeStack(this, detailMessage);
+  }
+
+  /**
+   * Parses {@code StackTraceElement}s from {@code detailMessage} and adds them to the proper place
+   * in {@code throwable}'s stack trace.  Note: this method is also called from native code.
+   */
+  static void addDuktapeStack(Throwable throwable, String detailMessage) {
     String[] lines = detailMessage.split("\n", -1);
     if (lines.length <= 1) {
       return;
     }
-    // We have a stacktrace following the message.  Add it to this exception.
+    // We have a stacktrace following the message.  Add it to the exception.
     List<StackTraceElement> elements = new ArrayList<>();
-    for (int i = 1; i < lines.length; ++i) {
-      StackTraceElement stackTraceElement = toStackTraceElement(lines[i]);
-      if (stackTraceElement == null) {
-        continue;
+
+    // Splice the JavaScript stack in right above the call to Duktape.evaluate.
+    boolean spliced = false;
+    for (StackTraceElement stackTraceElement : throwable.getStackTrace()) {
+      if (!spliced
+          && stackTraceElement.isNativeMethod()
+          && stackTraceElement.getClassName().equals(Duktape.class.getName())
+          && stackTraceElement.getMethodName().equals("evaluate")) {
+        for (int i = 1; i < lines.length; ++i) {
+          StackTraceElement jsElement = toStackTraceElement(lines[i]);
+          if (jsElement == null) {
+            continue;
+          }
+          elements.add(jsElement);
+        }
+        spliced = true;
       }
       elements.add(stackTraceElement);
     }
-    Collections.addAll(elements, getStackTrace());
-    setStackTrace(elements.toArray(new StackTraceElement[elements.size()]));
+    throwable.setStackTrace(elements.toArray(new StackTraceElement[elements.size()]));
   }
 
   private static String getErrorMessage(String detailMessage) {

@@ -127,13 +127,24 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
 
       // Is there an exception thrown from a Java method?
       if (duk_get_prop_string(m_context, -2, JavaMethod::JAVA_EXCEPTION_PROP_NAME)) {
-        // TODO: add the Duktape stack to this exception.
         jthrowable ex = static_cast<jthrowable>(duk_get_pointer(m_context, -1));
+
+        // add the Duktape JavaScript stack to this exception.
+        const jmethodID addDuktapeStack =
+            env->GetStaticMethodID(exceptionClass,
+                                   "addDuktapeStack",
+                                   "(Ljava/lang/Throwable;Ljava/lang/String;)V");
+        env->CallStaticVoidMethod(exceptionClass, addDuktapeStack, ex, env->NewStringUTF(stack));
+
+        // Rethrow the Java exception.
         env->Throw(ex);
+
+        // Pop the Java throwable.
         duk_pop(m_context);
       } else {
         env->ThrowNew(exceptionClass, stack);
       }
+      // Pop the stack text.
       duk_pop(m_context);
     } else {
       // Not an error or no stacktrace, just convert to a string.
@@ -143,6 +154,7 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
     result = env->NewStringUTF(duk_get_string(m_context, -1));
   }
 
+  // Pop the result of the evaluate call.
   duk_pop(m_context);
 
   return result;
