@@ -146,6 +146,57 @@ public final class DuktapeTest {
     }
   }
 
+  @Test public void exceptionsFromJavaWithUnifiedStackTrace() {
+    TestInterface boundObject = new TestInterface() {
+      @Override public String getValue() {
+        throw new UnsupportedOperationException("Cannot getValue");
+      }
+    };
+    duktape.bind("value", TestInterface.class, boundObject);
+    try {
+      duktape.evaluate("\n"
+          + "f1();\n"           // Line 2.
+          + "\n"
+          + "function f1() {\n"
+          + "  f2();\n"         // Line 5.
+          + "}\n"
+          + "\n"
+          + "\n"
+          + "function f2() {\n"
+          + "  value.getValue();\n"       // Line 10.
+          + "}\n", "test.js");
+      fail();
+    } catch (UnsupportedOperationException e) {
+      assertThat(e).hasMessage("Cannot getValue");
+
+      StackTraceElement[] stackTrace = e.getStackTrace();
+
+      // Top entry is what threw - the TestInterface implementation.
+      assertThat(stackTrace[0].getClassName()).isEqualTo(boundObject.getClass().getName());
+      assertThat(stackTrace[0].getMethodName()).isEqualTo("getValue");
+
+      // The next three entries are JavaScript
+      assertThat(stackTrace[1]).isEqualTo(new StackTraceElement("JavaScript", "f2", "test.js", 10));
+      assertThat(stackTrace[2]).isEqualTo(new StackTraceElement("JavaScript", "f1", "test.js", 5));
+      assertThat(stackTrace[3]).isEqualTo(new StackTraceElement("JavaScript", "eval", "test.js", 2));
+
+      // Then the native Duktape.evaluate method.
+      assertThat(stackTrace[4].getClassName()).isEqualTo(Duktape.class.getName());
+      assertThat(stackTrace[4].getMethodName()).isEqualTo("evaluate");
+      assertThat(stackTrace[4].isNativeMethod()).isTrue();
+
+      // Then the Java method.
+      assertThat(stackTrace[5].getClassName()).isEqualTo(Duktape.class.getName());
+      assertThat(stackTrace[5].getMethodName()).isEqualTo("evaluate");
+      assertThat(stackTrace[5].isNativeMethod()).isFalse();
+
+      // Then this test method.
+      assertThat(stackTrace[6].getClassName()).isEqualTo(DuktapeTest.class.getName());
+      assertThat(stackTrace[6].getMethodName())
+          .isEqualTo("exceptionsFromJavaWithUnifiedStackTrace");
+    }
+  }
+
   interface TestInterfaceArgs {
     String foo(String a, String b, String c);
   }
