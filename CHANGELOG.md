@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 0.9.5 *(2016-03-07)*
+----------------------------
+
+ * New: call Java methods from JavaScript.
+ * New: improved stacktraces. Includes both JavaScript and Java code from the call stack.
+ * New: update to Duktape 1.4.0.
+
 Version 0.9.4 *(2015-11-02)*
 ----------------------------
 
