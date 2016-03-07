@@ -116,7 +116,8 @@ public final class DuktapeTest {
 
   @Test public void callMissingMethodOnJavaObjectFails() {
     duktape.bind("value", TestInterface.class, new TestInterface() {
-      @Override public String getValue() {
+      @Override
+      public String getValue() {
         return "bar";
       }
     });
@@ -124,7 +125,7 @@ public final class DuktapeTest {
       duktape.evaluate("value.increment()");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: not callable");
+      assertThat(expected).hasMessage("TypeError: undefined not callable");
     }
   }
 
@@ -136,7 +137,8 @@ public final class DuktapeTest {
     });
     try {
       duktape.bind("value", TestInterface.class, new TestInterface() {
-        @Override public String getValue() {
+        @Override
+        public String getValue() {
           return "bar";
         }
       });
@@ -241,7 +243,7 @@ public final class DuktapeTest {
       duktape.evaluate("value.foo('1', '2', 3)");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected.getMessage()).isEqualTo("TypeError: not string");
+      assertThat(expected.getMessage()).startsWith("TypeError: string required, found 3");
     }
   }
 
