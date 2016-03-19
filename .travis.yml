@@ -14,10 +14,11 @@ jdk:
 before_script:
   # Install the NDK.
   - pushd ~
-  - wget http://dl.google.com/android/ndk/android-ndk-r10e-linux-x86_64.bin
-  - chmod +x android-ndk-r10e-linux-x86_64.bin
-  - ./android-ndk-r10e-linux-x86_64.bin 1> /dev/null
-  - export ANDROID_NDK_HOME="$HOME/android-ndk-r10e"
+  - wget http://dl.google.com/android/repository/android-ndk-r11b-linux-x86_64.zip
+  - unzip -qo android-ndk-r11b-linux-x86_64.zip
+  # Work around bug in NDK W.R.T. using Clang (https://github.com/android-ndk/ndk/issues/28).
+  - ln -s $HOME/android-ndk-r11b/toolchains/llvm $HOME/android-ndk-r11b/toolchains/llvm-3.8
+  - export ANDROID_NDK_HOME="$HOME/android-ndk-r11b"
   - popd
   # Create and start an emulator for instrumentation tests.
   - echo no | android create avd --force -n test -t android-18 --abi armeabi-v7a
