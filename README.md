@@ -1,7 +1,7 @@
 Duktape Android
 ===============
 
-The [Duktape embeddable Javascript engine][duk] packaged for Android.
+The [Duktape embeddable JavaScript engine][duk] packaged for Android.
 
 
 Usage
@@ -16,6 +16,60 @@ try {
 }
 ```
 
+## Calling Java from JavaScript
+
+You can bind a Java object to a JavaScript global, and call Java functions from JavaScript!
+Currently, the following Java types are supported for function arguments and return values:
+
+ * `boolean` and `Boolean`
+ * `int` and `Integer`
+ * `double` and `Double`
+ * `String`
+
+`void` return values are also supported.
+
+### Example
+
+Suppose we wanted to expose the functionality of [okio's ByteString][okio] in JavaScript to
+convert hex-encoded strings back into UTF-8. First, define a Java interface that declares
+the methods you would like to call from JavaScript:
+
+```java
+interface Utf8 {
+  String fromHex(String hex);
+}
+```
+
+Next, implement the interface in Java code (we leave the heavy lifting to okio):
+
+```java
+Utf8 utf8 = new Utf8() {
+  @Override public String fromHex(String hex) {
+    return okio.ByteString.decodeHex(hex).utf8();
+  }
+};
+```
+
+Now you can bind the object to a JavaScript global, making it available in JavaScript code:
+
+```java
+Duktape duktape = Duktape.create();
+try {
+  // Bind our interface to a JavaScript object called Utf8.
+  duktape.bind("Utf8", Utf8.class, utf8);
+
+  String greeting = duktape.evaluate("" +
+      // Here we have a hex encoded string.
+      "var hexEnc = 'EC9588EB8595ED9598EC84B8EC9A9421';\n" +
+      // Call out to Java to decode it!
+      "var message = Utf8.fromHex(hexEnc);\n" +
+      "message;");
+
+  Log.d("Greeting", greeting);
+} finally {
+  duktape.close();
+}
+```
 
 Download
 --------
@@ -39,6 +93,10 @@ Building
 ```
 ./gradlew build
 ```
+
+**NOTE:** When building with Android NDK r11b, the NDK bundle has an issue where the path to
+clang is incorrect. This can be fixed by creating a symlink called `<ndk dir>/toolchains/llvm-3.8`
+to `<ndk dir>/toolchains/llvm`.
 
 ## For Mac
 
@@ -75,3 +133,4 @@ Note: The included C code from Duktape is licensed under MIT.
 
  [duk]: http://duktape.org/
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
+ [okio]: https://github.com/square/okio/blob/master/okio/src/main/java/okio/ByteString.java
