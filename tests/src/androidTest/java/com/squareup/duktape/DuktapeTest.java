@@ -45,6 +45,11 @@ public final class DuktapeTest {
     assertThat(hello).isEqualTo("HELLO, WORLD!");
   }
 
+  @Test public void evaluateReturnsNumber() {
+    String result = duktape.evaluate("2 + 3;");
+    assertThat(result).isEqualTo("5");
+  }
+
   @Test public void exceptionsInScriptThrowInJava() {
     try {
       duktape.evaluate("nope();");

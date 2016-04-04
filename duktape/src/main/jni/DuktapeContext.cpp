@@ -150,8 +150,9 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
       // Not an error or no stacktrace, just convert to a string.
       env->ThrowNew(exceptionClass, duk_safe_to_string(m_context, -1));
     }
-  } else {
-    result = env->NewStringUTF(duk_get_string(m_context, -1));
+  } else if (!duk_is_null_or_undefined(m_context, -1)) {
+    // Return a string result (coerce the value if needed).
+    result = env->NewStringUTF(duk_safe_to_string(m_context, -1));
   }
 
   // Pop the result of the evaluate call.
