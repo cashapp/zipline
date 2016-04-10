@@ -93,6 +93,44 @@ duk_ret_t javaObjectFinalizer(duk_context *ctx) {
   return 0;
 }
 
+/**
+ * Sets up a Java {@code DuktapeException} based on the Duktape JavaScript error at the top of the
+ * Duktape stack. The exception will be thrown to the Java caller when the current JNI call returns.
+ */
+void queueJavaExceptionForJavaScriptError(JNIEnv *env, duk_context *ctx) {
+  jclass exceptionClass = env->FindClass("com/squareup/duktape/DuktapeException");
+
+  // If it's a Duktape error object, try to pull out the full stacktrace.
+  if (duk_is_error(ctx, -1) && duk_get_prop_string(ctx, -1, "stack")) {
+    const char* stack = duk_safe_to_string(ctx, -1);
+
+    // Is there an exception thrown from a Java method?
+    if (duk_get_prop_string(ctx, -2, JavaMethod::JAVA_EXCEPTION_PROP_NAME)) {
+      jthrowable ex = static_cast<jthrowable>(duk_get_pointer(ctx, -1));
+
+      // add the Duktape JavaScript stack to this exception.
+      const jmethodID addDuktapeStack =
+          env->GetStaticMethodID(exceptionClass,
+                                 "addDuktapeStack",
+                                 "(Ljava/lang/Throwable;Ljava/lang/String;)V");
+      env->CallStaticVoidMethod(exceptionClass, addDuktapeStack, ex, env->NewStringUTF(stack));
+
+      // Rethrow the Java exception.
+      env->Throw(ex);
+
+      // Pop the Java throwable.
+      duk_pop(ctx);
+    } else {
+      env->ThrowNew(exceptionClass, stack);
+    }
+    // Pop the stack text.
+    duk_pop(ctx);
+  } else {
+    // Not an error or no stacktrace, just convert to a string.
+    env->ThrowNew(exceptionClass, duk_safe_to_string(ctx, -1));
+  }
+}
+
 } // anonymous namespace
 
 DuktapeContext::DuktapeContext(JavaVM* javaVM)
@@ -119,37 +157,7 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
   jstring result = nullptr;
 
   if (eval_string_with_filename(m_context, sourceCode, fileName) != 0) {
-    jclass exceptionClass = env->FindClass("com/squareup/duktape/DuktapeException");
-
-    // If it's a Duktape error object, try to pull out the full stacktrace.
-    if (duk_is_error(m_context, -1) && duk_get_prop_string(m_context, -1, "stack")) {
-      const char* stack = duk_safe_to_string(m_context, -1);
-
-      // Is there an exception thrown from a Java method?
-      if (duk_get_prop_string(m_context, -2, JavaMethod::JAVA_EXCEPTION_PROP_NAME)) {
-        jthrowable ex = static_cast<jthrowable>(duk_get_pointer(m_context, -1));
-
-        // add the Duktape JavaScript stack to this exception.
-        const jmethodID addDuktapeStack =
-            env->GetStaticMethodID(exceptionClass,
-                                   "addDuktapeStack",
-                                   "(Ljava/lang/Throwable;Ljava/lang/String;)V");
-        env->CallStaticVoidMethod(exceptionClass, addDuktapeStack, ex, env->NewStringUTF(stack));
-
-        // Rethrow the Java exception.
-        env->Throw(ex);
-
-        // Pop the Java throwable.
-        duk_pop(m_context);
-      } else {
-        env->ThrowNew(exceptionClass, stack);
-      }
-      // Pop the stack text.
-      duk_pop(m_context);
-    } else {
-      // Not an error or no stacktrace, just convert to a string.
-      env->ThrowNew(exceptionClass, duk_safe_to_string(m_context, -1));
-    }
+    queueJavaExceptionForJavaScriptError(env, m_context);
   } else if (!duk_is_null_or_undefined(m_context, -1)) {
     // Return a string result (coerce the value if needed).
     result = env->NewStringUTF(duk_safe_to_string(m_context, -1));
@@ -161,7 +169,7 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
   return result;
 }
 
-void DuktapeContext::bindInstance(JNIEnv *env, jstring name, jobject object, jobjectArray methods) {
+void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArray methods) {
   duk_push_global_object(m_context);
   const JString instanceName(env, name);
   if (duk_has_prop_string(m_context, -1, instanceName)) {
@@ -218,4 +226,46 @@ void DuktapeContext::bindInstance(JNIEnv *env, jstring name, jobject object, job
   duk_put_prop_string(m_context, -2, instanceName);
   // Pop the Duktape global object off the stack.
   duk_pop(m_context);
+}
+
+jobject DuktapeContext::proxy(JNIEnv* env, jstring name, jobjectArray methods) {
+  // TODO: lookup and attach to object 'name' in the JS VM, set up call wrappers for methods given.
+  return name;
+}
+
+jobject DuktapeContext::call(JNIEnv *env, jobject target, jobject method, jobjectArray args) {
+  duk_push_global_object(m_context);
+  // TODO: attach to something stronger than the name in proxy(), and use that here.
+  const JString instanceName(env, static_cast<jstring>(target));
+  if (!duk_get_prop_string(m_context, -1, instanceName)) {
+    duk_pop(m_context);
+    const jclass illegalArgumentException = env->FindClass("java/lang/IllegalArgumentException");
+    const std::string message = "A global object called " + instanceName.str() + " was not found";
+    env->ThrowNew(illegalArgumentException, message.c_str());
+    return nullptr;
+  }
+
+  jclass methodClass = env->GetObjectClass(method);
+
+  const jmethodID getName = env->GetMethodID(methodClass, "getName", "()Ljava/lang/String;");
+  const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(method, getName)));
+  duk_push_string(m_context, methodName);
+
+  // TODO: put the arguments (from args) on the stack too.
+
+  jobject result;
+  if (!duk_pcall_prop(m_context, -2, 0)) {
+    // TODO: handle other return types.
+    result = duk_is_null_or_undefined(m_context, -1)
+        ? nullptr
+        : env->NewStringUTF(duk_safe_to_string(m_context, -1));
+  } else {
+    queueJavaExceptionForJavaScriptError(env, m_context);
+    result = nullptr;
+  }
+
+  // Pop the global object, our instance, and the call's result or error.
+  duk_pop_3(m_context);
+
+  return result;
 }

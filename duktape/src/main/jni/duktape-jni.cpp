@@ -23,6 +23,15 @@ namespace {
 std::unique_ptr<GlobalRef> duktapeClass;
 static jmethodID getLocalTimeZoneOffset = nullptr;
 
+bool throwIfNull(JNIEnv* env, DuktapeContext* context) {
+  if (context != nullptr) {
+    return false;
+  }
+  jclass exceptionClass = env->FindClass("java/lang/NullPointerException");
+  env->ThrowNew(exceptionClass, "Null Duktape context - did you close your Duktape?");
+  return true;
+}
+
 } // anonymous namespace
 
 extern "C" {
@@ -62,15 +71,41 @@ Java_com_squareup_duktape_Duktape_destroyContext(JNIEnv *env, jclass type, jlong
 JNIEXPORT jstring JNICALL
 Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2Ljava_lang_String_2(
     JNIEnv* env, jclass type, jlong context, jstring code, jstring fname) {
-  DuktapeContext * duktape = reinterpret_cast<DuktapeContext *>(context);
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (throwIfNull(env, duktape)) {
+    return nullptr;
+  }
   return duktape->evaluate(env, code, fname);
 }
 
 JNIEXPORT void JNICALL
 Java_com_squareup_duktape_Duktape_bind__JLjava_lang_String_2Ljava_lang_Object_2_3Ljava_lang_Object_2(
     JNIEnv *env, jclass type, jlong context, jstring name, jobject object, jobjectArray methods) {
-  DuktapeContext * duktape = reinterpret_cast<DuktapeContext *>(context);
-  duktape->bindInstance(env, name, object, methods);
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (throwIfNull(env, duktape)) {
+    return;
+  }
+  duktape->bind(env, name, object, methods);
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_squareup_duktape_Duktape_proxy(JNIEnv *env, jclass type, jlong context, jstring name,
+                                        jobjectArray methods) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (throwIfNull(env, duktape)) {
+    return nullptr;
+  }
+  return duktape->proxy(env, name, methods);
+}
+
+JNIEXPORT jobject JNICALL
+Java_com_squareup_duktape_Duktape_call(JNIEnv *env, jclass type, jlong context, jobject target,
+                                       jobject method, jobjectArray args) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (throwIfNull(env, duktape)) {
+    return nullptr;
+  }
+  return duktape->call(env, target, method, args);
 }
 
 } // extern "C"
