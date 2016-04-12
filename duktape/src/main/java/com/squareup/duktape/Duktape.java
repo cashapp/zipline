@@ -16,7 +16,9 @@
 package com.squareup.duktape;
 
 import java.io.Closeable;
+import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.TimeZone;
 import java.util.concurrent.TimeUnit;
@@ -69,11 +71,9 @@ public final class Duktape implements Closeable {
    * defines the interface implemented by {@code object} that will be accessible to JavaScript.
    * {@code type} must be an interface that does not extend any other interfaces, and cannot define
    * any overloaded methods.
-   * <p>
-   * Methods of the interface may return {@code void} or any of the following supported argument
+   * <p>Methods of the interface may return {@code void} or any of the following supported argument
    * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
    * {@link Double}, {@link String}.
-   * </p>
    */
   public <T> void bind(String name, Class<T> type, T object) {
     if (!type.isInterface()) {
@@ -92,6 +92,49 @@ public final class Duktape implements Closeable {
       }
     }
     bind(context, name, object, methods.values().toArray());
+  }
+
+  /**
+   * Creates a proxy to a global JavaScript object called {@code name} that implements {@code type}.
+   * {@code type} defines the interface implemented in JavaScript that will be accessible to Java.
+   * {@code type} must be an interface that does not extend any other interfaces, and cannot define
+   * any overloaded methods.
+   * <p>Methods of the interface may return {@code void} or any of the following supported argument
+   * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
+   * {@link Double}, {@link String}.
+   */
+  public <T> T proxy(final String name, final Class<T> type) {
+    if (!type.isInterface()) {
+      throw new UnsupportedOperationException("Only interfaces can be proxied. Received: " + type);
+    }
+    if (type.getInterfaces().length > 0) {
+      throw new UnsupportedOperationException(type + " must not extend other interfaces");
+    }
+    LinkedHashMap<String, Method> methods = new LinkedHashMap<>();
+    for (Method method : type.getMethods()) {
+      if (methods.put(method.getName(), method) != null) {
+        throw new UnsupportedOperationException(method.getName() + " is overloaded in " + type);
+      }
+    }
+
+    final Object instance = proxy(context, name, methods.values().toArray());
+
+    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{ type },
+        new InvocationHandler() {
+      @Override
+      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        // If the method is a method from Object then defer to normal invocation.
+        if (method.getDeclaringClass() == Object.class) {
+          return method.invoke(this, args);
+        }
+        return call(context, instance, method, args);
+      }
+
+      @Override
+      public String toString() {
+        return String.format("DuktapeProxy{name=%s, type=%s}", name, type.getName());
+      }
+    });
   }
 
   /**
@@ -116,6 +159,8 @@ public final class Duktape implements Closeable {
   private static native void destroyContext(long context);
   private static native String evaluate(long context, String sourceCode, String fileName);
   private static native void bind(long context, String name, Object object, Object[] methods);
+  private static native Object proxy(long context, String name, Object[] methods);
+  private static native Object call(long context, Object instance, Object method, Object[] args);
 
   /** Returns the timezone offset in seconds given system time millis. */
   @SuppressWarnings("unused") // Called from native code.

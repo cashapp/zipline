@@ -28,7 +28,11 @@ public:
 
   jstring evaluate(JNIEnv* env, jstring sourceCode, jstring fileName);
 
-  void bindInstance(JNIEnv* env, jstring name, jobject object, jobjectArray methods);
+  void bind(JNIEnv* env, jstring name, jobject object, jobjectArray methods);
+
+  jobject proxy(JNIEnv* env, jstring name, jobjectArray methods);
+
+  jobject call(JNIEnv* env, jobject instance, jobject method, jobjectArray args);
 
 private:
   duk_context* m_context;
