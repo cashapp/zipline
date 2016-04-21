@@ -15,6 +15,7 @@
  */
 package com.squareup.duktape;
 
+import android.support.annotation.Keep;
 import java.io.Closeable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -164,6 +165,7 @@ public final class Duktape implements Closeable {
 
   /** Returns the timezone offset in seconds given system time millis. */
   @SuppressWarnings("unused") // Called from native code.
+  @Keep // Instruct ProGuard not to strip this method.
   private static int getLocalTimeZoneOffset(double t) {
     int offsetMillis = TimeZone.getDefault().getOffset((long) t);
     return (int) TimeUnit.MILLISECONDS.toSeconds(offsetMillis);
