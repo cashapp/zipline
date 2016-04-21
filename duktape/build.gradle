@@ -40,6 +40,10 @@ model {
   }
 }
 
+dependencies {
+  compile 'com.android.support:support-annotations:23.3.0'
+}
+
 // TODO move all this nonsense to a standalone file
 import com.android.build.gradle.managed.AndroidConfig
 import com.android.build.gradle.model.AndroidComponentSpec
