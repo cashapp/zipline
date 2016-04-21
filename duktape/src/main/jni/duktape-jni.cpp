@@ -65,7 +65,7 @@ Java_com_squareup_duktape_Duktape_createContext(JNIEnv* env, jclass type) {
 
 JNIEXPORT void JNICALL
 Java_com_squareup_duktape_Duktape_destroyContext(JNIEnv *env, jclass type, jlong context) {
-  delete reinterpret_cast<DuktapeContext *>(context);
+  delete reinterpret_cast<DuktapeContext*>(context);
 }
 
 JNIEXPORT jstring JNICALL
@@ -79,8 +79,8 @@ Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2Ljava_lang_Strin
 }
 
 JNIEXPORT void JNICALL
-Java_com_squareup_duktape_Duktape_bind__JLjava_lang_String_2Ljava_lang_Object_2_3Ljava_lang_Object_2(
-    JNIEnv *env, jclass type, jlong context, jstring name, jobject object, jobjectArray methods) {
+Java_com_squareup_duktape_Duktape_bind(JNIEnv *env, jclass type, jlong context, jstring name,
+                                       jobject object, jobjectArray methods) {
   DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
   if (throwIfNull(env, duktape)) {
     return;
@@ -88,24 +88,24 @@ Java_com_squareup_duktape_Duktape_bind__JLjava_lang_String_2Ljava_lang_Object_2_
   duktape->bind(env, name, object, methods);
 }
 
-JNIEXPORT jobject JNICALL
+JNIEXPORT jlong JNICALL
 Java_com_squareup_duktape_Duktape_proxy(JNIEnv *env, jclass type, jlong context, jstring name,
                                         jobjectArray methods) {
   DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
   if (throwIfNull(env, duktape)) {
-    return nullptr;
+    return -1L;
   }
   return duktape->proxy(env, name, methods);
 }
 
 JNIEXPORT jobject JNICALL
-Java_com_squareup_duktape_Duktape_call(JNIEnv *env, jclass type, jlong context, jobject target,
+Java_com_squareup_duktape_Duktape_call(JNIEnv *env, jclass type, jlong context, jlong instance,
                                        jobject method, jobjectArray args) {
   DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
   if (throwIfNull(env, duktape)) {
     return nullptr;
   }
-  return duktape->call(env, target, method, args);
+  return duktape->call(env, instance, method, args);
 }
 
 } // extern "C"

@@ -19,6 +19,7 @@ import android.support.test.runner.AndroidJUnit4;
 
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -59,35 +60,33 @@ public class DuktapeProxyTest {
   }
 
   @Test public void proxyMissingObjectThrows() {
-    TestInterface proxy = duktape.proxy("DoesNotExist", TestInterface.class);
-    assertThat(proxy).isNotNull();
     try {
-      proxy.getValue();
+      duktape.proxy("DoesNotExist", TestInterface.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("A global object called DoesNotExist was not found");
+      assertThat(expected)
+          .hasMessage("A global JavaScript object called DoesNotExist was not found");
     }
   }
 
   @Test public void proxyMissingMethodThrows() {
     duktape.evaluate("var value = { getOtherValue: function() { return '8675309'; } };");
-    TestInterface proxy = duktape.proxy("value", TestInterface.class);
     try {
-      proxy.getValue();
+      duktape.proxy("value", TestInterface.class);
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: undefined not callable");
+      assertThat(expected).hasMessage("JavaScript global value has no method called getValue");
     }
   }
 
   @Test public void proxyMethodNotCallableThrows() {
     duktape.evaluate("var value = { getValue: '8675309' };");
-    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+
     try {
-      proxy.getValue();
+      duktape.proxy("value", TestInterface.class);
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: '8675309' not callable");
+      assertThat(expected).hasMessage("JavaScript property value.getValue not callable");
     }
   }
 
@@ -115,6 +114,52 @@ public class DuktapeProxyTest {
       fail();
     } catch (DuktapeException expected) {
       assertThat(expected).hasMessage("nope");
+    }
+  }
+
+  @Ignore // TODO: fix issue with NO_INSTANCE_VAR in JavaScriptObject.
+  @Test public void replaceProxiedObjectReferencesOld() {
+    duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
+
+    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    duktape.evaluate("var value = { getValue: function() { return '7471111'; } };");
+
+    String v = proxy.getValue();
+    assertThat(v).isEqualTo("8675309");
+  }
+
+  @Test public void replaceProxiedMethodReferencesNew() {
+    duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
+
+    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    duktape.evaluate("value.getValue = function() { return '7471111'; };");
+
+    String v = proxy.getValue();
+    assertThat(v).isEqualTo("7471111");
+  }
+
+  @Test public void proxyNonObjectThrows() {
+    duktape.evaluate("var value = 2;");
+
+    try {
+      duktape.proxy("value", TestInterface.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("JavaScript global called value is not an object");
+    }
+  }
+
+  @Test public void proxyCalledAfterObjectGarbageCollected() {
+    duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
+
+    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    duktape.evaluate("delete value;");
+
+    try {
+      proxy.getValue();
+      fail();
+    } catch (NullPointerException expected) {
+      assertThat(expected).hasMessage("JavaScript object called value was not found");
     }
   }
 }

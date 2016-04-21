@@ -118,24 +118,25 @@ public final class Duktape implements Closeable {
       }
     }
 
-    final Object instance = proxy(context, name, methods.values().toArray());
+    final long instance = proxy(context, name, methods.values().toArray());
 
-    return (T) Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{ type },
+    Object proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{ type },
         new InvocationHandler() {
-      @Override
-      public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        // If the method is a method from Object then defer to normal invocation.
-        if (method.getDeclaringClass() == Object.class) {
-          return method.invoke(this, args);
-        }
-        return call(context, instance, method, args);
-      }
+          @Override
+          public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            // If the method is a method from Object then defer to normal invocation.
+            if (method.getDeclaringClass() == Object.class) {
+              return method.invoke(this, args);
+            }
+            return call(context, instance, method, args);
+          }
 
-      @Override
-      public String toString() {
-        return String.format("DuktapeProxy{name=%s, type=%s}", name, type.getName());
-      }
-    });
+          @Override
+          public String toString() {
+            return String.format("DuktapeProxy{name=%s, type=%s}", name, type.getName());
+          }
+        });
+    return (T) proxy;
   }
 
   /**
@@ -160,8 +161,8 @@ public final class Duktape implements Closeable {
   private static native void destroyContext(long context);
   private static native String evaluate(long context, String sourceCode, String fileName);
   private static native void bind(long context, String name, Object object, Object[] methods);
-  private static native Object proxy(long context, String name, Object[] methods);
-  private static native Object call(long context, Object instance, Object method, Object[] args);
+  private static native long proxy(long context, String name, Object[] methods);
+  private static native Object call(long context, long instance, Object method, Object[] args);
 
   /** Returns the timezone offset in seconds given system time millis. */
   @SuppressWarnings("unused") // Called from native code.

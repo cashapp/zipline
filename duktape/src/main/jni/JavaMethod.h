@@ -23,12 +23,6 @@
 
 class JavaMethod {
 public:
-  /**
-   * Internal name used for storing a thrown Java exception as a property of a Duktape error object.
-   * The \xff\xff part keeps the variable hidden from JavaScript (visible through C API only).
-   */
-  static constexpr const char* JAVA_EXCEPTION_PROP_NAME = "\xff\xffjava_exception";
-
   JavaMethod(JNIEnv* env, jobject method);
 
   /**

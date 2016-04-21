@@ -17,7 +17,10 @@
 #define DUKTAPE_ANDROID_DUKTAPE_CONTEXT_H
 
 #include <jni.h>
+#include <vector>
 #include "duktape.h"
+
+class JavaScriptObject;
 
 class DuktapeContext {
 public:
@@ -30,12 +33,13 @@ public:
 
   void bind(JNIEnv* env, jstring name, jobject object, jobjectArray methods);
 
-  jobject proxy(JNIEnv* env, jstring name, jobjectArray methods);
+  jlong proxy(JNIEnv* env, jstring name, jobjectArray methods);
 
-  jobject call(JNIEnv* env, jobject instance, jobject method, jobjectArray args);
+  jobject call(JNIEnv* env, jlong instance, jobject method, jobjectArray args);
 
 private:
   duk_context* m_context;
+  std::vector<JavaScriptObject*> m_proxiedObjects;
 };
 
 #endif // DUKTAPE_ANDROID_DUKTAPE_CONTEXT_H
