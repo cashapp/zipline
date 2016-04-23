@@ -26,7 +26,7 @@ class GlobalRef {
 public:
   GlobalRef(JNIEnv* env, jobject object);
   GlobalRef(const GlobalRef& other);
-  GlobalRef& operator=(GlobalRef& other);
+  GlobalRef& operator=(const GlobalRef& other);
   ~GlobalRef();
 
   jobject get() const {

@@ -18,6 +18,7 @@
 #include <stdexcept>
 #include "JString.h"
 #include "GlobalRef.h"
+#include "JavaExceptions.h"
 
 namespace {
 
@@ -188,26 +189,11 @@ JavaMethod::ArgumentLoader getArgumentLoader(JNIEnv *env, jobject typeObject) {
   throw std::invalid_argument("Unsupported parameter type " + toString(env, typeObject));
 }
 
-/**
- * Determines if an exception has been thrown in this JNI thread.  If so, creates a Duktape error
- * with the Java exception embedded in it, and throws it.
- */
-void checkRethrowException(duk_context* ctx, JNIEnv* env) {
-  if (env->ExceptionCheck()) {
-    // The Java call threw an exception - it should be propagated back through JavaScript.
-    duk_push_error_object(ctx, DUK_ERR_API_ERROR, "Java Exception");
-    duk_push_pointer(ctx, env->ExceptionOccurred());
-    env->ExceptionClear();
-    duk_put_prop_string(ctx, -2, JavaMethod::JAVA_EXCEPTION_PROP_NAME);
-    duk_throw(ctx);
-  }
-}
-
 duk_ret_t unboxAndPushPrimitive(duk_context* ctx, JNIEnv* jniEnv,
     jobject javaThis, jmethodID methodId, jvalue* args,
     JavaMethod::MethodBody unbox) {
   jobject returnObject = jniEnv->CallObjectMethodA(javaThis, methodId, args);
-  checkRethrowException(ctx, jniEnv);
+  checkRethrowDuktapeError(jniEnv, ctx);
   if (returnObject == nullptr) {
     duk_push_null(ctx);
     return 1;
@@ -224,7 +210,7 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
   if (env->IsSameObject(returnType, env->FindClass("java/lang/String"))) {
     return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
       jobject returnValue = jniEnv->CallObjectMethodA(javaThis, methodId, args);
-      checkRethrowException(ctx, jniEnv);
+      checkRethrowDuktapeError(jniEnv, ctx);
       if (returnValue != nullptr) {
         const JString result(jniEnv, static_cast<jstring>(returnValue));
         duk_push_string(ctx, result);
@@ -238,7 +224,7 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
   if (env->IsSameObject(returnType, getPrimitiveType(env, "java/lang/Boolean"))) {
     return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
       jboolean returnValue = jniEnv->CallBooleanMethodA(javaThis, methodId, args);
-      checkRethrowException(ctx, jniEnv);
+      checkRethrowDuktapeError(jniEnv, ctx);
       duk_push_boolean(ctx, returnValue == JNI_TRUE);
       return 1;
     };
@@ -254,7 +240,7 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
   if (env->IsSameObject(returnType, getPrimitiveType(env, "java/lang/Integer"))) {
     return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
       jint returnValue = jniEnv->CallIntMethodA(javaThis, methodId, args);
-      checkRethrowException(ctx, jniEnv);
+      checkRethrowDuktapeError(jniEnv, ctx);
       duk_push_int(ctx, returnValue);
       return 1;
     };
@@ -270,7 +256,7 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
   if (env->IsSameObject(returnType, getPrimitiveType(env, "java/lang/Double"))) {
     return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
       jdouble returnValue = jniEnv->CallDoubleMethodA(javaThis, methodId, args);
-      checkRethrowException(ctx, jniEnv);
+      checkRethrowDuktapeError(jniEnv, ctx);
       duk_push_number(ctx, returnValue);
       return 1;
     };
@@ -286,7 +272,7 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
   if (env->IsSameObject(returnType, getPrimitiveType(env, "java/lang/Void"))) {
     return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
       jniEnv->CallVoidMethodA(javaThis, methodId, args);
-      checkRethrowException(ctx, jniEnv);
+      checkRethrowDuktapeError(jniEnv, ctx);
       return 0;
     };
   }

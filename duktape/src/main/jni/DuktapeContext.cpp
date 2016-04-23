@@ -17,9 +17,12 @@
 #include <memory>
 #include <string>
 #include <stdexcept>
+#include <functional>
 #include "JString.h"
 #include "JavaMethod.h"
 #include "GlobalRef.h"
+#include "JavaScriptObject.h"
+#include "JavaExceptions.h"
 
 namespace {
 
@@ -93,44 +96,6 @@ duk_ret_t javaObjectFinalizer(duk_context *ctx) {
   return 0;
 }
 
-/**
- * Sets up a Java {@code DuktapeException} based on the Duktape JavaScript error at the top of the
- * Duktape stack. The exception will be thrown to the Java caller when the current JNI call returns.
- */
-void queueJavaExceptionForJavaScriptError(JNIEnv *env, duk_context *ctx) {
-  jclass exceptionClass = env->FindClass("com/squareup/duktape/DuktapeException");
-
-  // If it's a Duktape error object, try to pull out the full stacktrace.
-  if (duk_is_error(ctx, -1) && duk_get_prop_string(ctx, -1, "stack")) {
-    const char* stack = duk_safe_to_string(ctx, -1);
-
-    // Is there an exception thrown from a Java method?
-    if (duk_get_prop_string(ctx, -2, JavaMethod::JAVA_EXCEPTION_PROP_NAME)) {
-      jthrowable ex = static_cast<jthrowable>(duk_get_pointer(ctx, -1));
-
-      // add the Duktape JavaScript stack to this exception.
-      const jmethodID addDuktapeStack =
-          env->GetStaticMethodID(exceptionClass,
-                                 "addDuktapeStack",
-                                 "(Ljava/lang/Throwable;Ljava/lang/String;)V");
-      env->CallStaticVoidMethod(exceptionClass, addDuktapeStack, ex, env->NewStringUTF(stack));
-
-      // Rethrow the Java exception.
-      env->Throw(ex);
-
-      // Pop the Java throwable.
-      duk_pop(ctx);
-    } else {
-      env->ThrowNew(exceptionClass, stack);
-    }
-    // Pop the stack text.
-    duk_pop(ctx);
-  } else {
-    // Not an error or no stacktrace, just convert to a string.
-    env->ThrowNew(exceptionClass, duk_safe_to_string(ctx, -1));
-  }
-}
-
 } // anonymous namespace
 
 DuktapeContext::DuktapeContext(JavaVM* javaVM)
@@ -147,6 +112,8 @@ DuktapeContext::DuktapeContext(JavaVM* javaVM)
 }
 
 DuktapeContext::~DuktapeContext() {
+  std::for_each(m_proxiedObjects.begin(), m_proxiedObjects.end(),
+                std::default_delete<JavaScriptObject>());
   duk_destroy_heap(m_context);
 }
 
@@ -156,8 +123,8 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
 
   jstring result = nullptr;
 
-  if (eval_string_with_filename(m_context, sourceCode, fileName) != 0) {
-    queueJavaExceptionForJavaScriptError(env, m_context);
+  if (eval_string_with_filename(m_context, sourceCode, fileName) != DUK_EXEC_SUCCESS) {
+    queueJavaExceptionForDuktapeError(env, m_context);
   } else if (!duk_is_null_or_undefined(m_context, -1)) {
     // Return a string result (coerce the value if needed).
     result = env->NewStringUTF(duk_safe_to_string(m_context, -1));
@@ -174,9 +141,8 @@ void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArra
   const JString instanceName(env, name);
   if (duk_has_prop_string(m_context, -1, instanceName)) {
     duk_pop(m_context);
-    const jclass illegalArgumentException = env->FindClass("java/lang/IllegalArgumentException");
-    const std::string message = "A global object called " + instanceName.str() + " already exists";
-    env->ThrowNew(illegalArgumentException, message.c_str());
+    queueIllegalArgumentException(env,
+       "A global object called " + instanceName.str() + " already exists");
     return;
   }
   const duk_idx_t objIndex = duk_require_normalize_index(m_context, duk_push_object(m_context));
@@ -197,10 +163,8 @@ void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArra
     try {
       javaMethod.reset(new JavaMethod(env, method));
     } catch (std::invalid_argument& invalidArgument) {
-      const jclass illegalArgumentException = env->FindClass("java/lang/IllegalArgumentException");
-      const std::string message = "In bound method \"" + instanceName.str() + "." + methodName.str()
-                                  + "\": " + invalidArgument.what();
-      env->ThrowNew(illegalArgumentException, message.c_str());
+      queueIllegalArgumentException(env, "In bound method \"" +
+          instanceName.str() + "." + methodName.str() + "\": " + invalidArgument.what());
       // Pop the object being bound and the duktape global object.
       duk_pop_2(m_context);
       return;
@@ -228,44 +192,26 @@ void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArra
   duk_pop(m_context);
 }
 
-jobject DuktapeContext::proxy(JNIEnv* env, jstring name, jobjectArray methods) {
-  // TODO: lookup and attach to object 'name' in the JS VM, set up call wrappers for methods given.
-  return name;
+jlong DuktapeContext::proxy(JNIEnv* env, jstring name, jobjectArray methods) {
+  const JString instanceName(env, name);
+  jlong index = static_cast<jlong>(m_proxiedObjects.size());
+  try {
+    m_proxiedObjects.push_back(new JavaScriptObject(env, m_context, instanceName.str(), methods));
+  } catch (const std::invalid_argument& e) {
+    queueIllegalArgumentException(env, e.what());
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+  return index;
 }
 
-jobject DuktapeContext::call(JNIEnv *env, jobject target, jobject method, jobjectArray args) {
-  duk_push_global_object(m_context);
-  // TODO: attach to something stronger than the name in proxy(), and use that here.
-  const JString instanceName(env, static_cast<jstring>(target));
-  if (!duk_get_prop_string(m_context, -1, instanceName)) {
-    duk_pop(m_context);
-    const jclass illegalArgumentException = env->FindClass("java/lang/IllegalArgumentException");
-    const std::string message = "A global object called " + instanceName.str() + " was not found";
-    env->ThrowNew(illegalArgumentException, message.c_str());
+jobject DuktapeContext::call(JNIEnv *env, jlong target, jobject method, jobjectArray args) {
+  JavaScriptObject *object = target >= 0 && target < m_proxiedObjects.size()
+                             ? m_proxiedObjects[target]
+                             : nullptr;
+  if (!object) {
+    queueNullPointerException(env, "Invalid proxy object");
     return nullptr;
   }
-
-  jclass methodClass = env->GetObjectClass(method);
-
-  const jmethodID getName = env->GetMethodID(methodClass, "getName", "()Ljava/lang/String;");
-  const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(method, getName)));
-  duk_push_string(m_context, methodName);
-
-  // TODO: put the arguments (from args) on the stack too.
-
-  jobject result;
-  if (!duk_pcall_prop(m_context, -2, 0)) {
-    // TODO: handle other return types.
-    result = duk_is_null_or_undefined(m_context, -1)
-        ? nullptr
-        : env->NewStringUTF(duk_safe_to_string(m_context, -1));
-  } else {
-    queueJavaExceptionForJavaScriptError(env, m_context);
-    result = nullptr;
-  }
-
-  // Pop the global object, our instance, and the call's result or error.
-  duk_pop_3(m_context);
-
-  return result;
+  return object->call(env, method, args);
 }

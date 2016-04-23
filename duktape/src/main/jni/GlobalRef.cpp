@@ -25,7 +25,7 @@ GlobalRef::GlobalRef(const GlobalRef& other)
     , m_object(getEnvFromJavaVM(m_javaVM)->NewGlobalRef(other.m_object)) {
 }
 
-GlobalRef& GlobalRef::operator=(GlobalRef& other) {
+GlobalRef& GlobalRef::operator=(const GlobalRef& other) {
   if (&other != this) {
     // Increment the new reference before decrementing the old.
     auto oldJVM = m_javaVM;
