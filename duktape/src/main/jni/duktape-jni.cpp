@@ -17,20 +17,12 @@
 #include <jni.h>
 #include "DuktapeContext.h"
 #include "GlobalRef.h"
+#include "JavaExceptions.h"
 
 namespace {
 
 std::unique_ptr<GlobalRef> duktapeClass;
 static jmethodID getLocalTimeZoneOffset = nullptr;
-
-bool throwIfNull(JNIEnv* env, DuktapeContext* context) {
-  if (context != nullptr) {
-    return false;
-  }
-  jclass exceptionClass = env->FindClass("java/lang/NullPointerException");
-  env->ThrowNew(exceptionClass, "Null Duktape context - did you close your Duktape?");
-  return true;
-}
 
 } // anonymous namespace
 
@@ -72,40 +64,74 @@ JNIEXPORT jstring JNICALL
 Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2Ljava_lang_String_2(
     JNIEnv* env, jclass type, jlong context, jstring code, jstring fname) {
   DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
-  if (throwIfNull(env, duktape)) {
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
     return nullptr;
   }
-  return duktape->evaluate(env, code, fname);
+  try {
+    return duktape->evaluate(env, code, fname);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+  return nullptr;
 }
 
 JNIEXPORT void JNICALL
 Java_com_squareup_duktape_Duktape_bind(JNIEnv *env, jclass type, jlong context, jstring name,
                                        jobject object, jobjectArray methods) {
   DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
-  if (throwIfNull(env, duktape)) {
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
     return;
   }
-  duktape->bind(env, name, object, methods);
+  try {
+    duktape->bind(env, name, object, methods);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
 }
 
 JNIEXPORT jlong JNICALL
 Java_com_squareup_duktape_Duktape_proxy(JNIEnv *env, jclass type, jlong context, jstring name,
                                         jobjectArray methods) {
   DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
-  if (throwIfNull(env, duktape)) {
-    return -1L;
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return 0L;
   }
-  return duktape->proxy(env, name, methods);
+
+  try {
+    return reinterpret_cast<jlong>(duktape->proxy(env, name, methods));
+  } catch (const std::invalid_argument& e) {
+    queueIllegalArgumentException(env, e.what());
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+  return 0L;
 }
 
 JNIEXPORT jobject JNICALL
 Java_com_squareup_duktape_Duktape_call(JNIEnv *env, jclass type, jlong context, jlong instance,
                                        jobject method, jobjectArray args) {
+  // Validate our DuktapeContext first - if the context is null, we can't use the proxy.
   DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
-  if (throwIfNull(env, duktape)) {
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
     return nullptr;
   }
-  return duktape->call(env, instance, method, args);
+
+  const JavaScriptObject* object = reinterpret_cast<const JavaScriptObject*>(instance);
+  if (object == nullptr) {
+    queueNullPointerException(env, "Invalid proxy object");
+    return nullptr;
+  }
+
+  try {
+    return object->call(env, method, args);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+  return nullptr;
 }
 
 } // extern "C"

@@ -23,6 +23,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Date;
+
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
@@ -117,15 +119,26 @@ public class DuktapeProxyTest {
     }
   }
 
-  @Ignore // TODO: fix issue with NO_INSTANCE_VAR in JavaScriptObject.
-  @Test public void replaceProxiedObjectReferencesOld() {
+  @Test public void replaceProxiedObjectProxyReferencesOld() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
     TestInterface proxy = duktape.proxy("value", TestInterface.class);
-    duktape.evaluate("var value = { getValue: function() { return '7471111'; } };");
 
-    String v = proxy.getValue();
-    assertThat(v).isEqualTo("8675309");
+    // Now replace the proxied object with a new global.
+    duktape.evaluate("value = { getValue: function() { return '7471111'; } };");
+
+    try {
+      // Calls to the old object fail.
+      proxy.getValue();
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("JavaScript object value has been garbage collected");
+    }
+
+    // We can create a new proxy to the new object and call it.
+    TestInterface proxy2 = duktape.proxy("value", TestInterface.class);
+    assertThat(proxy).isNotEqualTo(proxy2);
+    assertThat(proxy2.getValue()).isEqualTo("7471111");
   }
 
   @Test public void replaceProxiedMethodReferencesNew() {
@@ -149,6 +162,15 @@ public class DuktapeProxyTest {
     }
   }
 
+  @Test public void proxySameObjectTwice() {
+    duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
+
+    TestInterface proxy1 = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy2 = duktape.proxy("value", TestInterface.class);
+    assertThat(proxy1).isNotEqualTo(proxy2);
+    assertThat(proxy1.getValue()).isEqualTo(proxy2.getValue());
+  }
+
   @Test public void proxyCalledAfterObjectGarbageCollected() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
@@ -158,8 +180,84 @@ public class DuktapeProxyTest {
     try {
       proxy.getValue();
       fail();
-    } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("JavaScript object called value was not found");
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("JavaScript object value has been garbage collected");
     }
+  }
+
+  interface UnsupportedArgumentType {
+    void set(Date d);
+  }
+
+  @Test public void proxyUnsupportedArgumentType() {
+    duktape.evaluate("var value = { set: function(d) { return d.toString(); } };");
+
+    try {
+      duktape.proxy("value", UnsupportedArgumentType.class);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage(
+          "In proxied method \"value.set\": Unsupported Java type class java.util.Date");
+    }
+  }
+
+  interface TestPrimitiveTypes {
+    boolean b(boolean b);
+    int i(int i);
+    double d(double d);
+  }
+
+  // Verify that primitive types can be used as arguments and return values from JavaScript methods.
+  @Test public void proxyWithPrimitiveTypes() {
+    duktape.evaluate("var value = {\n" +
+        "  b: function(v) { return !v; },\n" +
+        "  i: function(v) { return v * v; },\n" +
+        "  d: function(v) { return v / 2.0; }\n" +
+        "};");
+
+    TestPrimitiveTypes proxy = duktape.proxy("value", TestPrimitiveTypes.class);
+    assertThat(proxy.b(true)).isEqualTo(false);
+    assertThat(proxy.i(4)).isEqualTo(16);
+    assertThat(proxy.d(6.28318)).isWithin(0.0001).of(3.14159);
+  }
+
+  interface TestMultipleArgTypes {
+    String print(boolean b, int i, double d);
+  }
+
+  // Double check that arguments of different types are processed in the correct order to the
+  // Duktape stack.
+  @Test public void proxyWithAllArgTypes() {
+    duktape.evaluate("var printer = {\n" +
+        "  print: function(b, i, d) {\n" +
+        "    return 'boolean: ' + b + ', int: ' + i + ', double: ' + d;\n" +
+        "  }\n" +
+        "};");
+    TestMultipleArgTypes printer = duktape.proxy("printer", TestMultipleArgTypes.class);
+    assertThat(printer.print(true, 42, 2.718281828459))
+        .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
+  }
+
+  interface TestBoxedPrimitiveArgTypes {
+    Boolean b(Boolean b);
+    Integer i(Integer i);
+    Double d(Double d);
+  }
+
+  @Test public void proxyWithBoxedPrimitiveTypes() {
+    duktape.evaluate("var value = {\n" +
+        "  b: function(v) { return v != null ? !v : null; },\n" +
+        "  i: function(v) { return v != null ? v * v : null; },\n" +
+        "  d: function(v) { return v != null ? v / 2.0 : null; }\n" +
+        "};");
+
+    TestBoxedPrimitiveArgTypes proxy = duktape.proxy("value", TestBoxedPrimitiveArgTypes.class);
+    assertThat(proxy.b(false)).isEqualTo(true);
+    assertThat(proxy.i(4)).isEqualTo(16);
+    assertThat(proxy.d(6.28318)).isWithin(0.0001).of(3.14159);
+
+    assertThat(proxy.b(null)).isNull();
+    assertThat(proxy.i(null)).isNull();
+    assertThat(proxy.d(null)).isNull();
   }
 }

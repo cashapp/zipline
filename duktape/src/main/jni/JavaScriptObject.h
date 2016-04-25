@@ -17,22 +17,27 @@
 #define DUKTAPE_ANDROID_JAVASCRIPTOBJECT_H
 
 #include <string>
+#include <functional>
+#include <unordered_map>
 #include <jni.h>
 #include "duktape.h"
 
 /** The class represents a global JavaScript object that can be called from Java. */
 class JavaScriptObject {
 public:
-  JavaScriptObject(JNIEnv* env, duk_context* context, const std::string& name, jobjectArray methods);
+  JavaScriptObject(JNIEnv* env, duk_context* context, jstring name, jobjectArray methods);
   ~JavaScriptObject();
   JavaScriptObject(const JavaScriptObject&) = delete;
   JavaScriptObject& operator=(const JavaScriptObject&) = delete;
 
-  jobject call(JNIEnv* env, jobject method, jobjectArray args);
+  jobject call(JNIEnv* env, jobject method, jobjectArray args) const;
 
-  const std::string& name() const {
-    return m_name;
-  }
+  /**
+   * Defines a functor to invoke a JavaScript method marshaling the given Java arguments and
+   * return value.  If the JavaScript method throws an error, the functor will throw a
+   * DuktapeException to the caller.
+   */
+  typedef std::function<jobject(JNIEnv*, duk_context*, void*, jobjectArray)> MethodBody;
 
 private:
   static duk_ret_t finalizer(duk_context* ctx);
@@ -40,6 +45,7 @@ private:
   const std::string m_name;
   duk_context* m_context;
   void* m_instance;
+  std::unordered_map<jmethodID, MethodBody> m_methods;
   duk_c_function m_nextFinalizer;
 };
 

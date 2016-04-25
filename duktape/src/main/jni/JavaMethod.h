@@ -35,7 +35,13 @@ public:
    * Defines a functor to use to pop a value off the Duktape stack and convert it to the required
    * Java type.
    */
-  typedef std::function<jvalue(duk_context*, JNIEnv*)> ArgumentLoader;
+  typedef std::function<jvalue(duk_context*, JNIEnv*)> JavaValuePopper;
+  /**
+   * Defines a functor to use to push a value onto the Duktape stack, unboxing and converting it to
+   * the required JavaScript type.
+   */
+  typedef std::function<duk_ret_t(duk_context*, JNIEnv*, jvalue)> JavaValuePusher;
+
   /**
    * Defines a functor to invoke the correct JNI method that will return the required Java type,
    * convert the return value to a JavaScript type and push it to the Duktape stack.  Returns the
@@ -45,8 +51,13 @@ public:
    */
   typedef std::function<duk_ret_t(duk_context*, JNIEnv*, jobject, jvalue*)> MethodBody;
 
+  // TODO: these static methods and functor types belong in their own class.
+
+  static JavaValuePopper getValuePopper(JNIEnv *env, jobject typeObject, bool forceBoxed = false);
+  static JavaValuePusher getValuePusher(JNIEnv* env, jclass type, bool forceBoxed = false);
+
 private:
-  std::vector<ArgumentLoader> m_argumentLoaders;
+  std::vector<JavaValuePopper> m_argumentLoaders;
   MethodBody m_methodBody;
 };
 

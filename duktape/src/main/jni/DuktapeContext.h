@@ -17,10 +17,9 @@
 #define DUKTAPE_ANDROID_DUKTAPE_CONTEXT_H
 
 #include <jni.h>
-#include <vector>
+#include <list>
 #include "duktape.h"
-
-class JavaScriptObject;
+#include "JavaScriptObject.h"
 
 class DuktapeContext {
 public:
@@ -29,17 +28,15 @@ public:
   DuktapeContext(const DuktapeContext &) = delete;
   DuktapeContext & operator=(const DuktapeContext &) = delete;
 
-  jstring evaluate(JNIEnv* env, jstring sourceCode, jstring fileName);
+  jstring evaluate(JNIEnv* env, jstring sourceCode, jstring fileName) const;
 
   void bind(JNIEnv* env, jstring name, jobject object, jobjectArray methods);
 
-  jlong proxy(JNIEnv* env, jstring name, jobjectArray methods);
-
-  jobject call(JNIEnv* env, jlong instance, jobject method, jobjectArray args);
+  const JavaScriptObject* proxy(JNIEnv* env, jstring name, jobjectArray methods);
 
 private:
   duk_context* m_context;
-  std::vector<JavaScriptObject*> m_proxiedObjects;
+  std::list<JavaScriptObject> m_proxiedObjects;
 };
 
 #endif // DUKTAPE_ANDROID_DUKTAPE_CONTEXT_H
