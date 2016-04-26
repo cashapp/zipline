@@ -22,7 +22,6 @@
 
 namespace {
 
-JavaMethod::ArgumentLoader getArgumentLoader(JNIEnv *env, jobject typeObject);
 JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject returnType);
 
 } // anonymous namespace
@@ -38,7 +37,7 @@ JavaMethod::JavaMethod(JNIEnv* env, jobject method) {
   m_argumentLoaders.reserve(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
     auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
-    m_argumentLoaders.push_back(getArgumentLoader(env, parameterType));
+    m_argumentLoaders.push_back(getValuePopper(env, parameterType));
   }
 
   const jmethodID getReturnType =
@@ -77,14 +76,17 @@ std::string toString(JNIEnv* env, jobject object) {
   return methodName.str();
 }
 
+jobject getPrimitiveType(JNIEnv* env, jclass boxedClass) {
+  const jfieldID typeField = env->GetStaticFieldID(boxedClass, "TYPE", "Ljava/lang/Class;");
+  return env->GetStaticObjectField(boxedClass, typeField);
+}
+
 /**
  * Loads the (primitive) TYPE member of {@code boxedClassName}.
  * For example, given java/lang/Integer, this function will return int.class.
  */
 jobject getPrimitiveType(JNIEnv* env, const char* boxedClassName) {
-  jclass boxedClass = env->FindClass(boxedClassName);
-  const jfieldID typeField = env->GetStaticFieldID(boxedClass, "TYPE", "Ljava/lang/Class;");
-  return env->GetStaticObjectField(boxedClass, typeField);
+  return getPrimitiveType(env, env->FindClass(boxedClassName));
 }
 
 /**
@@ -127,68 +129,6 @@ jvalue popDouble(duk_context* ctx, JNIEnv*) {
   return value;
 }
 
-/**
- * Get a functor that pops the object off the top of the stack and converts it to an instance of
- * {@code typeObject}.  Duktape may throw if the argument is not the correct type.
- */
-JavaMethod::ArgumentLoader getArgumentLoader(JNIEnv *env, jobject typeObject) {
-  if (env->IsSameObject(typeObject, env->FindClass("java/lang/String"))) {
-    return [](duk_context* ctx, JNIEnv* jniEnv) {
-      jvalue value;
-      // Check if the caller passed in a null string.
-      value.l = duk_get_type(ctx, -1) != DUK_TYPE_NULL
-                ? jniEnv->NewStringUTF(duk_require_string(ctx, -1))
-                : nullptr;
-      duk_pop(ctx);
-      return value;
-    };
-  }
-
-  if (env->IsSameObject(typeObject, getPrimitiveType(env, "java/lang/Boolean"))) {
-    return popBoolean;
-  }
-  if (env->IsSameObject(typeObject, env->FindClass("java/lang/Boolean"))) {
-    const GlobalRef typeObjectRef(env, typeObject);
-    const jmethodID valueOf = env->GetStaticMethodID(static_cast<jclass>(typeObjectRef.get()),
-                                                     "valueOf",
-                                                     "(Z)Ljava/lang/Boolean;");
-    return [typeObjectRef, valueOf](duk_context* ctx, JNIEnv* jniEnv) {
-      jclass type = static_cast<jclass>(typeObjectRef.get());
-      return boxPrimitive(ctx, jniEnv, type, valueOf, popBoolean);
-    };
-  }
-
-  if (env->IsSameObject(typeObject, getPrimitiveType(env, "java/lang/Integer"))) {
-    return popInteger;
-  }
-  if (env->IsSameObject(typeObject, env->FindClass("java/lang/Integer"))) {
-    const GlobalRef typeObjectRef(env, typeObject);
-    const jmethodID valueOf = env->GetStaticMethodID(static_cast<jclass>(typeObjectRef.get()),
-                                                     "valueOf",
-                                                     "(I)Ljava/lang/Integer;");
-    return [typeObjectRef, valueOf](duk_context* ctx, JNIEnv* jniEnv) {
-      jclass type = static_cast<jclass>(typeObjectRef.get());
-      return boxPrimitive(ctx, jniEnv, type, valueOf, popInteger);
-    };
-  }
-
-  if (env->IsSameObject(typeObject, getPrimitiveType(env, "java/lang/Double"))) {
-    return popDouble;
-  }
-  if (env->IsSameObject(typeObject, env->FindClass("java/lang/Double"))) {
-    const GlobalRef typeObjectRef(env, typeObject);
-    const jmethodID valueOf = env->GetStaticMethodID(static_cast<jclass>(typeObjectRef.get()),
-                                                     "valueOf",
-                                                     "(D)Ljava/lang/Double;");
-    return [typeObjectRef, valueOf](duk_context* ctx, JNIEnv* jniEnv) {
-      jclass type = static_cast<jclass>(typeObjectRef.get());
-      return boxPrimitive(ctx, jniEnv, type, valueOf, popDouble);
-    };
-  }
-
-  throw std::invalid_argument("Unsupported parameter type " + toString(env, typeObject));
-}
-
 duk_ret_t unboxAndPushPrimitive(duk_context* ctx, JNIEnv* jniEnv,
     jobject javaThis, jmethodID methodId, jvalue* args,
     JavaMethod::MethodBody unbox) {
@@ -206,6 +146,7 @@ duk_ret_t unboxAndPushPrimitive(duk_context* ctx, JNIEnv* jniEnv,
  * and convert the result to a JS type then push it to the stack.  The functor returns the number
  * of entries pushed to the stack to be returned to the Duktape caller.
  */
+// TODO: this should use getValuePusher.
 JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject returnType) {
   if (env->IsSameObject(returnType, env->FindClass("java/lang/String"))) {
     return [methodId](duk_context* ctx, JNIEnv* jniEnv, jobject javaThis, jvalue* args) {
@@ -281,3 +222,163 @@ JavaMethod::MethodBody getMethodBody(JNIEnv* env, jmethodID methodId, jobject re
 }
 
 } // anonymous namespace
+
+/**
+ * Get a functor that pops the object off the top of the stack and converts it to an instance of
+ * {@code typeObject}.  Duktape may throw if the argument is not the correct type.
+ */
+JavaMethod::JavaValuePopper JavaMethod::getValuePopper(JNIEnv *env, jobject typeObject,
+                                                       bool forceBoxed) {
+  if (env->IsSameObject(typeObject, env->FindClass("java/lang/String"))) {
+    return [](duk_context* ctx, JNIEnv* jniEnv) {
+      jvalue value;
+      // Check if the caller passed in a null string.
+      value.l = duk_get_type(ctx, -1) != DUK_TYPE_NULL
+                ? jniEnv->NewStringUTF(duk_require_string(ctx, -1))
+                : nullptr;
+      duk_pop(ctx);
+      return value;
+    };
+  }
+
+  const jclass booleanClass = env->FindClass("java/lang/Boolean");
+  bool isBool = env->IsSameObject(typeObject, getPrimitiveType(env, booleanClass));
+  if (isBool && !forceBoxed) {
+    return popBoolean;
+  }
+  if (isBool || env->IsSameObject(typeObject, booleanClass)) {
+    const GlobalRef typeObjectRef(env, booleanClass);
+    const jmethodID valueOf = env->GetStaticMethodID(static_cast<jclass>(typeObjectRef.get()),
+                                                     "valueOf",
+                                                     "(Z)Ljava/lang/Boolean;");
+    return [typeObjectRef, valueOf](duk_context* ctx, JNIEnv* jniEnv) {
+      jclass type = static_cast<jclass>(typeObjectRef.get());
+      return boxPrimitive(ctx, jniEnv, type, valueOf, popBoolean);
+    };
+  }
+
+  const jclass integerClass = env->FindClass("java/lang/Integer");
+  bool isInt = env->IsSameObject(typeObject, getPrimitiveType(env, integerClass));
+  if (isInt && !forceBoxed) {
+    return popInteger;
+  }
+  if (isInt || env->IsSameObject(typeObject, integerClass)) {
+    const GlobalRef typeObjectRef(env, integerClass);
+    const jmethodID valueOf = env->GetStaticMethodID(static_cast<jclass>(typeObjectRef.get()),
+                                                     "valueOf",
+                                                     "(I)Ljava/lang/Integer;");
+    return [typeObjectRef, valueOf](duk_context* ctx, JNIEnv* jniEnv) {
+      jclass type = static_cast<jclass>(typeObjectRef.get());
+      return boxPrimitive(ctx, jniEnv, type, valueOf, popInteger);
+    };
+  }
+
+  const jclass doubleClass = env->FindClass("java/lang/Double");
+  bool isDouble = env->IsSameObject(typeObject, getPrimitiveType(env, doubleClass));
+  if (isDouble && !forceBoxed) {
+    return popDouble;
+  }
+  if (isDouble || env->IsSameObject(typeObject, doubleClass)) {
+    const GlobalRef typeObjectRef(env, doubleClass);
+    const jmethodID valueOf = env->GetStaticMethodID(static_cast<jclass>(typeObjectRef.get()),
+                                                     "valueOf",
+                                                     "(D)Ljava/lang/Double;");
+    return [typeObjectRef, valueOf](duk_context* ctx, JNIEnv* jniEnv) {
+      jclass type = static_cast<jclass>(typeObjectRef.get());
+      return boxPrimitive(ctx, jniEnv, type, valueOf, popDouble);
+    };
+  }
+
+  if (env->IsSameObject(typeObject, getPrimitiveType(env, "java/lang/Void"))) {
+    return [](duk_context* ctx, JNIEnv*) {
+      duk_pop(ctx);
+      jvalue value;
+      value.l = nullptr;
+      return value;
+    };
+  }
+
+  throw std::invalid_argument("Unsupported Java type " + toString(env, typeObject));
+}
+
+JavaMethod::JavaValuePusher JavaMethod::getValuePusher(JNIEnv* env, jclass type, bool forceBoxed) {
+  if (env->IsSameObject(type, env->FindClass("java/lang/String"))) {
+    return [](duk_context* ctx, JNIEnv* jniEnv, jvalue value) {
+      if (value.l != nullptr) {
+        const JString result(jniEnv, static_cast<jstring>(value.l));
+        duk_push_string(ctx, result);
+      } else {
+        duk_push_null(ctx);
+      }
+      return 1;
+    };
+  }
+
+  const jclass booleanClass = env->FindClass("java/lang/Boolean");
+  const bool isBool = env->IsSameObject(type, getPrimitiveType(env, booleanClass));
+  if (isBool && !forceBoxed) {
+    return [](duk_context* ctx, JNIEnv* jniEnv, jvalue value) {
+      duk_push_boolean(ctx, value.z == JNI_TRUE);
+      return 1;
+    };
+  }
+  if (isBool || env->IsSameObject(type, booleanClass)) {
+    jmethodID getter = env->GetMethodID(booleanClass, "booleanValue", "()Z");
+    auto unbox = getMethodBody(env, getter, getPrimitiveType(env, booleanClass));
+    return [unbox](duk_context* ctx, JNIEnv* jniEnv, jvalue value) {
+      if (value.l == nullptr) {
+        duk_push_null(ctx);
+        return 1;
+      }
+      return unbox(ctx, jniEnv, value.l, nullptr);
+    };
+  }
+
+  const jclass integerClass = env->FindClass("java/lang/Integer");
+  const bool isInt = env->IsSameObject(type, getPrimitiveType(env, integerClass));
+  if (isInt && !forceBoxed) {
+    return [](duk_context* ctx, JNIEnv* jniEnv, jvalue value) {
+      duk_push_int(ctx, value.i);
+      return 1;
+    };
+  }
+  if (isInt || env->IsSameObject(type, integerClass)) {
+    jmethodID getter = env->GetMethodID(integerClass, "intValue", "()I");
+    auto unbox = getMethodBody(env, getter, getPrimitiveType(env, integerClass));
+    return [unbox](duk_context* ctx, JNIEnv* jniEnv, jvalue value) {
+      if (value.l == nullptr) {
+        duk_push_null(ctx);
+        return 1;
+      }
+      return unbox(ctx, jniEnv, value.l, nullptr);
+    };
+  }
+
+  const jclass doubleClass = env->FindClass("java/lang/Double");
+  const bool isDouble = env->IsSameObject(type, getPrimitiveType(env, doubleClass));
+  if (isDouble && !forceBoxed) {
+    return [](duk_context* ctx, JNIEnv* jniEnv, jvalue value) {
+      duk_push_number(ctx, value.d);
+      return 1;
+    };
+  }
+  if (isDouble || env->IsSameObject(type, doubleClass)) {
+    jmethodID getter = env->GetMethodID(doubleClass, "doubleValue", "()D");
+    auto unbox = getMethodBody(env, getter, getPrimitiveType(env, doubleClass));
+    return [unbox](duk_context* ctx, JNIEnv* jniEnv, jvalue value) {
+      if (value.l == nullptr) {
+        duk_push_null(ctx);
+        return 1;
+      }
+      return unbox(ctx, jniEnv, value.l, nullptr);
+    };
+  }
+
+  if (env->IsSameObject(type, getPrimitiveType(env, "java/lang/Void"))) {
+    return [](duk_context* ctx, JNIEnv* jniEnv, jvalue value) {
+      return 0;
+    };
+  }
+
+  throw std::invalid_argument("Unsupported Java type " + toString(env, type));
+}

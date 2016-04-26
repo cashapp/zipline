@@ -96,10 +96,14 @@ duk_ret_t javaObjectFinalizer(duk_context *ctx) {
   return 0;
 }
 
+void fatalErrorHandler(duk_context* ctx, duk_errcode_t code, const char* msg) {
+  throw std::runtime_error(msg);
+}
+
 } // anonymous namespace
 
 DuktapeContext::DuktapeContext(JavaVM* javaVM)
-    : m_context(duk_create_heap_default()) {
+    : m_context(duk_create_heap(nullptr, nullptr, nullptr, nullptr, fatalErrorHandler)) {
   if (!m_context) {
     throw std::bad_alloc();
   }
@@ -112,12 +116,12 @@ DuktapeContext::DuktapeContext(JavaVM* javaVM)
 }
 
 DuktapeContext::~DuktapeContext() {
-  std::for_each(m_proxiedObjects.begin(), m_proxiedObjects.end(),
-                std::default_delete<JavaScriptObject>());
+  // Delete the proxies before destroying the heap.
+  m_proxiedObjects.clear();
   duk_destroy_heap(m_context);
 }
 
-jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
+jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) const {
   const JString sourceCode(env, code);
   const JString fileName(env, fname);
 
@@ -128,10 +132,8 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) {
   } else if (!duk_is_null_or_undefined(m_context, -1)) {
     // Return a string result (coerce the value if needed).
     result = env->NewStringUTF(duk_safe_to_string(m_context, -1));
+    duk_pop(m_context);
   }
-
-  // Pop the result of the evaluate call.
-  duk_pop(m_context);
 
   return result;
 }
@@ -162,9 +164,9 @@ void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArra
     std::unique_ptr<JavaMethod> javaMethod;
     try {
       javaMethod.reset(new JavaMethod(env, method));
-    } catch (std::invalid_argument& invalidArgument) {
+    } catch (const std::invalid_argument& e) {
       queueIllegalArgumentException(env, "In bound method \"" +
-          instanceName.str() + "." + methodName.str() + "\": " + invalidArgument.what());
+          instanceName.str() + "." + methodName.str() + "\": " + e.what());
       // Pop the object being bound and the duktape global object.
       duk_pop_2(m_context);
       return;
@@ -192,26 +194,7 @@ void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArra
   duk_pop(m_context);
 }
 
-jlong DuktapeContext::proxy(JNIEnv* env, jstring name, jobjectArray methods) {
-  const JString instanceName(env, name);
-  jlong index = static_cast<jlong>(m_proxiedObjects.size());
-  try {
-    m_proxiedObjects.push_back(new JavaScriptObject(env, m_context, instanceName.str(), methods));
-  } catch (const std::invalid_argument& e) {
-    queueIllegalArgumentException(env, e.what());
-  } catch (const std::runtime_error& e) {
-    queueDuktapeException(env, e.what());
-  }
-  return index;
-}
-
-jobject DuktapeContext::call(JNIEnv *env, jlong target, jobject method, jobjectArray args) {
-  JavaScriptObject *object = target >= 0 && target < m_proxiedObjects.size()
-                             ? m_proxiedObjects[target]
-                             : nullptr;
-  if (!object) {
-    queueNullPointerException(env, "Invalid proxy object");
-    return nullptr;
-  }
-  return object->call(env, method, args);
+const JavaScriptObject* DuktapeContext::proxy(JNIEnv* env, jstring name, jobjectArray methods) {
+  m_proxiedObjects.emplace_back(env, m_context, name, methods);
+  return &m_proxiedObjects.back();
 }

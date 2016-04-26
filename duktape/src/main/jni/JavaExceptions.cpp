@@ -85,4 +85,6 @@ void queueJavaExceptionForDuktapeError(JNIEnv *env, duk_context *ctx) {
     // Not an error or no stacktrace, just convert to a string.
     env->ThrowNew(exceptionClass, duk_safe_to_string(ctx, -1));
   }
+
+  duk_pop(ctx);
 }
