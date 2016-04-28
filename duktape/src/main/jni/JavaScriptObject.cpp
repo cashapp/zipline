@@ -19,6 +19,7 @@
 #include "JString.h"
 #include "JavaExceptions.h"
 #include "JavaMethod.h"
+#include "StackChecker.h"
 
 namespace {
 
@@ -39,9 +40,10 @@ JavaScriptObject::JavaScriptObject(JNIEnv* env, duk_context* context, jstring na
     , m_context(context)
     , m_instance(nullptr)
     , m_nextFinalizer(nullptr) {
+  CHECK_STACK(m_context);
   duk_push_global_object(m_context);
   if (!duk_get_prop_string(m_context, -1, m_name.c_str())) {
-    duk_pop(m_context);
+    duk_pop_2(m_context);
     throw std::invalid_argument("A global JavaScript object called " + m_name + " was not found");
   }
 
@@ -154,6 +156,7 @@ JavaScriptObject::~JavaScriptObject() {
 }
 
 jobject JavaScriptObject::call(JNIEnv* env, jobject method, jobjectArray args) const {
+  CHECK_STACK(m_context);
   if (m_instance == nullptr) {
     queueDuktapeException(env, "JavaScript object " + m_name + " has been garbage collected");
     return nullptr;
@@ -224,6 +227,8 @@ JavaScriptObject::MethodBody buildMethodBody(JNIEnv* env, jobject method,
 
   return [methodName, returnValueLoader, argumentLoaders]
       (JNIEnv* jniEnv, duk_context* ctx, void* instance, jobjectArray args) {
+    CHECK_STACK(ctx);
+
     duk_push_global_object(ctx);
     // Set up the call - push the object, method name, and arguments onto the stack.
     duk_push_heapptr(ctx, instance);
