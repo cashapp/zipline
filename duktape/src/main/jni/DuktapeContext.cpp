@@ -23,6 +23,7 @@
 #include "GlobalRef.h"
 #include "JavaScriptObject.h"
 #include "JavaExceptions.h"
+#include "StackChecker.h"
 
 namespace {
 
@@ -121,7 +122,8 @@ DuktapeContext::~DuktapeContext() {
   duk_destroy_heap(m_context);
 }
 
-jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) const {
+jstring DuktapeContext::evaluate(JNIEnv* env, jstring code, jstring fname) const {
+  CHECK_STACK(m_context);
   const JString sourceCode(env, code);
   const JString fileName(env, fname);
 
@@ -129,9 +131,11 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) const
 
   if (eval_string_with_filename(m_context, sourceCode, fileName) != DUK_EXEC_SUCCESS) {
     queueJavaExceptionForDuktapeError(env, m_context);
-  } else if (!duk_is_null_or_undefined(m_context, -1)) {
-    // Return a string result (coerce the value if needed).
-    result = env->NewStringUTF(duk_safe_to_string(m_context, -1));
+  } else {
+    if (!duk_is_null_or_undefined(m_context, -1)) {
+      // Return a string result (coerce the value if needed).
+      result = env->NewStringUTF(duk_safe_to_string(m_context, -1));
+    }
     duk_pop(m_context);
   }
 
@@ -139,6 +143,7 @@ jstring DuktapeContext::evaluate(JNIEnv *env, jstring code, jstring fname) const
 }
 
 void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArray methods) {
+  CHECK_STACK(m_context);
   duk_push_global_object(m_context);
   const JString instanceName(env, name);
   if (duk_has_prop_string(m_context, -1, instanceName)) {

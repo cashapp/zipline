@@ -57,11 +57,13 @@ void queueJavaExceptionForDuktapeError(JNIEnv *env, duk_context *ctx) {
   jclass exceptionClass = env->FindClass("com/squareup/duktape/DuktapeException");
 
   // If it's a Duktape error object, try to pull out the full stacktrace.
-  if (duk_is_error(ctx, -1) && duk_get_prop_string(ctx, -1, "stack")) {
+  if (duk_is_error(ctx, -1) && duk_has_prop_string(ctx, -1, "stack")) {
+    duk_get_prop_string(ctx, -1, "stack");
     const char* stack = duk_safe_to_string(ctx, -1);
 
     // Is there an exception thrown from a Java method?
-    if (duk_get_prop_string(ctx, -2, JAVA_EXCEPTION_PROP_NAME)) {
+    if (duk_has_prop_string(ctx, -2, JAVA_EXCEPTION_PROP_NAME)) {
+      duk_get_prop_string(ctx, -2, JAVA_EXCEPTION_PROP_NAME);
       jthrowable ex = static_cast<jthrowable>(duk_get_pointer(ctx, -1));
 
       // add the Duktape JavaScript stack to this exception.
