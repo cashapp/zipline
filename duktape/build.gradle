@@ -18,8 +18,8 @@ model {
     buildTypes {
       release {
         ndk {
-          CFlags.addAll(['-Os', '-fomit-frame-pointer', '-DNDEBUG'])
-          cppFlags.addAll(['-Os', '-fomit-frame-pointer', '-DNDEBUG'])
+          CFlags.addAll(['-Os', '-fomit-frame-pointer', '-DNDEBUG', '-fvisibility=hidden'])
+          cppFlags.addAll(['-Os', '-fomit-frame-pointer', '-DNDEBUG', '-fvisibility=hidden'])
         }
       }
       debug {
