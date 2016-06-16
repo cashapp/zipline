@@ -94,10 +94,6 @@ Building
 ./gradlew build
 ```
 
-**NOTE:** When building with Android NDK r11b, the NDK bundle has an issue where the path to
-clang is incorrect. This can be fixed by creating a symlink called `<ndk dir>/toolchains/llvm-3.8`
-to `<ndk dir>/toolchains/llvm`.
-
 ## For Mac
 
 ```
