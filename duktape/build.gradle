@@ -35,7 +35,6 @@ model {
       moduleName = 'duktape'
       stl = "c++_static"
       toolchain = "clang"
-      toolchainVersion = "3.8"
       ldLibs.add("atomic")
       CFlags.addAll(['-std=c99', '-fstrict-aliasing', '-DDUK_OPT_HAVE_CUSTOM_H'])
       cppFlags.addAll(['-std=c++11', '-fstrict-aliasing', '-fexceptions', '-DDUK_OPT_HAVE_CUSTOM_H'])
