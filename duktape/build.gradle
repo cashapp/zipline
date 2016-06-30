@@ -13,6 +13,7 @@ model {
 
     defaultConfig {
       minSdkVersion.apiLevel = 4
+      consumerProguardFiles.add(file('consumer-proguard-rules.pro'))
     }
 
     buildTypes {
