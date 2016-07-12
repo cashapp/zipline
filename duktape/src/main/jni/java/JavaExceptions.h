@@ -17,7 +17,7 @@
 #define DUKTAPE_ANDROID_JAVAEXCEPTIONS_H
 
 #include <jni.h>
-#include "duktape.h"
+#include "../duktape/duktape.h"
 #include <string>
 
 void queueIllegalArgumentException(JNIEnv* env, const std::string& message);

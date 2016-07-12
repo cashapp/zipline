@@ -16,7 +16,7 @@
 #ifndef DUKTAPE_ANDROID_STACK_CHECKER_H
 #define DUKTAPE_ANDROID_STACK_CHECKER_H
 
-#include "duktape.h"
+#include "duktape/duktape.h"
 #include <string>
 #include <stdexcept>
 

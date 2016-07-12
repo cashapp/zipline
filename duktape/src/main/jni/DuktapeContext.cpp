@@ -18,11 +18,10 @@
 #include <string>
 #include <stdexcept>
 #include <functional>
-#include "JString.h"
-#include "JavaMethod.h"
-#include "GlobalRef.h"
-#include "JavaScriptObject.h"
-#include "JavaExceptions.h"
+#include "java/JString.h"
+#include "java/JavaMethod.h"
+#include "java/GlobalRef.h"
+#include "java/JavaExceptions.h"
 #include "StackChecker.h"
 
 namespace {
@@ -168,7 +167,7 @@ void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArra
 
     std::unique_ptr<JavaMethod> javaMethod;
     try {
-      javaMethod.reset(new JavaMethod(env, method));
+      javaMethod.reset(new JavaMethod(m_javaValues, env, method));
     } catch (const std::invalid_argument& e) {
       queueIllegalArgumentException(env, "In bound method \"" +
           instanceName.str() + "." + methodName.str() + "\": " + e.what());
@@ -200,6 +199,6 @@ void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArra
 }
 
 const JavaScriptObject* DuktapeContext::proxy(JNIEnv* env, jstring name, jobjectArray methods) {
-  m_proxiedObjects.emplace_back(env, m_context, name, methods);
+  m_proxiedObjects.emplace_back(m_javaValues, env, m_context, name, methods);
   return &m_proxiedObjects.back();
 }

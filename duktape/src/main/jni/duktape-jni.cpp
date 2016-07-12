@@ -16,8 +16,8 @@
 #include <memory>
 #include <jni.h>
 #include "DuktapeContext.h"
-#include "GlobalRef.h"
-#include "JavaExceptions.h"
+#include "java/GlobalRef.h"
+#include "java/JavaExceptions.h"
 
 namespace {
 

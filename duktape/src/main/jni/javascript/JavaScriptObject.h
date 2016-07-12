@@ -20,12 +20,14 @@
 #include <functional>
 #include <unordered_map>
 #include <jni.h>
-#include "duktape.h"
+#include "../duktape/duktape.h"
+
+class JavaTypeMap;
 
 /** The class represents a global JavaScript object that can be called from Java. */
 class JavaScriptObject {
 public:
-  JavaScriptObject(JNIEnv* env, duk_context* context, jstring name, jobjectArray methods);
+  JavaScriptObject(JavaTypeMap&, JNIEnv*, duk_context*, jstring name, jobjectArray methods);
   ~JavaScriptObject();
   JavaScriptObject(const JavaScriptObject&) = delete;
   JavaScriptObject& operator=(const JavaScriptObject&) = delete;

@@ -16,10 +16,11 @@
 
 #include "JavaScriptObject.h"
 #include <stdexcept>
-#include "JString.h"
-#include "JavaExceptions.h"
-#include "JavaMethod.h"
-#include "StackChecker.h"
+#include <vector>
+#include "../java/JString.h"
+#include "../java/JavaExceptions.h"
+#include "../java/JavaType.h"
+#include "../StackChecker.h"
 
 namespace {
 
@@ -30,12 +31,13 @@ namespace {
 // able to detach our local reference to the object when it is garbage collected in the JS VM.
 const char* WRAPPER_THIS_PROP_NAME = "\xff\xffwrapper_this";
 
-JavaScriptObject::MethodBody buildMethodBody(JNIEnv* env, jobject method, const std::string& name);
+JavaScriptObject::MethodBody
+buildMethodBody(JavaTypeMap&, JNIEnv*, jobject method, const std::string& name);
 
 }
 
-JavaScriptObject::JavaScriptObject(JNIEnv* env, duk_context* context, jstring name,
-                                   jobjectArray methods)
+JavaScriptObject::JavaScriptObject(JavaTypeMap& typeMap, JNIEnv* env, duk_context* context,
+                                   jstring name, jobjectArray methods)
     : m_name(JString(env, name).str())
     , m_context(context)
     , m_instance(nullptr)
@@ -78,7 +80,7 @@ JavaScriptObject::JavaScriptObject(JNIEnv* env, duk_context* context, jstring na
     try {
       // Build a call wrapper that handles marshalling the arguments and return value.
       m_methods.emplace(std::make_pair(env->FromReflectedMethod(method),
-                                       buildMethodBody(env, method, methodName.str())));
+                                       buildMethodBody(typeMap, env, method, methodName.str())));
     } catch (const std::invalid_argument& e) {
       duk_pop_3(m_context);
       throw std::invalid_argument("In proxied method \"" + m_name + "." + methodName.str() +
@@ -204,14 +206,14 @@ duk_ret_t JavaScriptObject::finalizer(duk_context* ctx) {
 
 namespace {
 
-JavaScriptObject::MethodBody buildMethodBody(JNIEnv* env, jobject method,
+JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, jobject method,
                                              const std::string& methodName) {
   const jclass methodClass = env->GetObjectClass(method);
 
   const jmethodID getReturnType =
       env->GetMethodID(methodClass, "getReturnType", "()Ljava/lang/Class;");
-  jobject returnType = env->CallObjectMethod(method, getReturnType);
-  const auto returnValueLoader = JavaMethod::getValuePopper(env, returnType, true);
+  jclass returnTypeClass = static_cast<jclass>(env->CallObjectMethod(method, getReturnType));
+  const JavaType* returnType = typeMap.getBoxed(env, static_cast<jclass>(returnTypeClass));
 
   const jmethodID getParameterTypes =
       env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
@@ -219,13 +221,13 @@ JavaScriptObject::MethodBody buildMethodBody(JNIEnv* env, jobject method,
       static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
   const jsize numArgs = env->GetArrayLength(parameterTypes);
 
-  std::vector<JavaMethod::JavaValuePusher> argumentLoaders(numArgs);
+  std::vector<const JavaType*> argumentLoaders(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
     auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
-    argumentLoaders[i] = JavaMethod::getValuePusher(env, static_cast<jclass>(parameterType), true);
+    argumentLoaders[i] = typeMap.getBoxed(env, static_cast<jclass>(parameterType));
   }
 
-  return [methodName, returnValueLoader, argumentLoaders]
+  return [methodName, returnType, argumentLoaders]
       (JNIEnv* jniEnv, duk_context* ctx, void* instance, jobjectArray args) {
     CHECK_STACK(ctx);
 
@@ -237,12 +239,12 @@ JavaScriptObject::MethodBody buildMethodBody(JNIEnv* env, jobject method,
     jvalue arg;
     for (jsize i = 0; i < numArguments; ++i) {
       arg.l = jniEnv->GetObjectArrayElement(args, i);
-      argumentLoaders[i](ctx, jniEnv, arg);
+      argumentLoaders[i]->push(ctx, jniEnv, arg);
     }
 
     jobject result;
     if (duk_pcall_prop(ctx, -2 - numArguments, numArguments) == DUK_EXEC_SUCCESS) {
-      result = returnValueLoader(ctx, jniEnv).l;
+      result = returnType->pop(ctx, jniEnv).l;
     } else {
       queueJavaExceptionForDuktapeError(jniEnv, ctx);
       result = nullptr;

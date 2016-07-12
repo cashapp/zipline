@@ -302,7 +302,7 @@ public final class DuktapeBindTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage(
-          "In bound method \"value.get\": Unsupported return type class java.util.Date");
+          "In bound method \"value.get\": Unsupported Java type class java.util.Date");
     }
   }
 
