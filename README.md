@@ -63,8 +63,50 @@ try {
       "var hexEnc = 'EC9588EB8595ED9598EC84B8EC9A9421';\n" +
       // Call out to Java to decode it!
       "var message = Utf8.fromHex(hexEnc);\n" +
-      "message;");
+      "return message;");
 
+  Log.d("Greeting", greeting);
+} finally {
+  duktape.close();
+}
+```
+
+## Calling JavaScript from Java
+
+You can create a proxy from a Java interface to a JavaScript global object, and call JavaScript
+functions directly from Java!  The same Java types are supported for function arguments and return
+values as the opposite case above.
+
+### Example
+
+Imagine a world where we don't have [okio's ByteString][okio]. Fortunately, there's a Duktape
+builtin that allows us to convert hex-encoded strings back into UTF-8! We can easily set up a
+proxy that allows us to use it directly from our Java code. First, define a Java interface
+that declares the JavaScript methods you would like to call:
+
+```java
+interface Utf8 {
+  String fromHex(String hex);
+}
+```
+
+Next, we define a global JavaScript object in Duktape to connect to with a proxy:
+
+```java
+// Note that Duktape.dec returns a Buffer, we must convert it to a String return value.
+duktape.evaluate("var Utf8 = {\n" +
+    "  fromHex: function(v) { return String(Duktape.dec('hex', v)); }\n" +
+    "};");
+```
+
+Now you can connect our interface to the JavaScript global, making it available in Java code:
+
+```java
+try {
+  // Connect our interface to a JavaScript object called Utf8.
+  Utf8 utf8 = duktape.proxy("Utf8", Utf8.class);
+
+  String greeting = utf8.fromHex("EC9588EB8595ED9598EC84B8EC9A9421");
   Log.d("Greeting", greeting);
 } finally {
   duktape.close();
@@ -93,15 +135,6 @@ Building
 ```
 ./gradlew build
 ```
-
-## For Mac
-
-```
-./build_mac
-```
-
-Set the `java.library.path` system property to `build/` when you execute Java.
-
 
 License
 -------
