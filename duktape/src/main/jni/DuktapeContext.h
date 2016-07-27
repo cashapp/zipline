@@ -18,8 +18,9 @@
 
 #include <jni.h>
 #include <list>
-#include "duktape.h"
-#include "JavaScriptObject.h"
+#include "duktape/duktape.h"
+#include "javascript/JavaScriptObject.h"
+#include "java/JavaType.h"
 
 class DuktapeContext {
 public:
@@ -37,6 +38,7 @@ public:
 private:
   duk_context* m_context;
   std::list<JavaScriptObject> m_proxiedObjects;
+  JavaTypeMap m_javaValues;
 };
 
 #endif // DUKTAPE_ANDROID_DUKTAPE_CONTEXT_H
