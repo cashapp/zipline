@@ -59,7 +59,8 @@ JavaMethod* getJavaMethod(duk_context* ctx) {
 
 duk_int_t eval_string_with_filename(duk_context *ctx, const char *src, const char *fileName) {
   duk_push_string(ctx, fileName);
-  return duk_eval_raw(ctx, src, 0, DUK_COMPILE_EVAL | DUK_COMPILE_SAFE |
+  const int numArgs = 2; // source and file name
+  return duk_eval_raw(ctx, src, 0, numArgs | DUK_COMPILE_EVAL | DUK_COMPILE_SAFE |
                                    DUK_COMPILE_NOSOURCE | DUK_COMPILE_STRLEN);
 }
 
