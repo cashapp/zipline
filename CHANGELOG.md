@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 0.9.6 *(2016-08-31)*
+----------------------------
+
+ * New: call JavaScript methods from Java via proxies.
+ * New: update to Duktape 1.5.0.
+
 Version 0.9.5 *(2016-03-07)*
 ----------------------------
 
