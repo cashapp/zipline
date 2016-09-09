@@ -31,13 +31,13 @@ public:
 
   jstring evaluate(JNIEnv* env, jstring sourceCode, jstring fileName) const;
 
-  void bind(JNIEnv* env, jstring name, jobject object, jobjectArray methods);
+  void set(JNIEnv *env, jstring name, jobject object, jobjectArray methods);
 
-  const JavaScriptObject* proxy(JNIEnv* env, jstring name, jobjectArray methods);
+  const JavaScriptObject*get(JNIEnv *env, jstring name, jobjectArray methods);
 
 private:
   duk_context* m_context;
-  std::list<JavaScriptObject> m_proxiedObjects;
+  std::list<JavaScriptObject> m_jsObjects;
   JavaTypeMap m_javaValues;
 };
 
