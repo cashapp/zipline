@@ -18,8 +18,9 @@ try {
 
 ## Calling Java from JavaScript
 
-You can bind a Java object to a JavaScript global, and call Java functions from JavaScript!
-Currently, the following Java types are supported for function arguments and return values:
+You can provide a Java object for use as a JavaScript global, and call Java functions from
+JavaScript! Currently, the following Java types are supported for function arguments and
+return values:
 
  * `boolean` and `Boolean`
  * `int` and `Integer`
@@ -50,11 +51,11 @@ Utf8 utf8 = new Utf8() {
 };
 ```
 
-Now you can bind the object to a JavaScript global, making it available in JavaScript code:
+Now you can set the object to a JavaScript global, making it available in JavaScript code:
 
 ```java
-// Bind our interface to a JavaScript object called Utf8.
-duktape.bind("Utf8", Utf8.class, utf8);
+// Attach our interface to a JavaScript object called Utf8.
+duktape.set("Utf8", Utf8.class, utf8);
 
 String greeting = duktape.evaluate("" +
     // Here we have a hex encoded string.
@@ -68,8 +69,8 @@ Log.d("Greeting", greeting);
 
 ## Calling JavaScript from Java
 
-You can create a proxy from a Java interface to a JavaScript global object, and call JavaScript
-functions directly from Java!  The same Java types are supported for function arguments and return
+You can attach a Java interface to a JavaScript global object, and call JavaScript functions
+directly from Java!  The same Java types are supported for function arguments and return
 values as the opposite case above.
 
 ### Example
@@ -85,7 +86,7 @@ interface Utf8 {
 }
 ```
 
-Next, we define a global JavaScript object in Duktape to connect to with a proxy:
+Next, we define a global JavaScript object in Duktape to connect to:
 
 ```java
 // Note that Duktape.dec returns a Buffer, we must convert it to a String return value.
@@ -99,7 +100,7 @@ Now you can connect our interface to the JavaScript global, making it available 
 
 ```java
 // Connect our interface to a JavaScript object called Utf8.
-Utf8 utf8 = duktape.proxy("Utf8", Utf8.class);
+Utf8 utf8 = duktape.get("Utf8", Utf8.class);
 
 // Call into the JavaScript object to decode a string.
 String greeting = utf8.fromHex("EC9588EB8595ED9598EC84B8EC9A9421");

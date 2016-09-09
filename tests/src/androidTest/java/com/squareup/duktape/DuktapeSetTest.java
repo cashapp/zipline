@@ -28,7 +28,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
-public final class DuktapeBindTest {
+public final class DuktapeSetTest {
   private Duktape duktape;
 
   @Before public void setUp() {
@@ -39,9 +39,9 @@ public final class DuktapeBindTest {
     duktape.close();
   }
 
-  @Test public void bindNonInterface() {
+  @Test public void setNonInterface() {
     try {
-      duktape.bind("s", String.class, "foo");
+      duktape.set("s", String.class, "foo");
       fail();
     } catch (UnsupportedOperationException expected) {
       assertThat(expected)
@@ -54,7 +54,7 @@ public final class DuktapeBindTest {
   }
 
   @Test public void callMethodOnJavaObject() {
-    duktape.bind("value", TestInterface.class, new TestInterface() {
+    duktape.set("value", TestInterface.class, new TestInterface() {
       @Override
       public String getValue() {
         return "8675309";
@@ -64,7 +64,7 @@ public final class DuktapeBindTest {
   }
 
   @Test public void callMissingMethodOnJavaObjectFails() {
-    duktape.bind("value", TestInterface.class, new TestInterface() {
+    duktape.set("value", TestInterface.class, new TestInterface() {
       @Override
       public String getValue() {
         throw new AssertionError();
@@ -78,14 +78,14 @@ public final class DuktapeBindTest {
     }
   }
 
-  @Test public void bindSameNameTwiceFails() {
-    duktape.bind("value", TestInterface.class, new TestInterface() {
+  @Test public void setSameNameTwiceFails() {
+    duktape.set("value", TestInterface.class, new TestInterface() {
       @Override public String getValue() {
         return "foo";
       }
     });
     try {
-      duktape.bind("value", TestInterface.class, new TestInterface() {
+      duktape.set("value", TestInterface.class, new TestInterface() {
         @Override
         public String getValue() {
           throw new AssertionError();
@@ -103,7 +103,7 @@ public final class DuktapeBindTest {
         throw new UnsupportedOperationException("Cannot getValue");
       }
     };
-    duktape.bind("value", TestInterface.class, boundObject);
+    duktape.set("value", TestInterface.class, boundObject);
     try {
       duktape.evaluate("\n"
           + "f1();\n"           // Line 2.
@@ -142,7 +142,7 @@ public final class DuktapeBindTest {
       assertThat(stackTrace[5].isNativeMethod()).isFalse();
 
       // Then this test method.
-      assertThat(stackTrace[6].getClassName()).isEqualTo(DuktapeBindTest.class.getName());
+      assertThat(stackTrace[6].getClassName()).isEqualTo(DuktapeSetTest.class.getName());
       assertThat(stackTrace[6].getMethodName())
           .isEqualTo("exceptionsFromJavaWithUnifiedStackTrace");
     }
@@ -153,7 +153,7 @@ public final class DuktapeBindTest {
   }
 
   @Test public void callMethodOnJavaObjectThrowsJavaException() {
-    duktape.bind("value", TestInterface.class, new TestInterface() {
+    duktape.set("value", TestInterface.class, new TestInterface() {
       @Override public String getValue() {
         throw new UnsupportedOperationException("This is an error message.");
       }
@@ -167,7 +167,7 @@ public final class DuktapeBindTest {
   }
 
   @Test public void callMethodWithArgsOnJavaObject() {
-    duktape.bind("value", TestInterfaceArgs.class, new TestInterfaceArgs() {
+    duktape.set("value", TestInterfaceArgs.class, new TestInterfaceArgs() {
       @Override public String foo(String a, String b, String c) {
         return a != null ? a + b + c : null;
       }
@@ -202,7 +202,7 @@ public final class DuktapeBindTest {
   }
 
   @Test public void callVoidJavaMethod() {
-    duktape.bind("value", TestInterfaceVoids.class, new TestInterfaceVoids() {
+    duktape.set("value", TestInterfaceVoids.class, new TestInterfaceVoids() {
       String result = "not called";
       @Override public void func() {
         result = "called";
@@ -225,7 +225,7 @@ public final class DuktapeBindTest {
 
   // Verify that primitive types can be used as both arguments and return values from Java methods.
   @Test public void callJavaMethodWithPrimitiveTypes() {
-    duktape.bind("value", TestPrimitiveTypes.class, new TestPrimitiveTypes() {
+    duktape.set("value", TestPrimitiveTypes.class, new TestPrimitiveTypes() {
       @Override public boolean b(boolean b) {
         return !b;
       }
@@ -250,7 +250,7 @@ public final class DuktapeBindTest {
   // Double check that arguments of different types are processed in the correct order from the
   // Duktape stack.
   @Test public void callJavaMethodWithAllArgTypes() {
-    duktape.bind("printer", TestMultipleArgTypes.class, new TestMultipleArgTypes() {
+    duktape.set("printer", TestMultipleArgTypes.class, new TestMultipleArgTypes() {
       @Override public String print(boolean b, int i, double d) {
         return String.format("boolean: %s, int: %s, double: %s", b, i, d);
       }
@@ -266,7 +266,7 @@ public final class DuktapeBindTest {
   }
 
   @Test public void callJavaMethodWithBoxedPrimitiveTypes() {
-    duktape.bind("value", TestBoxedPrimitiveArgTypes.class, new TestBoxedPrimitiveArgTypes() {
+    duktape.set("value", TestBoxedPrimitiveArgTypes.class, new TestBoxedPrimitiveArgTypes() {
       @Override public Boolean b(Boolean b) {
         return b != null ? !b : null;
       }
@@ -292,9 +292,9 @@ public final class DuktapeBindTest {
     Date get();
   }
 
-  @Test public void bindUnsupportedReturnType() {
+  @Test public void setUnsupportedReturnType() {
     try {
-      duktape.bind("value", UnsupportedReturnType.class, new UnsupportedReturnType() {
+      duktape.set("value", UnsupportedReturnType.class, new UnsupportedReturnType() {
         @Override public Date get() {
           return null;
         }
@@ -310,9 +310,9 @@ public final class DuktapeBindTest {
     void set(Date d);
   }
 
-  @Test public void bindUnsupportedArgumentType() {
+  @Test public void setUnsupportedArgumentType() {
     try {
-      duktape.bind("value", UnsupportedArgumentType.class, new UnsupportedArgumentType() {
+      duktape.set("value", UnsupportedArgumentType.class, new UnsupportedArgumentType() {
         @Override public void set(Date d) {
         }
       });
@@ -328,9 +328,9 @@ public final class DuktapeBindTest {
     void foo(double d);
   }
 
-  @Test public void bindOverloadedMethod() {
+  @Test public void setOverloadedMethod() {
     try {
-      duktape.bind("value", OverloadedMethod.class, new OverloadedMethod() {
+      duktape.set("value", OverloadedMethod.class, new OverloadedMethod() {
         @Override public void foo(int i) {
         }
         @Override public void foo(double d) {
@@ -345,9 +345,9 @@ public final class DuktapeBindTest {
   interface ExtendedInterface extends TestInterface {
   }
 
-  @Test public void bindExtendedInterface() {
+  @Test public void setExtendedInterface() {
     try {
-      duktape.bind("value", ExtendedInterface.class, new ExtendedInterface() {
+      duktape.set("value", ExtendedInterface.class, new ExtendedInterface() {
         @Override public String getValue() {
           return "nope";
         }
@@ -359,8 +359,8 @@ public final class DuktapeBindTest {
     }
   }
 
-  @Test public void bindFailureLeavesDuktapeConsistent() {
-    duktape.bind("value", TestInterface.class, new TestInterface() {
+  @Test public void setFailureLeavesDuktapeConsistent() {
+    duktape.set("value", TestInterface.class, new TestInterface() {
       @Override public String getValue() {
         return "8675309";
       }
@@ -368,7 +368,7 @@ public final class DuktapeBindTest {
     duktape.evaluate("var localVar = 42;");
 
     try {
-      duktape.bind("illegal", UnsupportedArgumentType.class, new UnsupportedArgumentType() {
+      duktape.set("illegal", UnsupportedArgumentType.class, new UnsupportedArgumentType() {
         @Override public void set(Date d) {
         }
       });

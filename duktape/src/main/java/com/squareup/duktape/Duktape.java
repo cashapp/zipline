@@ -68,7 +68,7 @@ public final class Duktape implements Closeable {
   }
 
   /**
-   * Binds {@code object} to {@code name} for use in JavaScript as a global object. {@code type}
+   * Provides {@code object} to JavaScript as a global object called {@code name}. {@code type}
    * defines the interface implemented by {@code object} that will be accessible to JavaScript.
    * {@code type} must be an interface that does not extend any other interfaces, and cannot define
    * any overloaded methods.
@@ -76,7 +76,7 @@ public final class Duktape implements Closeable {
    * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
    * {@link Double}, {@link String}.
    */
-  public <T> void bind(String name, Class<T> type, T object) {
+  public <T> void set(String name, Class<T> type, T object) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be bound. Received: " + type);
     }
@@ -92,11 +92,11 @@ public final class Duktape implements Closeable {
         throw new UnsupportedOperationException(method.getName() + " is overloaded in " + type);
       }
     }
-    bind(context, name, object, methods.values().toArray());
+    set(context, name, object, methods.values().toArray());
   }
 
   /**
-   * Creates a proxy to a global JavaScript object called {@code name} that implements {@code type}.
+   * Attaches to a global JavaScript object called {@code name} that implements {@code type}.
    * {@code type} defines the interface implemented in JavaScript that will be accessible to Java.
    * {@code type} must be an interface that does not extend any other interfaces, and cannot define
    * any overloaded methods.
@@ -104,7 +104,7 @@ public final class Duktape implements Closeable {
    * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
    * {@link Double}, {@link String}.
    */
-  public <T> T proxy(final String name, final Class<T> type) {
+  public <T> T get(final String name, final Class<T> type) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be proxied. Received: " + type);
     }
@@ -118,7 +118,7 @@ public final class Duktape implements Closeable {
       }
     }
 
-    final long instance = proxy(context, name, methods.values().toArray());
+    final long instance = get(context, name, methods.values().toArray());
 
     Object proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{ type },
         new InvocationHandler() {
@@ -160,8 +160,8 @@ public final class Duktape implements Closeable {
   private static native long createContext();
   private static native void destroyContext(long context);
   private static native String evaluate(long context, String sourceCode, String fileName);
-  private static native void bind(long context, String name, Object object, Object[] methods);
-  private static native long proxy(long context, String name, Object[] methods);
+  private static native void set(long context, String name, Object object, Object[] methods);
+  private static native long get(long context, String name, Object[] methods);
   private static native Object call(long context, long instance, Object method, Object[] args);
 
   /** Returns the timezone offset in seconds given system time millis. */

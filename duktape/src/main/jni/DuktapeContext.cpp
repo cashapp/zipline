@@ -118,7 +118,7 @@ DuktapeContext::DuktapeContext(JavaVM* javaVM)
 
 DuktapeContext::~DuktapeContext() {
   // Delete the proxies before destroying the heap.
-  m_proxiedObjects.clear();
+  m_jsObjects.clear();
   duk_destroy_heap(m_context);
 }
 
@@ -142,7 +142,7 @@ jstring DuktapeContext::evaluate(JNIEnv* env, jstring code, jstring fname) const
   return result;
 }
 
-void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArray methods) {
+void DuktapeContext::set(JNIEnv *env, jstring name, jobject object, jobjectArray methods) {
   CHECK_STACK(m_context);
   duk_push_global_object(m_context);
   const JString instanceName(env, name);
@@ -199,7 +199,7 @@ void DuktapeContext::bind(JNIEnv *env, jstring name, jobject object, jobjectArra
   duk_pop(m_context);
 }
 
-const JavaScriptObject* DuktapeContext::proxy(JNIEnv* env, jstring name, jobjectArray methods) {
-  m_proxiedObjects.emplace_back(m_javaValues, env, m_context, name, methods);
-  return &m_proxiedObjects.back();
+const JavaScriptObject* DuktapeContext::get(JNIEnv *env, jstring name, jobjectArray methods) {
+  m_jsObjects.emplace_back(m_javaValues, env, m_context, name, methods);
+  return &m_jsObjects.back();
 }

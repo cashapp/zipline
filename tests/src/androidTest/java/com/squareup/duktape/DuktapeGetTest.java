@@ -29,7 +29,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
-public class DuktapeProxyTest {
+public class DuktapeGetTest {
   private Duktape duktape;
 
   @Before public void setUp() {
@@ -40,9 +40,9 @@ public class DuktapeProxyTest {
     duktape.close();
   }
 
-  @Test public void proxyNonInterface() {
+  @Test public void getNonInterface() {
     try {
-      duktape.proxy("s", String.class);
+      duktape.get("s", String.class);
       fail();
     } catch (UnsupportedOperationException expected) {
       assertThat(expected)
@@ -54,16 +54,16 @@ public class DuktapeProxyTest {
     String getValue();
   }
 
-  @Test public void proxy() {
+  @Test public void get() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
-    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy = duktape.get("value", TestInterface.class);
     String v = proxy.getValue();
     assertThat(v).isEqualTo("8675309");
   }
 
-  @Test public void proxyMissingObjectThrows() {
+  @Test public void getMissingObjectThrows() {
     try {
-      duktape.proxy("DoesNotExist", TestInterface.class);
+      duktape.get("DoesNotExist", TestInterface.class);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
@@ -71,21 +71,21 @@ public class DuktapeProxyTest {
     }
   }
 
-  @Test public void proxyMissingMethodThrows() {
+  @Test public void getMissingMethodThrows() {
     duktape.evaluate("var value = { getOtherValue: function() { return '8675309'; } };");
     try {
-      duktape.proxy("value", TestInterface.class);
+      duktape.get("value", TestInterface.class);
       fail();
     } catch (DuktapeException expected) {
       assertThat(expected).hasMessage("JavaScript global value has no method called getValue");
     }
   }
 
-  @Test public void proxyMethodNotCallableThrows() {
+  @Test public void getMethodNotCallableThrows() {
     duktape.evaluate("var value = { getValue: '8675309' };");
 
     try {
-      duktape.proxy("value", TestInterface.class);
+      duktape.get("value", TestInterface.class);
       fail();
     } catch (DuktapeException expected) {
       assertThat(expected).hasMessage("JavaScript property value.getValue not callable");
@@ -94,7 +94,7 @@ public class DuktapeProxyTest {
 
   @Test public void proxyCalledAfterDuktapeClosed() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
-    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy = duktape.get("value", TestInterface.class);
 
     // Close the context - proxy can no longer be used.
     duktape.close();
@@ -109,7 +109,7 @@ public class DuktapeProxyTest {
 
   @Test public void proxyCallThrows() {
     duktape.evaluate("var value = { getValue: function() { throw 'nope'; } };");
-    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy = duktape.get("value", TestInterface.class);
 
     try {
       proxy.getValue();
@@ -122,7 +122,7 @@ public class DuktapeProxyTest {
   @Test public void replaceProxiedObjectProxyReferencesOld() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
-    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy = duktape.get("value", TestInterface.class);
 
     // Now replace the proxied object with a new global.
     duktape.evaluate("value = { getValue: function() { return '7471111'; } };");
@@ -136,7 +136,7 @@ public class DuktapeProxyTest {
     }
 
     // We can create a new proxy to the new object and call it.
-    TestInterface proxy2 = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy2 = duktape.get("value", TestInterface.class);
     assertThat(proxy).isNotEqualTo(proxy2);
     assertThat(proxy2.getValue()).isEqualTo("7471111");
   }
@@ -144,29 +144,29 @@ public class DuktapeProxyTest {
   @Test public void replaceProxiedMethodReferencesNew() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
-    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy = duktape.get("value", TestInterface.class);
     duktape.evaluate("value.getValue = function() { return '7471111'; };");
 
     String v = proxy.getValue();
     assertThat(v).isEqualTo("7471111");
   }
 
-  @Test public void proxyNonObjectThrows() {
+  @Test public void getNonObjectThrows() {
     duktape.evaluate("var value = 2;");
 
     try {
-      duktape.proxy("value", TestInterface.class);
+      duktape.get("value", TestInterface.class);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("JavaScript global called value is not an object");
     }
   }
 
-  @Test public void proxySameObjectTwice() {
+  @Test public void getSameObjectTwice() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
-    TestInterface proxy1 = duktape.proxy("value", TestInterface.class);
-    TestInterface proxy2 = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy1 = duktape.get("value", TestInterface.class);
+    TestInterface proxy2 = duktape.get("value", TestInterface.class);
     assertThat(proxy1).isNotEqualTo(proxy2);
     assertThat(proxy1.getValue()).isEqualTo(proxy2.getValue());
   }
@@ -174,7 +174,7 @@ public class DuktapeProxyTest {
   @Test public void proxyCalledAfterObjectGarbageCollected() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
-    TestInterface proxy = duktape.proxy("value", TestInterface.class);
+    TestInterface proxy = duktape.get("value", TestInterface.class);
     duktape.evaluate("delete value;");
 
     try {
@@ -193,7 +193,7 @@ public class DuktapeProxyTest {
     duktape.evaluate("var value = { set: function(d) { return d.toString(); } };");
 
     try {
-      duktape.proxy("value", UnsupportedArgumentType.class);
+      duktape.get("value", UnsupportedArgumentType.class);
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage(
@@ -215,7 +215,7 @@ public class DuktapeProxyTest {
         "  d: function(v) { return v / 2.0; }\n" +
         "};");
 
-    TestPrimitiveTypes proxy = duktape.proxy("value", TestPrimitiveTypes.class);
+    TestPrimitiveTypes proxy = duktape.get("value", TestPrimitiveTypes.class);
     assertThat(proxy.b(true)).isEqualTo(false);
     assertThat(proxy.i(4)).isEqualTo(16);
     assertThat(proxy.d(6.28318)).isWithin(0.0001).of(3.14159);
@@ -233,7 +233,7 @@ public class DuktapeProxyTest {
         "    return 'boolean: ' + b + ', int: ' + i + ', double: ' + d;\n" +
         "  }\n" +
         "};");
-    TestMultipleArgTypes printer = duktape.proxy("printer", TestMultipleArgTypes.class);
+    TestMultipleArgTypes printer = duktape.get("printer", TestMultipleArgTypes.class);
     assertThat(printer.print(true, 42, 2.718281828459))
         .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
   }
@@ -251,7 +251,7 @@ public class DuktapeProxyTest {
         "  d: function(v) { return v != null ? v / 2.0 : null; }\n" +
         "};");
 
-    TestBoxedPrimitiveArgTypes proxy = duktape.proxy("value", TestBoxedPrimitiveArgTypes.class);
+    TestBoxedPrimitiveArgTypes proxy = duktape.get("value", TestBoxedPrimitiveArgTypes.class);
     assertThat(proxy.b(false)).isEqualTo(true);
     assertThat(proxy.i(4)).isEqualTo(16);
     assertThat(proxy.d(6.28318)).isWithin(0.0001).of(3.14159);
