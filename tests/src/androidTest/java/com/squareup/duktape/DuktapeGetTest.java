@@ -260,4 +260,20 @@ public class DuktapeGetTest {
     assertThat(proxy.i(null)).isNull();
     assertThat(proxy.d(null)).isNull();
   }
+
+  interface PrinterFunction {
+    // All JavaScript functions have a call() method. The first argument will be passed
+    // as `this`.
+    String call(boolean b, int i, double d);
+  }
+
+  @Test public void proxyFunctionObject() {
+    duktape.evaluate(""
+        + "function printer(i, d) {\n"
+        + "  return 'boolean: ' + this + ', int: ' + i + ', double: ' + d;\n"
+        + "}\n");
+    PrinterFunction printer = duktape.get("printer", PrinterFunction.class);
+    assertThat(printer.call(true, 42, 2.718281828459))
+        .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
+  }
 }
