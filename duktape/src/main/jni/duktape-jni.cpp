@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <memory>
+#include <mutex>
 #include <jni.h>
 #include "DuktapeContext.h"
 #include "java/GlobalRef.h"
@@ -23,6 +24,13 @@ namespace {
 
 std::unique_ptr<GlobalRef> duktapeClass;
 static jmethodID getLocalTimeZoneOffset = nullptr;
+
+void initialize(JNIEnv* env, jclass type) {
+  duktapeClass.reset(new GlobalRef(env, type));
+  getLocalTimeZoneOffset = env->GetStaticMethodID(static_cast<jclass>(duktapeClass->get()),
+                                                  "getLocalTimeZoneOffset",
+                                                  "(D)I");
+}
 
 } // anonymous namespace
 
@@ -40,12 +48,9 @@ duk_int_t android__get_local_tzoffset(duk_double_t time) {
 
 JNIEXPORT jlong JNICALL
 Java_com_squareup_duktape_Duktape_createContext(JNIEnv* env, jclass type) {
-  if (!duktapeClass) {
-    duktapeClass.reset(new GlobalRef(env, type));
-    getLocalTimeZoneOffset = env->GetStaticMethodID(static_cast<jclass>(duktapeClass->get()),
-                                                    "getLocalTimeZoneOffset",
-                                                    "(D)I");
-  }
+  static std::once_flag initDuktapeClass;
+  std::call_once(initDuktapeClass, initialize, std::ref(env), type);
+
   JavaVM* javaVM;
   env->GetJavaVM(&javaVM);
   try {
