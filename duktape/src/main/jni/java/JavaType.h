@@ -26,6 +26,7 @@
  */
 class JavaType {
 public:
+  virtual ~JavaType() = default;
   /** Pops a {@code jvalue} from the Duktape stack in {@code ctx}. */
   virtual jvalue pop(duk_context* ctx, JNIEnv*) const = 0;
   /**

@@ -133,6 +133,8 @@ Java_com_squareup_duktape_Duktape_call(JNIEnv *env, jclass type, jlong context, 
 
   try {
     return object->call(env, method, args);
+  } catch (const std::invalid_argument& e) {
+    queueIllegalArgumentException(env, e.what());
   } catch (const std::runtime_error& e) {
     queueDuktapeException(env, e.what());
   }

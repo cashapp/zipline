@@ -276,4 +276,34 @@ public class DuktapeGetTest {
     assertThat(printer.call(true, 42, 2.718281828459))
         .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
   }
+
+  interface TestMultipleObjectArgs {
+    Object print(Object b, Object i, Object d);
+  }
+
+  @Test public void callProxyMultipleObjectArgs() {
+    duktape.evaluate("var printer = {\n" +
+        "  print: function(b, i, d) {\n" +
+        "    return 'boolean: ' + b + ', int: ' + i + ', double: ' + d;\n" +
+        "  }\n" +
+        "};");
+    TestMultipleObjectArgs printer = duktape.get("printer", TestMultipleObjectArgs.class);
+    assertThat(printer.print(true, 42, 2.718281828459))
+        .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
+  }
+
+  @Test public void passUnsupportedTypeAsObjectFails() {
+    duktape.evaluate("var printer = {\n" +
+        "  print: function(b, i, d) {\n" +
+        "    return 'boolean: ' + b + ', int: ' + i + ', double: ' + d;\n" +
+        "  }\n" +
+        "};");
+    TestMultipleObjectArgs printer = duktape.get("printer", TestMultipleObjectArgs.class);
+    try {
+      printer.print(true, 42, new Date());
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Unsupported Java type class java.util.Date");
+    }
+  }
 }
