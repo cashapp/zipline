@@ -380,4 +380,34 @@ public final class DuktapeSetTest {
     assertThat(duktape.evaluate("value.getValue();")).isEqualTo("8675309");
     assertThat(duktape.evaluate("localVar.toString();")).isEqualTo("42");
   }
+
+  interface TestMultipleObjectArgs {
+    Object print(Object b, Object i, Object d);
+  }
+
+  // Double check that arguments of different types are processed in the correct order from the
+  // Duktape stack.
+  @Test public void callJavaMethodObjectArgs() {
+    duktape.set("printer", TestMultipleObjectArgs.class, new TestMultipleObjectArgs() {
+      @Override public Object print(Object b, Object i, Object d) {
+        return String.format("boolean: %s, int: %s, double: %s", b, i, d);
+      }
+    });
+    assertThat(duktape.evaluate("printer.print(true, 42, 2.718281828459)"))
+        .isEqualTo("boolean: true, int: 42.0, double: 2.718281828459");
+  }
+
+  @Test public void passUnsupportedTypeAsObjectFails() {
+    duktape.set("printer", TestMultipleObjectArgs.class, new TestMultipleObjectArgs() {
+      @Override public Object print(Object b, Object i, Object d) {
+        return String.format("boolean: %s, int: %s, double: %s", b, i, d);
+      }
+    });
+    try {
+      duktape.evaluate("printer.print(true, 42, new Date())");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected.getMessage()).contains("Cannot marshal");
+    }
+  }
 }

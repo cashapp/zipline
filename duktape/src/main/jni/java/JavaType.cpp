@@ -254,6 +254,56 @@ private:
   const jmethodID m_box;
 };
 
+struct Object : public JavaType {
+  Object(const JavaType& boxedBoolean, const JavaType& boxedDouble, JavaTypeMap& typeMap)
+      : m_boxedBoolean(boxedBoolean)
+      , m_boxedDouble(boxedDouble)
+      , m_typeMap(typeMap) {
+  }
+
+  jvalue pop(duk_context* ctx, JNIEnv* env) const override {
+    jvalue value;
+    switch (duk_get_type(ctx, -1)) {
+      case DUK_TYPE_NULL:
+      case DUK_TYPE_UNDEFINED:
+        value.l = nullptr;
+        duk_pop(ctx);
+        break;
+
+      case DUK_TYPE_BOOLEAN:
+        value = m_boxedBoolean.pop(ctx, env);
+        break;
+
+      case DUK_TYPE_NUMBER:
+        value = m_boxedDouble.pop(ctx, env);
+        break;
+
+      case DUK_TYPE_STRING:
+        value.l = env->NewStringUTF(duk_require_string(ctx, -1));
+        duk_pop(ctx);
+        break;
+
+      default:
+        duk_error(ctx, DUK_RET_TYPE_ERROR,
+                  "Cannot marshal %s to Java", duk_safe_to_string(ctx, -1));
+        break;
+    }
+    return value;
+  }
+
+  duk_ret_t push(duk_context* ctx, JNIEnv* env, const jvalue& value) const override {
+    if (value.l == nullptr) {
+      duk_push_null(ctx);
+      return 1;
+    }
+    return m_typeMap.get(env, env->GetObjectClass(value.l))->push(ctx, env, value);
+  }
+
+  const JavaType& m_boxedBoolean;
+  const JavaType& m_boxedDouble;
+  JavaTypeMap& m_typeMap;
+};
+
 /**
  * Loads the (primitive) TYPE member of {@code boxedClassName}.
  * For example, given java/lang/Integer, this function will return int.class.
@@ -294,22 +344,25 @@ const JavaType* JavaTypeMap::get(JNIEnv* env, jclass c) {
     const jclass bClass = getPrimitiveType(env, booleanClass);
     const auto boolType = new Boolean(env, booleanClass);
     m_types.emplace(std::make_pair(toString(env, bClass), boolType));
-    m_types.emplace(std::make_pair(toString(env, booleanClass),
-                                   new BoxedPrimitive(env, *boolType)));
+    const auto boxedBooleanType = new BoxedPrimitive(env, *boolType);
+    m_types.emplace(std::make_pair(toString(env, booleanClass), boxedBooleanType));
 
     const jclass integerClass = env->FindClass("java/lang/Integer");
     const jclass iClass = getPrimitiveType(env, integerClass);
     const auto intType = new Integer(env, integerClass);
     m_types.emplace(std::make_pair(toString(env, iClass), intType));
-    m_types.emplace(std::make_pair(toString(env, integerClass),
-                                   new BoxedPrimitive(env, *intType)));
+    m_types.emplace(std::make_pair(toString(env, integerClass), new BoxedPrimitive(env, *intType)));
 
     const jclass doubleClass = env->FindClass("java/lang/Double");
     const jclass dClass = getPrimitiveType(env, doubleClass);
     const auto doubleType = new Double(env, doubleClass);
     m_types.emplace(std::make_pair(toString(env, dClass), doubleType));
-    m_types.emplace(std::make_pair(toString(env, doubleClass),
-                                   new BoxedPrimitive(env, *doubleType)));
+    const auto boxedDoubleType = new BoxedPrimitive(env, *doubleType);
+    m_types.emplace(std::make_pair(toString(env, doubleClass), boxedDoubleType));
+
+    const jclass objectClass = env->FindClass("java/lang/Object");
+    m_types.emplace(std::make_pair(toString(env, objectClass),
+                                   new Object(*boxedBooleanType, *boxedDoubleType, *this)));
   }
 
   const auto name = toString(env, c);
