@@ -65,7 +65,7 @@ public final class OctaneActivity extends Activity {
         }
         evaluateAsset(duktape, "octane.js");
 
-        String results = duktape.evaluate("getResults();");
+        String results = (String) duktape.evaluate("getResults();");
         output.append('\n').append(results);
       } catch (IOException e) {
         StringWriter sw = new StringWriter();
