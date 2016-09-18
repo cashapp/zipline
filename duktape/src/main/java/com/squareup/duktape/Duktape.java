@@ -43,10 +43,10 @@ public final class Duktape implements Closeable {
     return new Duktape(context);
   }
 
-  private long context;
+  private ThreadLocal<Long> context = new ThreadLocal<>();
 
   private Duktape(long context) {
-    this.context = context;
+    this.context.set(context);
   }
 
   /**
@@ -56,7 +56,7 @@ public final class Duktape implements Closeable {
    * @throws DuktapeException if there is an error evaluating the script.
    */
   public synchronized String evaluate(String script, String fileName) {
-    return evaluate(context, script, fileName);
+    return evaluate(getContext(), script, fileName);
   }
   /**
    * Evaluate {@code script} and return any result.
@@ -92,7 +92,7 @@ public final class Duktape implements Closeable {
         throw new UnsupportedOperationException(method.getName() + " is overloaded in " + type);
       }
     }
-    set(context, name, object, methods.values().toArray());
+    set(getContext(), name, object, methods.values().toArray());
   }
 
   /**
@@ -118,7 +118,7 @@ public final class Duktape implements Closeable {
       }
     }
 
-    final long instance = get(context, name, methods.values().toArray());
+    final long instance = get(getContext(), name, methods.values().toArray());
 
     Object proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{ type },
         new InvocationHandler() {
@@ -128,7 +128,7 @@ public final class Duktape implements Closeable {
             if (method.getDeclaringClass() == Object.class) {
               return method.invoke(this, args);
             }
-            return call(context, instance, method, args);
+            return call(getContext(), instance, method, args);
           }
 
           @Override
@@ -144,17 +144,22 @@ public final class Duktape implements Closeable {
    * method for each instance to avoid leaking native memory.
    */
   @Override public synchronized void close() {
-    if (context != 0) {
-      long contextToClose = context;
-      context = 0;
+    long contextToClose = getContext();
+    if (contextToClose != 0) {
+      context.remove();
       destroyContext(contextToClose);
     }
   }
 
   @Override protected synchronized void finalize() throws Throwable {
-    if (context != 0) {
+    if (getContext() != 0) {
       Logger.getLogger(getClass().getName()).warning("Duktape instance leaked!");
     }
+  }
+
+  private long getContext() {
+    Long ctx = context.get();
+    return ctx != null ? ctx : 0;
   }
 
   private static native long createContext();

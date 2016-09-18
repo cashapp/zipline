@@ -91,4 +91,22 @@ public final class DuktapeTest {
       TimeZone.setDefault(original);
     }
   }
+
+  @Test public void cannotShareBetweenThreads() throws InterruptedException {
+    // Other threads cannot use our duktape.
+    Thread thread = new Thread(new Runnable() {
+      @Override public void run() {
+        try {
+          duktape.evaluate("2 + 2");
+          fail();
+        } catch (NullPointerException ignored) {
+        }
+      }
+    });
+    thread.start();
+    thread.join();
+
+    // We can still call it.
+    assertThat(duktape.evaluate("2 + 2")).isEqualTo("4");
+  }
 }
