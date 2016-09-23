@@ -60,7 +60,7 @@ duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) co
   // Load the arguments off the stack and convert to Java types.
   // Note we're going backwards since the last argument is at the top of the stack.
   for (ssize_t i = m_argumentLoaders.size() - 1; i >= 0; --i) {
-    args[i] = m_argumentLoaders[i]->pop(ctx, env);
+    args[i] = m_argumentLoaders[i]->pop(ctx, env, true);
   }
 
   return m_methodBody(ctx, env, javaThis, args.data());

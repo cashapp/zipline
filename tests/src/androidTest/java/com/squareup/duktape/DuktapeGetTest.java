@@ -203,22 +203,19 @@ public class DuktapeGetTest {
 
   interface TestPrimitiveTypes {
     boolean b(boolean b);
-    int i(int i);
-    double d(double d);
+    double d(int i, double d);
   }
 
   // Verify that primitive types can be used as arguments and return values from JavaScript methods.
   @Test public void proxyWithPrimitiveTypes() {
     duktape.evaluate("var value = {\n" +
         "  b: function(v) { return !v; },\n" +
-        "  i: function(v) { return v * v; },\n" +
-        "  d: function(v) { return v / 2.0; }\n" +
+        "  d: function(i, v) { return v / i; }\n" +
         "};");
 
     TestPrimitiveTypes proxy = duktape.get("value", TestPrimitiveTypes.class);
     assertThat(proxy.b(true)).isEqualTo(false);
-    assertThat(proxy.i(4)).isEqualTo(16);
-    assertThat(proxy.d(6.28318)).isWithin(0.0001).of(3.14159);
+    assertThat(proxy.d(2, 6.28318)).isWithin(0.0001).of(3.14159);
   }
 
   interface TestMultipleArgTypes {
@@ -240,25 +237,38 @@ public class DuktapeGetTest {
 
   interface TestBoxedPrimitiveArgTypes {
     Boolean b(Boolean b);
-    Integer i(Integer i);
     Double d(Double d);
   }
 
   @Test public void proxyWithBoxedPrimitiveTypes() {
     duktape.evaluate("var value = {\n" +
         "  b: function(v) { return v != null ? !v : null; },\n" +
-        "  i: function(v) { return v != null ? v * v : null; },\n" +
         "  d: function(v) { return v != null ? v / 2.0 : null; }\n" +
         "};");
 
     TestBoxedPrimitiveArgTypes proxy = duktape.get("value", TestBoxedPrimitiveArgTypes.class);
     assertThat(proxy.b(false)).isEqualTo(true);
-    assertThat(proxy.i(4)).isEqualTo(16);
     assertThat(proxy.d(6.28318)).isWithin(0.0001).of(3.14159);
 
     assertThat(proxy.b(null)).isNull();
-    assertThat(proxy.i(null)).isNull();
     assertThat(proxy.d(null)).isNull();
+  }
+
+  interface IntegerGetter {
+    int get();
+  }
+
+  @Test public void proxyMethodCannotReturnInteger() {
+    duktape.evaluate("var value = {\n" +
+        "  get: function() { return 2; }\n" +
+        "};");
+
+    try {
+      duktape.get("value", IntegerGetter.class);
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected)
+          .hasMessage("In proxied method \"value.get\": Unsupported JavaScript return type int");
+    }
   }
 
   interface PrinterFunction {
@@ -277,6 +287,19 @@ public class DuktapeGetTest {
         .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
   }
 
+  @Test public void proxyFunctionObjectReturnsWrongType() {
+    duktape.evaluate(""
+        + "function printer(i, d) {\n"
+        + "  return d;\n"
+        + "}\n");
+    PrinterFunction printer = duktape.get("printer", PrinterFunction.class);
+    try {
+      printer.call(true, 42, 2.718281828459);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Cannot convert return value 2.718281828459 to String");
+    }
+  }
   interface TestMultipleObjectArgs {
     Object print(Object b, Object i, Object d);
   }

@@ -212,8 +212,12 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
 
   const jmethodID getReturnType =
       env->GetMethodID(methodClass, "getReturnType", "()Ljava/lang/Class;");
-  jclass returnTypeClass = static_cast<jclass>(env->CallObjectMethod(method, getReturnType));
-  const JavaType* returnType = typeMap.getBoxed(env, static_cast<jclass>(returnTypeClass));
+  const auto returnedClass = static_cast<jclass>(env->CallObjectMethod(method, getReturnType));
+  const JavaType* returnType = typeMap.getBoxed(env, returnedClass);
+  if (returnType->isInteger()) {
+    throw std::invalid_argument("Unsupported JavaScript return type "
+                                + toString(env, returnedClass));
+  }
 
   const jmethodID getParameterTypes =
       env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
@@ -244,7 +248,7 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
 
     jobject result;
     if (duk_pcall_prop(ctx, -2 - numArguments, numArguments) == DUK_EXEC_SUCCESS) {
-      result = returnType->pop(ctx, jniEnv).l;
+      result = returnType->pop(ctx, jniEnv, false).l;
     } else {
       queueJavaExceptionForDuktapeError(jniEnv, ctx);
       result = nullptr;

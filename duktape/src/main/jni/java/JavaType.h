@@ -27,8 +27,13 @@
 class JavaType {
 public:
   virtual ~JavaType() = default;
-  /** Pops a {@code jvalue} from the Duktape stack in {@code ctx}. */
-  virtual jvalue pop(duk_context* ctx, JNIEnv*) const = 0;
+
+  /**
+   * Pops a {@code jvalue} from the Duktape stack in {@code ctx}. if {@code inScript} is true,
+   * caller is inside a JavaScript execution so JavaScript exceptions can be used. If false, type
+   * errors will throw C++ exceptions.
+   */
+  virtual jvalue pop(duk_context* ctx, JNIEnv* env, bool inScript) const = 0;
   /**
    * Pushes {@code value} to the Duktape stack in {@code ctx}. Returns the number of entries pushed.
    */
@@ -42,6 +47,8 @@ public:
    * Return true if this is a primitive (int, boolean, etc.), false if not (String, Integer, etc.).
    */
   virtual bool isPrimitive() const { return false; }
+  /** Return true if this type is a java.lang.Integer. */
+  virtual bool isInteger() const { return false; }
 };
 
 /** Manages the {@code JavaType} instances for a particular {@code DuktapeContext}. */
@@ -52,8 +59,15 @@ public:
   const JavaType* get(JNIEnv*, jclass javaClass);
   /** Get the JavaType to use to marshal instances of {@code javaClass}, force boxed primitives. */
   const JavaType* getBoxed(JNIEnv*, jclass javaClass);
+  /** Get the JavaType that represents Object. */
+  const JavaType* getObjectType(JNIEnv*);
+
 private:
+  const JavaType* find(JNIEnv*, const std::string&);
   std::map<std::string, const JavaType*> m_types;
 };
+
+/** Calls toString() on the given object and returns a copy of the result. */
+std::string toString(JNIEnv* env, jobject object);
 
 #endif //DUKTAPE_ANDROID_JAVAVALUE_H

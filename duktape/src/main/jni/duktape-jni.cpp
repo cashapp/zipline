@@ -75,7 +75,9 @@ Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2Ljava_lang_Strin
   }
   try {
     return duktape->evaluate(env, code, fname);
-  } catch (const std::runtime_error& e) {
+  } catch (const std::invalid_argument& e) {
+    queueIllegalArgumentException(env, e.what());
+  } catch (const std::exception& e) {
     queueDuktapeException(env, e.what());
   }
   return nullptr;
@@ -91,7 +93,9 @@ Java_com_squareup_duktape_Duktape_set(JNIEnv *env, jclass type, jlong context, j
   }
   try {
     duktape->set(env, name, object, methods);
-  } catch (const std::runtime_error& e) {
+  } catch (const std::invalid_argument& e) {
+    queueIllegalArgumentException(env, e.what());
+  } catch (const std::exception& e) {
     queueDuktapeException(env, e.what());
   }
 }
@@ -109,7 +113,7 @@ Java_com_squareup_duktape_Duktape_get(JNIEnv *env, jclass type, jlong context, j
     return reinterpret_cast<jlong>(duktape->get(env, name, methods));
   } catch (const std::invalid_argument& e) {
     queueIllegalArgumentException(env, e.what());
-  } catch (const std::runtime_error& e) {
+  } catch (const std::exception& e) {
     queueDuktapeException(env, e.what());
   }
   return 0L;
@@ -135,7 +139,7 @@ Java_com_squareup_duktape_Duktape_call(JNIEnv *env, jclass type, jlong context, 
     return object->call(env, method, args);
   } catch (const std::invalid_argument& e) {
     queueIllegalArgumentException(env, e.what());
-  } catch (const std::runtime_error& e) {
+  } catch (const std::exception& e) {
     queueDuktapeException(env, e.what());
   }
   return nullptr;

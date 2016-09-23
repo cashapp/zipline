@@ -27,6 +27,13 @@ jvalue JavaType::callMethod(duk_context* ctx, JNIEnv *env, jmethodID methodId, j
   return result;
 }
 
+std::string toString(JNIEnv* env, jobject object) {
+  const jmethodID method =
+      env->GetMethodID(env->GetObjectClass(object), "toString", "()Ljava/lang/String;");
+  const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(object, method)));
+  return methodName.str();
+}
+
 namespace  {
 
 struct Void : public JavaType {
@@ -34,7 +41,7 @@ struct Void : public JavaType {
       : m_pushUndefined(pushUndefined) {
   }
 
-  jvalue pop(duk_context* ctx, JNIEnv*) const override {
+  jvalue pop(duk_context* ctx, JNIEnv*, bool) const override {
     duk_pop(ctx);
     jvalue value;
     value.l = nullptr;
@@ -63,7 +70,14 @@ struct Void : public JavaType {
 };
 
 struct String : public JavaType {
-  jvalue pop(duk_context* ctx, JNIEnv* env) const override {
+  jvalue pop(duk_context* ctx, JNIEnv* env, bool inScript) const override {
+    if (!inScript && !duk_is_string(ctx, -1) && !duk_is_null(ctx, -1)) {
+      const auto message =
+          std::string("Cannot convert return value ") + duk_safe_to_string(ctx, -1) + " to String";
+      duk_pop(ctx);
+      throw std::invalid_argument(message);
+    }
+
     jvalue value;
     // Check if the caller passed in a null string.
     value.l = duk_get_type(ctx, -1) != DUK_TYPE_NULL
@@ -94,6 +108,7 @@ public:
   virtual const char* getUnboxMethodName() const = 0;
   virtual const char* getBoxSignature() const = 0;
   virtual const char* getBoxMethodName() const { return "valueOf"; }
+  virtual bool isInt() const { return false; }
 
   bool isPrimitive() const override { return true; }
   jclass boxedClass() const { return static_cast<jclass>(m_boxedClassRef.get()); }
@@ -107,7 +122,13 @@ struct Boolean : public Primitive {
       : Primitive(env, boxedBoolean) {
   }
 
-  jvalue pop(duk_context* ctx, JNIEnv*) const override {
+  jvalue pop(duk_context* ctx, JNIEnv*, bool inScript) const override {
+    if (!inScript && !duk_is_boolean(ctx, -1)) {
+      const auto message =
+          std::string("Cannot convert return value ") + duk_safe_to_string(ctx, -1) + " to boolean";
+      duk_pop(ctx);
+      throw std::invalid_argument(message);
+    }
     jvalue value;
     value.z = duk_require_boolean(ctx, -1);
     duk_pop(ctx);
@@ -144,7 +165,13 @@ struct Integer : public Primitive {
       : Primitive(env, integerClass) {
   }
 
-  jvalue pop(duk_context* ctx, JNIEnv*) const override {
+  jvalue pop(duk_context* ctx, JNIEnv*, bool inScript) const override {
+    if (!inScript && !duk_is_number(ctx, -1)) {
+      const auto message =
+          std::string("Cannot convert return value ") + duk_safe_to_string(ctx, -1) + " to int";
+      duk_pop(ctx);
+      throw std::invalid_argument(message);
+    }
     jvalue value;
     value.i = duk_require_int(ctx, -1);
     duk_pop(ctx);
@@ -174,6 +201,9 @@ struct Integer : public Primitive {
   const char* getBoxSignature() const override {
     return "(I)Ljava/lang/Integer;";
   }
+  bool isInt() const override {
+    return true;
+  }
 };
 
 struct Double : public Primitive {
@@ -181,7 +211,13 @@ struct Double : public Primitive {
       : Primitive(env, boxedDouble) {
   }
 
-  jvalue pop(duk_context* ctx, JNIEnv*) const override {
+  jvalue pop(duk_context* ctx, JNIEnv*, bool inScript) const override {
+    if (!inScript && !duk_is_number(ctx, -1)) {
+      const auto message =
+          std::string("Cannot convert return value ") + duk_safe_to_string(ctx, -1) + " to double";
+      duk_pop(ctx);
+      throw std::invalid_argument(message);
+    }
     jvalue value;
     value.d = duk_require_number(ctx, -1);
     duk_pop(ctx);
@@ -225,10 +261,10 @@ public:
                                      primitive.getBoxSignature())) {
   }
 
-  jvalue pop(duk_context* ctx, JNIEnv* env) const override {
+  jvalue pop(duk_context* ctx, JNIEnv* env, bool inScript) const override {
     jvalue value;
     if (duk_get_type(ctx, -1) != DUK_TYPE_NULL) {
-      value = m_primitive.pop(ctx, env);
+      value = m_primitive.pop(ctx, env, inScript);
       value.l = env->CallStaticObjectMethodA(m_primitive.boxedClass(), m_box, &value);
       checkRethrowDuktapeError(env, ctx);
     } else {
@@ -248,6 +284,10 @@ public:
     }
   }
 
+  bool isInteger() const override {
+    return m_primitive.isInt();
+  }
+
 private:
   const Primitive& m_primitive;
   const jmethodID m_unbox;
@@ -261,7 +301,7 @@ struct Object : public JavaType {
       , m_typeMap(typeMap) {
   }
 
-  jvalue pop(duk_context* ctx, JNIEnv* env) const override {
+  jvalue pop(duk_context* ctx, JNIEnv* env, bool inScript) const override {
     jvalue value;
     switch (duk_get_type(ctx, -1)) {
       case DUK_TYPE_NULL:
@@ -271,22 +311,26 @@ struct Object : public JavaType {
         break;
 
       case DUK_TYPE_BOOLEAN:
-        value = m_boxedBoolean.pop(ctx, env);
+        value = m_boxedBoolean.pop(ctx, env, inScript);
         break;
 
       case DUK_TYPE_NUMBER:
-        value = m_boxedDouble.pop(ctx, env);
+        value = m_boxedDouble.pop(ctx, env, inScript);
         break;
 
       case DUK_TYPE_STRING:
-        value.l = env->NewStringUTF(duk_require_string(ctx, -1));
+        value.l = env->NewStringUTF(duk_get_string(ctx, -1));
         duk_pop(ctx);
         break;
 
       default:
-        duk_error(ctx, DUK_RET_TYPE_ERROR,
-                  "Cannot marshal %s to Java", duk_safe_to_string(ctx, -1));
-        break;
+        const auto message =
+            std::string("Cannot marshal return value ") + duk_safe_to_string(ctx, -1) + " to Java";
+        if (inScript) {
+          duk_error(ctx, DUK_RET_TYPE_ERROR, message.c_str());
+        }
+        duk_pop(ctx);
+        throw std::invalid_argument(message);
     }
     return value;
   }
@@ -313,14 +357,6 @@ jclass getPrimitiveType(JNIEnv* env, jclass boxedClass) {
   return static_cast<jclass>(env->GetStaticObjectField(boxedClass, typeField));
 }
 
-/** Calls toString() on the given object and returns a copy of the result. */
-std::string toString(JNIEnv* env, jobject object) {
-  const jmethodID method =
-      env->GetMethodID(env->GetObjectClass(object), "toString", "()Ljava/lang/String;");
-  const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(object, method)));
-  return methodName.str();
-}
-
 } // anonymous namespace
 
 JavaTypeMap::~JavaTypeMap() {
@@ -330,6 +366,24 @@ JavaTypeMap::~JavaTypeMap() {
 }
 
 const JavaType* JavaTypeMap::get(JNIEnv* env, jclass c) {
+  return find(env, toString(env, c));
+}
+
+const JavaType* JavaTypeMap::getBoxed(JNIEnv* env, jclass c) {
+  const JavaType* javaType = get(env, c);
+  if (!javaType->isPrimitive()) {
+    return javaType;
+  }
+
+  const Primitive* primitive = static_cast<const Primitive*>(javaType);
+  return get(env, primitive->boxedClass());
+}
+
+const JavaType* JavaTypeMap::getObjectType(JNIEnv* env) {
+  return find(env, "class java.lang.Object");
+}
+
+const JavaType* JavaTypeMap::find(JNIEnv* env, const std::string& name) {
   if (m_types.empty()) {
     // Load up the map with the types we support.
     const jclass voidClass = env->FindClass("java/lang/Void");
@@ -365,21 +419,10 @@ const JavaType* JavaTypeMap::get(JNIEnv* env, jclass c) {
                                    new Object(*boxedBooleanType, *boxedDoubleType, *this)));
   }
 
-  const auto name = toString(env, c);
   const auto I = m_types.find(name);
   if (I != m_types.end()) {
     return I->second;
   }
 
   throw std::invalid_argument("Unsupported Java type " + name);
-}
-
-const JavaType* JavaTypeMap::getBoxed(JNIEnv* env, jclass c) {
-  const JavaType* javaType = get(env, c);
-  if (!javaType->isPrimitive()) {
-    return javaType;
-  }
-
-  const Primitive* primitive = static_cast<const Primitive*>(javaType);
-  return get(env, primitive->boxedClass());
 }
