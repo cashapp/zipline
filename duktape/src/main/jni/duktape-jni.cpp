@@ -65,7 +65,7 @@ Java_com_squareup_duktape_Duktape_destroyContext(JNIEnv *env, jclass type, jlong
   delete reinterpret_cast<DuktapeContext*>(context);
 }
 
-JNIEXPORT jstring JNICALL
+JNIEXPORT jobject JNICALL
 Java_com_squareup_duktape_Duktape_evaluate__JLjava_lang_String_2Ljava_lang_String_2(
     JNIEnv* env, jclass type, jlong context, jstring code, jstring fname) {
   DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);

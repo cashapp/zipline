@@ -104,7 +104,8 @@ void fatalErrorHandler(duk_context* ctx, duk_errcode_t code, const char* msg) {
 } // anonymous namespace
 
 DuktapeContext::DuktapeContext(JavaVM* javaVM)
-    : m_context(duk_create_heap(nullptr, nullptr, nullptr, nullptr, fatalErrorHandler)) {
+    : m_context(duk_create_heap(nullptr, nullptr, nullptr, nullptr, fatalErrorHandler))
+    , m_objectType(m_javaValues.getObjectType(getEnvFromJavaVM(javaVM))) {
   if (!m_context) {
     throw std::bad_alloc();
   }
@@ -122,24 +123,17 @@ DuktapeContext::~DuktapeContext() {
   duk_destroy_heap(m_context);
 }
 
-jstring DuktapeContext::evaluate(JNIEnv* env, jstring code, jstring fname) const {
+jobject DuktapeContext::evaluate(JNIEnv* env, jstring code, jstring fname) const {
   CHECK_STACK(m_context);
   const JString sourceCode(env, code);
   const JString fileName(env, fname);
 
-  jstring result = nullptr;
-
   if (eval_string_with_filename(m_context, sourceCode, fileName) != DUK_EXEC_SUCCESS) {
     queueJavaExceptionForDuktapeError(env, m_context);
-  } else {
-    if (!duk_is_null_or_undefined(m_context, -1)) {
-      // Return a string result (coerce the value if needed).
-      result = env->NewStringUTF(duk_safe_to_string(m_context, -1));
-    }
-    duk_pop(m_context);
+    return nullptr;
   }
 
-  return result;
+  return m_objectType->pop(m_context, env, false).l;
 }
 
 void DuktapeContext::set(JNIEnv *env, jstring name, jobject object, jobjectArray methods) {

@@ -234,24 +234,35 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
   return [methodName, returnType, argumentLoaders]
       (JNIEnv* jniEnv, duk_context* ctx, void* instance, jobjectArray args) {
     CHECK_STACK(ctx);
+    jobject result = nullptr;
 
     duk_push_global_object(ctx);
     // Set up the call - push the object, method name, and arguments onto the stack.
     duk_push_heapptr(ctx, instance);
     duk_push_string(ctx, methodName.c_str());
+
     const jsize numArguments = args != nullptr ? jniEnv->GetArrayLength(args) : 0;
     jvalue arg;
     for (jsize i = 0; i < numArguments; ++i) {
       arg.l = jniEnv->GetObjectArrayElement(args, i);
-      argumentLoaders[i]->push(ctx, jniEnv, arg);
+      try {
+        argumentLoaders[i]->push(ctx, jniEnv, arg);
+      } catch (std::invalid_argument& e) {
+        // Pop the three stack entries pushed above, and any args pushed so far.
+        duk_pop_n(ctx, 3 + i);
+        queueIllegalArgumentException(jniEnv, e.what());
+        return result;
+      }
     }
 
-    jobject result;
     if (duk_pcall_prop(ctx, -2 - numArguments, numArguments) == DUK_EXEC_SUCCESS) {
-      result = returnType->pop(ctx, jniEnv, false).l;
+      try {
+        result = returnType->pop(ctx, jniEnv, false).l;
+      } catch (std::invalid_argument& e) {
+        queueIllegalArgumentException(jniEnv, e.what());
+      }
     } else {
       queueJavaExceptionForDuktapeError(jniEnv, ctx);
-      result = nullptr;
     }
 
     // Pop the instance and global object.
