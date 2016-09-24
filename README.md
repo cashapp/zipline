@@ -3,31 +3,35 @@ Duktape Android
 
 The [Duktape embeddable JavaScript engine][duk] packaged for Android.
 
-
 Usage
 -----
 
 ```java
 Duktape duktape = Duktape.create();
 try {
-  Log.d("Greeting", duktape.evaluate("'hello world'.toUpperCase();"));
+  Log.d("Greeting", duktape.evaluate("'hello world'.toUpperCase();").toString());
 } finally {
   duktape.close();
 }
 ```
 
+## Supported Java Types
+
+Currently, the following Java types are supported when interfacing with JavaScript:
+
+ * `boolean` and `Boolean`
+ * `int` and `Integer` - as an argument only (not a return value) when calling JavaScript from Java.
+ * `double` and `Double`
+ * `String`
+ * `void` - as a return value.
+
+`Object` is also supported in declarations, but the type of the actual value passed must be
+one of the above or `null`.
+
 ## Calling Java from JavaScript
 
 You can provide a Java object for use as a JavaScript global, and call Java functions from
-JavaScript! Currently, the following Java types are supported for function arguments and
-return values:
-
- * `boolean` and `Boolean`
- * `int` and `Integer`
- * `double` and `Double`
- * `String`
-
-`void` return values are also supported.
+JavaScript!  
 
 ### Example
 
@@ -57,12 +61,12 @@ Now you can set the object to a JavaScript global, making it available in JavaSc
 // Attach our interface to a JavaScript object called Utf8.
 duktape.set("Utf8", Utf8.class, utf8);
 
-String greeting = duktape.evaluate("" +
+String greeting = (String) duktape.evaluate(""
     // Here we have a hex encoded string.
-    "var hexEnc = 'EC9588EB8595ED9598EC84B8EC9A9421';\n" +
+    + "var hexEnc = 'EC9588EB8595ED9598EC84B8EC9A9421';\n"
     // Call out to Java to decode it!
-    "var message = Utf8.fromHex(hexEnc);\n" +
-    "return message;");
+    + "var message = Utf8.fromHex(hexEnc);\n"
+    + "message;");
 
 Log.d("Greeting", greeting);
 ```
@@ -90,10 +94,10 @@ Next, we define a global JavaScript object in Duktape to connect to:
 
 ```java
 // Note that Duktape.dec returns a Buffer, we must convert it to a String return value.
-duktape.evaluate("" +
-    "var Utf8 = {\n" +
-    "  fromHex: function(v) { return String(Duktape.dec('hex', v)); }\n" +
-    "};");
+duktape.evaluate(""
+    + "var Utf8 = {\n"
+    + "  fromHex: function(v) { return String(Duktape.dec('hex', v)); }\n"
+    + "};");
 ```
 
 Now you can connect our interface to the JavaScript global, making it available in Java code:
@@ -152,8 +156,6 @@ License
 
 
 Note: The included C code from Duktape is licensed under MIT.
-
-
 
 
 

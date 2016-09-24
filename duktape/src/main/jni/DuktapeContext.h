@@ -29,7 +29,7 @@ public:
   DuktapeContext(const DuktapeContext &) = delete;
   DuktapeContext & operator=(const DuktapeContext &) = delete;
 
-  jstring evaluate(JNIEnv* env, jstring sourceCode, jstring fileName) const;
+  jobject evaluate(JNIEnv* env, jstring sourceCode, jstring fileName) const;
 
   void set(JNIEnv *env, jstring name, jobject object, jobjectArray methods);
 
@@ -39,6 +39,7 @@ private:
   duk_context* m_context;
   std::list<JavaScriptObject> m_jsObjects;
   JavaTypeMap m_javaValues;
+  const JavaType* m_objectType;
 };
 
 #endif // DUKTAPE_ANDROID_DUKTAPE_CONTEXT_H

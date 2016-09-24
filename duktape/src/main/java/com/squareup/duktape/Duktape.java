@@ -50,21 +50,23 @@ public final class Duktape implements Closeable {
   }
 
   /**
-   * Evaluate {@code script} and return any result.  {@code fileName} will be used in error
-   * reporting.
+   * Evaluate {@code script} and return any result. {@code fileName} will be used in error
+   * reporting. Note that the result must be one of the supported Java types or the call will
+   * throw a {@link DuktapeException}.
    *
    * @throws DuktapeException if there is an error evaluating the script.
    */
-  public synchronized String evaluate(String script, String fileName) {
+  public synchronized Object evaluate(String script, String fileName) {
     return evaluate(context, script, fileName);
   }
   /**
-   * Evaluate {@code script} and return any result.
+   * Evaluate {@code script} and return any result. Note that the result must be one of the
+   * supported Java types or the call will throw a {@link DuktapeException}.
    *
    * @throws DuktapeException if there is an error evaluating the script.
    */
-  public String evaluate(String script) {
-    return evaluate(script, "?");
+  public Object evaluate(String script) {
+    return evaluate(context, script, "?");
   }
 
   /**
@@ -159,7 +161,7 @@ public final class Duktape implements Closeable {
 
   private static native long createContext();
   private static native void destroyContext(long context);
-  private static native String evaluate(long context, String sourceCode, String fileName);
+  private static native Object evaluate(long context, String sourceCode, String fileName);
   private static native void set(long context, String name, Object object, Object[] methods);
   private static native long get(long context, String name, Object[] methods);
   private static native Object call(long context, long instance, Object method, Object[] args);

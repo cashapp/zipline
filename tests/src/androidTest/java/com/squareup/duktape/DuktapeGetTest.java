@@ -125,7 +125,7 @@ public class DuktapeGetTest {
     TestInterface proxy = duktape.get("value", TestInterface.class);
 
     // Now replace the proxied object with a new global.
-    duktape.evaluate("value = { getValue: function() { return '7471111'; } };");
+    duktape.evaluate("value = { getValue: function() { return '7471111'; } }; null;");
 
     try {
       // Calls to the old object fail.
@@ -145,7 +145,7 @@ public class DuktapeGetTest {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
     TestInterface proxy = duktape.get("value", TestInterface.class);
-    duktape.evaluate("value.getValue = function() { return '7471111'; };");
+    duktape.evaluate("value.getValue = function() { return '7471111'; }; null;");
 
     String v = proxy.getValue();
     assertThat(v).isEqualTo("7471111");
@@ -265,6 +265,7 @@ public class DuktapeGetTest {
 
     try {
       duktape.get("value", IntegerGetter.class);
+      fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
           .hasMessage("In proxied method \"value.get\": Unsupported JavaScript return type int");
