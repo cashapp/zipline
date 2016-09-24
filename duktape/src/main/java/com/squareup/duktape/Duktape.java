@@ -65,7 +65,7 @@ public final class Duktape implements Closeable {
    *
    * @throws DuktapeException if there is an error evaluating the script.
    */
-  public Object evaluate(String script) {
+  public synchronized Object evaluate(String script) {
     return evaluate(context, script, "?");
   }
 
@@ -78,7 +78,7 @@ public final class Duktape implements Closeable {
    * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
    * {@link Double}, {@link String}.
    */
-  public <T> void set(String name, Class<T> type, T object) {
+  public synchronized <T> void set(String name, Class<T> type, T object) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be bound. Received: " + type);
     }
@@ -106,7 +106,7 @@ public final class Duktape implements Closeable {
    * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
    * {@link Double}, {@link String}.
    */
-  public <T> T get(final String name, final Class<T> type) {
+  public synchronized <T> T get(final String name, final Class<T> type) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be proxied. Received: " + type);
     }
@@ -121,6 +121,7 @@ public final class Duktape implements Closeable {
     }
 
     final long instance = get(context, name, methods.values().toArray());
+    final Duktape duktape = this;
 
     Object proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{ type },
         new InvocationHandler() {
@@ -130,7 +131,9 @@ public final class Duktape implements Closeable {
             if (method.getDeclaringClass() == Object.class) {
               return method.invoke(this, args);
             }
-            return call(context, instance, method, args);
+            synchronized (duktape) {
+              return call(duktape.context, instance, method, args);
+            }
           }
 
           @Override
