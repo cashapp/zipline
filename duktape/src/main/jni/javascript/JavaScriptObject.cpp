@@ -219,6 +219,9 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
                                 + toString(env, returnedClass));
   }
 
+  const jmethodID isVarArgsMethod = env->GetMethodID(methodClass, "isVarArgs", "()Z");
+  const auto isVarArgs = env->CallBooleanMethod(method, isVarArgsMethod);
+
   const jmethodID getParameterTypes =
       env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
   jobjectArray parameterTypes =
@@ -228,10 +231,18 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
   std::vector<const JavaType*> argumentLoaders(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
     auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
+    if (isVarArgs && i == numArgs - 1) {
+      const auto parameterClass = env->GetObjectClass(parameterType);
+      const jmethodID getComponentType =
+          env->GetMethodID(parameterClass, "getComponentType", "()Ljava/lang/Class;");
+      parameterType = env->CallObjectMethod(parameterType, getComponentType);
+      argumentLoaders[i] = typeMap.get(env, static_cast<jclass>(parameterType));
+      break;
+    }
     argumentLoaders[i] = typeMap.getBoxed(env, static_cast<jclass>(parameterType));
   }
 
-  return [methodName, returnType, argumentLoaders]
+  return [methodName, returnType, argumentLoaders, isVarArgs]
       (JNIEnv* jniEnv, duk_context* ctx, void* instance, jobjectArray args) {
     CHECK_STACK(ctx);
     jobject result = nullptr;
@@ -241,11 +252,15 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
     duk_push_heapptr(ctx, instance);
     duk_push_string(ctx, methodName.c_str());
 
-    const jsize numArguments = args != nullptr ? jniEnv->GetArrayLength(args) : 0;
+    jsize numArguments = args != nullptr ? jniEnv->GetArrayLength(args) : 0;
     jvalue arg;
     for (jsize i = 0; i < numArguments; ++i) {
       arg.l = jniEnv->GetObjectArrayElement(args, i);
       try {
+        if (isVarArgs && i == numArguments - 1) {
+          numArguments = i + argumentLoaders[i]->pushArray(ctx, jniEnv, static_cast<jarray>(arg.l));
+          break;
+        }
         argumentLoaders[i]->push(ctx, jniEnv, arg);
       } catch (std::invalid_argument& e) {
         // Pop the three stack entries pushed above, and any args pushed so far.

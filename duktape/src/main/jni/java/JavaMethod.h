@@ -37,6 +37,7 @@ public:
 private:
   std::vector<const JavaType*> m_argumentLoaders;
   std::function<duk_ret_t(duk_context*, JNIEnv*, jobject, jvalue*)> m_methodBody;
+  bool m_isVarArgs;
 };
 
 #endif //DUKTAPE_ANDROID_JAVAMETHOD_H

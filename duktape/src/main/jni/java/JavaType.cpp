@@ -16,7 +16,29 @@
 #include "JavaType.h"
 #include "JString.h"
 #include "JavaExceptions.h"
-#include "GlobalRef.h"
+
+jarray JavaType::popArray(duk_context* ctx, JNIEnv* env, uint32_t count, bool inScript) const {
+  jobjectArray array = env->NewObjectArray(count, static_cast<jclass>(m_classRef.get()), nullptr);
+  for (auto i = count; i > 0u; --i) {
+    env->SetObjectArrayElement(array, i - 1, pop(ctx, env, inScript).l);
+  }
+  return array;
+}
+
+duk_ret_t JavaType::pushArray(duk_context* ctx, JNIEnv* env, const jarray& values) const {
+  const auto size = env->GetArrayLength(values);
+  for (jsize i = 0; i < size; ++i) {
+    jvalue element;
+    element.l = env->GetObjectArrayElement(static_cast<jobjectArray>(values), i);
+    try {
+      push(ctx, env, element);
+    } catch (std::invalid_argument& e) {
+      duk_pop_n(ctx, i);
+      throw e;
+    }
+  }
+  return size;
+}
 
 jvalue JavaType::callMethod(duk_context* ctx, JNIEnv *env, jmethodID methodId, jobject javaThis,
                             jvalue* args) const {
@@ -37,8 +59,9 @@ std::string toString(JNIEnv* env, jobject object) {
 namespace  {
 
 struct Void : public JavaType {
-  Void(bool pushUndefined)
-      : m_pushUndefined(pushUndefined) {
+  Void(const GlobalRef& classRef, bool pushUndefined)
+      : JavaType(classRef)
+      , m_pushUndefined(pushUndefined) {
   }
 
   jvalue pop(duk_context* ctx, JNIEnv*, bool) const override {
@@ -70,6 +93,10 @@ struct Void : public JavaType {
 };
 
 struct String : public JavaType {
+  String(const GlobalRef& classRef)
+      : JavaType(classRef) {
+  }
+
   jvalue pop(duk_context* ctx, JNIEnv* env, bool inScript) const override {
     if (!inScript && !duk_is_string(ctx, -1) && !duk_is_null(ctx, -1)) {
       const auto message =
@@ -100,8 +127,9 @@ struct String : public JavaType {
 
 struct Primitive : public JavaType {
 public:
-  Primitive(JNIEnv* env, jclass boxedClass)
-      : m_boxedClassRef(env, boxedClass) {
+  Primitive(const GlobalRef& classRef, const GlobalRef& boxedClassRef)
+      : JavaType(classRef)
+      , m_boxedClassRef(boxedClassRef) {
   }
 
   virtual const char* getUnboxSignature() const = 0;
@@ -112,14 +140,15 @@ public:
 
   bool isPrimitive() const override { return true; }
   jclass boxedClass() const { return static_cast<jclass>(m_boxedClassRef.get()); }
+  const GlobalRef& boxedClassRef() const { return m_boxedClassRef; }
 
 private:
   const GlobalRef m_boxedClassRef;
 };
 
 struct Boolean : public Primitive {
-  Boolean(JNIEnv* env, jclass boxedBoolean)
-      : Primitive(env, boxedBoolean) {
+  Boolean(const GlobalRef& classRef, const GlobalRef& boxedClassRef)
+      : Primitive(classRef, boxedClassRef) {
   }
 
   jvalue pop(duk_context* ctx, JNIEnv*, bool inScript) const override {
@@ -135,9 +164,31 @@ struct Boolean : public Primitive {
     return value;
   }
 
+  jarray popArray(duk_context* ctx, JNIEnv* env, uint32_t count, bool inScript) const {
+    jbooleanArray array = env->NewBooleanArray(count);
+    for (auto i = count; i > 0u; --i) {
+      const auto value = pop(ctx, env, inScript).z;
+      env->SetBooleanArrayRegion(array, i - 1, 1, &value);
+    }
+    return array;
+  }
+
   duk_ret_t push(duk_context* ctx, JNIEnv*, const jvalue& value) const override {
     duk_push_boolean(ctx, value.z == JNI_TRUE);
     return 1;
+  }
+
+  duk_ret_t pushArray(duk_context* ctx, JNIEnv* env, const jarray& values) const {
+    const auto size = env->GetArrayLength(values);
+    if (size == 0) {
+      return 0;
+    }
+    jboolean* elements = env->GetBooleanArrayElements(static_cast<jbooleanArray>(values), nullptr);
+    for (jsize i = 0; i < size; ++i) {
+      duk_push_boolean(ctx, elements[i] == JNI_TRUE);
+    }
+    env->ReleaseBooleanArrayElements(static_cast<jbooleanArray>(values), elements, JNI_ABORT);
+    return size;
   }
 
   jvalue callMethod(duk_context* ctx, JNIEnv* env, jmethodID methodId, jobject javaThis,
@@ -161,8 +212,8 @@ struct Boolean : public Primitive {
 };
 
 struct Integer : public Primitive {
-  Integer(JNIEnv* env, jclass integerClass)
-      : Primitive(env, integerClass) {
+  Integer(const GlobalRef& classRef, const GlobalRef& boxedClassRef)
+      : Primitive(classRef, boxedClassRef) {
   }
 
   jvalue pop(duk_context* ctx, JNIEnv*, bool inScript) const override {
@@ -178,9 +229,31 @@ struct Integer : public Primitive {
     return value;
   }
 
+  jarray popArray(duk_context* ctx, JNIEnv* env, uint32_t count, bool inScript) const {
+    jintArray array = env->NewIntArray(count);
+    for (auto i = count; i > 0u; --i) {
+      const auto value = pop(ctx, env, inScript).i;
+      env->SetIntArrayRegion(array, i - 1, 1, &value);
+    }
+    return array;
+  }
+
   duk_ret_t push(duk_context* ctx, JNIEnv*, const jvalue& value) const override {
     duk_push_int(ctx, value.i);
     return 1;
+  }
+
+  duk_ret_t pushArray(duk_context* ctx, JNIEnv* env, const jarray& values) const override {
+    const auto size = env->GetArrayLength(values);
+    if (size == 0) {
+      return 0;
+    }
+    jint* elements = env->GetIntArrayElements(static_cast<jintArray>(values), nullptr);
+    for (jsize i = 0; i < size; ++i) {
+      duk_push_int(ctx, elements[i]);
+    }
+    env->ReleaseIntArrayElements(static_cast<jintArray>(values), elements, JNI_ABORT);
+    return size;
   }
 
   jvalue callMethod(duk_context* ctx, JNIEnv* env, jmethodID methodId, jobject javaThis,
@@ -207,8 +280,8 @@ struct Integer : public Primitive {
 };
 
 struct Double : public Primitive {
-  Double(JNIEnv* env, jclass boxedDouble)
-      : Primitive(env, boxedDouble) {
+  Double(const GlobalRef& classRef, const GlobalRef& boxedClassRef)
+      : Primitive(classRef, boxedClassRef) {
   }
 
   jvalue pop(duk_context* ctx, JNIEnv*, bool inScript) const override {
@@ -224,13 +297,35 @@ struct Double : public Primitive {
     return value;
   }
 
+  jarray popArray(duk_context* ctx, JNIEnv* env, uint32_t count, bool inScript) const {
+    jdoubleArray array = env->NewDoubleArray(count);
+    for (auto i = count; i > 0u; --i) {
+      const auto value = pop(ctx, env, inScript).d;
+      env->SetDoubleArrayRegion(array, i - 1, 1, &value);
+    }
+    return array;
+  }
+
   duk_ret_t push(duk_context* ctx, JNIEnv*, const jvalue& value) const override {
     duk_push_number(ctx, value.d);
     return 1;
   }
 
+  duk_ret_t pushArray(duk_context* ctx, JNIEnv* env, const jarray& values) const override {
+    const auto size = env->GetArrayLength(values);
+    if (size == 0) {
+      return 0;
+    }
+    jdouble* elements = env->GetDoubleArrayElements(static_cast<jdoubleArray>(values), nullptr);
+    for (jsize i = 0; i < size; ++i) {
+      duk_push_number(ctx, elements[i]);
+    }
+    env->ReleaseDoubleArrayElements(static_cast<jdoubleArray>(values), elements, JNI_ABORT);
+    return size;
+  }
+
   jvalue callMethod(duk_context* ctx, JNIEnv* env, jmethodID methodId, jobject javaThis,
-                    jvalue *args) const override {
+                    jvalue* args) const override {
     jdouble returnValue = env->CallDoubleMethodA(javaThis, methodId, args);
     checkRethrowDuktapeError(env, ctx);
     jvalue result;
@@ -252,7 +347,8 @@ struct Double : public Primitive {
 class BoxedPrimitive : public JavaType {
 public:
   BoxedPrimitive(JNIEnv* env, const Primitive& primitive)
-      : m_primitive(primitive)
+      : JavaType(primitive.boxedClassRef())
+      , m_primitive(primitive)
       , m_unbox(env->GetMethodID(primitive.boxedClass(),
                                  primitive.getUnboxMethodName(),
                                  primitive.getUnboxSignature()))
@@ -295,8 +391,10 @@ private:
 };
 
 struct Object : public JavaType {
-  Object(const JavaType& boxedBoolean, const JavaType& boxedDouble, JavaTypeMap& typeMap)
-      : m_boxedBoolean(boxedBoolean)
+  Object(const GlobalRef& classRef, const JavaType& boxedBoolean, const JavaType& boxedDouble,
+         JavaTypeMap& typeMap)
+      : JavaType(classRef)
+      , m_boxedBoolean(boxedBoolean)
       , m_boxedDouble(boxedDouble)
       , m_typeMap(typeMap) {
   }
@@ -388,35 +486,37 @@ const JavaType* JavaTypeMap::find(JNIEnv* env, const std::string& name) {
     // Load up the map with the types we support.
     const jclass voidClass = env->FindClass("java/lang/Void");
     const jclass vClass = getPrimitiveType(env, voidClass);
-    m_types.emplace(std::make_pair(toString(env, vClass), new Void(false)));
-    m_types.emplace(std::make_pair(toString(env, voidClass), new Void(true)));
+    m_types.emplace(std::make_pair(toString(env, vClass), new Void(GlobalRef(env, vClass), false)));
+    m_types.emplace(std::make_pair(toString(env, voidClass),
+                                   new Void(GlobalRef(env, voidClass), true)));
 
     const jclass stringClass = env->FindClass("java/lang/String");
-    m_types.emplace(std::make_pair(toString(env, stringClass), new String()));
+    m_types.emplace(std::make_pair(toString(env, stringClass),
+                                   new String(GlobalRef(env, stringClass))));
 
     const jclass booleanClass = env->FindClass("java/lang/Boolean");
     const jclass bClass = getPrimitiveType(env, booleanClass);
-    const auto boolType = new Boolean(env, booleanClass);
+    const auto boolType = new Boolean(GlobalRef(env, bClass), GlobalRef(env, booleanClass));
     m_types.emplace(std::make_pair(toString(env, bClass), boolType));
     const auto boxedBooleanType = new BoxedPrimitive(env, *boolType);
     m_types.emplace(std::make_pair(toString(env, booleanClass), boxedBooleanType));
 
     const jclass integerClass = env->FindClass("java/lang/Integer");
     const jclass iClass = getPrimitiveType(env, integerClass);
-    const auto intType = new Integer(env, integerClass);
+    const auto intType = new Integer(GlobalRef(env, iClass), GlobalRef(env, integerClass));
     m_types.emplace(std::make_pair(toString(env, iClass), intType));
     m_types.emplace(std::make_pair(toString(env, integerClass), new BoxedPrimitive(env, *intType)));
 
     const jclass doubleClass = env->FindClass("java/lang/Double");
     const jclass dClass = getPrimitiveType(env, doubleClass);
-    const auto doubleType = new Double(env, doubleClass);
+    const auto doubleType = new Double(GlobalRef(env, dClass), GlobalRef(env, doubleClass));
     m_types.emplace(std::make_pair(toString(env, dClass), doubleType));
     const auto boxedDoubleType = new BoxedPrimitive(env, *doubleType);
     m_types.emplace(std::make_pair(toString(env, doubleClass), boxedDoubleType));
 
     const jclass objectClass = env->FindClass("java/lang/Object");
     m_types.emplace(std::make_pair(toString(env, objectClass),
-                                   new Object(*boxedBooleanType, *boxedDoubleType, *this)));
+        new Object(GlobalRef(env, objectClass), *boxedBooleanType, *boxedDoubleType, *this)));
   }
 
   const auto I = m_types.find(name);
