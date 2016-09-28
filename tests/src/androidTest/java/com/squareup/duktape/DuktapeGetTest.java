@@ -301,6 +301,7 @@ public class DuktapeGetTest {
       assertThat(expected).hasMessage("Cannot convert return value 2.718281828459 to String");
     }
   }
+
   interface TestMultipleObjectArgs {
     Object print(Object b, Object i, Object d);
   }
@@ -329,5 +330,62 @@ public class DuktapeGetTest {
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage("Unsupported Java type class java.util.Date");
     }
+  }
+
+  interface TestVarArgs {
+    String call(String separator, Object... args);
+  }
+
+  @Test public void callVarArgMethod() {
+    duktape.evaluate(""
+        + "function joiner() {\n"
+        + "  var result = '';\n"
+        + "  for (i = 0; i < arguments.length; i++) {\n"
+        + "    if (i > 0) result = result + this;\n"
+        + "    result = result + arguments[i].toString();\n"
+        + "  }\n"
+        + "  return result.toString();\n"
+        + "}");
+    TestVarArgs joiner = duktape.get("joiner", TestVarArgs.class);
+    assertThat(joiner.call("-")).isEqualTo("");
+    assertThat(joiner.call(" + ", 1, 2, "three")).isEqualTo("1 + 2 + three");
+
+    try {
+      joiner.call(", ", "Test", new Date(), 1.0);
+      fail();
+    } catch (Exception expected) {
+      assertThat(expected).hasMessage("Unsupported Java type class java.util.Date");
+    }
+  }
+
+  interface Summer {
+    double sumDoubles(double... args);
+    double sumIntegers(int... args);
+    double countTrues(boolean... args);
+  }
+
+  @Test public void callVarArgPrimitiveMethod() {
+    duktape.evaluate(""
+        + "var summer = {\n"
+        + "  sum: function() {\n"
+        + "    var result = 0;\n"
+        + "    for (i = 0; i < arguments.length; i++) {\n"
+        + "      result = result + arguments[i];\n"
+        + "    }\n"
+        + "    return result;"
+        + "  },\n"
+        + "  sumDoubles: function() { return this.sum.apply(this, arguments); },\n"
+        + "  sumIntegers: function() { return this.sum.apply(this, arguments); },\n"
+        + "  countTrues: function() { return this.sum.apply(this, arguments); }\n"
+        + "};");
+    Summer summer = duktape.get("summer", Summer.class);
+    assertThat(summer.sumDoubles()).isEqualTo(0.0);
+    assertThat(summer.sumDoubles(1, 2, 3, 4)).isEqualTo(10.0);
+
+    assertThat(summer.sumIntegers()).isEqualTo(0.0);
+    assertThat(summer.sumIntegers(1, 2, 3, 4)).isEqualTo(10.0);
+
+    assertThat(summer.countTrues()).isEqualTo(0.0);
+    assertThat(summer.countTrues(true, false, true, true)).isEqualTo(3.0);
   }
 }

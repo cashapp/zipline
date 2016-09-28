@@ -19,6 +19,7 @@
 #include <map>
 #include <jni.h>
 #include "../duktape/duktape.h"
+#include "GlobalRef.h"
 
 /**
  * Represents an instance of a Java class.  Handles pushing/popping values of the represented type
@@ -26,18 +27,32 @@
  */
 class JavaType {
 public:
+  JavaType(const GlobalRef& classRef)
+      : m_classRef(classRef) {
+  }
   virtual ~JavaType() = default;
 
   /**
-   * Pops a {@code jvalue} from the Duktape stack in {@code ctx}. if {@code inScript} is true,
+   * Pops a {@code jvalue} from the Duktape stack in {@code ctx}. If {@code inScript} is true,
    * caller is inside a JavaScript execution so JavaScript exceptions can be used. If false, type
    * errors will throw C++ exceptions.
    */
   virtual jvalue pop(duk_context* ctx, JNIEnv* env, bool inScript) const = 0;
   /**
+   * Pops {@code count} values from the Duktape stack in {@code ctx} and packs them into a Java
+   * array. If {@code inScript} is true, caller is inside a JavaScript execution so JavaScript
+   * exceptions can be used. If false, type errors will throw C++ exceptions.
+   */
+  virtual jarray popArray(duk_context*, JNIEnv*, uint32_t count, bool inScript) const;
+  /**
    * Pushes {@code value} to the Duktape stack in {@code ctx}. Returns the number of entries pushed.
    */
   virtual duk_ret_t push(duk_context* ctx, JNIEnv*, const jvalue& value) const = 0;
+  /**
+   * Pushes the elements of {@code values} to the Duktape stack in {@code ctx} individually.
+   * Returns the number of entries pushed (the length of {@code values}) if successful.
+   */
+  virtual duk_ret_t pushArray(duk_context* ctx, JNIEnv*, const jarray& values) const;
   /**
    * Calls the given Java method with {@code javaThis} and {@code args}.  Returns the result from
    * the method.  The Duktape context is only modified to propagate exceptions thrown by the JVM.
@@ -49,6 +64,9 @@ public:
   virtual bool isPrimitive() const { return false; }
   /** Return true if this type is a java.lang.Integer. */
   virtual bool isInteger() const { return false; }
+
+private:
+  const GlobalRef m_classRef;
 };
 
 /** Manages the {@code JavaType} instances for a particular {@code DuktapeContext}. */

@@ -24,6 +24,9 @@
 JavaMethod::JavaMethod(JavaTypeMap& typeMap, JNIEnv* env, jobject method) {
   jclass methodClass = env->GetObjectClass(method);
 
+  const jmethodID isVarArgs = env->GetMethodID(methodClass, "isVarArgs", "()Z");
+  m_isVarArgs = env->CallBooleanMethod(method, isVarArgs);
+
   const jmethodID getParameterTypes =
       env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
   jobjectArray parameterTypes =
@@ -31,7 +34,13 @@ JavaMethod::JavaMethod(JavaTypeMap& typeMap, JNIEnv* env, jobject method) {
   const jsize numArgs = env->GetArrayLength(parameterTypes);
   m_argumentLoaders.resize(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
-    const auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
+    auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
+    if (m_isVarArgs && i == numArgs - 1) {
+      const auto parameterClass = env->GetObjectClass(parameterType);
+      const jmethodID getComponentType =
+          env->GetMethodID(parameterClass, "getComponentType", "()Ljava/lang/Class;");
+      parameterType = env->CallObjectMethod(parameterType, getComponentType);
+    }
     m_argumentLoaders[i]  = typeMap.get(env, static_cast<jclass>(parameterType));
   }
 
@@ -49,7 +58,11 @@ JavaMethod::JavaMethod(JavaTypeMap& typeMap, JNIEnv* env, jobject method) {
 }
 
 duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) const {
-  if (duk_get_top(ctx) != m_argumentLoaders.size()) {
+  const auto argCount = duk_get_top(ctx);
+  const auto minArgs = m_isVarArgs
+      ? m_argumentLoaders.size() - 1
+      : m_argumentLoaders.size();
+  if (argCount < minArgs || (!m_isVarArgs && argCount > minArgs)) {
     // Wrong number of arguments given - throw an error.
     duk_error(ctx, DUK_ERR_API_ERROR, "wrong number of arguments");
     // unreachable - duk_error never returns.
@@ -59,7 +72,10 @@ duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) co
   std::vector<jvalue> args(m_argumentLoaders.size());
   // Load the arguments off the stack and convert to Java types.
   // Note we're going backwards since the last argument is at the top of the stack.
-  for (ssize_t i = m_argumentLoaders.size() - 1; i >= 0; --i) {
+  if (m_isVarArgs) {
+    args.back().l = m_argumentLoaders.back()->popArray(ctx, env, argCount - minArgs, true);
+  }
+  for (ssize_t i = minArgs - 1; i >= 0; --i) {
     args[i] = m_argumentLoaders[i]->pop(ctx, env, true);
   }
 

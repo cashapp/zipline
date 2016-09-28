@@ -410,4 +410,88 @@ public final class DuktapeSetTest {
       assertThat(expected.getMessage()).contains("Cannot marshal");
     }
   }
+
+  interface TestVarArgs {
+    String format(String format, Object... args);
+  }
+
+  @Test public void callVarArgMethod() {
+    duktape.set("formatter", TestVarArgs.class, new TestVarArgs() {
+      @Override public String format(String format, Object... args) {
+        return String.format(format, args);
+      }
+    });
+
+    assertThat(duktape.evaluate("formatter.format('okay')")).isEqualTo("okay");
+    assertThat(duktape.evaluate(""
+        + "formatter.format('%s - %s: %s', '1999-12-31 23:59:59.999', 'FATAL', 'failure');"))
+        .isEqualTo("1999-12-31 23:59:59.999 - FATAL: failure");
+    try {
+      duktape.evaluate("formatter.format('%s %s', 'three', [1, 2, 3])");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("Error: Cannot marshal return value 1,2,3 to Java");
+    }
+  }
+
+  interface Summer {
+    int sumIntegers(int... args);
+    double sumDoubles(double... args);
+    int countTrues(boolean... args);
+  }
+
+  @Test public void callVarArgPrimitiveMethod() {
+    duktape.set("Summer", Summer.class, new Summer() {
+      @Override public int sumIntegers(int... args) {
+        int v = 0;
+        for (int arg : args) {
+          v += arg;
+        }
+        return v;      }
+
+      @Override public double sumDoubles(double... args) {
+        double v = 0;
+        for (double arg : args) {
+          v += arg;
+        }
+        return v;
+      }
+
+      @Override public int countTrues(boolean... args) {
+        int v = 0;
+        for (boolean arg : args) {
+          v += arg ? 1 : 0;
+        }
+        return v;
+      }
+    });
+
+    assertThat(duktape.evaluate("Summer.sumIntegers()")).isEqualTo(0.0);
+    assertThat(duktape.evaluate("Summer.sumIntegers(1, 2, 3, 4)")).isEqualTo(10.0);
+    try {
+      duktape.evaluate("Summer.sumIntegers(1, 2, 'three', 4)");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("TypeError: number required, found 'three' (stack index -1)");
+    }
+
+    assertThat(duktape.evaluate("Summer.sumDoubles()")).isEqualTo(0.0);
+    assertThat(duktape.evaluate("Summer.sumDoubles(0.5, 2.5, 3, 4)")).isEqualTo(10.0);
+    try {
+      duktape.evaluate("Summer.sumDoubles(1, 2, 'three', 4)");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("TypeError: number required, found 'three' (stack index -1)");
+    }
+
+    assertThat(duktape.evaluate("Summer.countTrues()")).isEqualTo(0.0);
+    assertThat(duktape.evaluate("Summer.countTrues(true, true, false, true)")).isEqualTo(3.0);
+    try {
+      duktape.evaluate("Summer.countTrues(true, false, 'ninja', true)");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected)
+          .hasMessage("TypeError: boolean required, found 'ninja' (stack index -1)");
+    }
+  }
 }
