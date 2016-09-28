@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+Version 1.0.0 *(2016-09-28)*
+----------------------------
+
+ * Renamed Duktape.proxy and Duktape.bind to Duktape.get and Duktape.set.
+ * New: support for arguments of type Object between Java/JavaScript.
+ * New: support variadic (VarArgs) functions on Java/JavaScript calls.
+ * Fix: Make creation and use of a Duktape instance thread-safe.
+
 Version 0.9.6 *(2016-08-31)*
 ----------------------------
 
