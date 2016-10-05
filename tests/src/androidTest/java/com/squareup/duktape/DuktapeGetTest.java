@@ -125,7 +125,7 @@ public class DuktapeGetTest {
     TestInterface proxy = duktape.get("value", TestInterface.class);
 
     // Now replace the proxied object with a new global.
-    duktape.evaluate("value = { getValue: function() { return '7471111'; } }; null;");
+    duktape.evaluate("value = { getValue: function() { return '7471111'; } };");
 
     try {
       // Calls to the old object fail.
@@ -145,7 +145,7 @@ public class DuktapeGetTest {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
     TestInterface proxy = duktape.get("value", TestInterface.class);
-    duktape.evaluate("value.getValue = function() { return '7471111'; }; null;");
+    duktape.evaluate("value.getValue = function() { return '7471111'; };");
 
     String v = proxy.getValue();
     assertThat(v).isEqualTo("7471111");

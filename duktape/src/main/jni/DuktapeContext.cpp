@@ -133,6 +133,13 @@ jobject DuktapeContext::evaluate(JNIEnv* env, jstring code, jstring fname) const
     return nullptr;
   }
 
+  const int supportedTypeMask = DUK_TYPE_MASK_BOOLEAN | DUK_TYPE_MASK_NUMBER | DUK_TYPE_MASK_STRING;
+  if (!duk_check_type_mask(m_context, -1, supportedTypeMask)) {
+    // The result is an unsupported type, undefined, or null.
+    duk_pop(m_context);
+    return nullptr;
+  }
+
   return m_objectType->pop(m_context, env, false).l;
 }
 

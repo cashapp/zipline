@@ -50,9 +50,9 @@ public final class Duktape implements Closeable {
   }
 
   /**
-   * Evaluate {@code script} and return any result. {@code fileName} will be used in error
+   * Evaluate {@code script} and return a result. {@code fileName} will be used in error
    * reporting. Note that the result must be one of the supported Java types or the call will
-   * throw a {@link DuktapeException}.
+   * return null.
    *
    * @throws DuktapeException if there is an error evaluating the script.
    */
@@ -60,8 +60,8 @@ public final class Duktape implements Closeable {
     return evaluate(context, script, fileName);
   }
   /**
-   * Evaluate {@code script} and return any result. Note that the result must be one of the
-   * supported Java types or the call will throw a {@link DuktapeException}.
+   * Evaluate {@code script} and return a result. Note that the result must be one of the
+   * supported Java types or the call will return null.
    *
    * @throws DuktapeException if there is an error evaluating the script.
    */
