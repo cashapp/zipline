@@ -1,1 +1,2 @@
 #define DUK_USE_DATE_GET_LOCAL_TZOFFSET android__get_local_tzoffset
+#define DUK_USE_DATE_PARSE_STRING android__date_parse_string
