@@ -91,4 +91,48 @@ public final class DuktapeTest {
       TimeZone.setDefault(original);
     }
   }
+
+  @Test public void parseDates() {
+    TimeZone original = TimeZone.getDefault();
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone("GMT+02:00"));
+      assertThat(duktape.evaluate("new Date('2015-03-25').toString();"))
+          .isEqualTo("2015-03-25 02:00:00.000+02:00");
+      assertThat(duktape.evaluate("new Date('03/25/2015').toString();"))
+          .isEqualTo("2015-03-25 00:00:00.000+02:00");
+      assertThat(duktape.evaluate("new Date('2015/03/25').toString();"))
+          .isEqualTo("2015-03-25 00:00:00.000+02:00");
+      assertThat(duktape.evaluate("new Date('Mar 25 2015').toString();"))
+          .isEqualTo("2015-03-25 00:00:00.000+02:00");
+      assertThat(duktape.evaluate("new Date('25 Mar 2015').toString();"))
+          .isEqualTo("2015-03-25 00:00:00.000+02:00");
+      assertThat(duktape.evaluate("new Date('Wednesday March 25 2015').toString();"))
+          .isEqualTo("2015-03-25 00:00:00.000+02:00");
+    } finally {
+      TimeZone.setDefault(original);
+    }
+  }
+
+  @Test public void parseDateAndTime() {
+    TimeZone original = TimeZone.getDefault();
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone("GMT-02:00"));
+      assertThat(duktape.evaluate("new Date('2015-03-25T23:45:12').toString();"))
+          .isEqualTo("2015-03-25 21:45:12.000-02:00");
+      assertThat(duktape.evaluate("new Date('2015-03-25T23:45:12-02:00').toString();"))
+          .isEqualTo("2015-03-25 23:45:12.000-02:00");
+      assertThat(duktape.evaluate("new Date('03/25/2015 23:45:12').toString();"))
+          .isEqualTo("2015-03-25 23:45:12.000-02:00");
+      assertThat(duktape.evaluate("new Date('2015/03/25 23:45:12').toString();"))
+          .isEqualTo("2015-03-25 23:45:12.000-02:00");
+      assertThat(duktape.evaluate("new Date('Mar 25 2015 23:45:12').toString();"))
+          .isEqualTo("2015-03-25 23:45:12.000-02:00");
+      assertThat(duktape.evaluate("new Date('25 Mar 2015 23:45:12').toString();"))
+          .isEqualTo("2015-03-25 23:45:12.000-02:00");
+      assertThat(duktape.evaluate("new Date('Wednesday March 25 2015 23:45:12').toString();"))
+          .isEqualTo("2015-03-25 23:45:12.000-02:00");
+    } finally {
+      TimeZone.setDefault(original);
+    }
+  }
 }
