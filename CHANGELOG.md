@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 1.0.1 *(2016-11-07)*
+----------------------------
+
+ * New: support parsing common date formats in JavaScript's "new Date('str')" constructor.
+ * Fix: Duktape.evaluate returns null if the implicit return type is unsupported.
+
 Version 1.0.0 *(2016-09-28)*
 ----------------------------
 

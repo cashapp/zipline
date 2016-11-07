@@ -5,7 +5,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.squareup.duktape</groupId>
   <artifactId>duktape-android</artifactId>
-  <version>1.0.1-SNAPSHOT</version>
+  <version>1.0.1</version>
   <packaging>aar</packaging>
   <name>Duktape Android</name>
   <description>The Duktape embeddable Javascript engine packaged for Android.</description>
