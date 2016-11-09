@@ -10,6 +10,6 @@ allprojects {
 }
 
 ext {
-  compileSdkVersion = 23
-  buildToolsVersion = '23.0.1'
+  compileSdkVersion = 25
+  buildToolsVersion = '25.0.0'
 }
