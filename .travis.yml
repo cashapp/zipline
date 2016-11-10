@@ -2,21 +2,35 @@ language: android
 
 android:
   components:
+    - tools
     - platform-tools
-    - build-tools-23.0.1
-    - android-23
+    - tools
+    - build-tools-25.0.0
+    - android-25
     - extra-android-m2repository
     - sys-img-armeabi-v7a-android-18
+
+# By default, we get an older version of libstdc++6 so we need to update it for CMake.
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - libstdc++6
 
 jdk:
   - oraclejdk8
 
 before_script:
+  # Install cmake.
+  - wget https://github.com/Commit451/android-cmake-installer/releases/download/1.1.0/install-cmake.sh
+  - chmod +x install-cmake.sh
+  - ./install-cmake.sh
   # Install the NDK.
   - pushd ~
-  - wget http://dl.google.com/android/repository/android-ndk-r12-linux-x86_64.zip
-  - unzip -qo android-ndk-r12-linux-x86_64.zip
-  - export ANDROID_NDK_HOME="$HOME/android-ndk-r12"
+  - wget http://dl.google.com/android/repository/android-ndk-r13b-linux-x86_64.zip
+  - unzip -qo android-ndk-r13b-linux-x86_64.zip
+  - export ANDROID_NDK_HOME="$HOME/android-ndk-r13b"
   - popd
   # Create and start an emulator for instrumentation tests.
   - echo no | android create avd --force -n test -t android-18 --abi armeabi-v7a

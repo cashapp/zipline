@@ -9,6 +9,7 @@ build/
 local.properties
 reports
 jacoco.exec
+duktape/.externalNativeBuild
 
 # upload.sh signing
 /*.asc
