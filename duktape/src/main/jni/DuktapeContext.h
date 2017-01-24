@@ -33,7 +33,7 @@ public:
 
   void set(JNIEnv *env, jstring name, jobject object, jobjectArray methods);
 
-  const JavaScriptObject*get(JNIEnv *env, jstring name, jobjectArray methods);
+  const JavaScriptObject* get(JNIEnv *env, jstring name, jobjectArray methods);
 
 private:
   duk_context* m_context;
