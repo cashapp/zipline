@@ -26,6 +26,7 @@ import org.junit.runner.RunWith;
 import java.util.Date;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
@@ -215,7 +216,7 @@ public class DuktapeGetTest {
 
     TestPrimitiveTypes proxy = duktape.get("value", TestPrimitiveTypes.class);
     assertThat(proxy.b(true)).isEqualTo(false);
-    assertThat(proxy.d(2, 6.28318)).isWithin(0.0001).of(3.14159);
+    assertThat(proxy.d(2, 6.28318)).isEqualTo(3.14159);
   }
 
   interface TestMultipleArgTypes {
@@ -248,7 +249,7 @@ public class DuktapeGetTest {
 
     TestBoxedPrimitiveArgTypes proxy = duktape.get("value", TestBoxedPrimitiveArgTypes.class);
     assertThat(proxy.b(false)).isEqualTo(true);
-    assertThat(proxy.d(6.28318)).isWithin(0.0001).of(3.14159);
+    assertThat(proxy.d(6.28318)).isEqualTo(3.14159);
 
     assertThat(proxy.b(null)).isNull();
     assertThat(proxy.d(null)).isNull();
@@ -387,5 +388,190 @@ public class DuktapeGetTest {
 
     assertThat(summer.countTrues()).isEqualTo(0.0);
     assertThat(summer.countTrues(true, false, true, true)).isEqualTo(3.0);
+  }
+
+  interface ObjectSorter {
+    Object[] sort(Object[] args);
+  }
+
+  private static final String SORTER_FUNCTOR = ""
+      + "var Sorter = {\n"
+      + "  sort: function(v) {"
+      + "    if (v) {\n"
+      + "      v.sort();\n"
+      + "    }\n"
+      + "    return v;\n"
+      + "  },\n"
+      + "  sortNullable: function(v) { return this.sort(v); }\n"
+      + "};";
+
+  @Ignore // TODO: rework array marshalling to not use the Duktape stack.
+  @Test public void marshalArrayWithManyElements() {
+    duktape.evaluate(SORTER_FUNCTOR);
+
+    ObjectSorter sorter = duktape.get("Sorter", ObjectSorter.class);
+
+    int length = 10000; // Current safe limit is ~249.
+    assertThat(sorter.sort(new Object[length])).hasLength(length);
+  }
+
+  @Test public void arraysOfObjects() {
+    duktape.evaluate(SORTER_FUNCTOR);
+
+    ObjectSorter sorter = duktape.get("Sorter", ObjectSorter.class);
+
+    assertThat(sorter.sort(null)).isNull();
+
+    Object[] original = new Object[]{2, 4, 3, 1};
+    Object[] sorted = sorter.sort(original);
+    assertArrayEquals(sorted, new Object[]{1.0, 2.0, 3.0, 4.0});
+    assertThat(original).isNotSameAs(sorted);
+
+    assertArrayEquals(sorter.sort(new Object[]{"b", "d", null, "a"}),
+        new String[]{"a", "b", "d", null});
+  }
+
+  interface StringSorter {
+    String[] sort(String[] args);
+  }
+
+  @Test public void arraysOfStrings() {
+    duktape.evaluate(SORTER_FUNCTOR);
+
+    StringSorter sorter = duktape.get("Sorter", StringSorter.class);
+
+    assertArrayEquals(sorter.sort(new String[]{ "b", "d", "c", "a" }),
+        new String[]{ "a", "b", "c", "d" });
+
+    assertArrayEquals(sorter.sort(new String[]{"b", "d", null, "a"}),
+        new String[]{"a", "b", "d", null});
+
+    // Replace the sorter with something broken.
+    duktape.evaluate(""
+        + "Sorter.sort = function(v) {"
+        + "  return [ 'a', 'b', 3, 'd' ];\n"
+        + "};");
+    try {
+      sorter.sort(new String[]{ "b", "d", "c", "a" });
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Cannot convert return value 3 to String");
+    }
+  }
+
+  interface DoubleSorter {
+    double[] sort(double[] args);
+  }
+
+  @Test public void arraysOfDoubles() {
+    duktape.evaluate(SORTER_FUNCTOR);
+
+    DoubleSorter sorter = duktape.get("Sorter", DoubleSorter.class);
+
+    assertArrayEquals(sorter.sort(new double[] { 2.9, 2.3, 3, 1}),
+        new double[]{ 1.0, 2.3, 2.9, 3.0 }, 0.0);
+
+    // Replace the sorter with something broken.
+    duktape.evaluate(""
+        + "Sorter.sort = function(v) {"
+        + "  return [ 1, 2, null, 4 ];\n"
+        + "};");
+    try {
+      sorter.sort(new double[0]);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Cannot convert return value null to double");
+    }
+  }
+
+  // Note, we return double[] and Double[] since we can't return ints from JavaScript.
+  interface IntSorter {
+    double[] sort(int[] args);
+    Double[] sortNullable(Integer[] args);
+  }
+
+  @Test public void arraysOfInts() {
+    duktape.evaluate(SORTER_FUNCTOR);
+
+    IntSorter sorter = duktape.get("Sorter", IntSorter.class);
+
+    assertArrayEquals(sorter.sort(new int[]{ 2, 4, 3, 1 }),
+        new double[]{ 1.0, 2.0, 3.0, 4.0 }, 0.0);
+
+    assertArrayEquals(sorter.sortNullable(new Integer[]{ 2, null, 3, 1 }),
+        new Double[]{ 1.0, 2.0, 3.0, null });
+
+    // Replace the sorter with something broken.
+    duktape.evaluate(""
+        + "Sorter.sort = function(v) {"
+        + "  return [ 1, 2, null, 4 ];\n"
+        + "};");
+    try {
+      sorter.sort(new int[0]);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Cannot convert return value null to double");
+    }
+  }
+
+  interface BoolSorter {
+    boolean[] sort(boolean[] args);
+    Boolean[] sortNullable(Boolean[] args);
+  }
+
+  @Test public void arraysOfBooleans() {
+    duktape.evaluate(SORTER_FUNCTOR);
+
+    BoolSorter sorter = duktape.get("Sorter", BoolSorter.class);
+
+    assertArrayEquals(sorter.sort(new boolean[]{ true, false, true, false }),
+        new boolean[]{ false, false, true, true });
+
+    assertArrayEquals(sorter.sortNullable(new Boolean[]{ null, true, false, true }),
+        new Boolean[]{ false, null, true, true });
+
+    // Replace the sorter with something broken.
+    duktape.evaluate(""
+        + "Sorter.sort = function(v) {"
+        + "  return [ false, false, null, true ];\n"
+        + "};");
+    try {
+      sorter.sort(new boolean[0]);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Cannot convert return value null to boolean");
+    }
+  }
+
+  interface MatrixTransposer {
+    Double[][] call(Double[][] matrix);
+  }
+
+  @Ignore // TODO: support N-dimensional arrays
+  @Test public void twoDimensionalArrays() {
+    duktape.evaluate(""
+        + "function transpose() {\n"
+        + "  return this[0].map(function(col, i) {\n"
+        + "      return this.map(function(row) {\n"
+        + "        return row[i];\n"
+        + "      })\n"
+        + "    });\n"
+        + "};\n");
+
+    MatrixTransposer transposer = duktape.get("transpose", MatrixTransposer.class);
+
+    Double[][] matrix = new Double[2][2];
+    matrix[0][0] = 1.0;
+    matrix[0][1] = 2.0;
+    matrix[1][0] = 3.0;
+    matrix[1][1] = 4.0;
+
+    Double[][] expected = new Double[2][2];
+    matrix[0][0] = 1.0;
+    matrix[1][0] = 2.0;
+    matrix[0][1] = 3.0;
+    matrix[1][1] = 4.0;
+
+    assertArrayEquals(transposer.call(matrix), expected);
   }
 }

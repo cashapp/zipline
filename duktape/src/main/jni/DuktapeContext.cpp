@@ -98,7 +98,13 @@ duk_ret_t javaObjectFinalizer(duk_context *ctx) {
 }
 
 void fatalErrorHandler(duk_context* ctx, duk_errcode_t code, const char* msg) {
+#ifndef NDEBUG
+  duk_push_context_dump(ctx);
+  const char* debugContext = duk_get_string(ctx, -1);
+  throw std::runtime_error(std::string(msg) + " (" + std::to_string(code) + ") - " + debugContext);
+#else
   throw std::runtime_error(msg);
+#endif
 }
 
 } // anonymous namespace
@@ -134,13 +140,36 @@ jobject DuktapeContext::evaluate(JNIEnv* env, jstring code, jstring fname) const
   }
 
   const int supportedTypeMask = DUK_TYPE_MASK_BOOLEAN | DUK_TYPE_MASK_NUMBER | DUK_TYPE_MASK_STRING;
-  if (!duk_check_type_mask(m_context, -1, supportedTypeMask)) {
+  if (duk_check_type_mask(m_context, -1, supportedTypeMask)) {
+    // The result is a supported scalar type - return it.
+    return m_objectType->pop(m_context, env, false).l;
+  } else if (!duk_is_array(m_context, -1)) {
     // The result is an unsupported type, undefined, or null.
     duk_pop(m_context);
     return nullptr;
   }
 
-  return m_objectType->pop(m_context, env, false).l;
+  const auto stackTop = duk_get_top_index(m_context);
+
+  // It's an array - load values onto the stack.
+  const auto arraySize = duk_get_length(m_context, -1);
+  for (duk_size_t i = 0; i < arraySize; ++i) {
+    duk_get_prop_index(m_context, -1 - i, i);
+  }
+
+  try {
+    // Create a Java array from the values.
+    jobject result = m_objectType->popArray(m_context, env, arraySize, false);
+
+    // Pop the JS array off the stack.
+    duk_pop(m_context);
+
+    return result;
+  } catch (std::invalid_argument& e) {
+    // Failed to marshal an array element - clean up the stack.
+    duk_set_top(m_context, stackTop);
+    throw e;
+  }
 }
 
 void DuktapeContext::set(JNIEnv *env, jstring name, jobject object, jobjectArray methods) {

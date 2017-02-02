@@ -136,7 +136,6 @@ public:
   virtual const char* getUnboxMethodName() const = 0;
   virtual const char* getBoxSignature() const = 0;
   virtual const char* getBoxMethodName() const { return "valueOf"; }
-  virtual bool isInt() const { return false; }
 
   bool isPrimitive() const override { return true; }
   jclass boxedClass() const { return static_cast<jclass>(m_boxedClassRef.get()); }
@@ -274,7 +273,7 @@ struct Integer : public Primitive {
   const char* getBoxSignature() const override {
     return "(I)Ljava/lang/Integer;";
   }
-  bool isInt() const override {
+  bool isInteger() const override {
     return true;
   }
 };
@@ -381,7 +380,7 @@ public:
   }
 
   bool isInteger() const override {
-    return m_primitive.isInt();
+    return m_primitive.isInteger();
   }
 
 private:
@@ -446,6 +445,87 @@ struct Object : public JavaType {
   JavaTypeMap& m_typeMap;
 };
 
+struct Array : public JavaType {
+  Array(const GlobalRef& classRef, const JavaType& componentType)
+    : JavaType(classRef)
+    , m_componentType(componentType) {
+  }
+
+  jvalue pop(duk_context* ctx, JNIEnv* env, bool inScript) const override {
+    if (duk_is_null_or_undefined(ctx, -1)) {
+      jvalue value;
+      value.l = nullptr;
+      duk_pop(ctx);
+      return value;
+    }
+    if (!duk_is_array(ctx, -1)) {
+      const auto message =
+          std::string("Cannot convert ") + duk_safe_to_string(ctx, -1) + " to array";
+      if (inScript) {
+        duk_error(ctx, DUK_RET_TYPE_ERROR, message.c_str());
+      }
+      duk_pop(ctx);
+      throw std::invalid_argument(message);
+    }
+
+    const auto stackTop = duk_get_top_index(ctx);
+
+    // Load the array elements onto the stack.
+    const auto arraySize = duk_get_length(ctx, -1);
+    for (duk_size_t i = 0; i < arraySize; ++i) {
+      duk_get_prop_index(ctx, -1 - i, i);
+    }
+
+    try {
+      // Create a Java array from the elements on the stack.
+      jvalue value;
+      value.l = m_componentType.popArray(ctx, env, arraySize, inScript);
+
+      // Pop the array off the stack.
+      duk_pop(ctx);
+
+      return value;
+    } catch (std::invalid_argument& e) {
+      // Failed to marshal an array element - clean up the stack.
+      duk_set_top(ctx, stackTop);
+      throw e;
+    }
+  }
+
+  duk_ret_t push(duk_context* ctx, JNIEnv* env, const jvalue& value) const override {
+    if (value.l == nullptr) {
+      duk_push_null(ctx);
+      return 1;
+    }
+
+    const auto stackTop = duk_get_top_index(ctx);
+
+    duk_push_array(ctx);
+
+    try {
+      // Load the array elements onto the stack.
+      const auto arraySize = m_componentType.pushArray(ctx, env, static_cast<jarray>(value.l));
+
+      // Move the elements from the stack into the array.
+      for (int i = arraySize - 1; i >= 0; --i) {
+        duk_put_prop_index(ctx, -2 - i, i);
+      }
+
+      return 1;
+    } catch (std::invalid_argument& e) {
+      // Failed to marshal an array element - clean up the stack.
+      duk_set_top(ctx, stackTop);
+      throw e;
+    }
+  }
+
+  bool isInteger() const override {
+    return m_componentType.isInteger();
+  }
+
+  const JavaType& m_componentType;
+};
+
 /**
  * Loads the (primitive) TYPE member of {@code boxedClassName}.
  * For example, given java/lang/Integer, this function will return int.class.
@@ -453,6 +533,34 @@ struct Object : public JavaType {
 jclass getPrimitiveType(JNIEnv* env, jclass boxedClass) {
   const jfieldID typeField = env->GetStaticFieldID(boxedClass, "TYPE", "Ljava/lang/Class;");
   return static_cast<jclass>(env->GetStaticObjectField(boxedClass, typeField));
+}
+
+void addArrayType(std::map<std::string, const JavaType*>& typeMap,
+                  JNIEnv* env, const JavaType& elementType) {
+  const auto array = elementType.popArray(nullptr, env, 0, false);
+  const jclass arrayClass = env->GetObjectClass(array);
+  typeMap.emplace(std::make_pair(toString(env, arrayClass),
+                                 new Array(GlobalRef(env, arrayClass), elementType)));
+}
+
+/**
+ * Adds type adapters for primitive and boxed versions of {@code name}, as well as arrays of those
+ * types.
+ */
+template<typename JavaTypeT>
+JavaType* addTypeAdapters(std::map<std::string, const JavaType *> &types, JNIEnv *env,
+                          const char *name) {
+  const jclass theClass = env->FindClass(name);
+  const jclass primitiveClass = getPrimitiveType(env, theClass);
+  const auto javaType = new JavaTypeT(GlobalRef(env, primitiveClass), GlobalRef(env, theClass));
+  types.emplace(std::make_pair(toString(env, primitiveClass), javaType));
+  addArrayType(types, env, *javaType);
+
+  const auto boxedType = new BoxedPrimitive(env, *javaType);
+  types.emplace(std::make_pair(toString(env, theClass), boxedType));
+  addArrayType(types, env, *boxedType);
+
+  return boxedType;
 }
 
 } // anonymous namespace
@@ -491,32 +599,19 @@ const JavaType* JavaTypeMap::find(JNIEnv* env, const std::string& name) {
                                    new Void(GlobalRef(env, voidClass), true)));
 
     const jclass stringClass = env->FindClass("java/lang/String");
-    m_types.emplace(std::make_pair(toString(env, stringClass),
-                                   new String(GlobalRef(env, stringClass))));
+    const auto stringType = new String(GlobalRef(env, stringClass));
+    m_types.emplace(std::make_pair(toString(env, stringClass), stringType));
+    addArrayType(m_types, env, *stringType);
 
-    const jclass booleanClass = env->FindClass("java/lang/Boolean");
-    const jclass bClass = getPrimitiveType(env, booleanClass);
-    const auto boolType = new Boolean(GlobalRef(env, bClass), GlobalRef(env, booleanClass));
-    m_types.emplace(std::make_pair(toString(env, bClass), boolType));
-    const auto boxedBooleanType = new BoxedPrimitive(env, *boolType);
-    m_types.emplace(std::make_pair(toString(env, booleanClass), boxedBooleanType));
-
-    const jclass integerClass = env->FindClass("java/lang/Integer");
-    const jclass iClass = getPrimitiveType(env, integerClass);
-    const auto intType = new Integer(GlobalRef(env, iClass), GlobalRef(env, integerClass));
-    m_types.emplace(std::make_pair(toString(env, iClass), intType));
-    m_types.emplace(std::make_pair(toString(env, integerClass), new BoxedPrimitive(env, *intType)));
-
-    const jclass doubleClass = env->FindClass("java/lang/Double");
-    const jclass dClass = getPrimitiveType(env, doubleClass);
-    const auto doubleType = new Double(GlobalRef(env, dClass), GlobalRef(env, doubleClass));
-    m_types.emplace(std::make_pair(toString(env, dClass), doubleType));
-    const auto boxedDoubleType = new BoxedPrimitive(env, *doubleType);
-    m_types.emplace(std::make_pair(toString(env, doubleClass), boxedDoubleType));
+    const auto boxedBooleanType = addTypeAdapters<Boolean>(m_types, env, "java/lang/Boolean");
+    const auto boxedDoubleType = addTypeAdapters<Double>(m_types, env, "java/lang/Double");
+    addTypeAdapters<Integer>(m_types, env, "java/lang/Integer");
 
     const jclass objectClass = env->FindClass("java/lang/Object");
-    m_types.emplace(std::make_pair(toString(env, objectClass),
-        new Object(GlobalRef(env, objectClass), *boxedBooleanType, *boxedDoubleType, *this)));
+    const auto objectType = new Object(GlobalRef(env, objectClass), *boxedBooleanType,
+                                       *boxedDoubleType, *this);
+    m_types.emplace(std::make_pair(toString(env, objectClass), objectType));
+    addArrayType(m_types, env, *objectType);
   }
 
   const auto I = m_types.find(name);

@@ -22,9 +22,13 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.TimeZone;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
 
 @RunWith(AndroidJUnit4.class)
@@ -493,5 +497,193 @@ public final class DuktapeSetTest {
       assertThat(expected)
           .hasMessage("TypeError: boolean required, found 'ninja' (stack index -1)");
     }
+  }
+
+  interface ObjectSorter {
+    Object[] sort(Object[] args);
+  }
+
+  @Test public void arraysOfObjects() {
+    duktape.set("Sorter", ObjectSorter.class, new ObjectSorter() {
+      @Override
+      public Object[] sort(Object[] args) {
+        if (args == null) return null;
+        Arrays.sort(args, new Comparator<Object>() {
+          @Override
+          public int compare(Object lhs, Object rhs) {
+            if (lhs == null) return -1;
+            if (rhs == null) return 1;
+            return ((Comparable<Object>) lhs).compareTo(rhs);
+          }
+        });
+        return args;
+      }
+    });
+
+    assertThat(duktape.evaluate("Sorter.sort(null)")).isNull();
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sort([2, 4, 3, 1])"),
+        new Object[]{1.0, 2.0, 3.0, 4.0});
+
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sort(['b', 'd', null, 'a'])"),
+        new String[]{null, "a", "b", "d"});
+
+    TimeZone original = TimeZone.getDefault();
+    try {
+      TimeZone.setDefault(TimeZone.getTimeZone("GMT+0:00"));
+      duktape.evaluate("Sorter.sort([ 1, 2, 3, new Date(0) ])");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected)
+          .hasMessage("Error: Cannot marshal return value 1970-01-01 00:00:00.000+00:00 to Java");
+    } finally {
+      TimeZone.setDefault(original);
+    }
+  }
+
+  interface StringSorter {
+    String[] sort(String[] args);
+  }
+
+  @Test public void arraysOfStrings() {
+    duktape.set("Sorter", StringSorter.class, new StringSorter() {
+      @Override public String[] sort(String[] args) {
+        Arrays.sort(args);
+        return args;
+      }
+    });
+
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sort(['b', 'd', 'c', 'a'])"),
+        new String[]{ "a", "b", "c", "d" });
+
+    try {
+      duktape.evaluate("Sorter.sort(['b', 'd', 3, 'a'])");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("TypeError: string required, found 3 (stack index -1)");
+    }
+  }
+
+  interface DoubleSorter {
+    double[] sort(double[] args);
+    Double[] sortNullsFirst(Double[] args);
+  }
+
+  @Test public void arraysOfDoubles() {
+    duktape.set("Sorter", DoubleSorter.class, new DoubleSorter() {
+      @Override public double[] sort(double[] args) {
+        Arrays.sort(args);
+        return args;
+      }
+      @Override public Double[] sortNullsFirst(Double[] args) {
+        Arrays.sort(args, new Comparator<Double>() {
+          @Override public int compare(Double lhs, Double rhs) {
+            if (lhs == null) return -1;
+            if (rhs == null) return 1;
+            return lhs.compareTo(rhs);
+          }
+        });
+        return args;
+      }
+    });
+
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sort([2.9, 2.3, 3, 1])"),
+        new Object[]{ 1.0, 2.3, 2.9, 3.0 });
+
+    try {
+      duktape.evaluate("Sorter.sort([2.3, 4, null, 1])");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("TypeError: number required, found null (stack index -1)");
+    }
+
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sortNullsFirst([2.9, null, 3, 1])"),
+        new Object[]{ null, 1.0, 2.9, 3.0 });
+  }
+
+  interface IntSorter {
+    int[] sort(int[] args);
+    Integer[] sortNullsFirst(Integer[] args);
+  }
+
+  @Test public void arraysOfInts() {
+    duktape.set("Sorter", IntSorter.class, new IntSorter() {
+      @Override public int[] sort(int[] args) {
+        Arrays.sort(args);
+        return args;
+      }
+
+      @Override public Integer[] sortNullsFirst(Integer[] args) {
+        Arrays.sort(args, new Comparator<Integer>() {
+          @Override public int compare(Integer lhs, Integer rhs) {
+            if (lhs == null) return -1;
+            if (rhs == null) return 1;
+            return lhs.compareTo(rhs);
+          }
+        });
+        return args;
+      }
+    });
+
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sort([2, 4, 3, 1])"),
+      new Object[]{ 1.0, 2.0, 3.0, 4.0 });
+
+    try {
+      duktape.evaluate("Sorter.sort([2, 4, null, 1])");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("TypeError: number required, found null (stack index -1)");
+    }
+
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sort([2, 4, 3.14, 1])"),
+        new Object[]{ 1.0, 2.0, 3.0, 4.0 });
+
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sortNullsFirst([2, null, 3, 1])"),
+        new Object[]{ null, 1.0, 2.0, 3.0 });
+  }
+
+  interface BoolSorter {
+    boolean[] sort(boolean[] args);
+    Boolean[] sortNullsFirst(Boolean[] args);
+  }
+
+  @Test public void arraysOfBooleans() {
+    duktape.set("Sorter", BoolSorter.class, new BoolSorter() {
+      @Override public boolean[] sort(boolean[] args) {
+        int count = 0;
+        for (boolean arg : args) {
+          if (arg) count++;
+        }
+        boolean[] result = new boolean[args.length];
+        for (int i = args.length - 1; i >= count; i--) {
+          result[i] = true;
+        }
+        return result;
+      }
+
+      @Override public Boolean[] sortNullsFirst(Boolean[] args) {
+        Arrays.sort(args, new Comparator<Boolean>() {
+          @Override public int compare(Boolean lhs, Boolean rhs) {
+            if (lhs == null) return -1;
+            if (rhs == null) return 1;
+            return lhs.compareTo(rhs);
+          }
+        });
+        return args;
+      }
+    });
+
+    assertArrayEquals((Object[]) duktape.evaluate("Sorter.sort([ true, false, true, false ])"),
+        new Object[]{ false, false, true, true });
+
+    try {
+      duktape.evaluate("Sorter.sort([false, true, null, false])");
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected).hasMessage("TypeError: boolean required, found null (stack index -1)");
+    }
+
+    assertArrayEquals(
+        (Object[]) duktape.evaluate("Sorter.sortNullsFirst([true, false, true, null])"),
+        new Object[]{ null, false, true, true });
   }
 }
