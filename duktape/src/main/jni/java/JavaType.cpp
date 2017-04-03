@@ -17,27 +17,67 @@
 #include "JString.h"
 #include "JavaExceptions.h"
 
-jarray JavaType::popArray(duk_context* ctx, JNIEnv* env, uint32_t count, bool inScript) const {
+/** Use RAII to unwind the JavaScript stack when a function returns. */
+// TODO(szurbrigg): promote this for use in other files.
+class StackUnwinder {
+public:
+  StackUnwinder(duk_context* ctx, int count)
+      : m_context(ctx)
+      , m_count(count) {
+  }
+  StackUnwinder(const StackUnwinder&) = delete;
+  StackUnwinder& operator=(const StackUnwinder&) = delete;
+  ~StackUnwinder() {
+    duk_pop_n(m_context, m_count);
+  }
+private:
+  duk_context* m_context;
+  const int m_count;
+};
+
+jarray JavaType::popArray(
+    duk_context* ctx, JNIEnv *env, uint32_t count, bool expanded, bool inScript) const {
+  // If we're not expanded, pop the array off the stack no matter what.
+  const StackUnwinder _(ctx, expanded ? 0 : 1);
+  count = expanded ? count : duk_get_length(ctx, -1);
   jobjectArray array = env->NewObjectArray(count, static_cast<jclass>(m_classRef.get()), nullptr);
   for (auto i = count; i > 0u; --i) {
+    if (!expanded) {
+      duk_get_prop_index(ctx, -1, i - 1);
+    }
     env->SetObjectArrayElement(array, i - 1, pop(ctx, env, inScript).l);
+    checkRethrowDuktapeError(env, ctx);
   }
   return array;
 }
 
-duk_ret_t JavaType::pushArray(duk_context* ctx, JNIEnv* env, const jarray& values) const {
+duk_ret_t JavaType::pushArray(
+    duk_context* ctx, JNIEnv* env, const jarray& values, bool expand) const {
   const auto size = env->GetArrayLength(values);
+  if (!expand) {
+    duk_push_array(ctx);
+  }
   for (jsize i = 0; i < size; ++i) {
     jvalue element;
     element.l = env->GetObjectArrayElement(static_cast<jobjectArray>(values), i);
     try {
       push(ctx, env, element);
+      if (!expand) {
+        duk_put_prop_index(ctx, -2, static_cast<duk_uarridx_t>(i));
+      }
     } catch (std::invalid_argument& e) {
-      duk_pop_n(ctx, i);
+      duk_pop_n(ctx, expand ? i : 1);
       throw e;
     }
+    // We're done with this element, let the GC take it.
+    env->DeleteLocalRef(element.l);
   }
-  return size;
+  return expand ? size : 1;
+}
+
+jclass JavaType::getArrayClass(JNIEnv* env) const {
+  jarray array = env->NewObjectArray(0, getClass(), nullptr);
+  return env->GetObjectClass(array);
 }
 
 jvalue JavaType::callMethod(duk_context* ctx, JNIEnv *env, jmethodID methodId, jobject javaThis,
@@ -49,10 +89,10 @@ jvalue JavaType::callMethod(duk_context* ctx, JNIEnv *env, jmethodID methodId, j
   return result;
 }
 
-std::string toString(JNIEnv* env, jobject object) {
+std::string getName(JNIEnv *env, jclass javaClass) {
   const jmethodID method =
-      env->GetMethodID(env->GetObjectClass(object), "toString", "()Ljava/lang/String;");
-  const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(object, method)));
+      env->GetMethodID(env->GetObjectClass(javaClass), "getName", "()Ljava/lang/String;");
+  const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(javaClass, method)));
   return methodName.str();
 }
 
@@ -163,9 +203,17 @@ struct Boolean : public Primitive {
     return value;
   }
 
-  jarray popArray(duk_context* ctx, JNIEnv* env, uint32_t count, bool inScript) const {
+  jarray popArray(
+      duk_context* ctx, JNIEnv* env, uint32_t count, bool expanded, bool inScript) const override {
+    // If we're not expanded, pop the array off the stack no matter what.
+    const StackUnwinder _(ctx, expanded ? 0 : 1);
+
+    count = expanded ? count : duk_get_length(ctx, -1);
     jbooleanArray array = env->NewBooleanArray(count);
     for (auto i = count; i > 0u; --i) {
+      if (!expanded) {
+        duk_get_prop_index(ctx, -1, i - 1);
+      }
       const auto value = pop(ctx, env, inScript).z;
       env->SetBooleanArrayRegion(array, i - 1, 1, &value);
     }
@@ -177,17 +225,21 @@ struct Boolean : public Primitive {
     return 1;
   }
 
-  duk_ret_t pushArray(duk_context* ctx, JNIEnv* env, const jarray& values) const {
+  duk_ret_t pushArray(
+      duk_context* ctx, JNIEnv* env, const jarray& values, bool expand) const override {
     const auto size = env->GetArrayLength(values);
-    if (size == 0) {
-      return 0;
+    if (!expand) {
+      duk_push_array(ctx);
     }
     jboolean* elements = env->GetBooleanArrayElements(static_cast<jbooleanArray>(values), nullptr);
     for (jsize i = 0; i < size; ++i) {
       duk_push_boolean(ctx, elements[i] == JNI_TRUE);
+      if (!expand) {
+        duk_put_prop_index(ctx, -2, static_cast<duk_uarridx_t>(i));
+      }
     }
     env->ReleaseBooleanArrayElements(static_cast<jbooleanArray>(values), elements, JNI_ABORT);
-    return size;
+    return expand ? size : 1;
   }
 
   jvalue callMethod(duk_context* ctx, JNIEnv* env, jmethodID methodId, jobject javaThis,
@@ -197,6 +249,11 @@ struct Boolean : public Primitive {
     jvalue result;
     result.z = returnValue;
     return result;
+  }
+
+  jclass getArrayClass(JNIEnv* env) const override {
+    jarray array = env->NewBooleanArray(0);
+    return env->GetObjectClass(array);
   }
 
   const char* getUnboxSignature() const override {
@@ -228,9 +285,17 @@ struct Integer : public Primitive {
     return value;
   }
 
-  jarray popArray(duk_context* ctx, JNIEnv* env, uint32_t count, bool inScript) const {
+  jarray popArray(
+      duk_context* ctx, JNIEnv* env, uint32_t count, bool expanded, bool inScript) const override {
+    // If we're not expanded, pop the array off the stack no matter what.
+    const StackUnwinder _(ctx, expanded ? 0 : 1);
+
+    count = expanded ? count : duk_get_length(ctx, -1);
     jintArray array = env->NewIntArray(count);
     for (auto i = count; i > 0u; --i) {
+      if (!expanded) {
+        duk_get_prop_index(ctx, -1, i - 1);
+      }
       const auto value = pop(ctx, env, inScript).i;
       env->SetIntArrayRegion(array, i - 1, 1, &value);
     }
@@ -242,17 +307,21 @@ struct Integer : public Primitive {
     return 1;
   }
 
-  duk_ret_t pushArray(duk_context* ctx, JNIEnv* env, const jarray& values) const override {
+  duk_ret_t pushArray(
+      duk_context* ctx, JNIEnv* env, const jarray& values, bool expand) const override {
     const auto size = env->GetArrayLength(values);
-    if (size == 0) {
-      return 0;
+    if (!expand) {
+      duk_push_array(ctx);
     }
     jint* elements = env->GetIntArrayElements(static_cast<jintArray>(values), nullptr);
     for (jsize i = 0; i < size; ++i) {
       duk_push_int(ctx, elements[i]);
+      if (!expand) {
+        duk_put_prop_index(ctx, -2, static_cast<duk_uarridx_t>(i));
+      }
     }
     env->ReleaseIntArrayElements(static_cast<jintArray>(values), elements, JNI_ABORT);
-    return size;
+    return expand ? size : 1;
   }
 
   jvalue callMethod(duk_context* ctx, JNIEnv* env, jmethodID methodId, jobject javaThis,
@@ -262,6 +331,11 @@ struct Integer : public Primitive {
     jvalue result;
     result.i = returnValue;
     return result;
+  }
+
+  jclass getArrayClass(JNIEnv* env) const override {
+    jarray array = env->NewIntArray(0);
+    return env->GetObjectClass(array);
   }
 
   const char* getUnboxSignature() const override {
@@ -296,9 +370,17 @@ struct Double : public Primitive {
     return value;
   }
 
-  jarray popArray(duk_context* ctx, JNIEnv* env, uint32_t count, bool inScript) const {
+  jarray popArray(
+      duk_context* ctx, JNIEnv* env, uint32_t count, bool expanded, bool inScript) const override {
+    // If we're not expanded, pop the array off the stack no matter what.
+    const StackUnwinder _(ctx, expanded ? 0 : 1);
+
+    count = expanded ? count : duk_get_length(ctx, -1);
     jdoubleArray array = env->NewDoubleArray(count);
     for (auto i = count; i > 0u; --i) {
+      if (!expanded) {
+        duk_get_prop_index(ctx, -1, i - 1);
+      }
       const auto value = pop(ctx, env, inScript).d;
       env->SetDoubleArrayRegion(array, i - 1, 1, &value);
     }
@@ -310,17 +392,21 @@ struct Double : public Primitive {
     return 1;
   }
 
-  duk_ret_t pushArray(duk_context* ctx, JNIEnv* env, const jarray& values) const override {
+  duk_ret_t pushArray(
+      duk_context* ctx, JNIEnv* env, const jarray& values, bool expand) const override {
     const auto size = env->GetArrayLength(values);
-    if (size == 0) {
-      return 0;
+    if (!expand) {
+      duk_push_array(ctx);
     }
     jdouble* elements = env->GetDoubleArrayElements(static_cast<jdoubleArray>(values), nullptr);
     for (jsize i = 0; i < size; ++i) {
       duk_push_number(ctx, elements[i]);
+      if (!expand) {
+        duk_put_prop_index(ctx, -2, static_cast<duk_uarridx_t>(i));
+      }
     }
     env->ReleaseDoubleArrayElements(static_cast<jdoubleArray>(values), elements, JNI_ABORT);
-    return size;
+    return expand ? size : 1;
   }
 
   jvalue callMethod(duk_context* ctx, JNIEnv* env, jmethodID methodId, jobject javaThis,
@@ -330,6 +416,11 @@ struct Double : public Primitive {
     jvalue result;
     result.d = returnValue;
     return result;
+  }
+
+  jclass getArrayClass(JNIEnv* env) const override {
+    jarray array = env->NewDoubleArray(0);
+    return env->GetObjectClass(array);
   }
 
   const char* getUnboxSignature() const override {
@@ -468,28 +559,9 @@ struct Array : public JavaType {
       throw std::invalid_argument(message);
     }
 
-    const auto stackTop = duk_get_top_index(ctx);
-
-    // Load the array elements onto the stack.
-    const auto arraySize = duk_get_length(ctx, -1);
-    for (duk_size_t i = 0; i < arraySize; ++i) {
-      duk_get_prop_index(ctx, -1 - i, i);
-    }
-
-    try {
-      // Create a Java array from the elements on the stack.
-      jvalue value;
-      value.l = m_componentType.popArray(ctx, env, arraySize, inScript);
-
-      // Pop the array off the stack.
-      duk_pop(ctx);
-
-      return value;
-    } catch (std::invalid_argument& e) {
-      // Failed to marshal an array element - clean up the stack.
-      duk_set_top(ctx, stackTop);
-      throw e;
-    }
+    jvalue value;
+    value.l = m_componentType.popArray(ctx, env, 1, false, inScript);
+    return value;
   }
 
   duk_ret_t push(duk_context* ctx, JNIEnv* env, const jvalue& value) const override {
@@ -498,25 +570,7 @@ struct Array : public JavaType {
       return 1;
     }
 
-    const auto stackTop = duk_get_top_index(ctx);
-
-    duk_push_array(ctx);
-
-    try {
-      // Load the array elements onto the stack.
-      const auto arraySize = m_componentType.pushArray(ctx, env, static_cast<jarray>(value.l));
-
-      // Move the elements from the stack into the array.
-      for (int i = arraySize - 1; i >= 0; --i) {
-        duk_put_prop_index(ctx, -2 - i, i);
-      }
-
-      return 1;
-    } catch (std::invalid_argument& e) {
-      // Failed to marshal an array element - clean up the stack.
-      duk_set_top(ctx, stackTop);
-      throw e;
-    }
+    return m_componentType.pushArray(ctx, env, static_cast<jarray>(value.l), false);
   }
 
   bool isInteger() const override {
@@ -535,32 +589,31 @@ jclass getPrimitiveType(JNIEnv* env, jclass boxedClass) {
   return static_cast<jclass>(env->GetStaticObjectField(boxedClass, typeField));
 }
 
-void addArrayType(std::map<std::string, const JavaType*>& typeMap,
-                  JNIEnv* env, const JavaType& elementType) {
-  const auto array = elementType.popArray(nullptr, env, 0, false);
-  const jclass arrayClass = env->GetObjectClass(array);
-  typeMap.emplace(std::make_pair(toString(env, arrayClass),
-                                 new Array(GlobalRef(env, arrayClass), elementType)));
-}
-
 /**
  * Adds type adapters for primitive and boxed versions of {@code name}, as well as arrays of those
  * types.
  */
 template<typename JavaTypeT>
 JavaType* addTypeAdapters(std::map<std::string, const JavaType *> &types, JNIEnv *env,
-                          const char *name) {
+                          const char *name, const char* primitiveSignature) {
   const jclass theClass = env->FindClass(name);
   const jclass primitiveClass = getPrimitiveType(env, theClass);
   const auto javaType = new JavaTypeT(GlobalRef(env, primitiveClass), GlobalRef(env, theClass));
-  types.emplace(std::make_pair(toString(env, primitiveClass), javaType));
-  addArrayType(types, env, *javaType);
+  types.emplace(std::make_pair(getName(env, primitiveClass), javaType));
+  types.emplace(std::make_pair(primitiveSignature, new JavaTypeT(*javaType)));
 
   const auto boxedType = new BoxedPrimitive(env, *javaType);
-  types.emplace(std::make_pair(toString(env, theClass), boxedType));
-  addArrayType(types, env, *boxedType);
+  types.emplace(std::make_pair(getName(env, theClass), boxedType));
 
   return boxedType;
+}
+
+/** convert Ljava.lang.String; -> java.lang.String */
+std::string dropLandSemicolon(const std::string& s) {
+  if (s.empty() || s[0] != 'L') {
+    return s;
+  }
+  return s.substr(1, s.length() - 2);
 }
 
 } // anonymous namespace
@@ -572,7 +625,7 @@ JavaTypeMap::~JavaTypeMap() {
 }
 
 const JavaType* JavaTypeMap::get(JNIEnv* env, jclass c) {
-  return find(env, toString(env, c));
+  return find(env, getName(env, c));
 }
 
 const JavaType* JavaTypeMap::getBoxed(JNIEnv* env, jclass c) {
@@ -586,7 +639,7 @@ const JavaType* JavaTypeMap::getBoxed(JNIEnv* env, jclass c) {
 }
 
 const JavaType* JavaTypeMap::getObjectType(JNIEnv* env) {
-  return find(env, "class java.lang.Object");
+  return find(env, "java.lang.Object");
 }
 
 const JavaType* JavaTypeMap::find(JNIEnv* env, const std::string& name) {
@@ -594,29 +647,37 @@ const JavaType* JavaTypeMap::find(JNIEnv* env, const std::string& name) {
     // Load up the map with the types we support.
     const jclass voidClass = env->FindClass("java/lang/Void");
     const jclass vClass = getPrimitiveType(env, voidClass);
-    m_types.emplace(std::make_pair(toString(env, vClass), new Void(GlobalRef(env, vClass), false)));
-    m_types.emplace(std::make_pair(toString(env, voidClass),
+    m_types.emplace(std::make_pair(getName(env, vClass), new Void(GlobalRef(env, vClass), false)));
+    m_types.emplace(std::make_pair(getName(env, voidClass),
                                    new Void(GlobalRef(env, voidClass), true)));
 
     const jclass stringClass = env->FindClass("java/lang/String");
     const auto stringType = new String(GlobalRef(env, stringClass));
-    m_types.emplace(std::make_pair(toString(env, stringClass), stringType));
-    addArrayType(m_types, env, *stringType);
+    m_types.emplace(std::make_pair(getName(env, stringClass), stringType));
 
-    const auto boxedBooleanType = addTypeAdapters<Boolean>(m_types, env, "java/lang/Boolean");
-    const auto boxedDoubleType = addTypeAdapters<Double>(m_types, env, "java/lang/Double");
-    addTypeAdapters<Integer>(m_types, env, "java/lang/Integer");
+    const auto boxedBooleanType = addTypeAdapters<Boolean>(m_types, env, "java/lang/Boolean", "Z");
+    const auto boxedDoubleType = addTypeAdapters<Double>(m_types, env, "java/lang/Double", "D");
+    addTypeAdapters<Integer>(m_types, env, "java/lang/Integer", "I");
 
     const jclass objectClass = env->FindClass("java/lang/Object");
     const auto objectType = new Object(GlobalRef(env, objectClass), *boxedBooleanType,
                                        *boxedDoubleType, *this);
-    m_types.emplace(std::make_pair(toString(env, objectClass), objectType));
-    addArrayType(m_types, env, *objectType);
+    m_types.emplace(std::make_pair(getName(env, objectClass), objectType));
   }
 
   const auto I = m_types.find(name);
   if (I != m_types.end()) {
     return I->second;
+  }
+
+  if (!name.empty() && name[0] == '[') {
+    const auto elementType = find(env, dropLandSemicolon(name.substr(name.find('[') + 1)));
+
+    const auto arrayClass = elementType->getArrayClass(env);
+    std::unique_ptr<JavaType> arrayType;
+    arrayType.reset(new Array(GlobalRef(env, arrayClass), *elementType));
+    m_types.emplace(std::make_pair(getName(env, arrayClass), arrayType.get()));
+    return arrayType.release();
   }
 
   throw std::invalid_argument("Unsupported Java type " + name);

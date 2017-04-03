@@ -216,7 +216,7 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
   const JavaType* returnType = typeMap.getBoxed(env, returnedClass);
   if (returnType->isInteger()) {
     throw std::invalid_argument("Unsupported JavaScript return type "
-                                + toString(env, returnedClass));
+                                + getName(env, returnedClass));
   }
 
   const jmethodID isVarArgsMethod = env->GetMethodID(methodClass, "isVarArgs", "()Z");
@@ -258,7 +258,8 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
       arg.l = jniEnv->GetObjectArrayElement(args, i);
       try {
         if (isVarArgs && i == numArguments - 1) {
-          numArguments = i + argumentLoaders[i]->pushArray(ctx, jniEnv, static_cast<jarray>(arg.l));
+          numArguments =
+              i + argumentLoaders[i]->pushArray(ctx, jniEnv, static_cast<jarray>(arg.l), true);
           break;
         }
         argumentLoaders[i]->push(ctx, jniEnv, arg);

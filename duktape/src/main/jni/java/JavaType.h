@@ -41,18 +41,22 @@ public:
   /**
    * Pops {@code count} values from the Duktape stack in {@code ctx} and packs them into a Java
    * array. If {@code inScript} is true, caller is inside a JavaScript execution so JavaScript
-   * exceptions can be used. If false, type errors will throw C++ exceptions.
+   * exceptions can be used. If false, type errors will throw C++ exceptions. If {@code expanded} is
+   * true, a {@code jarray} will be created from {@code count} entries from the JavaScript stack. If
+   * false, the top entry on the JavaScript stack should be an array that will be converted.
    */
-  virtual jarray popArray(duk_context*, JNIEnv*, uint32_t count, bool inScript) const;
+  virtual jarray popArray(duk_context*, JNIEnv*, uint32_t count, bool expanded, bool inScript) const;
   /**
    * Pushes {@code value} to the Duktape stack in {@code ctx}. Returns the number of entries pushed.
    */
   virtual duk_ret_t push(duk_context* ctx, JNIEnv*, const jvalue& value) const = 0;
   /**
    * Pushes the elements of {@code values} to the Duktape stack in {@code ctx} individually.
-   * Returns the number of entries pushed (the length of {@code values}) if successful.
+   * Returns the number of entries pushed (the length of {@code values}) if successful. If {@code
+   * expand} is true, {@code values}' individial entries will be pushed to the JavaScript stack. If
+   * false, {@code values} will be pushed as a single JavaScript array.
    */
-  virtual duk_ret_t pushArray(duk_context* ctx, JNIEnv*, const jarray& values) const;
+  virtual duk_ret_t pushArray(duk_context* ctx, JNIEnv*, const jarray& values, bool expand) const;
   /**
    * Calls the given Java method with {@code javaThis} and {@code args}.  Returns the result from
    * the method.  The Duktape context is only modified to propagate exceptions thrown by the JVM.
@@ -64,6 +68,9 @@ public:
   virtual bool isPrimitive() const { return false; }
   /** Return true if this type is a java.lang.Integer. */
   virtual bool isInteger() const { return false; }
+
+  jclass getClass() const { return static_cast<jclass>(m_classRef.get()); }
+  virtual jclass getArrayClass(JNIEnv*) const;
 
 private:
   const GlobalRef m_classRef;
@@ -85,7 +92,7 @@ private:
   std::map<std::string, const JavaType*> m_types;
 };
 
-/** Calls toString() on the given object and returns a copy of the result. */
-std::string toString(JNIEnv* env, jobject object);
+/** Calls getName() on the given class and returns a copy of the result. */
+std::string getName(JNIEnv* env, jclass javaClass);
 
 #endif //DUKTAPE_ANDROID_JAVAVALUE_H
