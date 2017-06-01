@@ -135,19 +135,19 @@ public final class DuktapeSetTest {
       assertThat(stackTrace[2]).isEqualTo(new StackTraceElement("JavaScript", "f1", "test.js", 5));
       assertThat(stackTrace[3]).isEqualTo(new StackTraceElement("JavaScript", "eval", "test.js", 2));
 
-      // Then the native Duktape.evaluate method.
-      assertThat(stackTrace[4].getClassName()).isEqualTo(Duktape.class.getName());
-      assertThat(stackTrace[4].getMethodName()).isEqualTo("evaluate");
-      assertThat(stackTrace[4].isNativeMethod()).isTrue();
-
-      // Then the Java method.
-      assertThat(stackTrace[5].getClassName()).isEqualTo(Duktape.class.getName());
-      assertThat(stackTrace[5].getMethodName()).isEqualTo("evaluate");
-      assertThat(stackTrace[5].isNativeMethod()).isFalse();
+      // Then one or two native Duktape.evaluate methods, followed by Duktape.evaluate in Java.
+      int i = 4;
+      assertThat(stackTrace[i].getClassName()).isEqualTo(Duktape.class.getName());
+      assertThat(stackTrace[i].getMethodName()).isEqualTo("evaluate");
+      assertThat(stackTrace[i].isNativeMethod()).isTrue();
+      while (stackTrace[i].getMethodName().equals("evaluate")) {
+        i++;
+      }
+      assertThat(stackTrace[i-1].isNativeMethod()).isFalse();
 
       // Then this test method.
-      assertThat(stackTrace[6].getClassName()).isEqualTo(DuktapeSetTest.class.getName());
-      assertThat(stackTrace[6].getMethodName())
+      assertThat(stackTrace[i].getClassName()).isEqualTo(DuktapeSetTest.class.getName());
+      assertThat(stackTrace[i].getMethodName())
           .isEqualTo("exceptionsFromJavaWithUnifiedStackTrace");
     }
   }
@@ -685,5 +685,22 @@ public final class DuktapeSetTest {
     assertArrayEquals(
         (Object[]) duktape.evaluate("Sorter.sortNullsFirst([true, false, true, null])"),
         new Object[]{ null, false, true, true });
+  }
+
+  @Test public void lotsOfLocalTemps() {
+    duktape.set("foo", TestInterfaceArgs.class, new TestInterfaceArgs() {
+      @Override public String foo(String a, String b, String c) {
+        return a + b + c;
+      }
+    });
+
+    Object result = duktape.evaluate(""
+        + "var len = 0;\n"
+        + "for (var i = 0; i < 100000; i++) {\n"
+        + "  var s = foo.foo('a', 'b', 'c');\n"
+        + "  len += s.length;\n"
+        + "}\n"
+        + "len;\n");
+    assertThat(result).isEqualTo(300000.0);
   }
 }
