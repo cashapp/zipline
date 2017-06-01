@@ -57,6 +57,24 @@ JavaMethod::JavaMethod(JavaTypeMap& typeMap, JNIEnv* env, jobject method) {
   };
 }
 
+namespace {
+
+struct LocalFrame {
+  LocalFrame(JNIEnv* env, std::size_t capacity)
+      : m_env(*env) {
+    m_env.PushLocalFrame(capacity);
+  }
+
+  ~LocalFrame() {
+    m_env.PopLocalFrame(nullptr);
+  }
+
+private:
+  JNIEnv& m_env;
+};
+
+} // anonymous namespace
+
 duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) const {
   const auto argCount = duk_get_top(ctx);
   const auto minArgs = m_isVarArgs
@@ -68,6 +86,9 @@ duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) co
     // unreachable - duk_error never returns.
     return DUK_RET_API_ERROR;
   }
+
+  // Release any local objects allocated in this frame when we leave this scope.
+  const LocalFrame localFrame(env, m_argumentLoaders.size());
 
   std::vector<jvalue> args(m_argumentLoaders.size());
   // Load the arguments off the stack and convert to Java types.
