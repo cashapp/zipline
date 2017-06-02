@@ -233,3 +233,220 @@ const JavaScriptObject* DuktapeContext::get(JNIEnv *env, jstring name, jobjectAr
   m_jsObjects.emplace_back(m_javaValues, env, m_context, name, methods);
   return &m_jsObjects.back();
 }
+
+void DuktapeContext::loadScript(JNIEnv *env, jstring script) {
+  CHECK_STACK(m_context);
+  const JString sourceCode(env, script);
+
+  duk_peval_string(m_context, sourceCode);
+
+  duk_push_global_object(m_context);
+}
+
+void DuktapeContext::closeScriptContext() {
+  CHECK_STACK(m_context);
+
+  duk_pop(m_context);
+}
+
+void DuktapeContext::putDouble(JNIEnv *env, jstring key, jdouble value) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  duk_push_string(m_context, contextKey);
+
+  duk_push_number(m_context, value);
+
+  duk_idx_t topIndex = duk_get_top_index(m_context);
+
+  duk_put_prop(m_context, -topIndex);
+}
+
+jdouble DuktapeContext::getDouble(JNIEnv *env, jstring key) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  if (duk_has_prop_string(m_context, -1, contextKey) != 1) {
+    queueDuktapeException(env, duk_safe_to_string(m_context, -1));
+    return 0L;
+  } else {
+    duk_get_prop_string(m_context, -1, contextKey);
+
+    duk_double_t value = duk_is_null_or_undefined(m_context, -1) ? 0 : duk_get_number(m_context, -1);
+
+    duk_pop(m_context);
+
+    return value;
+  }
+}
+
+void DuktapeContext::putString(JNIEnv *env, jstring key, jstring value) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  duk_push_string(m_context, contextKey);
+
+  if (value == nullptr) {
+    duk_push_null(m_context);
+  } else {
+    JString contextValue(env, value);
+    duk_push_string(m_context, contextValue);
+  }
+
+  duk_idx_t topIndex = duk_get_top_index(m_context);
+
+  duk_put_prop(m_context, -topIndex);
+}
+
+jstring DuktapeContext::getString(JNIEnv *env, jstring key) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  if (duk_has_prop_string(m_context, -1, contextKey) != 1) {
+    queueDuktapeException(env, duk_safe_to_string(m_context, -1));
+    return nullptr;
+  } else {
+    duk_get_prop_string(m_context, -1, contextKey);
+
+    const char *value = duk_get_string(m_context, -1);
+
+    duk_pop(m_context);
+
+    return env->NewStringUTF(value);
+  }
+}
+
+void DuktapeContext::putLong(JNIEnv *env, jstring key, jlong value) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  duk_push_string(m_context, contextKey);
+
+  duk_push_sprintf(m_context, "%ld", value);
+
+  duk_idx_t topIndex = duk_get_top_index(m_context);
+
+  duk_put_prop(m_context, -topIndex);
+}
+
+jlong DuktapeContext::getLong(JNIEnv *env, jstring key) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  if (duk_has_prop_string(m_context, -1, contextKey) != 1) {
+    queueDuktapeException(env, duk_safe_to_string(m_context, -1));
+    return 0L;
+  } else {
+    duk_get_prop_string(m_context, -1, contextKey);
+    duk_double_t value;
+
+    if (duk_is_null_or_undefined(m_context, -1))
+      value = 0;
+    else {
+      value = duk_is_string(m_context, -1) ?
+                           atol(duk_get_string(m_context, -1)) : duk_get_number(m_context, -1);
+    }
+
+    duk_pop(m_context);
+
+    return (jlong) value;
+  }
+}
+
+void DuktapeContext::putBoolean(JNIEnv *env, jstring key, jboolean value) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  duk_push_string(m_context, contextKey);
+
+  duk_push_boolean(m_context, value);
+
+  duk_idx_t topIndex = duk_get_top_index(m_context);
+
+  duk_put_prop(m_context, -topIndex);
+}
+
+jboolean DuktapeContext::getBoolean(JNIEnv *env, jstring key) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  if (duk_has_prop_string(m_context, -1, contextKey) != 1) {
+    queueDuktapeException(env, duk_safe_to_string(m_context, -1));
+    return 0L;
+  } else {
+    duk_get_prop_string(m_context, -1, contextKey);
+
+    jboolean value = (jboolean) (duk_is_null_or_undefined(m_context, -1) ? JNI_FALSE : duk_get_boolean(m_context, -1));
+
+    duk_pop(m_context);
+
+    return value;
+  }
+}
+
+jboolean DuktapeContext::isNull(JNIEnv *env, jstring key) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  if (duk_has_prop_string(m_context, -1, contextKey) != 1) {
+    queueDuktapeException(env, duk_safe_to_string(m_context, -1));
+    return JNI_FALSE;
+  } else {
+    duk_get_prop_string(m_context, -1, contextKey);
+
+    jboolean value = (jboolean) duk_is_null_or_undefined(m_context, -1);
+
+    duk_pop(m_context);
+
+    return value;
+  }
+}
+
+jstring DuktapeContext::callFunction(JNIEnv *env, jstring key, jobjectArray args) {
+  CHECK_STACK(m_context);
+
+  JString contextKey(env, key);
+
+  if (duk_has_prop_string(m_context, -1, contextKey) != 1) {
+    queueDuktapeException(env, duk_safe_to_string(m_context, -1));
+    return nullptr;
+  } else {
+    duk_get_prop_string(m_context, -1, contextKey);
+
+    jsize size = env->GetArrayLength(args);
+    
+    for (jsize i = 0; i < size; i++) {
+      jobject arg = env->GetObjectArrayElement(args, i);
+
+      const JavaType *javaType = m_javaValues.get(env, env->GetObjectClass(arg));
+
+      jvalue value;
+      value.l = arg;
+
+      javaType->push(m_context, env, value);
+    }
+
+    jstring result = nullptr;
+
+    if (duk_pcall(m_context, size) != 0) {
+      queueDuktapeException(env, duk_safe_to_string(m_context, -1));
+    } else {
+      if (!duk_is_null_or_undefined(m_context, -1)) {
+        result = env->NewStringUTF(duk_safe_to_string(m_context, -1));
+      }
+    }
+
+    duk_pop(m_context);
+
+    return result;
+  }
+}

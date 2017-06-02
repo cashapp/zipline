@@ -22,7 +22,7 @@
 
 namespace {
 
-std::unique_ptr<GlobalRef> duktapeClass;
+  std::unique_ptr<GlobalRef> duktapeClass;
 static jmethodID getLocalTimeZoneOffset = nullptr;
 
 void initialize(JNIEnv* env, jclass type) {
@@ -179,6 +179,209 @@ Java_com_squareup_duktape_Duktape_call(JNIEnv *env, jclass type, jlong context, 
   } catch (const std::exception& e) {
     queueDuktapeException(env, e.what());
   }
+  return nullptr;
+}
+
+JNIEXPORT void JNICALL
+Java_com_squareup_duktape_DuktapeScript_loadScript(JNIEnv *env, jclass type,
+                                                                  jlong context, jstring script) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return;
+  }
+
+  try {
+    return duktape->loadScript(env, script);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+}
+
+JNIEXPORT void JNICALL
+Java_com_squareup_duktape_DuktapeScript_closeScriptContext(JNIEnv *env, jclass type, jlong context) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return;
+  }
+
+  try {
+    return duktape->closeScriptContext();
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+}
+
+JNIEXPORT void JNICALL
+Java_com_squareup_duktape_DuktapeScript_putDouble(JNIEnv *env, jclass type,
+                                            jlong context, jstring key, jdouble value) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return;
+  }
+
+  try {
+    return duktape->putDouble(env, key, value);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+}
+
+JNIEXPORT jdouble JNICALL
+Java_com_squareup_duktape_DuktapeScript_getDouble(JNIEnv *env, jclass type,
+                                                                  jlong context, jstring key) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return 0L;
+  }
+
+  try {
+    return duktape->getDouble(env, key);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+
+  return 0L;
+}
+
+JNIEXPORT void JNICALL
+Java_com_squareup_duktape_DuktapeScript_putString(JNIEnv *env, jclass type,
+                                            jlong context, jstring key, jstring value) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return;
+  }
+
+  try {
+    return duktape->putString(env, key, value);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_squareup_duktape_DuktapeScript_getString(JNIEnv *env, jclass type,
+                                                                  jlong context, jstring key) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return nullptr;
+  }
+
+  try {
+    return duktape->getString(env, key);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+
+  return nullptr;
+}
+
+JNIEXPORT void JNICALL
+Java_com_squareup_duktape_DuktapeScript_putLong(JNIEnv *env, jclass type, jlong context,
+                                                jstring key, jlong value) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return;
+  }
+
+  try {
+    duktape->putLong(env, key, value);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+}
+
+JNIEXPORT jlong JNICALL
+Java_com_squareup_duktape_DuktapeScript_getLong(JNIEnv *env, jclass type,
+                                                jlong context, jstring key) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return 0L;
+  }
+
+  try {
+    return duktape->getLong(env, key);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+
+  return 0L;
+}
+
+JNIEXPORT void JNICALL
+Java_com_squareup_duktape_DuktapeScript_putBoolean(JNIEnv *env, jclass type, jlong context,
+                                                   jstring key, jboolean value) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return;
+  }
+
+  try {
+    duktape->putBoolean(env, key, value);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_squareup_duktape_DuktapeScript_getBoolean(JNIEnv *env, jclass type,
+                                                   jlong context, jstring key) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return JNI_FALSE;
+  }
+
+  try {
+    return duktape->getBoolean(env, key);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+
+  return JNI_FALSE;
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_squareup_duktape_DuktapeScript_isNull__JLjava_lang_String_2(JNIEnv *env, jclass type,
+                                                                     jlong context, jstring key) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return JNI_FALSE;
+  }
+
+  try {
+    return duktape->isNull(env, key);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+
+  return JNI_FALSE;
+}
+
+JNIEXPORT jstring JNICALL
+Java_com_squareup_duktape_DuktapeScript_callFunction(JNIEnv *env, jclass type,
+                                               jlong context, jstring key, jobjectArray args) {
+  DuktapeContext* duktape = reinterpret_cast<DuktapeContext*>(context);
+  if (duktape == nullptr) {
+    queueNullPointerException(env, "Null Duktape context - did you close your Duktape?");
+    return nullptr;
+  }
+
+  try {
+    return duktape->callFunction(env, key, args);
+  } catch (const std::runtime_error& e) {
+    queueDuktapeException(env, e.what());
+  }
+
   return nullptr;
 }
 

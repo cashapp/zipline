@@ -144,6 +144,10 @@ public final class Duktape implements Closeable {
     return (T) proxy;
   }
 
+  public DuktapeScript loadScript(String sourceCode) {
+    return new DuktapeScript(context, sourceCode);
+  }
+
   /**
    * Release the native resources associated with this object. You <strong>must</strong> call this
    * method for each instance to avoid leaking native memory.
@@ -176,4 +180,5 @@ public final class Duktape implements Closeable {
     int offsetMillis = TimeZone.getDefault().getOffset((long) t);
     return (int) TimeUnit.MILLISECONDS.toSeconds(offsetMillis);
   }
+
 }

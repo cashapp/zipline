@@ -35,6 +35,30 @@ public:
 
   const JavaScriptObject* get(JNIEnv *env, jstring name, jobjectArray methods);
 
+  void loadScript(JNIEnv *env, jstring script);
+
+  void closeScriptContext();
+
+  void putDouble(JNIEnv *env, jstring key, jdouble value);
+
+  jdouble getDouble(JNIEnv *env, jstring key);
+
+  void putString(JNIEnv *env, jstring key, jstring value);
+
+  jstring getString(JNIEnv *env, jstring key);
+
+  void putLong(JNIEnv *env, jstring key, jlong value);
+
+  jlong getLong(JNIEnv *env, jstring key);
+
+  void putBoolean(JNIEnv *env, jstring key, jboolean value);
+
+  jboolean getBoolean(JNIEnv *env, jstring key);
+
+  jstring callFunction(JNIEnv *env, jstring key, jobjectArray args);
+
+  jboolean isNull(JNIEnv *env, jstring key);
+
 private:
   duk_context* m_context;
   std::list<JavaScriptObject> m_jsObjects;
