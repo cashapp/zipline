@@ -8615,6 +8615,9 @@ DUK_INTERNAL_DECL duk_int_t duk_bi_date_get_local_tzoffset_windows(duk_double_t 
 #if defined(DUK_USE_DATE_PRS_STRPTIME)
 DUK_INTERNAL_DECL duk_bool_t duk_bi_date_parse_string_strptime(duk_context *ctx, const char *str);
 #endif
+#if defined(DUK_USE_DATE_PARSE_STRING)
+DUK_INTERNAL_DECL duk_bool_t duk_bi_date_parse_string_strptime_custom(duk_context *ctx, const char *str);
+#endif
 #if defined(DUK_USE_DATE_PRS_GETDATE)
 DUK_INTERNAL_DECL duk_bool_t duk_bi_date_parse_string_getdate(duk_context *ctx, const char *str);
 #endif
@@ -26339,6 +26342,46 @@ DUK_INTERNAL duk_bool_t duk_bi_date_parse_string_strptime(duk_context *ctx, cons
 	return 0;
 }
 #endif  /* DUK_USE_DATE_PRS_STRPTIME */
+
+#if defined(DUK_USE_DATE_PARSE_STRING)
+DUK_INTERNAL duk_bool_t duk_bi_date_parse_string_strptime_custom(duk_context *ctx, const char *str) {
+	struct tm tm;
+	time_t t;
+	char buf[DUK__STRPTIME_BUF_SIZE];
+
+	/* copy to buffer with spare to avoid Valgrind gripes from strptime */
+	DUK_ASSERT(str != NULL);
+	DUK_MEMZERO(buf, sizeof(buf));  /* valgrind whine without this */
+	DUK_SNPRINTF(buf, sizeof(buf), "%s", (const char *) str);
+	buf[sizeof(buf) - 1] = (char) 0;
+
+	DUK_DDD(DUK_DDDPRINT("parsing: '%s'", (const char *) buf));
+
+	DUK_MEMZERO(&tm, sizeof(tm));
+	if (strptime((const char *) buf, "%c", &tm) != NULL
+	    || strptime((const char *) buf, "%Y/%m/%d", &tm) != NULL
+	    || strptime((const char *) buf, "%Y/%m/%d %H:%M:%S", &tm) != NULL
+	    || strftime((const char *) buf, sizeof(buf) - 1, "%Y/%m/%d %H:%M:%S %z", &tm) != NULL
+	    || strftime((const char *) buf, sizeof(buf) - 1, "%Y/%m/%d %H:%M:%S %Z", &tm) != NULL) {
+
+		DUK_DDD(DUK_DDDPRINT("before mktime: tm={sec:%ld,min:%ld,hour:%ld,mday:%ld,mon:%ld,year:%ld,"
+		                     "wday:%ld,yday:%ld,isdst:%ld}",
+		                     (long) tm.tm_sec, (long) tm.tm_min, (long) tm.tm_hour,
+		                     (long) tm.tm_mday, (long) tm.tm_mon, (long) tm.tm_year,
+		                     (long) tm.tm_wday, (long) tm.tm_yday, (long) tm.tm_isdst));
+		tm.tm_isdst = -1;  /* negative: dst info not available */
+
+		t = mktime(&tm);
+		DUK_DDD(DUK_DDDPRINT("mktime() -> %ld", (long) t));
+		if (t >= 0) {
+			duk_push_number(ctx, ((duk_double_t) t) * 1000.0);
+			return 1;
+		}
+	}
+
+	return 0;
+}
+#endif
 
 #if defined(DUK_USE_DATE_PRS_GETDATE)
 DUK_INTERNAL duk_bool_t duk_bi_date_parse_string_getdate(duk_context *ctx, const char *str) {

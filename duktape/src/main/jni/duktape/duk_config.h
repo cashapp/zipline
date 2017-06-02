@@ -3530,6 +3530,8 @@ typedef FILE duk_file;
 #error no provider for DUK_USE_DATE_GET_LOCAL_TZOFFSET()
 #endif
 
+#define DUK_USE_DATE_PARSE_STRING(ctx,str)   duk_bi_date_parse_string_strptime_custom((ctx), (str))
+
 #if defined(DUK_USE_DATE_PARSE_STRING)
 /* External provider already defined. */
 #elif defined(DUK_USE_DATE_PRS_STRPTIME)
