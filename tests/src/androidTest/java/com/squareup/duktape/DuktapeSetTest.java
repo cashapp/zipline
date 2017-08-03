@@ -306,7 +306,7 @@ public final class DuktapeSetTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage(
-          "In bound method \"value.get\": Unsupported Java type class java.util.Date");
+          "In bound method \"value.get\": Unsupported Java type java.util.Date");
     }
   }
 
@@ -323,7 +323,7 @@ public final class DuktapeSetTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected).hasMessage(
-          "In bound method \"value.set\": Unsupported Java type class java.util.Date");
+          "In bound method \"value.set\": Unsupported Java type java.util.Date");
     }
   }
 

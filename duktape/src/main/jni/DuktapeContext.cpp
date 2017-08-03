@@ -143,32 +143,12 @@ jobject DuktapeContext::evaluate(JNIEnv* env, jstring code, jstring fname) const
   if (duk_check_type_mask(m_context, -1, supportedTypeMask)) {
     // The result is a supported scalar type - return it.
     return m_objectType->pop(m_context, env, false).l;
-  } else if (!duk_is_array(m_context, -1)) {
+  } else if (duk_is_array(m_context, -1)) {
+    return m_objectType->popArray(m_context, env, 1, false, false);
+  } else {
     // The result is an unsupported type, undefined, or null.
     duk_pop(m_context);
     return nullptr;
-  }
-
-  const auto stackTop = duk_get_top_index(m_context);
-
-  // It's an array - load values onto the stack.
-  const auto arraySize = duk_get_length(m_context, -1);
-  for (duk_size_t i = 0; i < arraySize; ++i) {
-    duk_get_prop_index(m_context, -1 - i, i);
-  }
-
-  try {
-    // Create a Java array from the values.
-    jobject result = m_objectType->popArray(m_context, env, arraySize, false);
-
-    // Pop the JS array off the stack.
-    duk_pop(m_context);
-
-    return result;
-  } catch (std::invalid_argument& e) {
-    // Failed to marshal an array element - clean up the stack.
-    duk_set_top(m_context, stackTop);
-    throw e;
   }
 }
 
