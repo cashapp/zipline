@@ -21,6 +21,7 @@
 #include "../java/JavaExceptions.h"
 #include "../java/JavaType.h"
 #include "../StackChecker.h"
+#include "../LocalFrame.h"
 
 namespace {
 
@@ -227,7 +228,8 @@ JavaScriptObject::MethodBody buildMethodBody(JavaTypeMap& typeMap, JNIEnv* env, 
   jobjectArray parameterTypes =
       static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
   const jsize numArgs = env->GetArrayLength(parameterTypes);
-
+  // Release any local objects allocated in this frame when we leave this scope.
+  const LocalFrame localFrame(env, numArgs);
   std::vector<const JavaType*> argumentLoaders(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
     auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
