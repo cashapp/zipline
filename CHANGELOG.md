@@ -1,6 +1,14 @@
 Change Log
 ==========
 
+Version 1.2.0 *(2017-09-08)*
+----------------------------
+
+ * New: support for arrays of supported types as arguments between Java/JavaScript.
+ * New: update to Duktape 1.8.0.
+ * Fix: explicitly release temporary JVM objects when returning from calls to Java from JavaScript.
+ * Fix: allocate a local frame when binding Java interfaces to allow many methods and arguments.
+
 Version 1.0.1 *(2016-11-08)*
 ----------------------------
 
