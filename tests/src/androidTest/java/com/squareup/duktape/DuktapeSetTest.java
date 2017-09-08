@@ -703,4 +703,365 @@ public final class DuktapeSetTest {
         + "len;\n");
     assertThat(result).isEqualTo(300000.0);
   }
+
+  // https://github.com/square/duktape-android/issues/95
+  interface HugeInterface {
+    String method01(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method02(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method03(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method04(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method05(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method06(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method07(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method08(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method09(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method10(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method11(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method12(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method13(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method14(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method15(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method16(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method17(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method18(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method19(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method20(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method21(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method22(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method23(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method24(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method25(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method26(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method27(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method28(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method29(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method30(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method31(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method32(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method33(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method34(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method35(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method36(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method37(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method38(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method39(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method40(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method41(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method42(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method43(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method44(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method45(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method46(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method47(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method48(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method49(String a, String b, String c, String d, String e, String f, String g, String h);
+    String method50(String a, String b, String c, String d, String e, String f, String g, String h);
+  }
+
+  @Test public void lotsOfInterfaceMethodsAndArgs() {
+    duktape.set("foo", HugeInterface.class, new HugeInterface() {
+      @Override
+      public String method01(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method02(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method03(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method04(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method05(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method06(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method07(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method08(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method09(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method10(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method11(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method12(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method13(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method14(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method15(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method16(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method17(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method18(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method19(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method20(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method21(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method22(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method23(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method24(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method25(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method26(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method27(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method28(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method29(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method30(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method31(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method32(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method33(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method34(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method35(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method36(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method37(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method38(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method39(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method40(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method41(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method42(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method43(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method44(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method45(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method46(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method47(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method48(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method49(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return null;
+      }
+
+      @Override
+      public String method50(String a, String b, String c, String d, String e, String f, String g,
+                             String h) {
+        return "method50" + a + b + c + d + e + f + g + h;
+      }
+    });
+
+    Object result = duktape.evaluate("foo.method50('a', 'b', 'c', 'd', 'e', 'f', 'g', 'h')\n");
+    assertThat(result).isEqualTo("method50abcdefgh");
+  }
 }

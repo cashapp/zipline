@@ -6,8 +6,9 @@ android:
     - platform-tools
     - tools
     - build-tools-25.0.0
-    - android-25
+    - android-18
     - extra-android-m2repository
+    - sys-img-armeabi-v7a-android-18
 
 # By default, we get an older version of libstdc++6 so we need to update it for CMake.
 addons:

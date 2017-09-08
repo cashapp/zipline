@@ -20,6 +20,7 @@
 #include "GlobalRef.h"
 #include "JavaExceptions.h"
 #include "JavaType.h"
+#include "../LocalFrame.h"
 
 JavaMethod::JavaMethod(JavaTypeMap& typeMap, JNIEnv* env, jobject method) {
   jclass methodClass = env->GetObjectClass(method);
@@ -32,6 +33,8 @@ JavaMethod::JavaMethod(JavaTypeMap& typeMap, JNIEnv* env, jobject method) {
   jobjectArray parameterTypes =
       static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
   const jsize numArgs = env->GetArrayLength(parameterTypes);
+  // Release any local objects allocated in this frame when we leave this scope.
+  const LocalFrame localFrame(env, numArgs);
   m_argumentLoaders.resize(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
     auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
@@ -56,24 +59,6 @@ JavaMethod::JavaMethod(JavaTypeMap& typeMap, JNIEnv* env, jobject method) {
     return returnType->push(ctx, jniEnv, result);
   };
 }
-
-namespace {
-
-struct LocalFrame {
-  LocalFrame(JNIEnv* env, std::size_t capacity)
-      : m_env(*env) {
-    m_env.PushLocalFrame(capacity);
-  }
-
-  ~LocalFrame() {
-    m_env.PopLocalFrame(nullptr);
-  }
-
-private:
-  JNIEnv& m_env;
-};
-
-} // anonymous namespace
 
 duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) const {
   const auto argCount = duk_get_top(ctx);
