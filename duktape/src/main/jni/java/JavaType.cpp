@@ -434,6 +434,88 @@ struct Double : public Primitive {
   }
 };
 
+struct Float : public Primitive {
+  Float(const GlobalRef& classRef, const GlobalRef& boxedClassRef)
+      : Primitive(classRef, boxedClassRef) {
+  }
+
+  jvalue pop(duk_context* ctx, JNIEnv*, bool inScript) const override {
+    if (!inScript && !duk_is_number(ctx, -1)) {
+      const auto message =
+          std::string("Cannot convert return value ") + duk_safe_to_string(ctx, -1) + " to float";
+      duk_pop(ctx);
+      throw std::invalid_argument(message);
+    }
+    jvalue value;
+    value.f = duk_require_number(ctx, -1);
+    duk_pop(ctx);
+    return value;
+  }
+
+  jarray popArray(
+      duk_context* ctx, JNIEnv* env, uint32_t count, bool expanded, bool inScript) const override {
+    // If we're not expanded, pop the array off the stack no matter what.
+    const StackUnwinder _(ctx, expanded ? 0 : 1);
+
+    count = expanded ? count : duk_get_length(ctx, -1);
+    jfloatArray array = env->NewFloatArray(count);
+    for (auto i = count; i > 0u; --i) {
+      if (!expanded) {
+        duk_get_prop_index(ctx, -1, i - 1);
+      }
+      const auto value = pop(ctx, env, inScript).f;
+      env->SetFloatArrayRegion(array, i - 1, 1, &value);
+    }
+    return array;
+  }
+
+  duk_ret_t push(duk_context* ctx, JNIEnv*, const jvalue& value) const override {
+    duk_push_number(ctx, value.f);
+    return 1;
+  }
+
+  duk_ret_t pushArray(
+      duk_context* ctx, JNIEnv* env, const jarray& values, bool expand) const override {
+    const auto size = env->GetArrayLength(values);
+    if (!expand) {
+      duk_push_array(ctx);
+    }
+    jfloat* elements = env->GetFloatArrayElements(static_cast<jfloatArray>(values), nullptr);
+    for (jsize i = 0; i < size; ++i) {
+      duk_push_number(ctx, elements[i]);
+      if (!expand) {
+        duk_put_prop_index(ctx, -2, static_cast<duk_uarridx_t>(i));
+      }
+    }
+    env->ReleaseFloatArrayElements(static_cast<jfloatArray>(values), elements, JNI_ABORT);
+    return expand ? size : 1;
+  }
+
+  jvalue callMethod(duk_context* ctx, JNIEnv* env, jmethodID methodId, jobject javaThis,
+                    jvalue* args) const override {
+    jdouble returnValue = env->CallFloatMethodA(javaThis, methodId, args);
+    checkRethrowDuktapeError(env, ctx);
+    jvalue result;
+    result.f = returnValue;
+    return result;
+  }
+
+  jclass getArrayClass(JNIEnv* env) const override {
+    jarray array = env->NewFloatArray(0);
+    return env->GetObjectClass(array);
+  }
+  
+  const char* getUnboxSignature() const override {
+    return "()F";
+  }
+  const char* getUnboxMethodName() const override {
+    return "floatValue";
+  }
+  const char* getBoxSignature() const override {
+    return "(F)Ljava/lang/Float;";
+  }
+};
+
 class BoxedPrimitive : public JavaType {
 public:
   BoxedPrimitive(JNIEnv* env, const Primitive& primitive)
@@ -658,6 +740,7 @@ const JavaType* JavaTypeMap::find(JNIEnv* env, const std::string& name) {
     const auto boxedBooleanType = addTypeAdapters<Boolean>(m_types, env, "java/lang/Boolean", "Z");
     const auto boxedDoubleType = addTypeAdapters<Double>(m_types, env, "java/lang/Double", "D");
     addTypeAdapters<Integer>(m_types, env, "java/lang/Integer", "I");
+    addTypeAdapters<Float>(m_types, env, "java/lang/Float", "F");
 
     const jclass objectClass = env->FindClass("java/lang/Object");
     const auto objectType = new Object(GlobalRef(env, objectClass), *boxedBooleanType,

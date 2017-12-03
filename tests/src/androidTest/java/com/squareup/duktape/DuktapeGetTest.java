@@ -54,11 +54,27 @@ public class DuktapeGetTest {
     String getValue();
   }
 
+  interface TestInterfaceMoreTypes {
+    String getValue();
+    double getValueDouble();
+    float getValueFloat();
+    boolean getValueBoolean();
+  }
+
   @Test public void get() {
-    duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
-    TestInterface proxy = duktape.get("value", TestInterface.class);
+    duktape.evaluate("var value = { "+
+                     "getValue: function() { return '8675309'; }," +
+                     "getValueDouble: function() { return 357; }," +
+                     "getValueFloat: function() { return 499.5; }," +
+                     "getValueBoolean: function() { return true; }," +
+                     "};");
+    TestInterfaceMoreTypes proxy = duktape.get("value", TestInterfaceMoreTypes.class);
     String v = proxy.getValue();
     assertThat(v).isEqualTo("8675309");
+
+    assertThat(proxy.getValueDouble()).isEqualTo(357.0);
+    assertThat(proxy.getValueFloat()).isEqualTo(499.5f);
+    assertThat(proxy.getValueBoolean()).isEqualTo(true);
   }
 
   @Test public void getMissingObjectThrows() {
@@ -204,18 +220,21 @@ public class DuktapeGetTest {
   interface TestPrimitiveTypes {
     boolean b(boolean b);
     double d(int i, double d);
+    float f(float f);
   }
 
   // Verify that primitive types can be used as arguments and return values from JavaScript methods.
   @Test public void proxyWithPrimitiveTypes() {
     duktape.evaluate("var value = {\n" +
         "  b: function(v) { return !v; },\n" +
-        "  d: function(i, v) { return v / i; }\n" +
+        "  d: function(i, v) { return v / i; },\n" +
+        "  f: function(f) { return f*f; }\n" +
         "};");
 
     TestPrimitiveTypes proxy = duktape.get("value", TestPrimitiveTypes.class);
     assertThat(proxy.b(true)).isEqualTo(false);
     assertThat(proxy.d(2, 6.28318)).isEqualTo(3.14159);
+    assertThat(proxy.f(0.5f)).isEqualTo(0.25f);
   }
 
   interface TestMultipleArgTypes {
@@ -541,6 +560,35 @@ public class DuktapeGetTest {
     }
   }
 
+  interface FloatSorter {
+    float[] sort(float[] args);
+    Float[] sortNullable(Float[] args);
+  }
+
+  @Test public void arraysOfFloats() {
+    duktape.evaluate(SORTER_FUNCTOR);
+
+    FloatSorter sorter = duktape.get("Sorter", FloatSorter.class);
+
+    assertArrayEquals(sorter.sort(new float[]{ 2f, 4f, 3f, 1f }),
+        new float[]{ 1.0f, 2.0f, 3.0f, 4.0f }, 0.0f);
+
+    assertArrayEquals(sorter.sortNullable(new Float[]{ 2f, null, 3f, 1f }),
+        new Float[]{ 1.0f, 2.0f, 3.0f, null });
+
+    // Replace the sorter with something broken.
+    duktape.evaluate(""
+        + "Sorter.sort = function(v) {"
+        + "  return [ 1, 2, null, 4 ];\n"
+        + "};");
+    try {
+      sorter.sort(new float[0]);
+      fail();
+    } catch (IllegalArgumentException expected) {
+      assertThat(expected).hasMessage("Cannot convert return value null to float");
+    }
+  }
+    
   interface MatrixTransposer {
     Double[][] call(Object o, Double[][] matrix);
   }
