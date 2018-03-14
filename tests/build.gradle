@@ -4,7 +4,7 @@ apply plugin: 'com.android.application'
 
 buildscript {
   dependencies {
-    classpath 'com.android.tools.build:gradle:2.2.2'
+    classpath 'com.android.tools.build:gradle:3.0.1'
   }
 }
 
@@ -20,7 +20,7 @@ android {
   defaultConfig {
     applicationId 'com.squareup.duktape.tests'
     minSdkVersion 15
-    targetSdkVersion 25
+    targetSdkVersion 26
 
     testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
   }
@@ -33,13 +33,13 @@ android {
 dependencies {
   compile project(':duktape')
   androidTestCompile project(path: ':duktape')
-  compile 'com.squareup.okio:okio:1.6.0'
+  compile 'com.squareup.okio:okio:1.14.0'
 
-  androidTestCompile 'com.android.support.test:runner:0.5'
-  androidTestCompile 'com.google.truth:truth:0.27'
+  androidTestCompile 'com.android.support.test:runner:1.0.1'
+  androidTestCompile 'com.google.truth:truth:0.39'
 
   // Force tests to use the same version of support-annotations as our Duktape artifact.
-  androidTestCompile 'com.android.support:support-annotations:25.0.0'
+  androidTestCompile 'com.android.support:support-annotations:27.1.0'
 }
 
 tasks.withType(AndroidTestTask) { task ->
