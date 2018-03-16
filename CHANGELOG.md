@@ -9,7 +9,7 @@ Version 1.2.0 *(2017-09-08)*
  * Fix: explicitly release temporary JVM objects when returning from calls to Java from JavaScript.
  * Fix: allocate a local frame when binding Java interfaces to allow many methods and arguments.
 
-Version 1.0.1 *(2016-11-08)*
+Version 1.1.0 *(2016-11-08)*
 ----------------------------
 
  * New: support parsing common date formats in JavaScript's "new Date('str')" constructor.
