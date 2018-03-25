@@ -15,14 +15,11 @@
  */
 package com.squareup.duktape;
 
-import android.support.annotation.Keep;
 import java.io.Closeable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
-import java.util.TimeZone;
-import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
 /** A simple EMCAScript (Javascript) interpreter. */
@@ -168,12 +165,4 @@ public final class Duktape implements Closeable {
   private static native void set(long context, String name, Object object, Object[] methods);
   private static native long get(long context, String name, Object[] methods);
   private static native Object call(long context, long instance, Object method, Object[] args);
-
-  /** Returns the timezone offset in seconds given system time millis. */
-  @SuppressWarnings("unused") // Called from native code.
-  @Keep // Instruct ProGuard not to strip this method.
-  private static int getLocalTimeZoneOffset(double t) {
-    int offsetMillis = TimeZone.getDefault().getOffset((long) t);
-    return (int) TimeUnit.MILLISECONDS.toSeconds(offsetMillis);
-  }
 }

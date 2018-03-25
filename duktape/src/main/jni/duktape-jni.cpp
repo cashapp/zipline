@@ -15,6 +15,7 @@
  */
 #include <memory>
 #include <mutex>
+#include <chrono>
 #include <jni.h>
 #include "DuktapeContext.h"
 #include "java/GlobalRef.h"
@@ -23,13 +24,23 @@
 namespace {
 
 std::unique_ptr<GlobalRef> duktapeClass;
-static jmethodID getLocalTimeZoneOffset = nullptr;
+std::function<int(double)> getTimeZoneOffset = [](double d) { return 0; };
 
 void initialize(JNIEnv* env, jclass type) {
   duktapeClass.reset(new GlobalRef(env, type));
-  getLocalTimeZoneOffset = env->GetStaticMethodID(static_cast<jclass>(duktapeClass->get()),
-                                                  "getLocalTimeZoneOffset",
-                                                  "(D)I");
+
+  auto tzClass = env->FindClass("java/util/TimeZone");
+  auto getDefaultTimeZone = env->GetStaticMethodID(tzClass, "getDefault", "()Ljava/util/TimeZone;");
+  auto getOffset = env->GetMethodID(tzClass, "getOffset", "(J)I");
+
+  const GlobalRef timeZoneClass(env, tzClass);
+  getTimeZoneOffset = [timeZoneClass, getDefaultTimeZone, getOffset](double time) {
+    auto theEnv = timeZoneClass.getJniEnv();
+    auto timeZone = theEnv->CallStaticObjectMethod(static_cast<jclass>(timeZoneClass.get()),
+                                                   getDefaultTimeZone);
+    const std::chrono::milliseconds offsetMillis(theEnv->CallIntMethod(timeZone, getOffset, time));
+    return static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(offsetMillis).count());
+  };
 }
 
 } // anonymous namespace
@@ -37,13 +48,7 @@ void initialize(JNIEnv* env, jclass type) {
 extern "C" {
 
 duk_int_t android__get_local_tzoffset(duk_double_t time) {
-  if (!duktapeClass) {
-    return 0;
-  }
-  JNIEnv* env = duktapeClass->getJniEnv();
-  return env->CallStaticIntMethod(static_cast<jclass>(duktapeClass->get()),
-                                  getLocalTimeZoneOffset,
-                                  time);
+  return getTimeZoneOffset(time);
 }
 
 /**
