@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-  compile 'com.android.support:support-annotations:27.1.0'
+  implementation 'com.android.support:support-annotations:27.1.0'
 }
 
 task sourcesJar(type: Jar) {

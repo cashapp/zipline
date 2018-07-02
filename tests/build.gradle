@@ -25,15 +25,15 @@ android {
 }
 
 dependencies {
-  compile project(':duktape')
-  androidTestCompile project(path: ':duktape')
-  compile 'com.squareup.okio:okio:1.14.0'
+  implementation project(':duktape')
+  androidTestImplementation project(path: ':duktape')
+  implementation 'com.squareup.okio:okio:1.14.0'
 
-  androidTestCompile 'com.android.support.test:runner:1.0.1'
-  androidTestCompile 'com.google.truth:truth:0.39'
+  androidTestImplementation 'com.android.support.test:runner:1.0.1'
+  androidTestImplementation 'com.google.truth:truth:0.39'
 
   // Force tests to use the same version of support-annotations as our Duktape artifact.
-  androidTestCompile 'com.android.support:support-annotations:27.1.0'
+  androidTestImplementation 'com.android.support:support-annotations:27.1.0'
 }
 
 tasks.withType(AndroidTestTask) { task ->
