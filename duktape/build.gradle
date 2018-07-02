@@ -1,9 +1,3 @@
-buildscript {
-  dependencies {
-    classpath 'com.android.tools.build:gradle:3.0.1'
-  }
-}
-
 apply plugin: 'com.android.library'
 
 android {
@@ -16,7 +10,7 @@ android {
     versionCode 1
     versionName "1.0"
     ndk {
-      abiFilters 'x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'arm64-v8a', 'mips', 'mips64'
+      abiFilters(*rootProject.ext.ndkAbiFilters)
     }
     externalNativeBuild {
       cmake {
@@ -53,7 +47,7 @@ android {
 }
 
 dependencies {
-  compile 'com.android.support:support-annotations:27.1.0'
+  implementation 'com.android.support:support-annotations:27.1.0'
 }
 
 task sourcesJar(type: Jar) {

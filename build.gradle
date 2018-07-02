@@ -1,17 +1,22 @@
+ext {
+  compileSdkVersion = 26
+  buildToolsVersion = '26.0.2'
+  buildGradleVersion = '3.0.1'
+  ndkAbiFilters = ['x86', 'x86_64', 'armeabi', 'armeabi-v7a', 'arm64-v8a', 'mips', 'mips64']
+}
+
 allprojects {
   buildscript {
     repositories {
       jcenter()
       google()
     }
+    dependencies {
+      classpath "com.android.tools.build:gradle:$buildGradleVersion"
+    }
   }
   repositories {
     jcenter()
     google()
   }
-}
-
-ext {
-  compileSdkVersion = 26
-  buildToolsVersion = '26.0.2'
 }
