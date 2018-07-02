@@ -2,12 +2,6 @@ import com.android.build.gradle.internal.tasks.AndroidTestTask
 
 apply plugin: 'com.android.application'
 
-buildscript {
-  dependencies {
-    classpath 'com.android.tools.build:gradle:3.0.1'
-  }
-}
-
 android {
   compileSdkVersion rootProject.ext.compileSdkVersion
   buildToolsVersion rootProject.ext.buildToolsVersion
