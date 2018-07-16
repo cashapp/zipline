@@ -46,7 +46,8 @@ public class DuktapeGetTest {
       fail();
     } catch (UnsupportedOperationException expected) {
       assertThat(expected)
-          .hasMessage("Only interfaces can be proxied. Received: class java.lang.String");
+          .hasMessageThat()
+          .isEqualTo("Only interfaces can be proxied. Received: class java.lang.String");
     }
   }
 
@@ -67,7 +68,8 @@ public class DuktapeGetTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage("A global JavaScript object called DoesNotExist was not found");
+          .hasMessageThat()
+          .isEqualTo("A global JavaScript object called DoesNotExist was not found");
     }
   }
 
@@ -77,7 +79,9 @@ public class DuktapeGetTest {
       duktape.get("value", TestInterface.class);
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("JavaScript global value has no method called getValue");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JavaScript global value has no method called getValue");
     }
   }
 
@@ -88,7 +92,9 @@ public class DuktapeGetTest {
       duktape.get("value", TestInterface.class);
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("JavaScript property value.getValue not callable");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JavaScript property value.getValue not callable");
     }
   }
 
@@ -103,7 +109,9 @@ public class DuktapeGetTest {
       proxy.getValue();
       fail();
     } catch (NullPointerException expected) {
-      assertThat(expected).hasMessage("Null Duktape context - did you close your Duktape?");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Null Duktape context - did you close your Duktape?");
     }
   }
 
@@ -115,7 +123,7 @@ public class DuktapeGetTest {
       proxy.getValue();
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("nope");
+      assertThat(expected).hasMessageThat().isEqualTo("nope");
     }
   }
 
@@ -132,7 +140,9 @@ public class DuktapeGetTest {
       proxy.getValue();
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("JavaScript object value has been garbage collected");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JavaScript object value has been garbage collected");
     }
 
     // We can create a new proxy to the new object and call it.
@@ -158,7 +168,9 @@ public class DuktapeGetTest {
       duktape.get("value", TestInterface.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("JavaScript global called value is not an object");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JavaScript global called value is not an object");
     }
   }
 
@@ -181,7 +193,9 @@ public class DuktapeGetTest {
       proxy.getValue();
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("JavaScript object value has been garbage collected");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("JavaScript object value has been garbage collected");
     }
   }
 
@@ -196,7 +210,7 @@ public class DuktapeGetTest {
       duktape.get("value", UnsupportedArgumentType.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage(
+      assertThat(expected).hasMessageThat().isEqualTo(
           "In proxied method \"value.set\": Unsupported Java type java.util.Date");
     }
   }
@@ -268,7 +282,8 @@ public class DuktapeGetTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessage("In proxied method \"value.get\": Unsupported JavaScript return type int");
+          .hasMessageThat()
+          .isEqualTo("In proxied method \"value.get\": Unsupported JavaScript return type int");
     }
   }
 
@@ -298,7 +313,9 @@ public class DuktapeGetTest {
       printer.call(true, 42, 2.718281828459);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Cannot convert return value 2.718281828459 to String");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("Cannot convert return value 2.718281828459 to String");
     }
   }
 
@@ -328,7 +345,8 @@ public class DuktapeGetTest {
       printer.print(true, 42, new Date());
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Unsupported Java type java.util.Date");
+      assertThat(expected)
+          .hasMessageThat().isEqualTo("Unsupported Java type java.util.Date");
     }
   }
 
@@ -354,7 +372,8 @@ public class DuktapeGetTest {
       joiner.call(", ", "Test", new Date(), 1.0);
       fail();
     } catch (Exception expected) {
-      assertThat(expected).hasMessage("Unsupported Java type java.util.Date");
+      assertThat(expected)
+          .hasMessageThat().isEqualTo("Unsupported Java type java.util.Date");
     }
   }
 
@@ -453,7 +472,8 @@ public class DuktapeGetTest {
       sorter.sort(new String[]{ "b", "d", "c", "a" });
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Cannot convert return value 3 to String");
+      assertThat(expected)
+          .hasMessageThat().isEqualTo("Cannot convert return value 3 to String");
     }
   }
 
@@ -478,7 +498,8 @@ public class DuktapeGetTest {
       sorter.sort(new double[0]);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Cannot convert return value null to double");
+      assertThat(expected)
+          .hasMessageThat().isEqualTo("Cannot convert return value null to double");
     }
   }
 
@@ -508,7 +529,8 @@ public class DuktapeGetTest {
       sorter.sort(new int[0]);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Cannot convert return value null to double");
+      assertThat(expected)
+          .hasMessageThat().isEqualTo("Cannot convert return value null to double");
     }
   }
 
@@ -537,7 +559,8 @@ public class DuktapeGetTest {
       sorter.sort(new boolean[0]);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("Cannot convert return value null to boolean");
+      assertThat(expected)
+          .hasMessageThat().isEqualTo("Cannot convert return value null to boolean");
     }
   }
 

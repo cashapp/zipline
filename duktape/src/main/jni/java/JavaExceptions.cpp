@@ -46,7 +46,7 @@ void checkRethrowDuktapeError(JNIEnv* env, duk_context* ctx) {
   }
 
   // The Java call threw an exception - it should be propagated back through JavaScript.
-  duk_push_error_object(ctx, DUK_ERR_API_ERROR, "Java Exception");
+  duk_push_error_object(ctx, DUK_ERR_EVAL_ERROR, "Java Exception");
   duk_push_pointer(ctx, env->ExceptionOccurred());
   env->ExceptionClear();
   duk_put_prop_string(ctx, -2, JAVA_EXCEPTION_PROP_NAME);

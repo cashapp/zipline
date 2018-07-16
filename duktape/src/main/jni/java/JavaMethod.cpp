@@ -67,9 +67,9 @@ duk_ret_t JavaMethod::invoke(duk_context* ctx, JNIEnv* env, jobject javaThis) co
       : m_argumentLoaders.size();
   if (argCount < minArgs || (!m_isVarArgs && argCount > minArgs)) {
     // Wrong number of arguments given - throw an error.
-    duk_error(ctx, DUK_ERR_API_ERROR, "wrong number of arguments");
+    duk_error(ctx, DUK_ERR_ERROR, "wrong number of arguments");
     // unreachable - duk_error never returns.
-    return DUK_RET_API_ERROR;
+    return DUK_RET_ERROR;
   }
 
   // Release any local objects allocated in this frame when we leave this scope.
