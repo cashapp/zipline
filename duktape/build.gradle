@@ -6,7 +6,7 @@ android {
 
   defaultConfig {
     minSdkVersion 12
-    targetSdkVersion 26
+    targetSdkVersion 28
     versionCode 1
     versionName "1.0"
     ndk {
@@ -15,7 +15,7 @@ android {
     externalNativeBuild {
       cmake {
         arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
-        cFlags '-std=c99', '-fstrict-aliasing', '-DDUK_OPT_HAVE_CUSTOM_H'
+        cFlags '-std=c99', '-fstrict-aliasing'
         cppFlags '-std=c++11', '-fstrict-aliasing', '-fexceptions'
       }
     }
@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-  implementation 'com.android.support:support-annotations:27.1.0'
+  implementation 'com.android.support:support-annotations:27.1.1'
 }
 
 task sourcesJar(type: Jar) {

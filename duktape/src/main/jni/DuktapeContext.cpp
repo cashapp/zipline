@@ -59,7 +59,7 @@ JavaMethod* getJavaMethod(duk_context* ctx) {
 
 duk_int_t eval_string_with_filename(duk_context *ctx, const char *src, const char *fileName) {
   duk_push_string(ctx, fileName);
-  const int numArgs = 2; // source and file name
+  const int numArgs = 1;
   return duk_eval_raw(ctx, src, 0, numArgs | DUK_COMPILE_EVAL | DUK_COMPILE_SAFE |
                                    DUK_COMPILE_NOSOURCE | DUK_COMPILE_STRLEN);
 }
@@ -69,7 +69,7 @@ duk_ret_t javaMethodHandler(duk_context *ctx) {
   JavaMethod* method = getJavaMethod(ctx);
   return method != nullptr
          ? method->invoke(ctx, getJNIEnv(ctx), getJavaThis(ctx))
-         : DUK_RET_INTERNAL_ERROR;
+         : DUK_RET_ERROR;
 }
 
 // Called by Duktape to handle finalization of bound Java objects.
@@ -97,11 +97,12 @@ duk_ret_t javaObjectFinalizer(duk_context *ctx) {
   return 0;
 }
 
-void fatalErrorHandler(duk_context* ctx, duk_errcode_t code, const char* msg) {
+void fatalErrorHandler(void* udata, const char* msg) {
 #ifndef NDEBUG
+  duk_context* ctx = *reinterpret_cast<duk_context**>(udata);
   duk_push_context_dump(ctx);
   const char* debugContext = duk_get_string(ctx, -1);
-  throw std::runtime_error(std::string(msg) + " (" + std::to_string(code) + ") - " + debugContext);
+  throw std::runtime_error(std::string(msg) + " - " + debugContext);
 #else
   throw std::runtime_error(msg);
 #endif
@@ -110,7 +111,7 @@ void fatalErrorHandler(duk_context* ctx, duk_errcode_t code, const char* msg) {
 } // anonymous namespace
 
 DuktapeContext::DuktapeContext(JavaVM* javaVM)
-    : m_context(duk_create_heap(nullptr, nullptr, nullptr, nullptr, fatalErrorHandler))
+    : m_context(duk_create_heap(nullptr, nullptr, nullptr, &m_context, fatalErrorHandler))
     , m_objectType(m_javaValues.getObjectType(getEnvFromJavaVM(javaVM))) {
   if (!m_context) {
     throw std::bad_alloc();

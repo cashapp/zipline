@@ -78,7 +78,7 @@ public final class DuktapeSetTest {
       duktape.evaluate("value.increment()");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: undefined not callable");
+      assertThat(expected).hasMessageThat().contains("TypeError: undefined not callable");
     }
   }
 
@@ -166,7 +166,7 @@ public final class DuktapeSetTest {
       duktape.evaluate("value.getValue()");
       fail();
     } catch (UnsupportedOperationException expected) {
-      assertThat(expected).hasMessage("This is an error message.");
+      assertThat(expected).hasMessageThat().isEqualTo("This is an error message.");
     }
   }
 
@@ -305,7 +305,7 @@ public final class DuktapeSetTest {
       });
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage(
+      assertThat(expected).hasMessageThat().isEqualTo(
           "In bound method \"value.get\": Unsupported Java type java.util.Date");
     }
   }
@@ -322,7 +322,7 @@ public final class DuktapeSetTest {
       });
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage(
+      assertThat(expected).hasMessageThat().isEqualTo(
           "In bound method \"value.set\": Unsupported Java type java.util.Date");
     }
   }
@@ -342,7 +342,8 @@ public final class DuktapeSetTest {
       });
       fail();
     } catch (UnsupportedOperationException expected) {
-      assertThat(expected).hasMessage("foo is overloaded in " + OverloadedMethod.class.toString());
+      assertThat(expected)
+          .hasMessageThat().isEqualTo("foo is overloaded in " + OverloadedMethod.class.toString());
     }
   }
 
@@ -359,7 +360,8 @@ public final class DuktapeSetTest {
       fail();
     } catch (UnsupportedOperationException expected) {
       assertThat(expected)
-          .hasMessage(ExtendedInterface.class.toString() + " must not extend other interfaces");
+          .hasMessageThat()
+          .isEqualTo(ExtendedInterface.class.toString() + " must not extend other interfaces");
     }
   }
 
@@ -434,7 +436,8 @@ public final class DuktapeSetTest {
       duktape.evaluate("formatter.format('%s %s', 'three', [1, 2, 3])");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("Error: Cannot marshal return value 1,2,3 to Java");
+      assertThat(expected)
+          .hasMessageThat().isEqualTo("Error: Cannot marshal return value 1,2,3 to Java");
     }
   }
 
@@ -476,7 +479,9 @@ public final class DuktapeSetTest {
       duktape.evaluate("Summer.sumIntegers(1, 2, 'three', 4)");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: number required, found 'three' (stack index -1)");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("TypeError: number required, found 'three' (stack index -1)");
     }
 
     assertThat(duktape.evaluate("Summer.sumDoubles()")).isEqualTo(0.0);
@@ -485,7 +490,9 @@ public final class DuktapeSetTest {
       duktape.evaluate("Summer.sumDoubles(1, 2, 'three', 4)");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: number required, found 'three' (stack index -1)");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("TypeError: number required, found 'three' (stack index -1)");
     }
 
     assertThat(duktape.evaluate("Summer.countTrues()")).isEqualTo(0.0);
@@ -495,7 +502,8 @@ public final class DuktapeSetTest {
       fail();
     } catch (DuktapeException expected) {
       assertThat(expected)
-          .hasMessage("TypeError: boolean required, found 'ninja' (stack index -1)");
+          .hasMessageThat()
+          .isEqualTo("TypeError: boolean required, found 'ninja' (stack index -1)");
     }
   }
 
@@ -534,7 +542,8 @@ public final class DuktapeSetTest {
       fail();
     } catch (DuktapeException expected) {
       assertThat(expected)
-          .hasMessage("Error: Cannot marshal return value 1970-01-01 00:00:00.000+00:00 to Java");
+          .hasMessageThat()
+          .isEqualTo("Error: Cannot marshal return value 1970-01-01 00:00:00.000+00:00 to Java");
     } finally {
       TimeZone.setDefault(original);
     }
@@ -559,7 +568,9 @@ public final class DuktapeSetTest {
       duktape.evaluate("Sorter.sort(['b', 'd', 3, 'a'])");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: string required, found 3 (stack index -1)");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("TypeError: string required, found 3 (stack index -1)");
     }
   }
 
@@ -593,7 +604,9 @@ public final class DuktapeSetTest {
       duktape.evaluate("Sorter.sort([2.3, 4, null, 1])");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: number required, found null (stack index -1)");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("TypeError: number required, found null (stack index -1)");
     }
 
     assertArrayEquals((Object[]) duktape.evaluate("Sorter.sortNullsFirst([2.9, null, 3, 1])"),
@@ -631,7 +644,9 @@ public final class DuktapeSetTest {
       duktape.evaluate("Sorter.sort([2, 4, null, 1])");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: number required, found null (stack index -1)");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("TypeError: number required, found null (stack index -1)");
     }
 
     assertArrayEquals((Object[]) duktape.evaluate("Sorter.sort([2, 4, 3.14, 1])"),
@@ -679,7 +694,9 @@ public final class DuktapeSetTest {
       duktape.evaluate("Sorter.sort([false, true, null, false])");
       fail();
     } catch (DuktapeException expected) {
-      assertThat(expected).hasMessage("TypeError: boolean required, found null (stack index -1)");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("TypeError: boolean required, found null (stack index -1)");
     }
 
     assertArrayEquals(
