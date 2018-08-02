@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+Version 1.3.0 *(2018-08-02)*
+----------------------------
+
+ * New: update to Duktape 2.2.1.
+ * Fix: update build settings to reduce AAR output size.
+
 Version 1.2.0 *(2017-09-08)*
 ----------------------------
 
