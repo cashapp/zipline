@@ -442,7 +442,7 @@ public class DuktapeGetTest {
     Object[] original = new Object[]{2, 4, 3, 1};
     Object[] sorted = sorter.sort(original);
     assertArrayEquals(sorted, new Object[]{1.0, 2.0, 3.0, 4.0});
-    assertThat(original).isNotSameAs(sorted);
+    assertThat(original).isNotSameInstanceAs(sorted);
 
     assertArrayEquals(sorter.sort(new Object[]{"b", "d", null, "a"}),
         new String[]{"a", "b", "d", null});

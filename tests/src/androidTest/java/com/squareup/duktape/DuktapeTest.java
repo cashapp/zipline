@@ -52,7 +52,7 @@ public final class DuktapeTest {
       duktape.evaluate("nope();");
       fail();
     } catch (DuktapeException e) {
-      assertThat(e).hasMessage("ReferenceError: identifier 'nope' undefined");
+      assertThat(e).hasMessageThat().isEqualTo("ReferenceError: identifier 'nope' undefined");
     }
   }
 
@@ -71,8 +71,8 @@ public final class DuktapeTest {
             + "}\n", "test.js");
       fail();
     } catch (DuktapeException e) {
-      assertThat(e).hasMessage("ReferenceError: identifier 'nope' undefined");
-      assertThat(e.getStackTrace()).asList().containsAllOf(
+      assertThat(e).hasMessageThat().isEqualTo("ReferenceError: identifier 'nope' undefined");
+      assertThat(e.getStackTrace()).asList().containsAtLeast(
               new StackTraceElement("JavaScript", "eval", "test.js", 2),
               new StackTraceElement("JavaScript", "f1", "test.js", 5),
               new StackTraceElement("JavaScript", "f2", "test.js", 10));
