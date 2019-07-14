@@ -49,7 +49,8 @@ public final class DuktapeSetTest {
       fail();
     } catch (UnsupportedOperationException expected) {
       assertThat(expected)
-          .hasMessage("Only interfaces can be bound. Received: class java.lang.String");
+          .hasMessageThat()
+          .isEqualTo("Only interfaces can be bound. Received: class java.lang.String");
     }
   }
 
@@ -97,7 +98,9 @@ public final class DuktapeSetTest {
       });
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessage("A global object called value already exists");
+      assertThat(expected)
+          .hasMessageThat()
+          .isEqualTo("A global object called value already exists");
     }
   }
 
@@ -122,7 +125,7 @@ public final class DuktapeSetTest {
           + "}\n", "test.js");
       fail();
     } catch (UnsupportedOperationException e) {
-      assertThat(e).hasMessage("Cannot getValue");
+      assertThat(e).hasMessageThat().isEqualTo("Cannot getValue");
 
       StackTraceElement[] stackTrace = e.getStackTrace();
 

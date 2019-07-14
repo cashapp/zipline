@@ -4,10 +4,8 @@ android {
   compileSdkVersion rootProject.ext.compileSdkVersion
 
   defaultConfig {
-    minSdkVersion 12
-    targetSdkVersion 28
-    versionCode 1
-    versionName "1.0"
+    minSdkVersion 14
+    targetSdkVersion 29
     ndk {
       abiFilters(*rootProject.ext.ndkAbiFilters)
     }
@@ -46,7 +44,7 @@ android {
 }
 
 dependencies {
-  implementation 'com.android.support:support-annotations:27.1.1'
+  implementation 'com.android.support:support-annotations:28.0.0'
 }
 
 task sourcesJar(type: Jar) {

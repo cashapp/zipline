@@ -1,16 +1,6 @@
 language: android
 
-android:
-  components:
-    - tools
-    - platform-tools
-    - build-tools-26.0.2
-    - android-18
-    - extra-android-m2repository
-    - sys-img-armeabi-v7a-android-18
-  licenses:
-    - 'android-sdk-license-.+'
-    - '.+'
+dist: trusty
 
 # By default, we get an older version of libstdc++6 so we need to update it for CMake.
 addons:
@@ -23,28 +13,30 @@ addons:
 jdk:
   - oraclejdk8
 
+before_install:
+  # Install SDK license so Android Gradle plugin can install deps.
+  - mkdir "$ANDROID_HOME/licenses" || true
+  - echo "d56f5187479451eabf01fb78af6dfcb131a6481e" > "$ANDROID_HOME/licenses/android-sdk-license"
+  - echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" >> "$ANDROID_HOME/licenses/android-sdk-license"
+  # Install the rest of tools (e.g., avdmanager)
+  - sdkmanager tools > /dev/null
+  # Install the emulator system image, NDK, and CMake
+  - sdkmanager "system-images;android-18;default;armeabi-v7a" ndk-bundle "cmake;3.10.2.4988404" > /dev/null
+  # Create and start emulator for the script. Meant to race the install task.
+  - echo no | avdmanager create avd --force -n test -k "system-images;android-18;default;armeabi-v7a"
+  - $(cd "$ANDROID_HOME/tools" && emulator -avd test -no-audio -no-window) &
+
+install:
+  - ./gradlew build assembleAndroidTest
+
 before_script:
-  - yes | sdkmanager "platforms;android-26"
-  # Install cmake.
-  - wget https://github.com/Commit451/android-cmake-installer/releases/download/1.1.0/install-cmake.sh
-  - chmod +x install-cmake.sh
-  - ./install-cmake.sh
-  # Install the NDK.
-  - pushd ~
-  - wget http://dl.google.com/android/repository/android-ndk-r16b-linux-x86_64.zip
-  - unzip -qo android-ndk-r16b-linux-x86_64.zip
-  - export ANDROID_NDK_HOME="$HOME/android-ndk-r16b"
-  - popd
-  # Create and start an emulator for instrumentation tests.
-  - echo no | android create avd --force -n test -t android-18 --abi armeabi-v7a
-  - emulator -avd test -no-window &
   - android-wait-for-emulator
   - adb shell input keyevent 82
 
 script:
   # We have to explicitly specify connectedCheck on the 'tests' module as it will fail if it is run
   # on the 'duktape' module, despite not actually having any androidTest sources.
-  - ./gradlew clean build :tests:connectedCheck
+  - ./gradlew :tests:connectedCheck
 
 after_success:
   - .buildscript/deploy_snapshot.sh
@@ -60,8 +52,6 @@ branches:
 
 notifications:
   email: false
-
-sudo: false
 
 cache:
   directories:
