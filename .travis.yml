@@ -36,7 +36,7 @@ before_script:
 script:
   # We have to explicitly specify connectedCheck on the 'tests' module as it will fail if it is run
   # on the 'duktape' module, despite not actually having any androidTest sources.
-  - ./gradlew :tests:connectedCheck
+  - ./gradlew :duktape:connectedCheck
 
 after_success:
   - .buildscript/deploy_snapshot.sh

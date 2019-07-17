@@ -22,7 +22,7 @@ import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
-/** A simple EMCAScript (Javascript) interpreter. */
+/** An EMCAScript (Javascript) interpreter backed by the 'duktape' native engine. */
 public final class Duktape implements Closeable {
   static {
     System.loadLibrary("duktape");
@@ -56,6 +56,7 @@ public final class Duktape implements Closeable {
   public synchronized Object evaluate(String script, String fileName) {
     return evaluate(context, script, fileName);
   }
+
   /**
    * Evaluate {@code script} and return a result. Note that the result must be one of the
    * supported Java types or the call will return null.

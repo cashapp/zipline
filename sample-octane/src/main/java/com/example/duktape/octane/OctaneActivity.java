@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.duktape.tests;
+package com.example.duktape.octane;
 
 import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.widget.TextView;
 import com.squareup.duktape.Duktape;
 import java.io.IOException;
@@ -37,14 +36,10 @@ public final class OctaneActivity extends Activity {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.octane);
 
-    output = (TextView) findViewById(R.id.output);
+    output = findViewById(R.id.output);
 
     run = findViewById(R.id.run);
-    run.setOnClickListener(new OnClickListener() {
-      @Override public void onClick(View v) {
-        new BenchmarkTask().execute();
-      }
-    });
+    run.setOnClickListener(v -> new BenchmarkTask().execute());
   }
 
   // Just don't rotate your phone...
@@ -56,8 +51,7 @@ public final class OctaneActivity extends Activity {
     @Override protected String doInBackground(Void... params) {
       StringBuilder output = new StringBuilder();
 
-      Duktape duktape = Duktape.create();
-      try {
+      try (Duktape duktape = Duktape.create()) {
         for (String file : getAssets().list("octane")) {
           long tookMs = evaluateAsset(duktape, "octane/" + file);
           output.append(file).append(" eval took ").append(tookMs).append(" ms\n");
@@ -73,8 +67,6 @@ public final class OctaneActivity extends Activity {
         output.append(sw.toString());
       }
 
-      duktape.close();
-
       return output.toString();
     }
 
@@ -89,9 +81,10 @@ public final class OctaneActivity extends Activity {
   }
 
   private long evaluateAsset(Duktape duktape, String file) throws IOException {
-    BufferedSource source = Okio.buffer(Okio.source(getAssets().open(file)));
-    String script = source.readUtf8();
-    source.close();
+    String script;
+    try (BufferedSource source = Okio.buffer(Okio.source(getAssets().open(file)))) {
+      script = source.readUtf8();
+    }
 
     long startNanos = System.nanoTime();
     duktape.evaluate(script, file);

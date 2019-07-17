@@ -6,9 +6,13 @@ android {
   defaultConfig {
     minSdkVersion 14
     targetSdkVersion 29
+
+    testInstrumentationRunner 'android.support.test.runner.AndroidJUnitRunner'
+
     ndk {
       abiFilters(*rootProject.ext.ndkAbiFilters)
     }
+
     externalNativeBuild {
       cmake {
         arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
@@ -17,6 +21,7 @@ android {
       }
     }
   }
+
   buildTypes {
     release {
       externalNativeBuild {
@@ -36,6 +41,7 @@ android {
       }
     }
   }
+
   externalNativeBuild {
     cmake {
       path "src/main/jni/CMakeLists.txt"
@@ -52,6 +58,9 @@ android {
 
 dependencies {
   implementation 'com.android.support:support-annotations:28.0.0'
+
+  androidTestImplementation 'com.android.support.test:runner:1.0.2'
+  androidTestImplementation 'com.google.truth:truth:1.0'
 }
 
 task sourcesJar(type: Jar) {

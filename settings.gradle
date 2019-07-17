@@ -1,2 +1,2 @@
 include ':duktape'
-include ':tests'
+include ':sample-octane'
