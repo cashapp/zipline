@@ -41,6 +41,13 @@ android {
       path "src/main/jni/CMakeLists.txt"
     }
   }
+
+  // TODO replace with https://issuetracker.google.com/issues/72050365 once released.
+  libraryVariants.all {
+    it.generateBuildConfigProvider.configure {
+      enabled = false
+    }
+  }
 }
 
 dependencies {
