@@ -4,15 +4,11 @@
 
 # Gradle
 .gradle
-gradlew.bat
 build/
 local.properties
 reports
 jacoco.exec
-duktape/.externalNativeBuild
+.externalNativeBuild
 
 # upload.sh signing
 /*.asc
-
-# Steve Jobs
-.DS_Store
