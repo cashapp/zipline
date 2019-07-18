@@ -14,8 +14,23 @@ android {
     targetSdkVersion 29
   }
 
-  lintOptions {
-    abortOnError false
+  signingConfigs {
+    javascript {
+      storeFile rootProject.file('javascript.keystore')
+      storePassword 'javascript'
+      keyAlias 'javascript'
+      keyPassword 'javascript'
+    }
+  }
+
+  buildTypes {
+    debug {
+      applicationIdSuffix '.debug'
+      signingConfig signingConfigs.javascript
+    }
+    release {
+      signingConfig signingConfigs.javascript
+    }
   }
 }
 

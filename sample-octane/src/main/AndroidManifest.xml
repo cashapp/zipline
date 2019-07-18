@@ -6,7 +6,7 @@
   <application android:allowBackup="false">
     <activity
         android:name=".OctaneActivity"
-        android:label="Duktape: Octane"
+        android:label="Octane"
         >
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
