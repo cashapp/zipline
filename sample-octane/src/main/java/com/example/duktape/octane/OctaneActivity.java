@@ -42,56 +42,53 @@ public final class OctaneActivity extends Activity {
     run.setOnClickListener(v -> new BenchmarkTask().execute());
   }
 
-  // Just don't rotate your phone...
-  class BenchmarkTask extends AsyncTask<Void, String, String> {
+  class BenchmarkTask extends AsyncTask<Void, String, Void> {
     @Override protected void onPreExecute() {
       run.setEnabled(false);
     }
 
-    @Override protected String doInBackground(Void... params) {
-      StringBuilder output = new StringBuilder();
+    @Override protected void onPostExecute(Void value) {
+      run.setEnabled(true);
+    }
 
+    @Override protected Void doInBackground(Void... params) {
       try (Duktape duktape = Duktape.create()) {
         for (String file : getAssets().list("octane")) {
-          output.append(file).append(" eval took… ");
-          publishProgress(output.toString());
-
-          long tookMs = evaluateAsset(duktape, "octane/" + file);
-
-          output.append(tookMs).append(" ms\n");
-          publishProgress(output.toString());
+          evaluateAsset(duktape, "octane/" + file);
         }
         evaluateAsset(duktape, "octane.js");
 
         String results = (String) duktape.evaluate("getResults();");
-        output.append('\n').append(results);
+        publishProgress("\n" + results);
       } catch (Throwable t) {
         StringWriter sw = new StringWriter();
         t.printStackTrace(new PrintWriter(sw));
-        output.append(sw.toString());
+        publishProgress(sw.toString());
       }
 
-      return output.toString();
+      return null;
     }
+
+    private void evaluateAsset(Duktape duktape, String file) throws IOException {
+      publishProgress(file + " eval…");
+
+      String script;
+      try (BufferedSource source = Okio.buffer(Okio.source(getAssets().open(file)))) {
+        script = source.readUtf8();
+      }
+
+      long startNanos = System.nanoTime();
+      duktape.evaluate(script, file);
+      long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
+
+      publishProgress(" " + tookMs + " ms\n");
+    }
+
+    private final StringBuilder outputText = new StringBuilder();
 
     @Override protected void onProgressUpdate(String... values) {
-      output.setText(values[0]);
+      outputText.append(values[0]);
+      output.setText(outputText.toString());
     }
-
-    @Override protected void onPostExecute(String value) {
-      output.setText(value);
-      run.setEnabled(true);
-    }
-  }
-
-  private long evaluateAsset(Duktape duktape, String file) throws IOException {
-    String script;
-    try (BufferedSource source = Okio.buffer(Okio.source(getAssets().open(file)))) {
-      script = source.readUtf8();
-    }
-
-    long startNanos = System.nanoTime();
-    duktape.evaluate(script, file);
-    return TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
   }
 }
