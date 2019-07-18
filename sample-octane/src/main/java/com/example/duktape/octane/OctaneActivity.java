@@ -53,17 +53,21 @@ public final class OctaneActivity extends Activity {
 
       try (Duktape duktape = Duktape.create()) {
         for (String file : getAssets().list("octane")) {
+          output.append(file).append(" eval took… ");
+          publishProgress(output.toString());
+
           long tookMs = evaluateAsset(duktape, "octane/" + file);
-          output.append(file).append(" eval took ").append(tookMs).append(" ms\n");
+
+          output.append(tookMs).append(" ms\n");
           publishProgress(output.toString());
         }
         evaluateAsset(duktape, "octane.js");
 
         String results = (String) duktape.evaluate("getResults();");
         output.append('\n').append(results);
-      } catch (IOException e) {
+      } catch (Throwable t) {
         StringWriter sw = new StringWriter();
-        e.printStackTrace(new PrintWriter(sw));
+        t.printStackTrace(new PrintWriter(sw));
         output.append(sw.toString());
       }
 
