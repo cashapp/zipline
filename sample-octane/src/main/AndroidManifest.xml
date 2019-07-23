@@ -7,6 +7,7 @@
     <activity
         android:name=".OctaneActivity"
         android:label="Octane"
+        android:configChanges="orientation"
         >
       <intent-filter>
         <action android:name="android.intent.action.MAIN"/>
