@@ -15,9 +15,8 @@
  */
 package com.squareup.duktape;
 
-import android.support.annotation.Keep;
+import androidx.annotation.Keep;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -44,7 +43,7 @@ public final class DuktapeException extends RuntimeException {
    * Parses {@code StackTraceElement}s from {@code detailMessage} and adds them to the proper place
    * in {@code throwable}'s stack trace.  Note: this method is also called from native code.
    */
-  static void addDuktapeStack(Throwable throwable, String detailMessage) {
+  private static void addDuktapeStack(Throwable throwable, String detailMessage) {
     String[] lines = detailMessage.split("\n", -1);
     if (lines.length <= 1) {
       return;

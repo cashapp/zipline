@@ -36,5 +36,5 @@ android {
 
 dependencies {
   implementation project(':duktape')
-  implementation 'com.squareup.okio:okio:1.14.1'
+  implementation deps.okio
 }

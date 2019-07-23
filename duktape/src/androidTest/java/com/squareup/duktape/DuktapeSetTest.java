@@ -15,23 +15,18 @@
  */
 package com.squareup.duktape;
 
-import android.support.test.runner.AndroidJUnit4;
-
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.TimeZone;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.fail;
 
-@RunWith(AndroidJUnit4.class)
 public final class DuktapeSetTest {
   private Duktape duktape;
 

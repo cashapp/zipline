@@ -54,7 +54,6 @@ private:
   const duk_idx_t m_top;
 };
 
-// TODO: always run unit tests with a debug version of this library.
 #ifdef NDEBUG
 #define CHECK_STACK(ctx) ((void)0)
 #else
