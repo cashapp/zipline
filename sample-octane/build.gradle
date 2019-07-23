@@ -10,7 +10,7 @@ android {
 
   defaultConfig {
     applicationId 'com.example.duktape.octane'
-    minSdkVersion 14
+    minSdkVersion 18
     targetSdkVersion 29
   }
 
@@ -36,5 +36,6 @@ android {
 
 dependencies {
   implementation project(':duktape')
+  implementation project(':quickjs')
   implementation deps.okio
 }

@@ -1,0 +1,84 @@
+apply plugin: 'com.android.library'
+
+android {
+  compileSdkVersion rootProject.ext.compileSdkVersion
+
+  defaultConfig {
+    minSdkVersion 18
+
+    testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+
+    ndk {
+      abiFilters(*rootProject.ext.ndkAbiFilters)
+    }
+
+    externalNativeBuild {
+      cmake {
+        arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
+        cFlags '-std=c99', '-fstrict-aliasing', "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\""
+      }
+    }
+  }
+
+  buildTypes {
+    release {
+      externalNativeBuild {
+        cmake {
+          arguments '-DCMAKE_BUILD_TYPE=MinSizeRel'
+          cFlags '-g0', '-Os', '-fomit-frame-pointer', '-DNDEBUG', '-fvisibility=hidden'
+        }
+      }
+    }
+    debug {
+      externalNativeBuild {
+        cmake {
+          cFlags '-g', '-DDEBUG', '-DDUMP_LEAKS'
+        }
+      }
+    }
+  }
+
+  externalNativeBuild {
+    cmake {
+      path "src/main/jni/CMakeLists.txt"
+    }
+  }
+
+  // TODO replace with https://issuetracker.google.com/issues/72050365 once released.
+  libraryVariants.all {
+    it.generateBuildConfigProvider.configure {
+      enabled = false
+    }
+  }
+}
+
+dependencies {
+  implementation deps.androidx.annotation
+
+  androidTestImplementation deps.androidx.test.runner
+  androidTestImplementation deps.truth
+}
+
+def quickJsVersion() {
+  return new File(projectDir, "src/main/jni/quickjs/VERSION").text.trim()
+}
+
+task sourcesJar(type: Jar) {
+  from android.sourceSets.main.java.srcDirs
+  classifier = 'sources'
+}
+
+task javadoc(type: Javadoc) {
+  source = android.sourceSets.main.java.srcDirs
+  classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+  classifier = 'javadoc'
+  from javadoc.destinationDir
+}
+
+artifacts {
+  archives javadocJar
+  archives sourcesJar
+}

@@ -1,2 +1,3 @@
 include ':duktape'
+include ':quickjs'
 include ':sample-octane'
