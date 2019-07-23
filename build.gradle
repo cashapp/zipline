@@ -1,7 +1,17 @@
 ext {
   compileSdkVersion = 29
-  buildGradleVersion = '3.4.2'
   ndkAbiFilters = ['x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a']
+
+  deps = [
+      'androidx': [
+          'annotation': 'androidx.annotation:annotation:1.1.0',
+          'test': [
+              'runner': 'androidx.test:runner:1.2.0',
+          ],
+      ],
+      'truth': 'com.google.truth:truth:1.0',
+      'okio': 'com.squareup.okio:okio:1.14.1',
+  ]
 }
 
 allprojects {
@@ -11,7 +21,7 @@ allprojects {
       google()
     }
     dependencies {
-      classpath "com.android.tools.build:gradle:$buildGradleVersion"
+      classpath "com.android.tools.build:gradle:3.4.2"
     }
   }
   repositories {
