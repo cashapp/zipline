@@ -19,8 +19,9 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.View;
+import android.widget.Spinner;
 import android.widget.TextView;
-import com.squareup.duktape.Duktape;
+import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -29,20 +30,33 @@ import okio.BufferedSource;
 import okio.Okio;
 
 public final class OctaneActivity extends Activity {
-  private TextView output;
+  private Spinner engine;
   private View run;
+  private TextView output;
 
   @Override protected void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.octane);
 
-    output = findViewById(R.id.output);
+    engine = findViewById(R.id.engine);
 
     run = findViewById(R.id.run);
-    run.setOnClickListener(v -> new BenchmarkTask().execute());
+    run.setOnClickListener(v -> {
+      int engineIndex = engine.getSelectedItemPosition();
+      Engine engine = Engine.values()[engineIndex];
+      new BenchmarkTask(engine).execute();
+    });
+
+    output = findViewById(R.id.output);
   }
 
   class BenchmarkTask extends AsyncTask<Void, String, Void> {
+    private final Engine engine;
+
+    BenchmarkTask(Engine engine) {
+      this.engine = engine;
+    }
+
     @Override protected void onPreExecute() {
       run.setEnabled(false);
     }
@@ -52,13 +66,16 @@ public final class OctaneActivity extends Activity {
     }
 
     @Override protected Void doInBackground(Void... params) {
-      try (Duktape duktape = Duktape.create()) {
+      try (Closeable instance = engine.create()) {
         for (String file : getAssets().list("octane")) {
-          evaluateAsset(duktape, "octane/" + file);
+          if (engine == Engine.DUKTAPE && file.contains("mandreel")) {
+            continue; // Fails to eval. https://github.com/square/duktape-android/issues/133
+          }
+          evaluateAsset(instance, "octane/" + file);
         }
-        evaluateAsset(duktape, "octane.js");
+        evaluateAsset(instance, "octane.js");
 
-        String results = (String) duktape.evaluate("getResults();");
+        String results = (String) engine.evaluate(instance, "getResults();", "?");
         publishProgress("\n" + results);
       } catch (Throwable t) {
         StringWriter sw = new StringWriter();
@@ -69,7 +86,7 @@ public final class OctaneActivity extends Activity {
       return null;
     }
 
-    private void evaluateAsset(Duktape duktape, String file) throws IOException {
+    private void evaluateAsset(Object instance, String file) throws IOException {
       publishProgress(file + " eval…");
 
       String script;
@@ -78,7 +95,7 @@ public final class OctaneActivity extends Activity {
       }
 
       long startNanos = System.nanoTime();
-      duktape.evaluate(script, file);
+      engine.evaluate(instance, script, file);
       long tookMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
 
       publishProgress(" " + tookMs + " ms\n");

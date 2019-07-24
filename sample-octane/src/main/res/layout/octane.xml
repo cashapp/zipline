@@ -5,12 +5,26 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     >
-  <Button
-      android:id="@+id/run"
+  <LinearLayout
       android:layout_width="match_parent"
-      android:layout_height="wrap_content"
-      android:text="Run!"
-      />
+      android:layout_height="48dp"
+      android:orientation="horizontal"
+      >
+    <Spinner
+        android:id="@+id/engine"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:entries="@array/engines"
+        />
+    <Button
+        android:id="@+id/run"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:text="Run!"
+        />
+  </LinearLayout>
   <ScrollView
       android:layout_width="match_parent"
       android:layout_height="0dp"
