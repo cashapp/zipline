@@ -16,6 +16,7 @@
 package com.squareup.duktape;
 
 import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -34,7 +35,7 @@ public final class DuktapeException extends RuntimeException {
   /** Java StackTraceElements require a class name.  We don't have one in JS, so use this. */
   private final static String STACK_TRACE_CLASS_NAME = "JavaScript";
 
-  public DuktapeException(String detailMessage) {
+  public DuktapeException(@NonNull String detailMessage) {
     super(getErrorMessage(detailMessage));
     addDuktapeStack(this, detailMessage);
   }

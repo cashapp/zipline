@@ -1,3 +1,17 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+buildscript {
+  repositories {
+    mavenCentral()
+    google()
+    gradlePluginPortal()
+  }
+  dependencies {
+    classpath 'com.android.tools.build:gradle:3.4.2'
+    classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.8.1'
+  }
+}
+
 ext {
   compileSdkVersion = 29
   ndkAbiFilters = ['x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a']
@@ -14,18 +28,49 @@ ext {
   ]
 }
 
-allprojects {
-  buildscript {
-    repositories {
-      jcenter()
-      google()
-    }
-    dependencies {
-      classpath "com.android.tools.build:gradle:3.4.2"
+subprojects {
+  repositories {
+    mavenCentral()
+    google()
+    jcenter {
+      // Required for a dependency of Android lint.
+      content {
+        includeGroup 'org.jetbrains.trove4j'
+      }
     }
   }
-  repositories {
-    jcenter()
-    google()
+
+  plugins.withId('com.android.library') {
+    android.lintOptions {
+      textReport true
+      textOutput 'stdout'
+      lintConfig rootProject.file('lint.xml')
+
+      checkDependencies true
+      checkTestSources false // TODO true https://issuetracker.google.com/issues/138247523
+      explainIssues false
+
+      // We run a full lint analysis as build part in CI, so skip vital checks for assemble task.
+      checkReleaseBuilds false
+    }
+  }
+
+  apply plugin: 'net.ltgt.errorprone'
+
+  dependencies {
+    errorproneJavac 'com.google.errorprone:javac:9+181-r4173-1'
+    errorprone 'com.google.errorprone:error_prone_core:2.3.3'
+  }
+
+  tasks.withType(JavaCompile).configureEach {
+    options.errorprone {
+      check('MissingFail', CheckSeverity.ERROR)
+      check('MissingOverride', CheckSeverity.ERROR)
+      check('UnsafeFinalization', CheckSeverity.ERROR)
+      check('UnusedException', CheckSeverity.ERROR)
+      check('UnusedMethod', CheckSeverity.ERROR)
+      check('UnusedNestedClass', CheckSeverity.ERROR)
+      check('UnusedVariable', CheckSeverity.ERROR)
+    }
   }
 }

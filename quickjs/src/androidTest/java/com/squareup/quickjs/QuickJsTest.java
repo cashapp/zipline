@@ -38,6 +38,11 @@ public final class QuickJsTest {
     assertThat(hello).isEqualTo("HELLO, WORLD!");
   }
 
+  @Test public void evaluateReturnsNull() {
+    String result = quickjs.evaluate("null;");
+    assertThat(result).isNull();
+  }
+
   @Test public void exceptionsInScriptThrowInJava() {
     try {
       quickjs.evaluate("nope();");
