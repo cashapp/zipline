@@ -39,6 +39,11 @@ public final class DuktapeTest {
     assertThat(hello).isEqualTo("HELLO, WORLD!");
   }
 
+  @Test public void evaluateReturnsNull() {
+    Object result = duktape.evaluate("null;");
+    assertThat(result).isNull();
+  }
+
   @Test public void evaluateReturnsNumber() {
     int result = ((Double) duktape.evaluate("2 + 3;")).intValue();
     assertThat(result).isEqualTo(5);
@@ -80,7 +85,7 @@ public final class DuktapeTest {
     TimeZone original = TimeZone.getDefault();
     try {
       TimeZone.setDefault(TimeZone.getTimeZone("GMT+2:00"));
-      String date = duktape.evaluate("new Date(0).toString();").toString();
+      String date = String.valueOf(duktape.evaluate("new Date(0).toString();"));
       assertThat(date).isEqualTo("1970-01-01 02:00:00.000+02:00");
       int offset = ((Double) duktape.evaluate("new Date(0).getTimezoneOffset();")).intValue();
       assertThat(offset).isEqualTo(-120);

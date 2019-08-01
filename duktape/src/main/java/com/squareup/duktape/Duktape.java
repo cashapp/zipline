@@ -15,6 +15,8 @@
  */
 package com.squareup.duktape;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.io.Closeable;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -32,7 +34,7 @@ public final class Duktape implements Closeable {
    * Create a new interpreter instance. Calls to this method <strong>must</strong> matched with
    * calls to {@link #close()} on the returned instance to avoid leaking native memory.
    */
-  public static Duktape create() {
+  public static @NonNull Duktape create() {
     long context = createContext();
     if (context == 0) {
       throw new OutOfMemoryError("Cannot create Duktape instance");
@@ -53,7 +55,8 @@ public final class Duktape implements Closeable {
    *
    * @throws DuktapeException if there is an error evaluating the script.
    */
-  public synchronized Object evaluate(String script, String fileName) {
+  @Nullable
+  public synchronized Object evaluate(@NonNull String script, @NonNull String fileName) {
     return evaluate(context, script, fileName);
   }
 
@@ -63,7 +66,8 @@ public final class Duktape implements Closeable {
    *
    * @throws DuktapeException if there is an error evaluating the script.
    */
-  public synchronized Object evaluate(String script) {
+  @Nullable
+  public synchronized Object evaluate(@NonNull String script) {
     return evaluate(context, script, "?");
   }
 
@@ -76,7 +80,8 @@ public final class Duktape implements Closeable {
    * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
    * {@link Double}, {@link String}.
    */
-  public synchronized <T> void set(String name, Class<T> type, T object) {
+  public synchronized <T> void set(@NonNull String name, @NonNull Class<T> type,
+      @NonNull T object) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be bound. Received: " + type);
     }
@@ -104,7 +109,8 @@ public final class Duktape implements Closeable {
    * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
    * {@link Double}, {@link String}.
    */
-  public synchronized <T> T get(final String name, final Class<T> type) {
+  @NonNull
+  public synchronized <T> T get(@NonNull final String name, @NonNull final Class<T> type) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be proxied. Received: " + type);
     }
@@ -154,16 +160,16 @@ public final class Duktape implements Closeable {
     }
   }
 
-  @Override protected synchronized void finalize() throws Throwable {
+  @Override protected synchronized void finalize() {
     if (context != 0) {
       Logger.getLogger(getClass().getName()).warning("Duktape instance leaked!");
     }
   }
 
   private static native long createContext();
-  private static native void destroyContext(long context);
-  private static native Object evaluate(long context, String sourceCode, String fileName);
-  private static native void set(long context, String name, Object object, Object[] methods);
-  private static native long get(long context, String name, Object[] methods);
-  private static native Object call(long context, long instance, Object method, Object[] args);
+  private native void destroyContext(long context);
+  private native Object evaluate(long context, String sourceCode, String fileName);
+  private native void set(long context, String name, Object object, Object[] methods);
+  private native long get(long context, String name, Object[] methods);
+  private native Object call(long context, long instance, Object method, Object[] args);
 }

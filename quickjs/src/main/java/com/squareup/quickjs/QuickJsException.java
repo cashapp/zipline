@@ -16,11 +16,12 @@
 package com.squareup.quickjs;
 
 import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
 
 @SuppressWarnings("unused") // Called from native code.
 @Keep // Instruct ProGuard not to strip this type.
 public final class QuickJsException extends RuntimeException {
-  public QuickJsException(String detailMessage) {
+  public QuickJsException(@NonNull String detailMessage) {
     super(detailMessage);
   }
 }

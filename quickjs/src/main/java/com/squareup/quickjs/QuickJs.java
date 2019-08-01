@@ -15,6 +15,8 @@
  */
 package com.squareup.quickjs;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.io.Closeable;
 import java.util.logging.Logger;
 
@@ -28,6 +30,7 @@ public final class QuickJs implements Closeable {
    * Create a new interpreter instance. Calls to this method <strong>must</strong> matched with
    * calls to {@link #close()} on the returned instance to avoid leaking native memory.
    */
+  @NonNull
   public static QuickJs create() {
     long context = createContext();
     if (context == 0) {
@@ -48,7 +51,8 @@ public final class QuickJs implements Closeable {
    *
    * @throws QuickJsException if there is an error evaluating the script.
    */
-  public synchronized String evaluate(String script, String fileName) {
+  @Nullable
+  public synchronized String evaluate(@NonNull String script, @NonNull String fileName) {
     return evaluate(context, script, fileName);
   }
 
@@ -57,7 +61,8 @@ public final class QuickJs implements Closeable {
    *
    * @throws QuickJsException if there is an error evaluating the script.
    */
-  public synchronized String evaluate(String script) {
+  @Nullable
+  public synchronized String evaluate(@NonNull String script) {
     return evaluate(context, script, "?");
   }
 
@@ -80,6 +85,6 @@ public final class QuickJs implements Closeable {
   }
 
   private static native long createContext();
-  private static native void destroyContext(long context);
-  private static native String evaluate(long context, String sourceCode, String fileName);
+  private native void destroyContext(long context);
+  private native String evaluate(long context, String sourceCode, String fileName);
 }
