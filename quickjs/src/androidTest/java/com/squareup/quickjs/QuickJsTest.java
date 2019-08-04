@@ -34,12 +34,12 @@ public final class QuickJsTest {
   }
 
   @Test public void helloWorld() {
-    String hello = quickjs.evaluate("'hello, world!'.toUpperCase();");
+    String hello = (String) quickjs.evaluate("'hello, world!'.toUpperCase();");
     assertThat(hello).isEqualTo("HELLO, WORLD!");
   }
 
   @Test public void evaluateReturnsNull() {
-    String result = quickjs.evaluate("null;");
+    Object result = quickjs.evaluate("null;");
     assertThat(result).isNull();
   }
 
@@ -50,5 +50,17 @@ public final class QuickJsTest {
     } catch (QuickJsException e) {
       assertThat(e).hasMessageThat().isEqualTo("nope is not defined");
     }
+  }
+
+  @Test public void returnTypes() {
+    assertThat(quickjs.evaluate("\"test\";")).isEqualTo("test");
+
+    assertThat(quickjs.evaluate("true;")).isEqualTo(true);
+    assertThat(quickjs.evaluate("false;")).isEqualTo(false);
+
+    assertThat(quickjs.evaluate("1;")).isEqualTo(1);
+    assertThat(quickjs.evaluate("1.123;")).isEqualTo(1.123);
+
+    assertThat(quickjs.evaluate("undefined;")).isNull();
   }
 }
