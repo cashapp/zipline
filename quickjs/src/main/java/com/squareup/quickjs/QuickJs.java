@@ -52,7 +52,7 @@ public final class QuickJs implements Closeable {
    * @throws QuickJsException if there is an error evaluating the script.
    */
   @Nullable
-  public synchronized String evaluate(@NonNull String script, @NonNull String fileName) {
+  public synchronized Object evaluate(@NonNull String script, @NonNull String fileName) {
     return evaluate(context, script, fileName);
   }
 
@@ -62,7 +62,7 @@ public final class QuickJs implements Closeable {
    * @throws QuickJsException if there is an error evaluating the script.
    */
   @Nullable
-  public synchronized String evaluate(@NonNull String script) {
+  public synchronized Object evaluate(@NonNull String script) {
     return evaluate(context, script, "?");
   }
 
@@ -86,5 +86,5 @@ public final class QuickJs implements Closeable {
 
   private static native long createContext();
   private native void destroyContext(long context);
-  private native String evaluate(long context, String sourceCode, String fileName);
+  private native Object evaluate(long context, String sourceCode, String fileName);
 }
