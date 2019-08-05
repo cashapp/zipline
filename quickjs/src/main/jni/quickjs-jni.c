@@ -3,6 +3,7 @@
 #include <malloc.h>
 #include "quickjs/quickjs.h"
 
+// TODO(szurbrigg): delete these global refs on teardown.
 static jclass booleanClass;
 static jmethodID booleanValueOf;
 static jclass integerClass;
@@ -22,7 +23,7 @@ Java_com_squareup_quickjs_QuickJs_createContext(JNIEnv *env, jclass type) {
 
   doubleClass = (*env)->NewGlobalRef(env, (*env)->FindClass(env, "java/lang/Double"));
   doubleValueOf = (*env)->GetStaticMethodID(env, doubleClass, "valueOf",
-                                             "(D)Ljava/lang/Double;");
+                                            "(D)Ljava/lang/Double;");
 
   JSRuntime *runtime = JS_NewRuntime();
   if (!runtime) {
@@ -38,9 +39,6 @@ Java_com_squareup_quickjs_QuickJs_destroyContext(JNIEnv *env, jclass type, jlong
   JSRuntime *runtime = JS_GetRuntime(context);
   JS_FreeContext(context);
   JS_FreeRuntime(runtime);
-  (*env)->DeleteGlobalRef(env, doubleClass);
-  (*env)->DeleteGlobalRef(env, integerClass);
-  (*env)->DeleteGlobalRef(env, booleanClass);
 }
 
 JNIEXPORT jobject JNICALL
@@ -56,22 +54,34 @@ Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_Strin
 
   JSValue evalValue = JS_Eval(context, sourceCode, strlen(sourceCode), fileName, 0);
 
+  (*env)->ReleaseStringUTFChars(env, sourceCode_, sourceCode);
+  (*env)->ReleaseStringUTFChars(env, fileName_, fileName);
+
   jstring result;
   switch (JS_VALUE_GET_TAG(evalValue)) {
     case JS_TAG_EXCEPTION: {
-      JS_FreeValue(context, evalValue);
-
       JSValue exceptionValue = JS_GetException(context);
 
       JSValue messageValue = JS_GetPropertyStr(context, exceptionValue, "message");
+      JSValue stackValue = JS_GetPropertyStr(context, exceptionValue, "stack");
       JS_FreeValue(context, exceptionValue);
 
       const char *message = JS_ToCString(context, messageValue);
       JS_FreeValue(context, messageValue);
 
+      const char *stack = JS_ToCString(context, stackValue);
+      JS_FreeValue(context, stackValue);
+
       jclass Exception = (*env)->FindClass(env, "com/squareup/quickjs/QuickJsException");
-      (*env)->ThrowNew(env, Exception, message);
+      char *messageAndStack = (char*) malloc(strlen(message) + strlen(stack) + 2);
+      strcpy(messageAndStack, message);
+      strcat(messageAndStack, "\n");
+      strcat(messageAndStack, stack);
+      JS_FreeCString(context, stack);
       JS_FreeCString(context, message);
+
+      (*env)->ThrowNew(env, Exception, messageAndStack);
+      free(messageAndStack);
       result = NULL;
       break;
     }
@@ -111,7 +121,7 @@ Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_Strin
       break;
   }
 
-  (*env)->ReleaseStringUTFChars(env, sourceCode_, sourceCode);
-  (*env)->ReleaseStringUTFChars(env, fileName_, fileName);
+  JS_FreeValue(context, evalValue);
+
   return result;
 }
