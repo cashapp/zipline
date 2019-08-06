@@ -18,10 +18,75 @@ package com.squareup.quickjs;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 @SuppressWarnings("unused") // Called from native code.
 @Keep // Instruct ProGuard not to strip this type.
 public final class QuickJsException extends RuntimeException {
+  /**
+   * QuickJs stack trace strings have multiple lines of the format "at func (file.ext:line)".
+   * "func" is optional, but we'll omit frames without a function, since it means the frame is in
+   * native code.
+   */
+  private final static Pattern STACK_TRACE_PATTERN =
+          Pattern.compile("\\s*at ([^\\s^\\[]+) \\(([^\\s]+):(\\d+)\\).*$");
+
+  /** Java StackTraceElements require a class name.  We don't have one in JS, so use this. */
+  private final static String STACK_TRACE_CLASS_NAME = "JavaScript";
+
   public QuickJsException(@NonNull String detailMessage) {
     super(detailMessage);
+  }
+
+  public QuickJsException(@NonNull String detailMessage, @NonNull String jsStackTrace) {
+    super(detailMessage);
+    addJavaScriptStack(this, jsStackTrace);
+  }
+
+  /**
+   * Parses {@code StackTraceElement}s from {@code detailMessage} and adds them to the proper place
+   * in {@code throwable}'s stack trace.  Note: this method is also called from native code.
+   */
+  // TODO(szurbrigg): share this code with the DuktapeException implementation.
+  private static void addJavaScriptStack(Throwable throwable, String detailMessage) {
+    String[] lines = detailMessage.split("\n", -1);
+    if (lines.length == 0) {
+      return;
+    }
+    // We have a stacktrace following the message.  Add it to the exception.
+    List<StackTraceElement> elements = new ArrayList<>();
+
+    // Splice the JavaScript stack in right above the call to QuickJs.evaluate.
+    boolean spliced = false;
+    for (StackTraceElement stackTraceElement : throwable.getStackTrace()) {
+      if (!spliced
+              && stackTraceElement.isNativeMethod()
+              && stackTraceElement.getClassName().equals(QuickJs.class.getName())
+              && stackTraceElement.getMethodName().equals("evaluate")) {
+        for (String line : lines) {
+          StackTraceElement jsElement = toStackTraceElement(line);
+          if (jsElement == null) {
+            continue;
+          }
+          elements.add(jsElement);
+        }
+        spliced = true;
+      }
+      elements.add(stackTraceElement);
+    }
+    throwable.setStackTrace(elements.toArray(new StackTraceElement[elements.size()]));
+  }
+
+  private static StackTraceElement toStackTraceElement(String s) {
+    Matcher m = STACK_TRACE_PATTERN.matcher(s);
+    if (!m.matches()) {
+      // Nothing interesting on this line.
+      return null;
+    }
+    return new StackTraceElement(STACK_TRACE_CLASS_NAME, m.group(1), m.group(2),
+            Integer.parseInt(m.group(3)));
   }
 }
