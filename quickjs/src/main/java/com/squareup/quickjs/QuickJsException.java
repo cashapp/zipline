@@ -38,15 +38,12 @@ public final class QuickJsException extends RuntimeException {
   private final static String STACK_TRACE_CLASS_NAME = "JavaScript";
 
   public QuickJsException(@NonNull String detailMessage) {
-    super(getErrorMessage(detailMessage));
-    addJavaScriptStack(this, detailMessage);
+    super(detailMessage);
   }
 
-  private static String getErrorMessage(String detailMessage) {
-    int end = detailMessage.indexOf('\n');
-    return end > 0
-            ? detailMessage.substring(0, end)
-            : detailMessage;
+  public QuickJsException(@NonNull String detailMessage, @NonNull String jsStackTrace) {
+    super(detailMessage);
+    addJavaScriptStack(this, jsStackTrace);
   }
 
   /**
@@ -56,7 +53,7 @@ public final class QuickJsException extends RuntimeException {
   // TODO(szurbrigg): share this code with the DuktapeException implementation.
   private static void addJavaScriptStack(Throwable throwable, String detailMessage) {
     String[] lines = detailMessage.split("\n", -1);
-    if (lines.length <= 1) {
+    if (lines.length == 0) {
       return;
     }
     // We have a stacktrace following the message.  Add it to the exception.
@@ -69,8 +66,8 @@ public final class QuickJsException extends RuntimeException {
               && stackTraceElement.isNativeMethod()
               && stackTraceElement.getClassName().equals(QuickJs.class.getName())
               && stackTraceElement.getMethodName().equals("evaluate")) {
-        for (int i = 1; i < lines.length; ++i) {
-          StackTraceElement jsElement = toStackTraceElement(lines[i]);
+        for (String line : lines) {
+          StackTraceElement jsElement = toStackTraceElement(line);
           if (jsElement == null) {
             continue;
           }
