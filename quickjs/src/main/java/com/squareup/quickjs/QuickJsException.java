@@ -17,6 +17,7 @@ package com.squareup.quickjs;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,19 +39,18 @@ public final class QuickJsException extends RuntimeException {
   private final static String STACK_TRACE_CLASS_NAME = "JavaScript";
 
   public QuickJsException(@NonNull String detailMessage) {
-    super(detailMessage);
+    this(detailMessage, null);
   }
 
-  public QuickJsException(@NonNull String detailMessage, @NonNull String jsStackTrace) {
+  public QuickJsException(@NonNull String detailMessage, @Nullable String jsStackTrace) {
     super(detailMessage);
-    addJavaScriptStack(this, jsStackTrace);
+    if (jsStackTrace != null) addJavaScriptStack(this, jsStackTrace);
   }
 
   /**
    * Parses {@code StackTraceElement}s from {@code detailMessage} and adds them to the proper place
    * in {@code throwable}'s stack trace.  Note: this method is also called from native code.
    */
-  // TODO(szurbrigg): share this code with the DuktapeException implementation.
   private static void addJavaScriptStack(Throwable throwable, String detailMessage) {
     String[] lines = detailMessage.split("\n", -1);
     if (lines.length == 0) {
