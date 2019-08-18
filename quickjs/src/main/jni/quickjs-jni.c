@@ -4,12 +4,31 @@
 #include "quickjs/quickjs.h"
 
 typedef struct {
+  char* name;
+  jmethodID methodId;
+
+  JSValueConst (** argLoaders)(JNIEnv* env, JSContext* jsContext, jvalue value);
+} JsMethodProxy;
+
+typedef struct {
+  char* name;
+  int numMethods;
+  JsMethodProxy* methods;
+} JsObjectProxy;
+
+typedef struct Node {
+  JsObjectProxy* proxy;
+  struct Node* next;
+} JsObjectProxyNode;
+
+typedef struct {
   JSRuntime* jsRuntime;
   JSContext* jsContext;
   jclass booleanClass;
   jclass integerClass;
   jclass doubleClass;
   jclass quickJsExecptionClass;
+  JsObjectProxyNode* proxyNodes;
 } Context;
 
 static jmethodID booleanValueOf;
@@ -61,9 +80,34 @@ Java_com_squareup_quickjs_QuickJs_createContext(JNIEnv* env, jclass type) {
   return 0;
 }
 
+static void deleteJsObjectProxy(JsObjectProxy* jsObjectProxy) {
+  if (!jsObjectProxy) {
+    return;
+  }
+  if (jsObjectProxy->name) {
+    free(jsObjectProxy->name);
+  }
+  for (int i = 0; jsObjectProxy->methods && i < jsObjectProxy->numMethods; ++i) {
+    if (jsObjectProxy->methods[i].argLoaders) {
+      free(jsObjectProxy->methods[i].argLoaders);
+    }
+    if (jsObjectProxy->methods[i].name) {
+      free(jsObjectProxy->methods[i].name);
+    }
+    free(jsObjectProxy->methods);
+  }
+  free(jsObjectProxy);
+}
+
 JNIEXPORT void JNICALL
 Java_com_squareup_quickjs_QuickJs_destroyContext(JNIEnv* env, jobject type, jlong context_) {
   Context* context = (Context*) context_;
+  while (context->proxyNodes) {
+    deleteJsObjectProxy(context->proxyNodes->proxy);
+    JsObjectProxyNode* prev = context->proxyNodes;
+    context->proxyNodes = context->proxyNodes->next;
+    free(prev);
+  }
   (*env)->DeleteGlobalRef(env, context->quickJsExecptionClass);
   (*env)->DeleteGlobalRef(env, context->doubleClass);
   (*env)->DeleteGlobalRef(env, context->integerClass);
@@ -192,38 +236,6 @@ Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_Strin
   return result;
 }
 
-typedef struct {
-  char* name;
-  jmethodID methodId;
-
-  JSValueConst (** argLoaders)(JNIEnv* env, JSContext* jsContext, jvalue value);
-} JsMethodProxy;
-
-typedef struct {
-  char* name;
-  int numMethods;
-  JsMethodProxy* methods;
-} JsObjectProxy;
-
-static void deleteJsObjectProxy(JsObjectProxy* jsObjectProxy) {
-  if (!jsObjectProxy) {
-    return;
-  }
-  if (jsObjectProxy->name) {
-    free(jsObjectProxy->name);
-  }
-  for (int i = 0; jsObjectProxy->methods && i < jsObjectProxy->numMethods; ++i) {
-    if (jsObjectProxy->methods[i].argLoaders) {
-      free(jsObjectProxy->methods[i].argLoaders);
-    }
-    if (jsObjectProxy->methods[i].name) {
-      free(jsObjectProxy->methods[i].name);
-    }
-    free(jsObjectProxy->methods);
-  }
-  free(jsObjectProxy);
-}
-
 JNIEXPORT jlong JNICALL
 Java_com_squareup_quickjs_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context, jstring name,
                                       jobjectArray methods) {
@@ -272,8 +284,11 @@ Java_com_squareup_quickjs_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context,
       (*env)->ReleaseStringUTFChars(env, methodName, methodNameStr);
     }
     if (!(*env)->ExceptionCheck(env)) {
+      JsObjectProxyNode* node = calloc(1, sizeof(JsObjectProxyNode));
+      node->proxy = jsObjectProxy;
+      node->next = context->proxyNodes;
+      context->proxyNodes = node;
       result = (jlong) jsObjectProxy;
-      // TODO: hook up the JS side's finalizer to call deleteJsObjectProxy().
     } else {
       deleteJsObjectProxy(jsObjectProxy);
       result = 0L;
@@ -341,6 +356,7 @@ Java_com_squareup_quickjs_QuickJs_call(JNIEnv* env, jobject thiz, jlong _context
     throwJsExceptionFmt(env, context, "Could not find method %s.%s", jsObjectProxy->name,
                         methodNameStr);
     (*env)->ReleaseStringUTFChars(env, methodName, methodNameStr);
+    result = NULL;
   }
   JS_FreeValue(context->jsContext, this);
   JS_FreeValue(context->jsContext, global);
