@@ -100,24 +100,24 @@ public final class QuickJs implements Closeable {
     }
     final QuickJs quickJs = this;
 
-    Object proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[]{ type },
-            new InvocationHandler() {
-              @Override
-              public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-                // If the method is a method from Object then defer to normal invocation.
-                if (method.getDeclaringClass() == Object.class) {
-                  return method.invoke(this, args);
-                }
-                synchronized (quickJs) {
-                  return call(quickJs.context, instance, method, args);
-                }
-              }
+    Object proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
+        new InvocationHandler() {
+          @Override
+          public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+            // If the method is a method from Object then defer to normal invocation.
+            if (method.getDeclaringClass() == Object.class) {
+              return method.invoke(this, args);
+            }
+            synchronized (quickJs) {
+              return call(quickJs.context, instance, method, args);
+            }
+          }
 
-              @Override
-              public String toString() {
-                return String.format("QuickJsProxy{name=%s, type=%s}", name, type.getName());
-              }
-            });
+          @Override
+          public String toString() {
+            return String.format("QuickJsProxy{name=%s, type=%s}", name, type.getName());
+          }
+        });
     return (T) proxy;
   }
 
@@ -140,8 +140,12 @@ public final class QuickJs implements Closeable {
   }
 
   private static native long createContext();
+
   private native void destroyContext(long context);
+
   private native Object evaluate(long context, String sourceCode, String fileName);
+
   private native long get(long context, String name, Object[] methods);
+
   private native Object call(long context, long instance, Object method, Object[] args);
 }
