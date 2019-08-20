@@ -63,24 +63,23 @@ public final class QuickJsTest {
   @Test public void exceptionsInScriptIncludeStackTrace() {
     try {
       quickjs.evaluate("\n"
-              + "f1();\n"           // Line 2.
-              + "\n"
-              + "function f1() {\n"
-              + "  f2();\n"         // Line 5.
-              + "}\n"
-              + "\n"
-              + "\n"
-              + "function f2() {\n"
-              + "  nope();\n"       // Line 10.
-              + "}\n", "test.js");
+          + "f1();\n"           // Line 2.
+          + "\n"
+          + "function f1() {\n"
+          + "  f2();\n"         // Line 5.
+          + "}\n"
+          + "\n"
+          + "\n"
+          + "function f2() {\n"
+          + "  nope();\n"       // Line 10.
+          + "}\n", "test.js");
       fail();
     } catch (QuickJsException e) {
       assertThat(e).hasMessageThat().isEqualTo("nope is not defined");
       assertThat(e.getStackTrace()).asList().containsAtLeast(
-              new StackTraceElement("JavaScript", "<eval>", "test.js", 2),
-              new StackTraceElement("JavaScript", "f1", "test.js", 5),
-              new StackTraceElement("JavaScript", "f2", "test.js", 10));
+          new StackTraceElement("JavaScript", "<eval>", "test.js", 2),
+          new StackTraceElement("JavaScript", "f1", "test.js", 5),
+          new StackTraceElement("JavaScript", "f2", "test.js", 10));
     }
   }
-
 }

@@ -17,6 +17,7 @@ package com.squareup.quickjs;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -32,25 +33,24 @@ public final class QuickJsException extends RuntimeException {
    * native code.
    */
   private final static Pattern STACK_TRACE_PATTERN =
-          Pattern.compile("\\s*at ([^\\s^\\[]+) \\(([^\\s]+):(\\d+)\\).*$");
+      Pattern.compile("\\s*at ([^\\s^\\[]+) \\(([^\\s]+):(\\d+)\\).*$");
 
   /** Java StackTraceElements require a class name.  We don't have one in JS, so use this. */
   private final static String STACK_TRACE_CLASS_NAME = "JavaScript";
 
   public QuickJsException(@NonNull String detailMessage) {
-    super(detailMessage);
+    this(detailMessage, null);
   }
 
-  public QuickJsException(@NonNull String detailMessage, @NonNull String jsStackTrace) {
+  public QuickJsException(@NonNull String detailMessage, @Nullable String jsStackTrace) {
     super(detailMessage);
-    addJavaScriptStack(this, jsStackTrace);
+    if (jsStackTrace != null) addJavaScriptStack(this, jsStackTrace);
   }
 
   /**
    * Parses {@code StackTraceElement}s from {@code detailMessage} and adds them to the proper place
    * in {@code throwable}'s stack trace.  Note: this method is also called from native code.
    */
-  // TODO(szurbrigg): share this code with the DuktapeException implementation.
   private static void addJavaScriptStack(Throwable throwable, String detailMessage) {
     String[] lines = detailMessage.split("\n", -1);
     if (lines.length == 0) {
@@ -63,9 +63,9 @@ public final class QuickJsException extends RuntimeException {
     boolean spliced = false;
     for (StackTraceElement stackTraceElement : throwable.getStackTrace()) {
       if (!spliced
-              && stackTraceElement.isNativeMethod()
-              && stackTraceElement.getClassName().equals(QuickJs.class.getName())
-              && stackTraceElement.getMethodName().equals("evaluate")) {
+          && stackTraceElement.isNativeMethod()
+          && stackTraceElement.getClassName().equals(QuickJs.class.getName())
+          && stackTraceElement.getMethodName().equals("evaluate")) {
         for (String line : lines) {
           StackTraceElement jsElement = toStackTraceElement(line);
           if (jsElement == null) {
@@ -87,6 +87,6 @@ public final class QuickJsException extends RuntimeException {
       return null;
     }
     return new StackTraceElement(STACK_TRACE_CLASS_NAME, m.group(1), m.group(2),
-            Integer.parseInt(m.group(3)));
+        Integer.parseInt(m.group(3)));
   }
 }
