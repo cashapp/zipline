@@ -7,7 +7,7 @@ buildscript {
     gradlePluginPortal()
   }
   dependencies {
-    classpath 'com.android.tools.build:gradle:3.4.2'
+    classpath 'com.android.tools.build:gradle:3.5.0'
     classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.8.1'
   }
 }
