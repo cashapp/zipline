@@ -16,6 +16,7 @@ android {
       cmake {
         arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
         cFlags '-std=c99', '-fstrict-aliasing', "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\""
+        cppFlags '-std=c++11', '-fstrict-aliasing', "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\""
       }
     }
   }
@@ -26,6 +27,7 @@ android {
         cmake {
           arguments '-DCMAKE_BUILD_TYPE=MinSizeRel'
           cFlags '-g0', '-Os', '-fomit-frame-pointer', '-DNDEBUG', '-fvisibility=hidden'
+          cppFlags '-g0', '-Os', '-fomit-frame-pointer', '-DNDEBUG', '-fvisibility=hidden'
         }
       }
     }
@@ -33,6 +35,7 @@ android {
       externalNativeBuild {
         cmake {
           cFlags '-g', '-DDEBUG', '-DDUMP_LEAKS'
+          cppFlags '-g', '-DDEBUG', '-DDUMP_LEAKS'
         }
       }
     }

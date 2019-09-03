@@ -12,3 +12,7 @@ jacoco.exec
 
 # upload.sh signing
 /*.asc
+
+# cxx dirs
+duktape/.cxx
+quickjs/.cxx
