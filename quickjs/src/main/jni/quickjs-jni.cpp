@@ -26,12 +26,6 @@ public:
   std::vector<JsMethodProxy> methods;
 };
 
-
-static jmethodID booleanValueOf;
-static jmethodID integerValueOf;
-static jmethodID doubleValueOf;
-static jmethodID quickJsExceptionConstructor;
-
 class Context {
 public:
   Context(JNIEnv *env)
@@ -39,12 +33,17 @@ public:
         booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
         integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
         doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
-        quickJsExecptionClass(static_cast<jclass>(env->NewGlobalRef(
-            env->FindClass("com/squareup/quickjs/QuickJsException")))) {
+        quickJsExceptionClass(static_cast<jclass>(env->NewGlobalRef(
+            env->FindClass("com/squareup/quickjs/QuickJsException")))),
+        booleanValueOf(env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;")),
+        integerValueOf(env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;")),
+        doubleValueOf(env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;")),
+        quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
+                                                     "(Ljava/lang/String;Ljava/lang/String;)V")) {
   }
 
   ~Context() {
-    env->DeleteGlobalRef(quickJsExecptionClass);
+    env->DeleteGlobalRef(quickJsExceptionClass);
     env->DeleteGlobalRef(doubleClass);
     env->DeleteGlobalRef(integerClass);
     env->DeleteGlobalRef(booleanClass);
@@ -58,29 +57,18 @@ public:
   jclass booleanClass;
   jclass integerClass;
   jclass doubleClass;
-  jclass quickJsExecptionClass;
+  jclass quickJsExceptionClass;
+  jmethodID booleanValueOf;
+  jmethodID integerValueOf;
+  jmethodID doubleValueOf;
+  jmethodID quickJsExceptionConstructor;
   std::vector<JsObjectProxy> objectProxies;
 };
 
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_squareup_quickjs_QuickJs_createContext(JNIEnv *env, jclass type) {
-  Context *c = new(std::nothrow) Context(env);
-  if (!c) {
-    return 0;
-  }
-  booleanValueOf = env->GetStaticMethodID(c->booleanClass, "valueOf",
-                                          "(Z)Ljava/lang/Boolean;");
-
-  integerValueOf = env->GetStaticMethodID(c->integerClass, "valueOf",
-                                          "(I)Ljava/lang/Integer;");
-
-  doubleValueOf = env->GetStaticMethodID(c->doubleClass, "valueOf",
-                                         "(D)Ljava/lang/Double;");
-
-  quickJsExceptionConstructor = env->GetMethodID(c->quickJsExecptionClass, "<init>",
-                                                 "(Ljava/lang/String;Ljava/lang/String;)V");
-  return (jlong) c;
+  return reinterpret_cast<jlong>(new(std::nothrow) Context(env));
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -104,8 +92,8 @@ static void throwJsExceptionFmt(JNIEnv *env, Context *context, const char *fmt, 
   va_start (args, fmt);
   vsnprintf(msg, sizeof(msg), fmt, args);
   va_end (args);
-  jobject exception = env->NewObject(context->quickJsExecptionClass,
-                                     quickJsExceptionConstructor,
+  jobject exception = env->NewObject(context->quickJsExceptionClass,
+                                     context->quickJsExceptionConstructor,
                                      env->NewStringUTF(msg),
                                      NULL);
   env->Throw(static_cast<jthrowable>(exception));
@@ -119,7 +107,7 @@ static void throwJsException(JNIEnv *env, Context *context, JSValue value) {
   JSValue messageValue = JS_GetPropertyStr(jsContext, exceptionValue, "message");
   JSValue stackValue = JS_GetPropertyStr(jsContext, exceptionValue, "stack");
 
-// If the JS does a `throw 2;`, there won't be a message property.
+  // If the JS does a `throw 2;`, there won't be a message property.
   const char *message = JS_ToCString(jsContext,
                                      JS_IsUndefined(messageValue) ? exceptionValue : messageValue);
   JS_FreeValue(jsContext, messageValue);
@@ -128,8 +116,8 @@ static void throwJsException(JNIEnv *env, Context *context, JSValue value) {
   JS_FreeValue(jsContext, stackValue);
   JS_FreeValue(jsContext, exceptionValue);
 
-  jobject exception = env->NewObject(context->quickJsExecptionClass,
-                                     quickJsExceptionConstructor,
+  jobject exception = env->NewObject(context->quickJsExceptionClass,
+                                     context->quickJsExceptionConstructor,
                                      env->NewStringUTF(message),
                                      env->NewStringUTF(stack));
   JS_FreeCString(jsContext, stack);
@@ -157,21 +145,21 @@ jvalue JSValueToObject(JNIEnv *env, Context *context, JSValue value) {
     case JS_TAG_BOOL: {
       jvalue v;
       v.z = (jboolean) JS_VALUE_GET_BOOL(value);
-      result.l = env->CallStaticObjectMethodA(context->booleanClass, booleanValueOf, &v);
+      result.l = env->CallStaticObjectMethodA(context->booleanClass, context->booleanValueOf, &v);
       break;
     }
 
     case JS_TAG_INT: {
       jvalue v;
       v.j = (jint) JS_VALUE_GET_INT(value);
-      result.l = env->CallStaticObjectMethodA(context->integerClass, integerValueOf, &v);
+      result.l = env->CallStaticObjectMethodA(context->integerClass, context->integerValueOf, &v);
       break;
     }
 
     case JS_TAG_FLOAT64: {
       jvalue v;
       v.d = (jdouble) JS_VALUE_GET_FLOAT64(value);
-      result.l = env->CallStaticObjectMethodA(context->doubleClass, doubleValueOf, &v);
+      result.l = env->CallStaticObjectMethodA(context->doubleClass, context->doubleValueOf, &v);
       break;
     }
 
@@ -285,7 +273,7 @@ Java_com_squareup_quickjs_QuickJs_call(JNIEnv *env, jobject thiz, jlong _context
                        "Null QuickJs context - did you close your QuickJs?");
     return NULL;
   }
-  JsObjectProxy *jsObjectProxy = reinterpret_cast<JsObjectProxy*>(instance);
+  JsObjectProxy *jsObjectProxy = reinterpret_cast<JsObjectProxy *>(instance);
   if (!jsObjectProxy) {
     throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
     return NULL;
