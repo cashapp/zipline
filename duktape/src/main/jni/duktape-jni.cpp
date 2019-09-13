@@ -39,6 +39,7 @@ void initialize(JNIEnv* env, jclass type) {
     auto timeZone = theEnv->CallStaticObjectMethod(static_cast<jclass>(timeZoneClass.get()),
                                                    getDefaultTimeZone);
     const std::chrono::milliseconds offsetMillis(theEnv->CallIntMethod(timeZone, getOffset, time));
+    theEnv->DeleteLocalRef(timeZone);
     return static_cast<int>(std::chrono::duration_cast<std::chrono::seconds>(offsetMillis).count());
   };
 }

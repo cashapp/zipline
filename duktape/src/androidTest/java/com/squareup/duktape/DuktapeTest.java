@@ -137,4 +137,9 @@ public final class DuktapeTest {
       TimeZone.setDefault(original);
     }
   }
+
+  @Test
+  public void parseManyDates() {
+    duktape.evaluate("for (var i = 0; i < 100000; ++i) { new Date(i).toString(); }");
+  }
 }

@@ -90,10 +90,15 @@ jvalue JavaType::callMethod(duk_context* ctx, JNIEnv *env, jmethodID methodId, j
 }
 
 std::string getName(JNIEnv *env, jclass javaClass) {
-  const jmethodID method =
-      env->GetMethodID(env->GetObjectClass(javaClass), "getName", "()Ljava/lang/String;");
-  const JString methodName(env, static_cast<jstring>(env->CallObjectMethod(javaClass, method)));
-  return methodName.str();
+  jclass objClass = env->GetObjectClass(javaClass);
+  const jmethodID method = env->GetMethodID(objClass, "getName", "()Ljava/lang/String;");
+  env->DeleteLocalRef(objClass);
+
+  auto methodName = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
+  const auto ret = JString(env, methodName).str();
+  env->DeleteLocalRef(methodName);
+
+  return ret;
 }
 
 namespace  {
@@ -528,7 +533,12 @@ struct Object : public JavaType {
       duk_push_null(ctx);
       return 1;
     }
-    return m_typeMap.get(env, env->GetObjectClass(value.l))->push(ctx, env, value);
+
+    jclass objectClass = env->GetObjectClass(value.l);
+    duk_ret_t ret = m_typeMap.get(env, objectClass)->push(ctx, env, value);
+    env->DeleteLocalRef(objectClass);
+
+    return ret;
   }
 
   const JavaType& m_boxedBoolean;
