@@ -18,8 +18,71 @@
 #include <algorithm>
 #include "Context.h"
 
-JsMethodProxy::JsMethodProxy(JNIEnv *env, const char *name, jobject method)
-    : name(name), methodId(env->FromReflectedMethod(method)) {
+namespace {
+
+std::string getName(JNIEnv *env, jclass javaClass) {
+  const jmethodID method =
+      env->GetMethodID(env->GetObjectClass(javaClass), "getName", "()Ljava/lang/String;");
+  auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
+  const auto s = env->GetStringUTFChars(javaString, nullptr);
+
+  std::string str(s);
+  env->ReleaseStringUTFChars(javaString, s);
+  env->DeleteLocalRef(javaString);
+  return str;
+}
+
+JsMethodProxy::ArgumentLoader
+getJavaToJsConverter(const Context* context, jclass type, bool boxed) {
+  const auto typeName = getName(context->env, type);
+  if (typeName == "java.lang.String") {
+    return [](const Context* c, jvalue v) {
+      if (!v.l) return JS_NULL;
+      const auto s = c->env->GetStringUTFChars(static_cast<jstring>(v.l), nullptr);
+      auto jsString = JS_NewString(c->jsContext, s);
+      c->env->ReleaseStringUTFChars(static_cast<jstring>(v.l), s);
+      return jsString;
+    };
+  } else if (typeName == "java.lang.Double" || (typeName == "double" && boxed)) {
+    return [](const Context *c, jvalue v) {
+      return v.l != nullptr
+             ? JS_NewFloat64(c->jsContext, c->env->CallDoubleMethod(v.l, c->doubleGetValue))
+             : JS_NULL;
+    };
+  } else if (typeName == "java.lang.Integer" || (typeName == "int" && boxed)) {
+    return [](const Context* c, jvalue v) {
+      return v.l != nullptr
+             ? JS_NewInt32(c->jsContext, c->env->CallIntMethod(v.l, c->integerGetValue))
+             : JS_NULL;
+    };
+  } else if (typeName == "java.lang.Boolean" || (typeName == "boolean" && boxed)) {
+    return [](const Context* c, jvalue v) {
+      return v.l != nullptr
+             ? JS_NewBool(c->jsContext, c->env->CallBooleanMethod(v.l, c->booleanGetValue))
+             : JS_NULL;
+    };
+  } else if (typeName == "double") {
+    return [](const Context* c, jvalue v) {
+      return JS_NewFloat64(c->jsContext, v.d);
+    };
+  } else if (typeName == "int") {
+    return [](const Context* c, jvalue v) {
+      return JS_NewInt32(c->jsContext, v.i);
+    };
+  } else if (typeName == "boolean") {
+    return [](const Context* c, jvalue v) {
+      return JS_NewBool(c->jsContext, v.z);
+    };
+  } else {
+    return [](const Context*, jvalue) { return JS_NULL; };
+  }
+}
+
+}
+
+JsMethodProxy::JsMethodProxy(const Context* context, const char *name, jobject method)
+    : name(name), methodId(context->env->FromReflectedMethod(method)) {
+  JNIEnv* env = context->env;
   const jclass methodClass = env->GetObjectClass(method);
 
   const jmethodID getReturnType =
@@ -27,16 +90,14 @@ JsMethodProxy::JsMethodProxy(JNIEnv *env, const char *name, jobject method)
   const auto returnedClass = static_cast<jclass>(env->CallObjectMethod(method, getReturnType));
 
   const jmethodID isVarArgsMethod = env->GetMethodID(methodClass, "isVarArgs", "()Z");
-  const auto isVarArgs = env->CallBooleanMethod(method, isVarArgsMethod);
+  isVarArgs = false; // TODO: env->CallBooleanMethod(method, isVarArgsMethod);
 
   const jmethodID getParameterTypes =
       env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
   jobjectArray parameterTypes =
       static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
   const jsize numArgs = env->GetArrayLength(parameterTypes);
-  // Release any local objects allocated in this frame when we leave this scope.
-  env->PushLocalFrame(numArgs);
-  //argumentLoaders.resize(numArgs);
+  argumentLoaders.resize(numArgs);
   for (jsize i = 0; i < numArgs; ++i) {
     auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
     if (isVarArgs && i == numArgs - 1) {
@@ -44,27 +105,32 @@ JsMethodProxy::JsMethodProxy(JNIEnv *env, const char *name, jobject method)
       const jmethodID getComponentType =
           env->GetMethodID(parameterClass, "getComponentType", "()Ljava/lang/Class;");
       parameterType = env->CallObjectMethod(parameterType, getComponentType);
-      //argumentLoaders[i] = typeMap.get(env, static_cast<jclass>(parameterType));
+      argumentLoaders[i] = getJavaToJsConverter(context, static_cast<jclass>(parameterType), false);
       break;
+    } else {
+      argumentLoaders[i] = getJavaToJsConverter(context, static_cast<jclass>(parameterType), true);
     }
-    //  argumentLoaders[i] = typeMap.getBoxed(env, static_cast<jclass>(parameterType));
+    env->DeleteLocalRef(parameterType);
   }
-  env->PopLocalFrame(nullptr);
+  env->DeleteLocalRef(parameterTypes);
 }
 
 jobject JsMethodProxy::call(Context *context, JSValue thisPointer, jobjectArray args) const {
-  JSValue function = JS_GetPropertyStr(context->jsContext, thisPointer, name.c_str());
   const auto totalArgs = std::min<int>(argumentLoaders.size(), context->env->GetArrayLength(args));
   JSValueConst arguments[totalArgs];
   int numArgs;
+  jvalue arg;
   for (numArgs = 0; numArgs < totalArgs && !context->env->ExceptionCheck(); numArgs++) {
-    auto arg = context->env->GetObjectArrayElement(args, numArgs);
+    arg.l = context->env->GetObjectArrayElement(args, numArgs);
     arguments[numArgs] = argumentLoaders[numArgs](context, arg);
+    context->env->DeleteLocalRef(arg.l);
   }
 
   jobject result;
   if (!context->env->ExceptionCheck()) {
-    JSValue callResult = JS_Call(context->jsContext, function, thisPointer, numArgs, arguments);
+    auto property = JS_NewAtom(context->jsContext, name.c_str());
+    JSValue callResult = JS_Invoke(context->jsContext, thisPointer, property, numArgs, arguments);
+    JS_FreeAtom(context->jsContext, property);
     result = context->toJavaObject(callResult);
     JS_FreeValue(context->jsContext, callResult);
   } else {
@@ -73,7 +139,6 @@ jobject JsMethodProxy::call(Context *context, JSValue thisPointer, jobjectArray 
   for (int i = 0; i < numArgs; i++) {
     JS_FreeValue(context->jsContext, arguments[i]);
   }
-  JS_FreeValue(context->jsContext, function);
 
   return result;
 }

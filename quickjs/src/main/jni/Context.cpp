@@ -27,8 +27,11 @@ Context::Context(JNIEnv *env)
       quickJsExceptionClass(static_cast<jclass>(env->NewGlobalRef(
           env->FindClass("com/squareup/quickjs/QuickJsException")))),
       booleanValueOf(env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;")),
+      booleanGetValue(env->GetMethodID(booleanClass, "booleanValue", "()Z")),
       integerValueOf(env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;")),
+      integerGetValue(env->GetMethodID(integerClass, "intValue", "()I")),
       doubleValueOf(env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;")),
+      doubleGetValue(env->GetMethodID(doubleClass, "doubleValue", "()D")),
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
                                                    "(Ljava/lang/String;Ljava/lang/String;)V")) {
 }
@@ -68,7 +71,7 @@ JsObjectProxy *Context::createObjectProxy(jstring name, jobjectArray methods) {
 
       JSValue prop = JS_GetPropertyStr(jsContext, obj, methodNameStr);
       if (JS_IsFunction(jsContext, prop)) {
-        jsObjectProxy->methods.push_back(new JsMethodProxy(env, methodNameStr, method));
+        jsObjectProxy->methods.push_back(new JsMethodProxy(this, methodNameStr, method));
       } else {
         const char *msg = JS_IsUndefined(prop)
                           ? "JavaScript global %s has no method called %s"

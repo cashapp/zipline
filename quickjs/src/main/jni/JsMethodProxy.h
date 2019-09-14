@@ -26,14 +26,15 @@ class Context;
 
 class JsMethodProxy {
 public:
-  JsMethodProxy(JNIEnv* env, const char* name, jobject method);
+  JsMethodProxy(const Context* context, const char* name, jobject method);
 
   jobject call(Context *context, JSValue thisPointer, jobjectArray pArray) const;
 
   const std::string name;
   jmethodID methodId;
-  typedef std::function<JSValueConst(const Context*, jobject)> ArgumentLoader;
+  typedef std::function<JSValueConst(const Context*, jvalue)> ArgumentLoader;
   std::vector<ArgumentLoader> argumentLoaders;
+  bool isVarArgs;
 };
 
 
