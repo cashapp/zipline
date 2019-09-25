@@ -21,14 +21,15 @@
 namespace {
 
 std::string getName(JNIEnv *env, jclass javaClass) {
-  const jmethodID method =
-      env->GetMethodID(env->GetObjectClass(javaClass), "getName", "()Ljava/lang/String;");
+  auto classType = env->GetObjectClass(javaClass);
+  const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
   auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
   const auto s = env->GetStringUTFChars(javaString, nullptr);
 
   std::string str(s);
   env->ReleaseStringUTFChars(javaString, s);
   env->DeleteLocalRef(javaString);
+  env->DeleteLocalRef(classType);
   return str;
 }
 
@@ -74,6 +75,7 @@ getJavaToJsConverter(const Context* context, jclass type, bool boxed) {
       return JS_NewBool(c->jsContext, v.z);
     };
   } else {
+    // TODO: throw an exception for unsupported argument type.
     return [](const Context*, jvalue) { return JS_NULL; };
   }
 }
@@ -104,8 +106,11 @@ JsMethodProxy::JsMethodProxy(const Context* context, const char *name, jobject m
       const auto parameterClass = env->GetObjectClass(parameterType);
       const jmethodID getComponentType =
           env->GetMethodID(parameterClass, "getComponentType", "()Ljava/lang/Class;");
-      parameterType = env->CallObjectMethod(parameterType, getComponentType);
-      argumentLoaders[i] = getJavaToJsConverter(context, static_cast<jclass>(parameterType), false);
+      auto parameterComponentType = env->CallObjectMethod(parameterType, getComponentType);
+      argumentLoaders[i] =
+          getJavaToJsConverter(context, static_cast<jclass>(parameterComponentType), false);
+      env->DeleteLocalRef(parameterComponentType);
+      env->DeleteLocalRef(parameterClass);
       break;
     } else {
       argumentLoaders[i] = getJavaToJsConverter(context, static_cast<jclass>(parameterType), true);
@@ -113,6 +118,7 @@ JsMethodProxy::JsMethodProxy(const Context* context, const char *name, jobject m
     env->DeleteLocalRef(parameterType);
   }
   env->DeleteLocalRef(parameterTypes);
+  env->DeleteLocalRef(methodClass);
 }
 
 jobject JsMethodProxy::call(Context *context, JSValue thisPointer, jobjectArray args) const {
