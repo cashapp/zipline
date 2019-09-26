@@ -17,6 +17,7 @@
 #include "JsMethodProxy.h"
 #include <algorithm>
 #include "Context.h"
+#include "ExceptionThrowers.h"
 
 namespace {
 
@@ -74,8 +75,15 @@ getJavaToJsConverter(const Context* context, jclass type, bool boxed) {
     return [](const Context* c, jvalue v) {
       return JS_NewBool(c->jsContext, v.z);
     };
+  } else if (typeName == "java.lang.Object") {
+    return [](const Context* c, jvalue v) {
+      if (!v.l) return JS_NULL;
+      return getJavaToJsConverter(c, c->env->GetObjectClass(v.l), true)(c, v);
+    };
   } else {
-    // TODO: throw an exception for unsupported argument type.
+    // Throw an exception for unsupported argument type.
+    throwJavaException(context->env, "java/lang/IllegalArgumentException",
+        "Unsupported Java type %s", typeName.c_str());
     return [](const Context*, jvalue) { return JS_NULL; };
   }
 }
@@ -86,10 +94,6 @@ JsMethodProxy::JsMethodProxy(const Context* context, const char *name, jobject m
     : name(name), methodId(context->env->FromReflectedMethod(method)) {
   JNIEnv* env = context->env;
   const jclass methodClass = env->GetObjectClass(method);
-
-  const jmethodID getReturnType =
-      env->GetMethodID(methodClass, "getReturnType", "()Ljava/lang/Class;");
-  const auto returnedClass = static_cast<jclass>(env->CallObjectMethod(method, getReturnType));
 
   const jmethodID isVarArgsMethod = env->GetMethodID(methodClass, "isVarArgs", "()Z");
   isVarArgs = false; // TODO: env->CallBooleanMethod(method, isVarArgsMethod);
