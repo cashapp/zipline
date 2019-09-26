@@ -41,8 +41,11 @@ public:
   jclass doubleClass;
   jclass quickJsExceptionClass;
   jmethodID booleanValueOf;
+  jmethodID booleanGetValue;
   jmethodID integerValueOf;
+  jmethodID integerGetValue;
   jmethodID doubleValueOf;
+  jmethodID doubleGetValue;
   jmethodID quickJsExceptionConstructor;
   std::vector<JsObjectProxy*> objectProxies;
 };
