@@ -205,8 +205,7 @@ public final class QuickJsGetTest {
       quickJs.get("value", UnsupportedArgumentType.class);
       fail();
     } catch (IllegalArgumentException expected) {
-      assertThat(expected).hasMessageThat().isEqualTo(
-          "In proxied method \"value.set\": Unsupported Java type java.util.Date");
+      assertThat(expected).hasMessageThat().isEqualTo("Unsupported Java type java.util.Date");
     }
   }
 
@@ -269,19 +268,13 @@ public final class QuickJsGetTest {
     int get();
   }
 
-  @Test public void proxyMethodCannotReturnInteger() {
+  @Test public void proxyMethodCanReturnInteger() {
     quickJs.evaluate("var value = {\n" +
         "  get: function() { return 2; }\n" +
         "};");
 
-    try {
-      quickJs.get("value", IntegerGetter.class);
-      fail();
-    } catch (IllegalArgumentException expected) {
-      assertThat(expected)
-          .hasMessageThat()
-          .isEqualTo("In proxied method \"value.get\": Unsupported JavaScript return type int");
-    }
+    IntegerGetter getter = quickJs.get("value", IntegerGetter.class);
+    assertThat(getter.get()).isEqualTo(2);
   }
 
   interface PrinterFunction {
@@ -309,10 +302,10 @@ public final class QuickJsGetTest {
     try {
       printer.call(true, 42, 2.718281828459);
       fail();
-    } catch (IllegalArgumentException expected) {
+    } catch (ClassCastException expected) {
       assertThat(expected)
           .hasMessageThat()
-          .isEqualTo("Cannot convert return value 2.718281828459 to String");
+          .isEqualTo("Couldn't convert result of type java.lang.Double to java.lang.String");
     }
   }
 
