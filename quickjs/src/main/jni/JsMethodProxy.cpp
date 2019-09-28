@@ -37,6 +37,62 @@ std::string getName(JNIEnv *env, jclass javaClass) {
 JsMethodProxy::ArgumentLoader
 getJavaToJsConverter(const Context* context, jclass type, bool boxed) {
   const auto typeName = getName(context->env, type);
+  if (!typeName.empty() && typeName[0] == '[') {
+    // type is an array.
+    const jmethodID method = context->env->GetMethodID(context->env->GetObjectClass(type),
+                                                       "getComponentType",
+                                                       "()Ljava/lang/Class;");
+    auto elementType = static_cast<jclass>(context->env->CallObjectMethod(type, method));
+    const auto elementTypeName = getName(context->env, elementType);
+    if (elementTypeName == "double") {
+      return [](const Context* c, jvalue v) {
+        if (!v.l) return JS_NULL;
+        JSValue result = JS_NewArray(c->jsContext);
+        auto elements = c->env->GetDoubleArrayElements(static_cast<jdoubleArray>(v.l), nullptr);
+        for (jsize i = 0, e = c->env->GetArrayLength(static_cast<jarray>(v.l)); i < e; i++) {
+          JS_SetPropertyUint32(c->jsContext, result, i, JS_NewFloat64(c->jsContext, elements[i]));
+        }
+        c->env->ReleaseDoubleArrayElements(static_cast<jdoubleArray>(v.l), elements, JNI_ABORT);
+        return result;
+      };
+    } else if (elementTypeName == "int") {
+      return [](const Context* c, jvalue v) {
+        if (!v.l) return JS_NULL;
+        JSValue result = JS_NewArray(c->jsContext);
+        auto elements = c->env->GetIntArrayElements(static_cast<jintArray >(v.l), nullptr);
+        for (jsize i = 0, e = c->env->GetArrayLength(static_cast<jarray>(v.l)); i < e; i++) {
+          JS_SetPropertyUint32(c->jsContext, result, i, JS_NewInt32(c->jsContext, elements[i]));
+        }
+        c->env->ReleaseIntArrayElements(static_cast<jintArray>(v.l), elements, JNI_ABORT);
+        return result;
+      };
+    } else if (elementTypeName == "boolean") {
+      return [](const Context* c, jvalue v) {
+        if (!v.l) return JS_NULL;
+        JSValue result = JS_NewArray(c->jsContext);
+        auto elements = c->env->GetBooleanArrayElements(static_cast<jbooleanArray>(v.l), nullptr);
+        for (jsize i = 0, e = c->env->GetArrayLength(static_cast<jarray>(v.l)); i < e; i++) {
+          JS_SetPropertyUint32(c->jsContext, result, i, JS_NewBool(c->jsContext, elements[i]));
+        }
+        c->env->ReleaseBooleanArrayElements(static_cast<jbooleanArray>(v.l), elements, JNI_ABORT);
+        return result;
+      };
+    } else {
+      auto converter = getJavaToJsConverter(context, elementType, boxed);
+      return [converter](const Context* c, jvalue v) {
+        if (!v.l) return JS_NULL;
+        JSValue result = JS_NewArray(c->jsContext);
+        jvalue element;
+        for (jsize i = 0, e = c->env->GetArrayLength(static_cast<jarray>(v.l)); i < e; i++) {
+          element.l = c->env->GetObjectArrayElement(static_cast<jobjectArray >(v.l), i);
+          JS_SetPropertyUint32(c->jsContext, result, i, converter(c, element));
+          c->env->DeleteLocalRef(element.l);
+        }
+        return result;
+      };
+    }
+  }
+
   if (typeName == "java.lang.String") {
     return [](const Context* c, jvalue v) {
       if (!v.l) return JS_NULL;
@@ -46,7 +102,7 @@ getJavaToJsConverter(const Context* context, jclass type, bool boxed) {
       return jsString;
     };
   } else if (typeName == "java.lang.Double" || (typeName == "double" && boxed)) {
-    return [](const Context *c, jvalue v) {
+    return [](const Context* c, jvalue v) {
       return v.l != nullptr
              ? JS_NewFloat64(c->jsContext, c->env->CallDoubleMethod(v.l, c->doubleGetValue))
              : JS_NULL;
@@ -90,64 +146,67 @@ getJavaToJsConverter(const Context* context, jclass type, bool boxed) {
 
 }
 
-JsMethodProxy::JsMethodProxy(const Context* context, const char *name, jobject method)
+JsMethodProxy::JsMethodProxy(const Context* context, const char* name, jobject method)
     : name(name), methodId(context->env->FromReflectedMethod(method)) {
   JNIEnv* env = context->env;
   const jclass methodClass = env->GetObjectClass(method);
 
   const jmethodID isVarArgsMethod = env->GetMethodID(methodClass, "isVarArgs", "()Z");
-  isVarArgs = false; // TODO: env->CallBooleanMethod(method, isVarArgsMethod);
+  isVarArgs = env->CallBooleanMethod(method, isVarArgsMethod);
 
   const jmethodID getParameterTypes =
       env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
   jobjectArray parameterTypes =
       static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
   const jsize numArgs = env->GetArrayLength(parameterTypes);
-  argumentLoaders.resize(numArgs);
-  for (jsize i = 0; i < numArgs; ++i) {
+  for (jsize i = 0; i < numArgs && !env->ExceptionCheck(); ++i) {
     auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
-    if (isVarArgs && i == numArgs - 1) {
-      const auto parameterClass = env->GetObjectClass(parameterType);
-      const jmethodID getComponentType =
-          env->GetMethodID(parameterClass, "getComponentType", "()Ljava/lang/Class;");
-      auto parameterComponentType = env->CallObjectMethod(parameterType, getComponentType);
-      argumentLoaders[i] =
-          getJavaToJsConverter(context, static_cast<jclass>(parameterComponentType), false);
-      env->DeleteLocalRef(parameterComponentType);
-      env->DeleteLocalRef(parameterClass);
-      break;
-    } else {
-      argumentLoaders[i] = getJavaToJsConverter(context, static_cast<jclass>(parameterType), true);
-    }
+    argumentLoaders.push_back(
+        getJavaToJsConverter(context, static_cast<jclass>(parameterType), true));
     env->DeleteLocalRef(parameterType);
   }
   env->DeleteLocalRef(parameterTypes);
   env->DeleteLocalRef(methodClass);
 }
 
-jobject JsMethodProxy::call(Context *context, JSValue thisPointer, jobjectArray args) const {
+jobject JsMethodProxy::call(Context* context, JSValue thisPointer, jobjectArray args) const {
   const auto totalArgs = std::min<int>(argumentLoaders.size(), context->env->GetArrayLength(args));
-  JSValueConst arguments[totalArgs];
+  std::vector<JSValue> arguments;
   int numArgs;
   jvalue arg;
   for (numArgs = 0; numArgs < totalArgs && !context->env->ExceptionCheck(); numArgs++) {
     arg.l = context->env->GetObjectArrayElement(args, numArgs);
-    arguments[numArgs] = argumentLoaders[numArgs](context, arg);
+    if (!isVarArgs || numArgs < totalArgs - 1) {
+      arguments.push_back(argumentLoaders[numArgs](context, arg));
+    } else {
+      auto varArgs = argumentLoaders[numArgs](context, arg);
+      if (JS_IsArray(context->jsContext, varArgs)) {
+        auto len = JS_GetPropertyStr(context->jsContext, varArgs, "length");
+        for (int i = 0, e = JS_VALUE_GET_INT(len); i < e; i++) {
+          arguments.push_back(JS_GetPropertyUint32(context->jsContext, varArgs, i));
+        }
+        JS_FreeValue(context->jsContext, len);
+        JS_FreeValue(context->jsContext, varArgs);
+      } else {
+        arguments.push_back(varArgs);
+      }
+    }
     context->env->DeleteLocalRef(arg.l);
   }
 
   jobject result;
   if (!context->env->ExceptionCheck()) {
     auto property = JS_NewAtom(context->jsContext, name.c_str());
-    JSValue callResult = JS_Invoke(context->jsContext, thisPointer, property, numArgs, arguments);
+    JSValue callResult = JS_Invoke(context->jsContext, thisPointer, property, arguments.size(),
+                                   arguments.data());
     JS_FreeAtom(context->jsContext, property);
     result = context->toJavaObject(callResult);
     JS_FreeValue(context->jsContext, callResult);
   } else {
     result = nullptr;
   }
-  for (int i = 0; i < numArgs; i++) {
-    JS_FreeValue(context->jsContext, arguments[i]);
+  for (JSValue argument : arguments) {
+    JS_FreeValue(context->jsContext, argument);
   }
 
   return result;
