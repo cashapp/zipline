@@ -24,6 +24,7 @@ Context::Context(JNIEnv *env)
       booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
       integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
       doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
+      objectClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Object")))),
       quickJsExceptionClass(static_cast<jclass>(env->NewGlobalRef(
           env->FindClass("com/squareup/quickjs/QuickJsException")))),
       booleanValueOf(env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;")),
@@ -41,6 +42,7 @@ Context::~Context() {
     delete proxy;
   }
   env->DeleteGlobalRef(quickJsExceptionClass);
+  env->DeleteGlobalRef(objectClass);
   env->DeleteGlobalRef(doubleClass);
   env->DeleteGlobalRef(integerClass);
   env->DeleteGlobalRef(booleanClass);
@@ -140,6 +142,19 @@ jobject Context::toJavaObject(JSValue value) const {
       result = env->CallStaticObjectMethodA(doubleClass, doubleValueOf, &v);
       break;
     }
+
+    case JS_TAG_OBJECT:
+      if (JS_IsArray(jsContext, value)) {
+        const auto arrayLength = JS_VALUE_GET_INT(JS_GetPropertyStr(jsContext, value, "length"));
+        result = env->NewObjectArray(arrayLength, objectClass, nullptr);
+        for (int i = 0; i < arrayLength && !env->ExceptionCheck(); i++) {
+          auto element = JS_GetPropertyUint32(jsContext, value, i);
+          env->SetObjectArrayElement(static_cast<jobjectArray>(result), i, toJavaObject(element));
+          JS_FreeValue(jsContext, element);
+        }
+        break;
+      }
+      // Fall through.
 
     case JS_TAG_NULL:
     case JS_TAG_UNDEFINED:

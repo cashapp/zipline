@@ -433,7 +433,7 @@ public final class QuickJsGetTest {
 
     Object[] original = new Object[] { 2, 4, 3, 1 };
     Object[] sorted = sorter.sort(original);
-    assertArrayEquals(sorted, new Object[] { 1.0, 2.0, 3.0, 4.0 });
+    assertArrayEquals(sorted, new Object[] { 1, 2, 3, 4 });
     assertThat(original).isNotSameInstanceAs(sorted);
 
     assertArrayEquals(sorter.sort(new Object[] { "b", "d", null, "a" }),

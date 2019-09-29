@@ -39,6 +39,7 @@ public:
   jclass booleanClass;
   jclass integerClass;
   jclass doubleClass;
+  jclass objectClass;
   jclass quickJsExceptionClass;
   jmethodID booleanValueOf;
   jmethodID booleanGetValue;
