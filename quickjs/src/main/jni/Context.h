@@ -30,8 +30,13 @@ public:
   ~Context();
 
   JsObjectProxy* createObjectProxy(jstring name, jobjectArray methods);
-  jobject toJavaObject(JSValue value) const;
   jobject eval(jstring source, jstring file) const;
+  typedef std::function<JSValueConst(const Context*, jvalue)> JavaToJavaScript;
+  JavaToJavaScript getJavaToJsConverter(jclass type, bool boxed) const;
+  typedef std::function<jvalue(const Context*, JSValueConst)> JavaScriptToJava;
+  JavaScriptToJava getJsToJavaConverter(jclass type, bool boxed) const;
+
+  jobject toJavaObject(const JSValue& value) const;
 
   JNIEnv *env;
   JSRuntime *jsRuntime;
