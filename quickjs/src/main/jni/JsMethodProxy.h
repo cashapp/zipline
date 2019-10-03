@@ -31,9 +31,10 @@ public:
   jobject call(Context *context, JSValue thisPointer, jobjectArray pArray) const;
 
   const std::string name;
-  jmethodID methodId;
-  typedef std::function<JSValueConst(const Context*, jvalue)> ArgumentLoader;
-  std::vector<ArgumentLoader> argumentLoaders;
+  const jmethodID methodId;
+private:
+  std::vector<std::function<JSValueConst(const Context*, jvalue)>> argumentLoaders;
+  std::function<jvalue(const Context*, const JSValueConst&)> resultLoader;
   bool isVarArgs;
 };
 
