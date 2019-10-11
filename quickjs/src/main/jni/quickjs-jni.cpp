@@ -35,7 +35,7 @@ Java_com_squareup_quickjs_QuickJs_destroyContext(JNIEnv *env, jobject type, jlon
 }
 
 
-extern "C" jobject JNICALL
+extern "C" JNIEXPORT jobject JNICALL
 Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv *env,
                                                                                     jobject type,
                                                                                     jlong context_,
