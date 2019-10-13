@@ -18,6 +18,7 @@ package com.squareup.quickjs;
 import java.util.Date;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
@@ -122,6 +123,7 @@ public final class QuickJsGetTest {
     }
   }
 
+  @Ignore("TODO: track JsMethodProxies.")
   @Test public void replaceProxiedObjectProxyReferencesOld() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
@@ -178,6 +180,7 @@ public final class QuickJsGetTest {
     assertThat(proxy1.getValue()).isEqualTo(proxy2.getValue());
   }
 
+  @Ignore("TODO: track JsMethodProxies.")
   @Test public void proxyCalledAfterObjectGarbageCollected() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };");
 
@@ -302,10 +305,10 @@ public final class QuickJsGetTest {
     try {
       printer.call(true, 42, 2.718281828459);
       fail();
-    } catch (ClassCastException expected) {
+    } catch (IllegalArgumentException expected) {
       assertThat(expected)
           .hasMessageThat()
-          .isEqualTo("Couldn't convert result of type java.lang.Double to java.lang.String");
+          .isEqualTo("Cannot convert return value 2.718281828459 to String");
     }
   }
 

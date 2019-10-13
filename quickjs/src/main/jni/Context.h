@@ -37,6 +37,7 @@ public:
   JavaScriptToJava getJsToJavaConverter(jclass type, bool boxed) const;
 
   jobject toJavaObject(const JSValue& value) const;
+  void throwJsException(const JSValue& value) const;
 
   JNIEnv *env;
   JSRuntime *jsRuntime;
