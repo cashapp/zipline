@@ -28,22 +28,23 @@ JsMethodProxy::JsMethodProxy(const Context* context, const char* name, jobject m
   const auto returnedClass = static_cast<jclass>(env->CallObjectMethod(method, getReturnType));
   resultLoader = context->getJsToJavaConverter(returnedClass, true);
   env->DeleteLocalRef(returnedClass);
+  if (!env->ExceptionCheck()) {
+    const jmethodID isVarArgsMethod = env->GetMethodID(methodClass, "isVarArgs", "()Z");
+    isVarArgs = env->CallBooleanMethod(method, isVarArgsMethod);
 
-  const jmethodID isVarArgsMethod = env->GetMethodID(methodClass, "isVarArgs", "()Z");
-  isVarArgs = env->CallBooleanMethod(method, isVarArgsMethod);
-
-  const jmethodID getParameterTypes =
-      env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
-  jobjectArray parameterTypes =
-      static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
-  const jsize numArgs = env->GetArrayLength(parameterTypes);
-  for (jsize i = 0; i < numArgs && !env->ExceptionCheck(); ++i) {
-    auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
-    argumentLoaders.push_back(
-        context->getJavaToJsConverter(static_cast<jclass>(parameterType), true));
-    env->DeleteLocalRef(parameterType);
+    const jmethodID getParameterTypes =
+        env->GetMethodID(methodClass, "getParameterTypes", "()[Ljava/lang/Class;");
+    jobjectArray parameterTypes =
+        static_cast<jobjectArray>(env->CallObjectMethod(method, getParameterTypes));
+    const jsize numArgs = env->GetArrayLength(parameterTypes);
+    for (jsize i = 0; i < numArgs && !env->ExceptionCheck(); ++i) {
+      auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
+      argumentLoaders.push_back(
+          context->getJavaToJsConverter(static_cast<jclass>(parameterType), true));
+      env->DeleteLocalRef(parameterType);
+    }
+    env->DeleteLocalRef(parameterTypes);
   }
-  env->DeleteLocalRef(parameterTypes);
   env->DeleteLocalRef(methodClass);
 }
 

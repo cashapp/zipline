@@ -15,6 +15,7 @@
  */
 #include "Context.h"
 #include <cstring>
+#include <memory>
 #include "JsObjectProxy.h"
 #include "JsMethodProxy.h"
 #include "ExceptionThrowers.h"
@@ -108,7 +109,7 @@ JsObjectProxy* Context::createObjectProxy(jstring name, jobjectArray methods) {
       jsObjectProxy = nullptr;
     }
   } else if (JS_IsException(obj)) {
-    throwJsException(env, this, obj);
+    throwJsException(obj);
   } else {
     const char* msg = JS_IsUndefined(obj)
                       ? "A global JavaScript object called %s was not found"
@@ -128,7 +129,7 @@ jobject Context::toJavaObject(const JSValueConst& value) const {
   jobject result;
   switch (JS_VALUE_GET_TAG(value)) {
     case JS_TAG_EXCEPTION: {
-      throwJsException(env, this, value);
+      throwJsException(value);
       result = nullptr;
       break;
     }
@@ -242,7 +243,7 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(jclass type, bool boxed)
         return result;
       };
     } else {
-      auto converter = getJavaToJsConverter(elementType, boxed);
+      auto converter = getJavaToJsConverter(elementType, true);
       return [converter](const Context* c, jvalue v) {
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
@@ -300,6 +301,10 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(jclass type, bool boxed)
       if (!v.l) return JS_NULL;
       return c->getJavaToJsConverter(c->env->GetObjectClass(v.l), true)(c, v);
     };
+  } else if (typeName == "void") {
+    return [](const Context*, jvalue) {
+      return JS_UNDEFINED;
+    };
   } else {
     // Throw an exception for unsupported argument type.
     throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
@@ -309,10 +314,339 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(jclass type, bool boxed)
 }
 
 Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed) const {
-  // TODO: switch on type parameter.
-  return [](const Context* c, const JSValueConst& value) {
-    jvalue result;
-    result.l = c->toJavaObject(value);
-    return result;
-  };
+  const auto typeName = getName(env, type);
+  if (!typeName.empty() && typeName[0] == '[') {
+    // type is an array.
+    const jmethodID method = env->GetMethodID(env->GetObjectClass(type),
+                                              "getComponentType",
+                                              "()Ljava/lang/Class;");
+    auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
+    const auto elementTypeName = getName(env, elementType);
+    if (elementTypeName == "double") {
+      return [](const Context* c, const JSValueConst& v) {
+        jvalue result;
+        if (JS_IsNull(v) || JS_IsUndefined(v)) {
+          result.l = nullptr;
+        } else if (JS_IsException(v)) {
+          result.l = nullptr;
+          c->throwJsException(v);
+        } else {
+          int length = 0;
+          auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
+          if (JS_ToInt32(c->jsContext, &length, jsLength)) {
+            result.l = nullptr;
+            c->throwJsException(jsLength);
+          } else {
+            result.l = c->env->NewDoubleArray(length);
+            for (int i = 0; i < length && !c->env->ExceptionCheck(); i++) {
+              double element;
+              auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
+              if (!JS_IsNumber(jsElement)) {
+                const auto str = JS_ToCString(c->jsContext, jsElement);
+                throwJavaException(c->env, "java/lang/IllegalArgumentException",
+                                   "Cannot convert return value %s to double", str);
+                JS_FreeCString(c->jsContext, str);
+              } else if (JS_ToFloat64(c->jsContext, &element, jsElement)) {
+                c->throwJsException(jsElement);
+              } else {
+                c->env->SetDoubleArrayRegion(static_cast<jdoubleArray>(result.l), i, 1, &element);
+              }
+              JS_FreeValue(c->jsContext, jsElement);
+            }
+          }
+          JS_FreeValue(c->jsContext, jsLength);
+        }
+        return result;
+      };
+    } else if (elementTypeName == "int") {
+      return [](const Context* c, const JSValueConst& v) {
+        jvalue result;
+        if (JS_IsNull(v) || JS_IsUndefined(v)) {
+          result.l = nullptr;
+        } else if (JS_IsException(v)) {
+          result.l = nullptr;
+          c->throwJsException(v);
+        } else {
+          int length = 0;
+          auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
+          if (JS_ToInt32(c->jsContext, &length, jsLength)) {
+            result.l = nullptr;
+            c->throwJsException(jsLength);
+          } else {
+            result.l = c->env->NewIntArray(length);
+            for (int i = 0; i < length && !c->env->ExceptionCheck(); i++) {
+              int element;
+              auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
+              if (!JS_IsInteger(jsElement)) {
+                const auto str = JS_ToCString(c->jsContext, jsElement);
+                throwJavaException(c->env, "java/lang/IllegalArgumentException",
+                                   "Cannot convert return value %s to int", str);
+                JS_FreeCString(c->jsContext, str);
+              } else if (JS_ToInt32(c->jsContext, &element, jsElement)) {
+                c->throwJsException(jsElement);
+              } else {
+                c->env->SetIntArrayRegion(static_cast<jintArray>(result.l), i, 1, &element);
+              }
+              JS_FreeValue(c->jsContext, jsElement);
+            }
+          }
+          JS_FreeValue(c->jsContext, jsLength);
+        }
+        return result;
+      };
+    } else if (elementTypeName == "boolean") {
+      return [](const Context* c, const JSValueConst& v) {
+        jvalue result;
+        if (JS_IsNull(v) || JS_IsUndefined(v)) {
+          result.l = nullptr;
+        } else if (JS_IsException(v)) {
+          result.l = nullptr;
+          c->throwJsException(v);
+        } else {
+          int length = 0;
+          auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
+          if (JS_ToInt32(c->jsContext, &length, jsLength)) {
+            result.l = nullptr;
+            c->throwJsException(jsLength);
+          } else {
+            result.l = c->env->NewBooleanArray(length);
+            for (int i = 0; i < length && !c->env->ExceptionCheck(); i++) {
+              auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
+              if (!JS_IsBool(jsElement)) {
+                const auto str = JS_ToCString(c->jsContext, jsElement);
+                throwJavaException(c->env, "java/lang/IllegalArgumentException",
+                                   "Cannot convert return value %s to boolean", str);
+                JS_FreeCString(c->jsContext, str);
+              } else {
+                int r = JS_ToBool(c->jsContext, jsElement);
+                if (r < 0) {
+                  c->throwJsException(jsElement);
+                } else {
+                  jboolean element = r != 0;
+                  c->env->SetBooleanArrayRegion(static_cast<jbooleanArray>(result.l), i, 1,
+                                                &element);
+                }
+              }
+              JS_FreeValue(c->jsContext, jsElement);
+            }
+          }
+          JS_FreeValue(c->jsContext, jsLength);
+        }
+        return result;
+      };
+    } else {
+      auto converter = getJsToJavaConverter(elementType, true);
+      // TODO: don't leak this
+      auto elementTypeGlobalRef(static_cast<jclass>(env->NewGlobalRef(elementType)));
+      return [converter, elementTypeGlobalRef](const Context* c, const JSValueConst& v) {
+        jvalue result;
+        if (JS_IsNull(v) || JS_IsUndefined(v)) {
+          result.l = nullptr;
+        } else if (JS_IsException(v)) {
+          result.l = nullptr;
+          c->throwJsException(v);
+        } else {
+          int length = 0;
+          auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
+          if (JS_ToInt32(c->jsContext, &length, jsLength)) {
+            result.l = nullptr;
+            c->throwJsException(jsLength);
+          } else {
+            result.l = c->env->NewObjectArray(length, elementTypeGlobalRef, nullptr);
+            for (int i = 0; i < length && !c->env->ExceptionCheck(); i++) {
+              auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
+              jvalue element = converter(c, jsElement);
+              JS_FreeValue(c->jsContext, jsElement);
+              if (c->env->ExceptionCheck()) break;
+              c->env->SetObjectArrayElement(static_cast<jobjectArray>(result.l), i, element.l);
+            }
+          }
+          JS_FreeValue(c->jsContext, jsLength);
+        }
+        return result;
+      };
+    }
+  }
+
+  if (typeName == "java.lang.String") {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      if (JS_IsNull(v) || JS_IsUndefined(v)) {
+        result.l = nullptr;
+      } else if (JS_IsException(v)) {
+        result.l = nullptr;
+        c->throwJsException(v);
+      } else if (!JS_IsString(v)) {
+        result.l = nullptr;
+        const auto str = JS_ToCString(c->jsContext, v);
+        throwJavaException(c->env, "java/lang/IllegalArgumentException",
+                           "Cannot convert return value %s to String", str);
+        JS_FreeCString(c->jsContext, str);
+      } else {
+        const auto str = JS_ToCString(c->jsContext, v);
+        result.l = c->env->NewStringUTF(str);
+        JS_FreeCString(c->jsContext, str);
+      }
+      return result;
+    };
+  } else if (typeName == "java.lang.Double" || (typeName == "double" && boxed)) {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      if (JS_IsNull(v) || JS_IsUndefined(v)) {
+        result.l = nullptr;
+      } else if (JS_IsException(v)) {
+        result.l = nullptr;
+        c->throwJsException(v);
+      } else {
+        if (JS_ToFloat64(c->jsContext, &result.d, v)) {
+          c->throwJsException(v);
+          result.l = nullptr;
+        } else {
+          result.l = c->env->CallStaticObjectMethodA(c->doubleClass, c->doubleValueOf, &result);
+        }
+      }
+      return result;
+    };
+  } else if (typeName == "java.lang.Integer" || (typeName == "int" && boxed)) {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      if (JS_IsNull(v) || JS_IsUndefined(v)) {
+        result.l = nullptr;
+      } else if (JS_IsException(v)) {
+        result.l = nullptr;
+        c->throwJsException(v);
+      } else {
+        if (JS_ToInt32(c->jsContext, &result.i, v)) {
+          c->throwJsException(v);
+          result.l = nullptr;
+        } else {
+          result.l = c->env->CallStaticObjectMethodA(c->integerClass, c->integerValueOf, &result);
+        }
+      }
+      return result;
+    };
+  } else if (typeName == "java.lang.Boolean" || (typeName == "boolean" && boxed)) {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      if (JS_IsNull(v) || JS_IsUndefined(v)) {
+        result.l = nullptr;
+      } else if (JS_IsException(v)) {
+        result.l = nullptr;
+        c->throwJsException(v);
+      } else {
+        int r = JS_ToBool(c->jsContext, v);
+        if (r < 0) {
+          c->throwJsException(v);
+          result.l = nullptr;
+        } else {
+          result.z = r != 0;
+          result.l = c->env->CallStaticObjectMethodA(c->booleanClass, c->booleanValueOf, &result);
+        }
+      }
+      return result;
+    };
+  } else if (typeName == "double") {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      if (!JS_IsNumber(v)) {
+        result.l = nullptr;
+        const auto str = JS_ToCString(c->jsContext, v);
+        throwJavaException(c->env, "java/lang/IllegalArgumentException",
+                           "Cannot convert return value %s to double", str);
+        JS_FreeCString(c->jsContext, str);
+      } else if (JS_IsException(v)) {
+        result.l = nullptr;
+        c->throwJsException(v);
+      } else if (JS_ToFloat64(c->jsContext, &result.d, v)) {
+        c->throwJsException(v);
+      }
+      return result;
+    };
+  } else if (typeName == "int") {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      if (!JS_IsInteger(v)) {
+        result.l = nullptr;
+        const auto str = JS_ToCString(c->jsContext, v);
+        throwJavaException(c->env, "java/lang/IllegalArgumentException",
+                           "Cannot convert return value %s to int", str);
+        JS_FreeCString(c->jsContext, str);
+      } else if (JS_IsException(v)) {
+        result.l = nullptr;
+        c->throwJsException(v);
+      } else if (JS_ToInt32(c->jsContext, &result.i, v)) {
+        c->throwJsException(v);
+      }
+      return result;
+    };
+  } else if (typeName == "boolean") {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      if (!JS_IsBool(v)) {
+        result.l = nullptr;
+        const auto str = JS_ToCString(c->jsContext, v);
+        throwJavaException(c->env, "java/lang/IllegalArgumentException",
+                           "Cannot convert return value %s to boolean", str);
+        JS_FreeCString(c->jsContext, str);
+      } else if (JS_IsException(v)) {
+        result.l = nullptr;
+        c->throwJsException(v);
+      } else {
+        int r = JS_ToBool(c->jsContext, v);
+        if (r < 0) {
+          c->throwJsException(v);
+        }
+        result.z = r != 0;
+      }
+      return result;
+    };
+  } else if (typeName == "java.lang.Object") {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      result.l = c->toJavaObject(v);
+      return result;
+    };
+  } else if (typeName == "void") {
+    return [](const Context* c, const JSValueConst& v) {
+      jvalue result;
+      result.l = nullptr;
+      if (JS_IsException(v)) {
+        c->throwJsException(v);
+      }
+      return result;
+    };
+  } else {
+    // Throw an exception for unsupported argument type.
+    throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
+                       typeName.c_str());
+    return [](const Context*, const JSValueConst&) {
+      jvalue result;
+      result.l = nullptr;
+      return result;
+    };
+  }
+}
+
+void Context::throwJsException(const JSValue& value) const {
+  JSValue exceptionValue = JS_GetException(jsContext);
+
+  JSValue messageValue = JS_GetPropertyStr(jsContext, exceptionValue, "message");
+  JSValue stackValue = JS_GetPropertyStr(jsContext, exceptionValue, "stack");
+
+  // If the JS does a `throw 2;`, there won't be a message property.
+  const char* message = JS_ToCString(jsContext,
+                                     JS_IsUndefined(messageValue) ? exceptionValue : messageValue);
+  JS_FreeValue(jsContext, messageValue);
+
+  const char* stack = JS_ToCString(jsContext, stackValue);
+  JS_FreeValue(jsContext, stackValue);
+  JS_FreeValue(jsContext, exceptionValue);
+  jobject exception = env->NewObject(quickJsExceptionClass,
+                                     quickJsExceptionConstructor,
+                                     env->NewStringUTF(message),
+                                     env->NewStringUTF(stack));
+  JS_FreeCString(jsContext, stack);
+  JS_FreeCString(jsContext, message);
+
+  env->Throw(static_cast<jthrowable>(exception));
 }

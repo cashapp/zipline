@@ -23,6 +23,5 @@ class Context;
 
 void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...);
 void throwJsExceptionFmt(JNIEnv *env, const Context *context, const char *fmt, ...);
-void throwJsException(JNIEnv *env, const Context *context, JSValue value);
 
 #endif //DUKTAPE_ANDROID_EXCEPTIONTHROWERS_H
