@@ -16,14 +16,13 @@
 #include "Context.h"
 #include <cstring>
 #include <memory>
+#include "JavaObjectProxy.h"
 #include "JsObjectProxy.h"
 #include "JsMethodProxy.h"
 #include "ExceptionThrowers.h"
+#include "quickjs/quickjs.h"
 
-
-namespace {
-
-std::string getName(JNIEnv* env, jclass javaClass) {
+std::string getName(JNIEnv* env, jobject javaClass) {
   auto classType = env->GetObjectClass(javaClass);
   const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
   auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
@@ -34,6 +33,14 @@ std::string getName(JNIEnv* env, jclass javaClass) {
   env->DeleteLocalRef(javaString);
   env->DeleteLocalRef(classType);
   return str;
+}
+
+namespace {
+
+JSClassID classId = 0;
+
+void jsFinalize(JSRuntime*, JSValue val) {
+  delete reinterpret_cast<JavaObjectProxy*>(JS_GetOpaque(val, classId));
 }
 
 } // anonymous namespace
@@ -69,7 +76,7 @@ Context::~Context() {
   JS_FreeRuntime(jsRuntime);
 }
 
-JsObjectProxy* Context::createObjectProxy(jstring name, jobjectArray methods) {
+JsObjectProxy* Context::getObjectProxy(jstring name, jobjectArray methods) {
   JSValue global = JS_GetGlobalObject(jsContext);
 
   const char* nameStr = env->GetStringUTFChars(name, 0);
@@ -123,6 +130,42 @@ JsObjectProxy* Context::createObjectProxy(jstring name, jobjectArray methods) {
   JS_FreeValue(jsContext, global);
 
   return jsObjectProxy;
+}
+
+void Context::setObjectProxy(jstring name, jobject object, jobjectArray methods) {
+  auto global = JS_GetGlobalObject(jsContext);
+
+  const char* nameStr = env->GetStringUTFChars(name, 0);
+
+  const auto objName = JS_NewAtom(jsContext, nameStr);
+  if (!JS_HasProperty(jsContext, global, objName)) {
+    if (classId == 0) {
+      JS_NewClassID(&classId);
+      JSClassDef classDef;
+      memset(&classDef, 0, sizeof(JSClassDef));
+      classDef.class_name = "QuickJsAndroidProxy";
+      classDef.finalizer = jsFinalize;
+      if (JS_NewClass(jsRuntime, classId, &classDef)) {
+        classId = 0;
+        throwJavaException(env, "java/lang/NullPointerException",
+                           "Failed to allocate JavaScript proxy class");
+      }
+    }
+    if (classId != 0) {
+      auto proxy = JS_NewObjectClass(jsContext, classId);
+      if (JS_IsException(proxy) || JS_SetProperty(jsContext, global, objName, proxy) <= 0) {
+        throwJsException(proxy);
+      } else {
+        JS_SetOpaque(proxy, new JavaObjectProxy(this, nameStr, object, methods, proxy));
+      }
+    }
+  } else {
+    throwJavaException(env, "java/lang/IllegalArgumentException",
+                       "A global object called %s already exists", nameStr);
+  }
+  JS_FreeAtom(jsContext, objName);
+  env->ReleaseStringUTFChars(name, nameStr);
+  JS_FreeValue(jsContext, global);
 }
 
 jobject Context::toJavaObject(const JSValueConst& value) const {
@@ -309,7 +352,9 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(jclass type, bool boxed)
     // Throw an exception for unsupported argument type.
     throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                        typeName.c_str());
-    return [](const Context*, jvalue) { return JS_NULL; };
+    return [typeName](const Context* context, jvalue) {
+      return JS_ThrowTypeError(context->jsContext, "Unsupported Java type %s", typeName.c_str());
+    };
   }
 }
 
@@ -344,7 +389,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed)
               if (!JS_IsNumber(jsElement)) {
                 const auto str = JS_ToCString(c->jsContext, jsElement);
                 throwJavaException(c->env, "java/lang/IllegalArgumentException",
-                                   "Cannot convert return value %s to double", str);
+                                   "Cannot convert value %s to double", str);
                 JS_FreeCString(c->jsContext, str);
               } else if (JS_ToFloat64(c->jsContext, &element, jsElement)) {
                 c->throwJsException(jsElement);
@@ -380,7 +425,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed)
               if (!JS_IsInteger(jsElement)) {
                 const auto str = JS_ToCString(c->jsContext, jsElement);
                 throwJavaException(c->env, "java/lang/IllegalArgumentException",
-                                   "Cannot convert return value %s to int", str);
+                                   "Cannot convert value %s to int", str);
                 JS_FreeCString(c->jsContext, str);
               } else if (JS_ToInt32(c->jsContext, &element, jsElement)) {
                 c->throwJsException(jsElement);
@@ -415,7 +460,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed)
               if (!JS_IsBool(jsElement)) {
                 const auto str = JS_ToCString(c->jsContext, jsElement);
                 throwJavaException(c->env, "java/lang/IllegalArgumentException",
-                                   "Cannot convert return value %s to boolean", str);
+                                   "Cannot convert value %s to boolean", str);
                 JS_FreeCString(c->jsContext, str);
               } else {
                 int r = JS_ToBool(c->jsContext, jsElement);
@@ -480,7 +525,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed)
         result.l = nullptr;
         const auto str = JS_ToCString(c->jsContext, v);
         throwJavaException(c->env, "java/lang/IllegalArgumentException",
-                           "Cannot convert return value %s to String", str);
+                           "Cannot convert value %s to String", str);
         JS_FreeCString(c->jsContext, str);
       } else {
         const auto str = JS_ToCString(c->jsContext, v);
@@ -552,7 +597,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed)
         result.l = nullptr;
         const auto str = JS_ToCString(c->jsContext, v);
         throwJavaException(c->env, "java/lang/IllegalArgumentException",
-                           "Cannot convert return value %s to double", str);
+                           "Cannot convert value %s to double", str);
         JS_FreeCString(c->jsContext, str);
       } else if (JS_IsException(v)) {
         result.l = nullptr;
@@ -569,7 +614,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed)
         result.l = nullptr;
         const auto str = JS_ToCString(c->jsContext, v);
         throwJavaException(c->env, "java/lang/IllegalArgumentException",
-                           "Cannot convert return value %s to int", str);
+                           "Cannot convert value %s to int", str);
         JS_FreeCString(c->jsContext, str);
       } else if (JS_IsException(v)) {
         result.l = nullptr;
@@ -586,7 +631,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed)
         result.l = nullptr;
         const auto str = JS_ToCString(c->jsContext, v);
         throwJavaException(c->env, "java/lang/IllegalArgumentException",
-                           "Cannot convert return value %s to boolean", str);
+                           "Cannot convert value %s to boolean", str);
         JS_FreeCString(c->jsContext, str);
       } else if (JS_IsException(v)) {
         result.l = nullptr;
@@ -619,7 +664,9 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(jclass type, bool boxed)
     // Throw an exception for unsupported argument type.
     throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                        typeName.c_str());
-    return [](const Context*, const JSValueConst&) {
+    return [typeName](const Context* context, const JSValueConst&) {
+      throwJavaException(context->env, "java/lang/IllegalArgumentException",
+                         "Unsupported Java type %s", typeName.c_str());
       jvalue result;
       result.l = nullptr;
       return result;
@@ -649,4 +696,13 @@ void Context::throwJsException(const JSValue& value) const {
   JS_FreeCString(jsContext, message);
 
   env->Throw(static_cast<jthrowable>(exception));
+}
+
+JSValue
+Context::jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
+  auto proxy = reinterpret_cast<const JavaObjectProxy*>(JS_GetOpaque(this_val, classId));
+  if (proxy) {
+    return proxy->call(magic, argc, argv);
+  }
+  return JS_ThrowReferenceError(ctx, "Null Java Proxy");
 }

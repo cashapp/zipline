@@ -308,7 +308,7 @@ public final class QuickJsGetTest {
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
           .hasMessageThat()
-          .isEqualTo("Cannot convert return value 2.718281828459 to String");
+          .isEqualTo("Cannot convert value 2.718281828459 to String");
     }
   }
 
@@ -468,7 +468,7 @@ public final class QuickJsGetTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Cannot convert return value 3 to String");
+          .hasMessageThat().isEqualTo("Cannot convert value 3 to String");
     }
   }
 
@@ -494,7 +494,7 @@ public final class QuickJsGetTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Cannot convert return value null to double");
+          .hasMessageThat().isEqualTo("Cannot convert value null to double");
     }
   }
 
@@ -526,7 +526,7 @@ public final class QuickJsGetTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Cannot convert return value null to double");
+          .hasMessageThat().isEqualTo("Cannot convert value null to double");
     }
   }
 
@@ -557,7 +557,7 @@ public final class QuickJsGetTest {
       fail();
     } catch (IllegalArgumentException expected) {
       assertThat(expected)
-          .hasMessageThat().isEqualTo("Cannot convert return value null to boolean");
+          .hasMessageThat().isEqualTo("Cannot convert value null to boolean");
     }
   }
 

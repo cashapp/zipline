@@ -71,6 +71,35 @@ public final class QuickJs implements Closeable {
   }
 
   /**
+   * Provides {@code object} to JavaScript as a global object called {@code name}. {@code type}
+   * defines the interface implemented by {@code object} that will be accessible to JavaScript.
+   * {@code type} must be an interface that does not extend any other interfaces, and cannot define
+   * any overloaded methods.
+   * <p>Methods of the interface may return {@code void} or any of the following supported argument
+   * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
+   * {@link Double}, {@link String}.
+   */
+  public synchronized <T> void set(@NonNull String name, @NonNull Class<T> type,
+      @NonNull T object) {
+    if (!type.isInterface()) {
+      throw new UnsupportedOperationException("Only interfaces can be bound. Received: " + type);
+    }
+    if (type.getInterfaces().length > 0) {
+      throw new UnsupportedOperationException(type + " must not extend other interfaces");
+    }
+    if (!type.isInstance(object)) {
+      throw new IllegalArgumentException(object.getClass() + " is not an instance of " + type);
+    }
+    LinkedHashMap<String, Method> methods = new LinkedHashMap<>();
+    for (Method method : type.getMethods()) {
+      if (methods.put(method.getName(), method) != null) {
+        throw new UnsupportedOperationException(method.getName() + " is overloaded in " + type);
+      }
+    }
+    set(context, name, object, methods.values().toArray());
+  }
+
+  /**
    * Attaches to a global JavaScript object called {@code name} that implements {@code type}.
    * {@code type} defines the interface implemented in JavaScript that will be accessible to Java.
    * {@code type} must be an interface that does not extend any other interfaces, and cannot define
@@ -140,12 +169,9 @@ public final class QuickJs implements Closeable {
   }
 
   private static native long createContext();
-
   private native void destroyContext(long context);
-
   private native Object evaluate(long context, String sourceCode, String fileName);
-
   private native long get(long context, String name, Object[] methods);
-
+  private native void set(long context, String name, Object object, Object[] methods);
   private native Object call(long context, long instance, Object method, Object[] args);
 }
