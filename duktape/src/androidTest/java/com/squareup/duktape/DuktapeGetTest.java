@@ -122,6 +122,20 @@ public final class DuktapeGetTest {
     }
   }
 
+  @Test public void proxyCallThrowsIncludeStacktrace() {
+    duktape.evaluate("function nop() { return 1; }");
+    duktape.evaluate("var value = { getValue: function() { return nope(); } };", "test.js");
+    TestInterface proxy = duktape.get("value", TestInterface.class);
+
+    try {
+      proxy.getValue();
+      fail();
+    } catch (DuktapeException expected) {
+      assertThat(expected.getStackTrace()).asList()
+          .contains(new StackTraceElement("JavaScript", "[anon]", "test.js", 1));
+    }
+  }
+
   @Test public void replaceProxiedObjectProxyReferencesOld() {
     duktape.evaluate("var value = { getValue: function() { return '8675309'; } };");
 

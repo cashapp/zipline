@@ -31,7 +31,7 @@ public final class DuktapeException extends RuntimeException {
    * native code.
    */
   private final static Pattern STACK_TRACE_PATTERN =
-      Pattern.compile("\\s*at ([^\\s^\\[]+) \\(([^\\s]+):(\\d+)\\).*$");
+      Pattern.compile("\\s*at ([^\\s]+) \\(([^\\s]+(?<!cpp)):(\\d+)\\).*$");
   /** Java StackTraceElements require a class name.  We don't have one in JS, so use this. */
   private final static String STACK_TRACE_CLASS_NAME = "JavaScript";
 
@@ -58,7 +58,8 @@ public final class DuktapeException extends RuntimeException {
       if (!spliced
           && stackTraceElement.isNativeMethod()
           && stackTraceElement.getClassName().equals(Duktape.class.getName())
-          && stackTraceElement.getMethodName().equals("evaluate")) {
+          && (stackTraceElement.getMethodName().equals("evaluate")
+          ||  stackTraceElement.getMethodName().equals("call"))) {
         for (int i = 1; i < lines.length; ++i) {
           StackTraceElement jsElement = toStackTraceElement(lines[i]);
           if (jsElement == null) {
