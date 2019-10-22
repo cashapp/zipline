@@ -23,29 +23,26 @@ JavaObjectProxy::JavaObjectProxy(Context* c, const char* name, jobject object,
     : context(c), name(name), javaThis(c->env->NewGlobalRef(object)) {
   auto env = context->env;
   const auto numMethods = env->GetArrayLength(methods);
-  functions = new JSCFunctionListEntry[numMethods];
+  functions.resize(numMethods);
+  auto f = functions.data();
   for (int i = 0; i < numMethods && !env->ExceptionCheck(); i++) {
     auto method = env->GetObjectArrayElement(methods, i);
     if (env->ExceptionCheck()) {
       break;
     }
-    const auto methodName = getName(env, method);
-    functions[i] = JS_CFUNC_MAGIC_DEF(strdup(methodName.c_str()), 0, Context::jsCall,
-                                      static_cast<short>(i));
     proxies.emplace_back(context, method);
+    const auto& proxyMethod = proxies.back();
+    f[i] = JS_CFUNC_MAGIC_DEF(proxyMethod.name.c_str(), static_cast<uint8_t>(proxyMethod.numArgs()),
+                              Context::jsCall, static_cast<short>(i));
     env->DeleteLocalRef(method);
   }
 
   if (!env->ExceptionCheck()) {
-    JS_SetPropertyFunctionList(context->jsContext, proxy, functions, numMethods);
+    JS_SetPropertyFunctionList(context->jsContext, proxy, functions.data(), functions.size());
   }
 }
 
 JavaObjectProxy::~JavaObjectProxy() {
-  for (int i = 0; i < proxies.size(); i++) {
-    free(const_cast<char*>(functions[i].name));
-  }
-  delete[] functions;
   context->env->DeleteGlobalRef(javaThis);
 }
 

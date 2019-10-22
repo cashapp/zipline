@@ -19,7 +19,8 @@
 #include "Context.h"
 #include "ExceptionThrowers.h"
 
-JavaMethodProxy::JavaMethodProxy(Context* context, jobject method) {
+JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
+    : name(getName(context->env, method)) {
   auto env = context->env;
   auto methodId = env->FromReflectedMethod(method);
   jclass methodClass = env->GetObjectClass(method);

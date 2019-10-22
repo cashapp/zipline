@@ -37,7 +37,7 @@ private:
   Context* context;
   const std::string name;
   jobject javaThis;
-  JSCFunctionListEntry* functions;
+  std::vector<JSCFunctionListEntry> functions;
   std::vector<JavaMethodProxy> proxies;
 };
 

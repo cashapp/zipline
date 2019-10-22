@@ -19,6 +19,7 @@
 #include <jni.h>
 #include <functional>
 #include <vector>
+#include <string>
 #include "quickjs/quickjs.h"
 
 class Context;
@@ -29,6 +30,12 @@ public:
   ~JavaMethodProxy();
 
   JSValue invoke(Context* context, jobject javaThis, int argc, JSValueConst *argv) const;
+
+  uint32_t numArgs() const {
+    return argumentLoaders.size();
+  }
+
+  const std::string name;
 
 private:
   std::vector<std::function<jvalue(const Context*, const JSValueConst&)>> argumentLoaders;
