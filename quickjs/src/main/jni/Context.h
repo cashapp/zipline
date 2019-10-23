@@ -29,7 +29,8 @@ public:
   Context(JNIEnv *env);
   ~Context();
 
-  JsObjectProxy* createObjectProxy(jstring name, jobjectArray methods);
+  JsObjectProxy* getObjectProxy(jstring name, jobjectArray methods);
+  void setObjectProxy(jstring name, jobject object, jobjectArray methods);
   jobject eval(jstring source, jstring file) const;
   typedef std::function<JSValueConst(const Context*, jvalue)> JavaToJavaScript;
   JavaToJavaScript getJavaToJsConverter(jclass type, bool boxed) const;
@@ -39,6 +40,9 @@ public:
   jobject toJavaObject(const JSValue& value) const;
   void throwJsException(const JSValue& value) const;
 
+  static JSValue jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic);
+
+  // TODO: store the JavaVM, not the JNIEnv.
   JNIEnv *env;
   JSRuntime *jsRuntime;
   JSContext *jsContext;
@@ -56,5 +60,7 @@ public:
   jmethodID quickJsExceptionConstructor;
   std::vector<JsObjectProxy*> objectProxies;
 };
+
+std::string getName(JNIEnv* env, jobject javaClass);
 
 #endif //DUKTAPE_ANDROID_CONTEXT_H

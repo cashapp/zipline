@@ -20,7 +20,7 @@
 #include "ExceptionThrowers.h"
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_squareup_quickjs_QuickJs_createContext(JNIEnv *env, jclass type) {
+Java_com_squareup_quickjs_QuickJs_createContext(JNIEnv* env, jclass type) {
   Context* c = new(std::nothrow) Context(env);
   if (!c || !c->jsContext || !c->jsRuntime) {
     delete c;
@@ -30,18 +30,18 @@ Java_com_squareup_quickjs_QuickJs_createContext(JNIEnv *env, jclass type) {
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_squareup_quickjs_QuickJs_destroyContext(JNIEnv *env, jobject type, jlong context) {
+Java_com_squareup_quickjs_QuickJs_destroyContext(JNIEnv* env, jobject type, jlong context) {
   delete reinterpret_cast<Context*>(context);
 }
 
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv *env,
+Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv* env,
                                                                                     jobject type,
                                                                                     jlong context_,
                                                                                     jstring sourceCode,
                                                                                     jstring fileName) {
-  Context *context = reinterpret_cast<Context *>(context_);
+  Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",
                        "Null QuickJs context - did you close your QuickJs?");
@@ -51,29 +51,41 @@ Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_Strin
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_squareup_quickjs_QuickJs_get(JNIEnv *env, jobject thiz, jlong _context, jstring name,
+Java_com_squareup_quickjs_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context, jstring name,
                                       jobjectArray methods) {
-  Context *context = reinterpret_cast<Context *>(_context);
+  Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",
                        "Null QuickJs context - did you close your QuickJs?");
     return 0L;
   }
 
-  return reinterpret_cast<jlong>(context->createObjectProxy(name, methods));
+  return reinterpret_cast<jlong>(context->getObjectProxy(name, methods));
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_squareup_quickjs_QuickJs_set(JNIEnv* env, jobject thiz, jlong _context, jstring name,
+                                      jobject object, jobjectArray methods) {
+  Context* context = reinterpret_cast<Context*>(_context);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return;
+  }
+  context->setObjectProxy(name, object, methods);
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_squareup_quickjs_QuickJs_call(JNIEnv *env, jobject thiz, jlong _context, jlong instance,
+Java_com_squareup_quickjs_QuickJs_call(JNIEnv* env, jobject thiz, jlong _context, jlong instance,
                                        jobject method, jobjectArray args) {
-  Context *context = reinterpret_cast<Context *>(_context);
+  Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",
                        "Null QuickJs context - did you close your QuickJs?");
     return nullptr;
   }
 
-  const JsObjectProxy *jsObjectProxy = reinterpret_cast<const JsObjectProxy *>(instance);
+  const JsObjectProxy* jsObjectProxy = reinterpret_cast<const JsObjectProxy*>(instance);
   if (!jsObjectProxy) {
     throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
     return nullptr;

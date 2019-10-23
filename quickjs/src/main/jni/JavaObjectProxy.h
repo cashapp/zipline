@@ -1,0 +1,44 @@
+/*
+ * Copyright (C) 2019 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#ifndef DUKTAPE_ANDROID_JAVAOBJECTPROXY_H
+#define DUKTAPE_ANDROID_JAVAOBJECTPROXY_H
+
+#include <jni.h>
+#include <string>
+#include <vector>
+#include "quickjs/quickjs.h"
+
+class Context;
+class JavaMethodProxy;
+
+class JavaObjectProxy {
+public:
+  JavaObjectProxy(Context*, const char* name, jobject object, jobjectArray methods,
+                  JSValueConst proxy);
+
+  ~JavaObjectProxy();
+
+  JSValue call(int magic, int argc, JSValueConst* argv) const;
+
+private:
+  Context* context;
+  const std::string name;
+  jobject javaThis;
+  std::vector<JSCFunctionListEntry> functions;
+  std::vector<JavaMethodProxy> proxies;
+};
+
+#endif //DUKTAPE_ANDROID_JAVAOBJECTPROXY_H
