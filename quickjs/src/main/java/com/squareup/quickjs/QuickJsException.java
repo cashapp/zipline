@@ -33,7 +33,7 @@ public final class QuickJsException extends RuntimeException {
    * native code.
    */
   private final static Pattern STACK_TRACE_PATTERN =
-      Pattern.compile("\\s*at ([^\\s^\\[]+) \\(([^\\s]+):(\\d+)\\).*$");
+      Pattern.compile("\\s*at ([^\\s]+) \\(([^\\s]+(?<!cpp))[:(\\d+)]?\\).*$");
 
   /** Java StackTraceElements require a class name.  We don't have one in JS, so use this. */
   private final static String STACK_TRACE_CLASS_NAME = "JavaScript";
@@ -65,7 +65,8 @@ public final class QuickJsException extends RuntimeException {
       if (!spliced
           && stackTraceElement.isNativeMethod()
           && stackTraceElement.getClassName().equals(QuickJs.class.getName())
-          && stackTraceElement.getMethodName().equals("evaluate")) {
+          && (stackTraceElement.getMethodName().equals("evaluate")
+          || stackTraceElement.getMethodName().equals("call"))) {
         for (String line : lines) {
           StackTraceElement jsElement = toStackTraceElement(line);
           if (jsElement == null) {
@@ -87,6 +88,6 @@ public final class QuickJsException extends RuntimeException {
       return null;
     }
     return new StackTraceElement(STACK_TRACE_CLASS_NAME, m.group(1), m.group(2),
-        Integer.parseInt(m.group(3)));
+        m.groupCount() > 3 ? Integer.parseInt(m.group(3)) : -1);
   }
 }

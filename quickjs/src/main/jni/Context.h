@@ -37,8 +37,9 @@ public:
   typedef std::function<jvalue(const Context*, JSValueConst)> JavaScriptToJava;
   JavaScriptToJava getJsToJavaConverter(jclass type, bool boxed) const;
 
-  jobject toJavaObject(const JSValue& value) const;
+  jobject toJavaObject(const JSValue& value, bool throwOnUnsupportedType = true) const;
   void throwJsException(const JSValue& value) const;
+  JSValue throwJavaExceptionFromJs() const;
 
   static JSValue jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic);
 
