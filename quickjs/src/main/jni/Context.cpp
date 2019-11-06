@@ -168,7 +168,7 @@ void Context::setObjectProxy(jstring name, jobject object, jobjectArray methods)
   JS_FreeValue(jsContext, global);
 }
 
-jobject Context::toJavaObject(const JSValueConst& value) const {
+jobject Context::toJavaObject(const JSValueConst& value, bool throwOnUnsupportedType) const {
   jobject result;
   switch (JS_VALUE_GET_TAG(value)) {
     case JS_TAG_EXCEPTION: {
@@ -205,6 +205,11 @@ jobject Context::toJavaObject(const JSValueConst& value) const {
       break;
     }
 
+    case JS_TAG_NULL:
+    case JS_TAG_UNDEFINED:
+      result = nullptr;
+      break;
+
     case JS_TAG_OBJECT:
       if (JS_IsArray(jsContext, value)) {
         const auto arrayLength = JS_VALUE_GET_INT(JS_GetPropertyStr(jsContext, value, "length"));
@@ -217,10 +222,12 @@ jobject Context::toJavaObject(const JSValueConst& value) const {
         break;
       }
       // Fall through.
-
-    case JS_TAG_NULL:
-    case JS_TAG_UNDEFINED:
     default:
+      if (throwOnUnsupportedType) {
+        auto str = JS_ToCString(jsContext, value);
+        throwJsExceptionFmt(env, this, "Cannot marshal value %s to Java %d", str);
+        JS_FreeCString(jsContext, str);
+      }
       result = nullptr;
       break;
   }
@@ -236,7 +243,7 @@ jobject Context::eval(jstring source, jstring file) const {
   env->ReleaseStringUTFChars(source, sourceCode);
   env->ReleaseStringUTFChars(file, fileName);
 
-  jobject result = toJavaObject(evalValue);
+  jobject result = toJavaObject(evalValue, false);
 
   JS_FreeValue(jsContext, evalValue);
 
@@ -688,14 +695,41 @@ void Context::throwJsException(const JSValue& value) const {
   const char* stack = JS_ToCString(jsContext, stackValue);
   JS_FreeValue(jsContext, stackValue);
   JS_FreeValue(jsContext, exceptionValue);
-  jobject exception = env->NewObject(quickJsExceptionClass,
-                                     quickJsExceptionConstructor,
-                                     env->NewStringUTF(message),
-                                     env->NewStringUTF(stack));
+
+  jthrowable cause = static_cast<jthrowable>(JS_GetContextOpaque(jsContext));
+  JS_SetContextOpaque(jsContext, nullptr);
+
+  jobject exception;
+  if (cause) {
+    exception = env->NewLocalRef(cause);
+    env->DeleteGlobalRef(cause);
+
+    // add the JavaScript stack to this exception.
+    const jmethodID addJavaScriptStack =
+        env->GetStaticMethodID(quickJsExceptionClass,
+                               "addJavaScriptStack",
+                               "(Ljava/lang/Throwable;Ljava/lang/String;)V");
+    env->CallStaticVoidMethod(quickJsExceptionClass, addJavaScriptStack, exception,
+                              env->NewStringUTF(stack));
+  } else {
+    exception = env->NewObject(quickJsExceptionClass,
+                               quickJsExceptionConstructor,
+                               env->NewStringUTF(message),
+                               env->NewStringUTF(stack));
+  }
+
   JS_FreeCString(jsContext, stack);
   JS_FreeCString(jsContext, message);
 
   env->Throw(static_cast<jthrowable>(exception));
+}
+
+JSValue Context::throwJavaExceptionFromJs() const {
+  assert(env->ExceptionCheck()); // There must be something to throw.
+  assert(JS_GetContextOpaque(jsContext) == nullptr); // There can't be a pending thrown exception.
+  JS_SetContextOpaque(jsContext, env->NewGlobalRef(env->ExceptionOccurred()));
+  env->ExceptionClear();
+  return JS_ThrowInternalError(jsContext, "Java Exception");
 }
 
 JSValue

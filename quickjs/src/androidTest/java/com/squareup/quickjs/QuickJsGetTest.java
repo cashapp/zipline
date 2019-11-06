@@ -123,6 +123,21 @@ public final class QuickJsGetTest {
     }
   }
 
+  @Test public void proxyCallThrowsIncludeStacktrace() {
+    quickJs.evaluate("function nop() { return 1; }");
+    quickJs.evaluate("var value = { getValue: function() { return nope(); } };", "test.js");
+    TestInterface proxy = quickJs.get("value", TestInterface.class);
+
+    try {
+      proxy.getValue();
+      fail();
+    } catch (QuickJsException expected) {
+      assertThat(expected.getStackTrace()[0].toString()).isEqualTo("JavaScript.getValue(test.js)");
+      assertThat(expected.getStackTrace()[1].toString())
+          .isEqualTo("com.squareup.quickjs.QuickJs.call(Native Method)");
+    }
+  }
+
   @Ignore("TODO: track JsMethodProxies.")
   @Test public void replaceProxiedObjectProxyReferencesOld() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };");

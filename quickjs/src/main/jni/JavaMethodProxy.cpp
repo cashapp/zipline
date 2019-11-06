@@ -55,8 +55,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
           if (!context->env->ExceptionCheck()) {
             return JS_UNDEFINED;
           } else {
-            // TODO: steal code from checkRethrowDuktapeError and queueJavaExceptionForDuktapeError
-            return JS_ThrowInternalError(context->jsContext, "Java Exception");
+            return context->throwJavaExceptionFromJs();
           }
         };
       } else if (returnTypeName == "boolean") {
@@ -68,8 +67,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
           if (!context->env->ExceptionCheck()) {
             jsResult = resultLoader(context, result);
           } else {
-            // TODO: steal code from checkRethrowDuktapeError and queueJavaExceptionForDuktapeError
-            jsResult = JS_ThrowInternalError(context->jsContext, "Java Exception");
+            jsResult = context->throwJavaExceptionFromJs();
           }
           return jsResult;
         };
@@ -82,8 +80,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
           if (!context->env->ExceptionCheck()) {
             jsResult = resultLoader(context, result);
           } else {
-            // TODO: steal code from checkRethrowDuktapeError and queueJavaExceptionForDuktapeError
-            jsResult = JS_ThrowInternalError(context->jsContext, "Java Exception");
+            jsResult = context->throwJavaExceptionFromJs();
           }
           return jsResult;
         };
@@ -96,8 +93,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
           if (!context->env->ExceptionCheck()) {
             jsResult = resultLoader(context, result);
           } else {
-            // TODO: steal code from checkRethrowDuktapeError and queueJavaExceptionForDuktapeError
-            jsResult = JS_ThrowInternalError(context->jsContext, "Java Exception");
+            jsResult = context->throwJavaExceptionFromJs();
           }
           return jsResult;
         };
@@ -110,8 +106,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
           if (!context->env->ExceptionCheck()) {
             jsResult = resultLoader(context, result);
           } else {
-            // TODO: steal code from checkRethrowDuktapeError and queueJavaExceptionForDuktapeError
-            jsResult = JS_ThrowInternalError(context->jsContext, "Java Exception");
+            jsResult = context->throwJavaExceptionFromJs();
           }
           return jsResult;
         };
@@ -142,8 +137,7 @@ JavaMethodProxy::invoke(Context* context, jobject javaThis, int argc, JSValueCon
     args[i] = argumentLoaders[i](context, argv[i]);
     if (env->ExceptionCheck()) {
       env->PopLocalFrame(nullptr);
-      // TODO: steal code from checkRethrowDuktapeError and queueJavaExceptionForDuktapeError
-      return JS_ThrowInternalError(context->jsContext, "Java Exception");
+      return context->throwJavaExceptionFromJs();
     }
   }
   if (isVarArgs) {
@@ -156,8 +150,7 @@ JavaMethodProxy::invoke(Context* context, jobject javaThis, int argc, JSValueCon
     JS_FreeValue(context->jsContext, varArgs);
     if (env->ExceptionCheck()) {
       env->PopLocalFrame(nullptr);
-      // TODO: steal code from checkRethrowDuktapeError and queueJavaExceptionForDuktapeError
-      return JS_ThrowInternalError(context->jsContext, "Java Exception");
+      return context->throwJavaExceptionFromJs();
     }
   }
 

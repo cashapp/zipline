@@ -100,7 +100,6 @@ public final class QuickJsSetTest {
     }
   }
 
-  @Ignore("TODO: exception propagation.")
   @Test public void exceptionsFromJavaWithUnifiedStackTrace() {
     TestInterface boundObject = new TestInterface() {
       @Override public String getValue() {
@@ -131,10 +130,9 @@ public final class QuickJsSetTest {
       assertThat(stackTrace[0].getMethodName()).isEqualTo("getValue");
 
       // The next three entries are JavaScript
-      assertThat(stackTrace[1]).isEqualTo(new StackTraceElement("JavaScript", "f2", "test.js", 10));
-      assertThat(stackTrace[2]).isEqualTo(new StackTraceElement("JavaScript", "f1", "test.js", 5));
-      assertThat(stackTrace[3]).isEqualTo(
-          new StackTraceElement("JavaScript", "eval", "test.js", 2));
+      assertThat(stackTrace[1].toString()).isEqualTo("JavaScript.f2(test.js:10)");
+      assertThat(stackTrace[2].toString()).isEqualTo("JavaScript.f1(test.js:5)");
+      assertThat(stackTrace[3].toString()).isEqualTo("JavaScript.<eval>(test.js:2)");
 
       // Then one or two native QuickJs.evaluate methods, followed by QuickJs.evaluate in Java.
       int i = 4;
@@ -415,7 +413,6 @@ public final class QuickJsSetTest {
         .isEqualTo("boolean: true, int: 42, double: 2.718281828459");
   }
 
-  @Ignore("TODO: exception propagation.")
   @Test public void passUnsupportedTypeAsObjectFails() {
     quickJs.set("printer", TestMultipleObjectArgs.class, new TestMultipleObjectArgs() {
       @Override public Object print(Object b, Object i, Object d) {
@@ -522,7 +519,6 @@ public final class QuickJsSetTest {
     Object[] sort(Object[] args);
   }
 
-  @Ignore("TODO: exception propagation.")
   @Test public void arraysOfObjects() {
     quickJs.set("Sorter", ObjectSorter.class, new ObjectSorter() {
       @Override
@@ -555,7 +551,7 @@ public final class QuickJsSetTest {
     } catch (QuickJsException expected) {
       assertThat(expected)
           .hasMessageThat()
-          .isEqualTo("Error: Cannot marshal return value 1970-01-01 00:00:00.000+00:00 to Java");
+          .contains("Cannot marshal");
     } finally {
       TimeZone.setDefault(original);
     }
