@@ -170,7 +170,7 @@ void Context::setObjectProxy(jstring name, jobject object, jobjectArray methods)
 
 jobject Context::toJavaObject(const JSValueConst& value, bool throwOnUnsupportedType) const {
   jobject result;
-  switch (JS_VALUE_GET_TAG(value)) {
+  switch (JS_VALUE_GET_NORM_TAG(value)) {
     case JS_TAG_EXCEPTION: {
       throwJsException(value);
       result = nullptr;
@@ -216,7 +216,10 @@ jobject Context::toJavaObject(const JSValueConst& value, bool throwOnUnsupported
         result = env->NewObjectArray(arrayLength, objectClass, nullptr);
         for (int i = 0; i < arrayLength && !env->ExceptionCheck(); i++) {
           auto element = JS_GetPropertyUint32(jsContext, value, i);
-          env->SetObjectArrayElement(static_cast<jobjectArray>(result), i, toJavaObject(element));
+          auto javaElement = toJavaObject(element);
+          if (!env->ExceptionCheck()) {
+            env->SetObjectArrayElement(static_cast<jobjectArray>(result), i, javaElement);
+          }
           JS_FreeValue(jsContext, element);
         }
         break;
@@ -225,7 +228,7 @@ jobject Context::toJavaObject(const JSValueConst& value, bool throwOnUnsupported
     default:
       if (throwOnUnsupportedType) {
         auto str = JS_ToCString(jsContext, value);
-        throwJsExceptionFmt(env, this, "Cannot marshal value %s to Java %d", str);
+        throwJsExceptionFmt(env, this, "Cannot marshal value %s to Java", str);
         JS_FreeCString(jsContext, str);
       }
       result = nullptr;
@@ -264,10 +267,14 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(jclass type, bool boxed)
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
         auto elements = c->env->GetDoubleArrayElements(static_cast<jdoubleArray>(v.l), nullptr);
-        for (jsize i = 0, e = c->env->GetArrayLength(static_cast<jarray>(v.l)); i < e; i++) {
+        const auto length = c->env->GetArrayLength(static_cast<jarray>(v.l));
+        for (jsize i = 0; i < length && !c->env->ExceptionCheck(); i++) {
           JS_SetPropertyUint32(c->jsContext, result, i, JS_NewFloat64(c->jsContext, elements[i]));
         }
         c->env->ReleaseDoubleArrayElements(static_cast<jdoubleArray>(v.l), elements, JNI_ABORT);
+        if (c->env->ExceptionCheck()) {
+          c->throwJavaExceptionFromJs();
+        }
         return result;
       };
     } else if (elementTypeName == "int") {
@@ -275,10 +282,14 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(jclass type, bool boxed)
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
         auto elements = c->env->GetIntArrayElements(static_cast<jintArray >(v.l), nullptr);
-        for (jsize i = 0, e = c->env->GetArrayLength(static_cast<jarray>(v.l)); i < e; i++) {
+        const auto length = c->env->GetArrayLength(static_cast<jarray>(v.l));
+        for (jsize i = 0; i < length && !c->env->ExceptionCheck(); i++) {
           JS_SetPropertyUint32(c->jsContext, result, i, JS_NewInt32(c->jsContext, elements[i]));
         }
         c->env->ReleaseIntArrayElements(static_cast<jintArray>(v.l), elements, JNI_ABORT);
+        if (c->env->ExceptionCheck()) {
+          c->throwJavaExceptionFromJs();
+        }
         return result;
       };
     } else if (elementTypeName == "boolean") {
@@ -286,10 +297,14 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(jclass type, bool boxed)
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
         auto elements = c->env->GetBooleanArrayElements(static_cast<jbooleanArray>(v.l), nullptr);
-        for (jsize i = 0, e = c->env->GetArrayLength(static_cast<jarray>(v.l)); i < e; i++) {
+        const auto length = c->env->GetArrayLength(static_cast<jarray>(v.l));
+        for (jsize i = 0; i < length && !c->env->ExceptionCheck(); i++) {
           JS_SetPropertyUint32(c->jsContext, result, i, JS_NewBool(c->jsContext, elements[i]));
         }
         c->env->ReleaseBooleanArrayElements(static_cast<jbooleanArray>(v.l), elements, JNI_ABORT);
+        if (c->env->ExceptionCheck()) {
+          c->throwJavaExceptionFromJs();
+        }
         return result;
       };
     } else {
@@ -298,10 +313,16 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(jclass type, bool boxed)
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
         jvalue element;
-        for (jsize i = 0, e = c->env->GetArrayLength(static_cast<jarray>(v.l)); i < e; i++) {
+        const auto length = c->env->GetArrayLength(static_cast<jarray>(v.l));
+        for (jsize i = 0; i < length && !c->env->ExceptionCheck(); i++) {
           element.l = c->env->GetObjectArrayElement(static_cast<jobjectArray >(v.l), i);
-          JS_SetPropertyUint32(c->jsContext, result, i, converter(c, element));
+          if (!c->env->ExceptionCheck()) {
+            JS_SetPropertyUint32(c->jsContext, result, i, converter(c, element));
+          }
           c->env->DeleteLocalRef(element.l);
+        }
+        if (c->env->ExceptionCheck()) {
+          c->throwJavaExceptionFromJs();
         }
         return result;
       };
@@ -727,8 +748,9 @@ void Context::throwJsException(const JSValue& value) const {
 JSValue Context::throwJavaExceptionFromJs() const {
   assert(env->ExceptionCheck()); // There must be something to throw.
   assert(JS_GetContextOpaque(jsContext) == nullptr); // There can't be a pending thrown exception.
-  JS_SetContextOpaque(jsContext, env->NewGlobalRef(env->ExceptionOccurred()));
+  auto exception = env->ExceptionOccurred();
   env->ExceptionClear();
+  JS_SetContextOpaque(jsContext, env->NewGlobalRef(exception));
   return JS_ThrowInternalError(jsContext, "Java Exception");
 }
 
