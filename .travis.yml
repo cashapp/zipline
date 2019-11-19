@@ -21,9 +21,9 @@ before_install:
   # Install the rest of tools (e.g., avdmanager)
   - sdkmanager tools > /dev/null
   # Install the emulator system image, NDK, and CMake
-  - sdkmanager "system-images;android-18;default;armeabi-v7a" ndk-bundle "cmake;3.10.2.4988404" > /dev/null
+  - sdkmanager "system-images;android-23;default;armeabi-v7a" ndk-bundle "cmake;3.10.2.4988404" > /dev/null
   # Create and start emulator for the script. Meant to race the install task.
-  - echo no | avdmanager create avd --force -n test -k "system-images;android-18;default;armeabi-v7a"
+  - echo no | avdmanager create avd --force -n test -k "system-images;android-23;default;armeabi-v7a"
   - $(cd "$ANDROID_HOME/tools" && emulator -avd test -no-audio -no-window) &
 
 install:
@@ -34,9 +34,7 @@ before_script:
   - adb shell input keyevent 82
 
 script:
-  # We have to explicitly specify connectedCheck on the 'tests' module as it will fail if it is run
-  # on the 'duktape' module, despite not actually having any androidTest sources.
-  - ./gradlew :duktape:connectedCheck
+  - ./gradlew :duktape:connectedCheck :quickjs:connectedCheck
 
 after_success:
   - .buildscript/deploy_snapshot.sh
