@@ -29,22 +29,24 @@ public:
   Context(JNIEnv *env);
   ~Context();
 
-  JsObjectProxy* getObjectProxy(jstring name, jobjectArray methods);
-  void setObjectProxy(jstring name, jobject object, jobjectArray methods);
-  jobject eval(jstring source, jstring file) const;
-  typedef std::function<JSValueConst(const Context*, jvalue)> JavaToJavaScript;
-  JavaToJavaScript getJavaToJsConverter(jclass type, bool boxed) const;
-  typedef std::function<jvalue(const Context*, JSValueConst)> JavaScriptToJava;
-  JavaScriptToJava getJsToJavaConverter(jclass type, bool boxed) const;
+  JsObjectProxy* getObjectProxy(JNIEnv*, jstring name, jobjectArray methods);
+  void setObjectProxy(JNIEnv*, jstring name, jobject object, jobjectArray methods);
+  jobject eval(JNIEnv*, jstring source, jstring file) const;
+  typedef std::function<JSValueConst(const Context*, JNIEnv*, jvalue)> JavaToJavaScript;
+  JavaToJavaScript getJavaToJsConverter(JNIEnv*, jclass type, bool boxed) const;
+  typedef std::function<jvalue(const Context*, JNIEnv*, JSValueConst)> JavaScriptToJava;
+  JavaScriptToJava getJsToJavaConverter(JNIEnv*, jclass type, bool boxed) const;
 
-  jobject toJavaObject(const JSValue& value, bool throwOnUnsupportedType = true) const;
-  void throwJsException(const JSValue& value) const;
-  JSValue throwJavaExceptionFromJs() const;
+  jobject toJavaObject(JNIEnv*, const JSValue& value, bool throwOnUnsupportedType = true) const;
+  void throwJsException(JNIEnv*, const JSValue& value) const;
+  JSValue throwJavaExceptionFromJs(JNIEnv*) const;
+
+  JNIEnv* getEnv() const;
 
   static JSValue jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic);
 
-  // TODO: store the JavaVM, not the JNIEnv.
-  JNIEnv *env;
+  JavaVM* javaVm;
+  const jint jniVersion;
   JSRuntime *jsRuntime;
   JSContext *jsContext;
   jclass booleanClass;

@@ -47,7 +47,7 @@ Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_Strin
                        "Null QuickJs context - did you close your QuickJs?");
     return nullptr;
   }
-  return context->eval(sourceCode, fileName);
+  return context->eval(env, sourceCode, fileName);
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -60,7 +60,7 @@ Java_com_squareup_quickjs_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context,
     return 0L;
   }
 
-  return reinterpret_cast<jlong>(context->getObjectProxy(name, methods));
+  return reinterpret_cast<jlong>(context->getObjectProxy(env, name, methods));
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -72,7 +72,7 @@ Java_com_squareup_quickjs_QuickJs_set(JNIEnv* env, jobject thiz, jlong _context,
                        "Null QuickJs context - did you close your QuickJs?");
     return;
   }
-  context->setObjectProxy(name, object, methods);
+  context->setObjectProxy(env, name, object, methods);
 }
 
 extern "C" JNIEXPORT jobject JNICALL
@@ -91,5 +91,5 @@ Java_com_squareup_quickjs_QuickJs_call(JNIEnv* env, jobject thiz, jlong _context
     return nullptr;
   }
 
-  return jsObjectProxy->call(context, method, args);
+  return jsObjectProxy->call(context, env, method, args);
 }

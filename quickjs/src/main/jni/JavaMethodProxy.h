@@ -26,7 +26,7 @@ class Context;
 
 class JavaMethodProxy {
 public:
-  JavaMethodProxy(Context*, jobject method);
+  JavaMethodProxy(Context*, JNIEnv*, jobject method);
   ~JavaMethodProxy();
 
   JSValue invoke(Context* context, jobject javaThis, int argc, JSValueConst *argv) const;
@@ -38,8 +38,8 @@ public:
   const std::string name;
 
 private:
-  std::vector<std::function<jvalue(const Context*, const JSValueConst&)>> argumentLoaders;
-  std::function<JSValueConst(const Context*, jobject, const jvalue*)> javaCaller;
+  std::vector<std::function<jvalue(const Context*, JNIEnv*, const JSValueConst&)>> argumentLoaders;
+  std::function<JSValueConst(const Context*, JNIEnv*, jobject, const jvalue*)> javaCaller;
   bool isVarArgs;
 };
 

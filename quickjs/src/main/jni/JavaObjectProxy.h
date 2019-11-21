@@ -26,7 +26,7 @@ class JavaMethodProxy;
 
 class JavaObjectProxy {
 public:
-  JavaObjectProxy(Context*, const char* name, jobject object, jobjectArray methods,
+  JavaObjectProxy(Context*, JNIEnv*, const char* name, jobject object, jobjectArray methods,
                   JSValueConst proxy);
 
   ~JavaObjectProxy();
