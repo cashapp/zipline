@@ -29,8 +29,7 @@ JsObjectProxy::~JsObjectProxy() {
   }
 }
 
-jobject JsObjectProxy::call(Context *context, jobject method, jobjectArray args) const {
-  JNIEnv *env = context->env;
+jobject JsObjectProxy::call(Context *context, JNIEnv* env, jobject method, jobjectArray args) const {
   JSValue global = JS_GetGlobalObject(context->jsContext);
   JSValue thisPointer = JS_GetPropertyStr(context->jsContext, global, name.c_str());
 
@@ -44,7 +43,7 @@ jobject JsObjectProxy::call(Context *context, jobject method, jobjectArray args)
 
   jobject result;
   if (methodProxy) {
-    result = methodProxy->call(context, thisPointer, args);
+    result = methodProxy->call(context, env, thisPointer, args);
   } else {
     const jclass methodClass = env->GetObjectClass(method);
     const jmethodID getName = env->GetMethodID(methodClass, "getName", "()Ljava/lang/String;");

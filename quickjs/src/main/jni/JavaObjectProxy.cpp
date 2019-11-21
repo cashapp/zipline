@@ -18,10 +18,9 @@
 #include "ExceptionThrowers.h"
 #include "JavaMethodProxy.h"
 
-JavaObjectProxy::JavaObjectProxy(Context* c, const char* name, jobject object,
+JavaObjectProxy::JavaObjectProxy(Context* c, JNIEnv* env, const char* name, jobject object,
                                  jobjectArray methods, JSValueConst proxy)
-    : context(c), name(name), javaThis(c->env->NewGlobalRef(object)) {
-  auto env = context->env;
+    : context(c), name(name), javaThis(env->NewGlobalRef(object)) {
   const auto numMethods = env->GetArrayLength(methods);
   functions.resize(numMethods);
   auto f = functions.data();
@@ -30,7 +29,7 @@ JavaObjectProxy::JavaObjectProxy(Context* c, const char* name, jobject object,
     if (env->ExceptionCheck()) {
       break;
     }
-    proxies.emplace_back(context, method);
+    proxies.emplace_back(context, env, method);
     const auto& proxyMethod = proxies.back();
     f[i] = JS_CFUNC_MAGIC_DEF(proxyMethod.name.c_str(), static_cast<uint8_t>(proxyMethod.numArgs()),
                               Context::jsCall, static_cast<short>(i));
@@ -43,7 +42,7 @@ JavaObjectProxy::JavaObjectProxy(Context* c, const char* name, jobject object,
 }
 
 JavaObjectProxy::~JavaObjectProxy() {
-  context->env->DeleteGlobalRef(javaThis);
+  context->getEnv()->DeleteGlobalRef(javaThis);
 }
 
 JSValue

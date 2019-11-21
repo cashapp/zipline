@@ -28,7 +28,7 @@ public:
   JsObjectProxy(const char *name);
   ~JsObjectProxy();
 
-  jobject call(Context* context, jobject method, jobjectArray args) const;
+  jobject call(Context* context, JNIEnv*, jobject method, jobjectArray args) const;
 
   const std::string name;
   std::vector<JsMethodProxy*> methods;

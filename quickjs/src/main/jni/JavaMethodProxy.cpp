@@ -19,9 +19,8 @@
 #include "Context.h"
 #include "ExceptionThrowers.h"
 
-JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
-    : name(getName(context->env, method)) {
-  auto env = context->env;
+JavaMethodProxy::JavaMethodProxy(Context* context, JNIEnv* env, jobject method)
+    : name(getName(env, method)) {
   auto methodId = env->FromReflectedMethod(method);
   jclass methodClass = env->GetObjectClass(method);
 
@@ -36,7 +35,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
   for (jsize i = 0; i < numArgs && !env->ExceptionCheck(); ++i) {
     auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
     argumentLoaders.push_back(
-        context->getJsToJavaConverter(static_cast<jclass>(parameterType), false));
+        context->getJsToJavaConverter(env, static_cast<jclass>(parameterType), false));
     env->DeleteLocalRef(parameterType);
   }
 
@@ -44,69 +43,70 @@ JavaMethodProxy::JavaMethodProxy(Context* context, jobject method)
     const jmethodID getReturnType =
         env->GetMethodID(methodClass, "getReturnType", "()Ljava/lang/Class;");
     auto returnTypeObject = env->CallObjectMethod(method, getReturnType);
-    auto resultLoader = context->getJavaToJsConverter(static_cast<jclass>(returnTypeObject), false);
+    auto resultLoader =
+        context->getJavaToJsConverter(env, static_cast<jclass>(returnTypeObject), false);
 
     if (!env->ExceptionCheck()) {
       auto returnTypeName = getName(env, returnTypeObject);
       if (returnTypeName == "void") {
-        javaCaller = [methodId, resultLoader](const Context* context, jobject javaThis,
+        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
-          context->env->CallVoidMethodA(javaThis, methodId, args);
-          if (!context->env->ExceptionCheck()) {
+          env->CallVoidMethodA(javaThis, methodId, args);
+          if (!env->ExceptionCheck()) {
             return JS_UNDEFINED;
           } else {
-            return context->throwJavaExceptionFromJs();
+            return context->throwJavaExceptionFromJs(env);
           }
         };
       } else if (returnTypeName == "boolean") {
-        javaCaller = [methodId, resultLoader](const Context* context, jobject javaThis,
+        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           jvalue result;
-          result.z = context->env->CallBooleanMethodA(javaThis, methodId, args);
+          result.z = env->CallBooleanMethodA(javaThis, methodId, args);
           JSValue jsResult;
-          if (!context->env->ExceptionCheck()) {
-            jsResult = resultLoader(context, result);
+          if (!env->ExceptionCheck()) {
+            jsResult = resultLoader(context, env, result);
           } else {
-            jsResult = context->throwJavaExceptionFromJs();
+            jsResult = context->throwJavaExceptionFromJs(env);
           }
           return jsResult;
         };
       } else if (returnTypeName == "int") {
-        javaCaller = [methodId, resultLoader](const Context* context, jobject javaThis,
+        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           jvalue result;
-          result.i = context->env->CallIntMethodA(javaThis, methodId, args);
+          result.i = env->CallIntMethodA(javaThis, methodId, args);
           JSValue jsResult;
-          if (!context->env->ExceptionCheck()) {
-            jsResult = resultLoader(context, result);
+          if (!env->ExceptionCheck()) {
+            jsResult = resultLoader(context, env, result);
           } else {
-            jsResult = context->throwJavaExceptionFromJs();
+            jsResult = context->throwJavaExceptionFromJs(env);
           }
           return jsResult;
         };
       } else if (returnTypeName == "double") {
-        javaCaller = [methodId, resultLoader](const Context* context, jobject javaThis,
+        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           jvalue result;
-          result.d = context->env->CallDoubleMethodA(javaThis, methodId, args);
+          result.d = env->CallDoubleMethodA(javaThis, methodId, args);
           JSValue jsResult;
-          if (!context->env->ExceptionCheck()) {
-            jsResult = resultLoader(context, result);
+          if (!env->ExceptionCheck()) {
+            jsResult = resultLoader(context, env, result);
           } else {
-            jsResult = context->throwJavaExceptionFromJs();
+            jsResult = context->throwJavaExceptionFromJs(env);
           }
           return jsResult;
         };
       } else {
-        javaCaller = [methodId, resultLoader](const Context* context, jobject javaThis,
+        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           jvalue result;
-          result.l = context->env->CallObjectMethodA(javaThis, methodId, args);
+          result.l = env->CallObjectMethodA(javaThis, methodId, args);
           JSValue jsResult;
-          if (!context->env->ExceptionCheck()) {
-            jsResult = resultLoader(context, result);
+          if (!env->ExceptionCheck()) {
+            jsResult = resultLoader(context, env, result);
           } else {
-            jsResult = context->throwJavaExceptionFromJs();
+            jsResult = context->throwJavaExceptionFromJs(env);
           }
           return jsResult;
         };
@@ -130,14 +130,14 @@ JavaMethodProxy::invoke(Context* context, jobject javaThis, int argc, JSValueCon
     return JS_ThrowRangeError(context->jsContext, "Wrong number of arguments");
   }
 
-  auto env = context->env;
+  auto env = context->getEnv();
   env->PushLocalFrame(argc + 1);
   jvalue args[argumentLoaders.size()];
   for (int i = 0; i < minArgs; i++) {
-    args[i] = argumentLoaders[i](context, argv[i]);
+    args[i] = argumentLoaders[i](context, env, argv[i]);
     if (env->ExceptionCheck()) {
       env->PopLocalFrame(nullptr);
-      return context->throwJavaExceptionFromJs();
+      return context->throwJavaExceptionFromJs(env);
     }
   }
   if (isVarArgs) {
@@ -146,15 +146,15 @@ JavaMethodProxy::invoke(Context* context, jobject javaThis, int argc, JSValueCon
       JS_SetPropertyUint32(context->jsContext, varArgs, i - minArgs,
                            JS_DupValue(context->jsContext, argv[i]));
     }
-    args[minArgs] = argumentLoaders.back()(context, varArgs);
+    args[minArgs] = argumentLoaders.back()(context, env, varArgs);
     JS_FreeValue(context->jsContext, varArgs);
     if (env->ExceptionCheck()) {
       env->PopLocalFrame(nullptr);
-      return context->throwJavaExceptionFromJs();
+      return context->throwJavaExceptionFromJs(env);
     }
   }
 
-  auto result = javaCaller(context, javaThis, args);
+  auto result = javaCaller(context, env, javaThis, args);
   env->PopLocalFrame(nullptr);
   return result;
 }

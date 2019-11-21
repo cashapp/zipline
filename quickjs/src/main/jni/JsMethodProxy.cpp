@@ -18,15 +18,14 @@
 #include <algorithm>
 #include "Context.h"
 
-JsMethodProxy::JsMethodProxy(const Context* context, const char* name, jobject method)
-    : name(name), methodId(context->env->FromReflectedMethod(method)) {
-  JNIEnv* env = context->env;
+JsMethodProxy::JsMethodProxy(const Context* context, JNIEnv* env, const char* name, jobject method)
+    : name(name), methodId(env->FromReflectedMethod(method)) {
   const jclass methodClass = env->GetObjectClass(method);
 
   const jmethodID getReturnType =
       env->GetMethodID(methodClass, "getReturnType", "()Ljava/lang/Class;");
   const auto returnedClass = static_cast<jclass>(env->CallObjectMethod(method, getReturnType));
-  resultLoader = context->getJsToJavaConverter(returnedClass, true);
+  resultLoader = context->getJsToJavaConverter(env, returnedClass, true);
   env->DeleteLocalRef(returnedClass);
   if (!env->ExceptionCheck()) {
     const jmethodID isVarArgsMethod = env->GetMethodID(methodClass, "isVarArgs", "()Z");
@@ -40,7 +39,7 @@ JsMethodProxy::JsMethodProxy(const Context* context, const char* name, jobject m
     for (jsize i = 0; i < numArgs && !env->ExceptionCheck(); ++i) {
       auto parameterType = env->GetObjectArrayElement(parameterTypes, i);
       argumentLoaders.push_back(
-          context->getJavaToJsConverter(static_cast<jclass>(parameterType), true));
+          context->getJavaToJsConverter(env, static_cast<jclass>(parameterType), true));
       env->DeleteLocalRef(parameterType);
     }
     env->DeleteLocalRef(parameterTypes);
@@ -48,17 +47,17 @@ JsMethodProxy::JsMethodProxy(const Context* context, const char* name, jobject m
   env->DeleteLocalRef(methodClass);
 }
 
-jobject JsMethodProxy::call(Context* context, JSValue thisPointer, jobjectArray args) const {
-  const auto totalArgs = std::min<int>(argumentLoaders.size(), context->env->GetArrayLength(args));
+jobject JsMethodProxy::call(Context* context, JNIEnv* env, JSValue thisPointer, jobjectArray args) const {
+  const auto totalArgs = std::min<int>(argumentLoaders.size(), env->GetArrayLength(args));
   std::vector<JSValue> arguments;
   int numArgs;
   jvalue arg;
-  for (numArgs = 0; numArgs < totalArgs && !context->env->ExceptionCheck(); numArgs++) {
-    arg.l = context->env->GetObjectArrayElement(args, numArgs);
+  for (numArgs = 0; numArgs < totalArgs && !env->ExceptionCheck(); numArgs++) {
+    arg.l = env->GetObjectArrayElement(args, numArgs);
     if (!isVarArgs || numArgs < totalArgs - 1) {
-      arguments.push_back(argumentLoaders[numArgs](context, arg));
+      arguments.push_back(argumentLoaders[numArgs](context, env, arg));
     } else {
-      auto varArgs = argumentLoaders[numArgs](context, arg);
+      auto varArgs = argumentLoaders[numArgs](context, env, arg);
       if (JS_IsArray(context->jsContext, varArgs)) {
         auto len = JS_GetPropertyStr(context->jsContext, varArgs, "length");
         for (int i = 0, e = JS_VALUE_GET_INT(len); i < e; i++) {
@@ -70,16 +69,16 @@ jobject JsMethodProxy::call(Context* context, JSValue thisPointer, jobjectArray 
         arguments.push_back(varArgs);
       }
     }
-    context->env->DeleteLocalRef(arg.l);
+    env->DeleteLocalRef(arg.l);
   }
 
   jobject result;
-  if (!context->env->ExceptionCheck()) {
+  if (!env->ExceptionCheck()) {
     auto property = JS_NewAtom(context->jsContext, name.c_str());
     JSValue callResult = JS_Invoke(context->jsContext, thisPointer, property, arguments.size(),
                                    arguments.data());
     JS_FreeAtom(context->jsContext, property);
-    result = resultLoader(context, callResult).l;
+    result = resultLoader(context, env, callResult).l;
     JS_FreeValue(context->jsContext, callResult);
   } else {
     result = nullptr;
