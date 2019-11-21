@@ -43,12 +43,13 @@ void jsFinalize(JSRuntime*, JSValue val) {
   delete reinterpret_cast<JavaObjectProxy*>(JS_GetOpaque(val, classId));
 }
 
-struct jniEnvDetacher {
+struct JniThreadDetacher {
   JavaVM& javaVm;
 
-  jniEnvDetacher(JavaVM* javaVm): javaVm(*javaVm) {
+  JniThreadDetacher(JavaVM* javaVm) : javaVm(*javaVm) {
   }
-  ~jniEnvDetacher() {
+
+  ~JniThreadDetacher() {
     javaVm.DetachCurrentThread();
   }
 };
@@ -56,7 +57,8 @@ struct jniEnvDetacher {
 } // anonymous namespace
 
 Context::Context(JNIEnv* env)
-    : jniVersion(env->GetVersion()), jsRuntime(JS_NewRuntime()), jsContext(JS_NewContext(jsRuntime)),
+    : jniVersion(env->GetVersion()), jsRuntime(JS_NewRuntime()),
+      jsContext(JS_NewContext(jsRuntime)),
       booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
       integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
       doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
@@ -79,6 +81,9 @@ Context::~Context() {
     delete proxy;
   }
   auto env = getEnv();
+  for (auto refs : globalReferences) {
+    env->DeleteGlobalRef(refs.second);
+  }
   env->DeleteGlobalRef(quickJsExceptionClass);
   env->DeleteGlobalRef(objectClass);
   env->DeleteGlobalRef(doubleClass);
@@ -181,7 +186,7 @@ void Context::setObjectProxy(JNIEnv* env, jstring name, jobject object, jobjectA
 }
 
 jobject
-Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupportedType) const {
+Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupportedType) {
   jobject result;
   switch (JS_VALUE_GET_NORM_TAG(value)) {
     case JS_TAG_EXCEPTION: {
@@ -250,7 +255,7 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
   return result;
 }
 
-jobject Context::eval(JNIEnv* env, jstring source, jstring file) const {
+jobject Context::eval(JNIEnv* env, jstring source, jstring file) {
   const char* sourceCode = env->GetStringUTFChars(source, 0);
   const char* fileName = env->GetStringUTFChars(file, 0);
 
@@ -266,7 +271,8 @@ jobject Context::eval(JNIEnv* env, jstring source, jstring file) const {
   return result;
 }
 
-Context::JavaToJavaScript Context::getJavaToJsConverter(JNIEnv* env, jclass type, bool boxed) const {
+Context::JavaToJavaScript
+Context::getJavaToJsConverter(JNIEnv* env, jclass type, bool boxed) {
   const auto typeName = getName(env, type);
   if (!typeName.empty() && typeName[0] == '[') {
     // type is an array.
@@ -276,7 +282,7 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(JNIEnv* env, jclass type
     auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
     const auto elementTypeName = getName(env, elementType);
     if (elementTypeName == "double") {
-      return [](const Context* c, JNIEnv* env, jvalue v) {
+      return [](Context* c, JNIEnv* env, jvalue v) {
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
         auto elements = env->GetDoubleArrayElements(static_cast<jdoubleArray>(v.l), nullptr);
@@ -291,7 +297,7 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(JNIEnv* env, jclass type
         return result;
       };
     } else if (elementTypeName == "int") {
-      return [](const Context* c, JNIEnv* env, jvalue v) {
+      return [](Context* c, JNIEnv* env, jvalue v) {
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
         auto elements = env->GetIntArrayElements(static_cast<jintArray >(v.l), nullptr);
@@ -306,7 +312,7 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(JNIEnv* env, jclass type
         return result;
       };
     } else if (elementTypeName == "boolean") {
-      return [](const Context* c, JNIEnv* env, jvalue v) {
+      return [](Context* c, JNIEnv* env, jvalue v) {
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
         auto elements = env->GetBooleanArrayElements(static_cast<jbooleanArray>(v.l), nullptr);
@@ -322,7 +328,7 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(JNIEnv* env, jclass type
       };
     } else {
       auto converter = getJavaToJsConverter(env, elementType, true);
-      return [converter](const Context* c, JNIEnv* env, jvalue v) {
+      return [converter](Context* c, JNIEnv* env, jvalue v) {
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
         jvalue element;
@@ -343,7 +349,7 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(JNIEnv* env, jclass type
   }
 
   if (typeName == "java.lang.String") {
-    return [](const Context* c, JNIEnv* env, jvalue v) {
+    return [](Context* c, JNIEnv* env, jvalue v) {
       if (!v.l) return JS_NULL;
       const auto s = env->GetStringUTFChars(static_cast<jstring>(v.l), nullptr);
       auto jsString = JS_NewString(c->jsContext, s);
@@ -351,55 +357,56 @@ Context::JavaToJavaScript Context::getJavaToJsConverter(JNIEnv* env, jclass type
       return jsString;
     };
   } else if (typeName == "java.lang.Double" || (typeName == "double" && boxed)) {
-    return [](const Context* c, JNIEnv* env, jvalue v) {
+    return [](Context* c, JNIEnv* env, jvalue v) {
       return v.l != nullptr
              ? JS_NewFloat64(c->jsContext, env->CallDoubleMethod(v.l, c->doubleGetValue))
              : JS_NULL;
     };
   } else if (typeName == "java.lang.Integer" || (typeName == "int" && boxed)) {
-    return [](const Context* c, JNIEnv* env, jvalue v) {
+    return [](Context* c, JNIEnv* env, jvalue v) {
       return v.l != nullptr
              ? JS_NewInt32(c->jsContext, env->CallIntMethod(v.l, c->integerGetValue))
              : JS_NULL;
     };
   } else if (typeName == "java.lang.Boolean" || (typeName == "boolean" && boxed)) {
-    return [](const Context* c, JNIEnv* env, jvalue v) {
+    return [](Context* c, JNIEnv* env, jvalue v) {
       return v.l != nullptr
              ? JS_NewBool(c->jsContext, env->CallBooleanMethod(v.l, c->booleanGetValue))
              : JS_NULL;
     };
   } else if (typeName == "double") {
-    return [](const Context* c, JNIEnv* env, jvalue v) {
+    return [](Context* c, JNIEnv* env, jvalue v) {
       return JS_NewFloat64(c->jsContext, v.d);
     };
   } else if (typeName == "int") {
-    return [](const Context* c, JNIEnv* env, jvalue v) {
+    return [](Context* c, JNIEnv* env, jvalue v) {
       return JS_NewInt32(c->jsContext, v.i);
     };
   } else if (typeName == "boolean") {
-    return [](const Context* c, JNIEnv* env, jvalue v) {
+    return [](Context* c, JNIEnv* env, jvalue v) {
       return JS_NewBool(c->jsContext, v.z);
     };
   } else if (typeName == "java.lang.Object") {
-    return [](const Context* c, JNIEnv* env, jvalue v) {
+    return [](Context* c, JNIEnv* env, jvalue v) {
       if (!v.l) return JS_NULL;
       return c->getJavaToJsConverter(env, env->GetObjectClass(v.l), true)(c, env, v);
     };
   } else if (typeName == "void") {
-    return [](const Context*, JNIEnv* env, jvalue) {
+    return [](Context*, JNIEnv* env, jvalue) {
       return JS_UNDEFINED;
     };
   } else {
     // Throw an exception for unsupported argument type.
     throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                        typeName.c_str());
-    return [typeName](const Context* context, JNIEnv* env, jvalue) {
+    return [typeName](Context* context, JNIEnv* env, jvalue) {
       return JS_ThrowTypeError(context->jsContext, "Unsupported Java type %s", typeName.c_str());
     };
   }
 }
 
-Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) const {
+Context::JavaScriptToJava
+Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) {
   const auto typeName = getName(env, type);
   if (!typeName.empty() && typeName[0] == '[') {
     // type is an array.
@@ -409,7 +416,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
     auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
     const auto elementTypeName = getName(env, elementType);
     if (elementTypeName == "double") {
-      return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
         jvalue result;
         if (JS_IsNull(v) || JS_IsUndefined(v)) {
           result.l = nullptr;
@@ -445,7 +452,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
         return result;
       };
     } else if (elementTypeName == "int") {
-      return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
         jvalue result;
         if (JS_IsNull(v) || JS_IsUndefined(v)) {
           result.l = nullptr;
@@ -481,7 +488,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
         return result;
       };
     } else if (elementTypeName == "boolean") {
-      return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
         jvalue result;
         if (JS_IsNull(v) || JS_IsUndefined(v)) {
           result.l = nullptr;
@@ -521,9 +528,9 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
       };
     } else {
       auto converter = getJsToJavaConverter(env, elementType, true);
-      // TODO: don't leak this
-      auto elementTypeGlobalRef(static_cast<jclass>(env->NewGlobalRef(elementType)));
-      return [converter, elementTypeGlobalRef](const Context* c, JNIEnv* env, const JSValueConst& v) {
+      auto elementTypeGlobalRef = getGlobalRef(env, elementType);
+      return [converter, elementTypeGlobalRef](Context* c, JNIEnv* env,
+                                               const JSValueConst& v) {
         jvalue result;
         if (JS_IsNull(v) || JS_IsUndefined(v)) {
           result.l = nullptr;
@@ -554,7 +561,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
   }
 
   if (typeName == "java.lang.String") {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       if (JS_IsNull(v) || JS_IsUndefined(v)) {
         result.l = nullptr;
@@ -575,7 +582,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
       return result;
     };
   } else if (typeName == "java.lang.Double" || (typeName == "double" && boxed)) {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       if (JS_IsNull(v) || JS_IsUndefined(v)) {
         result.l = nullptr;
@@ -593,7 +600,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
       return result;
     };
   } else if (typeName == "java.lang.Integer" || (typeName == "int" && boxed)) {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       if (JS_IsNull(v) || JS_IsUndefined(v)) {
         result.l = nullptr;
@@ -611,7 +618,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
       return result;
     };
   } else if (typeName == "java.lang.Boolean" || (typeName == "boolean" && boxed)) {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       if (JS_IsNull(v) || JS_IsUndefined(v)) {
         result.l = nullptr;
@@ -631,7 +638,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
       return result;
     };
   } else if (typeName == "double") {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       if (!JS_IsNumber(v)) {
         result.l = nullptr;
@@ -648,7 +655,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
       return result;
     };
   } else if (typeName == "int") {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       if (!JS_IsInteger(v)) {
         result.l = nullptr;
@@ -665,7 +672,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
       return result;
     };
   } else if (typeName == "boolean") {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       if (!JS_IsBool(v)) {
         result.l = nullptr;
@@ -686,13 +693,13 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
       return result;
     };
   } else if (typeName == "java.lang.Object") {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       result.l = c->toJavaObject(env, v);
       return result;
     };
   } else if (typeName == "void") {
-    return [](const Context* c, JNIEnv* env, const JSValueConst& v) {
+    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
       result.l = nullptr;
       if (JS_IsException(v)) {
@@ -704,7 +711,7 @@ Context::JavaScriptToJava Context::getJsToJavaConverter(JNIEnv* env, jclass type
     // Throw an exception for unsupported argument type.
     throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
                        typeName.c_str());
-    return [typeName](const Context* context, JNIEnv* env, const JSValueConst&) {
+    return [typeName](Context* context, JNIEnv* env, const JSValueConst&) {
       throwJavaException(env, "java/lang/IllegalArgumentException",
                          "Unsupported Java type %s", typeName.c_str());
       jvalue result;
@@ -781,7 +788,7 @@ JNIEnv* Context::getEnv() const {
 #endif
       nullptr);
   if (env) {
-    thread_local jniEnvDetacher detacher(javaVm);
+    thread_local JniThreadDetacher detacher(javaVm);
   }
   return env;
 }
@@ -793,4 +800,16 @@ Context::jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* a
     return proxy->call(magic, argc, argv);
   }
   return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+}
+
+jclass Context::getGlobalRef(JNIEnv* env, jclass clazz) {
+  auto name = getName(env, clazz);
+  auto i = globalReferences.find(name);
+  if (i != globalReferences.end()) {
+    return i->second;
+  }
+
+  auto globalRef = static_cast<jclass>(env->NewGlobalRef(clazz));
+  globalReferences[name] = globalRef;
+  return globalRef;
 }

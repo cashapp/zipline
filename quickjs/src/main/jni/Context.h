@@ -17,7 +17,9 @@
 #define DUKTAPE_ANDROID_CONTEXT_H
 
 #include <jni.h>
+#include <string>
 #include <vector>
+#include <unordered_map>
 #include "quickjs/quickjs.h"
 
 class JSRuntime;
@@ -31,19 +33,22 @@ public:
 
   JsObjectProxy* getObjectProxy(JNIEnv*, jstring name, jobjectArray methods);
   void setObjectProxy(JNIEnv*, jstring name, jobject object, jobjectArray methods);
-  jobject eval(JNIEnv*, jstring source, jstring file) const;
-  typedef std::function<JSValueConst(const Context*, JNIEnv*, jvalue)> JavaToJavaScript;
-  JavaToJavaScript getJavaToJsConverter(JNIEnv*, jclass type, bool boxed) const;
-  typedef std::function<jvalue(const Context*, JNIEnv*, JSValueConst)> JavaScriptToJava;
-  JavaScriptToJava getJsToJavaConverter(JNIEnv*, jclass type, bool boxed) const;
+  jobject eval(JNIEnv*, jstring source, jstring file);
+  typedef std::function<JSValueConst(Context*, JNIEnv*, jvalue)> JavaToJavaScript;
+  JavaToJavaScript getJavaToJsConverter(JNIEnv*, jclass type, bool boxed);
+  typedef std::function<jvalue(Context*, JNIEnv*, JSValueConst)> JavaScriptToJava;
+  JavaScriptToJava getJsToJavaConverter(JNIEnv*, jclass type, bool boxed);
 
-  jobject toJavaObject(JNIEnv*, const JSValue& value, bool throwOnUnsupportedType = true) const;
+  jobject toJavaObject(JNIEnv*, const JSValue& value, bool throwOnUnsupportedType = true);
   void throwJsException(JNIEnv*, const JSValue& value) const;
   JSValue throwJavaExceptionFromJs(JNIEnv*) const;
 
   JNIEnv* getEnv() const;
 
-  static JSValue jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic);
+  static JSValue
+  jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic);
+
+  jclass getGlobalRef(JNIEnv* env, jclass clazz);
 
   JavaVM* javaVm;
   const jint jniVersion;
@@ -62,6 +67,7 @@ public:
   jmethodID doubleGetValue;
   jmethodID quickJsExceptionConstructor;
   std::vector<JsObjectProxy*> objectProxies;
+  std::unordered_map<std::string, jclass> globalReferences;
 };
 
 std::string getName(JNIEnv* env, jobject javaClass);

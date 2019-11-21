@@ -49,7 +49,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, JNIEnv* env, jobject method)
     if (!env->ExceptionCheck()) {
       auto returnTypeName = getName(env, returnTypeObject);
       if (returnTypeName == "void") {
-        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
+        javaCaller = [methodId, resultLoader](Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           env->CallVoidMethodA(javaThis, methodId, args);
           if (!env->ExceptionCheck()) {
@@ -59,7 +59,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, JNIEnv* env, jobject method)
           }
         };
       } else if (returnTypeName == "boolean") {
-        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
+        javaCaller = [methodId, resultLoader](Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           jvalue result;
           result.z = env->CallBooleanMethodA(javaThis, methodId, args);
@@ -72,7 +72,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, JNIEnv* env, jobject method)
           return jsResult;
         };
       } else if (returnTypeName == "int") {
-        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
+        javaCaller = [methodId, resultLoader](Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           jvalue result;
           result.i = env->CallIntMethodA(javaThis, methodId, args);
@@ -85,7 +85,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, JNIEnv* env, jobject method)
           return jsResult;
         };
       } else if (returnTypeName == "double") {
-        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
+        javaCaller = [methodId, resultLoader](Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           jvalue result;
           result.d = env->CallDoubleMethodA(javaThis, methodId, args);
@@ -98,7 +98,7 @@ JavaMethodProxy::JavaMethodProxy(Context* context, JNIEnv* env, jobject method)
           return jsResult;
         };
       } else {
-        javaCaller = [methodId, resultLoader](const Context* context, JNIEnv* env, jobject javaThis,
+        javaCaller = [methodId, resultLoader](Context* context, JNIEnv* env, jobject javaThis,
                                               const jvalue* args) {
           jvalue result;
           result.l = env->CallObjectMethodA(javaThis, methodId, args);
