@@ -38,8 +38,8 @@ public:
   const std::string name;
 
 private:
-  std::vector<std::function<jvalue(const Context*, JNIEnv*, const JSValueConst&)>> argumentLoaders;
-  std::function<JSValueConst(const Context*, JNIEnv*, jobject, const jvalue*)> javaCaller;
+  std::vector<std::function<jvalue(Context*, JNIEnv*, const JSValueConst&)>> argumentLoaders;
+  std::function<JSValueConst(Context*, JNIEnv*, jobject, const jvalue*)> javaCaller;
   bool isVarArgs;
 };
 

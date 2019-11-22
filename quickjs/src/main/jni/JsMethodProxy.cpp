@@ -18,7 +18,7 @@
 #include <algorithm>
 #include "Context.h"
 
-JsMethodProxy::JsMethodProxy(const Context* context, JNIEnv* env, const char* name, jobject method)
+JsMethodProxy::JsMethodProxy(Context* context, JNIEnv* env, const char* name, jobject method)
     : name(name), methodId(env->FromReflectedMethod(method)) {
   const jclass methodClass = env->GetObjectClass(method);
 
