@@ -133,12 +133,18 @@ public final class QuickJs implements Closeable {
         new InvocationHandler() {
           @Override
           public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+
+            Object[] argsToSend = args;
+            if (argsToSend == null) {
+              argsToSend = new Object[0];
+            }
+
             // If the method is a method from Object then defer to normal invocation.
             if (method.getDeclaringClass() == Object.class) {
-              return method.invoke(this, args);
+              return method.invoke(this, argsToSend);
             }
             synchronized (quickJs) {
-              return call(quickJs.context, instance, method, args);
+              return call(quickJs.context, instance, method, argsToSend);
             }
           }
 
