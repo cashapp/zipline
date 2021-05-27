@@ -16,6 +16,7 @@
 #include "Context.h"
 #include <cstring>
 #include <memory>
+#include <assert.h>
 #include "JavaObjectProxy.h"
 #include "JsObjectProxy.h"
 #include "JsMethodProxy.h"
