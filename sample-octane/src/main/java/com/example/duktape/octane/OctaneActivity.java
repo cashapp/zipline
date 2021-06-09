@@ -21,6 +21,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Spinner;
 import android.widget.TextView;
+import androidx.annotation.Nullable;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -34,7 +35,7 @@ public final class OctaneActivity extends Activity {
   private View run;
   private TextView output;
 
-  @Override protected void onCreate(Bundle savedInstanceState) {
+  @Override protected void onCreate(@Nullable Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.octane);
 
