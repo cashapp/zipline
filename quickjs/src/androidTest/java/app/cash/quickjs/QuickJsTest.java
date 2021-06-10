@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.quickjs;
+package app.cash.quickjs;
 
 import org.junit.After;
 import org.junit.Before;
@@ -80,7 +80,7 @@ public final class QuickJsTest {
       assertThat(e.getStackTrace()[1].toString()).isEqualTo("JavaScript.f1(test.js:5)");
       assertThat(e.getStackTrace()[2].toString()).isEqualTo("JavaScript.<eval>(test.js:2)");
       assertThat(e.getStackTrace()[3].toString())
-          .isEqualTo("com.squareup.quickjs.QuickJs.evaluate(Native Method)");
+          .isEqualTo("app.cash.quickjs.QuickJs.evaluate(Native Method)");
     }
   }
 }

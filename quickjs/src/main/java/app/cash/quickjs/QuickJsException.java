@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.quickjs;
+package app.cash.quickjs;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;

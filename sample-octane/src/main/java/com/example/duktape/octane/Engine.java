@@ -15,8 +15,8 @@
  */
 package com.example.duktape.octane;
 
+import app.cash.quickjs.QuickJs;
 import com.squareup.duktape.Duktape;
-import com.squareup.quickjs.QuickJs;
 import java.io.Closeable;
 
 public enum Engine {

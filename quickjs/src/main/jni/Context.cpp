@@ -65,7 +65,7 @@ Context::Context(JNIEnv* env)
       doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
       objectClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Object")))),
       quickJsExceptionClass(static_cast<jclass>(env->NewGlobalRef(
-          env->FindClass("com/squareup/quickjs/QuickJsException")))),
+          env->FindClass("app/cash/quickjs/QuickJsException")))),
       booleanValueOf(env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;")),
       booleanGetValue(env->GetMethodID(booleanClass, "booleanValue", "()Z")),
       integerValueOf(env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;")),

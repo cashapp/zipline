@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.quickjs;
+package app.cash.quickjs;
 
 import java.util.Arrays;
 import java.util.Comparator;
@@ -21,7 +21,6 @@ import java.util.Date;
 import java.util.TimeZone;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import static com.google.common.truth.Truth.assertThat;
