@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.squareup.quickjs;
+package app.cash.quickjs;
 
 import java.util.Date;
 import org.junit.After;
@@ -134,7 +134,7 @@ public final class QuickJsGetTest {
     } catch (QuickJsException expected) {
       assertThat(expected.getStackTrace()[0].toString()).isEqualTo("JavaScript.getValue(test.js)");
       assertThat(expected.getStackTrace()[1].toString())
-          .isEqualTo("com.squareup.quickjs.QuickJs.call(Native Method)");
+          .isEqualTo("app.cash.quickjs.QuickJs.call(Native Method)");
     }
   }
 

@@ -20,7 +20,7 @@
 #include "ExceptionThrowers.h"
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_squareup_quickjs_QuickJs_createContext(JNIEnv* env, jclass type) {
+Java_app_cash_quickjs_QuickJs_createContext(JNIEnv* env, jclass type) {
   Context* c = new(std::nothrow) Context(env);
   if (!c || !c->jsContext || !c->jsRuntime) {
     delete c;
@@ -30,13 +30,13 @@ Java_com_squareup_quickjs_QuickJs_createContext(JNIEnv* env, jclass type) {
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_squareup_quickjs_QuickJs_destroyContext(JNIEnv* env, jobject type, jlong context) {
+Java_app_cash_quickjs_QuickJs_destroyContext(JNIEnv* env, jobject type, jlong context) {
   delete reinterpret_cast<Context*>(context);
 }
 
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv* env,
+Java_app_cash_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv* env,
                                                                                     jobject type,
                                                                                     jlong context_,
                                                                                     jstring sourceCode,
@@ -51,7 +51,7 @@ Java_com_squareup_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_Strin
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_squareup_quickjs_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context, jstring name,
+Java_app_cash_quickjs_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context, jstring name,
                                       jobjectArray methods) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
@@ -64,7 +64,7 @@ Java_com_squareup_quickjs_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context,
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_squareup_quickjs_QuickJs_set(JNIEnv* env, jobject thiz, jlong _context, jstring name,
+Java_app_cash_quickjs_QuickJs_set(JNIEnv* env, jobject thiz, jlong _context, jstring name,
                                       jobject object, jobjectArray methods) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
@@ -76,7 +76,7 @@ Java_com_squareup_quickjs_QuickJs_set(JNIEnv* env, jobject thiz, jlong _context,
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_com_squareup_quickjs_QuickJs_call(JNIEnv* env, jobject thiz, jlong _context, jlong instance,
+Java_app_cash_quickjs_QuickJs_call(JNIEnv* env, jobject thiz, jlong _context, jlong instance,
                                        jobject method, jobjectArray args) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
