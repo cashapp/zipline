@@ -471,7 +471,7 @@ Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) {
             for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
               int element;
               auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
-              if (!JS_IsInteger(jsElement)) {
+              if (JS_VALUE_GET_TAG(jsElement) != JS_TAG_INT) {
                 const auto str = JS_ToCString(c->jsContext, jsElement);
                 throwJavaException(env, "java/lang/IllegalArgumentException",
                                    "Cannot convert value %s to int", str);
@@ -658,7 +658,7 @@ Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) {
   } else if (typeName == "int") {
     return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
-      if (!JS_IsInteger(v)) {
+      if (JS_VALUE_GET_TAG(v) != JS_TAG_INT) {
         result.l = nullptr;
         const auto str = JS_ToCString(c->jsContext, v);
         throwJavaException(env, "java/lang/IllegalArgumentException",
