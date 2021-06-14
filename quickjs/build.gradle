@@ -1,5 +1,5 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.vanniktech.maven.publish'
+//apply plugin: 'com.vanniktech.maven.publish'
 
 android {
   compileSdkVersion rootProject.ext.compileSdkVersion

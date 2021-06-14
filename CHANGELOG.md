@@ -1,6 +1,13 @@
 Change Log
 ==========
 
+Version 1.4.0 *(2021-06-14)*
+----------------------------
+
+ * New: Update to Duktape 2.6.0.
+ * Fix: Correct a few JNI reference leaks which may have eventually caused a native crash.
+ * Migrated to AndroidX annotations.
+
 Version 1.3.0 *(2018-08-02)*
 ----------------------------
 
