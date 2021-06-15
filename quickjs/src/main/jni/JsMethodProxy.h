@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DUKTAPE_ANDROID_JSMETHODPROXY_H
-#define DUKTAPE_ANDROID_JSMETHODPROXY_H
+#ifndef QUICKJS_ANDROID_JSMETHODPROXY_H
+#define QUICKJS_ANDROID_JSMETHODPROXY_H
 
 #include <jni.h>
 #include <string>
@@ -39,4 +39,4 @@ private:
 };
 
 
-#endif //DUKTAPE_ANDROID_JSMETHODPROXY_H
+#endif //QUICKJS_ANDROID_JSMETHODPROXY_H

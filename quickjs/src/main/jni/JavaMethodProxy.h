@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DUKTAPE_ANDROID_JAVAMETHODPROXY_H
-#define DUKTAPE_ANDROID_JAVAMETHODPROXY_H
+#ifndef QUICKJS_ANDROID_JAVAMETHODPROXY_H
+#define QUICKJS_ANDROID_JAVAMETHODPROXY_H
 
 #include <jni.h>
 #include <functional>
@@ -43,4 +43,4 @@ private:
   bool isVarArgs;
 };
 
-#endif //DUKTAPE_ANDROID_JAVAMETHODPROXY_H
+#endif //QUICKJS_ANDROID_JAVAMETHODPROXY_H

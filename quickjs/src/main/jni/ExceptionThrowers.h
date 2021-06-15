@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DUKTAPE_ANDROID_EXCEPTIONTHROWERS_H
-#define DUKTAPE_ANDROID_EXCEPTIONTHROWERS_H
+#ifndef QUICKJS_ANDROID_EXCEPTIONTHROWERS_H
+#define QUICKJS_ANDROID_EXCEPTIONTHROWERS_H
 
 #include <jni.h>
 #include "quickjs/quickjs.h"
@@ -24,4 +24,4 @@ class Context;
 void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...);
 void throwJsExceptionFmt(JNIEnv *env, const Context *context, const char *fmt, ...);
 
-#endif //DUKTAPE_ANDROID_EXCEPTIONTHROWERS_H
+#endif //QUICKJS_ANDROID_EXCEPTIONTHROWERS_H

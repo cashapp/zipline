@@ -24,6 +24,7 @@ ext {
               'runner': 'androidx.test:runner:1.2.0',
           ],
       ],
+      'duktape': 'com.squareup.duktape:duktape-android:1.4.0',
       'truth': 'com.google.truth:truth:1.0',
       'okio': 'com.squareup.okio:okio:1.14.1',
   ]

@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DUKTAPE_ANDROID_CONTEXT_H
-#define DUKTAPE_ANDROID_CONTEXT_H
+#ifndef QUICKJS_ANDROID_CONTEXT_H
+#define QUICKJS_ANDROID_CONTEXT_H
 
 #include <jni.h>
 #include <string>
@@ -72,4 +72,4 @@ public:
 
 std::string getName(JNIEnv* env, jobject javaClass);
 
-#endif //DUKTAPE_ANDROID_CONTEXT_H
+#endif //QUICKJS_ANDROID_CONTEXT_H

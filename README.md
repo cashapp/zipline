@@ -1,21 +1,19 @@
-Duktape Android
-===============
+# QuickJS Java
 
-The [Duktape embeddable JavaScript engine][duk] packaged for Android.
+The [QuickJS embeddable JavaScript engine][qjs] packaged for Android (and soon the JVM).
 
-Usage
------
+_(Looking for [Duktape Android](#Duktape)?)_
+
+
+## Usage
 
 ```java
-Duktape duktape = Duktape.create();
-try {
-  Log.d("Greeting", duktape.evaluate("'hello world'.toUpperCase();").toString());
-} finally {
-  duktape.close();
+try (QuickJs engine = QuickJs.create()) {
+  Log.d("Greeting", engine.evaluate("'hello world'.toUpperCase();").toString());
 }
 ```
 
-## Supported Java Types
+### Supported Java Types
 
 Currently, the following Java types are supported when interfacing with JavaScript:
 
@@ -28,14 +26,14 @@ Currently, the following Java types are supported when interfacing with JavaScri
 `Object` is also supported in declarations, but the type of the actual value passed must be
 one of the above or `null`.
 
-## Calling Java from JavaScript
+### Calling Java from JavaScript
 
 You can provide a Java object for use as a JavaScript global, and call Java functions from
-JavaScript!  
+JavaScript!
 
-### Example
+#### Example
 
-Suppose we wanted to expose the functionality of [okio's ByteString][okio] in JavaScript to
+Suppose we wanted to expose the functionality of [Okio's `ByteString`][okio] in JavaScript to
 convert hex-encoded strings back into UTF-8. First, define a Java interface that declares
 the methods you would like to call from JavaScript:
 
@@ -45,7 +43,7 @@ interface Utf8 {
 }
 ```
 
-Next, implement the interface in Java code (we leave the heavy lifting to okio):
+Next, implement the interface in Java code (we leave the heavy lifting to Okio):
 
 ```java
 Utf8 utf8 = new Utf8() {
@@ -59,9 +57,9 @@ Now you can set the object to a JavaScript global, making it available in JavaSc
 
 ```java
 // Attach our interface to a JavaScript object called Utf8.
-duktape.set("Utf8", Utf8.class, utf8);
+engine.set("Utf8", Utf8.class, utf8);
 
-String greeting = (String) duktape.evaluate(""
+String greeting = (String) engine.evaluate(""
     // Here we have a hex encoded string.
     + "var hexEnc = 'EC9588EB8595ED9598EC84B8EC9A9421';\n"
     // Call out to Java to decode it!
@@ -71,15 +69,18 @@ String greeting = (String) duktape.evaluate(""
 Log.d("Greeting", greeting);
 ```
 
-## Calling JavaScript from Java
+### Calling JavaScript from Java
 
 You can attach a Java interface to a JavaScript global object, and call JavaScript functions
 directly from Java!  The same Java types are supported for function arguments and return
 values as the opposite case above.
 
-### Example
+#### Example
 
-Imagine a world where we don't have [okio's ByteString][okio]. Fortunately, there's a [Duktape
+TODO fix this example, as it no longer works with QuickJS!
+You should still be able to understand what is going on, though.
+
+Imagine a world where we don't have [Okio's `ByteString`][okio]. Fortunately, there's a [Duktape
 builtin][dukdec] that allows us to convert hex-encoded strings back into UTF-8! We can easily set up a
 proxy that allows us to use it directly from our Java code. First, define a Java interface
 that declares the JavaScript methods you would like to call:
@@ -94,7 +95,7 @@ Next, we define a global JavaScript object in Duktape to connect to:
 
 ```java
 // Note that Duktape.dec returns a Buffer, we must convert it to a String return value.
-duktape.evaluate(""
+engine.evaluate(""
     + "var Utf8 = {\n"
     + "  fromHex: function(v) { return String(Duktape.dec('hex', v)); }\n"
     + "};");
@@ -104,29 +105,49 @@ Now you can connect our interface to the JavaScript global, making it available 
 
 ```java
 // Connect our interface to a JavaScript object called Utf8.
-Utf8 utf8 = duktape.get("Utf8", Utf8.class);
+Utf8 utf8 = engine.get("Utf8", Utf8.class);
 
 // Call into the JavaScript object to decode a string.
 String greeting = utf8.fromHex("EC9588EB8595ED9598EC84B8EC9A9421");
 Log.d("Greeting", greeting);
 ```
 
-Download
---------
+## Download
 
 ```groovy
-implementation 'com.squareup.duktape:duktape-android:1.4.0'
+repositories {
+  mavenCentral()
+}
+dependencies {
+  implementation 'app.cash.quickjs:quickjs-android:0.9.0'
+}
 ```
 
 This library is provided as a "fat" aar with native binaries for all available architectures. To
 reduce your APK size, use the ABI filtering/splitting techniques in the Android plugin:
 http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits
 
-Snapshots of the development version are available in [Sonatype's `snapshots` repository][snap].
+<details>
+<summary>Snapshots of the development version are available in Sonatype's snapshots repository.</summary>
+<p>
+
+```groovy
+repository {
+  mavenCentral()
+  maven {
+    url 'https://oss.sonatype.org/content/repositories/snapshots/'
+  }
+}
+dependencies {
+  implementation 'app.cash.quickjs:quickjs-android:1.0.0-SNAPSHOT'
+}
+```
+
+</p>
+</details>
 
 
-Building
---------
+## Building
 
 ## For Android
 
@@ -137,8 +158,7 @@ Building
 Set the `java.library.path` system property to `build/` when you execute Java.
 
 
-License
--------
+## License
 
     Copyright 2015 Square, Inc.
 
@@ -155,11 +175,19 @@ License
     limitations under the License.
 
 
-Note: The included C code from Duktape is licensed under MIT.
+Note: The included C code from QuickJS is licensed under MIT.
+
+
+## Duktape
+
+This repository used to host an Android-specific packaging of the [Duktape](https://duktape.org/)
+engine. We have changed to using QuickJS with exactly the same features and API. The Duktape
+history is still present in this repo as are the release tags. Available versions are listed on
+[Maven central](https://search.maven.org/artifact/com.squareup.duktape/duktape-android).
 
 
 
- [duk]: http://duktape.org/
+
+ [qjs]: https://bellard.org/quickjs/
  [snap]: https://oss.sonatype.org/content/repositories/snapshots/
  [okio]: https://github.com/square/okio/blob/master/okio/src/main/java/okio/ByteString.java
- [dukdec]: http://duktape.org/guide.html#builtin-duktape-dec

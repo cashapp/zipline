@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef DUKTAPE_ANDROID_JSOBJECTPROXY_H
-#define DUKTAPE_ANDROID_JSOBJECTPROXY_H
+#ifndef QUICKJS_ANDROID_JSOBJECTPROXY_H
+#define QUICKJS_ANDROID_JSOBJECTPROXY_H
 
 #include <jni.h>
 #include <vector>
@@ -34,4 +34,4 @@ public:
   std::vector<JsMethodProxy*> methods;
 };
 
-#endif //DUKTAPE_ANDROID_JSOBJECTPROXY_H
+#endif //QUICKJS_ANDROID_JSOBJECTPROXY_H
