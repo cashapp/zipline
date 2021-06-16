@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   kotlin("jvm")
   kotlin("kapt")
@@ -20,8 +18,4 @@ dependencies {
 buildConfig {
   packageName(group.toString())
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${rootProject.extra["kotlin_plugin_id"]}\"")
-}
-
-tasks.withType<KotlinCompile> {
-  kotlinOptions.jvmTarget = "1.8"
 }
