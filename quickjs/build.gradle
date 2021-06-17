@@ -16,8 +16,8 @@ android {
     externalNativeBuild {
       cmake {
         arguments '-DANDROID_TOOLCHAIN=clang', '-DANDROID_STL=c++_static'
-        cFlags '-std=c99', '-fstrict-aliasing', "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\""
-        cppFlags '-std=c++11', '-fstrict-aliasing', "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\""
+        cFlags '-fstrict-aliasing', "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\""
+        cppFlags '-fstrict-aliasing', "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\""
       }
     }
   }
