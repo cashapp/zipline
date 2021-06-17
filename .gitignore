@@ -9,10 +9,4 @@ local.properties
 reports
 jacoco.exec
 .externalNativeBuild
-
-# upload.sh signing
-/*.asc
-
-# cxx dirs
-duktape/.cxx
-quickjs/.cxx
+.cxx
