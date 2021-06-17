@@ -1,5 +1,3 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-
 plugins {
   id("java-gradle-plugin")
   kotlin("jvm")
@@ -17,10 +15,6 @@ buildConfig {
   buildConfigField("String", "KOTLIN_PLUGIN_GROUP", "\"${project.group}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_NAME", "\"${project.name}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_VERSION", "\"${project.version}\"")
-}
-
-tasks.withType<KotlinCompile> {
-  kotlinOptions.jvmTarget = "1.8"
 }
 
 gradlePlugin {
