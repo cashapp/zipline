@@ -2,7 +2,7 @@
 
 set -e
 
-SRC_LOCATION=quickjs/src/main/jni/quickjs
+SRC_LOCATION=quickjs/android/src/main/jni/quickjs
 
 # Download the things: provide a link to the release binary (e.g. https://bellard.org/quickjs/quickjs-2019-07-09.tar.xz)
 wget -O quickjs.tar.xz $1

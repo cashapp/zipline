@@ -35,7 +35,7 @@ android {
 }
 
 dependencies {
-  implementation project(':quickjs')
+  implementation project(':quickjs:android')
   implementation deps.duktape
   implementation deps.okio
 }
