@@ -22,6 +22,11 @@ android {
     }
   }
 
+  sourceSets {
+    main.java.srcDirs += '../common/java/'
+    androidTest.java.srcDirs += '../common/test/'
+  }
+
   buildTypes {
     release {
       externalNativeBuild {
@@ -57,5 +62,5 @@ dependencies {
 }
 
 def quickJsVersion() {
-  return new File(projectDir, "src/main/jni/quickjs/VERSION").text.trim()
+  return new File(projectDir, "../common/native/quickjs/VERSION").text.trim()
 }

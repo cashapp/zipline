@@ -1,0 +1,23 @@
+apply plugin: 'java-library'
+apply plugin: 'com.vanniktech.maven.publish'
+
+java {
+  sourceCompatibility = JavaVersion.VERSION_1_8
+  targetCompatibility = JavaVersion.VERSION_1_8
+}
+
+sourceSets {
+  main.java.srcDirs += '../common/java'
+  test.java.srcDirs += '../common/test'
+}
+
+dependencies {
+  api deps.androidx.annotation
+
+  testImplementation deps.androidx.test.runner
+  testImplementation deps.truth
+}
+
+test {
+  systemProperty 'java.library.path', file("${buildDir}/resources/main").absolutePath
+}
