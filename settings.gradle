@@ -1,4 +1,5 @@
 rootProject.name = 'quickjs-root'
 
 include ':quickjs:android'
+include ':quickjs:jvm'
 include ':sample-octane'
