@@ -33,13 +33,10 @@ jobs:
 
       - name: Build native library
         run: |
-          mkdir -p quickjs/jvm/build/jni
-          cd quickjs/jvm/build/jni
-          cmake ../.. -DQUICKJS_VERSION="$(cat ../../../common/native/quickjs/VERSION)"
-          make
-          cd ../..
-          mkdir -p src/main/resources/
-          cp -v build/jni/libquickjs.* src/main/resources/
+          cmake -S quickjs/jvm/ -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/common/native/quickjs/VERSION)"
+          cmake --build build/jni/
+          mkdir -p quickjs/jvm/src/main/resources/
+          cp -v build/jni/libquickjs.* quickjs/jvm/src/main/resources/
 
       # TODO Run all tests https://github.com/cashapp/quickjs-java/issues/190
       # We explicitly specify the 'test' task despite being part of 'build' so that '--tests' works.
