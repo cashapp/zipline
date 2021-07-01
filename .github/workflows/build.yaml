@@ -18,7 +18,7 @@ jobs:
       matrix:
         os:
           - macOS-latest
-          # TODO: build on 'ubuntu-latest'
+          - ubuntu-latest
           # TODO: build on 'windows-latest'
 
     runs-on: ${{ matrix.os }}
@@ -31,10 +31,15 @@ jobs:
           distribution: 'zulu'
           java-version: 8
 
+      # Clang is seemingly already installed on Ubuntu but fails to build the project with errors
+      # like "file not found" for `#include <string>`. Explicitly (re?)installing fixes things.
+      - run: sudo apt-get install clang
+        if: matrix.os == 'ubuntu-latest'
+
       - name: Build native library
         run: |
           cmake -S quickjs/jvm/ -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/common/native/quickjs/VERSION)"
-          cmake --build build/jni/
+          cmake --build build/jni/ --verbose
           mkdir -p quickjs/jvm/src/main/resources/
           cp -v build/jni/libquickjs.* quickjs/jvm/src/main/resources/
 
