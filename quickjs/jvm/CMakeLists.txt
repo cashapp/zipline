@@ -4,7 +4,9 @@ project(quickjs)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_CXX_STANDARD 11)
 
-find_package(JNI)
+set(JAVA_AWT_LIBRARY NotNeeded)
+set(JAVA_AWT_INCLUDE_PATH NotNeeded)
+find_package(JNI REQUIRED)
 include_directories(${JNI_INCLUDE_DIRS})
 
 file(GLOB_RECURSE sources "../common/native/*.c" "../common/native/*.cpp")
