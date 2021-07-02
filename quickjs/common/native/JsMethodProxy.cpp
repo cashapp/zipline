@@ -48,7 +48,7 @@ JsMethodProxy::JsMethodProxy(Context* context, JNIEnv* env, const char* name, jo
 }
 
 jobject JsMethodProxy::call(Context* context, JNIEnv* env, JSValue thisPointer, jobjectArray args) const {
-  const auto totalArgs = std::min<int>(argumentLoaders.size(), env->GetArrayLength(args));
+  const auto totalArgs = std::min<int>(argumentLoaders.size(), args ? env->GetArrayLength(args) : 0);
   std::vector<JSValue> arguments;
   int numArgs;
   jvalue arg;
