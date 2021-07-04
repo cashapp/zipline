@@ -128,13 +128,14 @@ public final class QuickJsSetTest {
       assertThat(stackTrace[0].getClassName()).isEqualTo(boundObject.getClass().getName());
       assertThat(stackTrace[0].getMethodName()).isEqualTo("getValue");
 
-      // The next three entries are JavaScript
-      assertThat(stackTrace[1].toString()).isEqualTo("JavaScript.f2(test.js:10)");
-      assertThat(stackTrace[2].toString()).isEqualTo("JavaScript.f1(test.js:5)");
-      assertThat(stackTrace[3].toString()).isEqualTo("JavaScript.<eval>(test.js:2)");
+      // The next four entries are JavaScript
+      assertThat(stackTrace[1].toString()).isEqualTo("JavaScript.getValue(native)");
+      assertThat(stackTrace[2].toString()).isEqualTo("JavaScript.f2(test.js:10)");
+      assertThat(stackTrace[3].toString()).isEqualTo("JavaScript.f1(test.js:5)");
+      assertThat(stackTrace[4].toString()).isEqualTo("JavaScript.<eval>(test.js:2)");
 
       // Then one or two native QuickJs.evaluate methods, followed by QuickJs.evaluate in Java.
-      int i = 4;
+      int i = 5;
       assertThat(stackTrace[i].getClassName()).isEqualTo(QuickJs.class.getName());
       assertThat(stackTrace[i].getMethodName()).isEqualTo("evaluate");
       assertThat(stackTrace[i].isNativeMethod()).isTrue();

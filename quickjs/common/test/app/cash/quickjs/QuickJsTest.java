@@ -43,7 +43,7 @@ public final class QuickJsTest {
       quickjs.evaluate("nope();");
       fail();
     } catch (QuickJsException e) {
-      assertThat(e).hasMessageThat().isEqualTo("nope is not defined");
+      assertThat(e).hasMessageThat().isEqualTo("'nope' is not defined");
     }
   }
 
@@ -75,7 +75,7 @@ public final class QuickJsTest {
           + "}\n", "test.js");
       fail();
     } catch (QuickJsException e) {
-      assertThat(e).hasMessageThat().isEqualTo("nope is not defined");
+      assertThat(e).hasMessageThat().isEqualTo("'nope' is not defined");
       assertThat(e.getStackTrace()[0].toString()).isEqualTo("JavaScript.f2(test.js:10)");
       assertThat(e.getStackTrace()[1].toString()).isEqualTo("JavaScript.f1(test.js:5)");
       assertThat(e.getStackTrace()[2].toString()).isEqualTo("JavaScript.<eval>(test.js:2)");
