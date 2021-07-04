@@ -54,6 +54,7 @@ public:
   const jint jniVersion;
   JSRuntime *jsRuntime;
   JSContext *jsContext;
+  JSClassID jsClassId;
   jclass booleanClass;
   jclass integerClass;
   jclass doubleClass;

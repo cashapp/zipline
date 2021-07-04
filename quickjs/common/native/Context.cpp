@@ -38,10 +38,11 @@ std::string getName(JNIEnv* env, jobject javaClass) {
 
 namespace {
 
-JSClassID classId = 0;
-
-void jsFinalize(JSRuntime*, JSValue val) {
-  delete reinterpret_cast<JavaObjectProxy*>(JS_GetOpaque(val, classId));
+void jsFinalize(JSRuntime* jsRuntime, JSValue val) {
+  auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(jsRuntime));
+  if (context) {
+    delete reinterpret_cast<JavaObjectProxy*>(JS_GetOpaque(val, context->jsClassId));
+  }
 }
 
 struct JniThreadDetacher {
@@ -59,7 +60,7 @@ struct JniThreadDetacher {
 
 Context::Context(JNIEnv* env)
     : jniVersion(env->GetVersion()), jsRuntime(JS_NewRuntime()),
-      jsContext(JS_NewContext(jsRuntime)),
+      jsContext(JS_NewContext(jsRuntime)), jsClassId(0),
       booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
       integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
       doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
@@ -75,6 +76,7 @@ Context::Context(JNIEnv* env)
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
                                                    "(Ljava/lang/String;Ljava/lang/String;)V")) {
   env->GetJavaVM(&javaVm);
+  JS_SetRuntimeOpaque(jsRuntime, this);
 }
 
 Context::~Context() {
@@ -91,6 +93,7 @@ Context::~Context() {
   env->DeleteGlobalRef(integerClass);
   env->DeleteGlobalRef(booleanClass);
   JS_FreeContext(jsContext);
+  JS_SetRuntimeOpaque(jsRuntime, nullptr);
   JS_FreeRuntime(jsRuntime);
 }
 
@@ -157,24 +160,27 @@ void Context::setObjectProxy(JNIEnv* env, jstring name, jobject object, jobjectA
 
   const auto objName = JS_NewAtom(jsContext, nameStr);
   if (!JS_HasProperty(jsContext, global, objName)) {
-    if (classId == 0) {
-      JS_NewClassID(&classId);
+    if (jsClassId == 0) {
+      JS_NewClassID(&jsClassId);
       JSClassDef classDef;
       memset(&classDef, 0, sizeof(JSClassDef));
       classDef.class_name = "QuickJsAndroidProxy";
       classDef.finalizer = jsFinalize;
-      if (JS_NewClass(jsRuntime, classId, &classDef)) {
-        classId = 0;
+      if (JS_NewClass(jsRuntime, jsClassId, &classDef)) {
+        jsClassId = 0;
         throwJavaException(env, "java/lang/NullPointerException",
                            "Failed to allocate JavaScript proxy class");
       }
     }
-    if (classId != 0) {
-      auto proxy = JS_NewObjectClass(jsContext, classId);
+    if (jsClassId != 0) {
+      auto proxy = JS_NewObjectClass(jsContext, jsClassId);
       if (JS_IsException(proxy) || JS_SetProperty(jsContext, global, objName, proxy) <= 0) {
         throwJsException(env, proxy);
       } else {
-        JS_SetOpaque(proxy, new JavaObjectProxy(this, env, nameStr, object, methods, proxy));
+        std::unique_ptr<JavaObjectProxy> javaObject(new JavaObjectProxy(this, env, nameStr, object, methods, proxy));
+        if (!env->ExceptionCheck()) {
+          JS_SetOpaque(proxy, javaObject.release());
+        }
       }
     }
   } else {
@@ -796,9 +802,12 @@ JNIEnv* Context::getEnv() const {
 
 JSValue
 Context::jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  auto proxy = reinterpret_cast<const JavaObjectProxy*>(JS_GetOpaque(this_val, classId));
-  if (proxy) {
-    return proxy->call(magic, argc, argv);
+  auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
+  if (context) {
+    auto proxy = reinterpret_cast<const JavaObjectProxy*>(JS_GetOpaque(this_val, context->jsClassId));
+    if (proxy) {
+      return proxy->call(magic, argc, argv);
+    }
   }
   return JS_ThrowReferenceError(ctx, "Null Java Proxy");
 }
