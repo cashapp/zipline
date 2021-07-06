@@ -57,6 +57,15 @@ subprojects {
     }
   }
 
+  tasks.withType(Test).configureEach {
+    testLogging {
+      if (System.getenv('CI') == 'true') {
+        events = ['failed', 'skipped', 'passed']
+      }
+      exceptionFormat 'full'
+    }
+  }
+
   apply plugin: 'net.ltgt.errorprone'
 
   dependencies {
