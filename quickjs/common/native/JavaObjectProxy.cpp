@@ -31,7 +31,7 @@ JavaObjectProxy::JavaObjectProxy(Context* c, JNIEnv* env, const char* name, jobj
     }
     proxies.emplace_back(context, env, method);
     const auto& proxyMethod = proxies.back();
-    f[i] = JS_CFUNC_MAGIC_DEF(proxyMethod.name.c_str(), static_cast<uint8_t>(proxyMethod.numArgs()),
+    f[i] = JS_CFUNC_MAGIC_DEF(strdup(proxyMethod.name.c_str()), static_cast<uint8_t>(proxyMethod.numArgs()),
                               Context::jsCall, static_cast<short>(i));
     env->DeleteLocalRef(method);
   }
@@ -43,6 +43,9 @@ JavaObjectProxy::JavaObjectProxy(Context* c, JNIEnv* env, const char* name, jobj
 
 JavaObjectProxy::~JavaObjectProxy() {
   context->getEnv()->DeleteGlobalRef(javaThis);
+  for (auto& f : functions) {
+    delete [] f.name;
+  }
 }
 
 JSValue
