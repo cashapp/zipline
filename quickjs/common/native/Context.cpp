@@ -93,7 +93,6 @@ Context::~Context() {
   env->DeleteGlobalRef(integerClass);
   env->DeleteGlobalRef(booleanClass);
   JS_FreeContext(jsContext);
-  JS_SetRuntimeOpaque(jsRuntime, nullptr);
   JS_FreeRuntime(jsRuntime);
 }
 
