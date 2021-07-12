@@ -1,11 +1,8 @@
-name: build
+name: release
 
 on:
-  pull_request: {}
   push:
-    branches:
-      - '**'
-    tags-ignore:
+    tags:
       - '**'
 
 env:
@@ -103,17 +100,28 @@ jobs:
           if-no-files-found: error
 
       - run: ./gradlew publish
-        if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/quickjs-java' }}
         env:
           ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
           ORG_GRADLE_PROJECT_SONATYPE_NEXUS_PASSWORD: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ARTIFACT_SIGNING_PRIVATE_KEY }}
+
+      - uses: ffurrer2/extract-release-notes@v1
+        id: release_notes
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          body: ${{ steps.release_notes.outputs.release_notes }}
+          files: |
+            quickjs/android/build/outputs/aar/*-release.aar
+            quickjs/jvm/build/libs/*.jar
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Deploy docs to website
-        if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/quickjs-java' }}
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
           FOLDER: quickjs/jvm/build/docs/javadoc
-          TARGET_FOLDER: docs/latest/
+          TARGET_FOLDER: docs/0.x/
           CLEAN: true

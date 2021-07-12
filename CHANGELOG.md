@@ -1,12 +1,31 @@
 # Change Log
 
-## 0.9.0 - 2021-06-14
+## [Unreleased]
+
+
+## [0.9.1] - 2021-07-12
+
+JVM artifact is now available at `app.cash.quickjs:quickjs-jvm` for Linux and Mac OS!
+
+### Fixed
+
+* Handle null argument array which was sometimes supplied to native code instead of a zero-element array.
+* Properly track the associated proxy class from native code to avoid a segfault.
+* Eliminate a segfault during engine close when cleaning up proxied objects.
+
+
+## [0.9.0] - 2021-06-14
 
 Backing JS engine change to QuickJS.
 Package name is now `app.cash.quickjs`.
 Entrypoint is `QuickJs` class.
 Maven coordinates are now `app.cash.quickjs:quickjs-android`.
-The API and behavior should otherwise be unchanged
+The API and behavior should otherwise be unchanged.
+
+
+[Unreleased]: https://github.com/cashapp/quickjs-java/compare/0.9.1...HEAD
+[0.5.2]: https://github.com/cashapp/quickjs-java/releases/tag/0.9.1
+[0.5.1]: https://github.com/cashapp/quickjs-java/releases/tag/0.9.0
 
 
 

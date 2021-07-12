@@ -1,6 +1,6 @@
 # QuickJS Java
 
-The [QuickJS embeddable JavaScript engine][qjs] packaged for Android (and soon the JVM).
+The [QuickJS embeddable JavaScript engine][qjs] packaged for Android and the JVM.
 
 _(Looking for [Duktape Android](#Duktape)?)_
 
@@ -12,6 +12,9 @@ try (QuickJs engine = QuickJs.create()) {
   Log.d("Greeting", engine.evaluate("'hello world'.toUpperCase();").toString());
 }
 ```
+
+For long-lived usage feel free to call `QuickJs.create()` and retain the returned instance for as
+long as you need. Be sure to call `.close()` when you are done to avoid leaking native components.
 
 ### Supported Java Types
 
@@ -114,18 +117,22 @@ Log.d("Greeting", greeting);
 
 ## Download
 
+### Android
+
 ```groovy
 repositories {
   mavenCentral()
 }
 dependencies {
-  implementation 'app.cash.quickjs:quickjs-android:0.9.0'
+  implementation 'app.cash.quickjs:quickjs-android:0.9.1'
 }
 ```
 
-This library is provided as a "fat" aar with native binaries for all available architectures. To
-reduce your APK size, use the ABI filtering/splitting techniques in the Android plugin:
-http://tools.android.com/tech-docs/new-build-system/user-guide/apk-splits
+This library is provided as a "fat" `.aar` with native binaries for all available architectures.
+To reduce your binary size, use
+[ABI filtering/splitting](https://developer.android.com/studio/build/configure-apk-splits.html)
+when building an APK and/or enable
+[Android App Bundles](https://developer.android.com/guide/app-bundle).
 
 <details>
 <summary>Snapshots of the development version are available in Sonatype's snapshots repository.</summary>
@@ -147,15 +154,77 @@ dependencies {
 </details>
 
 
+### JVM
+
+```groovy
+repositories {
+  mavenCentral()
+}
+dependencies {
+  implementation 'app.cash.quickjs:quickjs-jvm:0.9.1'
+}
+```
+
+Only Linux and Mac OS are currently supported by the JVM artifact.
+
+<details>
+<summary>Snapshots of the development version are available in Sonatype's snapshots repository.</summary>
+<p>
+
+```groovy
+repository {
+  mavenCentral()
+  maven {
+    url 'https://oss.sonatype.org/content/repositories/snapshots/'
+  }
+}
+dependencies {
+  implementation 'app.cash.quickjs:quickjs-jvm:1.0.0-SNAPSHOT'
+}
+```
+
+</p>
+</details>
+
+
 ## Building
 
-## For Android
+### For Android
 
 ```
-./gradlew build
+$ ./gradlew :quickjs:android:build
 ```
 
-Set the `java.library.path` system property to `build/` when you execute Java.
+The build system will automatically cross-compile the native library to all applicable ABIs and
+create the fat `.aar` in `quickjs/android/build/outputs/aar/`.
+
+This will not run the tests. You must have a working device or emulator connected at which point
+you can explicitly run them.
+
+```
+$ ./gradlew :quickjs:android:connectedCheck
+```
+
+### For the JVM
+
+First, build the native library for your host OS:
+```
+$ cmake -S quickjs/jvm/ -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/common/native/quickjs/VERSION)"
+$ cmake --build build/jni/ --verbose
+```
+
+Next, copy the resulting binary into the resources of the JVM project:
+```
+$ mkdir -p quickjs/jvm/src/main/resources/
+$ cp -v build/jni/libquickjs.* quickjs/jvm/src/main/resources/
+```
+
+Finally, build the platform-specific `.jar` and run the tests:
+```
+$ ./gradlew :quickjs:jvm:build
+```
+
+The `.jar` will be available in `quickjs/jvm/build/libs/`. 
 
 
 ## License
@@ -189,5 +258,4 @@ history is still present in this repo as are the release tags. Available version
 
 
  [qjs]: https://bellard.org/quickjs/
- [snap]: https://oss.sonatype.org/content/repositories/snapshots/
  [okio]: https://github.com/square/okio/blob/master/okio/src/main/java/okio/ByteString.java

@@ -57,6 +57,14 @@ subprojects {
     }
   }
 
+  plugins.withId('com.vanniktech.maven.publish') {
+    signing {
+      def signingKey = findProperty('signingKey')
+      def signingPassword = ''
+      useInMemoryPgpKeys(signingKey, signingPassword)
+    }
+  }
+
   tasks.withType(Test).configureEach {
     testLogging {
       if (System.getenv('CI') == 'true') {

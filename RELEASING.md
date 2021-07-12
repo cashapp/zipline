@@ -16,32 +16,27 @@
    $ git commit -am "Prepare version X.Y.X"
    ```
 
-5. Publish
-
-    ```
-    $ ./gradlew clean publish
-    ```
-
-6. Visit [Sonatype Nexus](https://oss.sonatype.org/) and promote the artifact.
-
-   If this step fails, drop the Sonatype repo, fix, commit, and publish again.
-
-7. Tag
+5. Tag
 
    ```
    $ git tag -am "Version X.Y.Z" X.Y.Z
    ```
 
-8. Update the `VERSION_NAME` in `gradle.properties` to the next "SNAPSHOT" version.
+6. Update the `VERSION_NAME` in `gradle.properties` to the next "SNAPSHOT" version.
 
-9. Commit
+7. Commit
 
    ```
    $ git commit -am "Prepare next development version"
    ```
 
-10. Push!
+8. Push!
 
    ```
    $ git push && git push --tags
    ```
+
+   This will trigger a GitHub Action workflow which will create a GitHub release and upload the
+   release artifacts to Sonatype Nexus.
+
+9. Visit [Sonatype Nexus](https://oss.sonatype.org/) and promote the artifact.
