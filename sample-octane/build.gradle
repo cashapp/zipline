@@ -15,8 +15,8 @@ android {
   }
 
   signingConfigs {
-    javascript {
-      storeFile rootProject.file('javascript.keystore')
+    samples {
+      storeFile file('samples.keystore')
       storePassword 'javascript'
       keyAlias 'javascript'
       keyPassword 'javascript'
@@ -26,10 +26,10 @@ android {
   buildTypes {
     debug {
       applicationIdSuffix '.debug'
-      signingConfig signingConfigs.javascript
+      signingConfig signingConfigs.samples
     }
     release {
-      signingConfig signingConfigs.javascript
+      signingConfig signingConfigs.samples
     }
   }
 }
