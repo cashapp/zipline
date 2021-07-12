@@ -88,7 +88,7 @@ jobs:
           mkdir -p quickjs/jvm/src/main/resources/
           cp -v jvm-native-libraries/* quickjs/jvm/src/main/resources/
 
-      - run: ./gradlew assemble
+      - run: ./gradlew assemble javadoc
 
       - uses: actions/upload-artifact@v2
         with:
@@ -107,3 +107,13 @@ jobs:
         env:
           ORG_GRADLE_PROJECT_SONATYPE_NEXUS_USERNAME: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
           ORG_GRADLE_PROJECT_SONATYPE_NEXUS_PASSWORD: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
+
+      - name: Deploy docs to website
+        if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/quickjs-java' }}
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: site
+          FOLDER: quickjs/jvm/docs/javadoc
+          TARGET_FOLDER: docs/latest/
+          CLEAN: true
