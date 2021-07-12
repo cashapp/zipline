@@ -43,9 +43,7 @@ jobs:
           mkdir -p quickjs/jvm/src/main/resources/
           cp -v build/jni/libquickjs.* quickjs/jvm/src/main/resources/
 
-      # TODO Run all tests https://github.com/cashapp/quickjs-java/issues/190
-      # We explicitly specify the 'test' task despite being part of 'build' so that '--tests' works.
-      - run: ./gradlew :quickjs:jvm:build :quickjs:jvm:test --tests app.cash.quickjs.QuickJsTest.helloWorld
+      - run: ./gradlew :quickjs:jvm:build
 
       - uses: actions/upload-artifact@v2
         with:
@@ -67,11 +65,10 @@ jobs:
 
       - run: ./gradlew :quickjs:android:build :quickjs:android:assembleAndroidTest
 
-      # TODO Run all tests https://github.com/cashapp/quickjs-java/issues/190
       - uses: reactivecircus/android-emulator-runner@v2
         with:
           api-level: 29
-          script: ./gradlew connectedCheck "-Pandroid.testInstrumentationRunnerArguments.class=app.cash.quickjs.QuickJsTest#helloWorld"
+          script: ./gradlew connectedCheck
 
   publish:
     runs-on: ubuntu-latest
