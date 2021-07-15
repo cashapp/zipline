@@ -45,8 +45,12 @@ public final class QuickJsCompileTest {
   }
 
   @Test public void badCode() {
-    byte[] code = quickjs.compile("@#%(*W#(UF(E", "myFile.js");
-    assertThat(code).isNull();
+    try {
+      quickjs.compile("@#%(*W#(UF(E", "myFile.js");
+      fail();
+    } catch (QuickJsException e) {
+      assertThat(e.getMessage()).contains("unexpected token in expression");
+    }
   }
 
   @Test public void exceptionsInScriptIncludeStackTrace() {

@@ -135,6 +135,12 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   env->ReleaseStringUTFChars(file, fileName);
   env->ReleaseStringUTFChars(source, sourceCode);
 
+  if (JS_IsException(compiled)) {
+    // TODO: figure out how to get the failing line number into the exception.
+    throwJsException(env, compiled);
+    return nullptr;
+  }
+
   size_t bufferLength = 0;
   auto buffer = JS_WriteObject(jsContext, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
 

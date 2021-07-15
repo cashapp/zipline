@@ -154,7 +154,7 @@ public final class QuickJs implements Closeable {
    * Compile {@code sourceCode} and return the bytecode. {@code fileName} will be used in error
    * reporting.
    *
-   * Returns null if the sourceCode could not be compiled.
+   * @throws QuickJsException if the sourceCode could not be compiled.
    */
   @Nullable
   public synchronized byte[] compile(@NonNull String sourceCode, @NonNull String fileName) {
