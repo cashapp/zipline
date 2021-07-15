@@ -59,14 +59,12 @@ public final class QuickJsException extends RuntimeException {
     // We have a stacktrace following the message.  Add it to the exception.
     List<StackTraceElement> elements = new ArrayList<>();
 
-    // Splice the JavaScript stack in right above the call to QuickJs.evaluate.
+    // Splice the JavaScript stack in right above the call to QuickJs.
     boolean spliced = false;
     for (StackTraceElement stackTraceElement : throwable.getStackTrace()) {
       if (!spliced
           && stackTraceElement.isNativeMethod()
-          && stackTraceElement.getClassName().equals(QuickJs.class.getName())
-          && (stackTraceElement.getMethodName().equals("evaluate")
-          || stackTraceElement.getMethodName().equals("call"))) {
+          && stackTraceElement.getClassName().equals(QuickJs.class.getName())) {
         for (String line : lines) {
           StackTraceElement jsElement = toStackTraceElement(line);
           if (jsElement == null) {
