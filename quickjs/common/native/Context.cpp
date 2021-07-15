@@ -96,6 +96,67 @@ Context::~Context() {
   JS_FreeRuntime(jsRuntime);
 }
 
+jobject Context::execute(JNIEnv* env, jbyteArray byteCode) {
+  const auto buffer = env->GetByteArrayElements(byteCode, nullptr);
+  const auto bufferLength = env->GetArrayLength(byteCode);
+  const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
+  auto obj = JS_ReadObject(jsContext, reinterpret_cast<const uint8_t*>(buffer), bufferLength, flags);
+  env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
+
+  if (JS_IsException(obj)) {
+    throwJsException(env, obj);
+    return nullptr;
+  }
+
+  if (JS_ResolveModule(jsContext, obj)) {
+    throwJsExceptionFmt(env, this, "Failed to resolve JS module");
+    return nullptr;
+  }
+
+  auto val = JS_EvalFunction(jsContext, obj);
+  jobject result;
+  if (!JS_IsException(val)) {
+    result = toJavaObject(env, val, false);
+  } else {
+    result = nullptr;
+    throwJsException(env, val);
+  }
+  JS_FreeValue(jsContext, val);
+
+  return result;
+}
+
+jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
+  const auto sourceCode = env->GetStringUTFChars(source, 0);
+  const auto fileName = env->GetStringUTFChars(file, 0);
+
+  auto compiled = JS_Eval(jsContext, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY);
+
+  env->ReleaseStringUTFChars(file, fileName);
+  env->ReleaseStringUTFChars(source, sourceCode);
+
+  if (JS_IsException(compiled)) {
+    // TODO: figure out how to get the failing line number into the exception.
+    throwJsException(env, compiled);
+    return nullptr;
+  }
+
+  size_t bufferLength = 0;
+  auto buffer = JS_WriteObject(jsContext, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
+
+  auto result = buffer && bufferLength > 0 ? env->NewByteArray(bufferLength) : nullptr;
+  if (result) {
+    env->SetByteArrayRegion(result, 0, bufferLength, reinterpret_cast<const jbyte*>(buffer));
+  } else {
+    throwJsException(env, compiled);
+  }
+
+  JS_FreeValue(jsContext, compiled);
+  js_free(jsContext, buffer);
+
+  return result;
+}
+
 JsObjectProxy* Context::getObjectProxy(JNIEnv* env, jstring name, jobjectArray methods) {
   JSValue global = JS_GetGlobalObject(jsContext);
 

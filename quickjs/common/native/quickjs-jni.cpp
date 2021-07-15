@@ -34,7 +34,6 @@ Java_app_cash_quickjs_QuickJs_destroyContext(JNIEnv* env, jobject type, jlong co
   delete reinterpret_cast<Context*>(context);
 }
 
-
 extern "C" JNIEXPORT jobject JNICALL
 Java_app_cash_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv* env,
                                                                                     jobject type,
@@ -92,4 +91,24 @@ Java_app_cash_quickjs_QuickJs_call(JNIEnv* env, jobject thiz, jlong _context, jl
   }
 
   return jsObjectProxy->call(context, env, method, args);
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_app_cash_quickjs_QuickJs_execute(JNIEnv* env, jobject thiz, jlong _context, jbyteArray bytecode) {
+  Context* context = reinterpret_cast<Context*>(_context);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException", "Null QuickJs context - did you close your QuickJs?");
+    return nullptr;
+  }
+  return context->execute(env, bytecode);
+}
+
+extern "C" JNIEXPORT jbyteArray JNICALL
+Java_app_cash_quickjs_QuickJs_compile(JNIEnv* env, jobject thiz, jlong _context, jstring sourceCode, jstring fileName) {
+  Context* context = reinterpret_cast<Context*>(_context);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException", "Null QuickJs context - did you close your QuickJs?");
+    return nullptr;
+  }
+  return context->compile(env, sourceCode, fileName);
 }

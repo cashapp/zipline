@@ -151,6 +151,27 @@ public final class QuickJs implements Closeable {
   }
 
   /**
+   * Compile {@code sourceCode} and return the bytecode. {@code fileName} will be used in error
+   * reporting.
+   *
+   * @throws QuickJsException if the sourceCode could not be compiled.
+   */
+  @NonNull
+  public synchronized byte[] compile(@NonNull String sourceCode, @NonNull String fileName) {
+    return compile(context, sourceCode, fileName);
+  }
+
+  /**
+   * Load and execute {@code byteCode} and return the result.
+   *
+   * @throws QuickJsException if there is an error loading or executing the code.
+   */
+  @Nullable
+  public synchronized Object execute(@NonNull byte[] bytecode) {
+    return execute(context, bytecode);
+  }
+
+  /**
    * Release the native resources associated with this object. You <strong>must</strong> call this
    * method for each instance to avoid leaking native memory.
    */
@@ -174,4 +195,6 @@ public final class QuickJs implements Closeable {
   private native long get(long context, String name, Object[] methods);
   private native void set(long context, String name, Object object, Object[] methods);
   private native Object call(long context, long instance, Object method, Object[] args);
+  private native Object execute(long context, byte[] bytecode);
+  private native byte[] compile(long context, String sourceCode, String fileName);
 }
