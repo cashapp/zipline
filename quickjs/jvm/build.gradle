@@ -14,7 +14,7 @@ sourceSets {
 dependencies {
   api deps.androidx.annotation
 
-  testImplementation deps.androidx.test.runner
+  testImplementation deps.junit
   testImplementation deps.truth
 }
 

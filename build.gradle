@@ -25,6 +25,7 @@ ext {
           ],
       ],
       'duktape': 'com.squareup.duktape:duktape-android:1.4.0',
+      'junit': 'junit:junit:4.13.2',
       'truth': 'com.google.truth:truth:1.0',
       'okio': 'com.squareup.okio:okio:1.14.1',
   ]
