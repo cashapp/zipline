@@ -156,7 +156,7 @@ public final class QuickJs implements Closeable {
    *
    * @throws QuickJsException if the sourceCode could not be compiled.
    */
-  @Nullable
+  @NonNull
   public synchronized byte[] compile(@NonNull String sourceCode, @NonNull String fileName) {
     return compile(context, sourceCode, fileName);
   }

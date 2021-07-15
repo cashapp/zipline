@@ -147,6 +147,8 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   auto result = buffer && bufferLength > 0 ? env->NewByteArray(bufferLength) : nullptr;
   if (result) {
     env->SetByteArrayRegion(result, 0, bufferLength, reinterpret_cast<const jbyte*>(buffer));
+  } else {
+    throwJsException(env, compiled);
   }
 
   JS_FreeValue(jsContext, compiled);
