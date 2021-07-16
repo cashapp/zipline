@@ -27,7 +27,7 @@ import java.util.logging.Logger;
 /** An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine. */
 public final class QuickJs implements Closeable {
   static {
-    System.loadLibrary("quickjs");
+    QuickJsNativeLoader.load();
   }
 
   /**

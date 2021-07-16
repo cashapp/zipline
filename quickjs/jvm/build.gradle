@@ -17,7 +17,3 @@ dependencies {
   testImplementation deps.junit
   testImplementation deps.truth
 }
-
-test {
-  systemProperty 'java.library.path', file("${buildDir}/resources/main").absolutePath
-}
