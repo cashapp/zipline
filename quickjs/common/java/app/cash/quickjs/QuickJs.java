@@ -162,7 +162,7 @@ public final class QuickJs implements Closeable {
   }
 
   /**
-   * Load and execute {@code byteCode} and return the result.
+   * Load and execute {@code bytecode} and return the result.
    *
    * @throws QuickJsException if there is an error loading or executing the code.
    */
