@@ -65,6 +65,8 @@ Context::Context(JNIEnv* env)
       integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
       doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
       objectClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Object")))),
+      stringClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/String")))),
+      stringUtf8(static_cast<jstring>(env->NewGlobalRef(env->NewStringUTF("UTF-8")))),
       quickJsExceptionClass(static_cast<jclass>(env->NewGlobalRef(
           env->FindClass("app/cash/quickjs/QuickJsException")))),
       booleanValueOf(env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;")),
@@ -73,6 +75,8 @@ Context::Context(JNIEnv* env)
       integerGetValue(env->GetMethodID(integerClass, "intValue", "()I")),
       doubleValueOf(env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;")),
       doubleGetValue(env->GetMethodID(doubleClass, "doubleValue", "()D")),
+      stringGetBytes(env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B")),
+      stringConstructor(env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V")),
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
                                                    "(Ljava/lang/String;Ljava/lang/String;)V")) {
   env->GetJavaVM(&javaVm);
@@ -88,6 +92,8 @@ Context::~Context() {
     env->DeleteGlobalRef(refs.second);
   }
   env->DeleteGlobalRef(quickJsExceptionClass);
+  env->DeleteGlobalRef(stringUtf8);
+  env->DeleteGlobalRef(stringClass);
   env->DeleteGlobalRef(objectClass);
   env->DeleteGlobalRef(doubleClass);
   env->DeleteGlobalRef(integerClass);
@@ -263,9 +269,16 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
     }
 
     case JS_TAG_STRING: {
+      // Call `new String(byte[], "UTF-8")` to avoid modified UTF-8.
       const char* string = JS_ToCString(jsContext, value);
-      result = env->NewStringUTF(string);
+      size_t stringLength = strlen(string);
+      jbyteArray stringUtf8BytesObject = env->NewByteArray(stringLength);
+      jbyte* stringUtf8Bytes = env->GetByteArrayElements(stringUtf8BytesObject, NULL);
+      std::copy(string, string + stringLength, stringUtf8Bytes);
+      env->ReleaseByteArrayElements(stringUtf8BytesObject, stringUtf8Bytes, JNI_COMMIT);
       JS_FreeCString(jsContext, string);
+      result = env->NewObject(stringClass, stringConstructor, stringUtf8BytesObject, stringUtf8);
+      env->DeleteLocalRef(stringUtf8BytesObject);
       break;
     }
 
@@ -323,12 +336,19 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
 }
 
 jobject Context::eval(JNIEnv* env, jstring source, jstring file) {
-  const char* sourceCode = env->GetStringUTFChars(source, 0);
+  // Convert to UTF-8 and add a trailing '\u0000'.
+  const jbyteArray sourceCodeUtf8BytesObject = static_cast<jbyteArray>(env->CallObjectMethod(source, stringGetBytes, stringUtf8));
+  size_t sourceLength = env->GetArrayLength(sourceCodeUtf8BytesObject);
+  jbyte* sourceCodeUtf8Bytes = env->GetByteArrayElements(sourceCodeUtf8BytesObject, NULL);
+  std::string sourceCodeString = std::string(reinterpret_cast<char*>(sourceCodeUtf8Bytes), sourceLength);
+  sourceCodeString += "\u0000";
+  env->ReleaseByteArrayElements(sourceCodeUtf8BytesObject, sourceCodeUtf8Bytes, JNI_ABORT);
+  env->DeleteLocalRef(sourceCodeUtf8BytesObject);
+
   const char* fileName = env->GetStringUTFChars(file, 0);
 
-  JSValue evalValue = JS_Eval(jsContext, sourceCode, strlen(sourceCode), fileName, 0);
+  JSValue evalValue = JS_Eval(jsContext, sourceCodeString.c_str(), sourceLength, fileName, 0);
 
-  env->ReleaseStringUTFChars(source, sourceCode);
   env->ReleaseStringUTFChars(file, fileName);
 
   jobject result = toJavaObject(env, evalValue, false);
