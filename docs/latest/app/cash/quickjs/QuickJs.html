@@ -113,7 +113,10 @@ var activeTableTab = "activeTableTab";
 <pre>public final class <span class="typeNameLabel">QuickJs</span>
 extends java.lang.Object
 implements java.io.Closeable</pre>
-<div class="block">An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.</div>
+<div class="block">An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.
+ <p>
+ This class is NOT thread safe. If multiple threads access an instance concurrently it must be
+ externally.</div>
 </li>
 </ul>
 </div>
