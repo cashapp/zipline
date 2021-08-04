@@ -83,9 +83,4 @@ public final class QuickJsTest {
           .isEqualTo("app.cash.quickjs.QuickJs.evaluate(Native Method)");
     }
   }
-
-  @Test public void emojiRoundTrip() {
-    assertThat(quickjs.evaluate("\"a\uD83D\uDC1Dcdefg\""))
-        .isEqualTo("a\uD83D\uDC1Dcdefg");
-  }
 }
