@@ -269,16 +269,7 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
     }
 
     case JS_TAG_STRING: {
-      // Call `new String(byte[], "UTF-8")` to avoid modified UTF-8.
-      const char* string = JS_ToCString(jsContext, value);
-      size_t stringLength = strlen(string);
-      jbyteArray stringUtf8BytesObject = env->NewByteArray(stringLength);
-      jbyte* stringUtf8Bytes = env->GetByteArrayElements(stringUtf8BytesObject, NULL);
-      std::copy(string, string + stringLength, stringUtf8Bytes);
-      env->ReleaseByteArrayElements(stringUtf8BytesObject, stringUtf8Bytes, JNI_COMMIT);
-      JS_FreeCString(jsContext, string);
-      result = env->NewObject(stringClass, stringConstructor, stringUtf8BytesObject, stringUtf8);
-      env->DeleteLocalRef(stringUtf8BytesObject);
+      result = toJavaString(env, value);
       break;
     }
 
@@ -336,18 +327,11 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
 }
 
 jobject Context::eval(JNIEnv* env, jstring source, jstring file) {
-  // Convert to UTF-8 and add a trailing '\u0000'.
-  const jbyteArray sourceCodeUtf8BytesObject = static_cast<jbyteArray>(env->CallObjectMethod(source, stringGetBytes, stringUtf8));
-  size_t sourceLength = env->GetArrayLength(sourceCodeUtf8BytesObject);
-  jbyte* sourceCodeUtf8Bytes = env->GetByteArrayElements(sourceCodeUtf8BytesObject, NULL);
-  std::string sourceCodeString = std::string(reinterpret_cast<char*>(sourceCodeUtf8Bytes), sourceLength);
-  sourceCodeString += "\u0000";
-  env->ReleaseByteArrayElements(sourceCodeUtf8BytesObject, sourceCodeUtf8Bytes, JNI_ABORT);
-  env->DeleteLocalRef(sourceCodeUtf8BytesObject);
+  std::string sourceCodeString = toCppString(env, source);
 
   const char* fileName = env->GetStringUTFChars(file, 0);
 
-  JSValue evalValue = JS_Eval(jsContext, sourceCodeString.c_str(), sourceLength, fileName, 0);
+  JSValue evalValue = JS_Eval(jsContext, sourceCodeString.c_str(), sourceCodeString.length(), fileName, 0);
 
   env->ReleaseStringUTFChars(file, fileName);
 
@@ -438,9 +422,8 @@ Context::getJavaToJsConverter(JNIEnv* env, jclass type, bool boxed) {
   if (typeName == "java.lang.String") {
     return [](Context* c, JNIEnv* env, jvalue v) {
       if (!v.l) return JS_NULL;
-      const auto s = env->GetStringUTFChars(static_cast<jstring>(v.l), nullptr);
-      auto jsString = JS_NewString(c->jsContext, s);
-      env->ReleaseStringUTFChars(static_cast<jstring>(v.l), s);
+      std::string string = c->toCppString(env, static_cast<jstring>(v.l));
+      auto jsString = JS_NewString(c->jsContext, string.c_str());
       return jsString;
     };
   } else if (typeName == "java.lang.Double" || (typeName == "double" && boxed)) {
@@ -662,9 +645,7 @@ Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) {
                            "Cannot convert value %s to String", str);
         JS_FreeCString(c->jsContext, str);
       } else {
-        const auto str = JS_ToCString(c->jsContext, v);
-        result.l = env->NewStringUTF(str);
-        JS_FreeCString(c->jsContext, str);
+        result.l = c->toJavaString(env, v);
       }
       return result;
     };
@@ -815,11 +796,11 @@ void Context::throwJsException(JNIEnv* env, const JSValue& value) const {
   JSValue stackValue = JS_GetPropertyStr(jsContext, exceptionValue, "stack");
 
   // If the JS does a `throw 2;`, there won't be a message property.
-  const char* message = JS_ToCString(jsContext,
-                                     JS_IsUndefined(messageValue) ? exceptionValue : messageValue);
+  jstring message = toJavaString(env,
+                                 JS_IsUndefined(messageValue) ? exceptionValue : messageValue);
   JS_FreeValue(jsContext, messageValue);
 
-  const char* stack = JS_ToCString(jsContext, stackValue);
+  jstring stack = toJavaString(env, stackValue);
   JS_FreeValue(jsContext, stackValue);
   JS_FreeValue(jsContext, exceptionValue);
 
@@ -837,16 +818,16 @@ void Context::throwJsException(JNIEnv* env, const JSValue& value) const {
                                "addJavaScriptStack",
                                "(Ljava/lang/Throwable;Ljava/lang/String;)V");
     env->CallStaticVoidMethod(quickJsExceptionClass, addJavaScriptStack, exception,
-                              env->NewStringUTF(stack));
+                              stack);
   } else {
     exception = env->NewObject(quickJsExceptionClass,
                                quickJsExceptionConstructor,
-                               env->NewStringUTF(message),
-                               env->NewStringUTF(stack));
+                               message,
+                               stack);
   }
 
-  JS_FreeCString(jsContext, stack);
-  JS_FreeCString(jsContext, message);
+  env->DeleteLocalRef(stack);
+  env->DeleteLocalRef(message);
 
   env->Throw(static_cast<jthrowable>(exception));
 }
@@ -902,4 +883,35 @@ jclass Context::getGlobalRef(JNIEnv* env, jclass clazz) {
   auto globalRef = static_cast<jclass>(env->NewGlobalRef(clazz));
   globalReferences[name] = globalRef;
   return globalRef;
+}
+
+/*
+ * Converts `string` to UTF-8. Prefer this over `GetStringUTFChars()` for any string that might
+ * contain non-ASCII characters because that function returns modified UTF-8.
+ */
+std::string Context::toCppString(JNIEnv* env, jstring string) const {
+  const jbyteArray utf8BytesObject = static_cast<jbyteArray>(env->CallObjectMethod(string, stringGetBytes, stringUtf8));
+  size_t utf8Length = env->GetArrayLength(utf8BytesObject);
+  jbyte* utf8Bytes = env->GetByteArrayElements(utf8BytesObject, NULL);
+  std::string result = std::string(reinterpret_cast<char*>(utf8Bytes), utf8Length);
+  env->ReleaseByteArrayElements(utf8BytesObject, utf8Bytes, JNI_ABORT);
+  env->DeleteLocalRef(utf8BytesObject);
+  return result;
+}
+
+/*
+ * Converts `value` to a Java string. Prefer this over `NewStringUTF()` for any string that might
+ * contain non-ASCII characters because that function expects modified UTF-8.
+ */
+jstring Context::toJavaString(JNIEnv* env, const JSValueConst& value) const {
+  const char* string = JS_ToCString(jsContext, value);
+  size_t utf8Length = strlen(string);
+  jbyteArray utf8BytesObject = env->NewByteArray(utf8Length);
+  jbyte* utf8Bytes = env->GetByteArrayElements(utf8BytesObject, NULL);
+  std::copy(string, string + utf8Length, utf8Bytes);
+  env->ReleaseByteArrayElements(utf8BytesObject, utf8Bytes, JNI_COMMIT);
+  JS_FreeCString(jsContext, string);
+  jstring result = static_cast<jstring>(env->NewObject(stringClass, stringConstructor, utf8BytesObject, stringUtf8));
+  env->DeleteLocalRef(utf8BytesObject);
+  return result;
 }

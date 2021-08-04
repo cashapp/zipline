@@ -51,6 +51,8 @@ public:
   jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic);
 
   jclass getGlobalRef(JNIEnv* env, jclass clazz);
+  std::string toCppString(JNIEnv* env, jstring string) const;
+  jstring toJavaString(JNIEnv* env, const JSValueConst& value) const;
 
   JavaVM* javaVm;
   const jint jniVersion;
