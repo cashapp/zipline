@@ -24,7 +24,12 @@ import java.lang.reflect.Proxy;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
-/** An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine. */
+/**
+ * An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.
+ * <p>
+ * This class is NOT thread safe. If multiple threads access an instance concurrently it must be
+ * externally.
+ */
 public final class QuickJs implements Closeable {
   static {
     QuickJsNativeLoader.load();
@@ -56,7 +61,7 @@ public final class QuickJs implements Closeable {
    * @throws QuickJsException if there is an error evaluating the script.
    */
   @Nullable
-  public synchronized Object evaluate(@NonNull String script, @NonNull String fileName) {
+  public Object evaluate(@NonNull String script, @NonNull String fileName) {
     return evaluate(context, script, fileName);
   }
 
@@ -66,7 +71,7 @@ public final class QuickJs implements Closeable {
    * @throws QuickJsException if there is an error evaluating the script.
    */
   @Nullable
-  public synchronized Object evaluate(@NonNull String script) {
+  public Object evaluate(@NonNull String script) {
     return evaluate(context, script, "?");
   }
 
@@ -79,7 +84,7 @@ public final class QuickJs implements Closeable {
    * types: {@code boolean}, {@link Boolean}, {@code int}, {@link Integer}, {@code double},
    * {@link Double}, {@link String}.
    */
-  public synchronized <T> void set(@NonNull String name, @NonNull Class<T> type,
+  public <T> void set(@NonNull String name, @NonNull Class<T> type,
       @NonNull T object) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be bound. Received: " + type);
@@ -109,7 +114,7 @@ public final class QuickJs implements Closeable {
    * {@link Double}, {@link String}.
    */
   @NonNull
-  public synchronized <T> T get(@NonNull final String name, @NonNull final Class<T> type) {
+  public <T> T get(@NonNull final String name, @NonNull final Class<T> type) {
     if (!type.isInterface()) {
       throw new UnsupportedOperationException("Only interfaces can be proxied. Received: " + type);
     }
@@ -127,7 +132,6 @@ public final class QuickJs implements Closeable {
     if (instance == 0) {
       throw new OutOfMemoryError("Cannot create QuickJs proxy to " + name);
     }
-    final QuickJs quickJs = this;
 
     Object proxy = Proxy.newProxyInstance(type.getClassLoader(), new Class<?>[] { type },
         new InvocationHandler() {
@@ -137,9 +141,7 @@ public final class QuickJs implements Closeable {
             if (method.getDeclaringClass() == Object.class) {
               return method.invoke(this, args);
             }
-            synchronized (quickJs) {
-              return call(quickJs.context, instance, method, args);
-            }
+            return call(context, instance, method, args);
           }
 
           @Override
@@ -157,7 +159,7 @@ public final class QuickJs implements Closeable {
    * @throws QuickJsException if the sourceCode could not be compiled.
    */
   @NonNull
-  public synchronized byte[] compile(@NonNull String sourceCode, @NonNull String fileName) {
+  public byte[] compile(@NonNull String sourceCode, @NonNull String fileName) {
     return compile(context, sourceCode, fileName);
   }
 
@@ -167,7 +169,7 @@ public final class QuickJs implements Closeable {
    * @throws QuickJsException if there is an error loading or executing the code.
    */
   @Nullable
-  public synchronized Object execute(@NonNull byte[] bytecode) {
+  public Object execute(@NonNull byte[] bytecode) {
     return execute(context, bytecode);
   }
 
@@ -175,7 +177,7 @@ public final class QuickJs implements Closeable {
    * Release the native resources associated with this object. You <strong>must</strong> call this
    * method for each instance to avoid leaking native memory.
    */
-  @Override public synchronized void close() {
+  @Override public void close() {
     if (context != 0) {
       long contextToClose = context;
       context = 0;
@@ -183,7 +185,7 @@ public final class QuickJs implements Closeable {
     }
   }
 
-  @Override protected synchronized void finalize() {
+  @Override protected void finalize() {
     if (context != 0) {
       Logger.getLogger(getClass().getName()).warning("QuickJs instance leaked!");
     }
