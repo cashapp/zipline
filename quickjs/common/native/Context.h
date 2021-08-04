@@ -61,6 +61,8 @@ public:
   jclass integerClass;
   jclass doubleClass;
   jclass objectClass;
+  jclass stringClass;
+  jstring stringUtf8;
   jclass quickJsExceptionClass;
   jmethodID booleanValueOf;
   jmethodID booleanGetValue;
@@ -68,6 +70,8 @@ public:
   jmethodID integerGetValue;
   jmethodID doubleValueOf;
   jmethodID doubleGetValue;
+  jmethodID stringGetBytes;
+  jmethodID stringConstructor;
   jmethodID quickJsExceptionConstructor;
   std::vector<JsObjectProxy*> objectProxies;
   std::unordered_map<std::string, jclass> globalReferences;
