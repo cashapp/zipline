@@ -85,9 +85,8 @@ public final class QuickJsTest {
     }
   }
 
-  @Ignore("https://github.com/cashapp/quickjs-java/issues/214")
   @Test public void emojiRoundTrip() {
-    assertThat(quickjs.evaluate("\"\uD83D\uDC1D️\""))
-        .isEqualTo("\uD83D\uDC1D️️");
+    assertThat(quickjs.evaluate("\"\uD83D\uDC1D\""))
+        .isEqualTo("\uD83D\uDC1D");
   }
 }
