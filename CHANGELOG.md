@@ -3,6 +3,25 @@
 ## [Unreleased]
 
 
+## [0.9.2] - 2021-08-04
+
+### Added
+
+* `compile()` method takes JS source and produces a version-specific bytecode representation.
+* `execute()` method takes version-specific bytecode and runs it.
+
+
+### Changed
+
+* Methods are no longer `synchronized`. If you are performing concurrent access add your own synchronization.
+
+
+### Fixed
+
+* Self-extract native libraries from JAR when running on the JVM.
+* Correct UTF-8 handling of multi-byte graphemes to avoid mismatch between Java's modified UTF-8 and QuickJS's traditional UTF-8.
+
+
 ## [0.9.1] - 2021-07-12
 
 JVM artifact is now available at `app.cash.quickjs:quickjs-jvm` for Linux and Mac OS!
@@ -23,9 +42,10 @@ Maven coordinates are now `app.cash.quickjs:quickjs-android`.
 The API and behavior should otherwise be unchanged.
 
 
-[Unreleased]: https://github.com/cashapp/quickjs-java/compare/0.9.1...HEAD
-[0.5.2]: https://github.com/cashapp/quickjs-java/releases/tag/0.9.1
-[0.5.1]: https://github.com/cashapp/quickjs-java/releases/tag/0.9.0
+[Unreleased]: https://github.com/cashapp/quickjs-java/compare/0.10.0...HEAD
+[0.9.2]: https://github.com/cashapp/quickjs-java/releases/tag/0.9.2
+[0.9.1]: https://github.com/cashapp/quickjs-java/releases/tag/0.9.1
+[0.9.0]: https://github.com/cashapp/quickjs-java/releases/tag/0.9.0
 
 
 

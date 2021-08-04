@@ -124,7 +124,7 @@ repositories {
   mavenCentral()
 }
 dependencies {
-  implementation 'app.cash.quickjs:quickjs-android:0.9.1'
+  implementation 'app.cash.quickjs:quickjs-android:0.9.2'
 }
 ```
 
@@ -161,7 +161,7 @@ repositories {
   mavenCentral()
 }
 dependencies {
-  implementation 'app.cash.quickjs:quickjs-jvm:0.9.1'
+  implementation 'app.cash.quickjs:quickjs-jvm:0.9.2'
 }
 ```
 
