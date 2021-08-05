@@ -313,22 +313,11 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
         }
         break;
       } else {
-        size_t jsArrayBufferElementSize;
-        JSValue jsArrayBuffer = JS_GetTypedArrayBuffer(jsContext, value, NULL, NULL, &jsArrayBufferElementSize);
-        if (jsArrayBufferElementSize == 1) {
-          size_t jsArrayLength;
-          uint8_t* jsByteArray = JS_GetArrayBuffer(jsContext, &jsArrayLength, jsArrayBuffer);
-          if (jsByteArray != NULL) {
-            jbyteArray javaByteArrayObject = env->NewByteArray(jsArrayLength);
-            jbyte* javaByteArray = env->GetByteArrayElements(javaByteArrayObject, NULL);
-            std::copy(jsByteArray, jsByteArray + jsArrayLength, javaByteArray);
-            env->ReleaseByteArrayElements(javaByteArrayObject, javaByteArray, JNI_COMMIT);
-            result = javaByteArrayObject;
-            JS_FreeValue(jsContext, jsArrayBuffer);
-            break;
-          }
+        jobject javaByteArrayObject = toJavaByteArray(env, value);
+        if (javaByteArrayObject != nullptr) {
+          result = javaByteArrayObject;
+          break;
         }
-        JS_FreeValue(jsContext, jsArrayBuffer);
       }
       // Fall through.
     default:
@@ -369,7 +358,16 @@ Context::getJavaToJsConverter(JNIEnv* env, jclass type, bool boxed) {
                                               "()Ljava/lang/Class;");
     auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
     const auto elementTypeName = getName(env, elementType);
-    if (elementTypeName == "double") {
+    if (elementTypeName == "byte") {
+      return [](Context* c, JNIEnv* env, jvalue v) {
+        if (!v.l) return JS_NULL;
+        JSValue result = c->toJsByteArray(env, static_cast<jbyteArray>(v.l));
+        if (env->ExceptionCheck()) {
+          c->throwJavaExceptionFromJs(env);
+        }
+        return result;
+      };
+    } else if (elementTypeName == "double") {
       return [](Context* c, JNIEnv* env, jvalue v) {
         if (!v.l) return JS_NULL;
         JSValue result = JS_NewArray(c->jsContext);
@@ -502,7 +500,20 @@ Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) {
                                               "()Ljava/lang/Class;");
     auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
     const auto elementTypeName = getName(env, elementType);
-    if (elementTypeName == "double") {
+    if (elementTypeName == "byte") {
+      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
+        jvalue result;
+        if (JS_IsNull(v) || JS_IsUndefined(v)) {
+          result.l = nullptr;
+        } else if (JS_IsException(v)) {
+          result.l = nullptr;
+          c->throwJsException(env, v);
+        } else {
+          result.l = c->toJavaByteArray(env, v);
+        }
+        return result;
+      };
+    } else if (elementTypeName == "double") {
       return [](Context* c, JNIEnv* env, const JSValueConst& v) {
         jvalue result;
         if (JS_IsNull(v) || JS_IsUndefined(v)) {
@@ -931,4 +942,54 @@ jstring Context::toJavaString(JNIEnv* env, const JSValueConst& value) const {
   jstring result = static_cast<jstring>(env->NewObject(stringClass, stringConstructor, utf8BytesObject, stringUtf8));
   env->DeleteLocalRef(utf8BytesObject);
   return result;
+}
+
+/**
+ * Create a new byte[] and copy the Int8Array, Uint8Array, or Uint8ClampedArray into it. This uses
+ * std::copy rather than a loop for efficiency.
+ *
+ * To get directly at the memory in `value` this needs to get the TypedArrayBuffer from the JS
+ * TypedArray and then get an ArrayBuffer from that.
+ */
+jobject Context::toJavaByteArray(JNIEnv* env, const JSValueConst& value) const {
+  jobject result = nullptr;
+  size_t jsArrayBufferElementSize;
+  JSValue jsArrayBuffer = JS_GetTypedArrayBuffer(jsContext, value, NULL, NULL, &jsArrayBufferElementSize);
+  if (jsArrayBufferElementSize == 1) {
+    size_t jsArrayLength;
+    uint8_t* jsByteArray = JS_GetArrayBuffer(jsContext, &jsArrayLength, jsArrayBuffer);
+    if (jsByteArray != NULL) {
+      jbyteArray javaByteArrayObject = env->NewByteArray(jsArrayLength);
+      jbyte* javaByteArray = env->GetByteArrayElements(javaByteArrayObject, NULL);
+      std::copy(jsByteArray, jsByteArray + jsArrayLength, javaByteArray);
+      env->ReleaseByteArrayElements(javaByteArrayObject, javaByteArray, JNI_COMMIT);
+      result = javaByteArrayObject;
+    }
+  }
+  JS_FreeValue(jsContext, jsArrayBuffer);
+  return result;
+}
+
+/**
+ * Create a new Uint8Array and copy the byte[] into it. This uses std::copy rather than a loop for
+ * efficiency. This needs to look up the function `Uint8Array()` on the global object, then invoke
+ * it as a constructor with the size of the new array.
+ */
+JSValue Context::toJsByteArray(JNIEnv* env, jbyteArray value) const {
+  const auto length = env->GetArrayLength(value);
+  JSValue globalObject = JS_GetGlobalObject(jsContext);
+  JSValue uint8Constructor = JS_GetPropertyStr(jsContext, globalObject, "Uint8Array");
+  JS_FreeValue(jsContext, globalObject);
+  JSValue jsLength = JS_NewInt32(jsContext, length);
+  JSValue jsArray = JS_CallConstructor(jsContext, uint8Constructor, 1, &jsLength);
+  JS_FreeValue(jsContext, uint8Constructor);
+  JS_FreeValue(jsContext, jsLength);
+  JSValue jsArrayBuffer = JS_GetTypedArrayBuffer(jsContext, jsArray, NULL, NULL, NULL);
+  size_t jsArrayLength;
+  uint8_t* jsByteArray = JS_GetArrayBuffer(jsContext, &jsArrayLength, jsArrayBuffer);
+  jbyte* javaBytes = env->GetByteArrayElements(value, NULL);
+  std::copy(javaBytes, javaBytes + length, jsByteArray);
+  env->ReleaseByteArrayElements(value, javaBytes, JNI_COMMIT);
+  JS_FreeValue(jsContext, jsArrayBuffer);
+  return jsArray;
 }

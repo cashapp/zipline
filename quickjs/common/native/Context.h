@@ -53,6 +53,8 @@ public:
   jclass getGlobalRef(JNIEnv* env, jclass clazz);
   std::string toCppString(JNIEnv* env, jstring string) const;
   jstring toJavaString(JNIEnv* env, const JSValueConst& value) const;
+  jobject toJavaByteArray(JNIEnv* env, const JSValueConst& value) const;
+  JSValue toJsByteArray(JNIEnv* env, jbyteArray value) const;
 
   JavaVM* javaVm;
   const jint jniVersion;
