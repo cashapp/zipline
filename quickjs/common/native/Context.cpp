@@ -312,6 +312,23 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
           JS_FreeValue(jsContext, element);
         }
         break;
+      } else {
+        size_t jsArrayBufferElementSize;
+        JSValue jsArrayBuffer = JS_GetTypedArrayBuffer(jsContext, value, NULL, NULL, &jsArrayBufferElementSize);
+        if (jsArrayBufferElementSize == 1) {
+          size_t jsArrayLength;
+          uint8_t* jsByteArray = JS_GetArrayBuffer(jsContext, &jsArrayLength, jsArrayBuffer);
+          if (jsByteArray != NULL) {
+            jbyteArray javaByteArrayObject = env->NewByteArray(jsArrayLength);
+            jbyte* javaByteArray = env->GetByteArrayElements(javaByteArrayObject, NULL);
+            std::copy(jsByteArray, jsByteArray + jsArrayLength, javaByteArray);
+            env->ReleaseByteArrayElements(javaByteArrayObject, javaByteArray, JNI_COMMIT);
+            result = javaByteArrayObject;
+            JS_FreeValue(jsContext, jsArrayBuffer);
+            break;
+          }
+        }
+        JS_FreeValue(jsContext, jsArrayBuffer);
       }
       // Fall through.
     default:
