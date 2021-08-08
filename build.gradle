@@ -10,6 +10,7 @@ buildscript {
     classpath 'com.android.tools.build:gradle:4.2.1'
     classpath 'net.ltgt.gradle:gradle-errorprone-plugin:2.0.1'
     classpath 'com.vanniktech:gradle-maven-publish-plugin:0.14.2'
+    classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20"
   }
 }
 
@@ -27,7 +28,8 @@ ext {
       'duktape': 'com.squareup.duktape:duktape-android:1.4.0',
       'junit': 'junit:junit:4.13.2',
       'truth': 'com.google.truth:truth:1.0',
-      'okio': 'com.squareup.okio:okio:1.14.1',
+      'okio': 'com.squareup.okio:okio:2.10.0',
+      'okioMultiplatform': 'com.squareup.okio:okio-multiplatform:2.10.0',
   ]
 }
 
