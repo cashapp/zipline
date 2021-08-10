@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.bnorm.template
+package app.cash.quickjs.ktbridge.plugin
 
 import com.google.auto.service.AutoService
 import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
@@ -24,15 +24,7 @@ import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.CompilerConfigurationKey
 
 @AutoService(CommandLineProcessor::class)
-class TemplateCommandLineProcessor : CommandLineProcessor {
-  companion object {
-    private const val OPTION_STRING = "string"
-    private const val OPTION_FILE = "file"
-
-    val ARG_STRING = CompilerConfigurationKey<String>(OPTION_STRING)
-    val ARG_FILE = CompilerConfigurationKey<String>(OPTION_FILE)
-  }
-
+class KtBridgeCommandLineProcessor : CommandLineProcessor {
   override val pluginId: String = BuildConfig.KOTLIN_PLUGIN_ID
 
   override val pluginOptions: Collection<CliOption> = listOf(
@@ -60,5 +52,13 @@ class TemplateCommandLineProcessor : CommandLineProcessor {
       OPTION_FILE -> configuration.put(ARG_FILE, value)
       else -> throw IllegalArgumentException("Unexpected config option ${option.optionName}")
     }
+  }
+
+  companion object {
+    private const val OPTION_STRING = "string"
+    private const val OPTION_FILE = "file"
+
+    val ARG_STRING = CompilerConfigurationKey<String>(OPTION_STRING)
+    val ARG_FILE = CompilerConfigurationKey<String>(OPTION_FILE)
   }
 }

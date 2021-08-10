@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.bnorm.template
+package app.cash.quickjs.ktbridge.plugin
 
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -22,9 +22,9 @@ import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Test
 
-class IrPluginTest {
+class KtBridgePluginTest {
   @Test
-  fun `IR plugin success`() {
+  fun `happy path`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt", """
@@ -42,7 +42,7 @@ fun debug() = "Hello, World!"
 
 fun compile(
   sourceFiles: List<SourceFile>,
-  plugin: ComponentRegistrar = TemplateComponentRegistrar(),
+  plugin: ComponentRegistrar = KtBridgeComponentRegistrar(),
 ): KotlinCompilation.Result {
   return KotlinCompilation().apply {
     sources = sourceFiles
@@ -54,7 +54,7 @@ fun compile(
 
 fun compile(
   sourceFile: SourceFile,
-  plugin: ComponentRegistrar = TemplateComponentRegistrar(),
+  plugin: ComponentRegistrar = KtBridgeComponentRegistrar(),
 ): KotlinCompilation.Result {
   return compile(listOf(sourceFile), plugin)
 }

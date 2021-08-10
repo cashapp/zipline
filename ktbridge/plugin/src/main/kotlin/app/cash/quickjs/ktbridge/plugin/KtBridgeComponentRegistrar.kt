@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.bnorm.template
+package app.cash.quickjs.ktbridge.plugin
 
 import com.google.auto.service.AutoService
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
@@ -25,12 +25,12 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
 @AutoService(ComponentRegistrar::class)
-class TemplateComponentRegistrar(
+class KtBridgeComponentRegistrar(
   private val defaultString: String,
   private val defaultFile: String,
 ) : ComponentRegistrar {
 
-  @Suppress("unused") // Used by service loader
+  @Suppress("unused") // Used by service loader.
   constructor() : this(
     defaultString = "Hello, World!",
     defaultFile = "file.txt"
@@ -41,10 +41,10 @@ class TemplateComponentRegistrar(
     configuration: CompilerConfiguration
   ) {
     val messageCollector = configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
-    val string = configuration.get(TemplateCommandLineProcessor.ARG_STRING, defaultString)
-    val file = configuration.get(TemplateCommandLineProcessor.ARG_FILE, defaultFile)
+    val string = configuration.get(KtBridgeCommandLineProcessor.ARG_STRING, defaultString)
+    val file = configuration.get(KtBridgeCommandLineProcessor.ARG_FILE, defaultFile)
 
-    IrGenerationExtension.registerExtension(project, TemplateIrGenerationExtension(messageCollector, string, file))
+    IrGenerationExtension.registerExtension(project, KtBridgeIrGenerationExtension(messageCollector, string, file))
   }
 }
 

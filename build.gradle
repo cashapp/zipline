@@ -14,9 +14,14 @@ buildscript {
   }
 }
 
+plugins {
+  id 'com.github.gmazzo.buildconfig' version "2.1.0" apply false
+}
+
 ext {
   compileSdkVersion = 29
   ndkAbiFilters = ['x86', 'x86_64', 'armeabi-v7a', 'arm64-v8a']
+  kotlinPluginId = "app.cash.quickjs.ktbridge.plugin"
 
   deps = [
       'androidx': [
