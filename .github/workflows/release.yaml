@@ -42,6 +42,9 @@ jobs:
 
       - run: ./gradlew :quickjs:jvm:build
 
+      - name: KtBridge
+        run: ./gradlew :ktbridge:check
+
       - uses: actions/upload-artifact@v2
         with:
           name: jvm-native-libraries

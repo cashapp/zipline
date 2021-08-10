@@ -1,5 +1,7 @@
 rootProject.name = 'quickjs-root'
 
+include ':ktbridge'
+include ':ktbridge:testing'
 include ':quickjs:android'
 include ':quickjs:jvm'
 include ':sample-octane'
