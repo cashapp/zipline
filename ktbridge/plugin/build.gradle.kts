@@ -16,6 +16,6 @@ dependencies {
 }
 
 buildConfig {
-  packageName(group.toString())
-  buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${rootProject.extra["kotlin_plugin_id"]}\"")
+  packageName("app.cash.quickjs.ktbridge.plugin")
+  buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${rootProject.extra["kotlinPluginId"]}\"")
 }

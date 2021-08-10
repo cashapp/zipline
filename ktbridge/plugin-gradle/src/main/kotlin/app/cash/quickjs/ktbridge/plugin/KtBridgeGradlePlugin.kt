@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.bnorm.template
+package app.cash.quickjs.ktbridge.plugin
 
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
@@ -23,9 +23,9 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
-class TemplateGradlePlugin : KotlinCompilerPluginSupportPlugin {
+class KtBridgeGradlePlugin : KotlinCompilerPluginSupportPlugin {
   override fun apply(target: Project): Unit = with(target) {
-    extensions.create("template", TemplateGradleExtension::class.java)
+    extensions.create("ktBridge", KtBridgeGradleExtension::class.java)
   }
 
   override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
@@ -48,7 +48,7 @@ class TemplateGradlePlugin : KotlinCompilerPluginSupportPlugin {
     kotlinCompilation: KotlinCompilation<*>
   ): Provider<List<SubpluginOption>> {
     val project = kotlinCompilation.target.project
-    val extension = project.extensions.getByType(TemplateGradleExtension::class.java)
+    val extension = project.extensions.getByType(KtBridgeGradleExtension::class.java)
     return project.provider {
       listOf(
         SubpluginOption(key = "string", value = extension.stringProperty.get()),
