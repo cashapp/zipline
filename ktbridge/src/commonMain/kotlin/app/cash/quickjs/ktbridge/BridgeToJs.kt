@@ -20,5 +20,5 @@ import kotlin.js.JsName
 interface BridgeToJs<T : Any> {
   /** Internal function used to bridge method calls from Java or Android to JavaScript. */
   @JsName("invokeJs")
-  fun invokeJs(funName: String, arguments: ByteArray): ByteArray
+  fun invokeJs(funName: String, encodedArguments: ByteArray): ByteArray
 }

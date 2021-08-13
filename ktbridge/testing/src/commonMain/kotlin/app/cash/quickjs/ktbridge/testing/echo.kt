@@ -58,3 +58,11 @@ object EchoJsAdapter : JsAdapter {
     }
   }
 }
+
+class TestingEchoService(
+  private val greeting: String
+) : EchoService {
+  override fun echo(request: EchoRequest): EchoResponse {
+    return EchoResponse("$greeting from the compiler plugin, ${request.message}")
+  }
+}

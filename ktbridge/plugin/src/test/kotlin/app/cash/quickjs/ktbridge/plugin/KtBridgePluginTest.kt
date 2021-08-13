@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Brian Norman
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,46 @@
 
 package app.cash.quickjs.ktbridge.plugin
 
+import app.cash.quickjs.ktbridge.BridgeToJs
+import app.cash.quickjs.ktbridge.testing.EchoJsAdapter
+import app.cash.quickjs.ktbridge.testing.EchoRequest
+import app.cash.quickjs.ktbridge.testing.EchoResponse
+import app.cash.quickjs.ktbridge.testing.EchoService
+import app.cash.quickjs.ktbridge.toProxy
+import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Test
 
+/**
+ * This test exercises the compiler plugin on the JVM only. This is easier to integrate for testing
+ * and mostly representative of real-world behavior.
+ */
 class KtBridgePluginTest {
   @Test
   fun `happy path`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt", """
-fun main() {
-  println(debug())
-}
+package app.cash.quickjs.ktbridge.testing
 
-fun debug() = "Hello, World!"
+import app.cash.quickjs.ktbridge.createBridgeToJs
+
+val helloService = createBridgeToJs(TestingEchoService("hello"), EchoJsAdapter)
 """
       )
     )
-    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode)
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val mainKt = result.classLoader.loadClass("app.cash.quickjs.ktbridge.testing.MainKt")
+    val helloServiceBridge = mainKt.getDeclaredMethod("getHelloService")
+      .invoke(null) as BridgeToJs<EchoService>
+    val helloService = helloServiceBridge.toProxy(EchoService::class, EchoJsAdapter)
+
+    assertThat(helloService.echo(EchoRequest("Jesse")))
+      .isEqualTo(EchoResponse("hello from the compiler plugin, Jesse"))
   }
 }
 
