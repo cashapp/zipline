@@ -30,5 +30,5 @@ kotlin {
 
 buildConfig {
   packageName("app.cash.quickjs.ktbridge.plugin")
-  buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${rootProject.extra["kotlinPluginId"]}\"")
+  buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${Ext.kotlinPluginId}\"")
 }
