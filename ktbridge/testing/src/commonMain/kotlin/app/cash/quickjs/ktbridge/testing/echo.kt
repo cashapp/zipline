@@ -15,8 +15,8 @@
  */
 package app.cash.quickjs.ktbridge.testing
 
+import app.cash.quickjs.ktbridge.BridgeToJs
 import app.cash.quickjs.ktbridge.JsAdapter
-import kotlin.js.JsName
 import kotlin.reflect.KClass
 import okio.Buffer
 
@@ -32,15 +32,15 @@ data class EchoResponse(
   val message: String
 )
 
+expect val helloService: BridgeToJs<EchoService>
+
+expect val yoService: BridgeToJs<EchoService>
+
 object EchoJsAdapter : JsAdapter {
   override fun <T : Any> encode(value: T, sink: Buffer, type: KClass<T>) {
     when (type) {
       EchoRequest::class -> sink.writeUtf8((value as EchoRequest).message)
       EchoResponse::class -> sink.writeUtf8((value as EchoResponse).message)
-
-      // TODO(jwilson): codegen because we can't get this reflectively in JS
-      Any::class -> sink.writeUtf8((value as EchoResponse).message)
-
       else -> error("unexpected type: $type")
     }
   }
@@ -49,19 +49,7 @@ object EchoJsAdapter : JsAdapter {
     return when (type) {
       EchoRequest::class -> EchoRequest(source.readUtf8()) as T
       EchoResponse::class -> EchoResponse(source.readUtf8()) as T
-
-      // TODO(jwilson): codegen because we can't get this reflectively in JS
-      Any::class -> EchoRequest(source.readUtf8()) as T
-
       else -> error("unexpected type: $type")
     }
-  }
-}
-
-class TestingEchoService(
-  private val greeting: String
-) : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    return EchoResponse("$greeting from the compiler plugin, ${request.message}")
   }
 }

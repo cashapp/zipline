@@ -15,22 +15,20 @@
  */
 package app.cash.quickjs.ktbridge
 
-actual interface BridgeToJs<T : Any>
+import app.cash.quickjs.QuickJs
 
-/**
- * Call this to expose a JavaScript service to the JVM.
+/*
+ * This file mirrors the Kotlin/JS API for Kotlin/JVM to be used by KtBridgePluginTest. We use this
+ * to confirm the generated bridge works without a JavaScript engine. This is particularly
+ * convenient for testing the compiler plugin.
  *
- * The KtBridge Kotlin compiler plugin will rewrite calls to this function to insert a third
- * parameter to invoke the 3-argument overload.
+ * We'd prefer to map the JS sources in to the JVM tests, but that drags in multiplatform machinery
+ * due to our use of expect/actual.
  */
-fun <T : Any> createJsService(jsAdapter: JsAdapter, service: T): BridgeToJs<T> =
-  error("unexpected call to createJsService: is KtBridge plugin configured?")
 
-/** This is invoked by compiler-plugin-rewritten code. */
-@Deprecated(
-  level = DeprecationLevel.HIDDEN,
-  message = "call the two-argument form and let the compiler rewrite calls to use this",
-)
+fun <T : Any> createJsService(jsAdapter: JsAdapter, service: T): BridgeToJs<T> =
+  error("unexpected call")
+
 fun <T : Any> createJsService(
   jsAdapter: JsAdapter,
   service: T,
@@ -41,6 +39,8 @@ fun <T : Any> createJsService(
       val inboundCall = InboundCall(service, funName, encodedArguments, jsAdapter)
       return block(inboundCall)
     }
+
+    override fun get(quickJs: QuickJs): T = error("unexpected call")
   }
 }
 

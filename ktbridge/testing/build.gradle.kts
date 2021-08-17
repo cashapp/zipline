@@ -14,9 +14,14 @@ kotlin {
   }
 
   sourceSets {
-    commonMain {
+    val commonMain by getting {
       dependencies {
         implementation(project(":ktbridge"))
+      }
+    }
+    val jvmMain by getting {
+      dependencies {
+        implementation(project(":quickjs:jvm"))
       }
     }
   }

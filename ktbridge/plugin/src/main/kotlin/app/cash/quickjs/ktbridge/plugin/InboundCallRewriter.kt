@@ -57,28 +57,28 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `createBridgeToJs` with two arguments:
+ * Rewrites calls to `createJsService` with two arguments:
  *
  * ```
- * val helloService = createBridgeToJs(JsEchoService("hello"), EchoJsAdapter)
+ * val helloService = createJsService(EchoJsAdapter, JsEchoService("hello"))
  * ```
  *
  * to the overload that takes three arguments:
  *
  * ```
- * val helloService = createBridgeToJs(
- *   service = JsEchoService("hello"),
+ * val helloService = createJsService(
  *   jsAdapter = EchoJsAdapter,
- *   block = fun (bridgedCall: BridgedCall<JsEchoService>): ByteArray {
+ *   service = JsEchoService("hello"),
+ *   block = fun (inboundCall: InboundCall<EchoService>): ByteArray {
  *     return when {
- *       bridgedCall.funName == "echo" -> {
- *         bridgedCall.result(
- *           bridgedCall.service.echo(
- *             bridgedCall.parameter()
+ *       inboundCall.funName == "echo" -> {
+ *         inboundCall.result(
+ *           inboundCall.service.echo(
+ *             inboundCall.parameter()
  *           )
  *         )
  *       }
- *       else -> bridgedCall.unexpectedFunction()
+ *       else -> inboundCall.unexpectedFunction()
  *     }
  *   }
  * )
@@ -88,7 +88,7 @@ import org.jetbrains.kotlin.name.Name
  * result.
  */
 @ObsoleteDescriptorBasedAPI // TODO(jwilson): is there an alternative?
-class BridgedCallRewriter(
+class InboundCallRewriter(
   private val pluginContext: IrPluginContext,
   private val backingField: IrField,
   private val initializer: IrExpressionBody,
@@ -97,11 +97,11 @@ class BridgedCallRewriter(
   private val irFactory: IrFactory
     get() = pluginContext.irFactory
 
-  private val createBridgeToJsFunction3Arg = pluginContext.referenceFunctions(CREATE_BRIDGE_TO_JS)
+  private val createJsServiceFunction3Arg = pluginContext.referenceFunctions(CREATE_JS_SERVICE)
     .single { it.descriptor.valueParameters.size == 3 }
-  private val classBridgedCall = pluginContext.referenceClass(BRIDGED_CALL) ?: error("TODO")
+  private val classInboundCall = pluginContext.referenceClass(INBOUND_CALL) ?: error("TODO")
   private val serviceInterface = initializerCall.getTypeArgument(0) ?: error("TODO")
-  private val bridgedCallOfTType = classBridgedCall.typeWith(serviceInterface)
+  private val inboundCallOfTType = classInboundCall.typeWith(serviceInterface)
 
   private val function: IrSimpleFunction = irFactory.buildFun {
     name = Name.special("<no name provided>")
@@ -109,8 +109,8 @@ class BridgedCallRewriter(
   }.apply {
     parent = backingField
     addValueParameter(
-      name = "bridgedCall",
-      type = bridgedCallOfTType,
+      name = "inboundCall",
+      type = inboundCallOfTType,
       origin = IrDeclarationOrigin.DEFINED
     )
   }
@@ -132,7 +132,7 @@ class BridgedCallRewriter(
       statements += irBuilder.irReturn(iBridgedFunctionsWhen)
     }
 
-    initializer.expression = irCall(initializerCall, createBridgeToJsFunction3Arg).apply {
+    initializer.expression = irCall(initializerCall, createJsServiceFunction3Arg).apply {
       putValueArgument(2, irBuilder.irFunction1Expression())
     }
   }
@@ -140,8 +140,8 @@ class BridgedCallRewriter(
   /**
    * ```
    * when {
-   *   bridgedCall.funName == "function1" -> ...
-   *   bridgedCall.funName == "function2" -> ...
+   *   inboundCall.funName == "function1" -> ...
+   *   inboundCall.funName == "function2" -> ...
    *   ...
    *   else -> ...
    * }
@@ -181,17 +181,17 @@ class BridgedCallRewriter(
     )
   }
 
-  /** `bridgedCall.funName` */
+  /** `inboundCall.funName` */
   private fun IrBuilderWithScope.irFunName(): IrExpression {
     return irCall(
-      callee = classBridgedCall.getPropertyGetter("funName")!!,
+      callee = classInboundCall.getPropertyGetter("funName")!!,
       type = pluginContext.symbols.string.defaultType,
     ).apply {
-      dispatchReceiver = irGetBridgedCallParameter()
+      dispatchReceiver = irGetInboundCallParameter()
     }
   }
 
-  /** `bridgedCall.service.function1(...)` */
+  /** `inboundCall.service.function1(...)` */
   private fun IrBuilderWithScope.irCallServiceFunction(
     bridgedFunction: IrSimpleFunctionSymbol,
   ): IrExpression {
@@ -218,22 +218,22 @@ class BridgedCallRewriter(
     }
   }
 
-  /** `bridgedCall.service` */
+  /** `inboundCall.service` */
   private fun IrBuilderWithScope.irService(): IrExpression {
     return irCall(
       type = serviceInterface,
-      callee = classBridgedCall.getPropertyGetter("service")!!,
+      callee = classInboundCall.getPropertyGetter("service")!!,
     ).apply {
-      dispatchReceiver = irGetBridgedCallParameter()
+      dispatchReceiver = irGetInboundCallParameter()
     }
   }
 
-  /** `bridgedCall.decode(...)` */
+  /** `inboundCall.decode(...)` */
   private fun IrBuilderWithScope.irCallDecodeParameter(
     valueParameter: ValueParameterDescriptor
   ): IrExpression {
     val parameterFunction = pluginContext.referenceFunctions(
-      BRIDGED_CALL.child(
+      INBOUND_CALL.child(
         Name.identifier("parameter")
       )
     ).single { it.descriptor.isInline }
@@ -244,25 +244,25 @@ class BridgedCallRewriter(
       callee = parameterFunction,
       typeArgumentsCount = 1,
     ).apply {
-      dispatchReceiver = irGetBridgedCallParameter()
+      dispatchReceiver = irGetInboundCallParameter()
       putTypeArgument(0, parameterType)
     }
   }
 
-  /** `bridgedCall` */
-  private fun IrBuilderWithScope.irGetBridgedCallParameter(): IrGetValue {
+  /** `inboundCall` */
+  private fun IrBuilderWithScope.irGetInboundCallParameter(): IrGetValue {
     return irGet(
-      type = bridgedCallOfTType,
+      type = inboundCallOfTType,
       variable = function.valueParameters[0].symbol,
     )
   }
 
-  /** `bridgedCall.result(...)` */
+  /** `inboundCall.result(...)` */
   private fun IrBuilderWithScope.irCallEncodeResult(
     resultExpression: IrExpression
   ): IrExpression {
     val resultFunction = pluginContext.referenceFunctions(
-      BRIDGED_CALL.child(Name.identifier("result"))
+      INBOUND_CALL.child(Name.identifier("result"))
     ).single { it.descriptor.isInline }
 
     return irCall(
@@ -271,23 +271,23 @@ class BridgedCallRewriter(
       typeArgumentsCount = 1,
       valueArgumentsCount = 1,
     ).apply {
-      dispatchReceiver = irGetBridgedCallParameter()
+      dispatchReceiver = irGetInboundCallParameter()
       putTypeArgument(0, resultExpression.type)
       putValueArgument(0, resultExpression)
     }
   }
 
-  /** `bridgedCall.unexpectedFunction()` */
+  /** `inboundCall.unexpectedFunction()` */
   private fun IrBuilderWithScope.irCallUnexpectedFunction(): IrExpression {
     val unexpectedCallFunction = pluginContext.referenceFunctions(
-      BRIDGED_CALL.child(Name.identifier("unexpectedFunction"))
+      INBOUND_CALL.child(Name.identifier("unexpectedFunction"))
     ).single()
 
     return irCall(
       type = pluginContext.symbols.byteArrayType,
       callee = unexpectedCallFunction,
     ).apply {
-      dispatchReceiver = irGetBridgedCallParameter()
+      dispatchReceiver = irGetInboundCallParameter()
     }
   }
 
@@ -302,11 +302,11 @@ class BridgedCallRewriter(
     )
   }
 
-  /** Express [function] as a `Function1<BridgedCall<JsEchoService>, ByteArray>`. */
+  /** Express [function] as a `Function1<InboundCall<JsEchoService>, ByteArray>`. */
   private fun IrBuilderWithScope.irFunction1Expression(): IrFunctionExpression {
     val function1 = pluginContext.referenceClass(FqName("kotlin.Function1"))!!
     val function1WithTypeParameters = function1.typeWith(
-      bridgedCallOfTType,
+      inboundCallOfTType,
       pluginContext.symbols.byteArrayType,
     )
 
@@ -320,8 +320,8 @@ class BridgedCallRewriter(
   }
 
   companion object {
-    val CREATE_BRIDGE_TO_JS = FqName("app.cash.quickjs.ktbridge.createBridgeToJs")
+    val CREATE_JS_SERVICE = FqName("app.cash.quickjs.ktbridge.createJsService")
     val BRIDGE_TO_JS = FqName("app.cash.quickjs.ktbridge.BridgeToJs")
-    val BRIDGED_CALL = FqName("app.cash.quickjs.ktbridge.BridgedCall")
+    val INBOUND_CALL = FqName("app.cash.quickjs.ktbridge.InboundCall")
   }
 }

@@ -16,20 +16,20 @@
 package app.cash.quickjs.ktbridge.testing
 
 import app.cash.quickjs.ktbridge.BridgeToJs
-import app.cash.quickjs.ktbridge.createJsService
+import app.cash.quickjs.ktbridge.createJsClient
 
-class JsEchoService(
-  private val greeting: String
-) : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    return EchoResponse("$greeting from JavaScript, ${request.message}")
-  }
-}
+actual val helloService: BridgeToJs<EchoService> = createJsClient(
+  jsAdapter = EchoJsAdapter,
+  webpackModuleName = "testing",
+  type = EchoService::class,
+  packageName = "app.cash.quickjs.ktbridge.testing",
+  propertyName = "helloService",
+)
 
-@JsExport
-actual val helloService: BridgeToJs<EchoService> =
-  createJsService(EchoJsAdapter, JsEchoService("hello"))
-
-@JsExport
-actual val yoService: BridgeToJs<EchoService> =
-  createJsService(EchoJsAdapter, JsEchoService("yo"))
+actual val yoService: BridgeToJs<EchoService> = createJsClient(
+  jsAdapter = EchoJsAdapter,
+  webpackModuleName = "testing",
+  type = EchoService::class,
+  packageName = "app.cash.quickjs.ktbridge.testing",
+  propertyName = "yoService",
+)

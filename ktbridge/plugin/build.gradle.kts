@@ -12,6 +12,7 @@ dependencies {
 
   testImplementation(project(":ktbridge"))
   testImplementation(project(":ktbridge:testing"))
+  testImplementation(project(":quickjs:jvm"))
   testImplementation(kotlin("test-junit"))
   testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable")
   testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.1")
@@ -20,11 +21,6 @@ dependencies {
 
 kotlin {
   sourceSets {
-    val test by getting {
-      // Include jsMain as JVM test sources! This lets our tests can see createBridgeToJs() with
-      // just `inheritClasspath = true`.
-      kotlin.srcDir("$rootDir/ktbridge/src/jsMain")
-    }
   }
 }
 

@@ -19,7 +19,8 @@ kotlin.js.compiler=ir
 Define a Shared API
 -------------------
 
-Create an interface and value types that'll be shared between platforms.
+In your `commonMain` directory, create an interface and value types that'll be shared between
+platforms. Use an `expect` val to declare a shared global instance.
 
 ```kotlin
 interface EchoService {
@@ -33,6 +34,9 @@ data class EchoRequest(
 data class EchoResponse(
   val message: String
 )
+
+@JsExport
+expect val echoServiceBridge: BridgeToJs<EchoService>
 ```
 
 Define a JsAdapter
@@ -41,11 +45,11 @@ Define a JsAdapter
 Create a shared `JsAdapter` to encode and decode your parameter types.
 
 
-Create a Bridge in Kotlin/JS
-----------------------------
+Create a Service in Kotlin/JS
+-----------------------------
 
-Create an object in Kotlin/JS that you'd like to expose to Kotlin/JVM. Then call
-`createBridgeToJs()` with that object and assign the return value to a global property.
+In your `jsMain` directory, create a service object that you'd like to publish to Kotlin/JVM. Then
+call `createJsService()` with that object and assign the result value to the `actual` val.
 
 ```kotlin
 package com.example
@@ -55,24 +59,28 @@ import app.cash.quickjs.ktbridge.createBridgeToJs
 val echoService: EchoService = ...
 
 @JsExport
-val echoServiceBridge = createBridgeToJs(echoService, EchoJsAdapter)
+actual val echoServiceBridge = createJsService(EchoJsAdapter, echoService)
 ```
 
-Use the Bridge from Kotlin/JVM
-------------------------------
+Create a Client in Kotlin/JVM
+-----------------------------
 
-Load your Kotlin/JS module into QuickJS. The bridge global property should be ready before you
-attempt to access it from the JVM.
-
-Call the `quickjs.getBridgeToJs()` extension function to get an instance.
+In your `jvmMain` directory, call `createJsClient()` to consume the service object.
 
 ```kotlin
-val echoService = quickjs.getBridgeToJs<EchoService>(
+actual val echoServiceBridge = createJsClient<EchoService>(
+  jsAdapter = EchoJsAdapter,
   webpackModuleName = "testing",
-  packageName = "com.example",
-  propertyName = "echoServiceBridge",
-  jsAdapter = EchoJsAdapter
 )
+```
+
+Load your Kotlin/JS module into QuickJS. The service should be ready before you attempt to access it
+from the JVM. Call `get()` on the bridge to get a service instance.
+
+```kotlin
+val quickJs: QuickJs = ...
+
+val echoService = echoServiceBridge.get(quickJs)
 ```
 
 Now you can call Kotlin/JS from Kotlin/JVM. Outbound parameters are encoded in the JVM and decoded

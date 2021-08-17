@@ -15,10 +15,4 @@
  */
 package app.cash.quickjs.ktbridge
 
-import kotlin.js.JsName
-
-interface BridgeToJs<T : Any> {
-  /** Internal function used to bridge method calls from Java or Android to JavaScript. */
-  @JsName("invokeJs")
-  fun invokeJs(funName: String, encodedArguments: ByteArray): ByteArray
-}
+expect interface BridgeToJs<T : Any>
