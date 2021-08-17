@@ -25,8 +25,8 @@ class JsEchoService(
   }
 }
 
-@JsName("helloService")
+@JsExport
 val helloService = createBridgeToJs(JsEchoService("hello"), EchoJsAdapter)
 
-@JsName("yoService")
+@JsExport
 val yoService = createBridgeToJs(JsEchoService("yo"), EchoJsAdapter)

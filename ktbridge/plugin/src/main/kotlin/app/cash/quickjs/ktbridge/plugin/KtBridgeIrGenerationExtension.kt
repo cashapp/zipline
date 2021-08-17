@@ -38,7 +38,8 @@ class KtBridgeIrGenerationExtension(
     messageCollector.report(CompilerMessageSeverity.INFO, "Argument 'file' = $file")
 
     val createBridgeToJsFunction2Arg = pluginContext.referenceFunctions(CREATE_BRIDGE_TO_JS)
-        .single { it.descriptor.valueParameters.size == 2 }
+        .singleOrNull { it.descriptor.valueParameters.size == 2 }
+      ?: return // If this function is absent, there's nothing to do. Perhaps it isn't Kotlin/JS?
 
     // Find top-level properties of type `BridgeToJs<T>` that are initialized with a call to
     // the two-argument overload of createBridgeToJs(). Rewrite these.
