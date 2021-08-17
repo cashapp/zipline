@@ -26,7 +26,6 @@ import okio.buffer
 import okio.source
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
 class KtBridgeTest {
@@ -40,7 +39,6 @@ class KtBridgeTest {
     quickjs.close()
   }
   
-  @Ignore("needs some gradle changes so the KtBridge plugin can be applied")
   @Test fun happyPath() {
     val testingJs = File("testing/build/distributions/testing.js").source().buffer().use { source ->
       source.readUtf8()

@@ -21,7 +21,6 @@ import kotlin.reflect.KClass
 import okio.Buffer
 
 interface EchoService {
-  @JsName("echo")
   fun echo(request: EchoRequest): EchoResponse
 }
 

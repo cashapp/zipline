@@ -4,6 +4,18 @@ KtBridge
 This library makes it easy call between Kotlin/JVM and Kotlin/JavaScript. It expands beyond the
 built-in QuickJs binding to support custom types.
 
+Configure Kotlin/JS IR
+----------------------
+
+KtBridge uses a Kotlin compiler plugin to generate code for calling between the host application and
+QuickJS. This requires configuring the build to use the new IR (Intermediate Representation)
+compiler. In your root project's `gradle.properties`, add this:
+
+```properties
+kotlin.js.compiler=ir
+```
+
+
 Define a Shared API
 -------------------
 
@@ -11,7 +23,6 @@ Create an interface and value types that'll be shared between platforms.
 
 ```kotlin
 interface EchoService {
-  @JsName("echo")
   fun echo(request: EchoRequest): EchoResponse
 }
 
@@ -23,9 +34,6 @@ data class EchoResponse(
   val message: String
 )
 ```
-
-You'll need `@JsName` on all function names.
-
 
 Define a JsAdapter
 ------------------
@@ -40,30 +48,14 @@ Create an object in Kotlin/JS that you'd like to expose to Kotlin/JVM. Then call
 `createBridgeToJs()` with that object and assign the return value to a global property.
 
 ```kotlin
+package com.example
+
+import app.cash.quickjs.ktbridge.createBridgeToJs
+
 val echoService: EchoService = ...
 
-@JsName("echoServiceBridge")
+@JsExport
 val echoServiceBridge = createBridgeToJs(echoService, EchoJsAdapter)
-```
-
-In your Kotlin/JS `build.gradle` make sure that global property is retained. The structure of a
-`keep` argument combines the following:
-
- * The root project name (`rootProject.name` in `settings.gradle`, falling back to root project's
-   directory name)
- * The Kotlin/JS project name (a subproject's directory name) 
- * The enclosing package name
- * The bridge property name
-
-These are joined using a dash for the first delimiter and dots for subsequent delimiters. Here's a
-sample:
-
-```groovy
-tasks {
-  processDceJsKotlinJs {
-    keep("rootprojectname-projectname.com.example.echoServiceBridge")
-  }
-}
 ```
 
 Use the Bridge from Kotlin/JVM

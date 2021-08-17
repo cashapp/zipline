@@ -1,4 +1,4 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinJsDce
+import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 
 plugins {
   kotlin("multiplatform")
@@ -10,6 +10,7 @@ kotlin {
   js {
     browser {
     }
+    binaries.executable()
   }
 
   sourceSets {
@@ -21,7 +22,6 @@ kotlin {
   }
 }
 
-val processDceJsKotlinJs by tasks.getting(KotlinJsDce::class) {
-  keep("quickjs-root-testing.app.cash.quickjs.ktbridge.testing.helloService")
-  keep("quickjs-root-testing.app.cash.quickjs.ktbridge.testing.yoService")
+dependencies {
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":ktbridge:plugin"))
 }

@@ -4,6 +4,6 @@ object Dependencies {
   val duktape = "com.squareup.duktape:duktape-android:1.4.0"
   val junit = "junit:junit:4.13.2"
   val truth = "com.google.truth:truth:1.0"
-  val okio = "com.squareup.okio:okio:2.10.0"
-  val okioMultiplatform = "com.squareup.okio:okio-multiplatform:2.10.0"
+  val okio = "com.squareup.okio:okio:3.0.0-alpha.9"
+  val okioMultiplatform = "com.squareup.okio:okio-multiplatform:3.0.0-alpha.9"
 }
