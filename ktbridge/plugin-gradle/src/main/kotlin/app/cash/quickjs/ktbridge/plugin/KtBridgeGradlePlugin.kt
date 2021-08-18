@@ -38,12 +38,6 @@ class KtBridgeGradlePlugin : KotlinCompilerPluginSupportPlugin {
     version = BuildConfig.KOTLIN_PLUGIN_VERSION
   )
 
-  override fun getPluginArtifactForNative(): SubpluginArtifact = SubpluginArtifact(
-    groupId = BuildConfig.KOTLIN_PLUGIN_GROUP,
-    artifactId = BuildConfig.KOTLIN_PLUGIN_NAME + "-native",
-    version = BuildConfig.KOTLIN_PLUGIN_VERSION
-  )
-
   override fun applyToCompilation(
     kotlinCompilation: KotlinCompilation<*>
   ): Provider<List<SubpluginOption>> {
