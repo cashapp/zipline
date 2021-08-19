@@ -52,12 +52,18 @@ class InboundCallTest {
         else -> inboundCall.unexpectedFunction()
       }
     }
-  ) as InternalBridge<EchoService>
+  ) as InternalBridge
 
   @Test
   fun inboundCallRequestAndResponse() {
     responses += "this is a curt response"
-    val echoService = testService.toProxy(EchoService::class, EchoJsAdapter)
+    val echoService = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        val outboundCall = OutboundCall(EchoJsAdapter, testService, "echo", 1)
+        outboundCall.parameter(request)
+        return outboundCall.invoke()
+      }
+    }
     val response = echoService.echo(EchoRequest("this is a happy request"))
     assertThat(response.message).isEqualTo("this is a curt response")
     assertThat(requests.poll()).isEqualTo("this is a happy request")

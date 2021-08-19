@@ -16,12 +16,15 @@
 
 package app.cash.quickjs.ktbridge.plugin
 
+import app.cash.quickjs.ktbridge.InboundCall
 import app.cash.quickjs.ktbridge.InternalBridge
+import app.cash.quickjs.ktbridge.JsClient
+import app.cash.quickjs.ktbridge.OutboundCall
+import app.cash.quickjs.ktbridge.createJsService
 import app.cash.quickjs.ktbridge.testing.EchoJsAdapter
 import app.cash.quickjs.ktbridge.testing.EchoRequest
 import app.cash.quickjs.ktbridge.testing.EchoResponse
 import app.cash.quickjs.ktbridge.testing.EchoService
-import app.cash.quickjs.ktbridge.toProxy
 import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -35,7 +38,7 @@ import org.junit.Test
  */
 class KtBridgePluginTest {
   @Test
-  fun `createJsService rewritten to dispatch`() {
+  fun `createJsService rewritten to receive inbound calls`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt", """
@@ -58,12 +61,76 @@ val helloService = createJsService(EchoJsAdapter, TestingEchoService("hello"))
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val mainKt = result.classLoader.loadClass("app.cash.quickjs.ktbridge.testing.MainKt")
-    val helloServiceBridge = mainKt.getDeclaredMethod("getHelloService")
-      .invoke(null) as InternalBridge<EchoService>
-    val helloService = helloServiceBridge.toProxy(EchoService::class, EchoJsAdapter)
+    val helloServiceBridge = mainKt.getDeclaredMethod("getHelloService").invoke(null)
+    val helloService = internalBridgeToEchoClient(helloServiceBridge as InternalBridge)
 
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("hello from the compiler plugin, Jesse"))
+  }
+
+  @Test
+  fun `createJsClient rewritten to make outbound calls`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt", """
+package app.cash.quickjs.ktbridge.testing
+
+import app.cash.quickjs.ktbridge.BridgeToJs
+import app.cash.quickjs.ktbridge.createJsClient
+
+val helloService: BridgeToJs<EchoService> = createJsClient<EchoService>(
+  jsAdapter = EchoJsAdapter,
+  webpackModuleName = "testing",
+)
+"""
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val testingEchoService = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        return EchoResponse("greetings from the compiler plugin, ${request.message}")
+      }
+    }
+
+    val mainKt = result.classLoader.loadClass("app.cash.quickjs.ktbridge.testing.MainKt")
+    val helloServiceBridge = mainKt.getDeclaredMethod("getHelloService")
+      .invoke(null) as JsClient<EchoService>
+    val helloService = helloServiceBridge.get(echoServiceToInternalBridge(testingEchoService))
+
+    assertThat(helloService.echo(EchoRequest("Jesse")))
+      .isEqualTo(EchoResponse("greetings from the compiler plugin, Jesse"))
+  }
+
+  /** Manually adapt [InternalBridge] to [EchoService]. In non-test code this is generated. */
+  private fun internalBridgeToEchoClient(internalBridge: InternalBridge): EchoService {
+    return object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        val outboundCall = OutboundCall(EchoJsAdapter, internalBridge, "echo", 1)
+        outboundCall.parameter(request)
+        return outboundCall.invoke()
+      }
+    }
+  }
+
+  /** Manually adapt [EchoService] to [InternalBridge]. In non-test code this is generated. */
+  private fun echoServiceToInternalBridge(service: EchoService): InternalBridge {
+    return createJsService(
+      jsAdapter = EchoJsAdapter,
+      service = service,
+      block = fun(inboundCall: InboundCall<EchoService>): ByteArray {
+        return when {
+          inboundCall.funName == "echo" -> {
+            inboundCall.result(
+              inboundCall.service.echo(
+                inboundCall.parameter()
+              )
+            )
+          }
+          else -> inboundCall.unexpectedFunction()
+        }
+      }
+    ) as InternalBridge
   }
 }
 
