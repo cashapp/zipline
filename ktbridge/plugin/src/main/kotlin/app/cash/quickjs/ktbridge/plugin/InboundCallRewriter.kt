@@ -17,8 +17,6 @@ package app.cash.quickjs.ktbridge.plugin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
-import org.jetbrains.kotlin.descriptors.ValueParameterDescriptor
-import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
@@ -34,6 +32,7 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrFactory
 import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrBranch
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -87,7 +86,6 @@ import org.jetbrains.kotlin.name.Name
  * This synthesizes a function that routes calls by their name, decodes parameters, and encodes the
  * result.
  */
-@ObsoleteDescriptorBasedAPI // TODO(jwilson): is there an alternative?
 class InboundCallRewriter(
   private val pluginContext: IrPluginContext,
   private val backingField: IrField,
@@ -98,7 +96,7 @@ class InboundCallRewriter(
     get() = pluginContext.irFactory
 
   private val createJsServiceFunction3Arg = pluginContext.referenceFunctions(CREATE_JS_SERVICE)
-    .single { it.descriptor.valueParameters.size == 3 }
+    .single { it.owner.valueParameters.size == 3 }
   private val classInboundCall = pluginContext.referenceClass(INBOUND_CALL) ?: error("TODO")
   private val serviceInterface = initializerCall.getTypeArgument(0) ?: error("TODO")
   private val inboundCallOfTType = classInboundCall.typeWith(serviceInterface)
@@ -161,7 +159,7 @@ class InboundCallRewriter(
       result += irBranch(
         condition = irEquals(
           arg1 = irFunName(),
-          arg2 = irString(bridgedFunction.descriptor.name.identifier)
+          arg2 = irString(bridgedFunction.owner.name.identifier)
         ),
         result = irCallEncodeResult(
           resultExpression = irCallServiceFunction(bridgedFunction)
@@ -196,22 +194,20 @@ class InboundCallRewriter(
     bridgedFunction: IrSimpleFunctionSymbol,
   ): IrExpression {
     val getServiceCall = irService()
-    val returnType = pluginContext.typeTranslator.translateType(
-      bridgedFunction.descriptor.returnType ?: error("TODO")
-    )
+    val returnType = bridgedFunction.owner.returnType
 
     return irCall(
       type = returnType,
       callee = bridgedFunction,
-      valueArgumentsCount = bridgedFunction.descriptor.valueParameters.size,
+      valueArgumentsCount = bridgedFunction.owner.valueParameters.size,
     ).apply {
       dispatchReceiver = getServiceCall
 
-      for (p in bridgedFunction.descriptor.valueParameters.indices) {
+      for (p in bridgedFunction.owner.valueParameters.indices) {
         putValueArgument(
           p,
           irCallDecodeParameter(
-            valueParameter = bridgedFunction.descriptor.valueParameters[p]
+            valueParameter = bridgedFunction.owner.valueParameters[p]
           ),
         )
       }
@@ -230,15 +226,15 @@ class InboundCallRewriter(
 
   /** `inboundCall.decode(...)` */
   private fun IrBuilderWithScope.irCallDecodeParameter(
-    valueParameter: ValueParameterDescriptor
+    valueParameter: IrValueParameter
   ): IrExpression {
     val parameterFunction = pluginContext.referenceFunctions(
       INBOUND_CALL.child(
         Name.identifier("parameter")
       )
-    ).single { it.descriptor.isInline }
+    ).single { it.owner.isInline }
 
-    val parameterType = pluginContext.typeTranslator.translateType(valueParameter.type)
+    val parameterType = valueParameter.type
     return irCall(
       type = parameterType,
       callee = parameterFunction,
@@ -263,7 +259,7 @@ class InboundCallRewriter(
   ): IrExpression {
     val resultFunction = pluginContext.referenceFunctions(
       INBOUND_CALL.child(Name.identifier("result"))
-    ).single { it.descriptor.isInline }
+    ).single { it.owner.isInline }
 
     return irCall(
       type = pluginContext.symbols.byteArrayType,

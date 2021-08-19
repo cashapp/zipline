@@ -16,7 +16,6 @@
 
 package app.cash.quickjs.ktbridge.plugin
 
-import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
@@ -24,10 +23,6 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
 class KtBridgeGradlePlugin : KotlinCompilerPluginSupportPlugin {
-  override fun apply(target: Project): Unit = with(target) {
-    extensions.create("ktBridge", KtBridgeGradleExtension::class.java)
-  }
-
   override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
 
   override fun getCompilerPluginId(): String = BuildConfig.KOTLIN_PLUGIN_ID
@@ -42,12 +37,8 @@ class KtBridgeGradlePlugin : KotlinCompilerPluginSupportPlugin {
     kotlinCompilation: KotlinCompilation<*>
   ): Provider<List<SubpluginOption>> {
     val project = kotlinCompilation.target.project
-    val extension = project.extensions.getByType(KtBridgeGradleExtension::class.java)
     return project.provider {
-      listOf(
-        SubpluginOption(key = "string", value = extension.stringProperty.get()),
-        SubpluginOption(key = "file", value = extension.fileProperty.get().asFile.path),
-      )
+      listOf() // No options.
     }
   }
 }
