@@ -47,6 +47,13 @@ fun <T : Any> QuickJs.getBridgeToJs(
     get(globalName, BridgeToJs::class.java) as BridgeToJs<T>
   }
 
+  return bridgeToJs.toProxy(type, jsAdapter)
+}
+
+fun <T : Any> BridgeToJs<T>.toProxy(
+  type: KClass<T>,
+  jsAdapter: JsAdapter
+): T {
   val invocationHandler = object : InvocationHandler {
     override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any {
       val args = args ?: arrayOf()
@@ -61,7 +68,7 @@ fun <T : Any> QuickJs.getBridgeToJs(
         buffer.writeAll(eachValueBuffer)
       }
 
-      val encodedResponse = bridgeToJs.invokeJs(method.name, buffer.readByteArray())
+      val encodedResponse = invokeJs(method.name, buffer.readByteArray())
       buffer.write(encodedResponse)
 
       return jsAdapter.decode(buffer, method.returnType.kotlin)
