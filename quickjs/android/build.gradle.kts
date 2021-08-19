@@ -69,6 +69,6 @@ dependencies {
   androidTestImplementation(Dependencies.truth)
 }
 
-fun quickJsVersion(): File {
-  return File(projectDir, "../common/native/quickjs/VERSION")
+fun quickJsVersion(): String {
+  return File(projectDir, "../common/native/quickjs/VERSION").readText().trim()
 }

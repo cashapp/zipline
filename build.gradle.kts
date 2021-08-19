@@ -20,7 +20,6 @@ buildscript {
 }
 
 plugins {
-  id("com.gradle.plugin-publish") version "0.12.0" apply false
   id("com.github.gmazzo.buildconfig") version "2.1.0" apply false
 }
 
