@@ -18,7 +18,7 @@ package app.cash.quickjs.ktbridge
 import kotlin.js.JsName
 
 // TODO(jwilson): make `internal`.
-interface InternalBridge<T : Any> {
+interface InternalBridge {
   /** Internal function used to bridge method calls from Java or Android to JavaScript. */
   @JsName("invokeJs")
   fun invokeJs(funName: String, encodedArguments: ByteArray): ByteArray

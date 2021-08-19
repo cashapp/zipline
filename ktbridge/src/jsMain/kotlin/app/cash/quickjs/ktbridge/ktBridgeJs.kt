@@ -33,7 +33,7 @@ internal fun <T : Any> createJsService(
   service: T,
   block: (InboundCall<T>) -> ByteArray
 ) : BridgeToJs<T> {
-  return object : BridgeToJs<T>, InternalBridge<T> {
+  return object : BridgeToJs<T>, InternalBridge {
     override fun invokeJs(funName: String, encodedArguments: ByteArray): ByteArray {
       val inboundCall = InboundCall(service, funName, encodedArguments, jsAdapter)
       return block(inboundCall)

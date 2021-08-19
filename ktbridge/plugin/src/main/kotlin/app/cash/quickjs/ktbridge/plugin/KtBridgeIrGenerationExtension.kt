@@ -17,6 +17,7 @@
 package app.cash.quickjs.ktbridge.plugin
 
 import app.cash.quickjs.ktbridge.plugin.InboundCallRewriter.Companion.CREATE_JS_SERVICE
+import app.cash.quickjs.ktbridge.plugin.OutboundCallRewriter.Companion.CREATE_JS_CLIENT
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
@@ -31,7 +32,8 @@ class KtBridgeIrGenerationExtension(
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
     val createJsServiceFunction2Arg = pluginContext.referenceFunctions(CREATE_JS_SERVICE)
         .singleOrNull { it.owner.valueParameters.size == 2 }
-      ?: return // If this function is absent, there's nothing to do. Perhaps it isn't Kotlin/JS?
+    val createJsClientFunction2Arg = pluginContext.referenceFunctions(CREATE_JS_CLIENT)
+        .singleOrNull { it.owner.valueParameters.size == 2 }
 
     // Find top-level properties of type `BridgeToJs<T>` that are initialized with a call to
     // the two-argument overload of createJsService(). Rewrite these.
@@ -44,9 +46,15 @@ class KtBridgeIrGenerationExtension(
         val initializer = backingField.initializer ?: continue
         val initializerCall = initializer.expression
         if (initializerCall !is IrCall) continue
-        if (initializerCall.symbol != createJsServiceFunction2Arg) continue
 
-        InboundCallRewriter(pluginContext, backingField, initializer, initializerCall).rewrite()
+        when (initializerCall.symbol) {
+          createJsServiceFunction2Arg -> {
+            InboundCallRewriter(pluginContext, backingField).rewrite()
+          }
+          createJsClientFunction2Arg -> {
+            OutboundCallRewriter(pluginContext, backingField).rewrite()
+          }
+        }
       }
     }
   }

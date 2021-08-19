@@ -15,21 +15,14 @@
  */
 package app.cash.quickjs.ktbridge.testing
 
-import app.cash.quickjs.ktbridge.BridgeToJs
 import app.cash.quickjs.ktbridge.createJsClient
 
-actual val helloService: BridgeToJs<EchoService> = createJsClient(
+actual val helloService = createJsClient<EchoService>(
   jsAdapter = EchoJsAdapter,
-  webpackModuleName = "testing",
-  type = EchoService::class,
-  packageName = "app.cash.quickjs.ktbridge.testing",
-  propertyName = "helloService",
+  webpackModuleName = "testing"
 )
 
-actual val yoService: BridgeToJs<EchoService> = createJsClient(
+actual val yoService = createJsClient<EchoService>(
   jsAdapter = EchoJsAdapter,
-  webpackModuleName = "testing",
-  type = EchoService::class,
-  packageName = "app.cash.quickjs.ktbridge.testing",
-  propertyName = "yoService",
+  webpackModuleName = "testing"
 )

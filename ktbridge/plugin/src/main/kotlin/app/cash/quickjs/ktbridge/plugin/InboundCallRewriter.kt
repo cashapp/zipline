@@ -39,11 +39,9 @@ import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
 import org.jetbrains.kotlin.ir.expressions.IrFunctionExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
-import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrBlockBodyImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrFunctionExpressionImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrReturnImpl
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.classFqName
@@ -89,9 +87,10 @@ import org.jetbrains.kotlin.name.Name
 class InboundCallRewriter(
   private val pluginContext: IrPluginContext,
   private val backingField: IrField,
-  private val initializer: IrExpressionBody,
-  private val initializerCall: IrCall,
 ) {
+  private val initializer: IrExpressionBody = backingField.initializer!!
+  private val initializerCall: IrCall = initializer.expression as IrCall
+
   private val irFactory: IrFactory
     get() = pluginContext.irFactory
 
@@ -127,7 +126,7 @@ class InboundCallRewriter(
       startOffset = irBuilder.startOffset,
       endOffset = irBuilder.endOffset,
     ).apply {
-      statements += irBuilder.irReturn(iBridgedFunctionsWhen)
+      statements += irBuilder.irReturn(iBridgedFunctionsWhen, function.symbol)
     }
 
     initializer.expression = irCall(initializerCall, createJsServiceFunction3Arg).apply {
@@ -148,11 +147,11 @@ class InboundCallRewriter(
   private fun IrBuilderWithScope.irBridgedFunctionsWhen(): IrExpression {
     val result = mutableListOf<IrBranch>()
 
-    val serviceInterface = pluginContext.referenceClass(serviceInterface.classFqName!!)
+    val serviceInterfaceType = pluginContext.referenceClass(serviceInterface.classFqName!!)
       ?: error("TODO")
 
     // Each bridged function gets its own branch in the when() expression.
-    for (bridgedFunction in serviceInterface.functions) {
+    for (bridgedFunction in serviceInterfaceType.functions) {
       // TODO(jwilson): find a better way to skip equals()/hashCode()/toString()
       if (bridgedFunction.owner.isFakeOverride) continue
 
@@ -285,17 +284,6 @@ class InboundCallRewriter(
     ).apply {
       dispatchReceiver = irGetInboundCallParameter()
     }
-  }
-
-  /** `return ...` */
-  private fun IrBuilderWithScope.irReturn(value: IrExpression): IrReturn {
-    return IrReturnImpl(
-      startOffset = startOffset,
-      endOffset = endOffset,
-      type = value.type,
-      returnTargetSymbol = function.symbol,
-      value = value,
-    )
   }
 
   /** Express [function] as a `Function1<InboundCall<JsEchoService>, ByteArray>`. */
