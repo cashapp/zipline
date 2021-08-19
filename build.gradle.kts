@@ -15,11 +15,11 @@ buildscript {
     classpath("net.ltgt.gradle:gradle-errorprone-plugin:2.0.1")
     classpath("com.vanniktech:gradle-maven-publish-plugin:0.14.2")
     classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20")
+    classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.5.0")
   }
 }
 
 plugins {
-  id("com.gradle.plugin-publish") version "0.12.0" apply false
   id("com.github.gmazzo.buildconfig") version "2.1.0" apply false
 }
 

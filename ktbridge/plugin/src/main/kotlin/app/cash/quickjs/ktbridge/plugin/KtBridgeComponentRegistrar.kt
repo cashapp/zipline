@@ -23,31 +23,20 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
-import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 
 @AutoService(ComponentRegistrar::class)
-class KtBridgeComponentRegistrar(
-  private val defaultString: String,
-  private val defaultFile: String,
-) : ComponentRegistrar {
-
-  @Suppress("unused") // Used by service loader.
-  constructor() : this(
-    defaultString = "Hello, World!",
-    defaultFile = "file.txt"
-  )
-
-  @OptIn(ObsoleteDescriptorBasedAPI::class)
+class KtBridgeComponentRegistrar : ComponentRegistrar {
   override fun registerProjectComponents(
     project: MockProject,
-    configuration: CompilerConfiguration
+    configuration: CompilerConfiguration,
   ) {
-    val messageCollector = configuration.get(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, MessageCollector.NONE)
-    val string = configuration.get(KtBridgeCommandLineProcessor.ARG_STRING, defaultString)
-    val file = configuration.get(KtBridgeCommandLineProcessor.ARG_FILE, defaultFile)
-
-    IrGenerationExtension.registerExtension(project, KtBridgeIrGenerationExtension(messageCollector, string, file))
+    val messageCollector = configuration.get(
+      CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY,
+      MessageCollector.NONE
+    )
+    IrGenerationExtension.registerExtension(
+      project = project,
+      extension = KtBridgeIrGenerationExtension(messageCollector)
+    )
   }
 }
-
-

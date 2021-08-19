@@ -19,26 +19,18 @@ package app.cash.quickjs.ktbridge.plugin
 import app.cash.quickjs.ktbridge.plugin.InboundCallRewriter.Companion.CREATE_JS_SERVICE
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
-import org.jetbrains.kotlin.ir.ObsoleteDescriptorBasedAPI
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.types.classFqName
 
-@ObsoleteDescriptorBasedAPI // TODO(jwilson): is there an alternative?
 class KtBridgeIrGenerationExtension(
   private val messageCollector: MessageCollector,
-  private val string: String,
-  private val file: String
 ) : IrGenerationExtension {
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-    messageCollector.report(CompilerMessageSeverity.INFO, "Argument 'string' = $string")
-    messageCollector.report(CompilerMessageSeverity.INFO, "Argument 'file' = $file")
-
     val createJsServiceFunction2Arg = pluginContext.referenceFunctions(CREATE_JS_SERVICE)
-        .singleOrNull { it.descriptor.valueParameters.size == 2 }
+        .singleOrNull { it.owner.valueParameters.size == 2 }
       ?: return // If this function is absent, there's nothing to do. Perhaps it isn't Kotlin/JS?
 
     // Find top-level properties of type `BridgeToJs<T>` that are initialized with a call to
