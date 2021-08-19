@@ -16,7 +16,7 @@
 
 package app.cash.quickjs.ktbridge.plugin
 
-import app.cash.quickjs.ktbridge.BridgeToJs
+import app.cash.quickjs.ktbridge.InternalBridge
 import app.cash.quickjs.ktbridge.testing.EchoJsAdapter
 import app.cash.quickjs.ktbridge.testing.EchoRequest
 import app.cash.quickjs.ktbridge.testing.EchoResponse
@@ -35,15 +35,23 @@ import org.junit.Test
  */
 class KtBridgePluginTest {
   @Test
-  fun `happy path`() {
+  fun `createJsService rewritten to dispatch`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt", """
 package app.cash.quickjs.ktbridge.testing
 
-import app.cash.quickjs.ktbridge.createBridgeToJs
+import app.cash.quickjs.ktbridge.createJsService
 
-val helloService = createBridgeToJs(TestingEchoService("hello"), EchoJsAdapter)
+class TestingEchoService(
+  private val greeting: String
+) : EchoService {
+  override fun echo(request: EchoRequest): EchoResponse {
+    return EchoResponse("${'$'}greeting from the compiler plugin, ${'$'}{request.message}")
+  }
+}
+
+val helloService = createJsService(EchoJsAdapter, TestingEchoService("hello"))
 """
       )
     )
@@ -51,7 +59,7 @@ val helloService = createBridgeToJs(TestingEchoService("hello"), EchoJsAdapter)
 
     val mainKt = result.classLoader.loadClass("app.cash.quickjs.ktbridge.testing.MainKt")
     val helloServiceBridge = mainKt.getDeclaredMethod("getHelloService")
-      .invoke(null) as BridgeToJs<EchoService>
+      .invoke(null) as InternalBridge<EchoService>
     val helloService = helloServiceBridge.toProxy(EchoService::class, EchoJsAdapter)
 
     assertThat(helloService.echo(EchoRequest("Jesse")))

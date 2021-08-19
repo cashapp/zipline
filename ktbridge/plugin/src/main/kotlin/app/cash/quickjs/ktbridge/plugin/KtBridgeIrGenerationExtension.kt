@@ -16,7 +16,7 @@
 
 package app.cash.quickjs.ktbridge.plugin
 
-import app.cash.quickjs.ktbridge.plugin.BridgedCallRewriter.Companion.CREATE_BRIDGE_TO_JS
+import app.cash.quickjs.ktbridge.plugin.InboundCallRewriter.Companion.CREATE_JS_SERVICE
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
@@ -37,24 +37,24 @@ class KtBridgeIrGenerationExtension(
     messageCollector.report(CompilerMessageSeverity.INFO, "Argument 'string' = $string")
     messageCollector.report(CompilerMessageSeverity.INFO, "Argument 'file' = $file")
 
-    val createBridgeToJsFunction2Arg = pluginContext.referenceFunctions(CREATE_BRIDGE_TO_JS)
+    val createJsServiceFunction2Arg = pluginContext.referenceFunctions(CREATE_JS_SERVICE)
         .singleOrNull { it.descriptor.valueParameters.size == 2 }
       ?: return // If this function is absent, there's nothing to do. Perhaps it isn't Kotlin/JS?
 
     // Find top-level properties of type `BridgeToJs<T>` that are initialized with a call to
-    // the two-argument overload of createBridgeToJs(). Rewrite these.
+    // the two-argument overload of createJsService(). Rewrite these.
 
     for (file in moduleFragment.files) {
       for (declaration in file.declarations) {
         if (declaration !is IrProperty) continue
         val backingField = declaration.backingField ?: continue
-        if (backingField.type.classFqName != BridgedCallRewriter.BRIDGE_TO_JS) continue
+        if (backingField.type.classFqName != InboundCallRewriter.BRIDGE_TO_JS) continue
         val initializer = backingField.initializer ?: continue
         val initializerCall = initializer.expression
         if (initializerCall !is IrCall) continue
-        if (initializerCall.symbol != createBridgeToJsFunction2Arg) continue
+        if (initializerCall.symbol != createJsServiceFunction2Arg) continue
 
-        BridgedCallRewriter(pluginContext, backingField, initializer, initializerCall).rewrite()
+        InboundCallRewriter(pluginContext, backingField, initializer, initializerCall).rewrite()
       }
     }
   }

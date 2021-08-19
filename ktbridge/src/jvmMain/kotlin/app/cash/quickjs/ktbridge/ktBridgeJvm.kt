@@ -24,33 +24,37 @@ import kotlin.reflect.KClass
 import kotlin.reflect.cast
 import okio.Buffer
 
-/**
- * Call this in Kotlin/JVM to get an object that's defined in Kotlin/JS.
- */
-inline fun <reified T : Any> QuickJs.getBridgeToJs(
-  webpackModuleName: String,
-  packageName: String,
-  propertyName: String,
-  jsAdapter: JsAdapter
-): T = getBridgeToJs(webpackModuleName, packageName, propertyName, jsAdapter, T::class)
-
-fun <T : Any> QuickJs.getBridgeToJs(
-  webpackModuleName: String,
-  packageName: String,
-  propertyName: String,
-  jsAdapter: JsAdapter,
-  type: KClass<T>
-): T {
-  val bridgeToJs: BridgeToJs<T> = run {
-    val globalName = "ktBridge_${nextGlobalId.getAndIncrement()}"
-    evaluate("this.$globalName = $webpackModuleName.$packageName.$propertyName")
-    get(globalName, BridgeToJs::class.java) as BridgeToJs<T>
-  }
-
-  return bridgeToJs.toProxy(type, jsAdapter)
+actual interface BridgeToJs<T : Any> {
+  fun get(quickJs: QuickJs): T
 }
 
-fun <T : Any> BridgeToJs<T>.toProxy(
+fun <T : Any> createJsClient(jsAdapter: JsAdapter, webpackModuleName: String): BridgeToJs<T> =
+  error("unexpected call to createBridgeToJs: is KtBridge plugin configured?")
+
+/** This is invoked by compiler-plugin-rewritten code. */
+// @Deprecated(
+//   level = DeprecationLevel.HIDDEN,
+//   message = "call the one-argument form and let the compiler rewrite calls to use this",
+// )
+fun <T : Any> createJsClient(
+  type: KClass<T>,
+  jsAdapter: JsAdapter,
+  webpackModuleName: String,
+  packageName: String,
+  propertyName: String,
+): BridgeToJs<T> {
+  return object : BridgeToJs<T> {
+    override fun get(quickJs: QuickJs): T {
+      val globalName = "ktBridge_${nextGlobalId.getAndIncrement()}"
+      quickJs.evaluate("this.$globalName = $webpackModuleName.$packageName.$propertyName")
+      val internalBridge = quickJs.get(globalName, InternalBridge::class.java) as InternalBridge<T>
+      return internalBridge.toProxy(type, jsAdapter)
+    }
+  }
+}
+
+// TODO(jwilson): make private.
+fun <T : Any> InternalBridge<T>.toProxy(
   type: KClass<T>,
   jsAdapter: JsAdapter
 ): T {

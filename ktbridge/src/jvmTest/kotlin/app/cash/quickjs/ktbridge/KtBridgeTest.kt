@@ -16,10 +16,10 @@
 package app.cash.quickjs.ktbridge
 
 import app.cash.quickjs.QuickJs
-import app.cash.quickjs.ktbridge.testing.EchoJsAdapter
 import app.cash.quickjs.ktbridge.testing.EchoRequest
 import app.cash.quickjs.ktbridge.testing.EchoResponse
-import app.cash.quickjs.ktbridge.testing.EchoService
+import app.cash.quickjs.ktbridge.testing.helloService
+import app.cash.quickjs.ktbridge.testing.yoService
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import okio.buffer
@@ -45,26 +45,9 @@ class KtBridgeTest {
     }
     quickjs.evaluate(testingJs, "testing.js")
 
-    val moduleName = "testing"
-    val packageName = "app.cash.quickjs.ktbridge.testing"
-
-    val helloService = quickjs.getBridgeToJs<EchoService>(
-      webpackModuleName = moduleName,
-      packageName = packageName,
-      propertyName = "helloService",
-      jsAdapter = EchoJsAdapter
-    )
-
-    val yoService = quickjs.getBridgeToJs<EchoService>(
-      webpackModuleName = moduleName,
-      packageName = packageName,
-      propertyName = "yoService",
-      jsAdapter = EchoJsAdapter
-    )
-
-    assertThat(helloService.echo(EchoRequest("Jake")))
+    assertThat(helloService.get(quickjs).echo(EchoRequest("Jake")))
       .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
-    assertThat(yoService.echo(EchoRequest("Kevin")))
+    assertThat(yoService.get(quickjs).echo(EchoRequest("Kevin")))
       .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
   }
 }

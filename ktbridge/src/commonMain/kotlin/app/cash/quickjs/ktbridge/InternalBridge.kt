@@ -13,23 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge.testing
+package app.cash.quickjs.ktbridge
 
-import app.cash.quickjs.ktbridge.BridgeToJs
-import app.cash.quickjs.ktbridge.createJsService
+import kotlin.js.JsName
 
-class JsEchoService(
-  private val greeting: String
-) : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    return EchoResponse("$greeting from JavaScript, ${request.message}")
-  }
+// TODO(jwilson): make `internal`.
+interface InternalBridge<T : Any> {
+  /** Internal function used to bridge method calls from Java or Android to JavaScript. */
+  @JsName("invokeJs")
+  fun invokeJs(funName: String, encodedArguments: ByteArray): ByteArray
 }
-
-@JsExport
-actual val helloService: BridgeToJs<EchoService> =
-  createJsService(EchoJsAdapter, JsEchoService("hello"))
-
-@JsExport
-actual val yoService: BridgeToJs<EchoService> =
-  createJsService(EchoJsAdapter, JsEchoService("yo"))
