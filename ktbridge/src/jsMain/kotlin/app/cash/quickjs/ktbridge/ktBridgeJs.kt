@@ -27,11 +27,8 @@ fun <T : Any> createJsService(jsAdapter: JsAdapter, service: T): BridgeToJs<T> =
   error("unexpected call to createJsService: is KtBridge plugin configured?")
 
 /** This is invoked by compiler-plugin-rewritten code. */
-@Deprecated(
-  level = DeprecationLevel.HIDDEN,
-  message = "call the two-argument form and let the compiler rewrite calls to use this",
-)
-fun <T : Any> createJsService(
+@PublishedApi
+internal fun <T : Any> createJsService(
   jsAdapter: JsAdapter,
   service: T,
   block: (InboundCall<T>) -> ByteArray
