@@ -88,7 +88,7 @@ jobs:
           mkdir -p quickjs/jvm/src/main/resources/
           cp -v jvm-native-libraries/* quickjs/jvm/src/main/resources/
 
-      - run: ./gradlew assemble javadoc
+      - run: ./gradlew assemble dokkaHtml
 
       - uses: actions/upload-artifact@v2
         with:
@@ -125,6 +125,6 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
-          FOLDER: quickjs/jvm/build/docs/javadoc
+          FOLDER: quickjs/jvm/build/dokka/html
           TARGET_FOLDER: docs/0.x/
           CLEAN: true
