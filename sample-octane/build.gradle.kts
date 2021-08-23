@@ -37,7 +37,7 @@ extensions.configure<BaseExtension> {
 }
 
 dependencies {
-  implementation(project(":quickjs:android"))
+  implementation(project(":quickjs"))
   implementation(Dependencies.duktape)
   implementation(Dependencies.okio)
 }

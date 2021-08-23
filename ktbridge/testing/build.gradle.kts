@@ -21,7 +21,7 @@ kotlin {
     }
     val jvmMain by getting {
       dependencies {
-        implementation(project(":quickjs:jvm"))
+        implementation(project(":quickjs"))
       }
     }
   }

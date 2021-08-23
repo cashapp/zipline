@@ -13,7 +13,7 @@ set(JAVA_AWT_INCLUDE_PATH NotNeeded)
 find_package(JNI REQUIRED)
 include_directories(${JNI_INCLUDE_DIRS})
 
-file(GLOB_RECURSE sources "../common/native/*.c" "../common/native/*.cpp")
+file(GLOB_RECURSE sources "../native/*.c" "../native/*.cpp")
 
 add_library(quickjs SHARED ${sources})
 target_compile_definitions(quickjs PUBLIC CONFIG_VERSION="${QUICKJS_VERSION}")

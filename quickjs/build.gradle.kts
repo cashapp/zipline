@@ -1,13 +1,36 @@
-import com.android.build.gradle.BaseExtension
-
 plugins {
+  kotlin("multiplatform")
   id("com.android.library")
-  kotlin("android")
   id("com.vanniktech.maven.publish")
   id("org.jetbrains.dokka")
 }
 
-extensions.configure<BaseExtension> {
+kotlin {
+  android()
+  jvm()
+
+  sourceSets {
+    val jvmSharedMain by creating {
+      dependencies {
+        api(Dependencies.androidxAnnotation)
+      }
+    }
+    val androidMain by getting {
+      dependsOn(jvmSharedMain)
+    }
+    val jvmMain by getting {
+      dependsOn(jvmSharedMain)
+    }
+    val jvmTest by getting {
+      dependencies {
+        api(Dependencies.junit)
+      }
+      kotlin.srcDir("src/jvmSharedTest/kotlin/")
+    }
+  }
+}
+
+android {
   compileSdkVersion(Ext.compileSdkVersion)
 
   defaultConfig {
@@ -30,10 +53,11 @@ extensions.configure<BaseExtension> {
 
   sourceSets {
     val main by getting {
-      java.srcDir("../common/java/")
+      manifest.srcFile("src/androidMain/AndroidManifest.xml")
     }
     val androidTest by getting {
-      java.srcDir("../common/test/")
+      java.srcDir("src/jvmSharedTest/kotlin/")
+      resources.srcDir("src/androidInstrumentationTest/resources/")
     }
   }
 
@@ -59,17 +83,16 @@ extensions.configure<BaseExtension> {
 
   externalNativeBuild {
     cmake {
-      path = file("CMakeLists.txt")
+      path = file("src/androidMain/CMakeLists.txt")
     }
   }
 }
 
 dependencies {
-  api(Dependencies.androidxAnnotation)
-
+  androidTestImplementation(Dependencies.junit)
   androidTestImplementation(Dependencies.androidxTestRunner)
 }
 
 fun quickJsVersion(): String {
-  return File(projectDir, "../common/native/quickjs/VERSION").readText().trim()
+  return File(projectDir, "src/native/quickjs/VERSION").readText().trim()
 }

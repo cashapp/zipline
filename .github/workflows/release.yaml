@@ -35,20 +35,17 @@ jobs:
 
       - name: Build native library
         run: |
-          cmake -S quickjs/jvm/ -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/common/native/quickjs/VERSION)"
+          cmake -S quickjs/src/jvmMain/ -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/src/native/quickjs/VERSION)"
           cmake --build build/jni/ --verbose
-          mkdir -p quickjs/jvm/src/main/resources/
-          cp -v build/jni/libquickjs.* quickjs/jvm/src/main/resources/
+          mkdir -p quickjs/src/jvmMain/resources/
+          cp -v build/jni/libquickjs.* quickjs/src/jvmMain/resources/
 
-      - run: ./gradlew :quickjs:jvm:build
-
-      - name: KtBridge
-        run: ./gradlew :ktbridge:check
+      - run: ./gradlew build
 
       - uses: actions/upload-artifact@v2
         with:
           name: jvm-native-libraries
-          path: quickjs/jvm/src/main/resources/*
+          path: quickjs/src/jvmMain/resources/*
           if-no-files-found: error
 
   android:
@@ -63,7 +60,7 @@ jobs:
           distribution: 'zulu'
           java-version: 8
 
-      - run: ./gradlew :quickjs:android:build :quickjs:android:assembleAndroidTest
+      - run: ./gradlew assembleAndroidTest
 
       - uses: reactivecircus/android-emulator-runner@v2
         with:
@@ -85,21 +82,21 @@ jobs:
 
       - uses: actions/download-artifact@v2
       - run: |
-          mkdir -p quickjs/jvm/src/main/resources/
-          cp -v jvm-native-libraries/* quickjs/jvm/src/main/resources/
+          mkdir -p quickjs/src/jvmMain/resources/
+          cp -v jvm-native-libraries/* quickjs/src/jvmMain/resources/
 
       - run: ./gradlew assemble dokkaHtml
 
       - uses: actions/upload-artifact@v2
         with:
           name: quickjs-jvm.jar
-          path: quickjs/jvm/build/libs/*.jar
+          path: quickjs/build/libs/quickjs-jvm-*.jar
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
         with:
           name: quickjs-android.aar
-          path: quickjs/android/build/outputs/aar/*-release.aar
+          path: quickjs/build/outputs/aar/*-release.aar
           if-no-files-found: error
 
       - run: ./gradlew publish
@@ -114,9 +111,6 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           body: ${{ steps.release_notes.outputs.release_notes }}
-          files: |
-            quickjs/android/build/outputs/aar/*-release.aar
-            quickjs/jvm/build/libs/*.jar
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -125,6 +119,6 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
-          FOLDER: quickjs/jvm/build/dokka/html
+          FOLDER: quickjs/build/dokka/html
           TARGET_FOLDER: docs/0.x/
           CLEAN: true

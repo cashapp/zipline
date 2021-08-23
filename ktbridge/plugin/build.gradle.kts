@@ -13,7 +13,7 @@ dependencies {
 
   testImplementation(project(":ktbridge"))
   testImplementation(project(":ktbridge:testing"))
-  testImplementation(project(":quickjs:jvm"))
+  testImplementation(project(":quickjs"))
   testImplementation(kotlin("test-junit"))
   testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable")
   testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.1")
