@@ -13,10 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs;
+package app.cash.quickjs
 
-final class QuickJsNativeLoader {
-  static void load() {
-    System.loadLibrary("quickjs");
-  }
+internal fun loadNativeLibrary() {
+  System.loadLibrary("quickjs")
 }

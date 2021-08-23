@@ -32,7 +32,7 @@ import java.util.logging.Logger
 class QuickJs private constructor(private var context: Long) : Closeable {
   companion object {
     init {
-      QuickJsNativeLoader.load()
+      loadNativeLibrary()
     }
 
     /**
