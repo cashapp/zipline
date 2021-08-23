@@ -1,6 +1,7 @@
 plugins {
-  id("java-library")
+  kotlin("jvm")
   id("com.vanniktech.maven.publish")
+  id("org.jetbrains.dokka")
 }
 
 java {
