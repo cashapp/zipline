@@ -482,7 +482,8 @@ class QuickJsGetTest {
   companion object {
     private const val SORTER_FUNCTOR = """
       var Sorter = {
-        sort: function(v) {    if (v) {
+        sort: function(v) {
+          if (v) {
             v.sort();
           }
           return v;

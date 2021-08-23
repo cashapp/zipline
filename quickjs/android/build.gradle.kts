@@ -68,7 +68,6 @@ dependencies {
   api(Dependencies.androidxAnnotation)
 
   androidTestImplementation(Dependencies.androidxTestRunner)
-  androidTestImplementation(Dependencies.truth)
 }
 
 fun quickJsVersion(): String {
