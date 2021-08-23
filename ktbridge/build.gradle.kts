@@ -22,7 +22,7 @@ kotlin {
     val jvmMain by getting {
       dependencies {
         api(Dependencies.androidxAnnotation)
-        api(project(":quickjs:jvm"))
+        api(project(":quickjs"))
       }
     }
     val jvmTest by getting {
