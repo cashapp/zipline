@@ -27,7 +27,7 @@ import java.util.logging.Logger
  * An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.
  *
  * This class is NOT thread safe. If multiple threads access an instance concurrently it must be
- * externally.
+ * synchronized externally.
  */
 class QuickJs private constructor(private var context: Long) : Closeable {
   companion object {
