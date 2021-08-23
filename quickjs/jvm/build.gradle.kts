@@ -22,5 +22,4 @@ dependencies {
   api(Dependencies.androidxAnnotation)
 
   testImplementation(Dependencies.junit)
-  testImplementation(Dependencies.truth)
 }
