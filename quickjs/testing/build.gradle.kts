@@ -22,5 +22,5 @@ kotlin {
 }
 
 dependencies {
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":ktbridge:plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":quickjs-kotlin-plugin"))
 }

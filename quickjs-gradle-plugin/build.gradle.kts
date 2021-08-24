@@ -9,7 +9,7 @@ dependencies {
 }
 
 buildConfig {
-  val project = project(":ktbridge:plugin")
+  val project = project(":quickjs-kotlin-plugin")
   packageName("app.cash.quickjs.ktbridge.plugin")
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${Ext.kotlinPluginId}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_GROUP", "\"${project.group}\"")

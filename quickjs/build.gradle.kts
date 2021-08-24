@@ -31,8 +31,8 @@ val versionWriterTaskProvider = tasks.register("writeVersion", VersionWriterTask
 
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
   destinationDir = buildDir.resolve("generated/testingJs")
-  from(rootDir.resolve("ktbridge/testing/build/distributions/testing.js"))
-  dependsOn(":ktbridge:testing:jsBrowserProductionWebpack")
+  from(projectDir.resolve("testing/build/distributions/testing.js"))
+  dependsOn(":quickjs:testing:jsBrowserProductionWebpack")
 }
 
 kotlin {
@@ -71,7 +71,7 @@ kotlin {
       resources.srcDir(copyTestingJs)
       dependencies {
         implementation(Dependencies.truth)
-        implementation(project(":ktbridge:testing"))
+        implementation(project(":quickjs:testing"))
       }
     }
   }
@@ -150,9 +150,9 @@ dependencies {
   androidTestImplementation(Dependencies.junit)
   androidTestImplementation(Dependencies.androidxTestRunner)
   androidTestImplementation(Dependencies.truth)
-  androidTestImplementation(project(":ktbridge:testing"))
+  androidTestImplementation(project(":quickjs:testing"))
 
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":ktbridge:plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":quickjs-kotlin-plugin"))
 }
 
 fun quickJsVersion(): String {
