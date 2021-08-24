@@ -15,64 +15,26 @@
  */
 package app.cash.quickjs
 
-import java.io.Closeable
-import java.lang.IllegalArgumentException
-import java.lang.UnsupportedOperationException
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.logging.Logger
 
-/**
- * An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.
- *
- * This class is NOT thread safe. If multiple threads access an instance concurrently it must be
- * synchronized externally.
- */
-class QuickJs private constructor(private var context: Long) : Closeable {
+internal class JniQuickJs(private var context: Long) : QuickJs {
   companion object {
     init {
       loadNativeLibrary()
     }
 
-    /**
-     * Create a new interpreter instance. Calls to this method **must** matched with
-     * calls to [close] on the returned instance to avoid leaking native memory.
-     */
     @JvmStatic
-    fun create(): QuickJs {
-      val context = createContext()
-      if (context == 0L) {
-        throw OutOfMemoryError("Cannot create QuickJs instance")
-      }
-      return QuickJs(context)
-    }
-
-    @JvmStatic
-    private external fun createContext(): Long
+    external fun createContext(): Long
   }
 
-  /**
-   * Evaluate [script] and return any result. [fileName] will be used in error
-   * reporting.
-   *
-   * @throws QuickJsException if there is an error evaluating the script.
-   */
-  @JvmOverloads
-  fun evaluate(script: String, fileName: String = "?"): Any? {
+  override fun evaluate(script: String, fileName: String): Any? {
     return evaluate(context, script, fileName)
   }
 
-  /**
-   * Provides [instance] to JavaScript as a global object called [name]. [type]
-   * defines the interface implemented by [instance] that will be accessible to JavaScript.
-   * [type] must be an interface that does not extend any other interfaces, and cannot define
-   * any overloaded methods.
-   *
-   * Methods of the interface may return `void` or any of the following supported argument
-   * types: `boolean`, [Boolean], `int`, [Integer], `double`, [Double], [String].
-   */
-  operator fun <T : Any> set(name: String, type: Class<T>, instance: T) {
+  override operator fun <T : Any> set(name: String, type: Class<T>, instance: T) {
     if (!type.isInterface) {
       throw UnsupportedOperationException(
           "Only interfaces can be bound. Received: $type")
@@ -93,17 +55,7 @@ class QuickJs private constructor(private var context: Long) : Closeable {
     set(context, name, instance, methods.values.toTypedArray())
   }
 
-  /**
-   * Attaches to a global JavaScript object called `name` that implements `type`.
-   * `type` defines the interface implemented in JavaScript that will be accessible to Java.
-   * `type` must be an interface that does not extend any other interfaces, and cannot define
-   * any overloaded methods.
-   *
-   * Methods of the interface may return `void` or any of the following supported argument
-   * types: `boolean`, [Boolean], `int`, [Integer], `double`,
-   * [Double], [String].
-   */
-  operator fun <T : Any> get(name: String, type: Class<T>): T {
+  override operator fun <T : Any> get(name: String, type: Class<T>): T {
     if (!type.isInterface) {
       throw UnsupportedOperationException(
           "Only interfaces can be proxied. Received: $type")
@@ -146,29 +98,14 @@ class QuickJs private constructor(private var context: Long) : Closeable {
     return proxy as T
   }
 
-  /**
-   * Compile [sourceCode] and return the bytecode. [fileName] will be used in error
-   * reporting.
-   *
-   * @throws QuickJsException if the sourceCode could not be compiled.
-   */
-  fun compile(sourceCode: String, fileName: String): ByteArray {
+  override fun compile(sourceCode: String, fileName: String): ByteArray {
     return compile(context, sourceCode, fileName)
   }
 
-  /**
-   * Load and execute [bytecode] and return the result.
-   *
-   * @throws QuickJsException if there is an error loading or executing the code.
-   */
-  fun execute(bytecode: ByteArray): Any? {
+  override fun execute(bytecode: ByteArray): Any? {
     return execute(context, bytecode)
   }
 
-  /**
-   * Release the native resources associated with this object. You **must** call this
-   * method for each instance to avoid leaking native memory.
-   */
   override fun close() {
     val contextToClose = context
     if (contextToClose != 0L) {

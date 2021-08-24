@@ -65,7 +65,7 @@ class QuickJsCompileTest {
     assertEquals("JavaScript.f2(C:\\Documents\\myFile.js:8)", t.stackTrace[0].toString())
     assertEquals("JavaScript.f1(C:\\Documents\\myFile.js:4)", t.stackTrace[1].toString())
     assertEquals("JavaScript.<eval>(C:\\Documents\\myFile.js:1)", t.stackTrace[2].toString())
-    assertEquals("app.cash.quickjs.QuickJs.execute(Native Method)", t.stackTrace[3].toString())
+    assertEquals("app.cash.quickjs.JniQuickJs.execute(Native Method)", t.stackTrace[3].toString())
   }
 
   @Test fun multipleParts() {
