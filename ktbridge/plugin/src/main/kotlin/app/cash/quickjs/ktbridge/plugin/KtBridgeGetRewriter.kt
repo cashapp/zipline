@@ -15,6 +15,7 @@
  */
 package app.cash.quickjs.ktbridge.plugin
 
+import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
@@ -22,7 +23,6 @@ import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
-import org.jetbrains.kotlin.ir.builders.Scope
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.addDispatchReceiver
 import org.jetbrains.kotlin.ir.builders.declarations.addFunction
@@ -36,11 +36,11 @@ import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrFactory
-import org.jetbrains.kotlin.ir.declarations.IrField
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
-import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
+import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
@@ -48,86 +48,66 @@ import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
-import org.jetbrains.kotlin.ir.util.getPackageFragment
-import org.jetbrains.kotlin.ir.util.primaryConstructor
-import org.jetbrains.kotlin.ir.util.properties
-import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `createJsService` with two arguments:
+ * Rewrites calls to `KtBridge.get()` that takes a name and a `JsAdapter`:
  *
  * ```
- * val helloService = createJsClient<EchoService>(EchoJsAdapter, "testing")
+ * val helloService: EchoService = ktBridge.get("helloService", EchoJsAdapter)
  * ```
  *
- * to create a new subtype of JsClient:
+ * to the overload that takes a name and an `OutboundClientFactory`:
  *
  * ```
- * val helloService = object : JsClient<EchoService>(
- *   jsAdapter = EchoJsAdapter,
- *   webpackModuleName = "testing",
- *   packageName = "app.cash.quickjs.ktbridge.testing",
- *   propertyName = "yoService"
- * ) {
- *   override fun get(internalBridge: InternalBridge): EchoService {
- *     return object : EchoService {
- *       override fun echo(request: EchoRequest): EchoResponse {
- *         val outboundCall = OutboundCall(jsAdapter, internalBridge, "echo", 1)
- *         outboundCall.parameter(request)
- *         return outboundCall.invoke()
+ * val helloService: EchoService = ktBridge.get(
+ *   "helloService",
+ *   object : OutboundClientFactory<EchoService>(EchoJsAdapter) {
+ *     override fun create(outboundCallFactory: OutboundCall.Factory): EchoService {
+ *       return object : EchoService {
+ *         override fun echo(request: EchoRequest): EchoResponse {
+ *           val outboundCall = outboundCallFactory.create("echo", 1)
+ *           outboundCall.parameter(request)
+ *           return outboundCall.invoke()
+ *         }
  *       }
  *     }
- *   }
- * }
+ *   })
  * ```
  */
-class OutboundCallRewriter(
+internal class KtBridgeGetRewriter(
   private val pluginContext: IrPluginContext,
-  private val backingField: IrField,
+  private val ktBridgeApis: KtBridgeApis,
+  private val scope: ScopeWithIr,
+  private val declarationParent: IrDeclarationParent,
+  private val original: IrCall
 ) {
-  private val initializer: IrExpressionBody = backingField.initializer!!
-  private val initializerCall: IrCall = initializer.expression as IrCall
+  private val serviceInterface = original.getTypeArgument(0) ?: error("TODO")
 
   private val irFactory: IrFactory
     get() = pluginContext.irFactory
 
-  private val jsClientClass = pluginContext.referenceClass(JS_CLIENT) ?: error("TODO")
-  private val propertyJsClientJsAdapter = pluginContext.referenceProperties(JS_CLIENT_JS_ADAPTER).single()
-  private val anyClass = pluginContext.referenceClass(FqName("kotlin.Any")) ?: error("TODO")
-  private val classInternalBridge = pluginContext.referenceClass(INTERNAL_BRIDGE) ?: error("TODO")
-  private val classOutboundCall = pluginContext.referenceClass(OUTBOUND_CALL) ?: error("TODO")
-  private val functionOutboundCallParameter = pluginContext.referenceFunctions(OUTBOUND_CALL_PARAMETER)
-    .single { it.owner.valueParameters.size == 1 }
-  private val functionOutboundCallInvoke = pluginContext.referenceFunctions(OUTBOUND_CALL_INVOKE)
-    .single { it.owner.valueParameters.isEmpty() }
-  private val serviceInterface = initializerCall.getTypeArgument(0) ?: error("TODO")
+  fun rewrite(): IrCall {
+    return irCall(original, ktBridgeApis.rewrittenGetFunction).apply {
+      putValueArgument(1, irNewOutboundClientFactory())
+    }
+  }
 
-  fun rewrite() {
-    val jsClientClassOfT = jsClientClass.typeWith(serviceInterface)
-    val jsClientSubclass = irFactory.buildClass {
+  private fun irNewOutboundClientFactory(): IrContainerExpression {
+    val outboundClientFactoryOfT = ktBridgeApis.outboundClientFactory.typeWith(serviceInterface)
+    val outboundClientFactorySubclass = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
     }.apply {
-      parent = backingField
-      superTypes = listOf(jsClientClassOfT)
+      parent = declarationParent
+      superTypes = listOf(outboundClientFactoryOfT)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    /*
-     * ```
-     * JsClient<EchoService>(
-     *   jsAdapter = EchoJsAdapter,
-     *   webpackModuleName = "testing",
-     *   packageName = "app.cash.quickjs.ktbridge.testing",
-     *   propertyName = "yoService"
-     * )
-     * ```
-     */
-    val superConstructor = jsClientClass.constructors.single()
-    val packageName = backingField.getPackageFragment()?.fqName?.toString() ?: ""
-    val propertyName = backingField.symbol.owner.name.identifier
-    val constructor = jsClientSubclass.addConstructor {
+    // OutboundClientFactory<EchoService>(EchoJsAdapter)
+    val superConstructor = ktBridgeApis.outboundClientFactory.constructors.single()
+    val constructor = outboundClientFactorySubclass.addConstructor {
       origin = IrDeclarationOrigin.DEFINED
       visibility = DescriptorVisibilities.PUBLIC
       isPrimary = true
@@ -137,81 +117,67 @@ class OutboundCallRewriter(
           context = pluginContext,
           symbol = superConstructor,
           typeArgumentsCount = 1,
-          valueArgumentsCount = 4
+          valueArgumentsCount = 1
         ) {
           putTypeArgument(0, serviceInterface)
-          putValueArgument(0, initializerCall.getValueArgument(0))
-          putValueArgument(1, initializerCall.getValueArgument(1))
-          putValueArgument(2, irString(packageName))
-          putValueArgument(3, irString(propertyName))
+          putValueArgument(0, original.getValueArgument(1))
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,
-          classSymbol = jsClientSubclass.symbol,
+          classSymbol = outboundClientFactorySubclass.symbol,
         )
       }
     }
 
-    /*
-     * ```
-     * override fun get(internalBridge: InternalBridge): EchoService {
-     * ```
-     */
-    val getFunction = jsClientSubclass.addFunction {
-      name = Name.identifier("get")
+    // override fun create(callFactory: OutboundCall.Factory): EchoService {
+    // }
+    val createFunction = outboundClientFactorySubclass.addFunction {
+      name = Name.identifier("create")
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
       returnType = serviceInterface
     }.apply {
       addDispatchReceiver {
-        type = jsClientSubclass.defaultType
+        type = outboundClientFactorySubclass.defaultType
       }
       addValueParameter {
-        name = Name.identifier("internalBridge")
-        type = classInternalBridge.defaultType
+        name = Name.identifier("outboundCallFactory")
+        type = ktBridgeApis.outboundCallFactory.defaultType
       }
-      overriddenSymbols += jsClientClass.functions
-        .single { it.owner.name.identifier == "get" && it.owner.modality == Modality.ABSTRACT }
+      overriddenSymbols += ktBridgeApis.outboundClientFactoryCreate
     }
 
-    // Add overrides before defining the get() function's body, so we can use overridden properties.
-    jsClientSubclass.addFakeOverrides(pluginContext.irBuiltIns, listOf(getFunction))
-    val jsAdapterProperty = jsClientSubclass.properties
-      .single { it.name == JS_CLIENT_JS_ADAPTER.shortName() }
-    jsAdapterProperty.overriddenSymbols += propertyJsClientJsAdapter
+    // Add overrides before defining create()'s body, so we can use overridden properties.
+    outboundClientFactorySubclass.addFakeOverrides(pluginContext.irBuiltIns, listOf(createFunction))
 
-    getFunction.irFunctionBody(
+    createFunction.irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = backingField.symbol
+      scopeOwnerSymbol = scope.scope.scopeOwnerSymbol
     ) {
-      irGetFunctionBody(getFunction)
+      irCreateFunctionBody(createFunction)
     }
 
-    initializer.expression = IrBlockBodyBuilder(
+    return IrBlockBodyBuilder(
       startOffset = UNDEFINED_OFFSET,
       endOffset = UNDEFINED_OFFSET,
       context = pluginContext,
-      scope = Scope(backingField.symbol),
+      scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
-      resultType = jsClientSubclass.defaultType
-      +jsClientSubclass
-      +irCall(constructor.symbol, type = jsClientSubclass.defaultType)
+      resultType = outboundClientFactorySubclass.defaultType
+      +outboundClientFactorySubclass
+      +irCall(constructor.symbol, type = outboundClientFactorySubclass.defaultType)
     }
   }
 
-  /**
-   * ```
-   * return object : EchoService {
-   *   ...
-   * }
-   * ```
-   */
-  private fun IrBlockBodyBuilder.irGetFunctionBody(getFunction: IrSimpleFunction) {
+  private fun IrBlockBodyBuilder.irCreateFunctionBody(createFunction: IrSimpleFunction) {
+    // return object : EchoService {
+    //   ...
+    // }
     val clientImplementation = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
     }.apply {
-      parent = getFunction
+      parent = createFunction
       superTypes = listOf(serviceInterface)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
@@ -224,7 +190,7 @@ class OutboundCallRewriter(
     constructor.irConstructorBody(pluginContext) { statements ->
       statements += irDelegatingConstructorCall(
         context = pluginContext,
-        symbol = anyClass.constructors.single(),
+        symbol = ktBridgeApis.any.constructors.single(),
       )
       statements += irInstanceInitializerCall(
         context = pluginContext,
@@ -239,7 +205,7 @@ class OutboundCallRewriter(
       if (bridgedFunction.owner.isFakeOverride) continue
 
       clientImplementation.irBridgedFunction(
-        getFunction = getFunction,
+        createFunction = createFunction,
         bridgedFunction = bridgedFunction.owner
       )
     }
@@ -253,13 +219,13 @@ class OutboundCallRewriter(
         +clientImplementation
         +irCall(constructor.symbol, type = clientImplementation.defaultType)
       },
-      returnTargetSymbol = getFunction.symbol,
+      returnTargetSymbol = createFunction.symbol,
       type = pluginContext.irBuiltIns.nothingType,
     )
   }
 
   private fun IrClass.irBridgedFunction(
-    getFunction: IrSimpleFunction,
+    createFunction: IrSimpleFunction,
     bridgedFunction: IrSimpleFunction
   ): IrSimpleFunction {
     val result = addFunction {
@@ -281,34 +247,18 @@ class OutboundCallRewriter(
       }
     }
 
-    val primaryConstructor = classOutboundCall.owner.primaryConstructor!!
-
-    val jsClientSubclass = getFunction.parent as IrClass
-    val jsAdapterProperty = jsClientSubclass.properties
-      .single { it.name == JS_CLIENT_JS_ADAPTER.shortName() }
-
     result.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = result.symbol
     ) {
-      val callConstructor = irCall(primaryConstructor.symbol).apply {
-        putValueArgument(0,
-          irCall(
-            callee = jsAdapterProperty.getter!!.symbol,
-          ).apply {
-            dispatchReceiver = irGet(getFunction.dispatchReceiverParameter!!)
-          }
-        )
-        putValueArgument(1, irGet(
-          type = getFunction.valueParameters[0].type,
-          variable = getFunction.valueParameters[0].symbol,
-        ))
-        putValueArgument(2, irString(bridgedFunction.name.identifier))
-        putValueArgument(3, irInt(bridgedFunction.valueParameters.size))
+      val callCreate = irCall(ktBridgeApis.outboundCallFactoryCreate).apply {
+        dispatchReceiver = irGet(createFunction.valueParameters[0])
+        putValueArgument(0, irString(bridgedFunction.name.identifier))
+        putValueArgument(1, irInt(bridgedFunction.valueParameters.size))
       }
 
       val outboundCallLocal = irTemporary(
-        value = callConstructor,
+        value = callCreate,
         nameHint = "outboundCall",
         isMutable = false
       ).apply {
@@ -316,18 +266,21 @@ class OutboundCallRewriter(
       }
 
       for (valueParameter in result.valueParameters) {
-        +irCall(callee = functionOutboundCallParameter).apply {
+        +irCall(callee = ktBridgeApis.outboundCallParameter).apply {
           dispatchReceiver = irGet(outboundCallLocal)
           putTypeArgument(0, valueParameter.type)
-          putValueArgument(0, irGet(
-            type = valueParameter.type,
-            variable = valueParameter.symbol,
-          ))
+          putValueArgument(
+            0,
+            irGet(
+              type = valueParameter.type,
+              variable = valueParameter.symbol,
+            )
+          )
         }
       }
 
       +irReturn(
-        value = irCall(callee = functionOutboundCallInvoke).apply {
+        value = irCall(callee = ktBridgeApis.outboundCallInvoke).apply {
           dispatchReceiver = irGet(outboundCallLocal)
           type = bridgedFunction.returnType
           putTypeArgument(0, result.returnType)
@@ -338,15 +291,5 @@ class OutboundCallRewriter(
     }
 
     return result
-  }
-
-  companion object {
-    val JS_CLIENT = FqName("app.cash.quickjs.ktbridge.JsClient")
-    val JS_CLIENT_JS_ADAPTER = JS_CLIENT.child(Name.identifier("jsAdapter"))
-    val CREATE_JS_CLIENT = FqName("app.cash.quickjs.ktbridge.createJsClient")
-    val OUTBOUND_CALL = FqName("app.cash.quickjs.ktbridge.OutboundCall")
-    val OUTBOUND_CALL_PARAMETER = OUTBOUND_CALL.child(Name.identifier("parameter"))
-    val OUTBOUND_CALL_INVOKE = OUTBOUND_CALL.child(Name.identifier("invoke"))
-    val INTERNAL_BRIDGE = FqName("app.cash.quickjs.ktbridge.InternalBridge")
   }
 }

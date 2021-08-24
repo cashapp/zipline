@@ -15,10 +15,21 @@
  */
 package app.cash.quickjs.ktbridge
 
+import app.cash.quickjs.ktbridge.OutboundCall.Factory
 import kotlin.reflect.KClass
 import okio.Buffer
 
-class OutboundCall(
+/**
+ * This class models a single call sent to another Kotlin platform in the same process.
+ *
+ * It should be used to help implement an application-layer interface that is implemented by the
+ * other platform. Implement each function in that interface to create an [OutboundCall] by calling
+ * [Factory.create], pass in each received argument to [parameter], and then call [invoke] to
+ * perform the cross-platform call.
+ */
+@PublishedApi
+internal class OutboundCall private constructor(
+  private val instanceName: String,
   private val jsAdapter: JsAdapter,
   private val internalBridge: InternalBridge,
   private val funName: String,
@@ -47,8 +58,21 @@ class OutboundCall(
   fun <R : Any> invoke(type: KClass<R>): R {
     require(callCount++ == parameterCount)
     val encodedArguments = buffer.readByteArray()
-    val encodedResponse = internalBridge.invokeJs(funName, encodedArguments)
+    val encodedResponse = internalBridge.invokeJs(instanceName, funName, encodedArguments)
     buffer.write(encodedResponse)
     return jsAdapter.decode(buffer, type)
+  }
+
+  class Factory internal constructor(
+    private val instanceName: String,
+    private val jsAdapter: JsAdapter,
+    private val internalBridge: InternalBridge,
+  ) {
+    fun create(
+      funName: String,
+      parameterCount: Int
+    ): OutboundCall {
+      return OutboundCall(instanceName, jsAdapter, internalBridge, funName, parameterCount)
+    }
   }
 }

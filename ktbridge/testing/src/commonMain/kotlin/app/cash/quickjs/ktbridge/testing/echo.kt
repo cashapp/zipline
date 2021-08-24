@@ -15,7 +15,6 @@
  */
 package app.cash.quickjs.ktbridge.testing
 
-import app.cash.quickjs.ktbridge.BridgeToJs
 import app.cash.quickjs.ktbridge.JsAdapter
 import kotlin.reflect.KClass
 import okio.Buffer
@@ -31,10 +30,6 @@ data class EchoRequest(
 data class EchoResponse(
   val message: String
 )
-
-expect val helloService: BridgeToJs<EchoService>
-
-expect val yoService: BridgeToJs<EchoService>
 
 object EchoJsAdapter : JsAdapter {
   override fun <T : Any> encode(value: T, sink: Buffer, type: KClass<T>) {

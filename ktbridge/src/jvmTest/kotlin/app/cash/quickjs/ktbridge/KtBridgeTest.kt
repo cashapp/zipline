@@ -19,6 +19,7 @@ import app.cash.quickjs.QuickJs
 import app.cash.quickjs.ktbridge.testing.EchoRequest
 import app.cash.quickjs.ktbridge.testing.EchoResponse
 import app.cash.quickjs.ktbridge.testing.helloService
+import app.cash.quickjs.ktbridge.testing.prepareJvmBridges
 import app.cash.quickjs.ktbridge.testing.yoService
 import com.google.common.truth.Truth.assertThat
 import java.io.File
@@ -39,15 +40,32 @@ class KtBridgeTest {
     quickjs.close()
   }
   
-  @Test fun happyPath() {
+  @Test fun `jvm call js service`() {
+    val testingJs = File("testing/build/distributions/testing.js").source().buffer().use { source ->
+      source.readUtf8()
+    }
+    quickjs.evaluate(testingJs, "testing.js")
+    quickjs.evaluate("testing.app.cash.quickjs.ktbridge.testing.prepareJsBridges()")
+
+    val ktBridge = createKtBridge(quickjs)
+
+    assertThat(ktBridge.helloService.echo(EchoRequest("Jake")))
+      .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
+    assertThat(ktBridge.yoService.echo(EchoRequest("Kevin")))
+      .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
+  }
+
+  @Test fun `js call jvm service`() {
     val testingJs = File("testing/build/distributions/testing.js").source().buffer().use { source ->
       source.readUtf8()
     }
     quickjs.evaluate(testingJs, "testing.js")
 
-    assertThat(helloService.get(quickjs).echo(EchoRequest("Jake")))
-      .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
-    assertThat(yoService.get(quickjs).echo(EchoRequest("Kevin")))
-      .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
+    val ktBridge = createKtBridge(quickjs)
+    prepareJvmBridges(ktBridge)
+
+    assertThat(quickjs.evaluate(
+      "testing.app.cash.quickjs.ktbridge.testing.callSupService('homie')"
+    )).isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
   }
 }

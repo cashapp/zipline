@@ -17,9 +17,33 @@ package app.cash.quickjs.ktbridge
 
 import app.cash.quickjs.QuickJs
 
-actual interface BridgeToJs<T : Any> {
-  fun get(quickJs: QuickJs): T
-}
+fun createKtBridge(quickJs: QuickJs): KtBridge {
+  // Lazily fetch the bridge to call them.
+  val jsInboundBridge = object : InternalBridge {
+    val delegate: InternalBridge by lazy(mode = LazyThreadSafetyMode.NONE) {
+      quickJs.get(
+        name = "app_cash_quickjs_ktbridge_inboundBridge",
+        type = InternalBridge::class.java
+      )
+    }
 
-fun <T : Any> createJsClient(jsAdapter: JsAdapter, webpackModuleName: String): BridgeToJs<T> =
-  error("unexpected call to createJsClient: is KtBridge plugin configured?")
+    override fun invokeJs(
+      instanceName: String,
+      funName: String,
+      encodedArguments: ByteArray
+    ): ByteArray {
+      return delegate.invokeJs(instanceName, funName, encodedArguments)
+    }
+  }
+
+  val ktBridge = KtBridge(outboundBridge = jsInboundBridge)
+
+  // Eagerly publish the bridge so they can call us.
+  quickJs.set(
+    name = "app_cash_quickjs_ktbridge_outboundBridge",
+    type = InternalBridge::class.java,
+    instance = ktBridge.inboundBridge
+  )
+
+  return ktBridge
+}

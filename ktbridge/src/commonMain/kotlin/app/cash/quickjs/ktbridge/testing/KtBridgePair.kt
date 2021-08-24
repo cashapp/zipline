@@ -15,22 +15,20 @@
  */
 package app.cash.quickjs.ktbridge.testing
 
+import app.cash.quickjs.ktbridge.InternalBridge
 import app.cash.quickjs.ktbridge.KtBridge
 
-val KtBridge.helloService: EchoService
-  get() = get("helloService", EchoJsAdapter)
+/** A pair of bridges connected to each other for testing. */
+class KtBridgePair {
+  val a: KtBridge = KtBridge(object : InternalBridge {
+    override fun invokeJs(
+      instanceName: String,
+      funName: String,
+      encodedArguments: ByteArray
+    ): ByteArray {
+      return b.inboundBridge.invokeJs(instanceName, funName, encodedArguments)
+    }
+  })
 
-val KtBridge.yoService: EchoService
-  get() = get("yoService", EchoJsAdapter)
-
-class JvmEchoService(
-  private val greeting: String
-) : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    return EchoResponse("$greeting from the JVM, ${request.message}")
-  }
-}
-
-fun prepareJvmBridges(ktBridge: KtBridge) {
-  ktBridge.set("supService", EchoJsAdapter, JvmEchoService("sup"))
+  val b: KtBridge = KtBridge(a.inboundBridge)
 }

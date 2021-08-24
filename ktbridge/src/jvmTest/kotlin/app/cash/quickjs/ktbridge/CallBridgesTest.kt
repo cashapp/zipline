@@ -19,52 +19,62 @@ import app.cash.quickjs.ktbridge.testing.EchoJsAdapter
 import app.cash.quickjs.ktbridge.testing.EchoRequest
 import app.cash.quickjs.ktbridge.testing.EchoResponse
 import app.cash.quickjs.ktbridge.testing.EchoService
+import app.cash.quickjs.ktbridge.testing.KtBridgePair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
+import org.junit.Before
 import org.junit.Test
 
-/**
- * Manually call [createJsService] the way generated code does and confirm things work as expected.
- * This is intended to help with iterating on that API without working through the generator.
- */
-class InboundCallTest {
+internal class CallBridgesTest {
   private val requests = LinkedBlockingDeque<String>()
   private val responses = LinkedBlockingDeque<String>()
-  private val inboundCallEchoService = object : EchoService {
+
+  private val bridges = KtBridgePair()
+
+  private val echoService = object : EchoService {
     override fun echo(request: EchoRequest): EchoResponse {
       requests += request.message
       return EchoResponse(responses.take())
     }
   }
 
-  private val testService = createJsService(
-    jsAdapter = EchoJsAdapter,
-    service = inboundCallEchoService,
-    block = fun (inboundCall: InboundCall<EchoService>): ByteArray {
-      return when {
-        inboundCall.funName == "echo" -> {
-          inboundCall.result(
-            inboundCall.service.echo(
-              inboundCall.parameter()
-            )
-          )
+  private lateinit var echoClient: EchoService
+
+  @Before
+  fun setUp() {
+    bridges.a.set(
+      "helloService",
+      object : InboundService<EchoService>(EchoJsAdapter) {
+        private val service: EchoService = echoService
+        override fun call(inboundCall: InboundCall): ByteArray {
+          return when {
+            inboundCall.funName == "echo" -> {
+              inboundCall.result(service.echo(inboundCall.parameter()))
+            }
+            else -> inboundCall.unexpectedFunction()
+          }
         }
-        else -> inboundCall.unexpectedFunction()
+      })
+    echoClient = bridges.b.get(
+      "helloService",
+      object : OutboundClientFactory<EchoService>(EchoJsAdapter) {
+        override fun create(callFactory: OutboundCall.Factory): EchoService {
+          return object : EchoService {
+            override fun echo(request: EchoRequest): EchoResponse {
+              val outboundCall = callFactory.create("echo", 1)
+              outboundCall.parameter(request)
+              return outboundCall.invoke()
+            }
+          }
+        }
       }
-    }
-  ) as InternalBridge
+    )
+  }
 
   @Test
   fun inboundCallRequestAndResponse() {
     responses += "this is a curt response"
-    val echoService = object : EchoService {
-      override fun echo(request: EchoRequest): EchoResponse {
-        val outboundCall = OutboundCall(EchoJsAdapter, testService, "echo", 1)
-        outboundCall.parameter(request)
-        return outboundCall.invoke()
-      }
-    }
-    val response = echoService.echo(EchoRequest("this is a happy request"))
+    val response = echoClient.echo(EchoRequest("this is a happy request"))
     assertThat(response.message).isEqualTo("this is a curt response")
     assertThat(requests.poll()).isEqualTo("this is a happy request")
     assertThat(requests.poll()).isNull()

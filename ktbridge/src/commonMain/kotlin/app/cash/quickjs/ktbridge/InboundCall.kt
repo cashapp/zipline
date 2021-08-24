@@ -19,14 +19,16 @@ import kotlin.reflect.KClass
 import okio.Buffer
 
 /**
- * This class models a single call into JavaScript. Each use should call [parameter] once for each
- * parameter of [funName], then [result] for the function result. This will automatically decode
- * parameters to the requested type and encode results.
+ * This class models a single call received from another Kotlin platform in the same process.
+ *
+ * Each use should call [parameter] once for each parameter of [funName], then [result] for the
+ * function result. This will automatically decode parameters to the requested type and encode
+ * results.
  *
  * Call [unexpectedFunction] if an unexpected function is encountered.
  */
-class InboundCall<T: Any>(
-  val service: T,
+@PublishedApi
+internal class InboundCall(
   val funName: String,
   encodedArguments: ByteArray,
   private val jsAdapter: JsAdapter,
