@@ -24,6 +24,8 @@ import java.io.Closeable
  * synchronized externally.
  */
 actual interface QuickJs : Closeable {
+  actual val engineVersion: String
+
   /**
    * Evaluate [script] and return any result. [fileName] will be used in error
    * reporting.
