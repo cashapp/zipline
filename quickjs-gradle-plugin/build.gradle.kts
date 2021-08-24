@@ -1,6 +1,8 @@
 plugins {
   id("java-gradle-plugin")
   kotlin("jvm")
+  id("com.vanniktech.maven.publish")
+  id("org.jetbrains.dokka")
   id("com.github.gmazzo.buildconfig")
 }
 

@@ -1,6 +1,8 @@
 plugins {
   kotlin("jvm")
   kotlin("kapt")
+  id("com.vanniktech.maven.publish")
+  id("org.jetbrains.dokka")
   id("com.github.gmazzo.buildconfig")
 }
 
