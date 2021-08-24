@@ -15,8 +15,7 @@
  */
 package app.cash.quickjs.ktbridge.testing
 
-import app.cash.quickjs.ktbridge.BridgeToJs
-import app.cash.quickjs.ktbridge.createJsService
+import app.cash.quickjs.ktbridge.ktBridge
 
 class JsEchoService(
   private val greeting: String
@@ -27,9 +26,14 @@ class JsEchoService(
 }
 
 @JsExport
-actual val helloService: BridgeToJs<EchoService> =
-  createJsService(EchoJsAdapter, JsEchoService("hello"))
+fun prepareJsBridges() {
+  ktBridge.set<EchoService>("helloService", EchoJsAdapter, JsEchoService("hello"))
+  ktBridge.set<EchoService>("yoService", EchoJsAdapter, JsEchoService("yo"))
+}
 
 @JsExport
-actual val yoService: BridgeToJs<EchoService> =
-  createJsService(EchoJsAdapter, JsEchoService("yo"))
+fun callSupService(message: String): String {
+  val supService = ktBridge.get<EchoService>("supService", EchoJsAdapter)
+  val echoResponse = supService.echo(EchoRequest(message))
+  return "JavaScript received '${echoResponse.message}' from the JVM"
+}

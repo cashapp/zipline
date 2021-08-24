@@ -13,49 +13,52 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package app.cash.quickjs.ktbridge.plugin
 
-import app.cash.quickjs.ktbridge.plugin.InboundCallRewriter.Companion.CREATE_JS_SERVICE
-import app.cash.quickjs.ktbridge.plugin.OutboundCallRewriter.Companion.CREATE_JS_CLIENT
+import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
-import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.expressions.IrCall
-import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.expressions.IrExpression
 
 class KtBridgeIrGenerationExtension(
   private val messageCollector: MessageCollector,
 ) : IrGenerationExtension {
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-    val createJsServiceFunction2Arg = pluginContext.referenceFunctions(CREATE_JS_SERVICE)
-        .singleOrNull { it.owner.valueParameters.size == 2 }
-    val createJsClientFunction2Arg = pluginContext.referenceFunctions(CREATE_JS_CLIENT)
-        .singleOrNull { it.owner.valueParameters.size == 2 }
+    val ktBridgeApis = KtBridgeApis(pluginContext)
 
-    // Find top-level properties of type `BridgeToJs<T>` that are initialized with a call to
-    // the two-argument overload of createJsService(). Rewrite these.
+    val transformer = object : IrElementTransformerVoidWithContext() {
+      override fun visitCall(expression: IrCall): IrExpression {
+        val expression = super.visitCall(expression) as IrCall
 
-    for (file in moduleFragment.files) {
-      for (declaration in file.declarations) {
-        if (declaration !is IrProperty) continue
-        val backingField = declaration.backingField ?: continue
-        if (backingField.type.classFqName != InboundCallRewriter.BRIDGE_TO_JS) continue
-        val initializer = backingField.initializer ?: continue
-        val initializerCall = initializer.expression
-        if (initializerCall !is IrCall) continue
-
-        when (initializerCall.symbol) {
-          createJsServiceFunction2Arg -> {
-            InboundCallRewriter(pluginContext, backingField).rewrite()
+        return when (expression.symbol) {
+          ktBridgeApis.publicGetFunction -> {
+            KtBridgeGetRewriter(
+              pluginContext,
+              ktBridgeApis,
+              currentScope!!,
+              currentDeclarationParent!!,
+              expression
+            ).rewrite()
           }
-          createJsClientFunction2Arg -> {
-            OutboundCallRewriter(pluginContext, backingField).rewrite()
+
+          ktBridgeApis.publicSetFunction -> {
+            KtBridgeSetRewriter(
+              pluginContext,
+              ktBridgeApis,
+              currentScope!!,
+              currentDeclarationParent!!,
+              expression
+            ).rewrite()
           }
+
+          else -> expression
         }
       }
     }
+
+    moduleFragment.transform(transformer, null)
   }
 }

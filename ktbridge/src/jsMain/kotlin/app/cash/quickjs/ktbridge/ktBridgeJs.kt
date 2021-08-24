@@ -15,29 +15,20 @@
  */
 package app.cash.quickjs.ktbridge
 
-actual interface BridgeToJs<T : Any>
+val ktBridge = KtBridge(object : InternalBridge {
+  // Lazily fetch the bridge to call them.
+  private val outboundBridge: dynamic
+    get() = js("""globalThis.app_cash_quickjs_ktbridge_outboundBridge""")
 
-/**
- * Call this to expose a JavaScript service to the JVM.
- *
- * The KtBridge Kotlin compiler plugin will rewrite calls to this function to insert a third
- * parameter to invoke the 3-argument overload.
- */
-fun <T : Any> createJsService(jsAdapter: JsAdapter, service: T): BridgeToJs<T> =
-  error("unexpected call to createJsService: is KtBridge plugin configured?")
-
-/** This is invoked by compiler-plugin-rewritten code. */
-@PublishedApi
-internal fun <T : Any> createJsService(
-  jsAdapter: JsAdapter,
-  service: T,
-  block: (InboundCall<T>) -> ByteArray
-) : BridgeToJs<T> {
-  return object : BridgeToJs<T>, InternalBridge {
-    override fun invokeJs(funName: String, encodedArguments: ByteArray): ByteArray {
-      val inboundCall = InboundCall(service, funName, encodedArguments, jsAdapter)
-      return block(inboundCall)
-    }
+  override fun invokeJs(
+    instanceName: String,
+    funName: String,
+    encodedArguments: ByteArray
+  ): ByteArray {
+    return outboundBridge.invokeJs(instanceName, funName, encodedArguments)
   }
+}).apply {
+  // Eagerly publish the bridge so they can call us.
+  val inboundBridge = inboundBridge
+  js("""globalThis.app_cash_quickjs_ktbridge_inboundBridge = inboundBridge""")
 }
-

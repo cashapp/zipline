@@ -15,4 +15,13 @@
  */
 package app.cash.quickjs.ktbridge
 
-expect interface BridgeToJs<T : Any>
+/**
+ * Generated code extends this base class to make calls into an application-layer interface that is
+ * implemented by another platform in the same process.
+ */
+@PublishedApi
+internal abstract class OutboundClientFactory<T : Any>(
+  internal val jsAdapter: JsAdapter
+) {
+  abstract fun create(callFactory: OutboundCall.Factory): T
+}
