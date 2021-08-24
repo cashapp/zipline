@@ -1,7 +1,10 @@
 $dokka.format:html-v1
 $dokka.linkExtension:html
 $dokka.location:app.cash.quickjs////PointingToDeclaration/quickjs/app.cash.quickjs/index.html
+$dokka.location:app.cash.quickjs/QuickJs.Companion///PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-companion/index.html
+$dokka.location:app.cash.quickjs/QuickJs.Companion/engineVersion/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-companion/engine-version.html
 $dokka.location:app.cash.quickjs/QuickJs///PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/index.html
+$dokka.location:app.cash.quickjs/QuickJs/engineVersion/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/engine-version.html
 $dokka.location:app.cash.quickjs/QuickJsException///PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js-exception/index.html
 $dokka.location:app.cash.quickjs/QuickJsException/QuickJsException/#kotlin.String#kotlin.String?/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js-exception/-quick-js-exception.html
 app.cash.quickjs
