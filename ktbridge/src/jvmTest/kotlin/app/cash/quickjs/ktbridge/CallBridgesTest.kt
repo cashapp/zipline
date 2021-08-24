@@ -42,37 +42,12 @@ internal class CallBridgesTest {
 
   @Before
   fun setUp() {
-    bridges.a.set(
-      "helloService",
-      object : InboundService<EchoService>(EchoJsAdapter) {
-        private val service: EchoService = echoService
-        override fun call(inboundCall: InboundCall): ByteArray {
-          return when {
-            inboundCall.funName == "echo" -> {
-              inboundCall.result(service.echo(inboundCall.parameter()))
-            }
-            else -> inboundCall.unexpectedFunction()
-          }
-        }
-      })
-    echoClient = bridges.b.get(
-      "helloService",
-      object : OutboundClientFactory<EchoService>(EchoJsAdapter) {
-        override fun create(callFactory: OutboundCall.Factory): EchoService {
-          return object : EchoService {
-            override fun echo(request: EchoRequest): EchoResponse {
-              val outboundCall = callFactory.create("echo", 1)
-              outboundCall.parameter(request)
-              return outboundCall.invoke()
-            }
-          }
-        }
-      }
-    )
+    bridges.a.set<EchoService>("helloService", EchoJsAdapter, echoService)
+    echoClient = bridges.b.get("helloService", EchoJsAdapter)
   }
 
   @Test
-  fun inboundCallRequestAndResponse() {
+  fun `inbound call request and response`() {
     responses += "this is a curt response"
     val response = echoClient.echo(EchoRequest("this is a happy request"))
     assertThat(response.message).isEqualTo("this is a curt response")

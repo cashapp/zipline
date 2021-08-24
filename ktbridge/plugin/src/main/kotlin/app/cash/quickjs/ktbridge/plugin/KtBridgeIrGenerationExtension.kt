@@ -33,28 +33,33 @@ class KtBridgeIrGenerationExtension(
       override fun visitCall(expression: IrCall): IrExpression {
         val expression = super.visitCall(expression) as IrCall
 
-        return when (expression.symbol) {
-          ktBridgeApis.publicGetFunction -> {
-            KtBridgeGetRewriter(
-              pluginContext,
-              ktBridgeApis,
-              currentScope!!,
-              currentDeclarationParent!!,
-              expression
-            ).rewrite()
-          }
+        try {
+          return when (expression.symbol) {
+            ktBridgeApis.publicGetFunction -> {
+              KtBridgeGetRewriter(
+                pluginContext,
+                ktBridgeApis,
+                currentScope!!,
+                currentDeclarationParent!!,
+                expression
+              ).rewrite()
+            }
 
-          ktBridgeApis.publicSetFunction -> {
-            KtBridgeSetRewriter(
-              pluginContext,
-              ktBridgeApis,
-              currentScope!!,
-              currentDeclarationParent!!,
-              expression
-            ).rewrite()
-          }
+            ktBridgeApis.publicSetFunction -> {
+              KtBridgeSetRewriter(
+                pluginContext,
+                ktBridgeApis,
+                currentScope!!,
+                currentDeclarationParent!!,
+                expression
+              ).rewrite()
+            }
 
-          else -> expression
+            else -> expression
+          }
+        } catch (e: KtBridgeCompilationException) {
+          messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+          return expression
         }
       }
     }

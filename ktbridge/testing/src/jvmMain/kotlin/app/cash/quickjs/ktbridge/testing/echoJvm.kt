@@ -32,5 +32,5 @@ class JvmEchoService(
 }
 
 fun prepareJvmBridges(ktBridge: KtBridge) {
-  ktBridge.set("supService", EchoJsAdapter, JvmEchoService("sup"))
+  ktBridge.set<EchoService>("supService", EchoJsAdapter, JvmEchoService("sup"))
 }

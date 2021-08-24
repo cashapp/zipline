@@ -102,6 +102,52 @@ class KtBridgePluginTest {
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("greetings from the compiler plugin, Jesse"))
   }
+
+  @Test
+  fun `ktBridge set type argument is not an interface`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.quickjs.ktbridge.testing
+        
+        import app.cash.quickjs.ktbridge.KtBridge
+        
+        fun prepareJsBridges(ktBridge: KtBridge) {
+          ktBridge.set<TestingEchoService>("helloService", EchoJsAdapter, TestingEchoService)
+        }
+
+        object TestingEchoService : EchoService {
+          override fun echo(request: EchoRequest): EchoResponse = error("")
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
+    assertThat(result.messages)
+      .contains("(6, 12): The type argument to KtBridge.set() must be an interface type")
+  }
+
+  @Test
+  fun `ktBridge get type argument is not an interface`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.quickjs.ktbridge.testing
+        
+        import app.cash.quickjs.ktbridge.KtBridge
+        
+        fun getHelloService(ktBridge: KtBridge): String {
+          return ktBridge.get("helloService", EchoJsAdapter)
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
+    assertThat(result.messages)
+      .contains("(6, 19): The type argument to KtBridge.get() must be an interface type")
+  }
 }
 
 fun compile(
