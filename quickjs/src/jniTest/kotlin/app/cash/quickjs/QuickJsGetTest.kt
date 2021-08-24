@@ -16,9 +16,6 @@
 package app.cash.quickjs
 
 import java.util.Date
-import kotlin.IllegalArgumentException
-import kotlin.NullPointerException
-import kotlin.UnsupportedOperationException
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
@@ -105,7 +102,7 @@ class QuickJsGetTest {
       proxy.value
     }
     assertEquals("JavaScript.getValue(test.js)", t.stackTrace[0].toString())
-    assertEquals("app.cash.quickjs.QuickJs.call(Native Method)", t.stackTrace[1].toString())
+    assertEquals("app.cash.quickjs.JniQuickJs.call(Native Method)", t.stackTrace[1].toString())
   }
 
   @Ignore("TODO: track JsMethodProxies.")

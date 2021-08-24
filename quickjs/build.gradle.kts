@@ -10,22 +10,22 @@ kotlin {
   jvm()
 
   sourceSets {
-    val jvmSharedMain by creating {
+    val jniMain by creating {
       dependencies {
         api(Dependencies.androidxAnnotation)
       }
     }
     val androidMain by getting {
-      dependsOn(jvmSharedMain)
+      dependsOn(jniMain)
     }
     val jvmMain by getting {
-      dependsOn(jvmSharedMain)
+      dependsOn(jniMain)
     }
     val jvmTest by getting {
       dependencies {
         api(Dependencies.junit)
       }
-      kotlin.srcDir("src/jvmSharedTest/kotlin/")
+      kotlin.srcDir("src/jniTest/kotlin/")
     }
   }
 }
@@ -56,7 +56,7 @@ android {
       manifest.srcFile("src/androidMain/AndroidManifest.xml")
     }
     val androidTest by getting {
-      java.srcDir("src/jvmSharedTest/kotlin/")
+      java.srcDir("src/jniTest/kotlin/")
       resources.srcDir("src/androidInstrumentationTest/resources/")
     }
   }

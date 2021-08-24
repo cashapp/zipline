@@ -102,9 +102,9 @@ class QuickJsSetTest {
     assertEquals("JavaScript.f1(test.js:4)", stackTrace[3].toString())
     assertEquals("JavaScript.<eval>(test.js:1)", stackTrace[4].toString())
 
-    // Then one or two native QuickJs.evaluate methods, followed by QuickJs.evaluate in Java.
+    // Then one or two native JniQuickJs.evaluate methods, followed by JniQuickJs.evaluate in Java.
     var i = 5
-    assertEquals(QuickJs::class.java.name, stackTrace[i].className)
+    assertEquals("app.cash.quickjs.JniQuickJs", stackTrace[i].className)
     assertEquals("evaluate", stackTrace[i].methodName)
     assertTrue(stackTrace[i].isNativeMethod)
     while (stackTrace[i].methodName == "evaluate") {

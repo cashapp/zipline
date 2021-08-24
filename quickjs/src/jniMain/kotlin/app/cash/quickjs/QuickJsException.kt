@@ -16,7 +16,6 @@
 package app.cash.quickjs
 
 import androidx.annotation.Keep
-import java.lang.RuntimeException
 import java.util.regex.Pattern
 
 @Keep // Instruct ProGuard not to strip this type.
@@ -60,7 +59,7 @@ class QuickJsException @JvmOverloads constructor(
 
       // Splice the JavaScript stack in right above the call to QuickJs.
       var spliced = false
-      val quickJsClassName = QuickJs::class.java.name
+      val quickJsClassName = JniQuickJs::class.java.name
       for (stackTraceElement in stackTrace) {
         if (!spliced
             && stackTraceElement.isNativeMethod
