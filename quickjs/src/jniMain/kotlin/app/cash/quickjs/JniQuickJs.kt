@@ -30,6 +30,8 @@ internal class JniQuickJs(private var context: Long) : QuickJs {
     external fun createContext(): Long
   }
 
+  override val engineVersion get() = quickJsVersion
+
   override fun evaluate(script: String, fileName: String): Any? {
     return evaluate(context, script, fileName)
   }

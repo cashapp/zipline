@@ -5,11 +5,45 @@ plugins {
   id("org.jetbrains.dokka")
 }
 
+abstract class VersionWriterTask : DefaultTask() {
+  @InputFile
+  val versionFile = project.file("src/native/quickjs/VERSION")
+
+  @OutputDirectory
+  val outputDir = project.layout.buildDirectory.file("generated/version/")
+
+  @TaskAction
+  fun stuff() {
+    val version = versionFile.readText().trim()
+
+    val outputFile = outputDir.get().asFile.resolve("app/cash/quickjs/version.kt")
+    outputFile.parentFile.mkdirs()
+    outputFile.writeText("""
+      |package app.cash.quickjs
+      |
+      |internal const val quickJsVersion = "$version"
+      |""".trimMargin())
+  }
+}
+val versionWriterTaskProvider = tasks.register("writeVersion", VersionWriterTask::class)
+
 kotlin {
   android()
   jvm()
+  js {
+    nodejs()
+  }
 
   sourceSets {
+    val commonMain by getting {
+      kotlin.srcDir(versionWriterTaskProvider)
+    }
+    val commonTest by getting {
+      dependencies {
+        implementation(kotlin("test"))
+      }
+    }
+
     val jniMain by creating {
       dependencies {
         api(Dependencies.androidxAnnotation)
@@ -22,9 +56,6 @@ kotlin {
       dependsOn(jniMain)
     }
     val jvmTest by getting {
-      dependencies {
-        api(Dependencies.junit)
-      }
       kotlin.srcDir("src/jniTest/kotlin/")
     }
   }

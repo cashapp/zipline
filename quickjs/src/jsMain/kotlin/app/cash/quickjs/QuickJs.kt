@@ -15,6 +15,10 @@
  */
 package app.cash.quickjs
 
-expect interface QuickJs {
-  val engineVersion: String
+actual interface QuickJs {
+  actual val engineVersion: String
+
+  companion object : QuickJs {
+    override val engineVersion get() = quickJsVersion
+  }
 }

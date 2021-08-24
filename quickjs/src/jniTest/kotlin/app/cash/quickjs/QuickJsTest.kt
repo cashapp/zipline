@@ -17,6 +17,7 @@ package app.cash.quickjs
 
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -25,6 +26,10 @@ class QuickJsTest {
 
   @After fun tearDown() {
     quickjs.close()
+  }
+
+  @Test fun version() {
+    assertNotEquals("", quickjs.engineVersion)
   }
 
   @Test fun helloWorld() {

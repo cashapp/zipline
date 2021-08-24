@@ -15,6 +15,11 @@
  */
 package app.cash.quickjs
 
-expect interface QuickJs {
-  val engineVersion: String
+import kotlin.test.Test
+import kotlin.test.assertNotEquals
+
+class QuickJsTest {
+  @Test fun version() {
+    assertNotEquals("", QuickJs.engineVersion)
+  }
 }
