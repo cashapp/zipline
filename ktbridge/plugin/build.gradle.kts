@@ -11,7 +11,6 @@ dependencies {
   kapt("com.google.auto.service:auto-service:1.0-rc7")
   compileOnly("com.google.auto.service:auto-service-annotations:1.0-rc7")
 
-  testImplementation(project(":ktbridge"))
   testImplementation(project(":ktbridge:testing"))
   testImplementation(project(":quickjs"))
   testImplementation(kotlin("test-junit"))

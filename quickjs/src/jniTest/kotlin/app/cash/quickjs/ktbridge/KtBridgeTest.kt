@@ -33,7 +33,7 @@ class KtBridgeTest {
     quickjs.close()
   }
 
-  @Test fun `jvm call js service`() {
+  @Test fun jvmCallJsService() {
     val testingJs = KtBridgeTest::class.java.getResourceAsStream("/testing.js")!!
         .bufferedReader()
         .use(BufferedReader::readText)
@@ -48,7 +48,7 @@ class KtBridgeTest {
       .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
   }
 
-  @Test fun `js call jvm service`() {
+  @Test fun jsCallJvmService() {
     val testingJs = KtBridgeTest::class.java.getResourceAsStream("/testing.js")!!
       .bufferedReader()
       .use(BufferedReader::readText)

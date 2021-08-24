@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
+
 plugins {
   kotlin("multiplatform")
   id("com.android.library")
@@ -27,6 +29,12 @@ abstract class VersionWriterTask : DefaultTask() {
 }
 val versionWriterTaskProvider = tasks.register("writeVersion", VersionWriterTask::class)
 
+val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
+  destinationDir = buildDir.resolve("generated/testingJs")
+  from(rootDir.resolve("ktbridge/testing/build/distributions/testing.js"))
+  dependsOn(":ktbridge:testing:jsBrowserProductionWebpack")
+}
+
 kotlin {
   android()
   jvm()
@@ -37,6 +45,9 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       kotlin.srcDir(versionWriterTaskProvider)
+      dependencies {
+        api(Dependencies.okioMultiplatform)
+      }
     }
     val commonTest by getting {
       dependencies {
@@ -57,6 +68,11 @@ kotlin {
     }
     val jvmTest by getting {
       kotlin.srcDir("src/jniTest/kotlin/")
+      resources.srcDir(copyTestingJs)
+      dependencies {
+        implementation(Dependencies.truth)
+        implementation(project(":ktbridge:testing"))
+      }
     }
   }
 }
@@ -67,7 +83,7 @@ android {
   defaultConfig {
     minSdkVersion(18)
 
-    testInstrumentationRunner("androidx.test.runner.AndroidJUnitRunner")
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
     ndk {
       abiFilters += Ext.ndkAbiFilters
@@ -89,6 +105,17 @@ android {
     val androidTest by getting {
       java.srcDir("src/jniTest/kotlin/")
       resources.srcDir("src/androidInstrumentationTest/resources/")
+      resources.srcDir(copyTestingJs)
+    }
+  }
+
+  // The above `resources.srcDir(copyTestingJs)` code is supposed to automatically add a task
+  // dependency, but it doesn't. So we add it ourselves using this nonsense.
+  afterEvaluate {
+    libraryVariants.onEach { libraryVariant ->
+      libraryVariant.testVariant?.processJavaResourcesProvider?.configure {
+        dependsOn(copyTestingJs)
+      }
     }
   }
 
@@ -122,6 +149,10 @@ android {
 dependencies {
   androidTestImplementation(Dependencies.junit)
   androidTestImplementation(Dependencies.androidxTestRunner)
+  androidTestImplementation(Dependencies.truth)
+  androidTestImplementation(project(":ktbridge:testing"))
+
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":ktbridge:plugin"))
 }
 
 fun quickJsVersion(): String {
