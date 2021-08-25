@@ -15,11 +15,6 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        implementation(project(":ktbridge"))
-      }
-    }
-    val jvmMain by getting {
-      dependencies {
         implementation(project(":quickjs"))
       }
     }
@@ -27,5 +22,5 @@ kotlin {
 }
 
 dependencies {
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":ktbridge:plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":quickjs-kotlin-plugin"))
 }

@@ -47,7 +47,7 @@ internal class CallBridgesTest {
   }
 
   @Test
-  fun `inbound call request and response`() {
+  fun inboundCallRequestAndResponse() {
     responses += "this is a curt response"
     val response = echoClient.echo(EchoRequest("this is a happy request"))
     assertThat(response.message).isEqualTo("this is a curt response")
