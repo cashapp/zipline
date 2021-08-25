@@ -16,7 +16,8 @@
 package app.cash.quickjs.ktbridge
 
 import app.cash.quickjs.ktbridge.OutboundCall.Factory
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 import okio.Buffer
 
 /**
@@ -40,27 +41,39 @@ internal class OutboundCall private constructor(
       writeInt(parameterCount)
     }
   private var callCount = 0
-  private val eachParameterBuffer = Buffer()
+  private val eachValueBuffer = Buffer()
 
-  inline fun <reified T : Any> parameter(value: T) = parameter(T::class, value)
+  @OptIn(ExperimentalStdlibApi::class)
+  inline fun <reified T> parameter(value: T) = parameter(typeOf<T>(), value)
 
-  fun <T : Any> parameter(type: KClass<T>, value: T) {
+  fun <T> parameter(type: KType, value: T) {
     require(callCount++ < parameterCount)
-    jsAdapter.encode(value, eachParameterBuffer, type)
-    buffer.writeInt(eachParameterBuffer.size.toInt())
-    buffer.writeAll(eachParameterBuffer)
+    if (value == null) {
+      buffer.writeInt(-1)
+    } else {
+      jsAdapter.encode(value, eachValueBuffer, type)
+      buffer.writeInt(eachValueBuffer.size.toInt())
+      buffer.writeAll(eachValueBuffer)
+    }
   }
 
-  inline fun <reified R : Any> invoke(): R {
-    return invoke(R::class)
+  @OptIn(ExperimentalStdlibApi::class)
+  inline fun <reified R> invoke(): R {
+    return invoke(typeOf<R>())
   }
 
-  fun <R : Any> invoke(type: KClass<R>): R {
+  fun <R> invoke(type: KType): R {
     require(callCount++ == parameterCount)
     val encodedArguments = buffer.readByteArray()
     val encodedResponse = internalBridge.invokeJs(instanceName, funName, encodedArguments)
     buffer.write(encodedResponse)
-    return jsAdapter.decode(buffer, type)
+    val byteCount = buffer.readInt()
+    if (byteCount == -1) {
+      return null as R
+    } else {
+      eachValueBuffer.write(buffer, byteCount.toLong())
+      return jsAdapter.decode(eachValueBuffer, type)
+    }
   }
 
   class Factory internal constructor(

@@ -16,7 +16,7 @@
 package app.cash.quickjs.ktbridge.testing
 
 import app.cash.quickjs.ktbridge.JsAdapter
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
 import okio.Buffer
 
 interface EchoService {
@@ -32,16 +32,16 @@ data class EchoResponse(
 )
 
 object EchoJsAdapter : JsAdapter {
-  override fun <T : Any> encode(value: T, sink: Buffer, type: KClass<T>) {
-    when (type) {
+  override fun <T : Any> encode(value: T, sink: Buffer, type: KType) {
+    when (type.classifier) {
       EchoRequest::class -> sink.writeUtf8((value as EchoRequest).message)
       EchoResponse::class -> sink.writeUtf8((value as EchoResponse).message)
       else -> error("unexpected type: $type")
     }
   }
 
-  override fun <T : Any> decode(source: Buffer, type: KClass<T>): T {
-    return when (type) {
+  override fun <T : Any> decode(source: Buffer, type: KType): T {
+    return when (type.classifier) {
       EchoRequest::class -> EchoRequest(source.readUtf8()) as T
       EchoResponse::class -> EchoResponse(source.readUtf8()) as T
       else -> error("unexpected type: $type")

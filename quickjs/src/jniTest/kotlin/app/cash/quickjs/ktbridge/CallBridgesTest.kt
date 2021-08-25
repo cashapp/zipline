@@ -22,36 +22,68 @@ import app.cash.quickjs.ktbridge.testing.EchoService
 import app.cash.quickjs.ktbridge.testing.KtBridgePair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
-import org.junit.Before
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 internal class CallBridgesTest {
-  private val requests = LinkedBlockingDeque<String>()
-  private val responses = LinkedBlockingDeque<String>()
-
   private val bridges = KtBridgePair()
-
-  private val echoService = object : EchoService {
-    override fun echo(request: EchoRequest): EchoResponse {
-      requests += request.message
-      return EchoResponse(responses.take())
-    }
-  }
-
-  private lateinit var echoClient: EchoService
-
-  @Before
-  fun setUp() {
-    bridges.a.set<EchoService>("helloService", EchoJsAdapter, echoService)
-    echoClient = bridges.b.get("helloService", EchoJsAdapter)
-  }
 
   @Test
   fun inboundCallRequestAndResponse() {
+    val requests = LinkedBlockingDeque<String>()
+    val responses = LinkedBlockingDeque<String>()
+    val service = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        requests += request.message
+        return EchoResponse(responses.take())
+      }
+    }
+
+    bridges.a.set<EchoService>("helloService", EchoJsAdapter, service)
+    val client = bridges.b.get<EchoService>("helloService", EchoJsAdapter)
+
     responses += "this is a curt response"
-    val response = echoClient.echo(EchoRequest("this is a happy request"))
-    assertThat(response.message).isEqualTo("this is a curt response")
-    assertThat(requests.poll()).isEqualTo("this is a happy request")
-    assertThat(requests.poll()).isNull()
+    val response = client.echo(EchoRequest("this is a happy request"))
+    assertEquals("this is a curt response", response.message)
+    assertEquals("this is a happy request", requests.poll())
+    assertNull(responses.poll())
+    assertNull(requests.poll())
+  }
+
+  interface NullableEchoService {
+    fun echo(request: EchoRequest?): EchoResponse?
+  }
+
+  @Test
+  fun nullRequest() {
+    val service = object : NullableEchoService {
+      override fun echo(request: EchoRequest?): EchoResponse? {
+        assertNull(request)
+        return EchoResponse("received null")
+      }
+    }
+
+    bridges.a.set<NullableEchoService>("helloService", EchoJsAdapter, service)
+    val client = bridges.b.get<NullableEchoService>("helloService", EchoJsAdapter)
+
+    val response = client.echo(null)
+    assertThat(response?.message).isEqualTo("received null")
+  }
+
+  @Test
+  fun nullResponse() {
+    val service = object : NullableEchoService {
+      override fun echo(request: EchoRequest?): EchoResponse? {
+        assertEquals("send me null please?", request?.message)
+        return null
+      }
+    }
+
+    bridges.a.set<NullableEchoService>("helloService", EchoJsAdapter, service)
+    val client = bridges.b.get<NullableEchoService>("helloService", EchoJsAdapter)
+
+    val response = client.echo(EchoRequest("send me null please?"))
+    assertNull(response)
   }
 }

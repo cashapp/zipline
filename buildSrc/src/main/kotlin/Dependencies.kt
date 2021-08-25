@@ -3,6 +3,7 @@ object Dependencies {
   val androidxTestRunner = "androidx.test:runner:1.2.0"
   val duktape = "com.squareup.duktape:duktape-android:1.4.0"
   val junit = "junit:junit:4.13.2"
+  val kotlinReflect = "org.jetbrains.kotlin:kotlin-reflect"
   val truth = "com.google.truth:truth:1.0"
   val okio = "com.squareup.okio:okio:3.0.0-alpha.9"
   val okioMultiplatform = "com.squareup.okio:okio-multiplatform:3.0.0-alpha.9"
