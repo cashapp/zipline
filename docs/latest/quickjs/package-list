@@ -9,8 +9,8 @@ $dokka.location:app.cash.quickjs.ktbridge////PointingToDeclaration/quickjs/app.
 $dokka.location:app.cash.quickjs.ktbridge//createKtBridge/#app.cash.quickjs.QuickJs/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/create-kt-bridge.html
 $dokka.location:app.cash.quickjs.ktbridge//ktBridge/#/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/kt-bridge.html
 $dokka.location:app.cash.quickjs.ktbridge/JsAdapter///PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-js-adapter/index.html
-$dokka.location:app.cash.quickjs.ktbridge/JsAdapter/decode/#okio.Buffer#kotlin.reflect.KClass[TypeParam(bounds=[kotlin.Any])]/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-js-adapter/decode.html
-$dokka.location:app.cash.quickjs.ktbridge/JsAdapter/encode/#TypeParam(bounds=[kotlin.Any])#okio.Buffer#kotlin.reflect.KClass[TypeParam(bounds=[kotlin.Any])]/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-js-adapter/encode.html
+$dokka.location:app.cash.quickjs.ktbridge/JsAdapter/decode/#okio.Buffer#kotlin.reflect.KType/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-js-adapter/decode.html
+$dokka.location:app.cash.quickjs.ktbridge/JsAdapter/encode/#TypeParam(bounds=[kotlin.Any])#okio.Buffer#kotlin.reflect.KType/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-js-adapter/encode.html
 $dokka.location:app.cash.quickjs.ktbridge/KtBridge///PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-kt-bridge/index.html
 $dokka.location:app.cash.quickjs.ktbridge/KtBridge/get/#kotlin.String#app.cash.quickjs.ktbridge.JsAdapter/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-kt-bridge/get.html
 $dokka.location:app.cash.quickjs.ktbridge/KtBridge/set/#kotlin.String#app.cash.quickjs.ktbridge.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-kt-bridge/set.html
