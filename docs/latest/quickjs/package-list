@@ -1,5 +1,19 @@
 $dokka.format:html-v1
 $dokka.linkExtension:html
+$dokka.location:app.cash.quickjs.ktbridge.testing////PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge.testing/index.html
+$dokka.location:app.cash.quickjs.ktbridge.testing/KtBridgePair///PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge.testing/-kt-bridge-pair/index.html
+$dokka.location:app.cash.quickjs.ktbridge.testing/KtBridgePair/KtBridgePair/#/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge.testing/-kt-bridge-pair/-kt-bridge-pair.html
+$dokka.location:app.cash.quickjs.ktbridge.testing/KtBridgePair/a/#/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge.testing/-kt-bridge-pair/a.html
+$dokka.location:app.cash.quickjs.ktbridge.testing/KtBridgePair/b/#/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge.testing/-kt-bridge-pair/b.html
+$dokka.location:app.cash.quickjs.ktbridge////PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/index.html
+$dokka.location:app.cash.quickjs.ktbridge//createKtBridge/#app.cash.quickjs.QuickJs/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/create-kt-bridge.html
+$dokka.location:app.cash.quickjs.ktbridge//ktBridge/#/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/kt-bridge.html
+$dokka.location:app.cash.quickjs.ktbridge/JsAdapter///PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-js-adapter/index.html
+$dokka.location:app.cash.quickjs.ktbridge/JsAdapter/decode/#okio.Buffer#kotlin.reflect.KClass[TypeParam(bounds=[kotlin.Any])]/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-js-adapter/decode.html
+$dokka.location:app.cash.quickjs.ktbridge/JsAdapter/encode/#TypeParam(bounds=[kotlin.Any])#okio.Buffer#kotlin.reflect.KClass[TypeParam(bounds=[kotlin.Any])]/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-js-adapter/encode.html
+$dokka.location:app.cash.quickjs.ktbridge/KtBridge///PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-kt-bridge/index.html
+$dokka.location:app.cash.quickjs.ktbridge/KtBridge/get/#kotlin.String#app.cash.quickjs.ktbridge.JsAdapter/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-kt-bridge/get.html
+$dokka.location:app.cash.quickjs.ktbridge/KtBridge/set/#kotlin.String#app.cash.quickjs.ktbridge.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/quickjs/app.cash.quickjs.ktbridge/-kt-bridge/set.html
 $dokka.location:app.cash.quickjs////PointingToDeclaration/quickjs/app.cash.quickjs/index.html
 $dokka.location:app.cash.quickjs/QuickJs.Companion///PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-companion/index.html
 $dokka.location:app.cash.quickjs/QuickJs.Companion/engineVersion/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-companion/engine-version.html
@@ -8,4 +22,6 @@ $dokka.location:app.cash.quickjs/QuickJs/engineVersion/#/PointingToDeclaration/
 $dokka.location:app.cash.quickjs/QuickJsException///PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js-exception/index.html
 $dokka.location:app.cash.quickjs/QuickJsException/QuickJsException/#kotlin.String#kotlin.String?/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js-exception/-quick-js-exception.html
 app.cash.quickjs
+app.cash.quickjs.ktbridge
+app.cash.quickjs.ktbridge.testing
 
