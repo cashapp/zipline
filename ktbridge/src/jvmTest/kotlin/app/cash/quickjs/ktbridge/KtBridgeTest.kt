@@ -22,28 +22,21 @@ import app.cash.quickjs.ktbridge.testing.helloService
 import app.cash.quickjs.ktbridge.testing.prepareJvmBridges
 import app.cash.quickjs.ktbridge.testing.yoService
 import com.google.common.truth.Truth.assertThat
-import java.io.File
-import okio.buffer
-import okio.source
+import java.io.BufferedReader
 import org.junit.After
-import org.junit.Before
 import org.junit.Test
 
 class KtBridgeTest {
-  private lateinit var quickjs: QuickJs
-
-  @Before fun setUp() {
-    quickjs = QuickJs.create()
-  }
+  private val quickjs = QuickJs.create()
 
   @After fun tearDown() {
     quickjs.close()
   }
-  
+
   @Test fun `jvm call js service`() {
-    val testingJs = File("testing/build/distributions/testing.js").source().buffer().use { source ->
-      source.readUtf8()
-    }
+    val testingJs = KtBridgeTest::class.java.getResourceAsStream("/testing.js")!!
+        .bufferedReader()
+        .use(BufferedReader::readText)
     quickjs.evaluate(testingJs, "testing.js")
     quickjs.evaluate("testing.app.cash.quickjs.ktbridge.testing.prepareJsBridges()")
 
@@ -56,9 +49,9 @@ class KtBridgeTest {
   }
 
   @Test fun `js call jvm service`() {
-    val testingJs = File("testing/build/distributions/testing.js").source().buffer().use { source ->
-      source.readUtf8()
-    }
+    val testingJs = KtBridgeTest::class.java.getResourceAsStream("/testing.js")!!
+      .bufferedReader()
+      .use(BufferedReader::readText)
     quickjs.evaluate(testingJs, "testing.js")
 
     val ktBridge = createKtBridge(quickjs)

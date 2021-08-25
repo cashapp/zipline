@@ -6,13 +6,17 @@ plugins {
   id("org.jetbrains.dokka")
 }
 
+val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
+  destinationDir = buildDir.resolve("generated/testingJs")
+  from("testing/build/distributions/testing.js")
+  dependsOn(":ktbridge:testing:jsBrowserProductionWebpack")
+}
+
 kotlin {
-  jvm {
-  }
+  jvm()
 
   js {
-    browser {
-    }
+    browser()
   }
 
   sourceSets {
@@ -28,18 +32,13 @@ kotlin {
       }
     }
     val jvmTest by getting {
+      resources.srcDir(copyTestingJs)
       dependencies {
         implementation(project(":ktbridge:testing"))
         implementation(Dependencies.junit)
         implementation(Dependencies.truth)
       }
     }
-  }
-}
-
-tasks {
-  val jvmTest by getting {
-    dependsOn(":ktbridge:testing:jsBrowserProductionWebpack")
   }
 }
 
