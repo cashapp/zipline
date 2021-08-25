@@ -15,11 +15,11 @@
  */
 package app.cash.quickjs.ktbridge
 
-import kotlin.reflect.KClass
+import kotlin.reflect.KType
 import okio.Buffer
 
 // TODO(jwilson): Moshi-style nested Factory interface that binds `type` eagerly.
 interface JsAdapter {
-  fun <T : Any> encode(value: T, sink: Buffer, type: KClass<T>)
-  fun <T : Any> decode(source: Buffer, type: KClass<T>): T
+  fun <T : Any> encode(value: T, sink: Buffer, type: KType)
+  fun <T : Any> decode(source: Buffer, type: KType): T
 }

@@ -26,7 +26,10 @@ import app.cash.quickjs.ktbridge.testing.EchoResponse;
 import app.cash.quickjs.ktbridge.testing.EchoService;
 import kotlin.PublishedApi;
 import kotlin.jvm.JvmClassMappingKt;
-import kotlin.reflect.KClass;
+import kotlin.reflect.KType;
+import kotlin.reflect.full.KClassifiers;
+
+import static java.util.Collections.emptyList;
 
 /**
  * Call these {@link PublishedApi} internal APIs from Java rather than from Kotlin to hack around
@@ -34,10 +37,10 @@ import kotlin.reflect.KClass;
  */
 @SuppressWarnings("KotlinInternalInJava")
 public final class KtBridgeTestInternals {
-  private static final KClass<EchoResponse> echoResponseKt
-      = JvmClassMappingKt.getKotlinClass(EchoResponse.class);
-  private static final KClass<EchoRequest> echoRequestKt
-      = JvmClassMappingKt.getKotlinClass(EchoRequest.class);
+  private static final KType echoResponseKt = KClassifiers.createType(
+      JvmClassMappingKt.getKotlinClass(EchoResponse.class), emptyList(), false, emptyList());
+  private static final KType echoRequestKt = KClassifiers.createType(
+      JvmClassMappingKt.getKotlinClass(EchoRequest.class), emptyList(), false, emptyList());
 
   /** Simulate generated code for outbound calls. */
   public static EchoService getEchoClient(KtBridge ktBridge, String name) {

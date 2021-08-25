@@ -58,6 +58,7 @@ kotlin {
     val jniMain by creating {
       dependencies {
         api(Dependencies.androidxAnnotation)
+        api(Dependencies.kotlinReflect)
       }
     }
     val androidMain by getting {
