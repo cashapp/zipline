@@ -42,6 +42,7 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
@@ -49,6 +50,8 @@ import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.irCall
+import org.jetbrains.kotlin.ir.util.isInterface
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -83,7 +86,8 @@ internal class KtBridgeGetRewriter(
   private val declarationParent: IrDeclarationParent,
   private val original: IrCall
 ) {
-  private val serviceInterface = original.getTypeArgument(0) ?: error("TODO")
+  private val serviceInterface = original.getTypeArgument(0)!!
+  private val serviceInterfaceType = serviceInterfaceType()
 
   private val irFactory: IrFactory
     get() = pluginContext.irFactory
@@ -92,6 +96,18 @@ internal class KtBridgeGetRewriter(
     return irCall(original, ktBridgeApis.rewrittenGetFunction).apply {
       putValueArgument(1, irNewOutboundClientFactory())
     }
+  }
+
+  /** Returns the interface of the type argument for the original call. */
+  private fun serviceInterfaceType(): IrClassSymbol {
+    val result = pluginContext.referenceClass(serviceInterface.classFqName ?: FqName.ROOT)
+    if (result == null || !result.owner.isInterface) {
+      throw KtBridgeCompilationException(
+        element = original,
+        message = "The type argument to KtBridge.get() must be an interface type",
+      )
+    }
+    return result
   }
 
   private fun irNewOutboundClientFactory(): IrContainerExpression {
@@ -197,9 +213,6 @@ internal class KtBridgeGetRewriter(
         classSymbol = clientImplementation.symbol,
       )
     }
-
-    val serviceInterfaceType = pluginContext.referenceClass(serviceInterface.classFqName!!)
-      ?: error("TODO")
 
     for (bridgedFunction in serviceInterfaceType.functions.toList()) {
       if (bridgedFunction.owner.isFakeOverride) continue

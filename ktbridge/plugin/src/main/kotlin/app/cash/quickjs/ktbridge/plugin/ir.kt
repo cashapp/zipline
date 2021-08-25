@@ -16,6 +16,10 @@
 package app.cash.quickjs.ktbridge.plugin
 
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocationWithRange
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
+import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSourceLocation
+import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
@@ -23,6 +27,7 @@ import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.IrGeneratorContext
 import org.jetbrains.kotlin.ir.builders.Scope
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
+import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -41,6 +46,29 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 internal fun FqName.child(name: String) = child(Name.identifier(name))
+
+/** Thrown on invalid or unexpected input code. */
+class KtBridgeCompilationException(
+  override val message: String,
+  val element: IrElement? = null,
+  val severity: CompilerMessageSeverity = CompilerMessageSeverity.ERROR,
+) : Exception(message)
+
+/** Finds the line and column of [irElement] within this file. */
+fun IrFile.locationOf(irElement: IrElement?): CompilerMessageSourceLocation {
+  val sourceRangeInfo = fileEntry.getSourceRangeInfo(
+    beginOffset = irElement?.startOffset ?: UNDEFINED_OFFSET,
+    endOffset = irElement?.endOffset ?: UNDEFINED_OFFSET
+  )
+  return CompilerMessageLocationWithRange.create(
+    path = sourceRangeInfo.filePath,
+    lineStart = sourceRangeInfo.startLineNumber + 1,
+    columnStart = sourceRangeInfo.startColumnNumber + 1,
+    lineEnd = sourceRangeInfo.endLineNumber + 1,
+    columnEnd = sourceRangeInfo.endColumnNumber + 1,
+    lineContent = null
+  )!!
+}
 
 /** `return ...` */
 internal fun IrBuilderWithScope.irReturn(

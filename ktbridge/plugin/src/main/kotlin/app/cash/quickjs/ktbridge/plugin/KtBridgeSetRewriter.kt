@@ -54,6 +54,7 @@ import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
@@ -65,6 +66,8 @@ import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.getPropertyGetter
+import org.jetbrains.kotlin.ir.util.isInterface
+import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -104,7 +107,8 @@ internal class KtBridgeSetRewriter(
   private val declarationParent: IrDeclarationParent,
   private val original: IrCall
 ) {
-  private val serviceInterface = original.getTypeArgument(0) ?: error("TODO")
+  private val serviceInterface = original.getTypeArgument(0)!!
+  private val serviceInterfaceType = serviceInterfaceType()
 
   private val irFactory: IrFactory
     get() = pluginContext.irFactory
@@ -125,6 +129,18 @@ internal class KtBridgeSetRewriter(
       putValueArgument(0, original.getValueArgument(0))
       putValueArgument(1, irNewInboundService())
     }
+  }
+
+  /** Returns the interface of the type argument for the original call. */
+  private fun serviceInterfaceType(): IrClassSymbol {
+    val result = pluginContext.referenceClass(serviceInterface.classFqName ?: FqName.ROOT)
+    if (result == null || !result.owner.isInterface) {
+      throw KtBridgeCompilationException(
+        element = original,
+        message = "The type argument to KtBridge.set() must be an interface type",
+      )
+    }
+    return result
   }
 
   private fun irNewInboundService(): IrContainerExpression {
@@ -299,9 +315,6 @@ internal class KtBridgeSetRewriter(
     serviceProperty: IrProperty,
   ): IrExpression {
     val result = mutableListOf<IrBranch>()
-
-    val serviceInterfaceType = pluginContext.referenceClass(serviceInterface.classFqName!!)
-      ?: error("TODO")
 
     // Each bridged function gets its own branch in the when() expression.
     for (bridgedFunction in serviceInterfaceType.functions) {
