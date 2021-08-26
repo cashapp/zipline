@@ -15,6 +15,6 @@
  */
 package app.cash.quickjs
 
-expect interface QuickJs {
-  val engineVersion: String
+expect abstract class QuickJs {
+  abstract val engineVersion: String
 }

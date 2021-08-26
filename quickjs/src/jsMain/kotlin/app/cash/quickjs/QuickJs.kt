@@ -15,10 +15,10 @@
  */
 package app.cash.quickjs
 
-actual interface QuickJs {
-  actual val engineVersion: String
+actual abstract class QuickJs {
+  actual abstract val engineVersion: String
 
-  companion object : QuickJs {
+  companion object : QuickJs() {
     override val engineVersion get() = quickJsVersion
   }
 }

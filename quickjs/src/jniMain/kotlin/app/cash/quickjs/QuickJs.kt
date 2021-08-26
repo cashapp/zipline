@@ -23,8 +23,8 @@ import java.io.Closeable
  * This class is NOT thread safe. If multiple threads access an instance concurrently it must be
  * synchronized externally.
  */
-actual interface QuickJs : Closeable {
-  actual val engineVersion: String
+actual abstract class QuickJs : Closeable {
+  actual abstract val engineVersion: String
 
   /**
    * Evaluate [script] and return any result. [fileName] will be used in error
@@ -32,7 +32,7 @@ actual interface QuickJs : Closeable {
    *
    * @throws QuickJsException if there is an error evaluating the script.
    */
-  fun evaluate(script: String, fileName: String = "?"): Any?
+  abstract fun evaluate(script: String, fileName: String = "?"): Any?
 
   /**
    * Provides [instance] to JavaScript as a global object called [name]. [type]
@@ -43,7 +43,7 @@ actual interface QuickJs : Closeable {
    * Methods of the interface may return `void` or any of the following supported argument
    * types: `boolean`, [Boolean], `int`, [Integer], `double`, [Double], [String].
    */
-  operator fun <T : Any> set(name: String, type: Class<T>, instance: T)
+  abstract operator fun <T : Any> set(name: String, type: Class<T>, instance: T)
 
   /**
    * Attaches to a global JavaScript object called `name` that implements `type`.
@@ -55,7 +55,7 @@ actual interface QuickJs : Closeable {
    * types: `boolean`, [Boolean], `int`, [Integer], `double`,
    * [Double], [String].
    */
-  operator fun <T : Any> get(name: String, type: Class<T>): T
+  abstract operator fun <T : Any> get(name: String, type: Class<T>): T
 
   /**
    * Compile [sourceCode] and return the bytecode. [fileName] will be used in error
@@ -63,14 +63,14 @@ actual interface QuickJs : Closeable {
    *
    * @throws QuickJsException if the sourceCode could not be compiled.
    */
-  fun compile(sourceCode: String, fileName: String): ByteArray
+  abstract fun compile(sourceCode: String, fileName: String): ByteArray
 
   /**
    * Load and execute [bytecode] and return the result.
    *
    * @throws QuickJsException if there is an error loading or executing the code.
    */
-  fun execute(bytecode: ByteArray): Any?
+  abstract fun execute(bytecode: ByteArray): Any?
 
   companion object {
     /**
