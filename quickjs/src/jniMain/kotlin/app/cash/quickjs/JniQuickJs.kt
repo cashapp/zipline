@@ -20,7 +20,7 @@ import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.logging.Logger
 
-internal class JniQuickJs(private var context: Long) : QuickJs {
+internal class JniQuickJs(private var context: Long) : QuickJs() {
   companion object {
     init {
       loadNativeLibrary()
