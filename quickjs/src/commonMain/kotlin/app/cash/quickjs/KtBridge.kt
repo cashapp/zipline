@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge
+package app.cash.quickjs
 
 // TODO(jwilson): merge with QuickJs?
 class KtBridge internal constructor(
@@ -51,7 +51,7 @@ class KtBridge internal constructor(
     outboundClientFactory: OutboundClientFactory<T>
   ): T {
     return outboundClientFactory.create(
-      OutboundCall.Factory(name, outboundClientFactory.jsAdapter, outboundBridge)
+        OutboundCall.Factory(name, outboundClientFactory.jsAdapter, outboundBridge)
     )
   }
 }

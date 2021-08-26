@@ -16,11 +16,11 @@
 
 package app.cash.quickjs.ktbridge.plugin
 
-import app.cash.quickjs.ktbridge.KtBridge
-import app.cash.quickjs.ktbridge.testing.EchoRequest
-import app.cash.quickjs.ktbridge.testing.EchoResponse
-import app.cash.quickjs.ktbridge.testing.EchoService
-import app.cash.quickjs.ktbridge.testing.KtBridgePair
+import app.cash.quickjs.KtBridge
+import app.cash.quickjs.testing.EchoRequest
+import app.cash.quickjs.testing.EchoResponse
+import app.cash.quickjs.testing.EchoService
+import app.cash.quickjs.testing.KtBridgePair
 import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -39,9 +39,9 @@ class KtBridgePluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        package app.cash.quickjs.ktbridge.testing
+        package app.cash.quickjs.testing
         
-        import app.cash.quickjs.ktbridge.KtBridge
+        import app.cash.quickjs.KtBridge
         
         class TestingEchoService(
           private val greeting: String
@@ -60,7 +60,7 @@ class KtBridgePluginTest {
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val bridges = KtBridgePair()
-    val mainKt = result.classLoader.loadClass("app.cash.quickjs.ktbridge.testing.MainKt")
+    val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
     mainKt.getDeclaredMethod("prepareJsBridges", KtBridge::class.java).invoke(null, bridges.a)
 
     val helloService = KtBridgeTestInternals.getEchoClient(bridges.b, "helloService")
@@ -74,9 +74,9 @@ class KtBridgePluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        package app.cash.quickjs.ktbridge.testing
+        package app.cash.quickjs.testing
         
-        import app.cash.quickjs.ktbridge.KtBridge
+        import app.cash.quickjs.KtBridge
         
         fun getHelloService(ktBridge: KtBridge): EchoService {
           return ktBridge.get("helloService", EchoJsAdapter)
@@ -95,7 +95,7 @@ class KtBridgePluginTest {
     }
     KtBridgeTestInternals.setEchoService(bridges.b, "helloService", testingEchoService)
 
-    val mainKt = result.classLoader.loadClass("app.cash.quickjs.ktbridge.testing.MainKt")
+    val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
     val helloService = mainKt.getDeclaredMethod("getHelloService", KtBridge::class.java)
       .invoke(null, bridges.a) as EchoService
 
@@ -109,9 +109,9 @@ class KtBridgePluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        package app.cash.quickjs.ktbridge.testing
+        package app.cash.quickjs.testing
         
-        import app.cash.quickjs.ktbridge.KtBridge
+        import app.cash.quickjs.KtBridge
         
         fun prepareJsBridges(ktBridge: KtBridge) {
           ktBridge.set<TestingEchoService>("helloService", EchoJsAdapter, TestingEchoService)
@@ -134,9 +134,9 @@ class KtBridgePluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        package app.cash.quickjs.ktbridge.testing
+        package app.cash.quickjs.testing
         
-        import app.cash.quickjs.ktbridge.KtBridge
+        import app.cash.quickjs.KtBridge
         
         fun getHelloService(ktBridge: KtBridge): String {
           return ktBridge.get("helloService", EchoJsAdapter)

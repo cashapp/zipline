@@ -13,22 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge.testing
+package app.cash.quickjs
 
-import app.cash.quickjs.ktbridge.InternalBridge
-import app.cash.quickjs.ktbridge.KtBridge
+import kotlin.reflect.KType
+import okio.Buffer
 
-/** A pair of bridges connected to each other for testing. */
-class KtBridgePair {
-  val a: KtBridge = KtBridge(object : InternalBridge {
-    override fun invokeJs(
-      instanceName: String,
-      funName: String,
-      encodedArguments: ByteArray
-    ): ByteArray {
-      return b.inboundBridge.invokeJs(instanceName, funName, encodedArguments)
-    }
-  })
-
-  val b: KtBridge = KtBridge(a.inboundBridge)
+// TODO(jwilson): Moshi-style nested Factory interface that binds `type` eagerly.
+interface JsAdapter {
+  fun <T : Any> encode(value: T, sink: Buffer, type: KType)
+  fun <T : Any> decode(source: Buffer, type: KType): T
 }

@@ -13,9 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge
-
-import app.cash.quickjs.QuickJs
+package app.cash.quickjs
 
 fun createKtBridge(quickJs: QuickJs): KtBridge {
   // Lazily fetch the bridge to call them.

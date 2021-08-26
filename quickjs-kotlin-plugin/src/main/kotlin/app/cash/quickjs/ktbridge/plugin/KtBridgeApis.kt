@@ -26,7 +26,7 @@ import org.jetbrains.kotlin.name.FqName
 internal class KtBridgeApis(
   private val pluginContext: IrPluginContext,
 ) {
-  private val packageFqName = FqName("app.cash.quickjs.ktbridge")
+  private val packageFqName = FqName("app.cash.quickjs")
 
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!

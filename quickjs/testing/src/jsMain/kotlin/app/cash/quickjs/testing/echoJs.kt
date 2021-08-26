@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge.testing
+package app.cash.quickjs.testing
 
-import app.cash.quickjs.ktbridge.ktBridge
+import app.cash.quickjs.ktBridge
 
 class JsEchoService(
   private val greeting: String

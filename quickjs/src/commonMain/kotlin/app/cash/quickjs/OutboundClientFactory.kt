@@ -13,24 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge.testing
+package app.cash.quickjs
 
-import app.cash.quickjs.ktbridge.KtBridge
-
-val KtBridge.helloService: EchoService
-  get() = get("helloService", EchoJsAdapter)
-
-val KtBridge.yoService: EchoService
-  get() = get("yoService", EchoJsAdapter)
-
-class JvmEchoService(
-  private val greeting: String
-) : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    return EchoResponse("$greeting from the JVM, ${request.message}")
-  }
-}
-
-fun prepareJvmBridges(ktBridge: KtBridge) {
-  ktBridge.set<EchoService>("supService", EchoJsAdapter, JvmEchoService("sup"))
+/**
+ * Generated code extends this base class to make calls into an application-layer interface that is
+ * implemented by another platform in the same process.
+ */
+@PublishedApi
+internal abstract class OutboundClientFactory<T : Any>(
+  internal val jsAdapter: JsAdapter
+) {
+  abstract fun create(callFactory: OutboundCall.Factory): T
 }
