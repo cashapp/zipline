@@ -13,15 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge
+package app.cash.quickjs.testing
 
-/**
- * Generated code extends this base class to receive calls into an application-layer interface from
- * another platform in the same process.
- */
-@PublishedApi
-internal abstract class InboundService<T : Any>(
-  internal val jsAdapter: JsAdapter
-) {
-  abstract fun call(inboundCall: InboundCall): ByteArray
+import app.cash.quickjs.InternalBridge
+import app.cash.quickjs.KtBridge
+
+/** A pair of bridges connected to each other for testing. */
+class KtBridgePair {
+  val a: KtBridge = KtBridge(object : InternalBridge {
+    override fun invokeJs(
+      instanceName: String,
+      funName: String,
+      encodedArguments: ByteArray
+    ): ByteArray {
+      return b.inboundBridge.invokeJs(instanceName, funName, encodedArguments)
+    }
+  })
+
+  val b: KtBridge = KtBridge(a.inboundBridge)
 }

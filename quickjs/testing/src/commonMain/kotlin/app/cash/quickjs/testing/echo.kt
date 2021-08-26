@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge.testing
+package app.cash.quickjs.testing
 
-import app.cash.quickjs.ktbridge.JsAdapter
+import app.cash.quickjs.JsAdapter
 import kotlin.reflect.KType
 import okio.Buffer
 

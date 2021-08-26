@@ -15,15 +15,15 @@
  */
 package app.cash.quickjs.ktbridge.plugin;
 
-import app.cash.quickjs.ktbridge.InboundCall;
-import app.cash.quickjs.ktbridge.InboundService;
-import app.cash.quickjs.ktbridge.KtBridge;
-import app.cash.quickjs.ktbridge.OutboundCall;
-import app.cash.quickjs.ktbridge.OutboundClientFactory;
-import app.cash.quickjs.ktbridge.testing.EchoJsAdapter;
-import app.cash.quickjs.ktbridge.testing.EchoRequest;
-import app.cash.quickjs.ktbridge.testing.EchoResponse;
-import app.cash.quickjs.ktbridge.testing.EchoService;
+import app.cash.quickjs.InboundCall;
+import app.cash.quickjs.InboundService;
+import app.cash.quickjs.KtBridge;
+import app.cash.quickjs.OutboundCall;
+import app.cash.quickjs.OutboundClientFactory;
+import app.cash.quickjs.testing.EchoJsAdapter;
+import app.cash.quickjs.testing.EchoRequest;
+import app.cash.quickjs.testing.EchoResponse;
+import app.cash.quickjs.testing.EchoService;
 import kotlin.PublishedApi;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KType;

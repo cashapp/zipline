@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge
+package app.cash.quickjs
 
-import app.cash.quickjs.ktbridge.testing.EchoJsAdapter
-import app.cash.quickjs.ktbridge.testing.EchoRequest
-import app.cash.quickjs.ktbridge.testing.EchoResponse
-import app.cash.quickjs.ktbridge.testing.EchoService
-import app.cash.quickjs.ktbridge.testing.KtBridgePair
+import app.cash.quickjs.testing.EchoJsAdapter
+import app.cash.quickjs.testing.EchoRequest
+import app.cash.quickjs.testing.EchoResponse
+import app.cash.quickjs.testing.EchoService
+import app.cash.quickjs.testing.KtBridgePair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
 import org.junit.Assert.assertEquals

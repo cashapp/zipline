@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge
+package app.cash.quickjs
 
 val ktBridge = KtBridge(object : InternalBridge {
   // Lazily fetch the bridge to call them.

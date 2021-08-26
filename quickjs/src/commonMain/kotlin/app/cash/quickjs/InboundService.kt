@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge
+package app.cash.quickjs
 
-import kotlin.reflect.KType
-import okio.Buffer
-
-// TODO(jwilson): Moshi-style nested Factory interface that binds `type` eagerly.
-interface JsAdapter {
-  fun <T : Any> encode(value: T, sink: Buffer, type: KType)
-  fun <T : Any> decode(source: Buffer, type: KType): T
+/**
+ * Generated code extends this base class to receive calls into an application-layer interface from
+ * another platform in the same process.
+ */
+@PublishedApi
+internal abstract class InboundService<T : Any>(
+  internal val jsAdapter: JsAdapter
+) {
+  abstract fun call(inboundCall: InboundCall): ByteArray
 }

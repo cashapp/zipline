@@ -13,14 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.ktbridge
+package app.cash.quickjs
 
-import app.cash.quickjs.QuickJs
-import app.cash.quickjs.ktbridge.testing.EchoRequest
-import app.cash.quickjs.ktbridge.testing.EchoResponse
-import app.cash.quickjs.ktbridge.testing.helloService
-import app.cash.quickjs.ktbridge.testing.prepareJvmBridges
-import app.cash.quickjs.ktbridge.testing.yoService
+import app.cash.quickjs.testing.EchoRequest
+import app.cash.quickjs.testing.EchoResponse
+import app.cash.quickjs.testing.helloService
+import app.cash.quickjs.testing.prepareJvmBridges
+import app.cash.quickjs.testing.yoService
 import com.google.common.truth.Truth.assertThat
 import java.io.BufferedReader
 import org.junit.After
@@ -38,7 +37,7 @@ class KtBridgeTest {
         .bufferedReader()
         .use(BufferedReader::readText)
     quickjs.evaluate(testingJs, "testing.js")
-    quickjs.evaluate("testing.app.cash.quickjs.ktbridge.testing.prepareJsBridges()")
+    quickjs.evaluate("testing.app.cash.quickjs.testing.prepareJsBridges()")
 
     val ktBridge = createKtBridge(quickjs)
 
@@ -58,7 +57,7 @@ class KtBridgeTest {
     prepareJvmBridges(ktBridge)
 
     assertThat(quickjs.evaluate(
-      "testing.app.cash.quickjs.ktbridge.testing.callSupService('homie')"
+      "testing.app.cash.quickjs.testing.callSupService('homie')"
     )).isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
   }
 }
