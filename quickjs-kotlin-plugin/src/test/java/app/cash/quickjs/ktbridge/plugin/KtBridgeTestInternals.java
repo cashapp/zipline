@@ -24,12 +24,17 @@ import app.cash.quickjs.testing.EchoJsAdapter;
 import app.cash.quickjs.testing.EchoRequest;
 import app.cash.quickjs.testing.EchoResponse;
 import app.cash.quickjs.testing.EchoService;
+import app.cash.quickjs.testing.GenericEchoService;
+import app.cash.quickjs.testing.GenericJsAdapter;
+import java.util.List;
 import kotlin.PublishedApi;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KType;
+import kotlin.reflect.KTypeProjection;
 import kotlin.reflect.full.KClassifiers;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 
 /**
  * Call these {@link PublishedApi} internal APIs from Java rather than from Kotlin to hack around
@@ -41,6 +46,11 @@ public final class KtBridgeTestInternals {
       JvmClassMappingKt.getKotlinClass(EchoResponse.class), emptyList(), false, emptyList());
   private static final KType echoRequestKt = KClassifiers.createType(
       JvmClassMappingKt.getKotlinClass(EchoRequest.class), emptyList(), false, emptyList());
+  private static final KType stringKt = KClassifiers.createType(
+      JvmClassMappingKt.getKotlinClass(String.class), emptyList(), false, emptyList());
+  private static final KType listOfStringKt = KClassifiers.createType(
+      JvmClassMappingKt.getKotlinClass(List.class),
+      singletonList(KTypeProjection.invariant(stringKt)), false, emptyList());
 
   /** Simulate generated code for outbound calls. */
   public static EchoService getEchoClient(KtBridge ktBridge, String name) {
@@ -64,6 +74,37 @@ public final class KtBridgeTestInternals {
         if (inboundCall.getFunName().equals("echo")) {
           return inboundCall.result(echoResponseKt,
               echoService.echo(inboundCall.parameter(echoRequestKt)));
+        } else {
+          return inboundCall.unexpectedFunction();
+        }
+      }
+    });
+  }
+
+  /** Simulate generated code for outbound calls. */
+  public static GenericEchoService<String> getGenericEchoService(KtBridge ktBridge, String name) {
+    return ktBridge.get(name, new OutboundClientFactory<GenericEchoService<String>>(
+        GenericJsAdapter.INSTANCE) {
+      @Override public GenericEchoService<String> create(OutboundCall.Factory callFactory) {
+        return new GenericEchoService<String>() {
+          @Override public List<String> genericEcho(String request) {
+            OutboundCall outboundCall = callFactory.create("genericEcho", 1);
+            outboundCall.parameter(stringKt, request);
+            return outboundCall.invoke(listOfStringKt);
+          }
+        };
+      }
+    });
+  }
+
+  /** Simulate generated code for inbound calls. */
+  public static void setGenericEchoService(
+      KtBridge ktBridge, String name, GenericEchoService<String> echoService) {
+    ktBridge.set(name, new InboundService<GenericEchoService<String>>(GenericJsAdapter.INSTANCE) {
+      @Override public byte[] call(InboundCall inboundCall) {
+        if (inboundCall.getFunName().equals("genericEcho")) {
+          return inboundCall.result(listOfStringKt,
+              echoService.genericEcho(inboundCall.parameter(stringKt)));
         } else {
           return inboundCall.unexpectedFunction();
         }

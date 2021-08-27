@@ -42,16 +42,12 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
-import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
-import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.irCall
-import org.jetbrains.kotlin.ir.util.isInterface
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -86,8 +82,12 @@ internal class KtBridgeGetRewriter(
   private val declarationParent: IrDeclarationParent,
   private val original: IrCall
 ) {
-  private val serviceInterface = original.getTypeArgument(0)!!
-  private val serviceInterfaceType = serviceInterfaceType()
+  private val bridgedInterface = BridgedInterface.create(
+    pluginContext,
+    original,
+    "KtBridge.get()",
+    original.getTypeArgument(0)!!
+  )
 
   private val irFactory: IrFactory
     get() = pluginContext.irFactory
@@ -98,20 +98,8 @@ internal class KtBridgeGetRewriter(
     }
   }
 
-  /** Returns the interface of the type argument for the original call. */
-  private fun serviceInterfaceType(): IrClassSymbol {
-    val result = pluginContext.referenceClass(serviceInterface.classFqName ?: FqName.ROOT)
-    if (result == null || !result.owner.isInterface) {
-      throw KtBridgeCompilationException(
-        element = original,
-        message = "The type argument to KtBridge.get() must be an interface type",
-      )
-    }
-    return result
-  }
-
   private fun irNewOutboundClientFactory(): IrContainerExpression {
-    val outboundClientFactoryOfT = ktBridgeApis.outboundClientFactory.typeWith(serviceInterface)
+    val outboundClientFactoryOfT = ktBridgeApis.outboundClientFactory.typeWith(bridgedInterface.type)
     val outboundClientFactorySubclass = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
@@ -135,7 +123,7 @@ internal class KtBridgeGetRewriter(
           typeArgumentsCount = 1,
           valueArgumentsCount = 1
         ) {
-          putTypeArgument(0, serviceInterface)
+          putTypeArgument(0, bridgedInterface.type)
           putValueArgument(0, original.getValueArgument(1))
         }
         statements += irInstanceInitializerCall(
@@ -151,7 +139,7 @@ internal class KtBridgeGetRewriter(
       name = Name.identifier("create")
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
-      returnType = serviceInterface
+      returnType = bridgedInterface.type
     }.apply {
       addDispatchReceiver {
         type = outboundClientFactorySubclass.defaultType
@@ -194,7 +182,7 @@ internal class KtBridgeGetRewriter(
       visibility = DescriptorVisibilities.LOCAL
     }.apply {
       parent = createFunction
-      superTypes = listOf(serviceInterface)
+      superTypes = listOf(bridgedInterface.type)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
@@ -214,7 +202,7 @@ internal class KtBridgeGetRewriter(
       )
     }
 
-    for (bridgedFunction in serviceInterfaceType.functions.toList()) {
+    for (bridgedFunction in bridgedInterface.classSymbol.functions.toList()) {
       if (bridgedFunction.owner.isFakeOverride) continue
 
       clientImplementation.irBridgedFunction(
@@ -245,7 +233,7 @@ internal class KtBridgeGetRewriter(
       name = bridgedFunction.name
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
-      returnType = bridgedFunction.returnType
+      returnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
     }.apply {
       overriddenSymbols = listOf(bridgedFunction.symbol)
       addDispatchReceiver {
@@ -256,7 +244,7 @@ internal class KtBridgeGetRewriter(
     for (valueParameter in bridgedFunction.valueParameters) {
       result.addValueParameter {
         name = valueParameter.name
-        type = valueParameter.type
+        type = bridgedInterface.resolveTypeParameters(valueParameter.type)
       }
     }
 
@@ -295,7 +283,7 @@ internal class KtBridgeGetRewriter(
       +irReturn(
         value = irCall(callee = ktBridgeApis.outboundCallInvoke).apply {
           dispatchReceiver = irGet(outboundCallLocal)
-          type = bridgedFunction.returnType
+          type = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
           putTypeArgument(0, result.returnType)
         },
         returnTargetSymbol = result.symbol,

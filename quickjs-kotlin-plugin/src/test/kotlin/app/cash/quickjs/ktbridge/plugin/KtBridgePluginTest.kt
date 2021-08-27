@@ -20,6 +20,7 @@ import app.cash.quickjs.KtBridge
 import app.cash.quickjs.testing.EchoRequest
 import app.cash.quickjs.testing.EchoResponse
 import app.cash.quickjs.testing.EchoService
+import app.cash.quickjs.testing.GenericEchoService
 import app.cash.quickjs.testing.KtBridgePair
 import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -147,6 +148,77 @@ class KtBridgePluginTest {
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
       .contains("(6, 19): The type argument to KtBridge.get() must be an interface type")
+  }
+
+  @Test
+  fun `generic service`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.quickjs.testing
+        
+        import app.cash.quickjs.KtBridge
+        
+        class TestingGenericEchoService : GenericEchoService<String> {
+          override fun genericEcho(request: String): List<String> {
+            return listOf("received a generic ${'$'}request!")
+          }
+        }
+        
+        fun prepareJsBridges(ktBridge: KtBridge) {
+          ktBridge.set<GenericEchoService<String>>(
+            "genericService",
+            GenericJsAdapter,
+            TestingGenericEchoService()
+          )
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val bridges = KtBridgePair()
+    val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
+    mainKt.getDeclaredMethod("prepareJsBridges", KtBridge::class.java).invoke(null, bridges.a)
+
+    val helloService = KtBridgeTestInternals.getGenericEchoService(bridges.b, "genericService")
+    assertThat(helloService.genericEcho("Jesse")).containsExactly("received a generic Jesse!")
+  }
+
+  @Test
+  fun `generic client`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.quickjs.testing
+        
+        import app.cash.quickjs.KtBridge
+        
+        fun getGenericService(ktBridge: KtBridge): GenericEchoService<String> {
+          return ktBridge.get("genericService", GenericJsAdapter)
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val bridges = KtBridgePair()
+
+    val testingService = object : GenericEchoService<String> {
+      override fun genericEcho(request: String): List<String> {
+        return listOf("received a generic $request!")
+      }
+    }
+    KtBridgeTestInternals.setGenericEchoService(bridges.b, "genericService", testingService)
+
+    val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
+    val service = mainKt.getDeclaredMethod("getGenericService", KtBridge::class.java)
+      .invoke(null, bridges.a) as GenericEchoService<String>
+
+    assertThat(service.genericEcho("Jesse"))
+      .containsExactly("received a generic Jesse!")
   }
 }
 
