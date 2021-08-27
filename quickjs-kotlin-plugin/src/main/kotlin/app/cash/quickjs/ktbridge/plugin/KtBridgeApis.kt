@@ -81,20 +81,20 @@ internal class KtBridgeApis(
     get() = outboundClientFactory.functions.single { it.owner.name.identifier == "create" }
 
   val getFunctions: Collection<IrSimpleFunctionSymbol>
-    get() = pluginContext.referenceFunctions(packageFqName.child("KtBridge").child("get"))
+    get() = pluginContext.referenceFunctions(packageFqName.child("QuickJs").child("get"))
 
   val publicGetFunction: IrSimpleFunctionSymbol
     get() = getFunctions.single { it.owner.valueParameters[1].type == jsAdapter.defaultType }
 
   val rewrittenGetFunction: IrSimpleFunctionSymbol
-    get() = getFunctions.single { it.owner.valueParameters[1].type != jsAdapter.defaultType }
+    get() = getFunctions.single { it.owner.valueParameters[1].type != jsAdapter.defaultType && !it.owner.isOperator }
 
   val setFunctions: Collection<IrSimpleFunctionSymbol>
-    get() = pluginContext.referenceFunctions(packageFqName.child("KtBridge").child("set"))
+    get() = pluginContext.referenceFunctions(packageFqName.child("QuickJs").child("set"))
 
   val publicSetFunction: IrSimpleFunctionSymbol
     get() = setFunctions.single { it.owner.valueParameters[1].type == jsAdapter.defaultType }
 
   val rewrittenSetFunction: IrSimpleFunctionSymbol
-    get() = setFunctions.single { it.owner.valueParameters[1].type != jsAdapter.defaultType }
+    get() = setFunctions.single { it.owner.valueParameters[1].type != jsAdapter.defaultType && !it.owner.isOperator }
 }

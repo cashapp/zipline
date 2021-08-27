@@ -19,15 +19,60 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.logging.Logger
+import kotlin.LazyThreadSafetyMode.NONE
 
-internal class JniQuickJs(private var context: Long) : QuickJs() {
+internal class JniQuickJs(private var context: Long) : QuickJs(), InternalBridge {
   companion object {
     init {
       loadNativeLibrary()
     }
 
+    fun create(): JniQuickJs {
+      val context = createContext()
+      if (context == 0L) {
+        throw OutOfMemoryError("Cannot create QuickJs instance")
+      }
+      val quickJs = JniQuickJs(context)
+
+      // Eagerly expose the instance to JS as the outbound bridge so they can call us.
+      quickJs.set(
+          name = "app_cash_quickjs_outboundBridge",
+          type = InternalBridge::class.java,
+          instance = quickJs,
+      )
+
+      return quickJs
+    }
+
     @JvmStatic
-    external fun createContext(): Long
+    private external fun createContext(): Long
+  }
+
+  private val inboundHandlers = mutableMapOf<String, InboundService<*>>()
+  private val outboundBridge by lazy(NONE) {
+    get(name = "app_cash_quickjs_inboundBridge", type = InternalBridge::class.java)
+  }
+
+  override fun invokeJs(
+    instanceName: String,
+    funName: String,
+    encodedArguments: ByteArray
+  ): ByteArray {
+    val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
+    return handler.call(InboundCall(funName, encodedArguments, handler.jsAdapter))
+  }
+
+  override fun set(name: String, handler: InboundService<*>) {
+    inboundHandlers[name] = handler
+  }
+
+  override fun <T : Any> get(
+    name: String,
+    outboundClientFactory: OutboundClientFactory<T>
+  ): T {
+    return outboundClientFactory.create(
+        OutboundCall.Factory(name, outboundClientFactory.jsAdapter, outboundBridge)
+    )
   }
 
   override val engineVersion get() = quickJsVersion

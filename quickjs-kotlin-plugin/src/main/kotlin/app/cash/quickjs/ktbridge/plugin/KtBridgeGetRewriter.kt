@@ -55,16 +55,16 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `KtBridge.get()` that takes a name and a `JsAdapter`:
+ * Rewrites calls to `QuickJs.get()` that takes a name and a `JsAdapter`:
  *
  * ```
- * val helloService: EchoService = ktBridge.get("helloService", EchoJsAdapter)
+ * val helloService: EchoService = quickJs.get("helloService", EchoJsAdapter)
  * ```
  *
  * to the overload that takes a name and an `OutboundClientFactory`:
  *
  * ```
- * val helloService: EchoService = ktBridge.get(
+ * val helloService: EchoService = quickJs.get(
  *   "helloService",
  *   object : OutboundClientFactory<EchoService>(EchoJsAdapter) {
  *     override fun create(outboundCallFactory: OutboundCall.Factory): EchoService {
@@ -104,7 +104,7 @@ internal class KtBridgeGetRewriter(
     if (result == null || !result.owner.isInterface) {
       throw KtBridgeCompilationException(
         element = original,
-        message = "The type argument to KtBridge.get() must be an interface type",
+        message = "The type argument to QuickJs.get() must be an interface type",
       )
     }
     return result

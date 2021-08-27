@@ -15,12 +15,12 @@
  */
 package app.cash.quickjs.testing
 
-import app.cash.quickjs.KtBridge
+import app.cash.quickjs.QuickJs
 
-val KtBridge.helloService: EchoService
+val QuickJs.helloService: EchoService
   get() = get("helloService", EchoJsAdapter)
 
-val KtBridge.yoService: EchoService
+val QuickJs.yoService: EchoService
   get() = get("yoService", EchoJsAdapter)
 
 class JvmEchoService(
@@ -31,6 +31,6 @@ class JvmEchoService(
   }
 }
 
-fun prepareJvmBridges(ktBridge: KtBridge) {
-  ktBridge.set<EchoService>("supService", EchoJsAdapter, JvmEchoService("sup"))
+fun prepareJvmBridges(quickJs: QuickJs) {
+  quickJs.set<EchoService>("supService", EchoJsAdapter, JvmEchoService("sup"))
 }

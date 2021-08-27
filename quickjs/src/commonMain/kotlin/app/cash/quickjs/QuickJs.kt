@@ -17,4 +17,7 @@ package app.cash.quickjs
 
 expect abstract class QuickJs {
   abstract val engineVersion: String
+
+  fun <T : Any> get(name: String, jsAdapter: JsAdapter): T
+  fun <T : Any> set(name: String, jsAdapter: JsAdapter, instance: T)
 }

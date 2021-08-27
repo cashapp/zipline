@@ -16,16 +16,16 @@
 
 package app.cash.quickjs.ktbridge.plugin
 
-import app.cash.quickjs.KtBridge
+import app.cash.quickjs.QuickJs
 import app.cash.quickjs.testing.EchoRequest
 import app.cash.quickjs.testing.EchoResponse
 import app.cash.quickjs.testing.EchoService
-import app.cash.quickjs.testing.KtBridgePair
 import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.junit.After
 import org.junit.Test
 
 /**
@@ -33,15 +33,22 @@ import org.junit.Test
  * appropriate.
  */
 class KtBridgePluginTest {
+  private val quickJs = QuickJs.create()
+
+  @After
+  fun tearDown() {
+    quickJs.close()
+  }
+
   @Test
-  fun `ktBridge set rewritten to receive inbound calls`() {
+  fun `set rewritten to receive inbound calls`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
-        """
+          """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.QuickJs
         
         class TestingEchoService(
           private val greeting: String
@@ -51,70 +58,67 @@ class KtBridgePluginTest {
           }
         }
         
-        fun prepareJsBridges(ktBridge: KtBridge) {
-          ktBridge.set<EchoService>("helloService", EchoJsAdapter, TestingEchoService("hello"))
+        fun prepareJsBridges(quickJs: QuickJs) {
+          quickJs.set<EchoService>("helloService", EchoJsAdapter, TestingEchoService("hello"))
         }
         """
       )
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val bridges = KtBridgePair()
     val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
-    mainKt.getDeclaredMethod("prepareJsBridges", KtBridge::class.java).invoke(null, bridges.a)
+    mainKt.getDeclaredMethod("prepareJsBridges", QuickJs::class.java).invoke(null, quickJs)
 
-    val helloService = KtBridgeTestInternals.getEchoClient(bridges.b, "helloService")
+    val helloService = KtBridgeTestInternals.getEchoClient(quickJs, "helloService")
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("hello from the compiler plugin, Jesse"))
   }
 
   @Test
-  fun `ktBridge set rewritten to make outbound calls`() {
+  fun `set rewritten to make outbound calls`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
-        """
+          """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.QuickJs
         
-        fun getHelloService(ktBridge: KtBridge): EchoService {
-          return ktBridge.get("helloService", EchoJsAdapter)
+        fun getHelloService(quickJs: QuickJs): EchoService {
+          return quickJs.get("helloService", EchoJsAdapter)
         }
         """
       )
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
-
-    val bridges = KtBridgePair()
 
     val testingEchoService = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse {
         return EchoResponse("greetings from the compiler plugin, ${request.message}")
       }
     }
-    KtBridgeTestInternals.setEchoService(bridges.b, "helloService", testingEchoService)
+    KtBridgeTestInternals.setEchoService(quickJs, "helloService", testingEchoService)
 
     val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
-    val helloService = mainKt.getDeclaredMethod("getHelloService", KtBridge::class.java)
-      .invoke(null, bridges.a) as EchoService
+    val helloService = mainKt.getDeclaredMethod("getHelloService", QuickJs::class.java)
+      .invoke(null, quickJs) as EchoService
 
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("greetings from the compiler plugin, Jesse"))
   }
 
   @Test
-  fun `ktBridge set type argument is not an interface`() {
+  fun `set type argument is not an interface`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
-        """
+          """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.QuickJs
         
-        fun prepareJsBridges(ktBridge: KtBridge) {
-          ktBridge.set<TestingEchoService>("helloService", EchoJsAdapter, TestingEchoService)
+        fun prepareJsBridges(quickJs: QuickJs) {
+          quickJs.set<TestingEchoService>("helloService", EchoJsAdapter, TestingEchoService)
         }
 
         object TestingEchoService : EchoService {
@@ -125,28 +129,28 @@ class KtBridgePluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains("(6, 12): The type argument to KtBridge.set() must be an interface type")
+      .contains("(6, 12): The type argument to QuickJs.set() must be an interface type")
   }
 
   @Test
-  fun `ktBridge get type argument is not an interface`() {
+  fun `get type argument is not an interface`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
-        """
+          """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.QuickJs
         
-        fun getHelloService(ktBridge: KtBridge): String {
-          return ktBridge.get("helloService", EchoJsAdapter)
+        fun getHelloService(quickJs: QuickJs): String {
+          return quickJs.get("helloService", EchoJsAdapter)
         }
         """
       )
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains("(6, 19): The type argument to KtBridge.get() must be an interface type")
+      .contains("(6, 19): The type argument to QuickJs.get() must be an interface type")
   }
 }
 

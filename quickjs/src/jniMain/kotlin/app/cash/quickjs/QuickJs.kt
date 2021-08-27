@@ -26,6 +26,22 @@ import java.io.Closeable
 actual abstract class QuickJs : Closeable {
   actual abstract val engineVersion: String
 
+  actual fun <T : Any> get(name: String, jsAdapter: JsAdapter): T {
+    error("unexpected call to QuickJs.get: is QuickJs Gradle plugin configured?")
+  }
+  actual fun <T : Any> set(name: String, jsAdapter: JsAdapter, instance: T) {
+    error("unexpected call to QuickJs.set: is QuickJs Gradle plugin configured?")
+  }
+
+  @PublishedApi
+  internal abstract fun set(name: String, handler: InboundService<*>)
+
+  @PublishedApi
+  internal abstract fun <T : Any> get(
+    name: String,
+    outboundClientFactory: OutboundClientFactory<T>,
+  ): T
+
   /**
    * Evaluate [script] and return any result. [fileName] will be used in error
    * reporting.
@@ -78,12 +94,6 @@ actual abstract class QuickJs : Closeable {
      * calls to [close] on the returned instance to avoid leaking native memory.
      */
     @JvmStatic
-    fun create(): QuickJs {
-      val context = JniQuickJs.createContext()
-      if (context == 0L) {
-        throw OutOfMemoryError("Cannot create QuickJs instance")
-      }
-      return JniQuickJs(context)
-    }
+    fun create(): QuickJs = JniQuickJs.create()
   }
 }

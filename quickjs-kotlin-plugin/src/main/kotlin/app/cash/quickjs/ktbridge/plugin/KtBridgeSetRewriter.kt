@@ -71,16 +71,16 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `KtBridge.set()` that takes a name, a `JsAdapter`, and a service:
+ * Rewrites calls to `QuickJs.set()` that takes a name, a `JsAdapter`, and a service:
  *
  * ```
- * ktBridge.set("helloService", EchoJsAdapter, TestingEchoService("hello"))
+ * quickJs.set("helloService", EchoJsAdapter, TestingEchoService("hello"))
  * ```
  *
  * to the overload that takes a name and an `InboundService`:
  *
  * ```
- * ktBridge.set(
+ * quickJs.set(
  *   "helloService",
  *   object : InboundService<EchoService>(EchoJsAdapter) {
  *     val service: EchoService = TestingEchoService("hello")
@@ -137,7 +137,7 @@ internal class KtBridgeSetRewriter(
     if (result == null || !result.owner.isInterface) {
       throw KtBridgeCompilationException(
         element = original,
-        message = "The type argument to KtBridge.set() must be an interface type",
+        message = "The type argument to QuickJs.set() must be an interface type",
       )
     }
     return result

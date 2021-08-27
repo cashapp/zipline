@@ -17,9 +17,9 @@ package app.cash.quickjs.ktbridge.plugin;
 
 import app.cash.quickjs.InboundCall;
 import app.cash.quickjs.InboundService;
-import app.cash.quickjs.KtBridge;
 import app.cash.quickjs.OutboundCall;
 import app.cash.quickjs.OutboundClientFactory;
+import app.cash.quickjs.QuickJs;
 import app.cash.quickjs.testing.EchoJsAdapter;
 import app.cash.quickjs.testing.EchoRequest;
 import app.cash.quickjs.testing.EchoResponse;
@@ -43,8 +43,8 @@ public final class KtBridgeTestInternals {
       JvmClassMappingKt.getKotlinClass(EchoRequest.class), emptyList(), false, emptyList());
 
   /** Simulate generated code for outbound calls. */
-  public static EchoService getEchoClient(KtBridge ktBridge, String name) {
-    return ktBridge.get(name, new OutboundClientFactory<EchoService>(EchoJsAdapter.INSTANCE) {
+  public static EchoService getEchoClient(QuickJs quickJs, String name) {
+    return quickJs.get(name, new OutboundClientFactory<EchoService>(EchoJsAdapter.INSTANCE) {
       @Override public EchoService create(OutboundCall.Factory callFactory) {
         return new EchoService() {
           @Override public EchoResponse echo(EchoRequest request) {
@@ -58,8 +58,8 @@ public final class KtBridgeTestInternals {
   }
 
   /** Simulate generated code for inbound calls. */
-  public static void setEchoService(KtBridge ktBridge, String name, EchoService echoService) {
-    ktBridge.set(name, new InboundService<EchoService>(EchoJsAdapter.INSTANCE) {
+  public static void setEchoService(QuickJs quickJs, String name, EchoService echoService) {
+    quickJs.set(name, new InboundService<EchoService>(EchoJsAdapter.INSTANCE) {
       @Override public byte[] call(InboundCall inboundCall) {
         if (inboundCall.getFunName().equals("echo")) {
           return inboundCall.result(echoResponseKt,
