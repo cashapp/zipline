@@ -47,7 +47,7 @@ class KtBridge internal constructor(
         val result = handler.callSuspending(
           InboundCall(funName, encodedArguments, handler.jsAdapter)
         )
-        val callback = get<SuspendCallback>(callbackName, SuspendCallback.Adapter)
+        val callback = get<SuspendCallback>(callbackName, BuiltInJsAdapter)
         callback.success(result)
       }
     }
@@ -83,6 +83,6 @@ class KtBridge internal constructor(
   }
 
   internal fun generateName(): String {
-    return "ktBridge.${nextId++}"
+    return "app.cash.quickjs.${nextId++}"
   }
 }

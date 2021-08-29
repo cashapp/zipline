@@ -15,7 +15,7 @@
  */
 package app.cash.quickjs
 
-fun createKtBridge(quickJs: QuickJs): KtBridge {
+internal fun createKtBridge(quickJs: QuickJs): KtBridge {
   // Lazily fetch the bridge to call them.
   val jsInboundBridge = object : InternalBridge {
     val delegate: InternalBridge by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -53,4 +53,8 @@ fun createKtBridge(quickJs: QuickJs): KtBridge {
   )
 
   return ktBridge
+}
+
+fun QuickJs.getKtBridge(): KtBridge {
+  return (this as JniQuickJs).ktBridge
 }

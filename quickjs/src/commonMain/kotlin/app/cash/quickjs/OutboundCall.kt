@@ -83,7 +83,7 @@ internal class OutboundCall private constructor(
       require(callCount++ == parameterCount)
       val callbackName = ktBridge.generateName()
       val callback = RealSuspendCallback(callbackName, continuation, type)
-      ktBridge.set<SuspendCallback>(callbackName, SuspendCallback.Adapter, callback)
+      ktBridge.set<SuspendCallback>(callbackName, BuiltInJsAdapter, callback)
       val encodedArguments = buffer.readByteArray()
       internalBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
     }

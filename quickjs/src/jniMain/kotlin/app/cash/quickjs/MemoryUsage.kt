@@ -19,7 +19,7 @@ import androidx.annotation.Keep
 
 /** Introspect QuickJS for its current memory usage. */
 @Keep // Fully-qualified type and constructor used from native code.
-class MemoryUsage(
+data class MemoryUsage(
   /** Memory allocated. */
   val memoryAllocatedCount: Long,
   val memoryAllocatedSize: Long,

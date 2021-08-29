@@ -22,19 +22,19 @@ import app.cash.quickjs.testing.RecordingLogger
 import app.cash.quickjs.testing.jsSuspendingEchoService
 import app.cash.quickjs.testing.prepareSuspendingJvmBridges
 import com.google.common.truth.Truth.assertThat
-import java.io.BufferedReader
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Test
 
-@Ignore("Need to implement setTimeout() for QuickJs")
+@Ignore("Need to coordinate mutual exclusion")
 class KtBridgeSuspendingTest {
   private val quickjs = QuickJs.create()
 
   @Before
   fun setUp() {
+    quickjs.loadTestingJs()
     quickjs.set("console", Console::class.java, object : Console {
       override fun error(message: String) {
         println(message)
@@ -44,13 +44,6 @@ class KtBridgeSuspendingTest {
         println(message)
       }
     })
-
-    // TODO(jwilson): implement setTimeout for QuickJs for real.
-    quickjs.evaluate("""
-      globalThis.setTimeout = function(a) {
-        console.log(a.toString());
-      };
-      """.trimIndent())
   }
 
   @After fun tearDown() {
@@ -63,13 +56,9 @@ class KtBridgeSuspendingTest {
   }
 
   @Test fun jvmCallJsService() {
-    val testingJs = KtBridgeSuspendingTest::class.java.getResourceAsStream("/testing.js")!!
-        .bufferedReader()
-        .use(BufferedReader::readText)
-    quickjs.evaluate(testingJs, "testing.js")
     quickjs.evaluate("testing.app.cash.quickjs.testing.prepareSuspendingJsBridges()")
 
-    val ktBridge = createKtBridge(quickjs)
+    val ktBridge = quickjs.getKtBridge()
 
     runBlocking {
       assertThat(ktBridge.jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake")))
@@ -78,12 +67,7 @@ class KtBridgeSuspendingTest {
   }
 
   @Test fun jsCallJvmService() {
-    val testingJs = KtBridgeSuspendingTest::class.java.getResourceAsStream("/testing.js")!!
-      .bufferedReader()
-      .use(BufferedReader::readText)
-    quickjs.evaluate(testingJs, "testing.js")
-
-    val ktBridge = createKtBridge(quickjs)
+    val ktBridge = quickjs.getKtBridge()
     val recordingLogger = RecordingLogger()
     ktBridge.set<Logger>("logger", Logger.Adapter, recordingLogger)
     prepareSuspendingJvmBridges(ktBridge)

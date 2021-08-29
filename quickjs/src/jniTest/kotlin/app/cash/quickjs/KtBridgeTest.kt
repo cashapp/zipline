@@ -21,25 +21,25 @@ import app.cash.quickjs.testing.helloService
 import app.cash.quickjs.testing.prepareJvmBridges
 import app.cash.quickjs.testing.yoService
 import com.google.common.truth.Truth.assertThat
-import java.io.BufferedReader
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class KtBridgeTest {
   private val quickjs = QuickJs.create()
+
+  @Before fun setUp() {
+    quickjs.loadTestingJs()
+  }
 
   @After fun tearDown() {
     quickjs.close()
   }
 
   @Test fun jvmCallJsService() {
-    val testingJs = KtBridgeTest::class.java.getResourceAsStream("/testing.js")!!
-        .bufferedReader()
-        .use(BufferedReader::readText)
-    quickjs.evaluate(testingJs, "testing.js")
     quickjs.evaluate("testing.app.cash.quickjs.testing.prepareJsBridges()")
 
-    val ktBridge = createKtBridge(quickjs)
+    val ktBridge = quickjs.getKtBridge()
 
     assertThat(ktBridge.helloService.echo(EchoRequest("Jake")))
       .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
@@ -48,12 +48,7 @@ class KtBridgeTest {
   }
 
   @Test fun jsCallJvmService() {
-    val testingJs = KtBridgeTest::class.java.getResourceAsStream("/testing.js")!!
-      .bufferedReader()
-      .use(BufferedReader::readText)
-    quickjs.evaluate(testingJs, "testing.js")
-
-    val ktBridge = createKtBridge(quickjs)
+    val ktBridge = quickjs.getKtBridge()
     prepareJvmBridges(ktBridge)
 
     assertThat(quickjs.evaluate(
