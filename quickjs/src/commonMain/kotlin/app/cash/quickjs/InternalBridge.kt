@@ -34,6 +34,15 @@ internal interface InternalBridge {
    *  * 1 int (4 bytes): the number of bytes in the result value
    *  * the bytes of the result value
    */
-  @JsName("invokeJs")
-  fun invokeJs(instanceName: String, funName: String, encodedArguments: ByteArray): ByteArray
+  @JsName("invoke")
+  fun invoke(instanceName: String, funName: String, encodedArguments: ByteArray): ByteArray
+
+  /** Like [invoke], but the respose is delivered to the [SuspendCallback] named [callbackName]. */
+  @JsName("invokeSuspending")
+  fun invokeSuspending(
+    instanceName: String,
+    funName: String,
+    encodedArguments: ByteArray,
+    callbackName: String
+  )
 }

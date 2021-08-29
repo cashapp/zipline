@@ -74,6 +74,8 @@ import org.jetbrains.kotlin.name.Name
  *     }
  *   })
  * ```
+ *
+ * For suspending functions, everything is the same except the call is to `invokeSuspending()`.
  */
 internal class KtBridgeGetRewriter(
   private val pluginContext: IrPluginContext,
@@ -233,6 +235,7 @@ internal class KtBridgeGetRewriter(
       name = bridgedFunction.name
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
+      isSuspend = bridgedFunction.isSuspend
       returnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
     }.apply {
       overriddenSymbols = listOf(bridgedFunction.symbol)
@@ -280,8 +283,12 @@ internal class KtBridgeGetRewriter(
         }
       }
 
+      val invoke = when {
+        bridgedFunction.isSuspend -> ktBridgeApis.outboundCallInvokeSuspending
+        else -> ktBridgeApis.outboundCallInvoke
+      }
       +irReturn(
-        value = irCall(callee = ktBridgeApis.outboundCallInvoke).apply {
+        value = irCall(callee = invoke).apply {
           dispatchReceiver = irGet(outboundCallLocal)
           type = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
           putTypeArgument(0, result.returnType)

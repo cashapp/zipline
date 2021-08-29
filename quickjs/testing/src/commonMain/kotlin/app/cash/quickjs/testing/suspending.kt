@@ -13,17 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs
+package app.cash.quickjs.testing
 
-/**
- * Generated code extends this base class to receive calls into an application-layer interface from
- * another platform in the same process.
- */
-@PublishedApi
-internal abstract class InboundService<T : Any>(
-  internal val jsAdapter: JsAdapter
-) {
-  abstract fun call(inboundCall: InboundCall): ByteArray
-
-  abstract suspend fun callSuspending(inboundCall: InboundCall): ByteArray
+interface SuspendingEchoService {
+  suspend fun suspendingEcho(request: EchoRequest): EchoResponse
 }

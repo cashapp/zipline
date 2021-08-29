@@ -25,12 +25,21 @@ fun createKtBridge(quickJs: QuickJs): KtBridge {
       )
     }
 
-    override fun invokeJs(
+    override fun invoke(
       instanceName: String,
       funName: String,
       encodedArguments: ByteArray
     ): ByteArray {
-      return delegate.invokeJs(instanceName, funName, encodedArguments)
+      return delegate.invoke(instanceName, funName, encodedArguments)
+    }
+
+    override fun invokeSuspending(
+      instanceName: String,
+      funName: String,
+      encodedArguments: ByteArray,
+      callbackName: String
+    ) {
+      return delegate.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
     }
   }
 

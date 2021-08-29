@@ -36,6 +36,7 @@ object EchoJsAdapter : JsAdapter {
     when (type.classifier) {
       EchoRequest::class -> sink.writeUtf8((value as EchoRequest).message)
       EchoResponse::class -> sink.writeUtf8((value as EchoResponse).message)
+      ByteArray::class -> sink.write(value as ByteArray)
       else -> error("unexpected type: $type")
     }
   }
@@ -44,6 +45,7 @@ object EchoJsAdapter : JsAdapter {
     return when (type.classifier) {
       EchoRequest::class -> EchoRequest(source.readUtf8()) as T
       EchoResponse::class -> EchoResponse(source.readUtf8()) as T
+      ByteArray::class -> source.readByteArray() as T
       else -> error("unexpected type: $type")
     }
   }

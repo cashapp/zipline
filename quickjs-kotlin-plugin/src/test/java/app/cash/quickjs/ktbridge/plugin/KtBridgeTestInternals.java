@@ -28,6 +28,7 @@ import app.cash.quickjs.testing.GenericEchoService;
 import app.cash.quickjs.testing.GenericJsAdapter;
 import java.util.List;
 import kotlin.PublishedApi;
+import kotlin.coroutines.Continuation;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KType;
 import kotlin.reflect.KTypeProjection;
@@ -78,6 +79,11 @@ public final class KtBridgeTestInternals {
           return inboundCall.unexpectedFunction();
         }
       }
+
+      @Override public Object callSuspending(
+          InboundCall inboundCall, Continuation<? super byte[]> continuation) {
+        return inboundCall.unexpectedFunction();
+      }
     });
   }
 
@@ -108,6 +114,11 @@ public final class KtBridgeTestInternals {
         } else {
           return inboundCall.unexpectedFunction();
         }
+      }
+
+      @Override public Object callSuspending(
+          InboundCall inboundCall, Continuation<? super byte[]> continuation) {
+        return inboundCall.unexpectedFunction();
       }
     });
   }
