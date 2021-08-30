@@ -72,6 +72,9 @@ actual abstract class QuickJs : Closeable {
    */
   abstract fun execute(bytecode: ByteArray): Any?
 
+  /** Return memory usage statistics for the JavaScript engine. */
+  abstract fun memoryUsage(): MemoryUsage
+
   companion object {
     /**
      * Create a new interpreter instance. Calls to this method **must** matched with

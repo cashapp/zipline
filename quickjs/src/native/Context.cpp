@@ -66,6 +66,7 @@ Context::Context(JNIEnv* env)
       doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
       objectClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Object")))),
       stringClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/String")))),
+      memoryUsageClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("app/cash/quickjs/MemoryUsage")))),
       stringUtf8(static_cast<jstring>(env->NewGlobalRef(env->NewStringUTF("UTF-8")))),
       quickJsExceptionClass(static_cast<jclass>(env->NewGlobalRef(
           env->FindClass("app/cash/quickjs/QuickJsException")))),
@@ -77,6 +78,7 @@ Context::Context(JNIEnv* env)
       doubleGetValue(env->GetMethodID(doubleClass, "doubleValue", "()D")),
       stringGetBytes(env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B")),
       stringConstructor(env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V")),
+      memoryUsageConstructor(env->GetMethodID(memoryUsageClass, "<init>", "(JJJJJJJJJJJJJJJJJJJJJJJJJJ)V")),
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
                                                    "(Ljava/lang/String;Ljava/lang/String;)V")) {
   env->GetJavaVM(&javaVm);
@@ -161,6 +163,42 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   js_free(jsContext, buffer);
 
   return result;
+}
+
+jobject Context::memoryUsage(JNIEnv* env) {
+  JSMemoryUsage jsMemoryUsage;
+  JS_ComputeMemoryUsage(jsRuntime, &jsMemoryUsage);
+
+  return static_cast<jstring>(env->NewObject(
+    memoryUsageClass,
+    memoryUsageConstructor,
+    jsMemoryUsage.malloc_count,
+    jsMemoryUsage.malloc_size,
+    jsMemoryUsage.malloc_limit,
+    jsMemoryUsage.memory_used_count,
+    jsMemoryUsage.memory_used_size,
+    jsMemoryUsage.atom_count,
+    jsMemoryUsage.atom_size,
+    jsMemoryUsage.str_count,
+    jsMemoryUsage.str_size,
+    jsMemoryUsage.obj_count,
+    jsMemoryUsage.obj_size,
+    jsMemoryUsage.prop_count,
+    jsMemoryUsage.prop_size,
+    jsMemoryUsage.shape_count,
+    jsMemoryUsage.shape_size,
+    jsMemoryUsage.js_func_count,
+    jsMemoryUsage.js_func_size,
+    jsMemoryUsage.js_func_code_size,
+    jsMemoryUsage.js_func_pc2line_count,
+    jsMemoryUsage.js_func_pc2line_size,
+    jsMemoryUsage.c_func_count,
+    jsMemoryUsage.array_count,
+    jsMemoryUsage.fast_array_count,
+    jsMemoryUsage.fast_array_elements,
+    jsMemoryUsage.binary_object_count,
+    jsMemoryUsage.binary_object_size
+  ));
 }
 
 JsObjectProxy* Context::getObjectProxy(JNIEnv* env, jstring name, jobjectArray methods) {
