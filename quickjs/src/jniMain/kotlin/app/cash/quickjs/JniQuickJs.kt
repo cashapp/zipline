@@ -108,6 +108,10 @@ internal class JniQuickJs(private var context: Long) : QuickJs() {
     return execute(context, bytecode)
   }
 
+  override fun memoryUsage(): MemoryUsage {
+    return memoryUsage(context)
+  }
+
   override fun close() {
     val contextToClose = context
     if (contextToClose != 0L) {
@@ -129,4 +133,5 @@ internal class JniQuickJs(private var context: Long) : QuickJs() {
   private external fun call(context: Long, instance: Long, method: Any, args: Array<Any>): Any
   private external fun execute(context: Long, bytecode: ByteArray): Any?
   private external fun compile(context: Long, sourceCode: String, fileName: String): ByteArray
+  private external fun memoryUsage(context: Long): MemoryUsage
 }

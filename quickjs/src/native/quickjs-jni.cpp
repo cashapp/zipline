@@ -112,3 +112,14 @@ Java_app_cash_quickjs_JniQuickJs_compile(JNIEnv* env, jobject thiz, jlong _conte
   }
   return context->compile(env, sourceCode, fileName);
 }
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_app_cash_quickjs_JniQuickJs_memoryUsage(JNIEnv* env, jobject type, jlong context_) {
+  Context* context = reinterpret_cast<Context*>(context_);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return nullptr;
+  }
+  return context->memoryUsage(env);
+}

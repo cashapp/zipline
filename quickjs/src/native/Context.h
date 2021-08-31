@@ -36,6 +36,7 @@ public:
   jobject eval(JNIEnv*, jstring source, jstring file);
   jobject execute(JNIEnv*, jbyteArray byteCode);
   jbyteArray compile(JNIEnv*, jstring source, jstring file);
+  jobject memoryUsage(JNIEnv*);
   typedef std::function<JSValueConst(Context*, JNIEnv*, jvalue)> JavaToJavaScript;
   JavaToJavaScript getJavaToJsConverter(JNIEnv*, jclass type, bool boxed);
   typedef std::function<jvalue(Context*, JNIEnv*, JSValueConst)> JavaScriptToJava;
@@ -66,6 +67,7 @@ public:
   jclass doubleClass;
   jclass objectClass;
   jclass stringClass;
+  jclass memoryUsageClass;
   jstring stringUtf8;
   jclass quickJsExceptionClass;
   jmethodID booleanValueOf;
@@ -76,6 +78,7 @@ public:
   jmethodID doubleGetValue;
   jmethodID stringGetBytes;
   jmethodID stringConstructor;
+  jmethodID memoryUsageConstructor;
   jmethodID quickJsExceptionConstructor;
   std::vector<JsObjectProxy*> objectProxies;
   std::unordered_map<std::string, jclass> globalReferences;
