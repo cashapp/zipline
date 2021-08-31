@@ -31,8 +31,15 @@ val versionWriterTaskProvider = tasks.register("writeVersion", VersionWriterTask
 
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
   destinationDir = buildDir.resolve("generated/testingJs")
-  from(projectDir.resolve("testing/build/distributions/testing.js"))
-  dependsOn(":quickjs:testing:jsBrowserProductionWebpack")
+  if (true) {
+    // Production, which is minified JavaScript.
+    from(projectDir.resolve("testing/build/distributions/testing.js"))
+    dependsOn(":quickjs:testing:jsBrowserProductionWebpack")
+  } else {
+    // Development, which is not minified and has useful stack traces.
+    from(projectDir.resolve("testing/build/developmentExecutable/testing.js"))
+    dependsOn(":quickjs:testing:jsBrowserDevelopmentWebpack")
+  }
 }
 
 kotlin {
@@ -46,6 +53,7 @@ kotlin {
     val commonMain by getting {
       kotlin.srcDir(versionWriterTaskProvider)
       dependencies {
+        api(Dependencies.kotlinxCoroutines)
         api(Dependencies.okioMultiplatform)
       }
     }

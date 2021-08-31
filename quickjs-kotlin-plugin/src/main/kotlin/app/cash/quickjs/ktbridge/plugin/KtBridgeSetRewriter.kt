@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
 import org.jetbrains.kotlin.backend.common.ir.createDispatchReceiverParameter
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
+import org.jetbrains.kotlin.backend.common.ir.isSuspend
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
@@ -95,6 +96,9 @@ import org.jetbrains.kotlin.name.Name
  *   }
  * )
  * ```
+ *
+ * For suspending functions, everything is the same except overridden method is `callSuspending()`.
+ * Both methods area always overridden, but may contain only the `unexpectedFunction()` case.
  */
 internal class KtBridgeSetRewriter(
   private val pluginContext: IrPluginContext,
@@ -169,34 +173,21 @@ internal class KtBridgeSetRewriter(
 
     inboundServiceSubclass.declarations += serviceProperty
 
-    // override fun call(inboundCall: InboundCall): ByteArray {
-    // }
-    val callFunction = inboundServiceSubclass.addFunction {
-      name = Name.identifier("call")
-      visibility = DescriptorVisibilities.PUBLIC
-      modality = Modality.OPEN
-      returnType = pluginContext.symbols.byteArrayType
-    }.apply {
-      addDispatchReceiver {
-        type = inboundServiceSubclass.defaultType
-      }
-      addValueParameter {
-        name = Name.identifier("inboundCall")
-        type = ktBridgeApis.inboundCall.defaultType
-      }
-      overriddenSymbols += ktBridgeApis.inboundServiceCall
-    }
+    val callFunction = irCallFunction(
+      inboundServiceSubclass = inboundServiceSubclass,
+      serviceProperty = serviceProperty,
+      callSuspending = false
+    )
+    val callSuspendingFunction = irCallFunction(
+      inboundServiceSubclass = inboundServiceSubclass,
+      serviceProperty = serviceProperty,
+      callSuspending = true
+    )
 
-    callFunction.irFunctionBody(
-      context = pluginContext,
-      scopeOwnerSymbol = callFunction.symbol,
-    ) {
-      +irReturn(
-        irCallFunctionBody(callFunction, serviceProperty)
-      )
-    }
-
-    inboundServiceSubclass.addFakeOverrides(pluginContext.irBuiltIns, listOf(callFunction))
+    inboundServiceSubclass.addFakeOverrides(
+      pluginContext.irBuiltIns,
+      listOf(callFunction, callSuspendingFunction)
+    )
 
     return IrBlockBodyBuilder(
       startOffset = UNDEFINED_OFFSET,
@@ -208,6 +199,47 @@ internal class KtBridgeSetRewriter(
       +inboundServiceSubclass
       +irCall(constructor.symbol, type = inboundServiceSubclass.defaultType)
     }
+  }
+
+  /** Override either `InboundService.call()` or `InboundService.callSuspending()`. */
+  private fun irCallFunction(
+    inboundServiceSubclass: IrClass,
+    serviceProperty: IrProperty,
+    callSuspending: Boolean,
+  ): IrSimpleFunction {
+    // override fun call(inboundCall: InboundCall): ByteArray {
+    // }
+    val inboundServiceCall = when {
+      callSuspending -> ktBridgeApis.inboundServiceCallSuspending
+      else -> ktBridgeApis.inboundServiceCall
+    }
+    val result = inboundServiceSubclass.addFunction {
+      name = inboundServiceCall.owner.name
+      visibility = DescriptorVisibilities.PUBLIC
+      modality = Modality.OPEN
+      returnType = pluginContext.symbols.byteArrayType
+      isSuspend = callSuspending
+    }.apply {
+      addDispatchReceiver {
+        type = inboundServiceSubclass.defaultType
+      }
+      addValueParameter {
+        name = Name.identifier("inboundCall")
+        type = ktBridgeApis.inboundCall.defaultType
+      }
+      overriddenSymbols += inboundServiceCall
+    }
+
+    result.irFunctionBody(
+      context = pluginContext,
+      scopeOwnerSymbol = result.symbol,
+    ) {
+      +irReturn(
+        irCallFunctionBody(result, serviceProperty)
+      )
+    }
+
+    return result
   }
 
   // val service: EchoService = TestingEchoService("hello")
@@ -288,6 +320,8 @@ internal class KtBridgeSetRewriter(
   }
 
   /**
+   * The body of either `InboundService.call()` or `InboundService.callSuspending()`.
+   *
    * ```
    * when {
    *   inboundCall.funName == "function1" -> ...
@@ -307,6 +341,7 @@ internal class KtBridgeSetRewriter(
     for (bridgedFunction in bridgedInterface.classSymbol.functions) {
       // TODO(jwilson): find a better way to skip equals()/hashCode()/toString()
       if (bridgedFunction.owner.isFakeOverride) continue
+      if (callFunction.isSuspend != bridgedFunction.isSuspend) continue
 
       result += irBranch(
         condition = irEquals(

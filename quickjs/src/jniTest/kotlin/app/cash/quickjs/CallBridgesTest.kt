@@ -20,8 +20,13 @@ import app.cash.quickjs.testing.EchoRequest
 import app.cash.quickjs.testing.EchoResponse
 import app.cash.quickjs.testing.EchoService
 import app.cash.quickjs.testing.KtBridgePair
+import app.cash.quickjs.testing.SuspendingEchoService
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -85,5 +90,31 @@ internal class CallBridgesTest {
 
     val response = client.echo(EchoRequest("send me null please?"))
     assertNull(response)
+  }
+
+  @Test
+  fun suspendingRequestAndResponse() {
+    val requests = Channel<String>(1)
+    val responses = Channel<String>(1)
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        requests.send(request.message)
+        return EchoResponse(responses.receive())
+      }
+    }
+
+    bridges.a.set<SuspendingEchoService>("helloService", EchoJsAdapter, service)
+    val client = bridges.b.get<SuspendingEchoService>("helloService", EchoJsAdapter)
+
+    runBlocking {
+      val deferredResponse: Deferred<EchoResponse> = async {
+        client.suspendingEcho(EchoRequest("this is a happy request"))
+      }
+
+      assertEquals("this is a happy request", requests.receive())
+      responses.send("this is a response")
+
+      assertEquals("this is a response", deferredResponse.await().message)
+    }
   }
 }

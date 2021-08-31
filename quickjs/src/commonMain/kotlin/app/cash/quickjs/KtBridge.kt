@@ -15,20 +15,41 @@
  */
 package app.cash.quickjs
 
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+
 // TODO(jwilson): merge with QuickJs?
 class KtBridge internal constructor(
   private val outboundBridge: InternalBridge
 ) {
   private val inboundHandlers = mutableMapOf<String, InboundService<*>>()
+  private var nextId = 1
 
   internal val inboundBridge = object : InternalBridge {
-    override fun invokeJs(
+    override fun invoke(
       instanceName: String,
       funName: String,
       encodedArguments: ByteArray
     ): ByteArray {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       return handler.call(InboundCall(funName, encodedArguments, handler.jsAdapter))
+    }
+
+    override fun invokeSuspending(
+      instanceName: String,
+      funName: String,
+      encodedArguments: ByteArray,
+      callbackName: String
+    ) {
+      val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
+      // TODO(jwilson): confirm how we bootstrap a coroutine on an inbound call.
+      GlobalScope.launch {
+        val result = handler.callSuspending(
+          InboundCall(funName, encodedArguments, handler.jsAdapter)
+        )
+        val callback = get<SuspendCallback>(callbackName, SuspendCallback.Adapter)
+        callback.success(result)
+      }
     }
   }
 
@@ -41,6 +62,12 @@ class KtBridge internal constructor(
     inboundHandlers[name] = handler
   }
 
+  @PublishedApi
+  internal fun remove(name: String) {
+    val removed = inboundHandlers.remove(name)
+    require(removed != null) { "unable to find $name: was it removed twice?" }
+  }
+
   fun <T : Any> get(name: String, jsAdapter: JsAdapter): T {
     error("unexpected call to KtBridge.get: is KtBridge plugin configured?")
   }
@@ -51,7 +78,11 @@ class KtBridge internal constructor(
     outboundClientFactory: OutboundClientFactory<T>
   ): T {
     return outboundClientFactory.create(
-        OutboundCall.Factory(name, outboundClientFactory.jsAdapter, outboundBridge)
+        OutboundCall.Factory(name, outboundClientFactory.jsAdapter, this, outboundBridge)
     )
+  }
+
+  internal fun generateName(): String {
+    return "ktBridge.${nextId++}"
   }
 }

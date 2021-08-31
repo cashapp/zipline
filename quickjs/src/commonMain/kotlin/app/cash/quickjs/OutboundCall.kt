@@ -16,6 +16,8 @@
 package app.cash.quickjs
 
 import app.cash.quickjs.OutboundCall.Factory
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 import okio.Buffer
@@ -32,6 +34,7 @@ import okio.Buffer
 internal class OutboundCall private constructor(
   private val instanceName: String,
   private val jsAdapter: JsAdapter,
+  private val ktBridge: KtBridge,
   private val internalBridge: InternalBridge,
   private val funName: String,
   private val parameterCount: Int,
@@ -65,8 +68,42 @@ internal class OutboundCall private constructor(
   fun <R> invoke(type: KType): R {
     require(callCount++ == parameterCount)
     val encodedArguments = buffer.readByteArray()
-    val encodedResponse = internalBridge.invokeJs(instanceName, funName, encodedArguments)
-    buffer.write(encodedResponse)
+    val encodedResponse = internalBridge.invoke(instanceName, funName, encodedArguments)
+    return encodedResponse.decodeResponse(type)
+  }
+
+  @OptIn(ExperimentalStdlibApi::class)
+  suspend inline fun <reified R> invokeSuspending(): R {
+    return invokeSuspending(typeOf<R>())
+  }
+
+  @PublishedApi
+  internal suspend fun <R> invokeSuspending(type: KType): R {
+    return suspendCoroutine { continuation ->
+      require(callCount++ == parameterCount)
+      val callbackName = ktBridge.generateName()
+      val callback = RealSuspendCallback(callbackName, continuation, type)
+      ktBridge.set<SuspendCallback>(callbackName, SuspendCallback.Adapter, callback)
+      val encodedArguments = buffer.readByteArray()
+      internalBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
+    }
+  }
+
+  private inner class RealSuspendCallback<R>(
+    val callbackName: String,
+    val continuation: Continuation<R>,
+    val type: KType
+  ) : SuspendCallback {
+    override fun success(encodedResponse: ByteArray) {
+      // Suspend callbacks are one-shot. When triggered, remove them immediately.
+      ktBridge.remove(callbackName)
+      val value = encodedResponse.decodeResponse<R>(type)
+      continuation.resumeWith(Result.success(value))
+    }
+  }
+
+  private fun <R> ByteArray.decodeResponse(type: KType): R {
+    buffer.write(this)
     val byteCount = buffer.readInt()
     if (byteCount == -1) {
       return null as R
@@ -79,13 +116,21 @@ internal class OutboundCall private constructor(
   class Factory internal constructor(
     private val instanceName: String,
     private val jsAdapter: JsAdapter,
+    private val ktBridge: KtBridge,
     private val internalBridge: InternalBridge,
   ) {
     fun create(
       funName: String,
       parameterCount: Int
     ): OutboundCall {
-      return OutboundCall(instanceName, jsAdapter, internalBridge, funName, parameterCount)
+      return OutboundCall(
+        instanceName,
+        jsAdapter,
+        ktBridge,
+        internalBridge,
+        funName,
+        parameterCount
+      )
     }
   }
 }

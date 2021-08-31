@@ -20,12 +20,21 @@ val ktBridge = KtBridge(object : InternalBridge {
   private val outboundBridge: dynamic
     get() = js("""globalThis.app_cash_quickjs_ktbridge_outboundBridge""")
 
-  override fun invokeJs(
+  override fun invoke(
     instanceName: String,
     funName: String,
     encodedArguments: ByteArray
   ): ByteArray {
-    return outboundBridge.invokeJs(instanceName, funName, encodedArguments)
+    return outboundBridge.invoke(instanceName, funName, encodedArguments)
+  }
+
+  override fun invokeSuspending(
+    instanceName: String,
+    funName: String,
+    encodedArguments: ByteArray,
+    callbackName: String
+  ) {
+    return outboundBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
   }
 }).apply {
   // Eagerly publish the bridge so they can call us.

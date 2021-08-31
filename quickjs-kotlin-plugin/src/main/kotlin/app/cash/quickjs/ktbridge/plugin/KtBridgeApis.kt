@@ -58,9 +58,19 @@ internal class KtBridgeApis(
       packageFqName.child("InboundService").child("call")
     ).single()
 
+  val inboundServiceCallSuspending: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(
+      packageFqName.child("InboundService").child("callSuspending")
+    ).single()
+
   val outboundCallInvoke: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(packageFqName.child("OutboundCall").child("invoke"))
       .single { it.owner.valueParameters.isEmpty() }
+
+  val outboundCallInvokeSuspending: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(
+      packageFqName.child("OutboundCall").child("invokeSuspending")
+    ).single { it.owner.valueParameters.isEmpty() }
 
   val outboundCallParameter: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(packageFqName.child("OutboundCall").child("parameter"))

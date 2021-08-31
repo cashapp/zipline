@@ -21,12 +21,21 @@ import app.cash.quickjs.KtBridge
 /** A pair of bridges connected to each other for testing. */
 class KtBridgePair {
   val a: KtBridge = KtBridge(object : InternalBridge {
-    override fun invokeJs(
+    override fun invoke(
       instanceName: String,
       funName: String,
       encodedArguments: ByteArray
     ): ByteArray {
-      return b.inboundBridge.invokeJs(instanceName, funName, encodedArguments)
+      return b.inboundBridge.invoke(instanceName, funName, encodedArguments)
+    }
+
+    override fun invokeSuspending(
+      instanceName: String,
+      funName: String,
+      encodedArguments: ByteArray,
+      callbackName: String
+    ) {
+      return b.inboundBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
     }
   })
 

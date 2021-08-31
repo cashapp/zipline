@@ -80,6 +80,8 @@ Context::Context(JNIEnv* env)
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
                                                    "(Ljava/lang/String;Ljava/lang/String;)V")) {
   env->GetJavaVM(&javaVm);
+  // Increase the JavaScript stack size. (default is 256 * 1024).
+  JS_SetMaxStackSize(jsRuntime, 512 * 1024);
   JS_SetRuntimeOpaque(jsRuntime, this);
 }
 
