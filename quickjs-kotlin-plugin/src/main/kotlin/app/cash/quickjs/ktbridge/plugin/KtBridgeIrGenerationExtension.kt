@@ -34,29 +34,31 @@ class KtBridgeIrGenerationExtension(
         val expression = super.visitCall(expression) as IrCall
 
         try {
-          return when (expression.symbol) {
-            ktBridgeApis.publicGetFunction -> {
-              KtBridgeGetRewriter(
-                pluginContext,
-                ktBridgeApis,
-                currentScope!!,
-                currentDeclarationParent!!,
-                expression
-              ).rewrite()
-            }
-
-            ktBridgeApis.publicSetFunction -> {
-              KtBridgeSetRewriter(
-                pluginContext,
-                ktBridgeApis,
-                currentScope!!,
-                currentDeclarationParent!!,
-                expression
-              ).rewrite()
-            }
-
-            else -> expression
+          val rewrittenGetFunction = ktBridgeApis.getRewriteFunctions[expression.symbol]
+          if (rewrittenGetFunction != null) {
+            return KtBridgeGetRewriter(
+              pluginContext,
+              ktBridgeApis,
+              currentScope!!,
+              currentDeclarationParent!!,
+              expression,
+              rewrittenGetFunction,
+            ).rewrite()
           }
+
+          val rewrittenSetFunction = ktBridgeApis.setRewriteFunctions[expression.symbol]
+          if (rewrittenSetFunction != null) {
+            return KtBridgeSetRewriter(
+              pluginContext,
+              ktBridgeApis,
+              currentScope!!,
+              currentDeclarationParent!!,
+              expression,
+              rewrittenSetFunction,
+            ).rewrite()
+          }
+
+          return expression
         } catch (e: KtBridgeCompilationException) {
           messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
           return expression

@@ -42,6 +42,7 @@ import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
+import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
@@ -82,7 +83,8 @@ internal class KtBridgeGetRewriter(
   private val ktBridgeApis: KtBridgeApis,
   private val scope: ScopeWithIr,
   private val declarationParent: IrDeclarationParent,
-  private val original: IrCall
+  private val original: IrCall,
+  private val rewrittenGetFunction: IrSimpleFunctionSymbol,
 ) {
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
@@ -95,7 +97,7 @@ internal class KtBridgeGetRewriter(
     get() = pluginContext.irFactory
 
   fun rewrite(): IrCall {
-    return irCall(original, ktBridgeApis.rewrittenGetFunction).apply {
+    return irCall(original, rewrittenGetFunction).apply {
       putValueArgument(1, irNewOutboundClientFactory())
     }
   }

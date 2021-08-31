@@ -15,9 +15,9 @@
  */
 package app.cash.quickjs.testing
 
-import app.cash.quickjs.KtBridge
+import app.cash.quickjs.Zipline
 
-val KtBridge.jsSuspendingEchoService: SuspendingEchoService
+val Zipline.jsSuspendingEchoService: SuspendingEchoService
   get() = get("jsSuspendingEchoService", EchoJsAdapter)
 
 class JvmSuspendingEchoService(
@@ -28,8 +28,8 @@ class JvmSuspendingEchoService(
   }
 }
 
-fun prepareSuspendingJvmBridges(ktBridge: KtBridge) {
-  ktBridge.set<SuspendingEchoService>(
+fun prepareSuspendingJvmBridges(zipline: Zipline) {
+  zipline.set<SuspendingEchoService>(
     "jvmSuspendingEchoService",
     EchoJsAdapter,
     JvmSuspendingEchoService("sup")

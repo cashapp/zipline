@@ -16,12 +16,10 @@
 
 package app.cash.quickjs.ktbridge.plugin
 
-import app.cash.quickjs.KtBridge
 import app.cash.quickjs.testing.EchoRequest
 import app.cash.quickjs.testing.EchoResponse
 import app.cash.quickjs.testing.EchoService
 import app.cash.quickjs.testing.GenericEchoService
-import app.cash.quickjs.testing.KtBridgePair
 import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
@@ -42,7 +40,7 @@ class KtBridgePluginTest {
         """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.internal.bridge.KtBridge
         
         class TestingEchoService(
           private val greeting: String
@@ -60,11 +58,11 @@ class KtBridgePluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val bridges = KtBridgePair()
+    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
     val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
-    mainKt.getDeclaredMethod("prepareJsBridges", KtBridge::class.java).invoke(null, bridges.a)
+    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
 
-    val helloService = KtBridgeTestInternals.getEchoClient(bridges.b, "helloService")
+    val helloService = KtBridgeTestInternals.getEchoClient(bridgeB, "helloService")
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("hello from the compiler plugin, Jesse"))
   }
@@ -77,7 +75,7 @@ class KtBridgePluginTest {
         """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.internal.bridge.KtBridge
         
         fun getHelloService(ktBridge: KtBridge): EchoService {
           return ktBridge.get("helloService", EchoJsAdapter)
@@ -87,18 +85,18 @@ class KtBridgePluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val bridges = KtBridgePair()
+    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
 
     val testingEchoService = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse {
         return EchoResponse("greetings from the compiler plugin, ${request.message}")
       }
     }
-    KtBridgeTestInternals.setEchoService(bridges.b, "helloService", testingEchoService)
+    KtBridgeTestInternals.setEchoService(bridgeB, "helloService", testingEchoService)
 
     val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
-    val helloService = mainKt.getDeclaredMethod("getHelloService", KtBridge::class.java)
-      .invoke(null, bridges.a) as EchoService
+    val helloService = mainKt.getDeclaredMethod("getHelloService", bridgeA::class.java)
+      .invoke(null, bridgeA) as EchoService
 
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("greetings from the compiler plugin, Jesse"))
@@ -112,7 +110,7 @@ class KtBridgePluginTest {
         """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.internal.bridge.KtBridge
         
         fun prepareJsBridges(ktBridge: KtBridge) {
           ktBridge.set<TestingEchoService>("helloService", EchoJsAdapter, TestingEchoService)
@@ -137,7 +135,7 @@ class KtBridgePluginTest {
         """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.internal.bridge.KtBridge
         
         fun getHelloService(ktBridge: KtBridge): String {
           return ktBridge.get("helloService", EchoJsAdapter)
@@ -158,7 +156,7 @@ class KtBridgePluginTest {
         """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.internal.bridge.KtBridge
         
         class TestingGenericEchoService : GenericEchoService<String> {
           override fun genericEcho(request: String): List<String> {
@@ -178,11 +176,11 @@ class KtBridgePluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val bridges = KtBridgePair()
+    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
     val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
-    mainKt.getDeclaredMethod("prepareJsBridges", KtBridge::class.java).invoke(null, bridges.a)
+    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
 
-    val helloService = KtBridgeTestInternals.getGenericEchoService(bridges.b, "genericService")
+    val helloService = KtBridgeTestInternals.getGenericEchoService(bridgeB, "genericService")
     assertThat(helloService.genericEcho("Jesse")).containsExactly("received a generic Jesse!")
   }
 
@@ -194,7 +192,7 @@ class KtBridgePluginTest {
         """
         package app.cash.quickjs.testing
         
-        import app.cash.quickjs.KtBridge
+        import app.cash.quickjs.internal.bridge.KtBridge
         
         fun getGenericService(ktBridge: KtBridge): GenericEchoService<String> {
           return ktBridge.get("genericService", GenericJsAdapter)
@@ -204,18 +202,18 @@ class KtBridgePluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val bridges = KtBridgePair()
+    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
 
     val testingService = object : GenericEchoService<String> {
       override fun genericEcho(request: String): List<String> {
         return listOf("received a generic $request!")
       }
     }
-    KtBridgeTestInternals.setGenericEchoService(bridges.b, "genericService", testingService)
+    KtBridgeTestInternals.setGenericEchoService(bridgeB, "genericService", testingService)
 
     val mainKt = result.classLoader.loadClass("app.cash.quickjs.testing.MainKt")
-    val service = mainKt.getDeclaredMethod("getGenericService", KtBridge::class.java)
-      .invoke(null, bridges.a) as GenericEchoService<String>
+    val service = mainKt.getDeclaredMethod("getGenericService", bridgeA::class.java)
+      .invoke(null, bridgeA) as GenericEchoService<String>
 
     assertThat(service.genericEcho("Jesse"))
       .containsExactly("received a generic Jesse!")

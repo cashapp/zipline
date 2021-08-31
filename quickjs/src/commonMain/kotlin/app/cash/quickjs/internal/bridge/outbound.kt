@@ -13,14 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs
+package app.cash.quickjs.internal.bridge
 
-import app.cash.quickjs.OutboundCall.Factory
+import app.cash.quickjs.BuiltInJsAdapter
+import app.cash.quickjs.JsAdapter
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
 import okio.Buffer
+
+/**
+ * Generated code extends this base class to make calls into an application-layer interface that is
+ * implemented by another platform in the same process.
+ */
+@PublishedApi
+internal abstract class OutboundClientFactory<T : Any>(
+  internal val jsAdapter: JsAdapter
+) {
+  abstract fun create(callFactory: OutboundCall.Factory): T
+}
 
 /**
  * This class models a single call sent to another Kotlin platform in the same process.

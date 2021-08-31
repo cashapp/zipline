@@ -15,7 +15,7 @@
  */
 package app.cash.quickjs.testing
 
-import app.cash.quickjs.ktBridge
+import app.cash.quickjs.Zipline
 
 class JsEchoService(
   private val greeting: String
@@ -27,13 +27,13 @@ class JsEchoService(
 
 @JsExport
 fun prepareJsBridges() {
-  ktBridge.set<EchoService>("helloService", EchoJsAdapter, JsEchoService("hello"))
-  ktBridge.set<EchoService>("yoService", EchoJsAdapter, JsEchoService("yo"))
+  Zipline.set<EchoService>("helloService", EchoJsAdapter, JsEchoService("hello"))
+  Zipline.set<EchoService>("yoService", EchoJsAdapter, JsEchoService("yo"))
 }
 
 @JsExport
 fun callSupService(message: String): String {
-  val supService = ktBridge.get<EchoService>("supService", EchoJsAdapter)
+  val supService = Zipline.get<EchoService>("supService", EchoJsAdapter)
   val echoResponse = supService.echo(EchoRequest(message))
   return "JavaScript received '${echoResponse.message}' from the JVM"
 }

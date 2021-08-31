@@ -16,36 +16,45 @@
 package app.cash.quickjs
 
 import kotlin.test.assertEquals
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.delay
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
-@Ignore("Need to coordinate mutual exclusion")
 class SetTimeoutTest {
-  private val quickjs = QuickJs.create()
+  private val zipline = Zipline.create()
 
   @Before fun setUp() {
-    quickjs.loadTestingJs()
+    zipline.runBlocking {
+      loadTestingJs()
+    }
   }
 
   @After fun tearDown() {
-    quickjs.close()
+    zipline.runBlocking {
+      quickJs.close()
+    }
+    (zipline.dispatcher as? ExecutorCoroutineDispatcher)?.close()
   }
 
   @Test fun happyPath() {
-    quickjs.evaluate("""
-      var greeting = 'hello';
-      
-      var sayGoodbye = function() {
-        greeting = 'goodbye';
-      };
-      
-      setTimeout(sayGoodbye, 100);
-    """.trimIndent())
+    zipline.runBlocking {
+      quickJs.evaluate(
+        """
+        var greeting = 'hello';
+        
+        var sayGoodbye = function() {
+          greeting = 'goodbye';
+        };
+        
+        setTimeout(sayGoodbye, 100);
+        """
+      )
 
-    assertEquals("hello", quickjs.evaluate("greeting"))
-    Thread.sleep(200)
-    assertEquals("goodbye", quickjs.evaluate("greeting"))
+      assertEquals("hello", quickJs.evaluate("greeting"))
+      delay(200L)
+      assertEquals("goodbye", quickJs.evaluate("greeting"))
+    }
   }
 }

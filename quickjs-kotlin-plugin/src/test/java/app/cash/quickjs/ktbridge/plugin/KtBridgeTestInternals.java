@@ -15,11 +15,11 @@
  */
 package app.cash.quickjs.ktbridge.plugin;
 
-import app.cash.quickjs.InboundCall;
-import app.cash.quickjs.InboundService;
-import app.cash.quickjs.KtBridge;
-import app.cash.quickjs.OutboundCall;
-import app.cash.quickjs.OutboundClientFactory;
+import app.cash.quickjs.internal.bridge.InboundCall;
+import app.cash.quickjs.internal.bridge.InboundService;
+import app.cash.quickjs.internal.bridge.KtBridge;
+import app.cash.quickjs.internal.bridge.OutboundCall;
+import app.cash.quickjs.internal.bridge.OutboundClientFactory;
 import app.cash.quickjs.testing.EchoJsAdapter;
 import app.cash.quickjs.testing.EchoRequest;
 import app.cash.quickjs.testing.EchoResponse;
@@ -27,12 +27,15 @@ import app.cash.quickjs.testing.EchoService;
 import app.cash.quickjs.testing.GenericEchoService;
 import app.cash.quickjs.testing.GenericJsAdapter;
 import java.util.List;
+import kotlin.Pair;
 import kotlin.PublishedApi;
 import kotlin.coroutines.Continuation;
+import kotlin.coroutines.CoroutineContext;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KType;
 import kotlin.reflect.KTypeProjection;
 import kotlin.reflect.full.KClassifiers;
+import kotlinx.coroutines.CoroutineDispatcher;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -52,6 +55,18 @@ public final class KtBridgeTestInternals {
   private static final KType listOfStringKt = KClassifiers.createType(
       JvmClassMappingKt.getKotlinClass(List.class),
       singletonList(KTypeProjection.invariant(stringKt)), false, emptyList());
+
+  /** Refuse to dispatch anything. */
+  private static final CoroutineDispatcher NULL_DISPATCHER = new CoroutineDispatcher() {
+    @Override public void dispatch(CoroutineContext coroutineContext, Runnable runnable) {
+      throw new IllegalStateException();
+    }
+  };
+
+
+  public static Pair<KtBridge, KtBridge> newKtBridgePair() {
+    return app.cash.quickjs.testing.BridgesKt.newKtBridgePair(NULL_DISPATCHER);
+  }
 
   /** Simulate generated code for outbound calls. */
   public static EchoService getEchoClient(KtBridge ktBridge, String name) {

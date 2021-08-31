@@ -15,8 +15,10 @@
  */
 package app.cash.quickjs.testing
 
-import app.cash.quickjs.ktBridge
-import kotlinx.coroutines.GlobalScope
+import app.cash.quickjs.Zipline
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 class JsSuspendingEchoService(
@@ -29,7 +31,7 @@ class JsSuspendingEchoService(
 
 @JsExport
 fun prepareSuspendingJsBridges() {
-  ktBridge.set<SuspendingEchoService>(
+  Zipline.set<SuspendingEchoService>(
     "jsSuspendingEchoService",
     EchoJsAdapter,
     JsSuspendingEchoService("hello")
@@ -38,10 +40,8 @@ fun prepareSuspendingJsBridges() {
 
 @JsExport
 fun callSuspendingEchoService(message: String) {
-  val service = ktBridge.get<SuspendingEchoService>("jvmSuspendingEchoService", EchoJsAdapter)
-  val logger = ktBridge.get<Logger>("testLogger", Logger.Adapter)
-  GlobalScope.launch {
-    val echoResponse = service.suspendingEcho(EchoRequest(message))
-    logger.log("JavaScript received '${echoResponse.message}' in a suspending call from the JVM")
+  val service = Zipline.get<SuspendingEchoService>("jvmSuspendingEchoService", EchoJsAdapter)
+  CoroutineScope(EmptyCoroutineContext).launch(Dispatchers.Main) {
+    service.suspendingEcho(EchoRequest(message))
   }
 }

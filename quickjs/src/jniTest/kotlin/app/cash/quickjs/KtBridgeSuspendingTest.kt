@@ -17,63 +17,45 @@ package app.cash.quickjs
 
 import app.cash.quickjs.testing.EchoRequest
 import app.cash.quickjs.testing.EchoResponse
-import app.cash.quickjs.testing.Logger
-import app.cash.quickjs.testing.RecordingLogger
 import app.cash.quickjs.testing.jsSuspendingEchoService
 import app.cash.quickjs.testing.prepareSuspendingJvmBridges
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
-import org.junit.Ignore
 import org.junit.Test
 
-@Ignore("Need to coordinate mutual exclusion")
 class KtBridgeSuspendingTest {
-  private val quickjs = QuickJs.create()
+  private val zipline = Zipline.create()
 
   @Before
   fun setUp() {
-    quickjs.loadTestingJs()
-    quickjs.set("console", Console::class.java, object : Console {
-      override fun error(message: String) {
-        println(message)
-      }
-
-      override fun log(message: String) {
-        println(message)
-      }
-    })
+    zipline.runBlocking {
+      loadTestingJs()
+    }
   }
 
   @After fun tearDown() {
-    quickjs.close()
-  }
-
-  interface Console {
-    fun error(message: String)
-    fun log(message: String)
+    zipline.runBlocking {
+      quickJs.close()
+    }
+    (zipline.dispatcher as? ExecutorCoroutineDispatcher)?.close()
   }
 
   @Test fun jvmCallJsService() {
-    quickjs.evaluate("testing.app.cash.quickjs.testing.prepareSuspendingJsBridges()")
+    zipline.runBlocking {
+      zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.prepareSuspendingJsBridges()")
 
-    val ktBridge = quickjs.getKtBridge()
-
-    runBlocking {
-      assertThat(ktBridge.jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake")))
+      assertThat(zipline.jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake")))
         .isEqualTo(EchoResponse("hello from suspending JavaScript, Jake"))
     }
   }
 
   @Test fun jsCallJvmService() {
-    val ktBridge = quickjs.getKtBridge()
-    val recordingLogger = RecordingLogger()
-    ktBridge.set<Logger>("logger", Logger.Adapter, recordingLogger)
-    prepareSuspendingJvmBridges(ktBridge)
+    zipline.runBlocking {
+      prepareSuspendingJvmBridges(zipline)
 
-    quickjs.evaluate("testing.app.cash.quickjs.testing.callSuspendingEchoService('Eric')")
-    assertThat(recordingLogger.log.take())
-      .isEqualTo("JavaScript received 'sup from the suspending JVM, Eric' from the JVM")
+      quickJs.evaluate("testing.app.cash.quickjs.testing.callSuspendingEchoService('Eric')")
+    }
   }
 }

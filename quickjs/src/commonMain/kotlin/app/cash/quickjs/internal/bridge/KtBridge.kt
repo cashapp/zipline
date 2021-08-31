@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs
+package app.cash.quickjs.internal.bridge
 
-import kotlinx.coroutines.GlobalScope
+import app.cash.quickjs.BuiltInJsAdapter
+import app.cash.quickjs.JsAdapter
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-// TODO(jwilson): merge with QuickJs?
 class KtBridge internal constructor(
-  private val outboundBridge: InternalBridge
+  private val dispatcher: CoroutineDispatcher,
+  private val outboundBridge: InternalBridge,
 ) {
   private val inboundHandlers = mutableMapOf<String, InboundService<*>>()
   private var nextId = 1
@@ -42,8 +46,7 @@ class KtBridge internal constructor(
       callbackName: String
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
-      // TODO(jwilson): confirm how we bootstrap a coroutine on an inbound call.
-      GlobalScope.launch {
+      CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
         val result = handler.callSuspending(
           InboundCall(funName, encodedArguments, handler.jsAdapter)
         )
@@ -62,7 +65,6 @@ class KtBridge internal constructor(
     inboundHandlers[name] = handler
   }
 
-  @PublishedApi
   internal fun remove(name: String) {
     val removed = inboundHandlers.remove(name)
     require(removed != null) { "unable to find $name: was it removed twice?" }
@@ -78,7 +80,7 @@ class KtBridge internal constructor(
     outboundClientFactory: OutboundClientFactory<T>
   ): T {
     return outboundClientFactory.create(
-        OutboundCall.Factory(name, outboundClientFactory.jsAdapter, this, outboundBridge)
+      OutboundCall.Factory(name, outboundClientFactory.jsAdapter, this, outboundBridge)
     )
   }
 

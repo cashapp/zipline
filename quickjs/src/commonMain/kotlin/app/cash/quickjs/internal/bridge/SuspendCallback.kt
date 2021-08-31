@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs.testing
+package app.cash.quickjs.internal.bridge
 
-import java.util.concurrent.LinkedBlockingDeque
-
-class RecordingLogger : Logger {
-  val log = LinkedBlockingDeque<String>()
-  override suspend fun log(message: String) {
-    log += message
-  }
+/** A bridged interface to pass results from suspending calls. */
+@PublishedApi
+internal interface SuspendCallback {
+  fun success(encodedResponse: ByteArray)
 }

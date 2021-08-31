@@ -15,8 +15,10 @@
  */
 package app.cash.quickjs
 
-/** A bridged interface to pass results from suspending calls. */
-@PublishedApi
-internal interface SuspendCallback {
-  fun success(encodedResponse: ByteArray)
+expect abstract class Zipline {
+  abstract val engineVersion: String
+
+  fun <T : Any> get(name: String, jsAdapter: JsAdapter): T
+
+  fun <T : Any> set(name: String, jsAdapter: JsAdapter, instance: T)
 }

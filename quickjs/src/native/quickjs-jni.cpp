@@ -20,7 +20,7 @@
 #include "ExceptionThrowers.h"
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_app_cash_quickjs_JniQuickJs_createContext(JNIEnv* env, jclass type) {
+Java_app_cash_quickjs_QuickJs_createContext(JNIEnv* env, jclass type) {
   Context* c = new(std::nothrow) Context(env);
   if (!c || !c->jsContext || !c->jsRuntime) {
     delete c;
@@ -30,12 +30,12 @@ Java_app_cash_quickjs_JniQuickJs_createContext(JNIEnv* env, jclass type) {
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_app_cash_quickjs_JniQuickJs_destroyContext(JNIEnv* env, jobject type, jlong context) {
+Java_app_cash_quickjs_QuickJs_destroyContext(JNIEnv* env, jobject type, jlong context) {
   delete reinterpret_cast<Context*>(context);
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_app_cash_quickjs_JniQuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv* env,
+Java_app_cash_quickjs_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv* env,
                                                                                     jobject type,
                                                                                     jlong context_,
                                                                                     jstring sourceCode,
@@ -50,7 +50,7 @@ Java_app_cash_quickjs_JniQuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_app_cash_quickjs_JniQuickJs_get(JNIEnv* env, jobject thiz, jlong _context, jstring name,
+Java_app_cash_quickjs_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context, jstring name,
                                       jobjectArray methods) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
@@ -63,7 +63,7 @@ Java_app_cash_quickjs_JniQuickJs_get(JNIEnv* env, jobject thiz, jlong _context, 
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_app_cash_quickjs_JniQuickJs_set(JNIEnv* env, jobject thiz, jlong _context, jstring name,
+Java_app_cash_quickjs_QuickJs_set(JNIEnv* env, jobject thiz, jlong _context, jstring name,
                                       jobject object, jobjectArray methods) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
@@ -75,7 +75,7 @@ Java_app_cash_quickjs_JniQuickJs_set(JNIEnv* env, jobject thiz, jlong _context, 
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_app_cash_quickjs_JniQuickJs_call(JNIEnv* env, jobject thiz, jlong _context, jlong instance,
+Java_app_cash_quickjs_QuickJs_call(JNIEnv* env, jobject thiz, jlong _context, jlong instance,
                                        jobject method, jobjectArray args) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
@@ -94,7 +94,7 @@ Java_app_cash_quickjs_JniQuickJs_call(JNIEnv* env, jobject thiz, jlong _context,
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_app_cash_quickjs_JniQuickJs_execute(JNIEnv* env, jobject thiz, jlong _context, jbyteArray bytecode) {
+Java_app_cash_quickjs_QuickJs_execute(JNIEnv* env, jobject thiz, jlong _context, jbyteArray bytecode) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException", "Null QuickJs context - did you close your QuickJs?");
@@ -104,7 +104,7 @@ Java_app_cash_quickjs_JniQuickJs_execute(JNIEnv* env, jobject thiz, jlong _conte
 }
 
 extern "C" JNIEXPORT jbyteArray JNICALL
-Java_app_cash_quickjs_JniQuickJs_compile(JNIEnv* env, jobject thiz, jlong _context, jstring sourceCode, jstring fileName) {
+Java_app_cash_quickjs_QuickJs_compile(JNIEnv* env, jobject thiz, jlong _context, jstring sourceCode, jstring fileName) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException", "Null QuickJs context - did you close your QuickJs?");
@@ -114,7 +114,7 @@ Java_app_cash_quickjs_JniQuickJs_compile(JNIEnv* env, jobject thiz, jlong _conte
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_app_cash_quickjs_JniQuickJs_memoryUsage(JNIEnv* env, jobject type, jlong context_) {
+Java_app_cash_quickjs_QuickJs_memoryUsage(JNIEnv* env, jobject type, jlong context_) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",
@@ -125,7 +125,7 @@ Java_app_cash_quickjs_JniQuickJs_memoryUsage(JNIEnv* env, jobject type, jlong co
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_app_cash_quickjs_JniQuickJs_setMemoryLimit(JNIEnv* env, jobject type, jlong context_, jlong limit) {
+Java_app_cash_quickjs_QuickJs_setMemoryLimit(JNIEnv* env, jobject type, jlong context_, jlong limit) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",
@@ -136,7 +136,7 @@ Java_app_cash_quickjs_JniQuickJs_setMemoryLimit(JNIEnv* env, jobject type, jlong
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_app_cash_quickjs_JniQuickJs_setGcThreshold(JNIEnv* env, jobject type, jlong context_, jlong gcThreshold) {
+Java_app_cash_quickjs_QuickJs_setGcThreshold(JNIEnv* env, jobject type, jlong context_, jlong gcThreshold) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",
@@ -147,7 +147,7 @@ Java_app_cash_quickjs_JniQuickJs_setGcThreshold(JNIEnv* env, jobject type, jlong
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_app_cash_quickjs_JniQuickJs_setMaxStackSize(JNIEnv* env, jobject type, jlong context_, jlong stackSize) {
+Java_app_cash_quickjs_QuickJs_setMaxStackSize(JNIEnv* env, jobject type, jlong context_, jlong stackSize) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",

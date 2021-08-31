@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs
+package app.cash.quickjs.internal.bridge
 
 import kotlin.js.JsName
 

@@ -15,10 +15,11 @@
  */
 package app.cash.quickjs
 
-actual abstract class QuickJs {
-  actual abstract val engineVersion: String
+import kotlin.test.Test
+import kotlin.test.assertNotEquals
 
-  companion object : QuickJs() {
-    override val engineVersion get() = quickJsVersion
+class ZiplineJsTest {
+  @Test fun version() {
+    assertNotEquals("", Zipline.engineVersion)
   }
 }
