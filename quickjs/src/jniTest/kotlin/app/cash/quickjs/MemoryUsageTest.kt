@@ -29,11 +29,11 @@ class MemoryUsageTest {
 
   @Test fun initialMemoryUsage() {
     val usage = quickjs.memoryUsage()
-    assertTrue(usage.memoryAllocatedCount > 0L)
-    assertTrue(usage.memoryAllocatedSize > 0L)
-    assertEquals(usage.memoryAllocatedLimit, -1L)
-    assertTrue(usage.memoryUsedCount in 1..usage.memoryAllocatedCount)
-    assertTrue(usage.memoryUsedSize in 1..usage.memoryAllocatedSize)
+    assertTrue(usage.memoryAllocatedCount > 0L, usage.toString())
+    assertTrue(usage.memoryAllocatedSize > 0L, usage.toString())
+    assertTrue(usage.memoryAllocatedLimit != 0L, usage.toString())
+    assertTrue(usage.memoryUsedCount > 0L, usage.toString())
+    assertTrue(usage.memoryUsedSize in 1L..usage.memoryAllocatedSize, usage.toString())
   }
 
   @Test fun definePropertyIncreasesPropertiesCount() {

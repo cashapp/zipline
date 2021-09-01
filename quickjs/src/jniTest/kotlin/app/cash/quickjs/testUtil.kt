@@ -15,6 +15,8 @@
  */
 package app.cash.quickjs
 
+import java.io.BufferedReader
+
 inline fun <reified T : Throwable> assertThrows(body: () -> Unit): T {
   try {
     body()
@@ -26,4 +28,11 @@ inline fun <reified T : Throwable> assertThrows(body: () -> Unit): T {
   }
   throw AssertionError(
       "Expected body to fail with ${T::class.simpleName!!} but completed successfully")
+}
+
+fun QuickJs.loadTestingJs() {
+  val testingJs = QuickJs::class.java.getResourceAsStream("/testing.js")!!
+    .bufferedReader()
+    .use(BufferedReader::readText)
+  evaluate(testingJs, "testing.js")
 }

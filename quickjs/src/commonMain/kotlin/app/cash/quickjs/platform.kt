@@ -15,8 +15,17 @@
  */
 package app.cash.quickjs
 
-/** A bridged interface to pass results from suspending calls. */
-@PublishedApi
-internal interface SuspendCallback {
-  fun success(encodedResponse: ByteArray)
+/**
+ * Functions that are built in to regular JavaScript environments like the browser and NodeJS, but
+ * must be added to QuickJS.
+ *
+ * https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope
+ */
+internal interface HostPlatform {
+  // See org.w3c.dom.WindowOrWorkerGlobalScope
+  fun setTimeout(timeoutId: Int, delayMillis: Int)
+}
+
+internal interface JsPlatform {
+  fun runJob(timeoutId: Int)
 }

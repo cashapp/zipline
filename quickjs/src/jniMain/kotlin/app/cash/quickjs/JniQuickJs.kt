@@ -18,7 +18,9 @@ package app.cash.quickjs
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
+import java.util.concurrent.Executors
 import java.util.logging.Logger
+import kotlinx.coroutines.asCoroutineDispatcher
 
 internal class JniQuickJs(private var context: Long) : QuickJs() {
   companion object {
@@ -29,6 +31,10 @@ internal class JniQuickJs(private var context: Long) : QuickJs() {
     @JvmStatic
     external fun createContext(): Long
   }
+
+  internal val ktBridge = createKtBridge(this)
+  private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+  private val hostPlatform = createHostPlatform(ktBridge, dispatcher)
 
   override val engineVersion get() = quickJsVersion
 
