@@ -20,15 +20,34 @@ import kotlin.test.assertTrue
 import org.junit.After
 import org.junit.Test
 
-class MemoryUsageTest {
+class TuningApisTest {
   private val quickjs = QuickJs.create()
 
   @After fun tearDown() {
     quickjs.close()
   }
 
+  @Test fun setMemoryLimit() {
+    val value = 1024L * 1024L + 1L
+    quickjs.memoryLimit = value
+    assertEquals(value, quickjs.memoryLimit)
+    assertEquals(value, quickjs.memoryUsage.memoryAllocatedLimit)
+  }
+
+  @Test fun setGcThreshold() {
+    val value = 1024L * 1024L + 2L
+    quickjs.gcThreshold = value
+    assertEquals(value, quickjs.gcThreshold)
+  }
+
+  @Test fun setMaxStackSize() {
+    val value = 1024L * 1024L + 3L
+    quickjs.maxStackSize = value
+    assertEquals(value, quickjs.maxStackSize)
+  }
+
   @Test fun initialMemoryUsage() {
-    val usage = quickjs.memoryUsage()
+    val usage = quickjs.memoryUsage
     assertTrue(usage.memoryAllocatedCount > 0L, usage.toString())
     assertTrue(usage.memoryAllocatedSize > 0L, usage.toString())
     assertTrue(usage.memoryAllocatedLimit != 0L, usage.toString())
@@ -80,9 +99,9 @@ class MemoryUsageTest {
   }
 
   private fun diffMemoryUsage(block: () -> Unit): MemoryUsage {
-    val before = quickjs.memoryUsage()
+    val before = quickjs.memoryUsage
     block()
-    val after = quickjs.memoryUsage()
+    val after = quickjs.memoryUsage
 
     return MemoryUsage(
       memoryAllocatedCount = after.memoryAllocatedCount - before.memoryAllocatedCount,

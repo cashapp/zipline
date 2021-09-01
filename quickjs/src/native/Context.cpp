@@ -82,8 +82,6 @@ Context::Context(JNIEnv* env)
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
                                                    "(Ljava/lang/String;Ljava/lang/String;)V")) {
   env->GetJavaVM(&javaVm);
-  // Increase the JavaScript stack size. (default is 256 * 1024).
-  JS_SetMaxStackSize(jsRuntime, 512 * 1024);
   JS_SetRuntimeOpaque(jsRuntime, this);
 }
 
@@ -201,6 +199,18 @@ jobject Context::memoryUsage(JNIEnv* env) {
     jsMemoryUsage.binary_object_count,
     jsMemoryUsage.binary_object_size
   ));
+}
+
+void Context::setMemoryLimit(JNIEnv* env, jlong limit) {
+  JS_SetMemoryLimit(jsRuntime, limit);
+}
+
+void Context::setGcThreshold(JNIEnv* env, jlong gcThreshold) {
+  JS_SetGCThreshold(jsRuntime, gcThreshold);
+}
+
+void Context::setMaxStackSize(JNIEnv* env, jlong stackSize) {
+  JS_SetMaxStackSize(jsRuntime, stackSize);
 }
 
 JsObjectProxy* Context::getObjectProxy(JNIEnv* env, jstring name, jobjectArray methods) {

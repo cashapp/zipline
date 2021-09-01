@@ -26,6 +26,18 @@ import java.io.Closeable
 actual abstract class QuickJs : Closeable {
   actual abstract val engineVersion: String
 
+  /** Memory usage statistics for the JavaScript engine. */
+  abstract val memoryUsage: MemoryUsage
+
+  /** Default is -1. Use -1 for no limit. */
+  abstract var memoryLimit: Long
+
+  /** Default is 256 KiB. Use -1 to disable automatic GC. */
+  abstract var gcThreshold: Long
+
+  /** Default is 512 KiB. Use 0 to disable the maximum stack size check. */
+  abstract var maxStackSize: Long
+
   /**
    * Evaluate [script] and return any result. [fileName] will be used in error
    * reporting.
@@ -72,9 +84,6 @@ actual abstract class QuickJs : Closeable {
    */
   abstract fun execute(bytecode: ByteArray): Any?
 
-  /** Return memory usage statistics for the JavaScript engine. */
-  abstract fun memoryUsage(): MemoryUsage
-
   companion object {
     /**
      * Create a new interpreter instance. Calls to this method **must** matched with
@@ -86,7 +95,15 @@ actual abstract class QuickJs : Closeable {
       if (context == 0L) {
         throw OutOfMemoryError("Cannot create QuickJs instance")
       }
+
       return JniQuickJs(context)
+        .apply {
+          // Explicitly assign default values to these properties so the JVM backing fields values
+          // are consistent with their native fields. (QuickJS doesn't offer accessors for these.)
+          memoryLimit = -1L
+          gcThreshold = 256L * 1024L
+          maxStackSize = 512L * 1024L // Override the QuickJS default which is 256 KiB
+        }
     }
   }
 }
