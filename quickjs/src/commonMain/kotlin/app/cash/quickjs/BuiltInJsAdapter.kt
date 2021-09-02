@@ -24,6 +24,7 @@ internal object BuiltInJsAdapter : JsAdapter {
     when (type.classifier) {
       Int::class -> sink.writeInt(value as Int)
       ByteArray::class -> sink.write(value as ByteArray)
+      String::class -> sink.writeUtf8(value as String)
       Unit::class -> {}
       else -> error("unexpected type: $type")
     }
@@ -33,6 +34,7 @@ internal object BuiltInJsAdapter : JsAdapter {
     return when (type.classifier) {
       Int::class -> source.readInt() as T
       ByteArray::class -> source.readByteArray() as T
+      String::class -> source.readUtf8() as T
       Unit::class -> Unit as T
       else -> error("unexpected type: $type")
     }

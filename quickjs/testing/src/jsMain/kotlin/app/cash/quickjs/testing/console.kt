@@ -13,22 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.quickjs
+package app.cash.quickjs.testing
 
-/**
- * Functions that are built in to regular JavaScript environments like the browser and NodeJS, but
- * must be added to QuickJS.
- *
- * https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope
- */
-internal interface HostPlatform {
-  // See org.w3c.dom.WindowOrWorkerGlobalScope
-  fun setTimeout(timeoutId: Int, delayMillis: Int)
-
-  /** @param level one of `log`, `info`, `warn`, or `error`. */
-  fun consoleMessage(level: String, message: String)
+@JsExport
+fun consoleLogAllLevels() {
+  console.info("1. this is message 1 of 5. Its level is 'info'.")
+  console.log("2. this message has level 'log'.")
+  console.warn("3. this message has level 'warn'.")
+  console.error("4. this message has level 'error'.")
+  console.info("5. this is the last message")
 }
 
-internal interface JsPlatform {
-  fun runJob(timeoutId: Int)
+@JsExport
+fun consoleLogWithArguments() {
+  console.info("this message for %s is a %d out of %d", "Jesse", 8, 10)
 }

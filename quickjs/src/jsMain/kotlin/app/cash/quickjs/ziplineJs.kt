@@ -78,11 +78,17 @@ private class ZiplineJs : Zipline(), JsPlatform, InternalBridge  {
     val jsPlatform = this
     js(
       """
-      globalThis.setTimeout = function(handler, delay, args) {
-        return jsPlatform.setTimeout(handler, delay, args);
+      globalThis.setTimeout = function(handler, delay) {
+        return jsPlatform.setTimeout(handler, delay, arguments);
       };
       globalThis.clearTimeout = function(timeoutID) {
         return jsPlatform.clearTimeout(timeoutID);
+      };
+      globalThis.console = {
+        error: function() { jsPlatform.consoleMessage('error', arguments) },
+        info: function() { jsPlatform.consoleMessage('info', arguments) },
+        log: function() { jsPlatform.consoleMessage('log', arguments) },
+        warn: function() { jsPlatform.consoleMessage('warn', arguments) },
       };
       """
     )
@@ -147,6 +153,15 @@ private class ZiplineJs : Zipline(), JsPlatform, InternalBridge  {
   fun clearTimeout(handle: Int) {
     jobs.remove(handle)
     // TODO(jwilson): tell the host platform to clear the timeout.
+  }
+
+  /**
+   * Note that this doesn't currently implement `%o`, `%d`, `%s`, etc.
+   * https://developer.mozilla.org/en-US/docs/Web/API/console#outputting_text_to_the_console
+   */
+  @JsName("consoleMessage")
+  fun consoleMessage(level: String, vararg arguments: Any?) {
+    hostPlatform.consoleMessage(level, arguments.joinToString(separator = " "))
   }
 
   private class Job(
