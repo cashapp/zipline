@@ -9,7 +9,7 @@ plugins {
 
 abstract class VersionWriterTask : DefaultTask() {
   @InputFile
-  val versionFile = project.file("src/native/quickjs/VERSION")
+  val versionFile = project.file("native/quickjs/VERSION")
 
   @OutputDirectory
   val outputDir = project.layout.buildDirectory.file("generated/version/")
@@ -165,5 +165,5 @@ dependencies {
 }
 
 fun quickJsVersion(): String {
-  return File(projectDir, "src/native/quickjs/VERSION").readText().trim()
+  return File(projectDir, "native/quickjs/VERSION").readText().trim()
 }
