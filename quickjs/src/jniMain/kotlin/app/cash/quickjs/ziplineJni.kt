@@ -20,6 +20,7 @@ import app.cash.quickjs.internal.bridge.InternalBridge
 import app.cash.quickjs.internal.bridge.KtBridge
 import app.cash.quickjs.internal.bridge.OutboundClientFactory
 import java.util.concurrent.Executors
+import java.util.logging.Logger
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -67,6 +68,7 @@ private class ZiplineJvm(
 ) : Zipline(), InternalBridge, HostPlatform {
   private val ktBridge = KtBridge(dispatcher, outboundBridge = this)
   private val jsPlatform: JsPlatform
+  private val logger = Logger.getLogger(Zipline::class.qualifiedName)
 
   /** Lazily fetch the bridge to call into JS. */
   private val jsInboundBridge: InternalBridge by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -131,6 +133,14 @@ private class ZiplineJvm(
     CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
       delay(delayMillis.toLong())
       jsPlatform.runJob(timeoutId)
+    }
+  }
+
+  override fun consoleMessage(level: String, message: String) {
+    when (level) {
+      "warn" -> logger.warning(message)
+      "error" -> logger.severe(message)
+      else -> logger.info(message)
     }
   }
 }
