@@ -27,10 +27,10 @@ import java.util.logging.Logger
  * This class is NOT thread safe. If multiple threads access an instance concurrently it must be
  * synchronized externally.
  */
-class QuickJs private constructor(
+actual class QuickJs private constructor(
   private var context: Long
 ) : Closeable {
-  companion object {
+  actual companion object {
     init {
       loadNativeLibrary()
     }
@@ -40,7 +40,7 @@ class QuickJs private constructor(
      * calls to [close] on the returned instance to avoid leaking native memory.
      */
     @JvmStatic
-    fun create(): QuickJs {
+    actual fun create(): QuickJs {
       val context = createContext()
       if (context == 0L) {
         throw OutOfMemoryError("Cannot create QuickJs instance")
@@ -90,7 +90,7 @@ class QuickJs private constructor(
    *
    * @throws QuickJsException if there is an error evaluating the script.
    */
-  fun evaluate(script: String, fileName: String = "?"): Any? {
+  actual fun evaluate(script: String, fileName: String): Any? {
     return evaluate(context, script, fileName)
   }
 
@@ -183,7 +183,7 @@ class QuickJs private constructor(
    *
    * @throws QuickJsException if the sourceCode could not be compiled.
    */
-  fun compile(sourceCode: String, fileName: String): ByteArray {
+  actual fun compile(sourceCode: String, fileName: String): ByteArray {
     return compile(context, sourceCode, fileName)
   }
 
@@ -192,11 +192,11 @@ class QuickJs private constructor(
    *
    * @throws QuickJsException if there is an error loading or executing the code.
    */
-  fun execute(bytecode: ByteArray): Any? {
+  actual fun execute(bytecode: ByteArray): Any? {
     return execute(context, bytecode)
   }
 
-  override fun close() {
+  actual override fun close() {
     val contextToClose = context
     if (contextToClose != 0L) {
       context = 0

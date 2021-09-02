@@ -19,7 +19,7 @@ import androidx.annotation.Keep
 import java.util.regex.Pattern
 
 @Keep // Instruct ProGuard not to strip this type.
-class QuickJsException @JvmOverloads constructor(
+actual class QuickJsException @JvmOverloads constructor(
   detailMessage: String,
   jsStackTrace: String? = null
 ) : RuntimeException(detailMessage) {

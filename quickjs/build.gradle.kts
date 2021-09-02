@@ -63,7 +63,11 @@ kotlin {
       }
     }
 
+    val engineMain by creating
+    val engineTest by creating
+
     val jniMain by creating {
+      dependsOn(engineMain)
       dependencies {
         api(Dependencies.androidxAnnotation)
         api(Dependencies.kotlinReflect)
@@ -76,6 +80,7 @@ kotlin {
       dependsOn(jniMain)
     }
     val jvmTest by getting {
+      dependsOn(engineTest)
       kotlin.srcDir("src/jniTest/kotlin/")
       resources.srcDir(copyTestingJs)
       dependencies {
@@ -121,7 +126,7 @@ android {
       manifest.srcFile("src/androidMain/AndroidManifest.xml")
     }
     val androidTest by getting {
-      java.srcDir("src/jniTest/kotlin/")
+      java.srcDirs("src/engineTest/kotlin/", "src/jniTest/kotlin/")
       resources.srcDir("src/androidInstrumentationTest/resources/")
       resources.srcDir(copyTestingJs)
     }
