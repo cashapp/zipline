@@ -19,6 +19,7 @@ import app.cash.quickjs.internal.bridge.InboundService
 import app.cash.quickjs.internal.bridge.InternalBridge
 import app.cash.quickjs.internal.bridge.KtBridge
 import app.cash.quickjs.internal.bridge.OutboundClientFactory
+import java.io.Closeable
 import java.util.logging.Logger
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
@@ -26,7 +27,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-actual abstract class Zipline {
+actual abstract class Zipline : Closeable {
   actual abstract val engineVersion: String
 
   abstract val quickJs: QuickJs
@@ -50,25 +51,34 @@ actual abstract class Zipline {
   @PublishedApi
   internal abstract fun set(name: String, service: InboundService<*>)
 
+  /**
+   * Release resources held by this instance. It is an error to do any of the following after
+   * calling close:
+   *
+   *  * Call [get] or [set].
+   *  * Accessing [quickJs].
+   *  * Accessing the objects returned from [get].
+   */
+  abstract override fun close()
+
   companion object {
-    fun create(
-      dispatcher: CoroutineDispatcher,
-    ): Zipline {
+    fun create(dispatcher: CoroutineDispatcher): Zipline {
       val quickJs = QuickJs.create()
       // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
       quickJs.maxStackSize = 0L
-      return ZiplineJvm(quickJs, dispatcher)
+      return ZiplineJni(quickJs, dispatcher)
     }
   }
 }
 
-private class ZiplineJvm(
+private class ZiplineJni(
   override val quickJs: QuickJs,
   override val dispatcher: CoroutineDispatcher,
 ) : Zipline(), InternalBridge, HostPlatform {
   private val ktBridge = KtBridge(dispatcher, outboundBridge = this)
   private val jsPlatform: JsPlatform
   private val logger = Logger.getLogger(Zipline::class.qualifiedName)
+  private var closed = false
 
   /** Lazily fetch the bridge to call into JS. */
   private val jsInboundBridge: InternalBridge by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -106,6 +116,7 @@ private class ZiplineJvm(
     funName: String,
     encodedArguments: ByteArray
   ): ByteArray {
+    check(!closed) { "Zipline closed" }
     return jsInboundBridge.invoke(instanceName, funName, encodedArguments)
   }
 
@@ -115,6 +126,7 @@ private class ZiplineJvm(
     encodedArguments: ByteArray,
     callbackName: String
   ) {
+    check(!closed) { "Zipline closed" }
     return jsInboundBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
   }
 
@@ -122,10 +134,12 @@ private class ZiplineJvm(
     name: String,
     outboundClientFactory: OutboundClientFactory<T>
   ): T {
+    check(!closed) { "closed" }
     return ktBridge.get(name, outboundClientFactory)
   }
 
   override fun set(name: String, handler: InboundService<*>) {
+    check(!closed) { "closed" }
     ktBridge.set(name, handler)
   }
 
@@ -142,5 +156,10 @@ private class ZiplineJvm(
       "error" -> logger.severe(message)
       else -> logger.info(message)
     }
+  }
+
+  override fun close() {
+    closed = true
+    quickJs.close()
   }
 }

@@ -33,7 +33,7 @@ class SetTimeoutTest {
   }
 
   @After fun tearDown(): Unit = runBlocking(dispatcher) {
-    zipline.quickJs.close()
+    zipline.close()
   }
 
   @Test fun happyPath(): Unit = runBlocking(dispatcher) {
