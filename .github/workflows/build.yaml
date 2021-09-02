@@ -38,7 +38,7 @@ jobs:
 
       - name: Build native library
         run: |
-          cmake -S quickjs/src/jvmMain -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/src/native/quickjs/VERSION)"
+          cmake -S quickjs/src/jvmMain -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/native/quickjs/VERSION)"
           cmake --build build/jni/ --verbose
           mkdir -p quickjs/src/jvmMain/resources/
           cp -v build/jni/libquickjs.* quickjs/src/jvmMain/resources/
