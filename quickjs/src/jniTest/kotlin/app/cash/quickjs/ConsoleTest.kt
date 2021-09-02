@@ -60,7 +60,7 @@ class ConsoleTest {
 
   @After fun tearDown(): Unit = runBlocking(dispatcher) {
     Logger.getLogger(Zipline::class.qualifiedName).removeHandler(logHandler)
-    zipline.quickJs.close()
+    zipline.close()
   }
 
   @Test fun logAllLevels(): Unit = runBlocking(dispatcher) {
