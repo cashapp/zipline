@@ -36,7 +36,12 @@ class KtBridge internal constructor(
       encodedArguments: ByteArray
     ): ByteArray {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
-      return handler.call(InboundCall(funName, encodedArguments, handler.jsAdapter))
+      val inboundCall = InboundCall(funName, encodedArguments, handler.jsAdapter)
+      return try {
+        handler.call(inboundCall)
+      } catch (e: Throwable) {
+        inboundCall.resultException(e)
+      }
     }
 
     override fun invokeSuspending(
@@ -47,11 +52,14 @@ class KtBridge internal constructor(
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
-        val result = handler.callSuspending(
-          InboundCall(funName, encodedArguments, handler.jsAdapter)
-        )
         val callback = get<SuspendCallback>(callbackName, BuiltInJsAdapter)
-        callback.success(result)
+        val inboundCall = InboundCall(funName, encodedArguments, handler.jsAdapter)
+        val result = try {
+          handler.callSuspending(inboundCall)
+        } catch (e: Exception) {
+          inboundCall.resultException(e)
+        }
+        callback.call(result)
       }
     }
   }

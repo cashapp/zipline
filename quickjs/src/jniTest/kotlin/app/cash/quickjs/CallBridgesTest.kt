@@ -127,4 +127,40 @@ internal class CallBridgesTest {
 
     assertEquals("this is a response", deferredResponse.await().message)
   }
+
+  @Test
+  fun callThrowsException() {
+    val service = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        throw IllegalStateException("boom!")
+      }
+    }
+
+    bridgeA.set<EchoService>("helloService", EchoJsAdapter, service)
+    val client = bridgeB.get<EchoService>("helloService", EchoJsAdapter)
+
+    val thrownException = assertThrows<Exception> {
+      client.echo(EchoRequest(""))
+    }
+    assertThat(thrownException).hasMessageThat()
+      .isEqualTo("java.lang.IllegalStateException: boom!")
+  }
+
+  @Test
+  fun suspendingCallThrowsException(): Unit = runBlocking(dispatcher) {
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        throw IllegalStateException("boom!")
+      }
+    }
+
+    bridgeA.set<SuspendingEchoService>("helloService", EchoJsAdapter, service)
+    val client = bridgeB.get<SuspendingEchoService>("helloService", EchoJsAdapter)
+
+    val thrownException = assertThrows<Exception> {
+      client.suspendingEcho(EchoRequest(""))
+    }
+    assertThat(thrownException).hasMessageThat()
+      .isEqualTo("java.lang.IllegalStateException: boom!")
+  }
 }

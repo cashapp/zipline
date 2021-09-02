@@ -18,5 +18,5 @@ package app.cash.quickjs.internal.bridge
 /** A bridged interface to pass results from suspending calls. */
 @PublishedApi
 internal interface SuspendCallback {
-  fun success(encodedResponse: ByteArray)
+  fun call(encodedResponse: ByteArray)
 }

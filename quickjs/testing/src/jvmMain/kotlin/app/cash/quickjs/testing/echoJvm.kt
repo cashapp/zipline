@@ -22,15 +22,3 @@ val Zipline.helloService: EchoService
 
 val Zipline.yoService: EchoService
   get() = get("yoService", EchoJsAdapter)
-
-class JvmEchoService(
-  private val greeting: String
-) : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    return EchoResponse("$greeting from the JVM, ${request.message}")
-  }
-}
-
-fun prepareJvmBridges(zipline: Zipline) {
-  zipline.set<EchoService>("supService", EchoJsAdapter, JvmEchoService("sup"))
-}

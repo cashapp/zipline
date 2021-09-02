@@ -59,7 +59,7 @@ internal class InboundCall(
   fun <T> parameter(type: KType): T {
     require(callCount++ < parameterCount)
     val byteCount = buffer.readInt()
-    if (byteCount == -1) {
+    if (byteCount == BYTE_COUNT_NULL) {
       return null as T
     } else {
       eachValueBuffer.write(buffer, byteCount.toLong())
@@ -74,8 +74,9 @@ internal class InboundCall(
 
   fun <R> result(type: KType, value: R): ByteArray {
     require(callCount++ == parameterCount)
+    buffer.writeByte(RESULT_TYPE_NORMAL.toInt())
     if (value == null) {
-      buffer.writeInt(-1)
+      buffer.writeInt(BYTE_COUNT_NULL)
     } else {
       jsAdapter.encode(value, eachValueBuffer, type)
       buffer.writeInt(eachValueBuffer.size.toInt())
@@ -85,4 +86,15 @@ internal class InboundCall(
   }
 
   fun unexpectedFunction(): ByteArray = error("unexpected function: $funName")
+
+  @OptIn(ExperimentalStdlibApi::class)
+  fun resultException(e: Throwable): ByteArray {
+    buffer.clear()
+    eachValueBuffer.clear()
+    jsAdapter.encode(e, eachValueBuffer, typeOf<Throwable>())
+    buffer.writeByte(RESULT_TYPE_EXCEPTION.toInt())
+    buffer.writeInt(eachValueBuffer.size.toInt())
+    buffer.writeAll(eachValueBuffer)
+    return buffer.readByteArray()
+  }
 }

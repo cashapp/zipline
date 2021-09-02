@@ -64,7 +64,7 @@ internal class OutboundCall private constructor(
   fun <T> parameter(type: KType, value: T) {
     require(callCount++ < parameterCount)
     if (value == null) {
-      buffer.writeInt(-1)
+      buffer.writeInt(BYTE_COUNT_NULL)
     } else {
       jsAdapter.encode(value, eachValueBuffer, type)
       buffer.writeInt(eachValueBuffer.size.toInt())
@@ -80,8 +80,9 @@ internal class OutboundCall private constructor(
   fun <R> invoke(type: KType): R {
     require(callCount++ == parameterCount)
     val encodedArguments = buffer.readByteArray()
-    val encodedResponse = internalBridge.invoke(instanceName, funName, encodedArguments)
-    return encodedResponse.decodeResponse(type)
+    val encodedResult = internalBridge.invoke(instanceName, funName, encodedArguments)
+    val result = encodedResult.decodeResult<R>(type)
+    return result.getOrThrow()
   }
 
   @OptIn(ExperimentalStdlibApi::class)
@@ -106,22 +107,35 @@ internal class OutboundCall private constructor(
     val continuation: Continuation<R>,
     val type: KType
   ) : SuspendCallback {
-    override fun success(encodedResponse: ByteArray) {
+    override fun call(encodedResponse: ByteArray) {
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
       ktBridge.remove(callbackName)
-      val value = encodedResponse.decodeResponse<R>(type)
-      continuation.resumeWith(Result.success(value))
+      val result = encodedResponse.decodeResult<R>(type)
+      continuation.resumeWith(result)
     }
   }
 
-  private fun <R> ByteArray.decodeResponse(type: KType): R {
+  @OptIn(ExperimentalStdlibApi::class)
+  private fun <R> ByteArray.decodeResult(type: KType): Result<R> {
     buffer.write(this)
-    val byteCount = buffer.readInt()
-    if (byteCount == -1) {
-      return null as R
-    } else {
-      eachValueBuffer.write(buffer, byteCount.toLong())
-      return jsAdapter.decode(eachValueBuffer, type)
+    when (buffer.readByte()) {
+      RESULT_TYPE_NORMAL -> {
+        val byteCount = buffer.readInt()
+        if (byteCount == BYTE_COUNT_NULL) {
+          return Result.success(null as R)
+        } else {
+          eachValueBuffer.write(buffer, byteCount.toLong())
+          return Result.success(jsAdapter.decode(eachValueBuffer, type))
+        }
+      }
+      RESULT_TYPE_EXCEPTION -> {
+        val byteCount = buffer.readInt()
+        eachValueBuffer.write(buffer, byteCount.toLong())
+        return Result.failure(jsAdapter.decode(eachValueBuffer, typeOf<Throwable>()) as Throwable)
+      }
+      else -> {
+        error("unexpected result type")
+      }
     }
   }
 

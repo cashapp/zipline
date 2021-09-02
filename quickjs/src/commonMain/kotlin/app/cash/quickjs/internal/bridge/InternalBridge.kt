@@ -26,12 +26,15 @@ internal interface InternalBridge {
    *
    *  * 1 int (4 bytes): the number of parameters
    *  * For each parameter:
-   *    * 1 int (4 bytes): the number of bytes in the parameter value
+   *    * 1 int (4 bytes): the number of bytes in the parameter value. If the parameter value is
+   *      null this is [BYTE_COUNT_NULL] and no bytes follow.
    *    * the bytes of the parameter value
    *
    * The structure of the result is the following:
    *
-   *  * 1 int (4 bytes): the number of bytes in the result value
+   *  * 1 byte: the result type. Either [RESULT_TYPE_NORMAL] or [RESULT_TYPE_NORMAL]
+   *  * 1 int (4 bytes): the number of bytes in the result value. If the result is null this is
+   *    [BYTE_COUNT_NULL] and no bytes follow.
    *  * the bytes of the result value
    */
   @JsName("invoke")
@@ -46,3 +49,7 @@ internal interface InternalBridge {
     callbackName: String
   )
 }
+
+internal const val BYTE_COUNT_NULL = -1
+internal const val RESULT_TYPE_NORMAL = 0 as Byte
+internal const val RESULT_TYPE_EXCEPTION = 1 as Byte
