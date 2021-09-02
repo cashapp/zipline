@@ -1,19 +1,13 @@
 $dokka.format:html-v1
 $dokka.linkExtension:html
-$dokka.location:app.cash.quickjs.testing////PointingToDeclaration/quickjs/app.cash.quickjs.testing/index.html
-$dokka.location:app.cash.quickjs.testing/KtBridgePair///PointingToDeclaration/quickjs/app.cash.quickjs.testing/-kt-bridge-pair/index.html
-$dokka.location:app.cash.quickjs.testing/KtBridgePair/KtBridgePair/#/PointingToDeclaration/quickjs/app.cash.quickjs.testing/-kt-bridge-pair/-kt-bridge-pair.html
-$dokka.location:app.cash.quickjs.testing/KtBridgePair/a/#/PointingToDeclaration/quickjs/app.cash.quickjs.testing/-kt-bridge-pair/a.html
-$dokka.location:app.cash.quickjs.testing/KtBridgePair/b/#/PointingToDeclaration/quickjs/app.cash.quickjs.testing/-kt-bridge-pair/b.html
+$dokka.location:app.cash.quickjs.internal.bridge////PointingToDeclaration/quickjs/app.cash.quickjs.internal.bridge/index.html
+$dokka.location:app.cash.quickjs.internal.bridge/KtBridge///PointingToDeclaration/quickjs/app.cash.quickjs.internal.bridge/-kt-bridge/index.html
+$dokka.location:app.cash.quickjs.internal.bridge/KtBridge/get/#kotlin.String#app.cash.quickjs.JsAdapter/PointingToDeclaration/quickjs/app.cash.quickjs.internal.bridge/-kt-bridge/get.html
+$dokka.location:app.cash.quickjs.internal.bridge/KtBridge/set/#kotlin.String#app.cash.quickjs.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/quickjs/app.cash.quickjs.internal.bridge/-kt-bridge/set.html
 $dokka.location:app.cash.quickjs////PointingToDeclaration/quickjs/app.cash.quickjs/index.html
-$dokka.location:app.cash.quickjs//getKtBridge/app.cash.quickjs.QuickJs#/PointingToDeclaration/quickjs/app.cash.quickjs/get-kt-bridge.html
-$dokka.location:app.cash.quickjs//ktBridge/#/PointingToDeclaration/quickjs/app.cash.quickjs/kt-bridge.html
 $dokka.location:app.cash.quickjs/JsAdapter///PointingToDeclaration/quickjs/app.cash.quickjs/-js-adapter/index.html
 $dokka.location:app.cash.quickjs/JsAdapter/decode/#okio.Buffer#kotlin.reflect.KType/PointingToDeclaration/quickjs/app.cash.quickjs/-js-adapter/decode.html
 $dokka.location:app.cash.quickjs/JsAdapter/encode/#TypeParam(bounds=[kotlin.Any])#okio.Buffer#kotlin.reflect.KType/PointingToDeclaration/quickjs/app.cash.quickjs/-js-adapter/encode.html
-$dokka.location:app.cash.quickjs/KtBridge///PointingToDeclaration/quickjs/app.cash.quickjs/-kt-bridge/index.html
-$dokka.location:app.cash.quickjs/KtBridge/get/#kotlin.String#app.cash.quickjs.JsAdapter/PointingToDeclaration/quickjs/app.cash.quickjs/-kt-bridge/get.html
-$dokka.location:app.cash.quickjs/KtBridge/set/#kotlin.String#app.cash.quickjs.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/quickjs/app.cash.quickjs/-kt-bridge/set.html
 $dokka.location:app.cash.quickjs/MemoryUsage///PointingToDeclaration/quickjs/app.cash.quickjs/-memory-usage/index.html
 $dokka.location:app.cash.quickjs/MemoryUsage/MemoryUsage/#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long/PointingToDeclaration/quickjs/app.cash.quickjs/-memory-usage/-memory-usage.html
 $dokka.location:app.cash.quickjs/MemoryUsage/arraysCount/#/PointingToDeclaration/quickjs/app.cash.quickjs/-memory-usage/arrays-count.html
@@ -43,12 +37,28 @@ $dokka.location:app.cash.quickjs/MemoryUsage/shapeSize/#/PointingToDeclaration/
 $dokka.location:app.cash.quickjs/MemoryUsage/stringsCount/#/PointingToDeclaration/quickjs/app.cash.quickjs/-memory-usage/strings-count.html
 $dokka.location:app.cash.quickjs/MemoryUsage/stringsSize/#/PointingToDeclaration/quickjs/app.cash.quickjs/-memory-usage/strings-size.html
 $dokka.location:app.cash.quickjs/QuickJs.Companion///PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-companion/index.html
-$dokka.location:app.cash.quickjs/QuickJs.Companion/engineVersion/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-companion/engine-version.html
+$dokka.location:app.cash.quickjs/QuickJs.Companion/create/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-companion/create.html
+$dokka.location:app.cash.quickjs/QuickJs.Companion/createContext/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-companion/create-context.html
 $dokka.location:app.cash.quickjs/QuickJs///PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/index.html
-$dokka.location:app.cash.quickjs/QuickJs/QuickJs/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/-quick-js.html
-$dokka.location:app.cash.quickjs/QuickJs/engineVersion/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/engine-version.html
+$dokka.location:app.cash.quickjs/QuickJs/close/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/close.html
+$dokka.location:app.cash.quickjs/QuickJs/compile/#kotlin.String#kotlin.String/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/compile.html
+$dokka.location:app.cash.quickjs/QuickJs/evaluate/#kotlin.String#kotlin.String/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/evaluate.html
+$dokka.location:app.cash.quickjs/QuickJs/execute/#kotlin.ByteArray/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/execute.html
+$dokka.location:app.cash.quickjs/QuickJs/gcThreshold/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/gc-threshold.html
+$dokka.location:app.cash.quickjs/QuickJs/get/#kotlin.String#Class<T>[TypeParam(bounds=[kotlin.Any])]/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/get.html
+$dokka.location:app.cash.quickjs/QuickJs/maxStackSize/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/max-stack-size.html
+$dokka.location:app.cash.quickjs/QuickJs/memoryLimit/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/memory-limit.html
+$dokka.location:app.cash.quickjs/QuickJs/memoryUsage/#/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/memory-usage.html
+$dokka.location:app.cash.quickjs/QuickJs/set/#kotlin.String#Class<T>[TypeParam(bounds=[kotlin.Any])]#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js/set.html
 $dokka.location:app.cash.quickjs/QuickJsException///PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js-exception/index.html
 $dokka.location:app.cash.quickjs/QuickJsException/QuickJsException/#kotlin.String#kotlin.String?/PointingToDeclaration/quickjs/app.cash.quickjs/-quick-js-exception/-quick-js-exception.html
+$dokka.location:app.cash.quickjs/Zipline.Companion///PointingToDeclaration/quickjs/app.cash.quickjs/-zipline/-companion/index.html
+$dokka.location:app.cash.quickjs/Zipline.Companion/engineVersion/#/PointingToDeclaration/quickjs/app.cash.quickjs/-zipline/-companion/engine-version.html
+$dokka.location:app.cash.quickjs/Zipline///PointingToDeclaration/quickjs/app.cash.quickjs/-zipline/index.html
+$dokka.location:app.cash.quickjs/Zipline/Zipline/#/PointingToDeclaration/quickjs/app.cash.quickjs/-zipline/-zipline.html
+$dokka.location:app.cash.quickjs/Zipline/engineVersion/#/PointingToDeclaration/quickjs/app.cash.quickjs/-zipline/engine-version.html
+$dokka.location:app.cash.quickjs/Zipline/get/#kotlin.String#app.cash.quickjs.JsAdapter/PointingToDeclaration/quickjs/app.cash.quickjs/-zipline/get.html
+$dokka.location:app.cash.quickjs/Zipline/set/#kotlin.String#app.cash.quickjs.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/quickjs/app.cash.quickjs/-zipline/set.html
 app.cash.quickjs
-app.cash.quickjs.testing
+app.cash.quickjs.internal.bridge
 
