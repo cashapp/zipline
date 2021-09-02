@@ -30,12 +30,11 @@ import java.util.List;
 import kotlin.Pair;
 import kotlin.PublishedApi;
 import kotlin.coroutines.Continuation;
-import kotlin.coroutines.CoroutineContext;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KType;
 import kotlin.reflect.KTypeProjection;
 import kotlin.reflect.full.KClassifiers;
-import kotlinx.coroutines.CoroutineDispatcher;
+import kotlinx.coroutines.test.TestCoroutineDispatcher;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -56,16 +55,8 @@ public final class KtBridgeTestInternals {
       JvmClassMappingKt.getKotlinClass(List.class),
       singletonList(KTypeProjection.invariant(stringKt)), false, emptyList());
 
-  /** Refuse to dispatch anything. */
-  private static final CoroutineDispatcher NULL_DISPATCHER = new CoroutineDispatcher() {
-    @Override public void dispatch(CoroutineContext coroutineContext, Runnable runnable) {
-      throw new IllegalStateException();
-    }
-  };
-
-
   public static Pair<KtBridge, KtBridge> newKtBridgePair() {
-    return app.cash.quickjs.testing.BridgesKt.newKtBridgePair(NULL_DISPATCHER);
+    return app.cash.quickjs.testing.BridgesKt.newKtBridgePair(new TestCoroutineDispatcher());
   }
 
   /** Simulate generated code for outbound calls. */

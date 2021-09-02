@@ -16,45 +16,41 @@
 package app.cash.quickjs
 
 import kotlin.test.assertEquals
-import kotlinx.coroutines.ExecutorCoroutineDispatcher
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class SetTimeoutTest {
-  private val zipline = Zipline.create()
+  private val dispatcher = TestCoroutineDispatcher()
+  private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp() {
-    zipline.runBlocking {
-      loadTestingJs()
-    }
+  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+    zipline.loadTestingJs()
   }
 
-  @After fun tearDown() {
-    zipline.runBlocking {
-      quickJs.close()
-    }
-    (zipline.dispatcher as? ExecutorCoroutineDispatcher)?.close()
+  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.close()
   }
 
-  @Test fun happyPath() {
-    zipline.runBlocking {
-      quickJs.evaluate(
-        """
-        var greeting = 'hello';
-        
-        var sayGoodbye = function() {
-          greeting = 'goodbye';
-        };
-        
-        setTimeout(sayGoodbye, 100);
-        """
-      )
+  @Test fun happyPath(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate(
+      """
+      var greeting = 'hello';
 
-      assertEquals("hello", quickJs.evaluate("greeting"))
-      delay(200L)
-      assertEquals("goodbye", quickJs.evaluate("greeting"))
-    }
+      var sayGoodbye = function() {
+        greeting = 'goodbye';
+      };
+
+      setTimeout(sayGoodbye, 100);
+      """
+    )
+
+    assertEquals("hello", zipline.quickJs.evaluate("greeting"))
+    dispatcher.advanceTimeBy(200L)
+    assertEquals("goodbye", zipline.quickJs.evaluate("greeting"))
   }
 }

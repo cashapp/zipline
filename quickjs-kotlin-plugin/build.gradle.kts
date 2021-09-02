@@ -16,6 +16,7 @@ dependencies {
   testImplementation(project(":quickjs"))
   testImplementation(project(":quickjs:testing"))
   testImplementation(kotlin("test-junit"))
+  testImplementation(Dependencies.kotlinxCoroutinesTest)
   testImplementation("org.jetbrains.kotlin:kotlin-compiler-embeddable")
   testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.1")
   testImplementation("com.google.truth:truth:1.0")

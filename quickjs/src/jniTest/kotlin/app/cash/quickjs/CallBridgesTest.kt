@@ -23,20 +23,20 @@ import app.cash.quickjs.testing.EchoService
 import app.cash.quickjs.testing.SuspendingEchoService
 import app.cash.quickjs.testing.newKtBridgePair
 import com.google.common.truth.Truth.assertThat
-import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
 import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import org.junit.After
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class CallBridgesTest {
-  private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+  private val dispatcher = TestCoroutineDispatcher()
   private val bridgeA: KtBridge
   private val bridgeB: KtBridge
   
@@ -44,11 +44,6 @@ internal class CallBridgesTest {
     val (bridgeA, bridgeB) = newKtBridgePair(dispatcher)
     this.bridgeA = bridgeA
     this.bridgeB = bridgeB
-  }
-
-  @After
-  fun tearDown() {
-    dispatcher.close()
   }
 
   @Test
@@ -110,7 +105,7 @@ internal class CallBridgesTest {
   }
 
   @Test
-  fun suspendingRequestAndResponse() {
+  fun suspendingRequestAndResponse(): Unit = runBlocking(dispatcher) {
     val requests = Channel<String>(1)
     val responses = Channel<String>(1)
     val service = object : SuspendingEchoService {
@@ -123,15 +118,13 @@ internal class CallBridgesTest {
     bridgeA.set<SuspendingEchoService>("helloService", EchoJsAdapter, service)
     val client = bridgeB.get<SuspendingEchoService>("helloService", EchoJsAdapter)
 
-    runBlocking(dispatcher) {
-      val deferredResponse: Deferred<EchoResponse> = async {
-        client.suspendingEcho(EchoRequest("this is a happy request"))
-      }
-
-      assertEquals("this is a happy request", requests.receive())
-      responses.send("this is a response")
-
-      assertEquals("this is a response", deferredResponse.await().message)
+    val deferredResponse: Deferred<EchoResponse> = async {
+      client.suspendingEcho(EchoRequest("this is a happy request"))
     }
+
+    assertEquals("this is a happy request", requests.receive())
+    responses.send("this is a response")
+
+    assertEquals("this is a response", deferredResponse.await().message)
   }
 }

@@ -21,45 +21,40 @@ import app.cash.quickjs.testing.helloService
 import app.cash.quickjs.testing.prepareJvmBridges
 import app.cash.quickjs.testing.yoService
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class KtBridgeTest {
-  private val zipline = Zipline.create()
+  private val dispatcher = TestCoroutineDispatcher()
+  private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp() {
-    zipline.runBlocking {
-      zipline.loadTestingJs()
-    }
+  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+    zipline.loadTestingJs()
   }
 
-  @After fun tearDown() {
-    zipline.runBlocking {
-      quickJs.close()
-    }
-    (zipline.dispatcher as? ExecutorCoroutineDispatcher)?.close()
+  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.close()
   }
 
-  @Test fun jvmCallJsService() {
-    zipline.runBlocking {
-      quickJs.evaluate("testing.app.cash.quickjs.testing.prepareJsBridges()")
+  @Test fun jvmCallJsService(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.prepareJsBridges()")
 
-      assertThat(helloService.echo(EchoRequest("Jake")))
-        .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
-      assertThat(yoService.echo(EchoRequest("Kevin")))
-        .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
-    }
+    assertThat(zipline.helloService.echo(EchoRequest("Jake")))
+      .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
+    assertThat(zipline.yoService.echo(EchoRequest("Kevin")))
+      .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
   }
 
-  @Test fun jsCallJvmService() {
-    zipline.runBlocking {
-      prepareJvmBridges(zipline)
+  @Test fun jsCallJvmService(): Unit = runBlocking(dispatcher) {
+    prepareJvmBridges(zipline)
 
-      assertThat(quickJs.evaluate(
-        "testing.app.cash.quickjs.testing.callSupService('homie')"
-      )).isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
-    }
+    assertThat(zipline.quickJs.evaluate(
+      "testing.app.cash.quickjs.testing.callSupService('homie')"
+    )).isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
   }
 }
