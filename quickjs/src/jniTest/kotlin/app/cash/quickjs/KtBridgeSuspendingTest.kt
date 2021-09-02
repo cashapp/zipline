@@ -20,42 +20,37 @@ import app.cash.quickjs.testing.EchoResponse
 import app.cash.quickjs.testing.jsSuspendingEchoService
 import app.cash.quickjs.testing.prepareSuspendingJvmBridges
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class KtBridgeSuspendingTest {
-  private val zipline = Zipline.create()
+  private val dispatcher = TestCoroutineDispatcher()
+  private val zipline = Zipline.create(dispatcher)
 
   @Before
-  fun setUp() {
-    zipline.runBlocking {
-      loadTestingJs()
-    }
+  fun setUp(): Unit = runBlocking(dispatcher) {
+    zipline.loadTestingJs()
   }
 
-  @After fun tearDown() {
-    zipline.runBlocking {
-      quickJs.close()
-    }
-    (zipline.dispatcher as? ExecutorCoroutineDispatcher)?.close()
+  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.close()
   }
 
-  @Test fun jvmCallJsService() {
-    zipline.runBlocking {
-      zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.prepareSuspendingJsBridges()")
+  @Test fun jvmCallJsService(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.prepareSuspendingJsBridges()")
 
-      assertThat(zipline.jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake")))
-        .isEqualTo(EchoResponse("hello from suspending JavaScript, Jake"))
-    }
+    assertThat(zipline.jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake")))
+      .isEqualTo(EchoResponse("hello from suspending JavaScript, Jake"))
   }
 
-  @Test fun jsCallJvmService() {
-    zipline.runBlocking {
-      prepareSuspendingJvmBridges(zipline)
+  @Test fun jsCallJvmService(): Unit = runBlocking(dispatcher) {
+    prepareSuspendingJvmBridges(zipline)
 
-      quickJs.evaluate("testing.app.cash.quickjs.testing.callSuspendingEchoService('Eric')")
-    }
+    zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.callSuspendingEchoService('Eric')")
   }
 }

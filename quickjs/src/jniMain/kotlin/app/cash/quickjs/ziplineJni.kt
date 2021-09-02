@@ -19,12 +19,10 @@ import app.cash.quickjs.internal.bridge.InboundService
 import app.cash.quickjs.internal.bridge.InternalBridge
 import app.cash.quickjs.internal.bridge.KtBridge
 import app.cash.quickjs.internal.bridge.OutboundClientFactory
-import java.util.concurrent.Executors
 import java.util.logging.Logger
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -54,9 +52,11 @@ actual abstract class Zipline {
 
   companion object {
     fun create(
-      dispatcher: CoroutineDispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher(),
+      dispatcher: CoroutineDispatcher,
     ): Zipline {
       val quickJs = QuickJs.create()
+      // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
+      quickJs.maxStackSize = 0L
       return ZiplineJvm(quickJs, dispatcher)
     }
   }

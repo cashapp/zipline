@@ -80,6 +80,7 @@ kotlin {
       resources.srcDir(copyTestingJs)
       dependencies {
         implementation(Dependencies.truth)
+        implementation(Dependencies.kotlinxCoroutinesTest)
         implementation(project(":quickjs:testing"))
       }
     }
@@ -91,6 +92,7 @@ android {
 
   defaultConfig {
     minSdkVersion(18)
+    multiDexEnabled = true
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -104,6 +106,13 @@ android {
         cFlags("-fstrict-aliasing", "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\"")
         cppFlags("-fstrict-aliasing", "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\"")
       }
+    }
+
+    packagingOptions {
+      // We get multiple copies of some license files via JNA, which is a transitive dependency of
+      // kotlinx-coroutines-test. Don't fail the build on these duplicates.
+      exclude("META-INF/AL2.0")
+      exclude("META-INF/LGPL2.1")
     }
   }
 
@@ -159,6 +168,7 @@ dependencies {
   androidTestImplementation(Dependencies.junit)
   androidTestImplementation(Dependencies.androidxTestRunner)
   androidTestImplementation(Dependencies.truth)
+  androidTestImplementation(Dependencies.kotlinxCoroutinesTest)
   androidTestImplementation(project(":quickjs:testing"))
 
   add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":quickjs-kotlin-plugin"))

@@ -15,20 +15,23 @@
  */
 package app.cash.quickjs
 
-import kotlinx.coroutines.ExecutorCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class ZiplineTest {
-  private val zipline = Zipline.create()
+  private val dispatcher = TestCoroutineDispatcher()
+  private val zipline = Zipline.create(dispatcher)
 
-  @After fun tearDown() {
+  @After fun tearDown(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.close()
-    (zipline.dispatcher as? ExecutorCoroutineDispatcher)?.close()
   }
 
-  @Test fun version() {
+  @Test fun version(): Unit = runBlocking(dispatcher) {
     assertNotEquals("", zipline.engineVersion)
   }
 }
