@@ -104,7 +104,7 @@ class QuickJsSetTest {
 
     // Then one or two native JniQuickJs.evaluate methods, followed by JniQuickJs.evaluate in Java.
     var i = 5
-    assertEquals("app.cash.quickjs.JniQuickJs", stackTrace[i].className)
+    assertEquals("app.cash.quickjs.QuickJs", stackTrace[i].className)
     assertEquals("evaluate", stackTrace[i].methodName)
     assertTrue(stackTrace[i].isNativeMethod)
     while (stackTrace[i].methodName == "evaluate") {

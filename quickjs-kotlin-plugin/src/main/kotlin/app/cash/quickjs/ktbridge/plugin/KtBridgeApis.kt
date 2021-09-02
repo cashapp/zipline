@@ -27,6 +27,10 @@ internal class KtBridgeApis(
   private val pluginContext: IrPluginContext,
 ) {
   private val packageFqName = FqName("app.cash.quickjs")
+  private val bridgeFqName = FqName("app.cash.quickjs.internal.bridge")
+  private val ziplineFqName = packageFqName.child("Zipline")
+  private val ziplineCompanionFqName = ziplineFqName.child("Companion")
+  private val ktBridgeFqName = bridgeFqName.child("KtBridge")
 
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!
@@ -35,76 +39,87 @@ internal class KtBridgeApis(
     get() = pluginContext.referenceClass(packageFqName.child("JsAdapter"))!!
 
   val inboundCall: IrClassSymbol
-    get() = pluginContext.referenceClass(packageFqName.child("InboundCall"))!!
+    get() = pluginContext.referenceClass(bridgeFqName.child("InboundCall"))!!
 
   val inboundCallParameter: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(packageFqName.child("InboundCall").child("parameter"))
+    get() = pluginContext.referenceFunctions(bridgeFqName.child("InboundCall").child("parameter"))
       .single { it.owner.isInline }
 
   val inboundCallResult: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(packageFqName.child("InboundCall").child("result"))
+    get() = pluginContext.referenceFunctions(bridgeFqName.child("InboundCall").child("result"))
       .single { it.owner.isInline }
 
   val inboundCallUnexpectedFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      packageFqName.child("InboundCall").child("unexpectedFunction")
+      bridgeFqName.child("InboundCall").child("unexpectedFunction")
     ).single()
 
   val inboundService: IrClassSymbol
-    get() = pluginContext.referenceClass(packageFqName.child("InboundService"))!!
+    get() = pluginContext.referenceClass(bridgeFqName.child("InboundService"))!!
 
   val inboundServiceCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      packageFqName.child("InboundService").child("call")
+      bridgeFqName.child("InboundService").child("call")
     ).single()
 
   val inboundServiceCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      packageFqName.child("InboundService").child("callSuspending")
+      bridgeFqName.child("InboundService").child("callSuspending")
     ).single()
 
   val outboundCallInvoke: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(packageFqName.child("OutboundCall").child("invoke"))
+    get() = pluginContext.referenceFunctions(bridgeFqName.child("OutboundCall").child("invoke"))
       .single { it.owner.valueParameters.isEmpty() }
 
   val outboundCallInvokeSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      packageFqName.child("OutboundCall").child("invokeSuspending")
+      bridgeFqName.child("OutboundCall").child("invokeSuspending")
     ).single { it.owner.valueParameters.isEmpty() }
 
   val outboundCallParameter: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(packageFqName.child("OutboundCall").child("parameter"))
+    get() = pluginContext.referenceFunctions(bridgeFqName.child("OutboundCall").child("parameter"))
       .single { it.owner.valueParameters.size == 1 }
 
   val outboundCallFactory: IrClassSymbol
-    get() = pluginContext.referenceClass(packageFqName.child("OutboundCall").child("Factory"))!!
+    get() = pluginContext.referenceClass(bridgeFqName.child("OutboundCall").child("Factory"))!!
 
   val outboundCallFactoryCreate: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      packageFqName.child("OutboundCall").child("Factory").child("create")
+      bridgeFqName.child("OutboundCall").child("Factory").child("create")
     ).single()
 
   val outboundClientFactory: IrClassSymbol
-    get() = pluginContext.referenceClass(packageFqName.child("OutboundClientFactory"))!!
+    get() = pluginContext.referenceClass(bridgeFqName.child("OutboundClientFactory"))!!
 
   val outboundClientFactoryCreate: IrSimpleFunctionSymbol
     get() = outboundClientFactory.functions.single { it.owner.name.identifier == "create" }
 
-  val getFunctions: Collection<IrSimpleFunctionSymbol>
-    get() = pluginContext.referenceFunctions(packageFqName.child("KtBridge").child("get"))
+  /** Keys are functions like `Zipline.get()` and values are their rewrite targets. */
+  val getRewriteFunctions: Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> = buildRewritesMap(
+    ziplineFqName.child("get"),
+    ziplineCompanionFqName.child("get"),
+    ktBridgeFqName.child("get"),
+  )
 
-  val publicGetFunction: IrSimpleFunctionSymbol
-    get() = getFunctions.single { it.owner.valueParameters[1].type == jsAdapter.defaultType }
+  /** Keys are functions like `Zipline.set()` and values are their rewrite targets. */
+  val setRewriteFunctions: Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> = buildRewritesMap(
+    ziplineFqName.child("set"),
+    ziplineCompanionFqName.child("set"),
+    ktBridgeFqName.child("set"),
+  )
 
-  val rewrittenGetFunction: IrSimpleFunctionSymbol
-    get() = getFunctions.single { it.owner.valueParameters[1].type != jsAdapter.defaultType }
-
-  val setFunctions: Collection<IrSimpleFunctionSymbol>
-    get() = pluginContext.referenceFunctions(packageFqName.child("KtBridge").child("set"))
-
-  val publicSetFunction: IrSimpleFunctionSymbol
-    get() = setFunctions.single { it.owner.valueParameters[1].type == jsAdapter.defaultType }
-
-  val rewrittenSetFunction: IrSimpleFunctionSymbol
-    get() = setFunctions.single { it.owner.valueParameters[1].type != jsAdapter.defaultType }
+  /** Maps overloads from the user-friendly function to its internal rewrite target. */
+  private fun buildRewritesMap(
+    vararg functionNames: FqName
+  ): Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> {
+    val result = mutableMapOf<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol>()
+    for (functionName in functionNames) {
+      val overloads = pluginContext.referenceFunctions(functionName)
+      if (overloads.isEmpty()) continue // The Companion APIs are JS-only.
+      val original = overloads.single { it.owner.valueParameters[1].type == jsAdapter.defaultType }
+      val target = overloads.single { it != original }
+      result[original] = target
+    }
+    return result
+  }
 }

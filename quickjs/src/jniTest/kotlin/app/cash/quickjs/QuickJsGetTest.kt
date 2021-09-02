@@ -102,7 +102,7 @@ class QuickJsGetTest {
       proxy.value
     }
     assertEquals("JavaScript.getValue(test.js)", t.stackTrace[0].toString())
-    assertEquals("app.cash.quickjs.JniQuickJs.call(Native Method)", t.stackTrace[1].toString())
+    assertEquals("app.cash.quickjs.QuickJs.call(Native Method)", t.stackTrace[1].toString())
   }
 
   @Ignore("TODO: track JsMethodProxies.")

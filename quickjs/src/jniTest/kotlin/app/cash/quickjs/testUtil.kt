@@ -16,6 +16,9 @@
 package app.cash.quickjs
 
 import java.io.BufferedReader
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 
 inline fun <reified T : Throwable> assertThrows(body: () -> Unit): T {
   try {
@@ -30,9 +33,23 @@ inline fun <reified T : Throwable> assertThrows(body: () -> Unit): T {
       "Expected body to fail with ${T::class.simpleName!!} but completed successfully")
 }
 
-fun QuickJs.loadTestingJs() {
-  val testingJs = QuickJs::class.java.getResourceAsStream("/testing.js")!!
+fun Zipline.loadTestingJs() {
+  val testingJs = Zipline::class.java.getResourceAsStream("/testing.js")!!
     .bufferedReader()
     .use(BufferedReader::readText)
-  evaluate(testingJs, "testing.js")
+  quickJs.evaluate(testingJs, "testing.js")
+}
+
+/** Execute [block] on the JavaScript dispatcher and wait for it to return. */
+inline fun <T> Zipline.runBlocking(crossinline block: suspend Zipline.() -> T): T {
+  return kotlinx.coroutines.runBlocking(dispatcher) {
+    block()
+  }
+}
+
+/** Enqueue [block] to run on the JavaScript dispatcher and return immediately. */
+inline fun Zipline.launch(crossinline block: suspend Zipline.() -> Unit) {
+  CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
+    block()
+  }
 }

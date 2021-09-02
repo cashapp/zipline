@@ -15,12 +15,13 @@
  */
 package app.cash.quickjs
 
+import app.cash.quickjs.internal.bridge.KtBridge
 import app.cash.quickjs.testing.EchoJsAdapter
 import app.cash.quickjs.testing.EchoRequest
 import app.cash.quickjs.testing.EchoResponse
 import app.cash.quickjs.testing.EchoService
-import app.cash.quickjs.testing.KtBridgePair
 import app.cash.quickjs.testing.SuspendingEchoService
+import app.cash.quickjs.testing.newKtBridgePair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.Executors
 import java.util.concurrent.LinkedBlockingDeque
@@ -29,12 +30,26 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 internal class CallBridgesTest {
-  private val bridges = KtBridgePair()
+  private val dispatcher = Executors.newSingleThreadExecutor().asCoroutineDispatcher()
+  private val bridgeA: KtBridge
+  private val bridgeB: KtBridge
+  
+  init {
+    val (bridgeA, bridgeB) = newKtBridgePair(dispatcher)
+    this.bridgeA = bridgeA
+    this.bridgeB = bridgeB
+  }
+
+  @After
+  fun tearDown() {
+    dispatcher.close()
+  }
 
   @Test
   fun inboundCallRequestAndResponse() {
@@ -47,8 +62,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridges.a.set<EchoService>("helloService", EchoJsAdapter, service)
-    val client = bridges.b.get<EchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<EchoService>("helloService", EchoJsAdapter, service)
+    val client = bridgeB.get<EchoService>("helloService", EchoJsAdapter)
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -71,8 +86,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridges.a.set<NullableEchoService>("helloService", EchoJsAdapter, service)
-    val client = bridges.b.get<NullableEchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<NullableEchoService>("helloService", EchoJsAdapter, service)
+    val client = bridgeB.get<NullableEchoService>("helloService", EchoJsAdapter)
 
     val response = client.echo(null)
     assertThat(response?.message).isEqualTo("received null")
@@ -87,8 +102,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridges.a.set<NullableEchoService>("helloService", EchoJsAdapter, service)
-    val client = bridges.b.get<NullableEchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<NullableEchoService>("helloService", EchoJsAdapter, service)
+    val client = bridgeB.get<NullableEchoService>("helloService", EchoJsAdapter)
 
     val response = client.echo(EchoRequest("send me null please?"))
     assertNull(response)
@@ -105,10 +120,10 @@ internal class CallBridgesTest {
       }
     }
 
-    bridges.a.set<SuspendingEchoService>("helloService", EchoJsAdapter, service)
-    val client = bridges.b.get<SuspendingEchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<SuspendingEchoService>("helloService", EchoJsAdapter, service)
+    val client = bridgeB.get<SuspendingEchoService>("helloService", EchoJsAdapter)
 
-    runBlocking {
+    runBlocking(dispatcher) {
       val deferredResponse: Deferred<EchoResponse> = async {
         client.suspendingEcho(EchoRequest("this is a happy request"))
       }

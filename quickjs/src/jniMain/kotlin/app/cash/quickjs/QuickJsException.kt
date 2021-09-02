@@ -36,7 +36,7 @@ class QuickJsException @JvmOverloads constructor(
      * native code.
      */
     private val STACK_TRACE_PATTERN =
-        Pattern.compile("\\s*at ([^\\s]+) \\(([^\\s]+(?<!cpp))[:(\\d+)]?\\).*$")
+      Pattern.compile("\\s*at ([^\\s]+) \\(([^\\s]+(?<!cpp))[:(\\d+)]?\\).*$")
 
     /** Java StackTraceElements require a class name.  We don't have one in JS, so use this.  */
     private const val STACK_TRACE_CLASS_NAME = "JavaScript"
@@ -59,7 +59,7 @@ class QuickJsException @JvmOverloads constructor(
 
       // Splice the JavaScript stack in right above the call to QuickJs.
       var spliced = false
-      val quickJsClassName = JniQuickJs::class.java.name
+      val quickJsClassName = QuickJs::class.java.name
       for (stackTraceElement in stackTrace) {
         if (!spliced
             && stackTraceElement.isNativeMethod

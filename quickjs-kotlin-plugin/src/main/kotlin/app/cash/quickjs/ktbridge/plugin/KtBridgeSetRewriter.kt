@@ -105,7 +105,8 @@ internal class KtBridgeSetRewriter(
   private val ktBridgeApis: KtBridgeApis,
   private val scope: ScopeWithIr,
   private val declarationParent: IrDeclarationParent,
-  private val original: IrCall
+  private val original: IrCall,
+  private val rewrittenSetFunction: IrSimpleFunctionSymbol,
 ) {
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
@@ -122,7 +123,7 @@ internal class KtBridgeSetRewriter(
       startOffset = original.startOffset,
       endOffset = original.endOffset,
       type = original.type,
-      symbol = ktBridgeApis.rewrittenSetFunction,
+      symbol = rewrittenSetFunction,
       typeArgumentsCount = 0,
       valueArgumentsCount = 2,
       origin = original.origin,

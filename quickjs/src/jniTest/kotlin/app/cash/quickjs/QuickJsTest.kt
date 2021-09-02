@@ -17,7 +17,6 @@ package app.cash.quickjs
 
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
@@ -26,10 +25,6 @@ class QuickJsTest {
 
   @After fun tearDown() {
     quickjs.close()
-  }
-
-  @Test fun version() {
-    assertNotEquals("", quickjs.engineVersion)
   }
 
   @Test fun helloWorld() {
@@ -72,6 +67,6 @@ class QuickJsTest {
     assertEquals("JavaScript.f2(test.js:8)", t.stackTrace[0].toString())
     assertEquals("JavaScript.f1(test.js:4)", t.stackTrace[1].toString())
     assertEquals("JavaScript.<eval>(test.js:1)", t.stackTrace[2].toString())
-    assertEquals("app.cash.quickjs.JniQuickJs.evaluate(Native Method)", t.stackTrace[3].toString())
+    assertEquals("app.cash.quickjs.QuickJs.evaluate(Native Method)", t.stackTrace[3].toString())
   }
 }

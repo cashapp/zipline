@@ -21,38 +21,45 @@ import app.cash.quickjs.testing.helloService
 import app.cash.quickjs.testing.prepareJvmBridges
 import app.cash.quickjs.testing.yoService
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.ExecutorCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 class KtBridgeTest {
-  private val quickjs = QuickJs.create()
+  private val zipline = Zipline.create()
 
   @Before fun setUp() {
-    quickjs.loadTestingJs()
+    zipline.runBlocking {
+      zipline.loadTestingJs()
+    }
   }
 
   @After fun tearDown() {
-    quickjs.close()
+    zipline.runBlocking {
+      quickJs.close()
+    }
+    (zipline.dispatcher as? ExecutorCoroutineDispatcher)?.close()
   }
 
   @Test fun jvmCallJsService() {
-    quickjs.evaluate("testing.app.cash.quickjs.testing.prepareJsBridges()")
+    zipline.runBlocking {
+      quickJs.evaluate("testing.app.cash.quickjs.testing.prepareJsBridges()")
 
-    val ktBridge = quickjs.getKtBridge()
-
-    assertThat(ktBridge.helloService.echo(EchoRequest("Jake")))
-      .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
-    assertThat(ktBridge.yoService.echo(EchoRequest("Kevin")))
-      .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
+      assertThat(helloService.echo(EchoRequest("Jake")))
+        .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
+      assertThat(yoService.echo(EchoRequest("Kevin")))
+        .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
+    }
   }
 
   @Test fun jsCallJvmService() {
-    val ktBridge = quickjs.getKtBridge()
-    prepareJvmBridges(ktBridge)
+    zipline.runBlocking {
+      prepareJvmBridges(zipline)
 
-    assertThat(quickjs.evaluate(
-      "testing.app.cash.quickjs.testing.callSupService('homie')"
-    )).isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
+      assertThat(quickJs.evaluate(
+        "testing.app.cash.quickjs.testing.callSupService('homie')"
+      )).isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
+    }
   }
 }
