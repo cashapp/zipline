@@ -38,6 +38,27 @@ internal class JniQuickJs(private var context: Long) : QuickJs() {
 
   override val engineVersion get() = quickJsVersion
 
+  override val memoryUsage: MemoryUsage
+    get() = memoryUsage(context)
+
+  override var memoryLimit: Long = -1L
+    set(value) {
+      field = value
+      setMemoryLimit(context, value)
+    }
+
+  override var gcThreshold: Long = -1L
+    set(value) {
+      field = value
+      setGcThreshold(context, value)
+    }
+
+  override var maxStackSize: Long = -1L
+    set(value) {
+      field = value
+      setMaxStackSize(context, value)
+    }
+
   override fun evaluate(script: String, fileName: String): Any? {
     return evaluate(context, script, fileName)
   }
@@ -114,10 +135,6 @@ internal class JniQuickJs(private var context: Long) : QuickJs() {
     return execute(context, bytecode)
   }
 
-  override fun memoryUsage(): MemoryUsage {
-    return memoryUsage(context)
-  }
-
   override fun close() {
     val contextToClose = context
     if (contextToClose != 0L) {
@@ -140,4 +157,7 @@ internal class JniQuickJs(private var context: Long) : QuickJs() {
   private external fun execute(context: Long, bytecode: ByteArray): Any?
   private external fun compile(context: Long, sourceCode: String, fileName: String): ByteArray
   private external fun memoryUsage(context: Long): MemoryUsage
+  private external fun setMemoryLimit(context: Long, limit: Long)
+  private external fun setGcThreshold(context: Long, gcThreshold: Long)
+  private external fun setMaxStackSize(context: Long, stackSize: Long)
 }

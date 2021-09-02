@@ -37,6 +37,9 @@ public:
   jobject execute(JNIEnv*, jbyteArray byteCode);
   jbyteArray compile(JNIEnv*, jstring source, jstring file);
   jobject memoryUsage(JNIEnv*);
+  void setMemoryLimit(JNIEnv* env, jlong limit);
+  void setGcThreshold(JNIEnv* env, jlong gcThreshold);
+  void setMaxStackSize(JNIEnv* env, jlong stackSize);
   typedef std::function<JSValueConst(Context*, JNIEnv*, jvalue)> JavaToJavaScript;
   JavaToJavaScript getJavaToJsConverter(JNIEnv*, jclass type, bool boxed);
   typedef std::function<jvalue(Context*, JNIEnv*, JSValueConst)> JavaScriptToJava;

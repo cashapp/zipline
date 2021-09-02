@@ -123,3 +123,36 @@ Java_app_cash_quickjs_JniQuickJs_memoryUsage(JNIEnv* env, jobject type, jlong co
   }
   return context->memoryUsage(env);
 }
+
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_quickjs_JniQuickJs_setMemoryLimit(JNIEnv* env, jobject type, jlong context_, jlong limit) {
+  Context* context = reinterpret_cast<Context*>(context_);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return;
+  }
+  context->setMemoryLimit(env, limit);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_quickjs_JniQuickJs_setGcThreshold(JNIEnv* env, jobject type, jlong context_, jlong gcThreshold) {
+  Context* context = reinterpret_cast<Context*>(context_);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return;
+  }
+  context->setGcThreshold(env, gcThreshold);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_quickjs_JniQuickJs_setMaxStackSize(JNIEnv* env, jobject type, jlong context_, jlong stackSize) {
+  Context* context = reinterpret_cast<Context*>(context_);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return;
+  }
+  context->setMaxStackSize(env, stackSize);
+}
