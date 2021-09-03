@@ -37,6 +37,7 @@ object EchoJsAdapter : JsAdapter {
       EchoRequest::class -> sink.writeUtf8((value as EchoRequest).message)
       EchoResponse::class -> sink.writeUtf8((value as EchoResponse).message)
       ByteArray::class -> sink.write(value as ByteArray)
+      Throwable::class -> sink.writeUtf8((value as Throwable).toString())
       else -> error("unexpected type: $type")
     }
   }
@@ -46,6 +47,7 @@ object EchoJsAdapter : JsAdapter {
       EchoRequest::class -> EchoRequest(source.readUtf8()) as T
       EchoResponse::class -> EchoResponse(source.readUtf8()) as T
       ByteArray::class -> source.readByteArray() as T
+      Throwable::class -> Exception(source.readUtf8()) as T
       else -> error("unexpected type: $type")
     }
   }

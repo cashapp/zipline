@@ -19,10 +19,8 @@ import app.cash.quickjs.testing.EchoJsAdapter
 import app.cash.quickjs.testing.EchoRequest
 import app.cash.quickjs.testing.EchoResponse
 import app.cash.quickjs.testing.EchoService
-import app.cash.quickjs.testing.JvmEchoService
 import app.cash.quickjs.testing.helloService
 import app.cash.quickjs.testing.jsSuspendingEchoService
-import app.cash.quickjs.testing.prepareJvmBridges
 import app.cash.quickjs.testing.prepareSuspendingJvmBridges
 import app.cash.quickjs.testing.yoService
 import com.google.common.truth.Truth.assertThat
@@ -81,10 +79,26 @@ class ZiplineTest {
   }
 
   @Test fun jsCallJvmService(): Unit = runBlocking(dispatcher) {
-    prepareJvmBridges(zipline)
+    zipline.set<EchoService>("supService", EchoJsAdapter, JvmEchoService("sup"))
 
     assertThat(zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.callSupService('homie')"))
       .isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
+  }
+
+  @Test fun jvmCallJsServiceThatThrows(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.prepareThrowingJsBridges()")
+
+    assertThat(assertThrows<Exception> {
+      zipline.helloService.echo(EchoRequest("Jake"))
+    }).hasMessageThat().contains("boom!") // 'IllegalStateException' prefix lost when we minify JS.
+  }
+
+  @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
+    zipline.set<EchoService>("supService", EchoJsAdapter, JvmThrowingEchoService())
+
+    assertThat(assertThrows<QuickJsException> {
+      zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.callSupService('homie')")
+    }).hasMessageThat().contains("java.lang.IllegalStateException: boom!")
   }
 
   @Test fun suspendingJvmCallJsService(): Unit = runBlocking(dispatcher) {
@@ -98,5 +112,17 @@ class ZiplineTest {
     prepareSuspendingJvmBridges(zipline)
 
     zipline.quickJs.evaluate("testing.app.cash.quickjs.testing.callSuspendingEchoService('Eric')")
+  }
+
+  private class JvmEchoService(private val greeting: String) : EchoService {
+    override fun echo(request: EchoRequest): EchoResponse {
+      return EchoResponse("$greeting from the JVM, ${request.message}")
+    }
+  }
+
+  private class JvmThrowingEchoService : EchoService {
+    override fun echo(request: EchoRequest): EchoResponse {
+      throw IllegalStateException("boom!")
+    }
   }
 }
