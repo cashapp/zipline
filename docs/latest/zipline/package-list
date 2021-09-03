@@ -1,0 +1,64 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:app.cash.zipline.internal.bridge////PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/index.html
+$dokka.location:app.cash.zipline.internal.bridge/KtBridge///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-kt-bridge/index.html
+$dokka.location:app.cash.zipline.internal.bridge/KtBridge/get/#kotlin.String#app.cash.zipline.JsAdapter/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-kt-bridge/get.html
+$dokka.location:app.cash.zipline.internal.bridge/KtBridge/set/#kotlin.String#app.cash.zipline.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-kt-bridge/set.html
+$dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
+$dokka.location:app.cash.zipline/JsAdapter///PointingToDeclaration/zipline/app.cash.zipline/-js-adapter/index.html
+$dokka.location:app.cash.zipline/JsAdapter/decode/#okio.Buffer#kotlin.reflect.KType/PointingToDeclaration/zipline/app.cash.zipline/-js-adapter/decode.html
+$dokka.location:app.cash.zipline/JsAdapter/encode/#TypeParam(bounds=[kotlin.Any])#okio.Buffer#kotlin.reflect.KType/PointingToDeclaration/zipline/app.cash.zipline/-js-adapter/encode.html
+$dokka.location:app.cash.zipline/MemoryUsage///PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/index.html
+$dokka.location:app.cash.zipline/MemoryUsage/MemoryUsage/#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long#kotlin.Long/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/-memory-usage.html
+$dokka.location:app.cash.zipline/MemoryUsage/arraysCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/arrays-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/atomsCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/atoms-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/atomsSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/atoms-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/binaryObjectsCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/binary-objects-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/binaryObjectsSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/binary-objects-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/cFunctionsCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/c-functions-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/fastArraysCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/fast-arrays-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/fastArraysElementsCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/fast-arrays-elements-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/jsFunctionsCodeSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/js-functions-code-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/jsFunctionsCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/js-functions-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/jsFunctionsLineNumberTablesCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/js-functions-line-number-tables-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/jsFunctionsLineNumberTablesSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/js-functions-line-number-tables-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/jsFunctionsSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/js-functions-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/memoryAllocatedCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/memory-allocated-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/memoryAllocatedLimit/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/memory-allocated-limit.html
+$dokka.location:app.cash.zipline/MemoryUsage/memoryAllocatedSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/memory-allocated-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/memoryUsedCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/memory-used-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/memoryUsedSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/memory-used-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/objectsCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/objects-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/objectsSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/objects-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/propertiesCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/properties-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/propertiesSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/properties-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/shapeCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/shape-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/shapeSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/shape-size.html
+$dokka.location:app.cash.zipline/MemoryUsage/stringsCount/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/strings-count.html
+$dokka.location:app.cash.zipline/MemoryUsage/stringsSize/#/PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/strings-size.html
+$dokka.location:app.cash.zipline/QuickJs.Companion///PointingToDeclaration/zipline/app.cash.zipline/-quick-js/-companion/index.html
+$dokka.location:app.cash.zipline/QuickJs.Companion/create/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/-companion/create.html
+$dokka.location:app.cash.zipline/QuickJs.Companion/createContext/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/-companion/create-context.html
+$dokka.location:app.cash.zipline/QuickJs///PointingToDeclaration/zipline/app.cash.zipline/-quick-js/index.html
+$dokka.location:app.cash.zipline/QuickJs/close/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/close.html
+$dokka.location:app.cash.zipline/QuickJs/compile/#kotlin.String#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/compile.html
+$dokka.location:app.cash.zipline/QuickJs/evaluate/#kotlin.String#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/evaluate.html
+$dokka.location:app.cash.zipline/QuickJs/execute/#kotlin.ByteArray/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/execute.html
+$dokka.location:app.cash.zipline/QuickJs/gcThreshold/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/gc-threshold.html
+$dokka.location:app.cash.zipline/QuickJs/get/#kotlin.String#Class<T>[TypeParam(bounds=[kotlin.Any])]/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/get.html
+$dokka.location:app.cash.zipline/QuickJs/maxStackSize/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/max-stack-size.html
+$dokka.location:app.cash.zipline/QuickJs/memoryLimit/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/memory-limit.html
+$dokka.location:app.cash.zipline/QuickJs/memoryUsage/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/memory-usage.html
+$dokka.location:app.cash.zipline/QuickJs/set/#kotlin.String#Class<T>[TypeParam(bounds=[kotlin.Any])]#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/set.html
+$dokka.location:app.cash.zipline/QuickJsException///PointingToDeclaration/zipline/app.cash.zipline/-quick-js-exception/index.html
+$dokka.location:app.cash.zipline/QuickJsException/QuickJsException/#kotlin.String#kotlin.String?/PointingToDeclaration/zipline/app.cash.zipline/-quick-js-exception/-quick-js-exception.html
+$dokka.location:app.cash.zipline/Zipline.Companion///PointingToDeclaration/zipline/app.cash.zipline/-zipline/-companion/index.html
+$dokka.location:app.cash.zipline/Zipline.Companion/engineVersion/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/-companion/engine-version.html
+$dokka.location:app.cash.zipline/Zipline///PointingToDeclaration/zipline/app.cash.zipline/-zipline/index.html
+$dokka.location:app.cash.zipline/Zipline/Zipline/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/-zipline.html
+$dokka.location:app.cash.zipline/Zipline/engineVersion/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/engine-version.html
+$dokka.location:app.cash.zipline/Zipline/get/#kotlin.String#app.cash.zipline.JsAdapter/PointingToDeclaration/zipline/app.cash.zipline/-zipline/get.html
+$dokka.location:app.cash.zipline/Zipline/set/#kotlin.String#app.cash.zipline.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline/-zipline/set.html
+app.cash.zipline
+app.cash.zipline.internal.bridge
+
