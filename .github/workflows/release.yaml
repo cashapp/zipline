@@ -35,17 +35,17 @@ jobs:
 
       - name: Build native library
         run: |
-          cmake -S quickjs/src/jvmMain/ -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/native/quickjs/VERSION)"
+          cmake -S zipline/src/jvmMain/ -B build/jni/ -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)"
           cmake --build build/jni/ --verbose
-          mkdir -p quickjs/src/jvmMain/resources/
-          cp -v build/jni/libquickjs.* quickjs/src/jvmMain/resources/
+          mkdir -p zipline/src/jvmMain/resources/
+          cp -v build/jni/libquickjs.* zipline/src/jvmMain/resources/
 
       - run: ./gradlew build
 
       - uses: actions/upload-artifact@v2
         with:
           name: jvm-native-libraries
-          path: quickjs/src/jvmMain/resources/*
+          path: zipline/src/jvmMain/resources/*
           if-no-files-found: error
 
   android:
@@ -82,21 +82,21 @@ jobs:
 
       - uses: actions/download-artifact@v2
       - run: |
-          mkdir -p quickjs/src/jvmMain/resources/
-          cp -v jvm-native-libraries/* quickjs/src/jvmMain/resources/
+          mkdir -p zipline/src/jvmMain/resources/
+          cp -v jvm-native-libraries/* zipline/src/jvmMain/resources/
 
       - run: ./gradlew assemble dokkaHtml
 
       - uses: actions/upload-artifact@v2
         with:
-          name: quickjs-jvm.jar
-          path: quickjs/build/libs/quickjs-jvm-*.jar
+          name: zipline-jvm.jar
+          path: zipline/build/libs/zipline-jvm-*.jar
           if-no-files-found: error
 
       - uses: actions/upload-artifact@v2
         with:
-          name: quickjs-android.aar
-          path: quickjs/build/outputs/aar/*-release.aar
+          name: zipline-android.aar
+          path: zipline/build/outputs/aar/*-release.aar
           if-no-files-found: error
 
       - run: ./gradlew publish
@@ -119,6 +119,6 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
-          FOLDER: quickjs/build/dokka/html
+          FOLDER: zipline/build/dokka/html
           TARGET_FOLDER: docs/0.x/
           CLEAN: true
