@@ -15,7 +15,7 @@
  */
 package com.example.duktape.octane;
 
-import app.cash.quickjs.QuickJs;
+import app.cash.zipline.QuickJs;
 import com.squareup.duktape.Duktape;
 import java.io.Closeable;
 

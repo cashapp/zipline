@@ -37,7 +37,7 @@ extensions.configure<BaseExtension> {
 }
 
 dependencies {
-  implementation(project(":quickjs"))
+  implementation(project(":zipline"))
   implementation(Dependencies.duktape)
   implementation(Dependencies.okio)
 }

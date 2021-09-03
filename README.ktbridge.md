@@ -51,7 +51,7 @@ call `ktBridge.set()` with that object. Note that you must explicitly specify th
 ```kotlin
 package com.example
 
-import app.cash.quickjs.ktbridge.ktBridge
+import app.cash.zipline.ktbridge.ktBridge
 
 val echoService: EchoService = ...
 
