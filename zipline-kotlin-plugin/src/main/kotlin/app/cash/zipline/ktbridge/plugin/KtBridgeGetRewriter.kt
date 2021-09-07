@@ -52,10 +52,10 @@ import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `KtBridge.get()` that takes a name and a `JsAdapter`:
+ * Rewrites calls to `KtBridge.get()` that takes a name and a `SerializersModule`:
  *
  * ```
- * val helloService: EchoService = ktBridge.get("helloService", EchoJsAdapter)
+ * val helloService: EchoService = ktBridge.get("helloService", EchoSerializersModule)
  * ```
  *
  * to the overload that takes a name and an `OutboundClientFactory`:
@@ -63,7 +63,7 @@ import org.jetbrains.kotlin.name.Name
  * ```
  * val helloService: EchoService = ktBridge.get(
  *   "helloService",
- *   object : OutboundClientFactory<EchoService>(EchoJsAdapter) {
+ *   object : OutboundClientFactory<EchoService>(EchoSerializersModule) {
  *     override fun create(outboundCallFactory: OutboundCall.Factory): EchoService {
  *       return object : EchoService {
  *         override fun echo(request: EchoRequest): EchoResponse {
@@ -113,7 +113,7 @@ internal class KtBridgeGetRewriter(
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    // OutboundClientFactory<EchoService>(EchoJsAdapter)
+    // OutboundClientFactory<EchoService>(EchoSerializersModule)
     val superConstructor = ktBridgeApis.outboundClientFactory.constructors.single()
     val constructor = outboundClientFactorySubclass.addConstructor {
       origin = IrDeclarationOrigin.DEFINED

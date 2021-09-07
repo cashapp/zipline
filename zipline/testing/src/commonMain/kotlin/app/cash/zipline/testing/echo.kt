@@ -15,40 +15,24 @@
  */
 package app.cash.zipline.testing
 
-import app.cash.zipline.JsAdapter
-import kotlin.reflect.KType
-import okio.Buffer
+import app.cash.zipline.DefaultZiplineSerializersModule
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
 
 interface EchoService {
   fun echo(request: EchoRequest): EchoResponse
 }
 
+@Serializable
 data class EchoRequest(
   val message: String
 )
 
+@Serializable
 data class EchoResponse(
   val message: String
 )
 
-object EchoJsAdapter : JsAdapter {
-  override fun <T : Any> encode(value: T, sink: Buffer, type: KType) {
-    when (type.classifier) {
-      EchoRequest::class -> sink.writeUtf8((value as EchoRequest).message)
-      EchoResponse::class -> sink.writeUtf8((value as EchoResponse).message)
-      ByteArray::class -> sink.write(value as ByteArray)
-      Throwable::class -> sink.writeUtf8((value as Throwable).toString())
-      else -> error("unexpected type: $type")
-    }
-  }
-
-  override fun <T : Any> decode(source: Buffer, type: KType): T {
-    return when (type.classifier) {
-      EchoRequest::class -> EchoRequest(source.readUtf8()) as T
-      EchoResponse::class -> EchoResponse(source.readUtf8()) as T
-      ByteArray::class -> source.readByteArray() as T
-      Throwable::class -> Exception(source.readUtf8()) as T
-      else -> error("unexpected type: $type")
-    }
-  }
+val EchoSerializersModule: SerializersModule = SerializersModule {
+  include(DefaultZiplineSerializersModule)
 }

@@ -28,6 +28,7 @@ internal class KtBridgeApis(
 ) {
   private val packageFqName = FqName("app.cash.zipline")
   private val bridgeFqName = FqName("app.cash.zipline.internal.bridge")
+  private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
   private val ziplineFqName = packageFqName.child("Zipline")
   private val ziplineCompanionFqName = ziplineFqName.child("Companion")
   private val ktBridgeFqName = bridgeFqName.child("KtBridge")
@@ -35,8 +36,8 @@ internal class KtBridgeApis(
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!
 
-  val jsAdapter: IrClassSymbol
-    get() = pluginContext.referenceClass(packageFqName.child("JsAdapter"))!!
+  val serializersModule: IrClassSymbol
+    get() = pluginContext.referenceClass(serializationModulesFqName.child("SerializersModule"))!!
 
   val inboundCall: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("InboundCall"))!!
@@ -116,7 +117,9 @@ internal class KtBridgeApis(
     for (functionName in functionNames) {
       val overloads = pluginContext.referenceFunctions(functionName)
       if (overloads.isEmpty()) continue // The Companion APIs are JS-only.
-      val original = overloads.single { it.owner.valueParameters[1].type == jsAdapter.defaultType }
+      val original = overloads.single {
+        it.owner.valueParameters[1].type == serializersModule.defaultType
+      }
       val target = overloads.single { it != original }
       result[original] = target
     }

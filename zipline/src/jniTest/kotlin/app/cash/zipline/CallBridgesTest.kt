@@ -16,9 +16,9 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.KtBridge
-import app.cash.zipline.testing.EchoJsAdapter
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
+import app.cash.zipline.testing.EchoSerializersModule
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newKtBridgePair
@@ -57,8 +57,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<EchoService>("helloService", EchoJsAdapter, service)
-    val client = bridgeB.get<EchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<EchoService>("helloService", EchoSerializersModule, service)
+    val client = bridgeB.get<EchoService>("helloService", EchoSerializersModule)
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -81,8 +81,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<NullableEchoService>("helloService", EchoJsAdapter, service)
-    val client = bridgeB.get<NullableEchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<NullableEchoService>("helloService", EchoSerializersModule, service)
+    val client = bridgeB.get<NullableEchoService>("helloService", EchoSerializersModule)
 
     val response = client.echo(null)
     assertThat(response?.message).isEqualTo("received null")
@@ -97,8 +97,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<NullableEchoService>("helloService", EchoJsAdapter, service)
-    val client = bridgeB.get<NullableEchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<NullableEchoService>("helloService", EchoSerializersModule, service)
+    val client = bridgeB.get<NullableEchoService>("helloService", EchoSerializersModule)
 
     val response = client.echo(EchoRequest("send me null please?"))
     assertNull(response)
@@ -115,8 +115,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<SuspendingEchoService>("helloService", EchoJsAdapter, service)
-    val client = bridgeB.get<SuspendingEchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<SuspendingEchoService>("helloService", EchoSerializersModule, service)
+    val client = bridgeB.get<SuspendingEchoService>("helloService", EchoSerializersModule)
 
     val deferredResponse: Deferred<EchoResponse> = async {
       client.suspendingEcho(EchoRequest("this is a happy request"))
@@ -136,8 +136,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<EchoService>("helloService", EchoJsAdapter, service)
-    val client = bridgeB.get<EchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<EchoService>("helloService", EchoSerializersModule, service)
+    val client = bridgeB.get<EchoService>("helloService", EchoSerializersModule)
 
     val thrownException = assertThrows<Exception> {
       client.echo(EchoRequest(""))
@@ -154,8 +154,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<SuspendingEchoService>("helloService", EchoJsAdapter, service)
-    val client = bridgeB.get<SuspendingEchoService>("helloService", EchoJsAdapter)
+    bridgeA.set<SuspendingEchoService>("helloService", EchoSerializersModule, service)
+    val client = bridgeB.get<SuspendingEchoService>("helloService", EchoSerializersModule)
 
     val thrownException = assertThrows<Exception> {
       client.suspendingEcho(EchoRequest(""))

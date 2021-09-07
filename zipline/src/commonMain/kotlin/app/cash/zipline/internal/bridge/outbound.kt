@@ -15,12 +15,12 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.BuiltInJsAdapter
-import app.cash.zipline.JsAdapter
+import app.cash.zipline.DefaultZiplineSerializersModule
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 import okio.Buffer
 
 /**
@@ -29,7 +29,7 @@ import okio.Buffer
  */
 @PublishedApi
 internal abstract class OutboundClientFactory<T : Any>(
-  internal val jsAdapter: JsAdapter
+  internal val serializersModule: SerializersModule
 ) {
   abstract fun create(callFactory: OutboundCall.Factory): T
 }
@@ -45,7 +45,7 @@ internal abstract class OutboundClientFactory<T : Any>(
 @PublishedApi
 internal class OutboundCall private constructor(
   private val instanceName: String,
-  private val jsAdapter: JsAdapter,
+  val serializersModule: SerializersModule,
   private val ktBridge: KtBridge,
   private val internalBridge: InternalBridge,
   private val funName: String,
@@ -59,14 +59,14 @@ internal class OutboundCall private constructor(
   private val eachValueBuffer = Buffer()
 
   @OptIn(ExperimentalStdlibApi::class)
-  inline fun <reified T> parameter(value: T) = parameter(typeOf<T>(), value)
+  inline fun <reified T> parameter(value: T) = parameter(serializersModule.serializer(), value)
 
-  fun <T> parameter(type: KType, value: T) {
+  fun <T> parameter(serializer: KSerializer<T>, value: T) {
     require(callCount++ < parameterCount)
     if (value == null) {
       buffer.writeInt(BYTE_COUNT_NULL)
     } else {
-      jsAdapter.encode(value, eachValueBuffer, type)
+      eachValueBuffer.writeJsonUtf8(serializer, value)
       buffer.writeInt(eachValueBuffer.size.toInt())
       buffer.writeAll(eachValueBuffer)
     }
@@ -74,29 +74,29 @@ internal class OutboundCall private constructor(
 
   @OptIn(ExperimentalStdlibApi::class)
   inline fun <reified R> invoke(): R {
-    return invoke(typeOf<R>())
+    return invoke(serializersModule.serializer())
   }
 
-  fun <R> invoke(type: KType): R {
+  fun <R> invoke(serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     val encodedArguments = buffer.readByteArray()
     val encodedResult = internalBridge.invoke(instanceName, funName, encodedArguments)
-    val result = encodedResult.decodeResult<R>(type)
+    val result = encodedResult.decodeResult(serializer)
     return result.getOrThrow()
   }
 
   @OptIn(ExperimentalStdlibApi::class)
   suspend inline fun <reified R> invokeSuspending(): R {
-    return invokeSuspending(typeOf<R>())
+    return invokeSuspending(serializersModule.serializer())
   }
 
   @PublishedApi
-  internal suspend fun <R> invokeSuspending(type: KType): R {
+  internal suspend fun <R> invokeSuspending(serializer: KSerializer<R>): R {
     return suspendCoroutine { continuation ->
       require(callCount++ == parameterCount)
       val callbackName = ktBridge.generateName()
-      val callback = RealSuspendCallback(callbackName, continuation, type)
-      ktBridge.set<SuspendCallback>(callbackName, BuiltInJsAdapter, callback)
+      val callback = RealSuspendCallback(callbackName, continuation, serializer)
+      ktBridge.set<SuspendCallback>(callbackName, DefaultZiplineSerializersModule, callback)
       val encodedArguments = buffer.readByteArray()
       internalBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
     }
@@ -105,18 +105,18 @@ internal class OutboundCall private constructor(
   private inner class RealSuspendCallback<R>(
     val callbackName: String,
     val continuation: Continuation<R>,
-    val type: KType
+    val serializer: KSerializer<R>
   ) : SuspendCallback {
     override fun call(encodedResponse: ByteArray) {
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
       ktBridge.remove(callbackName)
-      val result = encodedResponse.decodeResult<R>(type)
+      val result = encodedResponse.decodeResult(serializer)
       continuation.resumeWith(result)
     }
   }
 
   @OptIn(ExperimentalStdlibApi::class)
-  private fun <R> ByteArray.decodeResult(type: KType): Result<R> {
+  private fun <R> ByteArray.decodeResult(serializer: KSerializer<R>): Result<R> {
     buffer.write(this)
     when (buffer.readByte()) {
       RESULT_TYPE_NORMAL -> {
@@ -125,13 +125,14 @@ internal class OutboundCall private constructor(
           return Result.success(null as R)
         } else {
           eachValueBuffer.write(buffer, byteCount.toLong())
-          return Result.success(jsAdapter.decode(eachValueBuffer, type))
+          return Result.success(eachValueBuffer.readJsonUtf8(serializer))
         }
       }
       RESULT_TYPE_EXCEPTION -> {
         val byteCount = buffer.readInt()
         eachValueBuffer.write(buffer, byteCount.toLong())
-        return Result.failure(jsAdapter.decode(eachValueBuffer, typeOf<Throwable>()) as Throwable)
+        val throwable = eachValueBuffer.readJsonUtf8(serializersModule.serializer<Throwable>())
+        return Result.failure(throwable)
       }
       else -> {
         error("unexpected result type")
@@ -141,7 +142,7 @@ internal class OutboundCall private constructor(
 
   class Factory internal constructor(
     private val instanceName: String,
-    private val jsAdapter: JsAdapter,
+    private val serializersModule: SerializersModule,
     private val ktBridge: KtBridge,
     private val internalBridge: InternalBridge,
   ) {
@@ -151,7 +152,7 @@ internal class OutboundCall private constructor(
     ): OutboundCall {
       return OutboundCall(
         instanceName,
-        jsAdapter,
+        serializersModule,
         ktBridge,
         internalBridge,
         funName,

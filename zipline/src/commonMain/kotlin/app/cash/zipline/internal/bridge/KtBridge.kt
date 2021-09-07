@@ -15,12 +15,12 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.BuiltInJsAdapter
-import app.cash.zipline.JsAdapter
+import app.cash.zipline.DefaultZiplineSerializersModule
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.modules.SerializersModule
 
 class KtBridge internal constructor(
   private val dispatcher: CoroutineDispatcher,
@@ -36,7 +36,7 @@ class KtBridge internal constructor(
       encodedArguments: ByteArray
     ): ByteArray {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
-      val inboundCall = InboundCall(funName, encodedArguments, handler.jsAdapter)
+      val inboundCall = InboundCall(funName, encodedArguments, handler.serializersModule)
       return try {
         handler.call(inboundCall)
       } catch (e: Throwable) {
@@ -52,8 +52,8 @@ class KtBridge internal constructor(
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
-        val callback = get<SuspendCallback>(callbackName, BuiltInJsAdapter)
-        val inboundCall = InboundCall(funName, encodedArguments, handler.jsAdapter)
+        val callback = get<SuspendCallback>(callbackName, DefaultZiplineSerializersModule)
+        val inboundCall = InboundCall(funName, encodedArguments, handler.serializersModule)
         val result = try {
           handler.callSuspending(inboundCall)
         } catch (e: Exception) {
@@ -64,7 +64,7 @@ class KtBridge internal constructor(
     }
   }
 
-  fun <T : Any> set(name: String, jsAdapter: JsAdapter, instance: T) {
+  fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
     error("unexpected call to KtBridge.set: is KtBridge plugin configured?")
   }
 
@@ -78,7 +78,7 @@ class KtBridge internal constructor(
     require(removed != null) { "unable to find $name: was it removed twice?" }
   }
 
-  fun <T : Any> get(name: String, jsAdapter: JsAdapter): T {
+  fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
     error("unexpected call to KtBridge.get: is KtBridge plugin configured?")
   }
 
@@ -88,7 +88,7 @@ class KtBridge internal constructor(
     outboundClientFactory: OutboundClientFactory<T>
   ): T {
     return outboundClientFactory.create(
-      OutboundCall.Factory(name, outboundClientFactory.jsAdapter, this, outboundBridge)
+      OutboundCall.Factory(name, outboundClientFactory.serializersModule, this, outboundBridge)
     )
   }
 

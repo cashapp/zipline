@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 
 plugins {
   kotlin("multiplatform")
+  kotlin("plugin.serialization")
   id("com.android.library")
   id("com.vanniktech.maven.publish")
   id("org.jetbrains.dokka")
@@ -54,6 +55,7 @@ kotlin {
       kotlin.srcDir(versionWriterTaskProvider)
       dependencies {
         api(Dependencies.kotlinxCoroutines)
+        api(Dependencies.kotlinxSerializationJson)
         api(Dependencies.okioMultiplatform)
       }
     }

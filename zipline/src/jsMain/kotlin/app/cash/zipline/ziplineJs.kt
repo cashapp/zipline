@@ -20,11 +20,12 @@ import app.cash.zipline.internal.bridge.InternalBridge
 import app.cash.zipline.internal.bridge.KtBridge
 import app.cash.zipline.internal.bridge.OutboundClientFactory
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.modules.SerializersModule
 
 actual abstract class Zipline {
   actual abstract val engineVersion: String
 
-  actual fun <T : Any> get(name: String, jsAdapter: JsAdapter): T {
+  actual fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
 
@@ -34,7 +35,7 @@ actual abstract class Zipline {
     outboundClientFactory: OutboundClientFactory<T>
   ): T
 
-  actual fun <T : Any> set(name: String, jsAdapter: JsAdapter, instance: T) {
+  actual fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
   }
 
@@ -96,12 +97,12 @@ private class ZiplineJs : Zipline(), JsPlatform, InternalBridge  {
     // Connect platforms using our newly-bootstrapped bridges.
     ktBridge.set<JsPlatform>(
       name = "app.cash.zipline.jsPlatform",
-      jsAdapter = BuiltInJsAdapter,
+      serializersModule = DefaultZiplineSerializersModule,
       instance = this
     )
     hostPlatform = ktBridge.get(
       name = "app.cash.zipline.hostPlatform",
-      jsAdapter = BuiltInJsAdapter
+      serializersModule = DefaultZiplineSerializersModule
     )
   }
 
