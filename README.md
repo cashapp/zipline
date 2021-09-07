@@ -1,11 +1,22 @@
-# QuickJS Java
+# Zipline
 
-The [QuickJS embeddable JavaScript engine][qjs] packaged for Android and the JVM.
+This library streamlines using Kotlin/JS libraries from Kotlin/JVM and Kotlin/Native programs. It
+makes it possible to do continuously deployment of mobile apps, just like we do for servers and web
+applications.
+
+It'd be simpler to do continuous deploys via the App Store & Play Store! But that process is too
+slow. Even if we could release via these channels every day, we can’t guarantee that user’s devices 
+will take the updates immediately. For Cash App we support apps that haven’t been updated for a full
+year.
 
 _(Looking for [Duktape Android](#Duktape)?)_
 
+## QuickJS
 
-## Usage
+This library uses the [QuickJS embeddable JavaScript engine][qjs] to execute Kotlin/JS. It's
+included in this library and supports both Android and the JVM.
+
+### QuickJS Usage
 
 ```java
 try (QuickJs engine = QuickJs.create()) {
