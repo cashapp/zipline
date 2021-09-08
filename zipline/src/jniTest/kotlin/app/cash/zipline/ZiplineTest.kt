@@ -15,9 +15,9 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.testing.EchoJsAdapter
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
+import app.cash.zipline.testing.EchoSerializersModule
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.helloService
 import app.cash.zipline.testing.jsSuspendingEchoService
@@ -52,10 +52,10 @@ class ZiplineTest {
   @Test fun cannotGetOrSetServiceAfterClose(): Unit = runBlocking(dispatcher) {
     zipline.close()
     assertThat(assertThrows<IllegalStateException> {
-      zipline.get<EchoService>("helloService", EchoJsAdapter)
+      zipline.get<EchoService>("helloService", EchoSerializersModule)
     })
     assertThat(assertThrows<IllegalStateException> {
-      zipline.set<EchoService>("supService", EchoJsAdapter, JvmEchoService("sup"))
+      zipline.set<EchoService>("supService", EchoSerializersModule, JvmEchoService("sup"))
     })
   }
 
@@ -79,7 +79,7 @@ class ZiplineTest {
   }
 
   @Test fun jsCallJvmService(): Unit = runBlocking(dispatcher) {
-    zipline.set<EchoService>("supService", EchoJsAdapter, JvmEchoService("sup"))
+    zipline.set<EchoService>("supService", EchoSerializersModule, JvmEchoService("sup"))
 
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')"))
       .isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
@@ -94,7 +94,7 @@ class ZiplineTest {
   }
 
   @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
-    zipline.set<EchoService>("supService", EchoJsAdapter, JvmThrowingEchoService())
+    zipline.set<EchoService>("supService", EchoSerializersModule, JvmThrowingEchoService())
 
     assertThat(assertThrows<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")

@@ -15,9 +15,9 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.JsAdapter
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 import okio.Buffer
 
 /**
@@ -26,7 +26,7 @@ import okio.Buffer
  */
 @PublishedApi
 internal abstract class InboundService<T : Any>(
-  internal val jsAdapter: JsAdapter
+  internal val serializersModule: SerializersModule
 ) {
   abstract fun call(inboundCall: InboundCall): ByteArray
 
@@ -46,7 +46,7 @@ internal abstract class InboundService<T : Any>(
 internal class InboundCall(
   val funName: String,
   encodedArguments: ByteArray,
-  private val jsAdapter: JsAdapter,
+  val serializersModule: SerializersModule,
 ) {
   private val buffer = Buffer().write(encodedArguments)
   private val parameterCount = buffer.readInt()
@@ -54,31 +54,31 @@ internal class InboundCall(
   private val eachValueBuffer = Buffer()
 
   @OptIn(ExperimentalStdlibApi::class)
-  inline fun <reified T : Any> parameter(): T = parameter(typeOf<T>())
+  inline fun <reified T : Any> parameter(): T = parameter(serializersModule.serializer())
 
-  fun <T> parameter(type: KType): T {
+  fun <T> parameter(serializer: KSerializer<T>): T {
     require(callCount++ < parameterCount)
     val byteCount = buffer.readInt()
     if (byteCount == BYTE_COUNT_NULL) {
       return null as T
     } else {
       eachValueBuffer.write(buffer, byteCount.toLong())
-      return jsAdapter.decode(eachValueBuffer, type)
+      return eachValueBuffer.readJsonUtf8(serializer)
     }
   }
 
   @OptIn(ExperimentalStdlibApi::class)
   inline fun <reified R> result(value: R): ByteArray {
-    return result(typeOf<R>(), value)
+    return result(serializersModule.serializer(), value)
   }
 
-  fun <R> result(type: KType, value: R): ByteArray {
+  fun <R> result(serializer: KSerializer<R>, value: R): ByteArray {
     require(callCount++ == parameterCount)
     buffer.writeByte(RESULT_TYPE_NORMAL.toInt())
     if (value == null) {
       buffer.writeInt(BYTE_COUNT_NULL)
     } else {
-      jsAdapter.encode(value, eachValueBuffer, type)
+      eachValueBuffer.writeJsonUtf8(serializer, value)
       buffer.writeInt(eachValueBuffer.size.toInt())
       buffer.writeAll(eachValueBuffer)
     }
@@ -91,7 +91,7 @@ internal class InboundCall(
   fun resultException(e: Throwable): ByteArray {
     buffer.clear()
     eachValueBuffer.clear()
-    jsAdapter.encode(e, eachValueBuffer, typeOf<Throwable>())
+    eachValueBuffer.writeJsonUtf8(serializersModule.serializer(), e)
     buffer.writeByte(RESULT_TYPE_EXCEPTION.toInt())
     buffer.writeInt(eachValueBuffer.size.toInt())
     buffer.writeAll(eachValueBuffer)

@@ -51,7 +51,7 @@ class KtBridgePluginTest {
         }
         
         fun prepareJsBridges(ktBridge: KtBridge) {
-          ktBridge.set<EchoService>("helloService", EchoJsAdapter, TestingEchoService("hello"))
+          ktBridge.set<EchoService>("helloService", EchoSerializersModule, TestingEchoService("hello"))
         }
         """
       )
@@ -78,7 +78,7 @@ class KtBridgePluginTest {
         import app.cash.zipline.internal.bridge.KtBridge
         
         fun getHelloService(ktBridge: KtBridge): EchoService {
-          return ktBridge.get("helloService", EchoJsAdapter)
+          return ktBridge.get("helloService", EchoSerializersModule)
         }
         """
       )
@@ -113,7 +113,7 @@ class KtBridgePluginTest {
         import app.cash.zipline.internal.bridge.KtBridge
         
         fun prepareJsBridges(ktBridge: KtBridge) {
-          ktBridge.set<TestingEchoService>("helloService", EchoJsAdapter, TestingEchoService)
+          ktBridge.set<TestingEchoService>("helloService", EchoSerializersModule, TestingEchoService)
         }
 
         object TestingEchoService : EchoService {
@@ -138,7 +138,7 @@ class KtBridgePluginTest {
         import app.cash.zipline.internal.bridge.KtBridge
         
         fun getHelloService(ktBridge: KtBridge): String {
-          return ktBridge.get("helloService", EchoJsAdapter)
+          return ktBridge.get("helloService", EchoSerializersModule)
         }
         """
       )
@@ -167,7 +167,7 @@ class KtBridgePluginTest {
         fun prepareJsBridges(ktBridge: KtBridge) {
           ktBridge.set<GenericEchoService<String>>(
             "genericService",
-            GenericJsAdapter,
+            EchoSerializersModule,
             TestingGenericEchoService()
           )
         }
@@ -195,7 +195,7 @@ class KtBridgePluginTest {
         import app.cash.zipline.internal.bridge.KtBridge
         
         fun getGenericService(ktBridge: KtBridge): GenericEchoService<String> {
-          return ktBridge.get("genericService", GenericJsAdapter)
+          return ktBridge.get("genericService", EchoSerializersModule)
         }
         """
       )

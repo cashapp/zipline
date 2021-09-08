@@ -16,6 +16,11 @@
 package app.cash.zipline.internal.bridge
 
 import kotlin.js.JsName
+import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.json.Json
+import okio.BufferedSink
+import okio.BufferedSource
 
 @PublishedApi
 internal interface InternalBridge {
@@ -28,14 +33,14 @@ internal interface InternalBridge {
    *  * For each parameter:
    *    * 1 int (4 bytes): the number of bytes in the parameter value. If the parameter value is
    *      null this is [BYTE_COUNT_NULL] and no bytes follow.
-   *    * the bytes of the parameter value
+   *    * the bytes of the parameter value, encoded using [kotlinx.serialization.json.Json]
    *
    * The structure of the result is the following:
    *
    *  * 1 byte: the result type. Either [RESULT_TYPE_NORMAL] or [RESULT_TYPE_NORMAL]
    *  * 1 int (4 bytes): the number of bytes in the result value. If the result is null this is
    *    [BYTE_COUNT_NULL] and no bytes follow.
-   *  * the bytes of the result value
+   *  * the bytes of the result value, encoded using [kotlinx.serialization.json.Json]
    */
   @JsName("invoke")
   fun invoke(instanceName: String, funName: String, encodedArguments: ByteArray): ByteArray
@@ -53,3 +58,13 @@ internal interface InternalBridge {
 internal const val BYTE_COUNT_NULL = -1
 internal const val RESULT_TYPE_NORMAL = 0 as Byte
 internal const val RESULT_TYPE_EXCEPTION = 1 as Byte
+
+internal fun <T> BufferedSink.writeJsonUtf8(serializer: SerializationStrategy<T>, value: T) {
+  val json = Json.encodeToString(serializer, value)
+  writeUtf8(json)
+}
+
+internal fun <T> BufferedSource.readJsonUtf8(serializer: DeserializationStrategy<T>): T {
+  val json = readUtf8()
+  return Json.decodeFromString(serializer, json)
+}

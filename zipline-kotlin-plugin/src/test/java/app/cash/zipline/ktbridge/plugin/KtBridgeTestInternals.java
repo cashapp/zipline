@@ -20,12 +20,10 @@ import app.cash.zipline.internal.bridge.InboundService;
 import app.cash.zipline.internal.bridge.KtBridge;
 import app.cash.zipline.internal.bridge.OutboundCall;
 import app.cash.zipline.internal.bridge.OutboundClientFactory;
-import app.cash.zipline.testing.EchoJsAdapter;
 import app.cash.zipline.testing.EchoRequest;
 import app.cash.zipline.testing.EchoResponse;
 import app.cash.zipline.testing.EchoService;
 import app.cash.zipline.testing.GenericEchoService;
-import app.cash.zipline.testing.GenericJsAdapter;
 import java.util.List;
 import kotlin.Pair;
 import kotlin.PublishedApi;
@@ -35,9 +33,13 @@ import kotlin.reflect.KType;
 import kotlin.reflect.KTypeProjection;
 import kotlin.reflect.full.KClassifiers;
 import kotlinx.coroutines.test.TestCoroutineDispatcher;
+import kotlinx.serialization.KSerializer;
+import kotlinx.serialization.modules.SerializersModule;
 
+import static app.cash.zipline.testing.EchoKt.getEchoSerializersModule;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static kotlinx.serialization.SerializersKt.serializer;
 
 /**
  * Call these {@link PublishedApi} internal APIs from Java rather than from Kotlin to hack around
@@ -61,13 +63,18 @@ public final class KtBridgeTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static EchoService getEchoClient(KtBridge ktBridge, String name) {
-    return ktBridge.get(name, new OutboundClientFactory<EchoService>(EchoJsAdapter.INSTANCE) {
+    final SerializersModule serializersModule = getEchoSerializersModule();
+    return ktBridge.get(name, new OutboundClientFactory<EchoService>(serializersModule) {
       @Override public EchoService create(OutboundCall.Factory callFactory) {
         return new EchoService() {
           @Override public EchoResponse echo(EchoRequest request) {
             OutboundCall outboundCall = callFactory.create("echo", 1);
-            outboundCall.parameter(echoRequestKt, request);
-            return outboundCall.invoke(echoResponseKt);
+            KSerializer<EchoRequest> parameterSerializer
+                = (KSerializer) serializer(serializersModule, echoRequestKt);
+            KSerializer<EchoResponse> resultSerializer
+                = (KSerializer) serializer(serializersModule, echoResponseKt);
+            outboundCall.parameter(parameterSerializer, request);
+            return outboundCall.invoke(resultSerializer);
           }
         };
       }
@@ -76,11 +83,16 @@ public final class KtBridgeTestInternals {
 
   /** Simulate generated code for inbound calls. */
   public static void setEchoService(KtBridge ktBridge, String name, EchoService echoService) {
-    ktBridge.set(name, new InboundService<EchoService>(EchoJsAdapter.INSTANCE) {
+    SerializersModule serializersModule = getEchoSerializersModule();
+    ktBridge.set(name, new InboundService<EchoService>(serializersModule) {
       @Override public byte[] call(InboundCall inboundCall) {
         if (inboundCall.getFunName().equals("echo")) {
-          return inboundCall.result(echoResponseKt,
-              echoService.echo(inboundCall.parameter(echoRequestKt)));
+          KSerializer<EchoResponse> resultSerializer
+              = (KSerializer) serializer(serializersModule, echoResponseKt);
+          KSerializer<EchoRequest> parameterSerializer
+              = (KSerializer) serializer(serializersModule, echoRequestKt);
+          return inboundCall.result(resultSerializer, echoService.echo(
+              inboundCall.parameter(parameterSerializer)));
         } else {
           return inboundCall.unexpectedFunction();
         }
@@ -95,14 +107,19 @@ public final class KtBridgeTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static GenericEchoService<String> getGenericEchoService(KtBridge ktBridge, String name) {
+    final SerializersModule serializersModule = getEchoSerializersModule();
     return ktBridge.get(name, new OutboundClientFactory<GenericEchoService<String>>(
-        GenericJsAdapter.INSTANCE) {
+        serializersModule) {
       @Override public GenericEchoService<String> create(OutboundCall.Factory callFactory) {
         return new GenericEchoService<String>() {
           @Override public List<String> genericEcho(String request) {
             OutboundCall outboundCall = callFactory.create("genericEcho", 1);
-            outboundCall.parameter(stringKt, request);
-            return outboundCall.invoke(listOfStringKt);
+            KSerializer<String> parameterSerializer
+                = (KSerializer) serializer(serializersModule, stringKt);
+            KSerializer<List<String>> resultSerializer
+                = (KSerializer) serializer(serializersModule, listOfStringKt);
+            outboundCall.parameter(parameterSerializer, request);
+            return outboundCall.invoke(resultSerializer);
           }
         };
       }
@@ -112,11 +129,16 @@ public final class KtBridgeTestInternals {
   /** Simulate generated code for inbound calls. */
   public static void setGenericEchoService(
       KtBridge ktBridge, String name, GenericEchoService<String> echoService) {
-    ktBridge.set(name, new InboundService<GenericEchoService<String>>(GenericJsAdapter.INSTANCE) {
+    final SerializersModule serializersModule = getEchoSerializersModule();
+    ktBridge.set(name, new InboundService<GenericEchoService<String>>(serializersModule) {
       @Override public byte[] call(InboundCall inboundCall) {
         if (inboundCall.getFunName().equals("genericEcho")) {
-          return inboundCall.result(listOfStringKt,
-              echoService.genericEcho(inboundCall.parameter(stringKt)));
+          KSerializer<List<String>> resultSerializer
+              = (KSerializer) serializer(serializersModule, listOfStringKt);
+          KSerializer<String> parameterSerializer
+              = (KSerializer) serializer(serializersModule, stringKt);
+          return inboundCall.result(resultSerializer, echoService.genericEcho(
+              inboundCall.parameter(parameterSerializer)));
         } else {
           return inboundCall.unexpectedFunction();
         }

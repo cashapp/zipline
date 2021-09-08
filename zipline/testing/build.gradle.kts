@@ -2,6 +2,7 @@ import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 
 plugins {
   kotlin("multiplatform")
+  kotlin("plugin.serialization")
 }
 
 kotlin {

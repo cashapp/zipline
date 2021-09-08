@@ -68,10 +68,10 @@ import org.jetbrains.kotlin.ir.util.getPropertyGetter
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `KtBridge.set()` that takes a name, a `JsAdapter`, and a service:
+ * Rewrites calls to `KtBridge.set()` that takes a name, a `SerializersModule`, and a service:
  *
  * ```
- * ktBridge.set("helloService", EchoJsAdapter, TestingEchoService("hello"))
+ * ktBridge.set("helloService", EchoSerializersModule, TestingEchoService("hello"))
  * ```
  *
  * to the overload that takes a name and an `InboundService`:
@@ -79,7 +79,7 @@ import org.jetbrains.kotlin.name.Name
  * ```
  * ktBridge.set(
  *   "helloService",
- *   object : InboundService<EchoService>(EchoJsAdapter) {
+ *   object : InboundService<EchoService>(EchoSerializersModule) {
  *     val service: EchoService = TestingEchoService("hello")
  *     override fun call(inboundCall: InboundCall): ByteArray {
  *       return when {
@@ -146,7 +146,7 @@ internal class KtBridgeSetRewriter(
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    // InboundService<EchoService>(EchoJsAdapter)
+    // InboundService<EchoService>(EchoSerializersModule)
     val superConstructor = ktBridgeApis.inboundService.constructors.single()
     val constructor = inboundServiceSubclass.addConstructor {
       origin = IrDeclarationOrigin.DEFINED

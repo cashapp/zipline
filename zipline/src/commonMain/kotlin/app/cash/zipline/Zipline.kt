@@ -15,10 +15,12 @@
  */
 package app.cash.zipline
 
+import kotlinx.serialization.modules.SerializersModule
+
 expect abstract class Zipline {
   abstract val engineVersion: String
 
-  fun <T : Any> get(name: String, jsAdapter: JsAdapter): T
+  fun <T : Any> get(name: String, serializersModule: SerializersModule): T
 
-  fun <T : Any> set(name: String, jsAdapter: JsAdapter, instance: T)
+  fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T)
 }

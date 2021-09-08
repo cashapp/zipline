@@ -18,7 +18,7 @@ package app.cash.zipline.testing
 import app.cash.zipline.Zipline
 
 val Zipline.jsSuspendingEchoService: SuspendingEchoService
-  get() = get("jsSuspendingEchoService", EchoJsAdapter)
+  get() = get("jsSuspendingEchoService", EchoSerializersModule)
 
 class JvmSuspendingEchoService(
   private val greeting: String
@@ -31,7 +31,7 @@ class JvmSuspendingEchoService(
 fun prepareSuspendingJvmBridges(zipline: Zipline) {
   zipline.set<SuspendingEchoService>(
     "jvmSuspendingEchoService",
-    EchoJsAdapter,
+    EchoSerializersModule,
     JvmSuspendingEchoService("sup")
   )
 }
