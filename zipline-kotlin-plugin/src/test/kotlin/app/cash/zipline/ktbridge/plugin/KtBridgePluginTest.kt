@@ -68,7 +68,7 @@ class KtBridgePluginTest {
   }
 
   @Test
-  fun `ktBridge set rewritten to make outbound calls`() {
+  fun `ktBridge get rewritten to make outbound calls`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",

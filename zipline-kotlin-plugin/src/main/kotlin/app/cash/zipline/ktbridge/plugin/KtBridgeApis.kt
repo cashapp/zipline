@@ -18,7 +18,7 @@ package app.cash.zipline.ktbridge.plugin
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
-import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.name.FqName
 
@@ -28,6 +28,7 @@ internal class KtBridgeApis(
 ) {
   private val packageFqName = FqName("app.cash.zipline")
   private val bridgeFqName = FqName("app.cash.zipline.internal.bridge")
+  private val serializationFqName = FqName("kotlinx.serialization")
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
   private val ziplineFqName = packageFqName.child("Zipline")
   private val ziplineCompanionFqName = ziplineFqName.child("Companion")
@@ -36,19 +37,29 @@ internal class KtBridgeApis(
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!
 
-  val serializersModule: IrClassSymbol
-    get() = pluginContext.referenceClass(serializationModulesFqName.child("SerializersModule"))!!
+  val kSerializer: IrClassSymbol
+    get() = pluginContext.referenceClass(serializationFqName.child("KSerializer"))!!
+
+  val serializerFunction: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(serializationFqName.child("serializer"))
+      .single {
+        it.owner.extensionReceiverParameter?.type?.classFqName == serializersModuleFqName &&
+          it.owner.valueParameters.isEmpty() &&
+          it.owner.typeParameters.size == 1
+      }
+
+  val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
 
   val inboundCall: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("InboundCall"))!!
 
   val inboundCallParameter: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(bridgeFqName.child("InboundCall").child("parameter"))
-      .single { it.owner.isInline }
+      .single()
 
   val inboundCallResult: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(bridgeFqName.child("InboundCall").child("result"))
-      .single { it.owner.isInline }
+      .single()
 
   val inboundCallUnexpectedFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
@@ -70,16 +81,16 @@ internal class KtBridgeApis(
 
   val outboundCallInvoke: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(bridgeFqName.child("OutboundCall").child("invoke"))
-      .single { it.owner.valueParameters.isEmpty() }
+      .single()
 
   val outboundCallInvokeSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
       bridgeFqName.child("OutboundCall").child("invokeSuspending")
-    ).single { it.owner.valueParameters.isEmpty() }
+    ).single()
 
   val outboundCallParameter: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(bridgeFqName.child("OutboundCall").child("parameter"))
-      .single { it.owner.valueParameters.size == 1 }
+      .single()
 
   val outboundCallFactory: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("OutboundCall").child("Factory"))!!
@@ -118,7 +129,7 @@ internal class KtBridgeApis(
       val overloads = pluginContext.referenceFunctions(functionName)
       if (overloads.isEmpty()) continue // The Companion APIs are JS-only.
       val original = overloads.single {
-        it.owner.valueParameters[1].type == serializersModule.defaultType
+        it.owner.valueParameters[1].type.classFqName == serializersModuleFqName
       }
       val target = overloads.single { it != original }
       result[original] = target

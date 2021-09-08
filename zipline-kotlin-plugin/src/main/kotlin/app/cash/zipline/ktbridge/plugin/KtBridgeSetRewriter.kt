@@ -18,7 +18,6 @@ package app.cash.zipline.ktbridge.plugin
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
-import org.jetbrains.kotlin.backend.common.ir.createDispatchReceiverParameter
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.backend.common.ir.isSuspend
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
@@ -35,8 +34,8 @@ import org.jetbrains.kotlin.ir.builders.irBlock
 import org.jetbrains.kotlin.ir.builders.irBranch
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irEquals
+import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
-import org.jetbrains.kotlin.ir.builders.irGetField
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTrue
@@ -56,14 +55,10 @@ import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
-import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
-import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
-import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.getPropertyGetter
 import org.jetbrains.kotlin.name.Name
 
@@ -81,12 +76,15 @@ import org.jetbrains.kotlin.name.Name
  *   "helloService",
  *   object : InboundService<EchoService>(EchoSerializersModule) {
  *     val service: EchoService = TestingEchoService("hello")
+ *     val serializer_0 = EchoSerializersModule.serializer<EchoRequest>()
+ *     val serializer_1 = EchoSerializersModule.serializer<EchoResponse>()
  *     override fun call(inboundCall: InboundCall): ByteArray {
  *       return when {
  *         inboundCall.funName == "echo" -> {
  *           inboundCall.result(
+ *             serializer_1,
  *             service.echo(
- *               inboundCall.parameter()
+ *               inboundCall.parameter(serializer_0)
  *             )
  *           )
  *         }
@@ -110,6 +108,7 @@ internal class KtBridgeSetRewriter(
 ) {
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
+    ktBridgeApis,
     original,
     "KtBridge.set()",
     original.getTypeArgument(0)!!
@@ -171,24 +170,41 @@ internal class KtBridgeSetRewriter(
     }
 
     val serviceProperty = irServiceProperty(inboundServiceSubclass)
-
     inboundServiceSubclass.declarations += serviceProperty
 
     val callFunction = irCallFunction(
       inboundServiceSubclass = inboundServiceSubclass,
-      serviceProperty = serviceProperty,
       callSuspending = false
     )
     val callSuspendingFunction = irCallFunction(
       inboundServiceSubclass = inboundServiceSubclass,
-      serviceProperty = serviceProperty,
       callSuspending = true
     )
 
+    // We add overrides here so we can use them below.
     inboundServiceSubclass.addFakeOverrides(
       pluginContext.irBuiltIns,
       listOf(callFunction, callSuspendingFunction)
     )
+
+    bridgedInterface.declareSerializerProperties(inboundServiceSubclass)
+
+    callFunction.irFunctionBody(
+      context = pluginContext,
+      scopeOwnerSymbol = callFunction.symbol,
+    ) {
+      +irReturn(
+        irCallFunctionBody(callFunction, serviceProperty)
+      )
+    }
+    callSuspendingFunction.irFunctionBody(
+      context = pluginContext,
+      scopeOwnerSymbol = callSuspendingFunction.symbol,
+    ) {
+      +irReturn(
+        irCallFunctionBody(callSuspendingFunction, serviceProperty)
+      )
+    }
 
     return IrBlockBodyBuilder(
       startOffset = UNDEFINED_OFFSET,
@@ -205,7 +221,6 @@ internal class KtBridgeSetRewriter(
   /** Override either `InboundService.call()` or `InboundService.callSuspending()`. */
   private fun irCallFunction(
     inboundServiceSubclass: IrClass,
-    serviceProperty: IrProperty,
     callSuspending: Boolean,
   ): IrSimpleFunction {
     // override fun call(inboundCall: InboundCall): ByteArray {
@@ -231,93 +246,19 @@ internal class KtBridgeSetRewriter(
       overriddenSymbols += inboundServiceCall
     }
 
-    result.irFunctionBody(
-      context = pluginContext,
-      scopeOwnerSymbol = result.symbol,
-    ) {
-      +irReturn(
-        irCallFunctionBody(result, serviceProperty)
-      )
-    }
-
     return result
   }
 
   // val service: EchoService = TestingEchoService("hello")
   private fun irServiceProperty(inboundServiceSubclass: IrClass): IrProperty {
-    val result = irFactory.createProperty(
-      startOffset = inboundServiceSubclass.startOffset,
-      endOffset = inboundServiceSubclass.endOffset,
-      origin = IrDeclarationOrigin.DEFINED,
-      symbol = IrPropertySymbolImpl(),
-      name = Name.identifier("service"),
-      visibility = DescriptorVisibilities.PRIVATE,
-      modality = Modality.FINAL,
-      isVar = false,
-      isConst = false,
-      isLateinit = false,
-      isDelegated = false,
-      isExternal = false,
-      isExpect = false,
-      isFakeOverride = false,
-      containerSource = null,
-    ).apply {
-      parent = inboundServiceSubclass
+    return irVal(
+      pluginContext = pluginContext,
+      propertyType = bridgedInterface.type,
+      declaringClass = inboundServiceSubclass,
+      propertyName = Name.identifier("service")
+    ) {
+      irExprBody(original.getValueArgument(2)!!)
     }
-
-    result.backingField = irFactory.createField(
-      startOffset = inboundServiceSubclass.startOffset,
-      endOffset = inboundServiceSubclass.endOffset,
-      origin = IrDeclarationOrigin.PROPERTY_BACKING_FIELD,
-      symbol = IrFieldSymbolImpl(),
-      name = result.name,
-      type = bridgedInterface.type,
-      visibility = DescriptorVisibilities.PRIVATE,
-      isFinal = true,
-      isExternal = false,
-      isStatic = false
-    ).apply {
-      parent = inboundServiceSubclass
-      correspondingPropertySymbol = result.symbol
-      initializer = irFactory.createExpressionBody(original.getValueArgument(2)!!)
-    }
-
-    result.getter = irFactory.createFunction(
-      startOffset = inboundServiceSubclass.startOffset,
-      endOffset = inboundServiceSubclass.endOffset,
-      origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR,
-      name = Name.special("<get-service>"),
-      visibility = DescriptorVisibilities.PRIVATE,
-      isExternal = false,
-      symbol = IrSimpleFunctionSymbolImpl(),
-      modality = Modality.FINAL,
-      returnType = bridgedInterface.type,
-      isInline = false,
-      isTailrec = false,
-      isSuspend = false,
-      isOperator = false,
-      isInfix = false,
-      isExpect = false,
-      isFakeOverride = false,
-      containerSource = null
-    ).apply {
-      parent = inboundServiceSubclass
-      correspondingPropertySymbol = result.symbol
-      createDispatchReceiverParameter()
-      irFunctionBody(
-        context = pluginContext,
-        scopeOwnerSymbol = symbol
-      ) {
-        +irReturn(
-          value = irGetField(
-            irGet(dispatchReceiverParameter!!),
-            result.backingField!!
-          )
-        )
-      }
-    }
-
-    return result
   }
 
   /**
@@ -339,9 +280,7 @@ internal class KtBridgeSetRewriter(
     val result = mutableListOf<IrBranch>()
 
     // Each bridged function gets its own branch in the when() expression.
-    for (bridgedFunction in bridgedInterface.classSymbol.functions) {
-      // TODO(jwilson): find a better way to skip equals()/hashCode()/toString()
-      if (bridgedFunction.owner.isFakeOverride) continue
+    for (bridgedFunction in bridgedInterface.bridgedFunctions) {
       if (callFunction.isSuspend != bridgedFunction.isSuspend) continue
 
       result += irBranch(
@@ -439,10 +378,17 @@ internal class KtBridgeSetRewriter(
     return irCall(
       type = valueParameterType,
       callee = ktBridgeApis.inboundCallParameter,
-      typeArgumentsCount = 1,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)
       putTypeArgument(0, valueParameterType)
+      putValueArgument(
+        0,
+        bridgedInterface.serializerExpression(
+          this@irCallDecodeParameter,
+          valueParameterType,
+          callFunction.dispatchReceiverParameter!!
+        )
+      )
     }
   }
 
@@ -464,12 +410,18 @@ internal class KtBridgeSetRewriter(
     return irCall(
       type = pluginContext.symbols.byteArrayType,
       callee = ktBridgeApis.inboundCallResult,
-      typeArgumentsCount = 1,
-      valueArgumentsCount = 1,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)
       putTypeArgument(0, resultExpression.type)
-      putValueArgument(0, resultExpression)
+      putValueArgument(
+        0,
+        bridgedInterface.serializerExpression(
+          this@irCallEncodeResult,
+          resultExpression.type,
+          callFunction.dispatchReceiverParameter!!
+        )
+      )
+      putValueArgument(1, resultExpression)
     }
   }
 
