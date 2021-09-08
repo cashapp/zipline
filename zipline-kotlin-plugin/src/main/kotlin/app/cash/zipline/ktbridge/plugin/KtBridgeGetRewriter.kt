@@ -64,11 +64,20 @@ import org.jetbrains.kotlin.name.Name
  * val helloService: EchoService = ktBridge.get(
  *   "helloService",
  *   object : OutboundClientFactory<EchoService>(EchoSerializersModule) {
+ *     val serializer1 = EchoSerializersModule.serializer<EchoRequest>()
+ *     val serialzier2 = EchoSerializersModule.serializer<String>()
+ *     val serializer3 = EchoSerializersModule.serializer<String>()
  *     override fun create(outboundCallFactory: OutboundCall.Factory): EchoService {
  *       return object : EchoService {
  *         override fun echo(request: EchoRequest): EchoResponse {
  *           val outboundCall = outboundCallFactory.create("echo", 1)
- *           outboundCall.parameter(request)
+ *           outboundCall.parameter<EchoRequest>(serializer1, request)
+ *           return outboundCall.invoke()
+ *         }
+ *         override fun functionWithTwoParameters(a: String, b: String) {
+ *           val outboundCall = outboundCallFactory.create("functionWithTwoParameters", 2)
+ *           outboundCall.parameter<EchoRequest>(serializer2, a)
+ *           outboundCall.parameter<EchoRequest>(serializer3, b)
  *           return outboundCall.invoke()
  *         }
  *       }
@@ -97,9 +106,10 @@ internal class KtBridgeGetRewriter(
     get() = pluginContext.irFactory
 
   fun rewrite(): IrCall {
-    return irCall(original, rewrittenGetFunction).apply {
+    val x = irCall(original, rewrittenGetFunction).apply {
       putValueArgument(1, irNewOutboundClientFactory())
     }
+    return x
   }
 
   private fun irNewOutboundClientFactory(): IrContainerExpression {
@@ -136,6 +146,28 @@ internal class KtBridgeGetRewriter(
         )
       }
     }
+
+    // TODO serializer vals go here
+    bridgedFunctions.forEach { bridgedFunction ->
+      // Loop through all functions on interface
+
+      bridgedFunction.owner.valueParameters.forEach { valueParameter ->
+        // Loop through all parameters in each function
+        val serializerVal = irVal(
+          pluginContext = pluginContext,
+          propertyType = valueParameter.type, // Serializer of
+          declaringClass = outboundClientFactorySubclass,
+          initializer = irFactory.createExpressionBody(irCall()),
+          propertyName = Name.identifier("serializer_0"), //needs to be unique across all functions
+        )
+        outboundClientFactorySubclass.declarations += serializerVal
+        //        {
+        //          name = valueParameter.name
+        //          type = bridgedInterface.resolveTypeParameters(valueParameter.type)
+        //        }
+      }
+    }
+
 
     // override fun create(callFactory: OutboundCall.Factory): EchoService {
     // }
@@ -206,9 +238,7 @@ internal class KtBridgeGetRewriter(
       )
     }
 
-    for (bridgedFunction in bridgedInterface.classSymbol.functions.toList()) {
-      if (bridgedFunction.owner.isFakeOverride) continue
-
+    for (bridgedFunction in bridgedFunctions) {
       clientImplementation.irBridgedFunction(
         createFunction = createFunction,
         bridgedFunction = bridgedFunction.owner
@@ -228,6 +258,10 @@ internal class KtBridgeGetRewriter(
       type = pluginContext.irBuiltIns.nothingType,
     )
   }
+
+  private val bridgedFunctions: List<IrSimpleFunctionSymbol>
+    get() = bridgedInterface.classSymbol.functions.toList()
+      .filterNot { it.owner.isFakeOverride }
 
   private fun IrClass.irBridgedFunction(
     createFunction: IrSimpleFunction,

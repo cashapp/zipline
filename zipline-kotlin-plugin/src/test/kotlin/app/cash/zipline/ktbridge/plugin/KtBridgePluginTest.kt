@@ -16,16 +16,23 @@
 
 package app.cash.zipline.ktbridge.plugin
 
+import app.cash.zipline.internal.bridge.KtBridge
+import app.cash.zipline.internal.bridge.OutboundCall
+import app.cash.zipline.internal.bridge.OutboundClientFactory
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
+import app.cash.zipline.testing.EchoSerializersModule
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.GenericEchoService
 import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import kotlin.test.assertEquals
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Test
+import kotlin.test.assertEquals
 
 /**
  * Confirm bridge calls are rewritten to use `OutboundClientFactory` or `InboundService` as
@@ -76,8 +83,33 @@ class KtBridgePluginTest {
         package app.cash.zipline.testing
         
         import app.cash.zipline.internal.bridge.KtBridge
+//        import app.cash.zipline.internal.bridge.OutboundCall
+//        import app.cash.zipline.internal.bridge.OutboundClientFactory
+//        import app.cash.zipline.testing.EchoRequest
+//        import app.cash.zipline.testing.EchoResponse
+//        import app.cash.zipline.testing.EchoSerializersModule
+//        import app.cash.zipline.testing.EchoService
+//        import app.cash.zipline.testing.GenericEchoService
+//        import kotlinx.serialization.KSerializer
+//        import kotlinx.serialization.modules.SerializersModule
+//        import kotlinx.serialization.serializer
         
         fun getHelloService(ktBridge: KtBridge): EchoService {
+//          val serializersModule: SerializersModule = EchoSerializersModule
+//          val x = ktBridge.get("hello", object : OutboundClientFactory<EchoService>(serializersModule) {
+//            val parameterSerializer: KSerializer<EchoRequest> = this.serializersModule.serializer<EchoRequest>()
+//            val resultSerializer: KSerializer<EchoResponse> = this.serializersModule.serializer<EchoResponse>()
+//            override fun create(callFactory: OutboundCall.Factory): EchoService {
+//              return object : EchoService {
+//                override fun echo(request: EchoRequest): EchoResponse {
+//                  val outboundCall: OutboundCall = callFactory.create("echo", 1)
+//                  outboundCall.parameter(parameterSerializer, request)
+//                  return outboundCall.invoke(resultSerializer)
+//                }
+//              }
+//            }
+//          })
+
           return ktBridge.get("helloService", EchoSerializersModule)
         }
         """

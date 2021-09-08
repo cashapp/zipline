@@ -82,8 +82,9 @@ class KtBridge internal constructor(
     error("unexpected call to KtBridge.get: is KtBridge plugin configured?")
   }
 
-  @PublishedApi
-  internal fun <T : Any> get(
+//  @PublishedApi
+//  internal
+  fun <T : Any> get(
     name: String,
     outboundClientFactory: OutboundClientFactory<T>
   ): T {

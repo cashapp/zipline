@@ -15,6 +15,10 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.testing.AdaptersRequest
+import app.cash.zipline.testing.AdaptersResponse
+import app.cash.zipline.testing.AdaptersSerializersModule
+import app.cash.zipline.testing.AdaptersService
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoSerializersModule
@@ -27,6 +31,7 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.serialization.modules.EmptySerializersModule
 import org.junit.After
 import org.junit.Assert.assertNotEquals
 import org.junit.Before
@@ -112,6 +117,20 @@ class ZiplineTest {
     prepareSuspendingJvmBridges(zipline)
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('Eric')")
+  }
+
+  @Test fun missingSerializerFailsFast(): Unit = runBlocking(dispatcher) {
+    assertThat(assertThrows<IllegalArgumentException> {
+      zipline.get<AdaptersService>("adaptersService", EmptySerializersModule)
+    }).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
+  }
+
+  @Test fun presentSerializersSucceeds(): Unit = runBlocking(dispatcher) {
+    val service = zipline.get<AdaptersService>("adaptersService", AdaptersSerializersModule)
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareAdaptersJsBridges()")
+
+    assertThat(service.echo(AdaptersRequest("Andrew")))
+      .isEqualTo(AdaptersResponse("thank you for using your serializers, Andrew"))
   }
 
   private class JvmEchoService(private val greeting: String) : EchoService {

@@ -18,7 +18,6 @@ package app.cash.zipline.ktbridge.plugin
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
-import org.jetbrains.kotlin.backend.common.ir.createDispatchReceiverParameter
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.backend.common.ir.isSuspend
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
@@ -36,7 +35,6 @@ import org.jetbrains.kotlin.ir.builders.irBranch
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irEquals
 import org.jetbrains.kotlin.ir.builders.irGet
-import org.jetbrains.kotlin.ir.builders.irGetField
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTrue
@@ -56,9 +54,6 @@ import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
-import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
-import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
-import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
@@ -245,79 +240,13 @@ internal class KtBridgeSetRewriter(
 
   // val service: EchoService = TestingEchoService("hello")
   private fun irServiceProperty(inboundServiceSubclass: IrClass): IrProperty {
-    val result = irFactory.createProperty(
-      startOffset = inboundServiceSubclass.startOffset,
-      endOffset = inboundServiceSubclass.endOffset,
-      origin = IrDeclarationOrigin.DEFINED,
-      symbol = IrPropertySymbolImpl(),
-      name = Name.identifier("service"),
-      visibility = DescriptorVisibilities.PRIVATE,
-      modality = Modality.FINAL,
-      isVar = false,
-      isConst = false,
-      isLateinit = false,
-      isDelegated = false,
-      isExternal = false,
-      isExpect = false,
-      isFakeOverride = false,
-      containerSource = null,
-    ).apply {
-      parent = inboundServiceSubclass
-    }
-
-    result.backingField = irFactory.createField(
-      startOffset = inboundServiceSubclass.startOffset,
-      endOffset = inboundServiceSubclass.endOffset,
-      origin = IrDeclarationOrigin.PROPERTY_BACKING_FIELD,
-      symbol = IrFieldSymbolImpl(),
-      name = result.name,
-      type = bridgedInterface.type,
-      visibility = DescriptorVisibilities.PRIVATE,
-      isFinal = true,
-      isExternal = false,
-      isStatic = false
-    ).apply {
-      parent = inboundServiceSubclass
-      correspondingPropertySymbol = result.symbol
-      initializer = irFactory.createExpressionBody(original.getValueArgument(2)!!)
-    }
-
-    result.getter = irFactory.createFunction(
-      startOffset = inboundServiceSubclass.startOffset,
-      endOffset = inboundServiceSubclass.endOffset,
-      origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR,
-      name = Name.special("<get-service>"),
-      visibility = DescriptorVisibilities.PRIVATE,
-      isExternal = false,
-      symbol = IrSimpleFunctionSymbolImpl(),
-      modality = Modality.FINAL,
-      returnType = bridgedInterface.type,
-      isInline = false,
-      isTailrec = false,
-      isSuspend = false,
-      isOperator = false,
-      isInfix = false,
-      isExpect = false,
-      isFakeOverride = false,
-      containerSource = null
-    ).apply {
-      parent = inboundServiceSubclass
-      correspondingPropertySymbol = result.symbol
-      createDispatchReceiverParameter()
-      irFunctionBody(
-        context = pluginContext,
-        scopeOwnerSymbol = symbol
-      ) {
-        +irReturn(
-          value = irGetField(
-            irGet(dispatchReceiverParameter!!),
-            result.backingField!!
-          )
-        )
-      }
-    }
-
-    return result
+    return irVal(
+      pluginContext = pluginContext,
+      propertyType = bridgedInterface.type,
+      declaringClass = inboundServiceSubclass,
+      initializer = irFactory.createExpressionBody(original.getValueArgument(2)!!),
+      propertyName = Name.identifier("service")
+    )
   }
 
   /**
