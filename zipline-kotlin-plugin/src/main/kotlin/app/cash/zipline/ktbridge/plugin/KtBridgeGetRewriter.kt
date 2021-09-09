@@ -47,7 +47,6 @@ import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.name.Name
 
@@ -64,12 +63,14 @@ import org.jetbrains.kotlin.name.Name
  * val helloService: EchoService = ktBridge.get(
  *   "helloService",
  *   object : OutboundClientFactory<EchoService>(EchoSerializersModule) {
+ *     val serializer_0 = EchoSerializersModule.serializer<EchoRequest>()
+ *     val serializer_1 = EchoSerializersModule.serializer<EchoResponse>()
  *     override fun create(outboundCallFactory: OutboundCall.Factory): EchoService {
  *       return object : EchoService {
  *         override fun echo(request: EchoRequest): EchoResponse {
  *           val outboundCall = outboundCallFactory.create("echo", 1)
- *           outboundCall.parameter(request)
- *           return outboundCall.invoke()
+ *           outboundCall.parameter<EchoRequest>(serializer_0, request)
+ *           return outboundCall.invoke(serializer_1)
  *         }
  *       }
  *     }
@@ -88,6 +89,7 @@ internal class KtBridgeGetRewriter(
 ) {
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
+    ktBridgeApis,
     original,
     "KtBridge.get()",
     original.getTypeArgument(0)!!
@@ -155,8 +157,10 @@ internal class KtBridgeGetRewriter(
       overriddenSymbols += ktBridgeApis.outboundClientFactoryCreate
     }
 
-    // Add overrides before defining create()'s body, so we can use overridden properties.
+    // We add overrides here so we can use them below.
     outboundClientFactorySubclass.addFakeOverrides(pluginContext.irBuiltIns, listOf(createFunction))
+
+    bridgedInterface.declareSerializerProperties(outboundClientFactorySubclass)
 
     createFunction.irFunctionBody(
       context = pluginContext,
@@ -206,12 +210,10 @@ internal class KtBridgeGetRewriter(
       )
     }
 
-    for (bridgedFunction in bridgedInterface.classSymbol.functions.toList()) {
-      if (bridgedFunction.owner.isFakeOverride) continue
-
+    for (bridgedFunction in bridgedInterface.bridgedFunctions) {
       clientImplementation.irBridgedFunction(
         createFunction = createFunction,
-        bridgedFunction = bridgedFunction.owner
+        bridgedFunction = bridgedFunction.owner,
       )
     }
 
@@ -231,14 +233,15 @@ internal class KtBridgeGetRewriter(
 
   private fun IrClass.irBridgedFunction(
     createFunction: IrSimpleFunction,
-    bridgedFunction: IrSimpleFunction
+    bridgedFunction: IrSimpleFunction,
   ): IrSimpleFunction {
+    val functionReturnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
     val result = addFunction {
       name = bridgedFunction.name
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
       isSuspend = bridgedFunction.isSuspend
-      returnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
+      returnType = functionReturnType
     }.apply {
       overriddenSymbols = listOf(bridgedFunction.symbol)
       addDispatchReceiver {
@@ -271,12 +274,22 @@ internal class KtBridgeGetRewriter(
         origin = IrDeclarationOrigin.DEFINED
       }
 
+      // outboundCall.parameter<EchoRequest>(serializer_0, request)
       for (valueParameter in result.valueParameters) {
+        val parameterType = bridgedInterface.resolveTypeParameters(valueParameter.type)
         +irCall(callee = ktBridgeApis.outboundCallParameter).apply {
           dispatchReceiver = irGet(outboundCallLocal)
-          putTypeArgument(0, valueParameter.type)
+          putTypeArgument(0, parameterType)
           putValueArgument(
             0,
+            bridgedInterface.serializerExpression(
+              this@irFunctionBody,
+              parameterType,
+              createFunction.dispatchReceiverParameter!!
+            )
+          )
+          putValueArgument(
+            1,
             irGet(
               type = valueParameter.type,
               variable = valueParameter.symbol,
@@ -285,6 +298,9 @@ internal class KtBridgeGetRewriter(
         }
       }
 
+      // One of:
+      //   return outboundCall.<EchoResponse>invoke(serializer_2)
+      //   return outboundCall.<EchoResponse>invokeSuspending(serializer_2)
       val invoke = when {
         bridgedFunction.isSuspend -> ktBridgeApis.outboundCallInvokeSuspending
         else -> ktBridgeApis.outboundCallInvoke
@@ -292,8 +308,16 @@ internal class KtBridgeGetRewriter(
       +irReturn(
         value = irCall(callee = invoke).apply {
           dispatchReceiver = irGet(outboundCallLocal)
-          type = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
+          type = functionReturnType
           putTypeArgument(0, result.returnType)
+          putValueArgument(
+            0,
+            bridgedInterface.serializerExpression(
+              this@irFunctionBody,
+              functionReturnType,
+              createFunction.dispatchReceiverParameter!!
+            )
+          )
         },
         returnTargetSymbol = result.symbol,
         type = pluginContext.irBuiltIns.nothingType,

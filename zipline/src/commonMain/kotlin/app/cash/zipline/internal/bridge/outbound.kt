@@ -29,7 +29,7 @@ import okio.Buffer
  */
 @PublishedApi
 internal abstract class OutboundClientFactory<T : Any>(
-  internal val serializersModule: SerializersModule
+  val serializersModule: SerializersModule
 ) {
   abstract fun create(callFactory: OutboundCall.Factory): T
 }
@@ -58,9 +58,6 @@ internal class OutboundCall private constructor(
   private var callCount = 0
   private val eachValueBuffer = Buffer()
 
-  @OptIn(ExperimentalStdlibApi::class)
-  inline fun <reified T> parameter(value: T) = parameter(serializersModule.serializer(), value)
-
   fun <T> parameter(serializer: KSerializer<T>, value: T) {
     require(callCount++ < parameterCount)
     if (value == null) {
@@ -72,22 +69,12 @@ internal class OutboundCall private constructor(
     }
   }
 
-  @OptIn(ExperimentalStdlibApi::class)
-  inline fun <reified R> invoke(): R {
-    return invoke(serializersModule.serializer())
-  }
-
   fun <R> invoke(serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     val encodedArguments = buffer.readByteArray()
     val encodedResult = internalBridge.invoke(instanceName, funName, encodedArguments)
     val result = encodedResult.decodeResult(serializer)
     return result.getOrThrow()
-  }
-
-  @OptIn(ExperimentalStdlibApi::class)
-  suspend inline fun <reified R> invokeSuspending(): R {
-    return invokeSuspending(serializersModule.serializer())
   }
 
   @PublishedApi

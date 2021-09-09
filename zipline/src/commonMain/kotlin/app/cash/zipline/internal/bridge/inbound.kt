@@ -26,7 +26,7 @@ import okio.Buffer
  */
 @PublishedApi
 internal abstract class InboundService<T : Any>(
-  internal val serializersModule: SerializersModule
+  val serializersModule: SerializersModule
 ) {
   abstract fun call(inboundCall: InboundCall): ByteArray
 
@@ -53,9 +53,6 @@ internal class InboundCall(
   private var callCount = 0
   private val eachValueBuffer = Buffer()
 
-  @OptIn(ExperimentalStdlibApi::class)
-  inline fun <reified T : Any> parameter(): T = parameter(serializersModule.serializer())
-
   fun <T> parameter(serializer: KSerializer<T>): T {
     require(callCount++ < parameterCount)
     val byteCount = buffer.readInt()
@@ -65,11 +62,6 @@ internal class InboundCall(
       eachValueBuffer.write(buffer, byteCount.toLong())
       return eachValueBuffer.readJsonUtf8(serializer)
     }
-  }
-
-  @OptIn(ExperimentalStdlibApi::class)
-  inline fun <reified R> result(value: R): ByteArray {
-    return result(serializersModule.serializer(), value)
   }
 
   fun <R> result(serializer: KSerializer<R>, value: R): ByteArray {
