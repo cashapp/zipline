@@ -48,6 +48,7 @@ import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.irCall
+import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -101,6 +102,7 @@ internal class KtBridgeGetRewriter(
   fun rewrite(): IrCall {
     return irCall(original, rewrittenGetFunction).apply {
       putValueArgument(1, irNewOutboundClientFactory())
+      patchDeclarationParents(declarationParent)
     }
   }
 
@@ -110,7 +112,6 @@ internal class KtBridgeGetRewriter(
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
     }.apply {
-      parent = declarationParent
       superTypes = listOf(outboundClientFactoryOfT)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
