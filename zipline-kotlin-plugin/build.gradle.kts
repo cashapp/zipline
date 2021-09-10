@@ -1,9 +1,13 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinJvm
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
+
 plugins {
   kotlin("jvm")
   kotlin("kapt")
-  id("com.vanniktech.maven.publish")
-  id("org.jetbrains.dokka")
   id("com.github.gmazzo.buildconfig")
+  id("org.jetbrains.dokka")
+  id("com.vanniktech.maven.publish.base")
 }
 
 dependencies {
@@ -28,6 +32,14 @@ kotlin {
 }
 
 buildConfig {
-  packageName("app.cash.zipline.ktbridge.plugin")
+  packageName("app.cash.zipline.kotlin")
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${Ext.kotlinPluginId}\"")
+}
+
+configure<MavenPublishBaseExtension> {
+  configure(
+    KotlinJvm(
+      javadocJar = JavadocJar.Empty()
+    )
+  )
 }

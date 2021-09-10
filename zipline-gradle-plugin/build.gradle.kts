@@ -1,9 +1,13 @@
+import com.vanniktech.maven.publish.GradlePlugin
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
+
 plugins {
   id("java-gradle-plugin")
   kotlin("jvm")
-  id("com.vanniktech.maven.publish")
-  id("org.jetbrains.dokka")
   id("com.github.gmazzo.buildconfig")
+  id("org.jetbrains.dokka")
+  id("com.vanniktech.maven.publish.base")
 }
 
 dependencies {
@@ -12,7 +16,7 @@ dependencies {
 
 buildConfig {
   val project = project(":zipline-kotlin-plugin")
-  packageName("app.cash.zipline.ktbridge.plugin")
+  packageName("app.cash.zipline.gradle")
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${Ext.kotlinPluginId}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_GROUP", "\"${project.group}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_NAME", "\"${project.name}\"")
@@ -21,11 +25,19 @@ buildConfig {
 
 gradlePlugin {
   plugins {
-    create("ktBridge") {
-      id = Ext.kotlinPluginId as String
-      displayName = "KtBridge"
-      description = "Generate bridges for calling from Kotlin/JVM to Kotlin/JS"
-      implementationClass = "app.cash.zipline.ktbridge.plugin.KtBridgeGradlePlugin"
+    create("zipline") {
+      id = "app.cash.zipline"
+      displayName = "zipline"
+      description = "Compiler plugin to generate bridges between platforms"
+      implementationClass = "app.cash.zipline.gradle.ZiplinePlugin"
     }
   }
+}
+
+configure<MavenPublishBaseExtension> {
+  configure(
+    GradlePlugin(
+      javadocJar = JavadocJar.Empty(), sourcesJar = true
+    )
+  )
 }
