@@ -218,6 +218,37 @@ class KtBridgePluginTest {
     assertThat(service.genericEcho("Jesse"))
       .containsExactly("received a generic Jesse!")
   }
+
+  @Test
+  fun `ktBridge set anonymous class`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.zipline.testing
+        
+        import app.cash.zipline.internal.bridge.KtBridge
+        
+        fun prepareJsBridges(ktBridge: KtBridge) {
+          ktBridge.set<EchoService>("helloService", EchoSerializersModule, object : EchoService {
+            override fun echo(request: EchoRequest): EchoResponse {
+              return EchoResponse("hello from anonymous, ${'$'}{request.message}")
+            }
+          })
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
+    val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
+    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
+
+    val helloService = KtBridgeTestInternals.getEchoClient(bridgeB, "helloService")
+    assertThat(helloService.echo(EchoRequest("Alec")))
+      .isEqualTo(EchoResponse("hello from anonymous, Alec"))
+  }
 }
 
 fun compile(
