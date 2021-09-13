@@ -118,7 +118,7 @@ allprojects {
         }
         developers {
           developer {
-            id.set("square")
+            id.set("cashapp")
             name.set("Square, Inc.")
           }
         }
