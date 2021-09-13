@@ -119,7 +119,7 @@ allprojects {
         developers {
           developer {
             id.set("cashapp")
-            name.set("Square, Inc.")
+            name.set("Cash App")
           }
         }
         scm {
