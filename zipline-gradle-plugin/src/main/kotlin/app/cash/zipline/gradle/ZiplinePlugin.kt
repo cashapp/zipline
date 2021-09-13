@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Brian Norman
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package app.cash.zipline.ktbridge.plugin
+package app.cash.zipline.gradle
 
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -22,7 +21,7 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 
-class KtBridgeGradlePlugin : KotlinCompilerPluginSupportPlugin {
+class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
 
   override fun getCompilerPluginId(): String = BuildConfig.KOTLIN_PLUGIN_ID

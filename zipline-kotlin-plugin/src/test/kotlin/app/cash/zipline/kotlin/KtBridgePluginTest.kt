@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package app.cash.zipline.ktbridge.plugin
+package app.cash.zipline.kotlin
 
+import app.cash.zipline.ktbridge.plugin.KtBridgeTestInternals
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService

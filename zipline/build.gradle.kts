@@ -1,11 +1,14 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinMultiplatform
+import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
   id("com.android.library")
-  id("com.vanniktech.maven.publish")
   id("org.jetbrains.dokka")
+  id("com.vanniktech.maven.publish.base")
 }
 
 abstract class VersionWriterTask : DefaultTask() {
@@ -183,4 +186,20 @@ dependencies {
 
 fun quickJsVersion(): String {
   return File(projectDir, "native/quickjs/VERSION").readText().trim()
+}
+
+// https://github.com/vanniktech/gradle-maven-publish-plugin/issues/301
+val metadataJar by tasks.getting(Jar::class)
+configure<PublishingExtension> {
+  publications.withType<MavenPublication>().named("kotlinMultiplatform").configure {
+    artifact(metadataJar)
+  }
+}
+
+configure<MavenPublishBaseExtension> {
+  configure(
+    KotlinMultiplatform(
+      javadocJar = JavadocJar.Dokka("dokkaGfm")
+    )
+  )
 }
