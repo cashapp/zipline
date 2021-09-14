@@ -27,7 +27,12 @@ plugins {
   id("com.github.gmazzo.buildconfig") version "2.1.0" apply false
 }
 
-subprojects {
+apply(plugin = "com.vanniktech.maven.publish.base")
+
+allprojects {
+  group = "app.cash.zipline"
+  version = "1.0.0-SNAPSHOT"
+
   repositories {
     mavenCentral()
     google()
@@ -38,7 +43,9 @@ subprojects {
       }
     }
   }
+}
 
+subprojects {
   plugins.withId("com.android.library") {
     extensions.configure<BaseExtension> {
       lintOptions {
