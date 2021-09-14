@@ -2,9 +2,10 @@ $dokka.format:html-v1
 $dokka.linkExtension:html
 $dokka.location:app.cash.zipline.internal.bridge////PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/index.html
 $dokka.location:app.cash.zipline.internal.bridge/KtBridge///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-kt-bridge/index.html
-$dokka.location:app.cash.zipline.internal.bridge/KtBridge/get/#kotlin.String#app.cash.zipline.JsAdapter/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-kt-bridge/get.html
-$dokka.location:app.cash.zipline.internal.bridge/KtBridge/set/#kotlin.String#app.cash.zipline.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-kt-bridge/set.html
+$dokka.location:app.cash.zipline.internal.bridge/KtBridge/get/#kotlin.String#kotlinx.serialization.modules.SerializersModule/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-kt-bridge/get.html
+$dokka.location:app.cash.zipline.internal.bridge/KtBridge/set/#kotlin.String#kotlinx.serialization.modules.SerializersModule#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-kt-bridge/set.html
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
+$dokka.location:app.cash.zipline//DefaultZiplineSerializersModule/#/PointingToDeclaration/zipline/app.cash.zipline/-default-zipline-serializers-module.html
 $dokka.location:app.cash.zipline/JsAdapter///PointingToDeclaration/zipline/app.cash.zipline/-js-adapter/index.html
 $dokka.location:app.cash.zipline/JsAdapter/decode/#okio.Buffer#kotlin.reflect.KType/PointingToDeclaration/zipline/app.cash.zipline/-js-adapter/decode.html
 $dokka.location:app.cash.zipline/JsAdapter/encode/#TypeParam(bounds=[kotlin.Any])#okio.Buffer#kotlin.reflect.KType/PointingToDeclaration/zipline/app.cash.zipline/-js-adapter/encode.html
@@ -54,11 +55,12 @@ $dokka.location:app.cash.zipline/QuickJsException///PointingToDeclaration/zipli
 $dokka.location:app.cash.zipline/QuickJsException/QuickJsException/#kotlin.String#kotlin.String?/PointingToDeclaration/zipline/app.cash.zipline/-quick-js-exception/-quick-js-exception.html
 $dokka.location:app.cash.zipline/Zipline.Companion///PointingToDeclaration/zipline/app.cash.zipline/-zipline/-companion/index.html
 $dokka.location:app.cash.zipline/Zipline.Companion/engineVersion/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/-companion/engine-version.html
+$dokka.location:app.cash.zipline/Zipline.Companion/get/#kotlin.String#app.cash.zipline.internal.bridge.OutboundClientFactory[TypeParam(bounds=[kotlin.Any])]/PointingToDeclaration/zipline/app.cash.zipline/-zipline/-companion/get.html
 $dokka.location:app.cash.zipline/Zipline///PointingToDeclaration/zipline/app.cash.zipline/-zipline/index.html
 $dokka.location:app.cash.zipline/Zipline/Zipline/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/-zipline.html
 $dokka.location:app.cash.zipline/Zipline/engineVersion/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/engine-version.html
-$dokka.location:app.cash.zipline/Zipline/get/#kotlin.String#app.cash.zipline.JsAdapter/PointingToDeclaration/zipline/app.cash.zipline/-zipline/get.html
-$dokka.location:app.cash.zipline/Zipline/set/#kotlin.String#app.cash.zipline.JsAdapter#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline/-zipline/set.html
+$dokka.location:app.cash.zipline/Zipline/get/#kotlin.String#kotlinx.serialization.modules.SerializersModule/PointingToDeclaration/zipline/app.cash.zipline/-zipline/get.html
+$dokka.location:app.cash.zipline/Zipline/set/#kotlin.String#kotlinx.serialization.modules.SerializersModule#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline/-zipline/set.html
 app.cash.zipline
 app.cash.zipline.internal.bridge
 
