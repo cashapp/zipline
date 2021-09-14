@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.collectLatest
 class EmojiSearchPresenter : CoroutinePresenter<EmojiSearchEvent, EmojiSearchViewModel> {
   override suspend fun produceModels(
     events: Flow<EmojiSearchEvent>,
-    models: suspend (EmojiSearchViewModel) -> Unit
+    models: ModelReceiver<EmojiSearchViewModel>
   ) {
     events.collectLatest { event ->
       when (event) {
         is EmojiSearchEvent.SearchTermEvent -> {
           val filteredImages = sampleImages.filter { event.searchTerm in it.label }
-          models(EmojiSearchViewModel(event.searchTerm, filteredImages))
+          models.invoke(EmojiSearchViewModel(event.searchTerm, filteredImages))
         }
       }
     }

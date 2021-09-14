@@ -20,24 +20,28 @@ import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
+import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
-import kotlin.coroutines.EmptyCoroutineContext
 
 class EmojiSearchActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val presenter = EmojiSearchPresenter()
+    val emojiSearchZipline = EmojiSearchZipline()
+    val presenter = emojiSearchZipline.zipline.emojiSearchPresenter
     val events = MutableSharedFlow<EmojiSearchEvent>(extraBufferCapacity = Int.MAX_VALUE)
     val models = MutableStateFlow(initialViewModel)
 
     CoroutineScope(EmptyCoroutineContext).launch {
-      presenter.produceModels(events) {
-        models.value = it
+      val modelReceiver = object : ModelReceiver<EmojiSearchViewModel> {
+        override suspend fun invoke(model: EmojiSearchViewModel) {
+          models.value = model
+        }
       }
+      presenter.produceModels(events, modelReceiver)
     }
 
     setContent {
