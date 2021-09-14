@@ -26,8 +26,13 @@ import okio.Buffer
  */
 @PublishedApi
 internal abstract class InboundService<T : Any>(
-  val serializersModule: SerializersModule
+  serializersModule: SerializersModule
 ) {
+  val serializersModule: SerializersModule = SerializersModule {
+    include(ZiplineSerializersModule)
+    include(serializersModule)
+  }
+
   abstract fun call(inboundCall: InboundCall): ByteArray
 
   abstract suspend fun callSuspending(inboundCall: InboundCall): ByteArray

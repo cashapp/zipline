@@ -34,7 +34,6 @@ import kotlin.reflect.KTypeProjection;
 import kotlin.reflect.full.KClassifiers;
 import kotlinx.coroutines.test.TestCoroutineDispatcher;
 import kotlinx.serialization.KSerializer;
-import kotlinx.serialization.modules.SerializersModule;
 
 import static app.cash.zipline.testing.EchoKt.getEchoSerializersModule;
 import static java.util.Collections.emptyList;
@@ -63,16 +62,15 @@ public final class KtBridgeTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static EchoService getEchoClient(KtBridge ktBridge, String name) {
-    final SerializersModule serializersModule = getEchoSerializersModule();
-    return ktBridge.get(name, new OutboundClientFactory<EchoService>(serializersModule) {
+    return ktBridge.get(name, new OutboundClientFactory<EchoService>(getEchoSerializersModule()) {
       @Override public EchoService create(OutboundCall.Factory callFactory) {
         return new EchoService() {
           @Override public EchoResponse echo(EchoRequest request) {
             OutboundCall outboundCall = callFactory.create("echo", 1);
             KSerializer<EchoRequest> parameterSerializer
-                = (KSerializer) serializer(serializersModule, echoRequestKt);
+                = (KSerializer) serializer(getSerializersModule(), echoRequestKt);
             KSerializer<EchoResponse> resultSerializer
-                = (KSerializer) serializer(serializersModule, echoResponseKt);
+                = (KSerializer) serializer(getSerializersModule(), echoResponseKt);
             outboundCall.parameter(parameterSerializer, request);
             return outboundCall.invoke(resultSerializer);
           }
@@ -83,14 +81,13 @@ public final class KtBridgeTestInternals {
 
   /** Simulate generated code for inbound calls. */
   public static void setEchoService(KtBridge ktBridge, String name, EchoService echoService) {
-    SerializersModule serializersModule = getEchoSerializersModule();
-    ktBridge.set(name, new InboundService<EchoService>(serializersModule) {
+    ktBridge.set(name, new InboundService<EchoService>(getEchoSerializersModule()) {
       @Override public byte[] call(InboundCall inboundCall) {
         if (inboundCall.getFunName().equals("echo")) {
           KSerializer<EchoResponse> resultSerializer
-              = (KSerializer) serializer(serializersModule, echoResponseKt);
+              = (KSerializer) serializer(getSerializersModule(), echoResponseKt);
           KSerializer<EchoRequest> parameterSerializer
-              = (KSerializer) serializer(serializersModule, echoRequestKt);
+              = (KSerializer) serializer(getSerializersModule(), echoRequestKt);
           return inboundCall.result(resultSerializer, echoService.echo(
               inboundCall.parameter(parameterSerializer)));
         } else {
@@ -107,17 +104,16 @@ public final class KtBridgeTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static GenericEchoService<String> getGenericEchoService(KtBridge ktBridge, String name) {
-    final SerializersModule serializersModule = getEchoSerializersModule();
     return ktBridge.get(name, new OutboundClientFactory<GenericEchoService<String>>(
-        serializersModule) {
+        getEchoSerializersModule()) {
       @Override public GenericEchoService<String> create(OutboundCall.Factory callFactory) {
         return new GenericEchoService<String>() {
           @Override public List<String> genericEcho(String request) {
             OutboundCall outboundCall = callFactory.create("genericEcho", 1);
             KSerializer<String> parameterSerializer
-                = (KSerializer) serializer(serializersModule, stringKt);
+                = (KSerializer) serializer(getSerializersModule(), stringKt);
             KSerializer<List<String>> resultSerializer
-                = (KSerializer) serializer(serializersModule, listOfStringKt);
+                = (KSerializer) serializer(getSerializersModule(), listOfStringKt);
             outboundCall.parameter(parameterSerializer, request);
             return outboundCall.invoke(resultSerializer);
           }
@@ -129,14 +125,13 @@ public final class KtBridgeTestInternals {
   /** Simulate generated code for inbound calls. */
   public static void setGenericEchoService(
       KtBridge ktBridge, String name, GenericEchoService<String> echoService) {
-    final SerializersModule serializersModule = getEchoSerializersModule();
-    ktBridge.set(name, new InboundService<GenericEchoService<String>>(serializersModule) {
+    ktBridge.set(name, new InboundService<GenericEchoService<String>>(getEchoSerializersModule()) {
       @Override public byte[] call(InboundCall inboundCall) {
         if (inboundCall.getFunName().equals("genericEcho")) {
           KSerializer<List<String>> resultSerializer
-              = (KSerializer) serializer(serializersModule, listOfStringKt);
+              = (KSerializer) serializer(getSerializersModule(), listOfStringKt);
           KSerializer<String> parameterSerializer
-              = (KSerializer) serializer(serializersModule, stringKt);
+              = (KSerializer) serializer(getSerializersModule(), stringKt);
           return inboundCall.result(resultSerializer, echoService.genericEcho(
               inboundCall.parameter(parameterSerializer)));
         } else {

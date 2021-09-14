@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.DefaultZiplineSerializersModule
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -52,7 +51,7 @@ class KtBridge internal constructor(
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
-        val callback = get<SuspendCallback>(callbackName, DefaultZiplineSerializersModule)
+        val callback = get<SuspendCallback>(callbackName, ZiplineSerializersModule)
         val inboundCall = InboundCall(funName, encodedArguments, handler.serializersModule)
         val result = try {
           handler.callSuspending(inboundCall)

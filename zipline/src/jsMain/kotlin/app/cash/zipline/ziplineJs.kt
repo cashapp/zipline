@@ -19,6 +19,7 @@ import app.cash.zipline.internal.bridge.InboundService
 import app.cash.zipline.internal.bridge.InternalBridge
 import app.cash.zipline.internal.bridge.KtBridge
 import app.cash.zipline.internal.bridge.OutboundClientFactory
+import app.cash.zipline.internal.bridge.ZiplineSerializersModule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.modules.SerializersModule
 
@@ -97,12 +98,12 @@ private class ZiplineJs : Zipline(), JsPlatform, InternalBridge  {
     // Connect platforms using our newly-bootstrapped bridges.
     ktBridge.set<JsPlatform>(
       name = "app.cash.zipline.jsPlatform",
-      serializersModule = DefaultZiplineSerializersModule,
+      serializersModule = ZiplineSerializersModule,
       instance = this
     )
     hostPlatform = ktBridge.get(
       name = "app.cash.zipline.hostPlatform",
-      serializersModule = DefaultZiplineSerializersModule
+      serializersModule = ZiplineSerializersModule
     )
   }
 

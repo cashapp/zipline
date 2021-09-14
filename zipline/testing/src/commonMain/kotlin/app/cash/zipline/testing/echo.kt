@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.testing
 
-import app.cash.zipline.DefaultZiplineSerializersModule
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 
@@ -34,5 +33,4 @@ data class EchoResponse(
 )
 
 val EchoSerializersModule: SerializersModule = SerializersModule {
-  include(DefaultZiplineSerializersModule)
 }

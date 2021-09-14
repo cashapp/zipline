@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.DefaultZiplineSerializersModule
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.serialization.KSerializer
@@ -29,8 +28,13 @@ import okio.Buffer
  */
 @PublishedApi
 internal abstract class OutboundClientFactory<T : Any>(
-  val serializersModule: SerializersModule
+  serializersModule: SerializersModule
 ) {
+  val serializersModule: SerializersModule = SerializersModule {
+    include(ZiplineSerializersModule)
+    include(serializersModule)
+  }
+
   abstract fun create(callFactory: OutboundCall.Factory): T
 }
 
@@ -83,7 +87,7 @@ internal class OutboundCall private constructor(
       require(callCount++ == parameterCount)
       val callbackName = ktBridge.generateName()
       val callback = RealSuspendCallback(callbackName, continuation, serializer)
-      ktBridge.set<SuspendCallback>(callbackName, DefaultZiplineSerializersModule, callback)
+      ktBridge.set<SuspendCallback>(callbackName, ZiplineSerializersModule, callback)
       val encodedArguments = buffer.readByteArray()
       internalBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
     }
