@@ -26,6 +26,8 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
+import kotlin.coroutines.EmptyCoroutineContext
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
@@ -36,7 +38,8 @@ class EmojiSearchActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val presenter = EmojiSearchPresenter()
+    val emojiSearchZipline = EmojiSearchZipline()
+    val presenter = emojiSearchZipline.zipline.emojiSearchPresenter
     val events = MutableSharedFlow<EmojiSearchEvent>(extraBufferCapacity = Int.MAX_VALUE)
     val models = MutableStateFlow(initialViewModel)
 
@@ -44,6 +47,7 @@ class EmojiSearchActivity : ComponentActivity() {
       presenter.produceModels(events) {
         models.value = it
       }
+      presenter.produceModels(events, modelReceiver)
     }
 
     setContent {

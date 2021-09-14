@@ -6,4 +6,5 @@ include(":zipline-kotlin-plugin")
 include(":zipline-gradle-plugin")
 
 include(":samples:emoji-search")
+include(":samples:emoji-search:presenters")
 include(":samples:octane")
