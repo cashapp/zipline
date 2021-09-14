@@ -10,3 +10,7 @@ reports
 jacoco.exec
 .externalNativeBuild
 .cxx
+
+# macOS
+.DS_Store
+captures
