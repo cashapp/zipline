@@ -2,7 +2,7 @@
 
 set -e
 
-ASSET_LOCATION=sample-octane/src/main/assets/octane
+ASSET_LOCATION=samples/octane/src/main/assets/octane
 
 # Download and extract ZIP from GitHub.
 wget https://github.com/chromium/octane/archive/master.zip
