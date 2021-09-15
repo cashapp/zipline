@@ -13,13 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.ktbridge.plugin;
+package app.cash.zipline.kotlin;
 
+import app.cash.zipline.internal.bridge.Endpoint;
+import app.cash.zipline.internal.bridge.InboundBridge;
 import app.cash.zipline.internal.bridge.InboundCall;
-import app.cash.zipline.internal.bridge.InboundService;
-import app.cash.zipline.internal.bridge.KtBridge;
 import app.cash.zipline.internal.bridge.OutboundCall;
-import app.cash.zipline.internal.bridge.OutboundClientFactory;
+import app.cash.zipline.internal.bridge.OutboundBridge;
 import app.cash.zipline.testing.EchoRequest;
 import app.cash.zipline.testing.EchoResponse;
 import app.cash.zipline.testing.EchoService;
@@ -45,7 +45,7 @@ import static kotlinx.serialization.SerializersKt.serializer;
  * visibility of internal APIs.
  */
 @SuppressWarnings("KotlinInternalInJava")
-public final class KtBridgeTestInternals {
+public final class ZiplineTestInternals {
   private static final KType echoResponseKt = KClassifiers.createType(
       JvmClassMappingKt.getKotlinClass(EchoResponse.class), emptyList(), false, emptyList());
   private static final KType echoRequestKt = KClassifiers.createType(
@@ -56,13 +56,13 @@ public final class KtBridgeTestInternals {
       JvmClassMappingKt.getKotlinClass(List.class),
       singletonList(KTypeProjection.invariant(stringKt)), false, emptyList());
 
-  public static Pair<KtBridge, KtBridge> newKtBridgePair() {
-    return app.cash.zipline.testing.BridgesKt.newKtBridgePair(new TestCoroutineDispatcher());
+  public static Pair<Endpoint, Endpoint> newEndpointPair() {
+    return app.cash.zipline.testing.EndpointsKt.newEndpointPair(new TestCoroutineDispatcher());
   }
 
   /** Simulate generated code for outbound calls. */
-  public static EchoService getEchoClient(KtBridge ktBridge, String name) {
-    return ktBridge.get(name, new OutboundClientFactory<EchoService>(getEchoSerializersModule()) {
+  public static EchoService getEchoClient(Endpoint endpoint, String name) {
+    return endpoint.get(name, new OutboundBridge<EchoService>(getEchoSerializersModule()) {
       @Override public EchoService create(OutboundCall.Factory callFactory) {
         return new EchoService() {
           @Override public EchoResponse echo(EchoRequest request) {
@@ -80,8 +80,8 @@ public final class KtBridgeTestInternals {
   }
 
   /** Simulate generated code for inbound calls. */
-  public static void setEchoService(KtBridge ktBridge, String name, EchoService echoService) {
-    ktBridge.set(name, new InboundService<EchoService>(getEchoSerializersModule()) {
+  public static void setEchoService(Endpoint endpoint, String name, EchoService echoService) {
+    endpoint.set(name, new InboundBridge<EchoService>(getEchoSerializersModule()) {
       @Override public byte[] call(InboundCall inboundCall) {
         if (inboundCall.getFunName().equals("echo")) {
           KSerializer<EchoResponse> resultSerializer
@@ -103,8 +103,8 @@ public final class KtBridgeTestInternals {
   }
 
   /** Simulate generated code for outbound calls. */
-  public static GenericEchoService<String> getGenericEchoService(KtBridge ktBridge, String name) {
-    return ktBridge.get(name, new OutboundClientFactory<GenericEchoService<String>>(
+  public static GenericEchoService<String> getGenericEchoService(Endpoint endpoint, String name) {
+    return endpoint.get(name, new OutboundBridge<GenericEchoService<String>>(
         getEchoSerializersModule()) {
       @Override public GenericEchoService<String> create(OutboundCall.Factory callFactory) {
         return new GenericEchoService<String>() {
@@ -124,8 +124,8 @@ public final class KtBridgeTestInternals {
 
   /** Simulate generated code for inbound calls. */
   public static void setGenericEchoService(
-      KtBridge ktBridge, String name, GenericEchoService<String> echoService) {
-    ktBridge.set(name, new InboundService<GenericEchoService<String>>(getEchoSerializersModule()) {
+      Endpoint endpoint, String name, GenericEchoService<String> echoService) {
+    endpoint.set(name, new InboundBridge<GenericEchoService<String>>(getEchoSerializersModule()) {
       @Override public byte[] call(InboundCall inboundCall) {
         if (inboundCall.getFunName().equals("genericEcho")) {
           KSerializer<List<String>> resultSerializer
@@ -146,6 +146,6 @@ public final class KtBridgeTestInternals {
     });
   }
 
-  private KtBridgeTestInternals() {
+  private ZiplineTestInternals() {
   }
 }

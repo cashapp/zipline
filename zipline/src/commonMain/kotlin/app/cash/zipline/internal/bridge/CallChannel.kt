@@ -29,7 +29,7 @@ import okio.BufferedSink
 import okio.BufferedSource
 
 @PublishedApi
-internal interface InternalBridge {
+internal interface CallChannel {
   /**
    * Internal function used to bridge method calls from Java or Android to JavaScript.
    *
@@ -76,7 +76,7 @@ internal fun <T> BufferedSource.readJsonUtf8(serializer: DeserializationStrategy
 }
 
 /**
- * Installed by [InboundService] and [OutboundClientFactory] to add serializers required by core
+ * Installed by [InboundBridge] and [OutboundBridge] to add serializers required by core
  * types like [Throwable].
  */
 internal val ZiplineSerializersModule: SerializersModule = SerializersModule {

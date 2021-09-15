@@ -25,7 +25,7 @@ import okio.Buffer
  * another platform in the same process.
  */
 @PublishedApi
-internal abstract class InboundService<T : Any>(
+internal abstract class InboundBridge<T : Any>(
   serializersModule: SerializersModule
 ) {
   val serializersModule: SerializersModule = SerializersModule {

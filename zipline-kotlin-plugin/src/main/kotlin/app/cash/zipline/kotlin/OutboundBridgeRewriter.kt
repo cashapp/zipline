@@ -52,18 +52,18 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `KtBridge.get()` that takes a name and a `SerializersModule`:
+ * Rewrites calls to `Zipline.get()` that takes a name and a `SerializersModule`:
  *
  * ```
- * val helloService: EchoService = ktBridge.get("helloService", EchoSerializersModule)
+ * val helloService: EchoService = zipline.get("helloService", EchoSerializersModule)
  * ```
  *
- * to the overload that takes a name and an `OutboundClientFactory`:
+ * to the overload that takes a name and an `OutboundBridge`:
  *
  * ```
- * val helloService: EchoService = ktBridge.get(
+ * val helloService: EchoService = zipline.get(
  *   "helloService",
- *   object : OutboundClientFactory<EchoService>(EchoSerializersModule) {
+ *   object : OutboundBridge<EchoService>(EchoSerializersModule) {
  *     val serializer_0 = EchoSerializersModule.serializer<EchoRequest>()
  *     val serializer_1 = EchoSerializersModule.serializer<EchoResponse>()
  *     override fun create(outboundCallFactory: OutboundCall.Factory): EchoService {
@@ -80,9 +80,9 @@ import org.jetbrains.kotlin.name.Name
  *
  * For suspending functions, everything is the same except the call is to `invokeSuspending()`.
  */
-internal class KtBridgeGetRewriter(
+internal class OutboundBridgeRewriter(
   private val pluginContext: IrPluginContext,
-  private val ktBridgeApis: KtBridgeApis,
+  private val ziplineApis: ZiplineApis,
   private val scope: ScopeWithIr,
   private val declarationParent: IrDeclarationParent,
   private val original: IrCall,
@@ -90,9 +90,9 @@ internal class KtBridgeGetRewriter(
 ) {
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
-    ktBridgeApis,
+    ziplineApis,
     original,
-    "KtBridge.get()",
+    "Zipline.get()",
     original.getTypeArgument(0)!!
   )
 
@@ -101,24 +101,24 @@ internal class KtBridgeGetRewriter(
 
   fun rewrite(): IrCall {
     return irCall(original, rewrittenGetFunction).apply {
-      putValueArgument(1, irNewOutboundClientFactory())
+      putValueArgument(1, irNewOutboundBridge())
       patchDeclarationParents(declarationParent)
     }
   }
 
-  private fun irNewOutboundClientFactory(): IrContainerExpression {
-    val outboundClientFactoryOfT = ktBridgeApis.outboundClientFactory.typeWith(bridgedInterface.type)
-    val outboundClientFactorySubclass = irFactory.buildClass {
+  private fun irNewOutboundBridge(): IrContainerExpression {
+    val outboundBridgeOfT = ziplineApis.outboundBridge.typeWith(bridgedInterface.type)
+    val outboundBridgeSubclass = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
     }.apply {
-      superTypes = listOf(outboundClientFactoryOfT)
+      superTypes = listOf(outboundBridgeOfT)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    // OutboundClientFactory<EchoService>(EchoSerializersModule)
-    val superConstructor = ktBridgeApis.outboundClientFactory.constructors.single()
-    val constructor = outboundClientFactorySubclass.addConstructor {
+    // OutboundBridge<EchoService>(EchoSerializersModule)
+    val superConstructor = ziplineApis.outboundBridge.constructors.single()
+    val constructor = outboundBridgeSubclass.addConstructor {
       origin = IrDeclarationOrigin.DEFINED
       visibility = DescriptorVisibilities.PUBLIC
       isPrimary = true
@@ -135,33 +135,33 @@ internal class KtBridgeGetRewriter(
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,
-          classSymbol = outboundClientFactorySubclass.symbol,
+          classSymbol = outboundBridgeSubclass.symbol,
         )
       }
     }
 
     // override fun create(callFactory: OutboundCall.Factory): EchoService {
     // }
-    val createFunction = outboundClientFactorySubclass.addFunction {
+    val createFunction = outboundBridgeSubclass.addFunction {
       name = Name.identifier("create")
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
       returnType = bridgedInterface.type
     }.apply {
       addDispatchReceiver {
-        type = outboundClientFactorySubclass.defaultType
+        type = outboundBridgeSubclass.defaultType
       }
       addValueParameter {
         name = Name.identifier("outboundCallFactory")
-        type = ktBridgeApis.outboundCallFactory.defaultType
+        type = ziplineApis.outboundCallFactory.defaultType
       }
-      overriddenSymbols += ktBridgeApis.outboundClientFactoryCreate
+      overriddenSymbols += ziplineApis.outboundBridgeCreate
     }
 
     // We add overrides here so we can use them below.
-    outboundClientFactorySubclass.addFakeOverrides(pluginContext.irBuiltIns, listOf(createFunction))
+    outboundBridgeSubclass.addFakeOverrides(pluginContext.irBuiltIns, listOf(createFunction))
 
-    bridgedInterface.declareSerializerProperties(outboundClientFactorySubclass)
+    bridgedInterface.declareSerializerProperties(outboundBridgeSubclass)
 
     createFunction.irFunctionBody(
       context = pluginContext,
@@ -176,9 +176,9 @@ internal class KtBridgeGetRewriter(
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
-      resultType = outboundClientFactorySubclass.defaultType
-      +outboundClientFactorySubclass
-      +irCall(constructor.symbol, type = outboundClientFactorySubclass.defaultType)
+      resultType = outboundBridgeSubclass.defaultType
+      +outboundBridgeSubclass
+      +irCall(constructor.symbol, type = outboundBridgeSubclass.defaultType)
     }
   }
 
@@ -203,7 +203,7 @@ internal class KtBridgeGetRewriter(
     constructor.irConstructorBody(pluginContext) { statements ->
       statements += irDelegatingConstructorCall(
         context = pluginContext,
-        symbol = ktBridgeApis.any.constructors.single(),
+        symbol = ziplineApis.any.constructors.single(),
       )
       statements += irInstanceInitializerCall(
         context = pluginContext,
@@ -261,7 +261,7 @@ internal class KtBridgeGetRewriter(
       context = pluginContext,
       scopeOwnerSymbol = result.symbol
     ) {
-      val callCreate = irCall(ktBridgeApis.outboundCallFactoryCreate).apply {
+      val callCreate = irCall(ziplineApis.outboundCallFactoryCreate).apply {
         dispatchReceiver = irGet(createFunction.valueParameters[0])
         putValueArgument(0, irString(bridgedFunction.name.identifier))
         putValueArgument(1, irInt(bridgedFunction.valueParameters.size))
@@ -278,7 +278,7 @@ internal class KtBridgeGetRewriter(
       // outboundCall.parameter<EchoRequest>(serializer_0, request)
       for (valueParameter in result.valueParameters) {
         val parameterType = bridgedInterface.resolveTypeParameters(valueParameter.type)
-        +irCall(callee = ktBridgeApis.outboundCallParameter).apply {
+        +irCall(callee = ziplineApis.outboundCallParameter).apply {
           dispatchReceiver = irGet(outboundCallLocal)
           putTypeArgument(0, parameterType)
           putValueArgument(
@@ -303,8 +303,8 @@ internal class KtBridgeGetRewriter(
       //   return outboundCall.<EchoResponse>invoke(serializer_2)
       //   return outboundCall.<EchoResponse>invokeSuspending(serializer_2)
       val invoke = when {
-        bridgedFunction.isSuspend -> ktBridgeApis.outboundCallInvokeSuspending
-        else -> ktBridgeApis.outboundCallInvoke
+        bridgedFunction.isSuspend -> ziplineApis.outboundCallInvokeSuspending
+        else -> ziplineApis.outboundCallInvoke
       }
       +irReturn(
         value = irCall(callee = invoke).apply {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline
+package app.cash.zipline.internal
 
 /**
  * Functions that are built in to regular JavaScript environments like the browser and NodeJS, but
