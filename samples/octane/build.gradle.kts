@@ -1,25 +1,18 @@
-import com.android.build.gradle.BaseExtension
-
 plugins {
   id("com.android.application")
 }
 
-extensions.configure<BaseExtension> {
-  compileSdkVersion(Ext.compileSdkVersion)
-
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
-  }
+android {
+  compileSdk = Ext.compileSdk
 
   defaultConfig {
-    applicationId = "com.example.duktape.octane"
-    minSdkVersion(18)
-    targetSdkVersion(29)
+    applicationId = "com.example.zipline.octane"
+    minSdk = 18
+    targetSdk = Ext.targetSdk
   }
 
   val samples by signingConfigs.creating {
-    storeFile(file("samples.keystore"))
+    storeFile(file("../samples.keystore"))
     storePassword("javascript")
     keyAlias("javascript")
     keyPassword("javascript")
@@ -27,7 +20,7 @@ extensions.configure<BaseExtension> {
 
   buildTypes {
     val debug by getting {
-      applicationIdSuffix(".debug")
+      applicationIdSuffix = ".debug"
       signingConfig = samples
     }
     val release by getting {

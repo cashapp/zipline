@@ -14,11 +14,11 @@ buildscript {
     gradlePluginPortal()
   }
   dependencies {
-    classpath("com.android.tools.build:gradle:4.2.1")
+    classpath("com.android.tools.build:gradle:7.0.2")
     classpath("net.ltgt.gradle:gradle-errorprone-plugin:2.0.1")
     classpath("com.vanniktech:gradle-maven-publish-plugin:0.18.0")
-    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.20")
-    classpath("org.jetbrains.kotlin:kotlin-serialization:1.5.20")
+    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
+    classpath("org.jetbrains.kotlin:kotlin-serialization:1.5.21")
     classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.5.0")
   }
 }
@@ -36,12 +36,6 @@ allprojects {
   repositories {
     mavenCentral()
     google()
-    jcenter {
-      // Required for a dependency of Android lint.
-      content {
-        includeGroup("org.jetbrains.trove4j")
-      }
-    }
   }
 }
 

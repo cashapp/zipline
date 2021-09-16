@@ -29,7 +29,7 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
-          java-version: 8
+          java-version: 11
 
       # Clang is seemingly already installed on Ubuntu but fails to build the project with errors
       # like "file not found" for `#include <string>`. Explicitly (re?)installing fixes things.
@@ -61,7 +61,7 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
-          java-version: 8
+          java-version: 11
 
       - run: ./gradlew assembleAndroidTest
 
@@ -81,7 +81,7 @@ jobs:
       - uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
-          java-version: 8
+          java-version: 11
 
       - uses: actions/download-artifact@v2
       - run: |

@@ -98,7 +98,7 @@ kotlin {
 }
 
 android {
-  compileSdkVersion(Ext.compileSdkVersion)
+  compileSdkVersion(Ext.compileSdk)
 
   defaultConfig {
     minSdkVersion(18)
@@ -127,10 +127,10 @@ android {
   }
 
   sourceSets {
-    val main by getting {
+    getByName("main") {
       manifest.srcFile("src/androidMain/AndroidManifest.xml")
     }
-    val androidTest by getting {
+    getByName("androidTest") {
       java.srcDirs("src/engineTest/kotlin/", "src/jniTest/kotlin/")
       resources.srcDir("src/androidInstrumentationTest/resources/")
       resources.srcDir(copyTestingJs)
