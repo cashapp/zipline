@@ -30,8 +30,10 @@ class EmojiSearchActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
 
-    val emojiSearchZipline = EmojiSearchZipline()
-    val presenter = emojiSearchZipline.zipline.emojiSearchPresenter
+    // TODO: use the JS presenter
+//    val emojiSearchZipline = EmojiSearchZipline()
+//    val presenter = emojiSearchZipline.zipline.emojiSearchPresenter
+    val presenter = EmojiSearchPresenterJVM(RealHostApi())
     val events = MutableSharedFlow<EmojiSearchEvent>(extraBufferCapacity = Int.MAX_VALUE)
     val models = MutableStateFlow(initialViewModel)
 

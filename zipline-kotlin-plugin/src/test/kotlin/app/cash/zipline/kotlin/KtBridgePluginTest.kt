@@ -40,9 +40,9 @@ class KtBridgePluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.KtBridge
-        
+
         class TestingEchoService(
           private val greeting: String
         ) : EchoService {
@@ -50,8 +50,9 @@ class KtBridgePluginTest {
             return EchoResponse("${'$'}greeting from the compiler plugin, ${'$'}{request.message}")
           }
         }
-        
+
         fun prepareJsBridges(ktBridge: KtBridge) {
+          ktBridge.set<EchoService>("helloService", object : InboundService)
           ktBridge.set<EchoService>("helloService", EchoSerializersModule, TestingEchoService("hello"))
         }
         """
@@ -75,9 +76,9 @@ class KtBridgePluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.KtBridge
-        
+
         fun getHelloService(ktBridge: KtBridge): EchoService {
           return ktBridge.get("helloService", EchoSerializersModule)
         }
@@ -110,9 +111,9 @@ class KtBridgePluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.KtBridge
-        
+
         fun prepareJsBridges(ktBridge: KtBridge) {
           ktBridge.set<TestingEchoService>("helloService", EchoSerializersModule, TestingEchoService)
         }
@@ -135,9 +136,9 @@ class KtBridgePluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.KtBridge
-        
+
         fun getHelloService(ktBridge: KtBridge): String {
           return ktBridge.get("helloService", EchoSerializersModule)
         }
@@ -156,15 +157,15 @@ class KtBridgePluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.KtBridge
-        
+
         class TestingGenericEchoService : GenericEchoService<String> {
           override fun genericEcho(request: String): List<String> {
             return listOf("received a generic ${'$'}request!")
           }
         }
-        
+
         fun prepareJsBridges(ktBridge: KtBridge) {
           ktBridge.set<GenericEchoService<String>>(
             "genericService",
@@ -192,9 +193,9 @@ class KtBridgePluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.KtBridge
-        
+
         fun getGenericService(ktBridge: KtBridge): GenericEchoService<String> {
           return ktBridge.get("genericService", EchoSerializersModule)
         }
@@ -227,9 +228,9 @@ class KtBridgePluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.KtBridge
-        
+
         fun prepareJsBridges(ktBridge: KtBridge) {
           ktBridge.set<EchoService>("helloService", EchoSerializersModule, object : EchoService {
             override fun echo(request: EchoRequest): EchoResponse {

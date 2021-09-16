@@ -19,6 +19,11 @@ kotlin {
         implementation(project(":zipline"))
       }
     }
+    val jvmMain by getting {
+      dependencies {
+        implementation("com.squareup.okhttp3:okhttp:4.9.1")
+      }
+    }
   }
 }
 

@@ -119,7 +119,7 @@ internal class KtBridgeSetRewriter(
     get() = pluginContext.irFactory
 
   fun rewrite(): IrCall {
-    return IrCallImpl(
+    val resultAfterRewriting = IrCallImpl(
       startOffset = original.startOffset,
       endOffset = original.endOffset,
       type = original.type,
@@ -134,6 +134,7 @@ internal class KtBridgeSetRewriter(
       putValueArgument(1, irNewInboundService())
       patchDeclarationParents(declarationParent)
     }
+    return resultAfterRewriting
   }
 
   private fun irNewInboundService(): IrContainerExpression {
