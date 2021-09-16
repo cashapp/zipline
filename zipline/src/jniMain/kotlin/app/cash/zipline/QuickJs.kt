@@ -47,8 +47,9 @@ actual class QuickJs private constructor(
       }
       return QuickJs(context)
         .apply {
-          // Explicitly assign default values to these properties so the JVM backing fields values
+          // Explicitly assign default values to these properties so the backing fields values
           // are consistent with their native fields. (QuickJS doesn't offer accessors for these.)
+          // TODO extract this somewhere common to share with nativeMain/
           memoryLimit = -1L
           gcThreshold = 256L * 1024L
           maxStackSize = 512L * 1024L // Override the QuickJS default which is 256 KiB

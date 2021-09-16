@@ -19,33 +19,14 @@ import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertNull
 import org.junit.Ignore
 import org.junit.Test
 
-class QuickJsCompileTest {
+class QuickJsCompileJvmTest {
   private var quickJs = QuickJs.create()
 
   @After fun tearDown() {
     quickJs.close()
-  }
-
-  @Test fun helloWorld() {
-    val code = quickJs.compile("'hello, world!'.toUpperCase();", "myFile.js")
-    assertNotEquals(0, code.size)
-
-    quickJs.close()
-    quickJs = QuickJs.create()
-
-    val hello = quickJs.execute(code)
-    assertEquals("HELLO, WORLD!", hello)
-  }
-
-  @Test fun badCode() {
-    val t = assertFailsWith<QuickJsException> {
-      quickJs.compile("@#%(*W#(UF(E", "myFile.js")
-    }
-    assertEquals("unexpected token in expression: '@'", t.message)
   }
 
   @Test fun exceptionsInScriptIncludeStackTrace() {
@@ -68,26 +49,6 @@ class QuickJsCompileTest {
     assertEquals("JavaScript.f1(C:\\Documents\\myFile.js:4)", t.stackTrace[1].toString())
     assertEquals("JavaScript.<eval>(C:\\Documents\\myFile.js:1)", t.stackTrace[2].toString())
     assertEquals("app.cash.zipline.QuickJs.execute(Native Method)", t.stackTrace[3].toString())
-  }
-
-  @Test fun multipleParts() {
-    val code = quickJs.compile("myFunction();", "myFileA.js")
-    assertNotEquals(0, code.size)
-
-    val functionDef =
-        quickJs.compile("function myFunction() { return 'this is the answer'; }", "myFileB.js")
-    assertNotEquals(0, functionDef.size)
-
-    quickJs.close()
-    quickJs = QuickJs.create()
-
-    val t = assertFailsWith<QuickJsException> {
-      quickJs.execute(code)
-    }
-    assertEquals("'myFunction' is not defined", t.message)
-
-    assertNull(quickJs.execute(functionDef))
-    assertEquals("this is the answer", quickJs.execute(code))
   }
 
   internal interface TestInterface {

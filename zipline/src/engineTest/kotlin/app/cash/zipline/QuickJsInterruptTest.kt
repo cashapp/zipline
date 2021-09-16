@@ -15,25 +15,28 @@
  */
 package app.cash.zipline
 
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
 
 class QuickJsInterruptTest {
   private val quickJs = QuickJs.create()
 
-  @Before fun setUp() {
+  @BeforeTest fun setUp() {
     quickJs.evaluate("""
       |var fib = function(a) {
       |  if (a < 2) return 1;
       |  return fib(a - 1) + fib(a - 2);
       |}
       """.trimMargin())
+
+    // Set a huge max stack because of the heavy recursion of fib().
+    quickJs.maxStackSize *= 5
   }
 
-  @After fun tearDown() {
+  @AfterTest fun tearDown() {
     quickJs.close()
   }
 

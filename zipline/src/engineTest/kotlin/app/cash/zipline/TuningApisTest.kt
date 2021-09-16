@@ -15,16 +15,23 @@
  */
 package app.cash.zipline
 
+import kotlin.test.AfterTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import org.junit.After
-import org.junit.Test
 
 class TuningApisTest {
   private val quickjs = QuickJs.create()
 
-  @After fun tearDown() {
+  @AfterTest fun tearDown() {
     quickjs.close()
+  }
+
+  @Test fun defaults() {
+    // TODO remove this test once jniMain and nativeMain share initial value config in engineMain.
+    assertEquals(-1, quickjs.memoryLimit)
+    assertEquals(256L * 1024L, quickjs.gcThreshold)
+    assertEquals(512L * 1024L, quickjs.maxStackSize)
   }
 
   @Test fun setMemoryLimit() {
@@ -71,7 +78,7 @@ class TuningApisTest {
     val diff = diffMemoryUsage {
       quickjs.evaluate(
         """
-        globalThis.hypotenuse = function(a, b) { 
+        globalThis.hypotenuse = function(a, b) {
           return Math.sqrt((a * a) + (b * b));
         };
         """

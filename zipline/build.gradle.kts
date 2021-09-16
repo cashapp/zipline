@@ -1,7 +1,9 @@
+import co.touchlab.cklib.gradle.CompileToBitcode.Language.C
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
+import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
 
 plugins {
   kotlin("multiplatform")
@@ -9,6 +11,7 @@ plugins {
   id("com.android.library")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
+  id("co.touchlab.cklib")
 }
 
 abstract class VersionWriterTask : DefaultTask() {
@@ -49,9 +52,26 @@ val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
 kotlin {
   android()
   jvm()
+
   js {
     nodejs()
   }
+
+  linuxX64()
+  macosX64()
+  macosArm64()
+  iosArm32()
+  iosArm64()
+  iosX64()
+  iosSimulatorArm64()
+  watchosArm32()
+  watchosArm64()
+  watchosSimulatorArm64()
+  watchosX86()
+  watchosX64()
+  tvosArm64()
+  tvosSimulatorArm64()
+  tvosX64()
 
   sourceSets {
     val commonMain by getting {
@@ -98,6 +118,93 @@ kotlin {
         implementation(project(":zipline:testing"))
       }
     }
+
+    val nativeMain by creating {
+      dependsOn(engineMain)
+    }
+    val nativeTest by creating {
+      dependsOn(engineTest)
+    }
+
+    val native32Main by creating {
+      dependsOn(nativeMain)
+    }
+    val native32Test by creating {
+      dependsOn(nativeTest)
+    }
+
+    val native64Main by creating {
+      dependsOn(nativeMain)
+    }
+    val native64Test by creating {
+      dependsOn(nativeTest)
+    }
+
+    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget> {
+      val main by compilations.getting
+      main.defaultSourceSet.dependsOn(
+        if (use64BitSource(this)) {
+          native64Main
+        } else {
+          native32Main
+        }
+      )
+
+      main.cinterops {
+        create("quickjs") {
+          header(file("native/quickjs/quickjs.h"))
+          packageName("app.cash.zipline.quickjs")
+        }
+      }
+
+      val test by compilations.getting
+      test.defaultSourceSet.dependsOn(
+        if (use64BitSource(this)) {
+          native64Test
+        } else {
+          native32Test
+        }
+      )
+    }
+
+    targets.all {
+      compilations.all {
+        val pluginDependency = if (this is AbstractKotlinNativeCompilation) {
+          project(":zipline-kotlin-plugin:hosted")
+        } else {
+          project(":zipline-kotlin-plugin")
+        }
+        // Naming logic from https://github.com/JetBrains/kotlin/blob/a0e6fb03f0288f0bff12be80c402d8a62b5b045a/libraries/tools/kotlin-gradle-plugin/src/main/kotlin/org/jetbrains/kotlin/gradle/plugin/KotlinTargetConfigurator.kt#L519-L520
+        val pluginConfigurationName = PLUGIN_CLASSPATH_CONFIGURATION_NAME +
+          target.disambiguationClassifier.orEmpty().capitalize() +
+          compilationName.capitalize()
+        project.dependencies.add(pluginConfigurationName, pluginDependency)
+      }
+    }
+  }
+}
+
+// The cinterop in QuickJS is slightly different between 32 and 64 bit.
+// watchosArm64 reports as 64 bit but has 32 bit pointers.
+fun use64BitSource(target:org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget): Boolean =
+  target.name != "watchosArm64" && target.konanTarget.architecture.bitness == 64
+
+cklib {
+  create("quickjs") {
+    language = C
+    srcDirs = project.files(file("native/quickjs"))
+    compilerArgs.addAll(
+      listOf(
+        "-DKONAN_MI_MALLOC=1",
+        "-DCONFIG_VERSION=\"${quickJsVersion()}\"",
+        "-Wno-unknown-pragmas",
+        "-ftls-model=initial-exec",
+        "-Wno-unused-function",
+        "-Wno-error=atomic-alignment",
+        "-Wno-sign-compare",
+        "-Wno-unused-parameter" /* for windows 32*/
+      )
+    )
   }
 }
 
@@ -184,8 +291,6 @@ dependencies {
   androidTestImplementation(Dependencies.truth)
   androidTestImplementation(Dependencies.kotlinxCoroutinesTest)
   androidTestImplementation(project(":zipline:testing"))
-
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
 }
 
 fun quickJsVersion(): String {
