@@ -45,7 +45,7 @@ actual abstract class Zipline : Closeable {
   @PublishedApi
   internal abstract fun <T : Any> get(
     name: String,
-    outboundBridge: OutboundBridge<T>
+    bridge: OutboundBridge<T>
   ): T
 
   actual fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
@@ -136,15 +136,15 @@ private class ZiplineJni(
 
   override fun <T : Any> get(
     name: String,
-    outboundBridge: OutboundBridge<T>
+    bridge: OutboundBridge<T>
   ): T {
     check(!closed) { "closed" }
-    return endpoint.get(name, outboundBridge)
+    return endpoint.get(name, bridge)
   }
 
-  override fun set(name: String, handler: InboundBridge<*>) {
+  override fun set(name: String, bridge: InboundBridge<*>) {
     check(!closed) { "closed" }
-    endpoint.set(name, handler)
+    endpoint.set(name, bridge)
   }
 
   override fun setTimeout(timeoutId: Int, delayMillis: Int) {

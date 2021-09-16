@@ -50,6 +50,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrReturnImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
+import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrReturnTargetSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
 import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
@@ -170,6 +171,7 @@ fun irVal(
   propertyType: IrType,
   declaringClass: IrClass,
   propertyName: Name,
+  overriddenProperty: IrPropertySymbol? = null,
   initializer: IrBlockBuilder.() -> IrExpressionBody,
 ): IrProperty {
   val irFactory = pluginContext.irFactory
@@ -179,7 +181,7 @@ fun irVal(
     origin = IrDeclarationOrigin.DEFINED,
     symbol = IrPropertySymbolImpl(),
     name = propertyName,
-    visibility = DescriptorVisibilities.PRIVATE,
+    visibility = overriddenProperty?.owner?.visibility ?: DescriptorVisibilities.PRIVATE,
     modality = Modality.FINAL,
     isVar = false,
     isConst = false,
@@ -190,6 +192,7 @@ fun irVal(
     isFakeOverride = false,
     containerSource = null,
   ).apply {
+    overriddenSymbols = listOfNotNull(overriddenProperty)
     parent = declaringClass
   }
 
@@ -221,7 +224,7 @@ fun irVal(
     endOffset = declaringClass.endOffset,
     origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR,
     name = Name.special("<get-${propertyName.identifier}>"),
-    visibility = DescriptorVisibilities.PRIVATE,
+    visibility = overriddenProperty?.owner?.getter?.visibility ?: DescriptorVisibilities.PRIVATE,
     isExternal = false,
     symbol = IrSimpleFunctionSymbolImpl(),
     modality = Modality.FINAL,
@@ -237,6 +240,7 @@ fun irVal(
   ).apply {
     parent = declaringClass
     correspondingPropertySymbol = result.symbol
+    overriddenSymbols = listOfNotNull(overriddenProperty?.owner?.getter?.symbol)
     createDispatchReceiverParameter()
     irFunctionBody(
       context = pluginContext,

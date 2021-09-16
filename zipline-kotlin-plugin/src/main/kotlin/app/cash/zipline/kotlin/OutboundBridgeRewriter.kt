@@ -39,6 +39,7 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrFactory
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
@@ -64,18 +65,19 @@ import org.jetbrains.kotlin.name.Name
  * val helloService: EchoService = zipline.get(
  *   "helloService",
  *   object : OutboundBridge<EchoService>(EchoSerializersModule) {
- *     val serializer_0 = EchoSerializersModule.serializer<EchoRequest>()
- *     val serializer_1 = EchoSerializersModule.serializer<EchoResponse>()
- *     override fun create(outboundCallFactory: OutboundCall.Factory): EchoService {
+ *     override fun create(context: Context): EchoService {
+ *       val serializer_0 = context.serializersModule.serializer<EchoRequest>()
+ *       val serializer_1 = context.serializersModule.serializer<EchoResponse>()
  *       return object : EchoService {
  *         override fun echo(request: EchoRequest): EchoResponse {
- *           val outboundCall = outboundCallFactory.create("echo", 1)
+ *           val outboundCall = context.newCall("echo", 1)
  *           outboundCall.parameter<EchoRequest>(serializer_0, request)
  *           return outboundCall.invoke(serializer_1)
  *         }
  *       }
  *     }
- *   })
+ *   }
+ * )
  * ```
  *
  * For suspending functions, everything is the same except the call is to `invokeSuspending()`.
@@ -152,8 +154,8 @@ internal class OutboundBridgeRewriter(
         type = outboundBridgeSubclass.defaultType
       }
       addValueParameter {
-        name = Name.identifier("outboundCallFactory")
-        type = ziplineApis.outboundCallFactory.defaultType
+        name = Name.identifier("context")
+        type = ziplineApis.outboundBridgeContext.defaultType
       }
       overriddenSymbols += ziplineApis.outboundBridgeCreate
     }
@@ -161,13 +163,11 @@ internal class OutboundBridgeRewriter(
     // We add overrides here so we can use them below.
     outboundBridgeSubclass.addFakeOverrides(pluginContext.irBuiltIns, listOf(createFunction))
 
-    bridgedInterface.declareSerializerProperties(outboundBridgeSubclass)
-
     createFunction.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = scope.scope.scopeOwnerSymbol
     ) {
-      irCreateFunctionBody(createFunction)
+      irCreateFunctionBody(createFunction, createFunction.valueParameters[0])
     }
 
     return IrBlockBodyBuilder(
@@ -182,7 +182,10 @@ internal class OutboundBridgeRewriter(
     }
   }
 
-  private fun IrBlockBodyBuilder.irCreateFunctionBody(createFunction: IrSimpleFunction) {
+  private fun IrBlockBodyBuilder.irCreateFunctionBody(
+    createFunction: IrSimpleFunction,
+    contextParameter: IrValueParameter,
+  ) {
     // return object : EchoService {
     //   ...
     // }
@@ -210,6 +213,8 @@ internal class OutboundBridgeRewriter(
         classSymbol = clientImplementation.symbol,
       )
     }
+
+    bridgedInterface.declareSerializerProperties(clientImplementation, contextParameter)
 
     for (bridgedFunction in bridgedInterface.bridgedFunctions) {
       clientImplementation.irBridgedFunction(
@@ -261,14 +266,14 @@ internal class OutboundBridgeRewriter(
       context = pluginContext,
       scopeOwnerSymbol = result.symbol
     ) {
-      val callCreate = irCall(ziplineApis.outboundCallFactoryCreate).apply {
+      val newCall = irCall(ziplineApis.outboundBridgeContextNewCall).apply {
         dispatchReceiver = irGet(createFunction.valueParameters[0])
         putValueArgument(0, irString(bridgedFunction.name.identifier))
         putValueArgument(1, irInt(bridgedFunction.valueParameters.size))
       }
 
       val outboundCallLocal = irTemporary(
-        value = callCreate,
+        value = newCall,
         nameHint = "outboundCall",
         isMutable = false
       ).apply {
@@ -286,7 +291,7 @@ internal class OutboundBridgeRewriter(
             bridgedInterface.serializerExpression(
               this@irFunctionBody,
               parameterType,
-              createFunction.dispatchReceiverParameter!!
+              result.dispatchReceiverParameter!!
             )
           )
           putValueArgument(
@@ -316,7 +321,7 @@ internal class OutboundBridgeRewriter(
             bridgedInterface.serializerExpression(
               this@irFunctionBody,
               functionReturnType,
-              createFunction.dispatchReceiverParameter!!
+              result.dispatchReceiverParameter!!
             )
           )
         },

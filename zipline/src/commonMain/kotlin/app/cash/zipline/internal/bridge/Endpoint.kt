@@ -29,7 +29,7 @@ class Endpoint internal constructor(
   private val dispatcher: CoroutineDispatcher,
   private val outboundChannel: CallChannel,
 ) {
-  private val inboundHandlers = mutableMapOf<String, InboundBridge<*>>()
+  private val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
   private var nextId = 1
 
   internal val inboundChannel = object : CallChannel {
@@ -39,7 +39,7 @@ class Endpoint internal constructor(
       encodedArguments: ByteArray
     ): ByteArray {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
-      val inboundCall = InboundCall(funName, encodedArguments, handler.serializersModule)
+      val inboundCall = InboundCall(handler.context, funName, encodedArguments)
       return try {
         handler.call(inboundCall)
       } catch (e: Throwable) {
@@ -56,7 +56,7 @@ class Endpoint internal constructor(
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
         val callback = get<SuspendCallback>(callbackName, ZiplineSerializersModule)
-        val inboundCall = InboundCall(funName, encodedArguments, handler.serializersModule)
+        val inboundCall = InboundCall(handler.context, funName, encodedArguments)
         val result = try {
           handler.callSuspending(inboundCall)
         } catch (e: Exception) {
@@ -72,8 +72,12 @@ class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal fun set(name: String, handler: InboundBridge<*>) {
-    inboundHandlers[name] = handler
+  internal fun set(name: String, inboundBridge: InboundBridge<*>) {
+    val serializersModule = SerializersModule {
+      include(ZiplineSerializersModule)
+      include(inboundBridge.serializersModule)
+    }
+    inboundHandlers[name] = inboundBridge.create(InboundBridge.Context(serializersModule))
   }
 
   internal fun remove(name: String) {
@@ -90,8 +94,12 @@ class Endpoint internal constructor(
     name: String,
     outboundBridge: OutboundBridge<T>
   ): T {
+    val serializersModule = SerializersModule {
+      include(ZiplineSerializersModule)
+      include(outboundBridge.serializersModule)
+    }
     return outboundBridge.create(
-      OutboundCall.Factory(name, outboundBridge.serializersModule, this, outboundChannel)
+      OutboundBridge.Context(name, serializersModule, this, outboundChannel)
     )
   }
 

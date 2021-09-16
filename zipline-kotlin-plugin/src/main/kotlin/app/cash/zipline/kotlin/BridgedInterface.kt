@@ -33,7 +33,6 @@ import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
-import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.substitute
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -69,7 +68,10 @@ internal class BridgedInterface(
       .filterNot { it.owner.isFakeOverride }
 
   /** Declares properties for all the serializers needed to bridge this interface. */
-  fun declareSerializerProperties(declaringClass: IrClass) {
+  fun declareSerializerProperties(
+    declaringClass: IrClass,
+    contextParameter: IrValueParameter,
+  ) {
     check(typeToSerializerProperty.isEmpty()) { "declareSerializerProperties() called twice?" }
 
     val serializedTypes = mutableSetOf<IrType>()
@@ -83,6 +85,7 @@ internal class BridgedInterface(
     for (serializedType in serializedTypes) {
       val serializerProperty = irSerializerProperty(
         declaringClass = declaringClass,
+        contextParameter = contextParameter,
         type = serializedType,
         name = Name.identifier("serializer_${typeToSerializerProperty.size}")
       )
@@ -93,14 +96,17 @@ internal class BridgedInterface(
 
   private fun irSerializerProperty(
     declaringClass: IrClass,
+    contextParameter: IrValueParameter,
     type: IrType,
     name: Name
   ): IrProperty {
-    val serializersModuleProperty = declaringClass.properties.single {
-      it.getter?.returnType?.classFqName == ziplineApis.serializersModuleFqName
+    val serializersModuleProperty = when (contextParameter.type.classFqName) {
+      ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextSerializersModule
+      ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextSerializersModule
+      else -> error("unexpected Context type")
     }
 
-    // val serializer_0: KSerializer<EchoRequest> = serializersModule.serializer<EchoRequest>()
+    // val serializer_0: KSerializer<EchoRequest> = context.serializersModule.serializer<EchoRequest>()
     val kSerializerOfT = ziplineApis.kSerializer.typeWith(type)
     return irVal(
       pluginContext = pluginContext,
@@ -115,9 +121,9 @@ internal class BridgedInterface(
         ).apply {
           putTypeArgument(0, type)
           extensionReceiver = irCall(
-            callee = serializersModuleProperty.getter!!,
+            callee = serializersModuleProperty.owner.getter!!,
           ).apply {
-            dispatchReceiver = irGet(declaringClass.thisReceiver!!)
+            dispatchReceiver = irGet(contextParameter)
           }
         })
     }

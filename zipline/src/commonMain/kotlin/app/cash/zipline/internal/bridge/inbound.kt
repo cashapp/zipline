@@ -26,16 +26,24 @@ import okio.Buffer
  */
 @PublishedApi
 internal abstract class InboundBridge<T : Any>(
-  serializersModule: SerializersModule
+  val serializersModule: SerializersModule
 ) {
-  val serializersModule: SerializersModule = SerializersModule {
-    include(ZiplineSerializersModule)
-    include(serializersModule)
+  abstract fun create(context: Context): InboundCallHandler
+
+  class Context(
+    val serializersModule: SerializersModule,
+  ) {
+    val throwableSerializer = serializersModule.serializer<Throwable>()
   }
+}
 
-  abstract fun call(inboundCall: InboundCall): ByteArray
+@PublishedApi
+internal interface InboundCallHandler {
+  val context: InboundBridge.Context
 
-  abstract suspend fun callSuspending(inboundCall: InboundCall): ByteArray
+  fun call(inboundCall: InboundCall): ByteArray
+
+  suspend fun callSuspending(inboundCall: InboundCall): ByteArray
 }
 
 /**
@@ -49,9 +57,9 @@ internal abstract class InboundBridge<T : Any>(
  */
 @PublishedApi
 internal class InboundCall(
+  private val context: InboundBridge.Context,
   val funName: String,
   encodedArguments: ByteArray,
-  val serializersModule: SerializersModule,
 ) {
   private val buffer = Buffer().write(encodedArguments)
   private val parameterCount = buffer.readInt()
@@ -88,7 +96,7 @@ internal class InboundCall(
   fun resultException(e: Throwable): ByteArray {
     buffer.clear()
     eachValueBuffer.clear()
-    eachValueBuffer.writeJsonUtf8(serializersModule.serializer(), e)
+    eachValueBuffer.writeJsonUtf8(context.throwableSerializer, e)
     buffer.writeByte(RESULT_TYPE_EXCEPTION.toInt())
     buffer.writeInt(eachValueBuffer.size.toInt())
     buffer.writeAll(eachValueBuffer)

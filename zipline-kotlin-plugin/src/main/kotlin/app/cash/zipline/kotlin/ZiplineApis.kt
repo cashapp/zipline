@@ -17,6 +17,7 @@ package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.functions
@@ -69,14 +70,37 @@ internal class ZiplineApis(
   val inboundBridge: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("InboundBridge"))!!
 
-  val inboundBridgeCall: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("InboundBridge").child("call")
+  val inboundBridgeContextFqName = bridgeFqName.child("InboundBridge").child("Context")
+
+  val inboundBridgeContext: IrClassSymbol
+    get() = pluginContext.referenceClass(inboundBridgeContextFqName)!!
+
+  val inboundBridgeContextSerializersModule: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      inboundBridgeContextFqName.child("serializersModule")
     ).single()
 
-  val inboundBridgeCallSuspending: IrSimpleFunctionSymbol
+  val inboundBridgeCreate: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("InboundBridge").child("callSuspending")
+      bridgeFqName.child("InboundBridge").child("create")
+    ).single()
+
+  val inboundCallHandler: IrClassSymbol
+    get() = pluginContext.referenceClass(bridgeFqName.child("InboundCallHandler"))!!
+
+  val inboundCallHandlerCall: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(
+      bridgeFqName.child("InboundCallHandler").child("call")
+    ).single()
+
+  val inboundCallHandlerCallSuspending: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(
+      bridgeFqName.child("InboundCallHandler").child("callSuspending")
+    ).single()
+
+  val inboundCallHandlerContext: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      bridgeFqName.child("InboundCallHandler").child("context")
     ).single()
 
   val outboundCallInvoke: IrSimpleFunctionSymbol
@@ -92,16 +116,23 @@ internal class ZiplineApis(
     get() = pluginContext.referenceFunctions(bridgeFqName.child("OutboundCall").child("parameter"))
       .single()
 
-  val outboundCallFactory: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("OutboundCall").child("Factory"))!!
-
-  val outboundCallFactoryCreate: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("OutboundCall").child("Factory").child("create")
-    ).single()
-
   val outboundBridge: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("OutboundBridge"))!!
+
+  val outboundBridgeContextFqName = bridgeFqName.child("OutboundBridge").child("Context")
+
+  val outboundBridgeContext: IrClassSymbol
+    get() = pluginContext.referenceClass(outboundBridgeContextFqName)!!
+
+  val outboundBridgeContextNewCall: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(
+      outboundBridgeContextFqName.child("newCall")
+    ).single()
+
+  val outboundBridgeContextSerializersModule: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      outboundBridgeContextFqName.child("serializersModule")
+    ).single()
 
   val outboundBridgeCreate: IrSimpleFunctionSymbol
     get() = outboundBridge.functions.single { it.owner.name.identifier == "create" }
