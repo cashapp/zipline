@@ -15,20 +15,20 @@
  */
 package app.cash.zipline.testing
 
-import app.cash.zipline.internal.bridge.InternalBridge
-import app.cash.zipline.internal.bridge.KtBridge
+import app.cash.zipline.internal.bridge.CallChannel
+import app.cash.zipline.internal.bridge.Endpoint
 import kotlinx.coroutines.CoroutineDispatcher
 
-/** Returns a pair of bridges connected to each other for testing. */
-internal fun newKtBridgePair(dipatcher: CoroutineDispatcher): Pair<KtBridge, KtBridge> {
+/** Returns a pair of endpoints connected to each other for testing. */
+internal fun newEndpointPair(dipatcher: CoroutineDispatcher): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
-    val a: KtBridge = KtBridge(dipatcher, object : InternalBridge {
+    val a: Endpoint = Endpoint(dipatcher, object : CallChannel {
       override fun invoke(
         instanceName: String,
         funName: String,
         encodedArguments: ByteArray
       ): ByteArray {
-        return b.inboundBridge.invoke(instanceName, funName, encodedArguments)
+        return b.inboundChannel.invoke(instanceName, funName, encodedArguments)
       }
 
       override fun invokeSuspending(
@@ -37,13 +37,13 @@ internal fun newKtBridgePair(dipatcher: CoroutineDispatcher): Pair<KtBridge, KtB
         encodedArguments: ByteArray,
         callbackName: String
       ) {
-        return b.inboundBridge.invokeSuspending(
+        return b.inboundChannel.invokeSuspending(
           instanceName, funName, encodedArguments, callbackName
         )
       }
     })
 
-    val b: KtBridge = KtBridge(dipatcher, a.inboundBridge)
+    val b: Endpoint = Endpoint(dipatcher, a.inboundChannel)
   }
 
   return pair.a to pair.b

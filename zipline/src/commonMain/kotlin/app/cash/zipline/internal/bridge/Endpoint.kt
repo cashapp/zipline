@@ -15,21 +15,24 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.DefaultZiplineSerializersModule
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.modules.SerializersModule
 
-class KtBridge internal constructor(
+/**
+ * An outbound channel for delivering calls to the other platform, and an inbound channel for
+ * receiving calls from the other platform.
+ */
+class Endpoint internal constructor(
   private val dispatcher: CoroutineDispatcher,
-  private val outboundBridge: InternalBridge,
+  private val outboundChannel: CallChannel,
 ) {
-  private val inboundHandlers = mutableMapOf<String, InboundService<*>>()
+  private val inboundHandlers = mutableMapOf<String, InboundBridge<*>>()
   private var nextId = 1
 
-  internal val inboundBridge = object : InternalBridge {
+  internal val inboundChannel = object : CallChannel {
     override fun invoke(
       instanceName: String,
       funName: String,
@@ -52,7 +55,7 @@ class KtBridge internal constructor(
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
-        val callback = get<SuspendCallback>(callbackName, DefaultZiplineSerializersModule)
+        val callback = get<SuspendCallback>(callbackName, ZiplineSerializersModule)
         val inboundCall = InboundCall(funName, encodedArguments, handler.serializersModule)
         val result = try {
           handler.callSuspending(inboundCall)
@@ -65,11 +68,11 @@ class KtBridge internal constructor(
   }
 
   fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
-    error("unexpected call to KtBridge.set: is KtBridge plugin configured?")
+    error("unexpected call to Zipline.set: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun set(name: String, handler: InboundService<*>) {
+  internal fun set(name: String, handler: InboundBridge<*>) {
     inboundHandlers[name] = handler
   }
 
@@ -79,16 +82,16 @@ class KtBridge internal constructor(
   }
 
   fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
-    error("unexpected call to KtBridge.get: is KtBridge plugin configured?")
+    error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
 
   @PublishedApi
   internal fun <T : Any> get(
     name: String,
-    outboundClientFactory: OutboundClientFactory<T>
+    outboundBridge: OutboundBridge<T>
   ): T {
-    return outboundClientFactory.create(
-      OutboundCall.Factory(name, outboundClientFactory.serializersModule, this, outboundBridge)
+    return outboundBridge.create(
+      OutboundCall.Factory(name, outboundBridge.serializersModule, this, outboundChannel)
     )
   }
 

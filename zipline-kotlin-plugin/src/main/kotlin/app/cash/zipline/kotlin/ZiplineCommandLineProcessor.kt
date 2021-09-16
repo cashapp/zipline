@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2020 Brian Norman
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,13 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline
+package app.cash.zipline.kotlin
 
-import kotlin.reflect.KType
-import okio.Buffer
+import com.google.auto.service.AutoService
+import org.jetbrains.kotlin.compiler.plugin.CliOption
+import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 
-// TODO(jwilson): Moshi-style nested Factory interface that binds `type` eagerly.
-interface JsAdapter {
-  fun <T : Any> encode(value: T, sink: Buffer, type: KType)
-  fun <T : Any> decode(source: Buffer, type: KType): T
+@AutoService(CommandLineProcessor::class)
+class ZiplineCommandLineProcessor : CommandLineProcessor {
+  override val pluginId: String = BuildConfig.KOTLIN_PLUGIN_ID
+
+  override val pluginOptions = listOf<CliOption>()
 }

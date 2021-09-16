@@ -40,7 +40,7 @@ import org.jetbrains.kotlin.name.Name
 
 /**
  * A user-defined interface (like `EchoService` or `Callback<String>`) and support for either
- * implementing it ([KtBridgeGetRewriter]) or calling it ([KtBridgeSetRewriter]).
+ * implementing it ([OutboundBridgeRewriter]) or calling it ([InboundBridgeRewriter]).
  *
  * This class tracks the interface type (like `EchoService` or `Callback<String>`) and its
  * implementation class (that doesn't know its generic parameters).
@@ -52,7 +52,7 @@ import org.jetbrains.kotlin.name.Name
  */
 internal class BridgedInterface(
   private val pluginContext: IrPluginContext,
-  private val ktBridgeApis: KtBridgeApis,
+  private val ziplineApis: ZiplineApis,
 
   /** A specific type identifier that knows the values of its generic parameters. */
   val type: IrType,
@@ -97,11 +97,11 @@ internal class BridgedInterface(
     name: Name
   ): IrProperty {
     val serializersModuleProperty = declaringClass.properties.single {
-      it.getter?.returnType?.classFqName == ktBridgeApis.serializersModuleFqName
+      it.getter?.returnType?.classFqName == ziplineApis.serializersModuleFqName
     }
 
     // val serializer_0: KSerializer<EchoRequest> = serializersModule.serializer<EchoRequest>()
-    val kSerializerOfT = ktBridgeApis.kSerializer.typeWith(type)
+    val kSerializerOfT = ziplineApis.kSerializer.typeWith(type)
     return irVal(
       pluginContext = pluginContext,
       propertyType = kSerializerOfT,
@@ -110,7 +110,7 @@ internal class BridgedInterface(
     ) {
       irExprBody(
         irCall(
-          callee = ktBridgeApis.serializerFunction,
+          callee = ziplineApis.serializerFunction,
           type = kSerializerOfT,
         ).apply {
           putTypeArgument(0, type)
@@ -148,20 +148,20 @@ internal class BridgedInterface(
   companion object {
     fun create(
       pluginContext: IrPluginContext,
-      ktBridgeApis: KtBridgeApis,
+      ziplineApis: ZiplineApis,
       element: IrElement,
       functionName: String,
       type: IrType,
     ): BridgedInterface {
       val classSymbol = pluginContext.referenceClass(type.classFqName ?: FqName.ROOT)
       if (classSymbol == null || !classSymbol.owner.isInterface) {
-        throw KtBridgeCompilationException(
+        throw ZiplineCompilationException(
           element = element,
           message = "The type argument to $functionName must be an interface type",
         )
       }
 
-      return BridgedInterface(pluginContext, ktBridgeApis, type, classSymbol)
+      return BridgedInterface(pluginContext, ziplineApis, type, classSymbol)
     }
   }
 }

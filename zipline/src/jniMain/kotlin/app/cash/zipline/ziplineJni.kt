@@ -15,10 +15,13 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.InboundService
-import app.cash.zipline.internal.bridge.InternalBridge
-import app.cash.zipline.internal.bridge.KtBridge
-import app.cash.zipline.internal.bridge.OutboundClientFactory
+import app.cash.zipline.internal.HostPlatform
+import app.cash.zipline.internal.JsPlatform
+import app.cash.zipline.internal.bridge.CallChannel
+import app.cash.zipline.internal.bridge.Endpoint
+import app.cash.zipline.internal.bridge.InboundBridge
+import app.cash.zipline.internal.bridge.OutboundBridge
+import app.cash.zipline.internal.bridge.ZiplineSerializersModule
 import java.io.Closeable
 import java.util.logging.Logger
 import kotlin.coroutines.EmptyCoroutineContext
@@ -42,7 +45,7 @@ actual abstract class Zipline : Closeable {
   @PublishedApi
   internal abstract fun <T : Any> get(
     name: String,
-    outboundClientFactory: OutboundClientFactory<T>
+    outboundBridge: OutboundBridge<T>
   ): T
 
   actual fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
@@ -50,7 +53,7 @@ actual abstract class Zipline : Closeable {
   }
 
   @PublishedApi
-  internal abstract fun set(name: String, service: InboundService<*>)
+  internal abstract fun set(name: String, bridge: InboundBridge<*>)
 
   /**
    * Release resources held by this instance. It is an error to do any of the following after
@@ -75,37 +78,37 @@ actual abstract class Zipline : Closeable {
 private class ZiplineJni(
   override val quickJs: QuickJs,
   override val dispatcher: CoroutineDispatcher,
-) : Zipline(), InternalBridge, HostPlatform {
-  private val ktBridge = KtBridge(dispatcher, outboundBridge = this)
+) : Zipline(), CallChannel, HostPlatform {
+  private val endpoint = Endpoint(dispatcher, outboundChannel = this)
   private val jsPlatform: JsPlatform
   private val logger = Logger.getLogger(Zipline::class.qualifiedName)
   private var closed = false
 
   /** Lazily fetch the bridge to call into JS. */
-  private val jsInboundBridge: InternalBridge by lazy(mode = LazyThreadSafetyMode.NONE) {
+  private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
     quickJs.get(
-      name = "app_cash_zipline_inboundBridge",
-      type = InternalBridge::class.java
+      name = "app_cash_zipline_inboundChannel",
+      type = CallChannel::class.java
     )
   }
 
   init {
     // Eagerly publish the bridge so they can call us.
     quickJs.set(
-      name = "app_cash_zipline_outboundBridge",
-      type = InternalBridge::class.java,
-      instance = ktBridge.inboundBridge
+      name = "app_cash_zipline_outboundChannel",
+      type = CallChannel::class.java,
+      instance = endpoint.inboundChannel
     )
 
     // Connect platforms using our newly-bootstrapped bridges.
-    ktBridge.set<HostPlatform>(
+    endpoint.set<HostPlatform>(
       name = "app.cash.zipline.hostPlatform",
-      serializersModule = DefaultZiplineSerializersModule,
+      serializersModule = ZiplineSerializersModule,
       instance = this
     )
-    jsPlatform = ktBridge.get(
+    jsPlatform = endpoint.get(
       name = "app.cash.zipline.jsPlatform",
-      serializersModule = DefaultZiplineSerializersModule
+      serializersModule = ZiplineSerializersModule
     )
   }
 
@@ -133,15 +136,15 @@ private class ZiplineJni(
 
   override fun <T : Any> get(
     name: String,
-    outboundClientFactory: OutboundClientFactory<T>
+    outboundBridge: OutboundBridge<T>
   ): T {
     check(!closed) { "closed" }
-    return ktBridge.get(name, outboundClientFactory)
+    return endpoint.get(name, outboundBridge)
   }
 
-  override fun set(name: String, handler: InboundService<*>) {
+  override fun set(name: String, handler: InboundBridge<*>) {
     check(!closed) { "closed" }
-    ktBridge.set(name, handler)
+    endpoint.set(name, handler)
   }
 
   override fun setTimeout(timeoutId: Int, delayMillis: Int) {

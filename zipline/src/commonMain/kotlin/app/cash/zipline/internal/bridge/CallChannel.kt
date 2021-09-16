@@ -17,13 +17,19 @@ package app.cash.zipline.internal.bridge
 
 import kotlin.js.JsName
 import kotlinx.serialization.DeserializationStrategy
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.SerializersModule
 import okio.BufferedSink
 import okio.BufferedSource
 
 @PublishedApi
-internal interface InternalBridge {
+internal interface CallChannel {
   /**
    * Internal function used to bridge method calls from Java or Android to JavaScript.
    *
@@ -68,3 +74,30 @@ internal fun <T> BufferedSource.readJsonUtf8(serializer: DeserializationStrategy
   val json = readUtf8()
   return Json.decodeFromString(serializer, json)
 }
+
+/**
+ * Installed by [InboundBridge] and [OutboundBridge] to add serializers required by core
+ * types like [Throwable].
+ */
+internal val ZiplineSerializersModule: SerializersModule = SerializersModule {
+  contextual(Throwable::class, ThrowableSerializer)
+}
+
+private object ThrowableSerializer : KSerializer<Throwable> {
+  override val descriptor: SerialDescriptor = ThrowableSurrogate.serializer().descriptor
+
+  override fun serialize(encoder: Encoder, value: Throwable) {
+    val surrogate = ThrowableSurrogate(value.toString())
+    encoder.encodeSerializableValue(ThrowableSurrogate.serializer(), surrogate)
+  }
+
+  override fun deserialize(decoder: Decoder): Throwable {
+    val surrogate = decoder.decodeSerializableValue(ThrowableSurrogate.serializer())
+    return Exception(surrogate.message)
+  }
+}
+
+@Serializable
+private class ThrowableSurrogate(
+  val message: String
+)

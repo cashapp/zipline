@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.DefaultZiplineSerializersModule
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.serialization.KSerializer
@@ -28,9 +27,14 @@ import okio.Buffer
  * implemented by another platform in the same process.
  */
 @PublishedApi
-internal abstract class OutboundClientFactory<T : Any>(
-  val serializersModule: SerializersModule
+internal abstract class OutboundBridge<T : Any>(
+  serializersModule: SerializersModule
 ) {
+  val serializersModule: SerializersModule = SerializersModule {
+    include(ZiplineSerializersModule)
+    include(serializersModule)
+  }
+
   abstract fun create(callFactory: OutboundCall.Factory): T
 }
 
@@ -46,8 +50,8 @@ internal abstract class OutboundClientFactory<T : Any>(
 internal class OutboundCall private constructor(
   private val instanceName: String,
   val serializersModule: SerializersModule,
-  private val ktBridge: KtBridge,
-  private val internalBridge: InternalBridge,
+  private val endpoint: Endpoint,
+  private val channel: CallChannel,
   private val funName: String,
   private val parameterCount: Int,
 ) {
@@ -72,7 +76,7 @@ internal class OutboundCall private constructor(
   fun <R> invoke(serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     val encodedArguments = buffer.readByteArray()
-    val encodedResult = internalBridge.invoke(instanceName, funName, encodedArguments)
+    val encodedResult = channel.invoke(instanceName, funName, encodedArguments)
     val result = encodedResult.decodeResult(serializer)
     return result.getOrThrow()
   }
@@ -81,11 +85,11 @@ internal class OutboundCall private constructor(
   internal suspend fun <R> invokeSuspending(serializer: KSerializer<R>): R {
     return suspendCoroutine { continuation ->
       require(callCount++ == parameterCount)
-      val callbackName = ktBridge.generateName()
+      val callbackName = endpoint.generateName()
       val callback = RealSuspendCallback(callbackName, continuation, serializer)
-      ktBridge.set<SuspendCallback>(callbackName, DefaultZiplineSerializersModule, callback)
+      endpoint.set<SuspendCallback>(callbackName, ZiplineSerializersModule, callback)
       val encodedArguments = buffer.readByteArray()
-      internalBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
+      channel.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
     }
   }
 
@@ -96,7 +100,7 @@ internal class OutboundCall private constructor(
   ) : SuspendCallback {
     override fun call(encodedResponse: ByteArray) {
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
-      ktBridge.remove(callbackName)
+      endpoint.remove(callbackName)
       val result = encodedResponse.decodeResult(serializer)
       continuation.resumeWith(result)
     }
@@ -130,8 +134,8 @@ internal class OutboundCall private constructor(
   class Factory internal constructor(
     private val instanceName: String,
     private val serializersModule: SerializersModule,
-    private val ktBridge: KtBridge,
-    private val internalBridge: InternalBridge,
+    private val endpoint: Endpoint,
+    private val channel: CallChannel,
   ) {
     fun create(
       funName: String,
@@ -140,8 +144,8 @@ internal class OutboundCall private constructor(
       return OutboundCall(
         instanceName,
         serializersModule,
-        ktBridge,
-        internalBridge,
+        endpoint,
+        channel,
         funName,
         parameterCount
       )

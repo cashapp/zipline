@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
 @AutoService(ComponentRegistrar::class)
-class KtBridgeComponentRegistrar : ComponentRegistrar {
+class ZiplineComponentRegistrar : ComponentRegistrar {
   override fun registerProjectComponents(
     project: MockProject,
     configuration: CompilerConfiguration,
@@ -35,7 +35,7 @@ class KtBridgeComponentRegistrar : ComponentRegistrar {
     )
     IrGenerationExtension.registerExtension(
       project = project,
-      extension = KtBridgeIrGenerationExtension(messageCollector)
+      extension = ZiplineIrGenerationExtension(messageCollector)
     )
   }
 }

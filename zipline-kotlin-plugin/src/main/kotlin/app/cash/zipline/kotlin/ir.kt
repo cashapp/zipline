@@ -62,7 +62,7 @@ import org.jetbrains.kotlin.name.Name
 internal fun FqName.child(name: String) = child(Name.identifier(name))
 
 /** Thrown on invalid or unexpected input code. */
-class KtBridgeCompilationException(
+class ZiplineCompilationException(
   override val message: String,
   val element: IrElement? = null,
   val severity: CompilerMessageSeverity = CompilerMessageSeverity.ERROR,

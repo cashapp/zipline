@@ -23,22 +23,22 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 
-class KtBridgeIrGenerationExtension(
+class ZiplineIrGenerationExtension(
   private val messageCollector: MessageCollector,
 ) : IrGenerationExtension {
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-    val ktBridgeApis = KtBridgeApis(pluginContext)
+    val ziplineApis = ZiplineApis(pluginContext)
 
     val transformer = object : IrElementTransformerVoidWithContext() {
       override fun visitCall(expression: IrCall): IrExpression {
         val expression = super.visitCall(expression) as IrCall
 
         try {
-          val rewrittenGetFunction = ktBridgeApis.getRewriteFunctions[expression.symbol]
+          val rewrittenGetFunction = ziplineApis.getRewriteFunctions[expression.symbol]
           if (rewrittenGetFunction != null) {
-            return KtBridgeGetRewriter(
+            return OutboundBridgeRewriter(
               pluginContext,
-              ktBridgeApis,
+              ziplineApis,
               currentScope!!,
               currentDeclarationParent!!,
               expression,
@@ -46,11 +46,11 @@ class KtBridgeIrGenerationExtension(
             ).rewrite()
           }
 
-          val rewrittenSetFunction = ktBridgeApis.setRewriteFunctions[expression.symbol]
+          val rewrittenSetFunction = ziplineApis.setRewriteFunctions[expression.symbol]
           if (rewrittenSetFunction != null) {
-            return KtBridgeSetRewriter(
+            return InboundBridgeRewriter(
               pluginContext,
-              ktBridgeApis,
+              ziplineApis,
               currentScope!!,
               currentDeclarationParent!!,
               expression,
@@ -59,7 +59,7 @@ class KtBridgeIrGenerationExtension(
           }
 
           return expression
-        } catch (e: KtBridgeCompilationException) {
+        } catch (e: ZiplineCompilationException) {
           messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
           return expression
         }
