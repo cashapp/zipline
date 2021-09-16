@@ -76,20 +76,24 @@ import org.jetbrains.kotlin.name.Name
  * zipline.set(
  *   "helloService",
  *   object : InboundBridge<EchoService>(EchoSerializersModule) {
- *     val service: EchoService = TestingEchoService("hello")
- *     val serializer_0 = EchoSerializersModule.serializer<EchoRequest>()
- *     val serializer_1 = EchoSerializersModule.serializer<EchoResponse>()
- *     override fun call(inboundCall: InboundCall): ByteArray {
- *       return when {
- *         inboundCall.funName == "echo" -> {
- *           inboundCall.result(
- *             serializer_1,
- *             service.echo(
- *               inboundCall.parameter(serializer_0)
- *             )
- *           )
+ *     override fun create(context: Context): InboundCallHandler {
+ *       return object : InboundCallHandler {
+ *         val serializer_0 = context.serializersModule.serializer<EchoRequest>()
+ *         val serializer_1 = context.serializersModule.serializer<EchoResponse>()
+ *         override val context: Context = context
+ *         override fun call(inboundCall: InboundCall): ByteArray {
+ *           return when {
+ *             inboundCall.funName == "echo" -> {
+ *               inboundCall.result(
+ *                 serializer_1,
+ *                 s.echo(
+ *                   inboundCall.parameter(serializer_0)
+ *                 )
+ *               )
+ *             }
+ *             else -> inboundCall.unexpectedFunction()
+ *           }
  *         }
- *         else -> inboundCall.unexpectedFunction()
  *       }
  *     }
  *   }
@@ -136,6 +140,8 @@ internal class InboundBridgeRewriter(
     }
   }
 
+  // object : InboundBridge<EchoService>(EchoSerializersModule) {
+  // }
   private fun irNewInboundBridge(): IrContainerExpression {
     val inboundBridgeOfT = ziplineApis.inboundBridge.typeWith(bridgedInterface.type)
     val inboundBridgeSubclass = irFactory.buildClass {
@@ -170,25 +176,113 @@ internal class InboundBridgeRewriter(
       }
     }
 
-    val serviceProperty = irServiceProperty(inboundBridgeSubclass)
-    inboundBridgeSubclass.declarations += serviceProperty
-
-    val callFunction = irCallFunction(
-      inboundBridgeSubclass = inboundBridgeSubclass,
-      callSuspending = false
-    )
-    val callSuspendingFunction = irCallFunction(
-      inboundBridgeSubclass = inboundBridgeSubclass,
-      callSuspending = true
-    )
+    val createFunction = irCreateFunction(inboundBridgeSubclass)
 
     // We add overrides here so we can use them below.
     inboundBridgeSubclass.addFakeOverrides(
       pluginContext.irBuiltIns,
-      listOf(callFunction, callSuspendingFunction)
+      listOf(createFunction)
     )
 
-    bridgedInterface.declareSerializerProperties(inboundBridgeSubclass)
+    return IrBlockBodyBuilder(
+      startOffset = UNDEFINED_OFFSET,
+      endOffset = UNDEFINED_OFFSET,
+      context = pluginContext,
+      scope = scope.scope,
+    ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
+      resultType = inboundBridgeSubclass.defaultType
+      +inboundBridgeSubclass
+      +irCall(constructor.symbol, type = inboundBridgeSubclass.defaultType)
+    }
+  }
+
+  /** Override `InboundBridge.create()`. */
+  private fun irCreateFunction(
+    inboundBridgeSubclass: IrClass
+  ): IrSimpleFunction {
+    // override fun create(context: Context): InboundCallHandler {
+    // }
+    val result = inboundBridgeSubclass.addFunction {
+      name = ziplineApis.inboundBridgeCreate.owner.name
+      visibility = DescriptorVisibilities.PUBLIC
+      modality = Modality.OPEN
+      returnType = ziplineApis.inboundCallHandler.defaultType
+    }.apply {
+      addDispatchReceiver {
+        type = inboundBridgeSubclass.defaultType
+      }
+      addValueParameter {
+        name = Name.identifier("context")
+        type = ziplineApis.inboundBridgeContext.defaultType
+      }
+      overriddenSymbols += ziplineApis.inboundBridgeCreate
+    }
+    result.irFunctionBody(
+      context = pluginContext,
+      scopeOwnerSymbol = result.symbol,
+    ) {
+      +irReturn(
+        irNewInboundCallHandler(result.valueParameters[0])
+      )
+    }
+    return result
+  }
+
+  private fun irNewInboundCallHandler(
+    contextParameter: IrValueParameter,
+  ): IrContainerExpression {
+    // object : InboundCallHandler {
+    // }
+    val inboundCallHandler = ziplineApis.inboundCallHandler.defaultType
+    val inboundCallHandlerSubclass = irFactory.buildClass {
+      name = Name.special("<no name provided>")
+      visibility = DescriptorVisibilities.LOCAL
+    }.apply {
+      superTypes = listOf(inboundCallHandler)
+      createImplicitParameterDeclarationWithWrappedDescriptor()
+    }
+
+    val constructor = inboundCallHandlerSubclass.addConstructor {
+      origin = IrDeclarationOrigin.DEFINED
+      visibility = DescriptorVisibilities.PUBLIC
+      isPrimary = true
+    }.apply {
+      irConstructorBody(pluginContext) { statements ->
+        statements += irDelegatingConstructorCall(
+          context = pluginContext,
+          symbol = ziplineApis.any.constructors.single(),
+          typeArgumentsCount = 0,
+          valueArgumentsCount = 0
+        )
+        statements += irInstanceInitializerCall(
+          context = pluginContext,
+          classSymbol = inboundCallHandlerSubclass.symbol,
+        )
+      }
+    }
+
+    val contextProperty = irContextProperty(inboundCallHandlerSubclass, contextParameter)
+    inboundCallHandlerSubclass.declarations += contextProperty
+
+    val serviceProperty = irServiceProperty(inboundCallHandlerSubclass)
+    inboundCallHandlerSubclass.declarations += serviceProperty
+
+    bridgedInterface.declareSerializerProperties(inboundCallHandlerSubclass, contextParameter)
+
+    val callFunction = irCallFunction(
+      inboundCallHandler = inboundCallHandlerSubclass,
+      callSuspending = false
+    )
+    val callSuspendingFunction = irCallFunction(
+      inboundCallHandler = inboundCallHandlerSubclass,
+      callSuspending = true
+    )
+
+    // We add overrides here so we can call them below.
+    inboundCallHandlerSubclass.addFakeOverrides(
+      pluginContext.irBuiltIns,
+      listOf(contextProperty, callFunction, callSuspendingFunction)
+    )
 
     callFunction.irFunctionBody(
       context = pluginContext,
@@ -213,24 +307,24 @@ internal class InboundBridgeRewriter(
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
-      resultType = inboundBridgeSubclass.defaultType
-      +inboundBridgeSubclass
-      +irCall(constructor.symbol, type = inboundBridgeSubclass.defaultType)
+      resultType = inboundCallHandlerSubclass.defaultType
+      +inboundCallHandlerSubclass
+      +irCall(constructor.symbol, type = inboundCallHandlerSubclass.defaultType)
     }
   }
 
-  /** Override either `InboundBridge.call()` or `InboundBridge.callSuspending()`. */
+  /** Override either `InboundCallHandler.call()` or `InboundCallHandler.callSuspending()`. */
   private fun irCallFunction(
-    inboundBridgeSubclass: IrClass,
+    inboundCallHandler: IrClass,
     callSuspending: Boolean,
   ): IrSimpleFunction {
     // override fun call(inboundCall: InboundCall): ByteArray {
     // }
     val inboundBridgeCall = when {
-      callSuspending -> ziplineApis.inboundBridgeCallSuspending
-      else -> ziplineApis.inboundBridgeCall
+      callSuspending -> ziplineApis.inboundCallHandlerCallSuspending
+      else -> ziplineApis.inboundCallHandlerCall
     }
-    val result = inboundBridgeSubclass.addFunction {
+    return inboundCallHandler.addFunction {
       name = inboundBridgeCall.owner.name
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
@@ -238,7 +332,7 @@ internal class InboundBridgeRewriter(
       isSuspend = callSuspending
     }.apply {
       addDispatchReceiver {
-        type = inboundBridgeSubclass.defaultType
+        type = inboundCallHandler.defaultType
       }
       addValueParameter {
         name = Name.identifier("inboundCall")
@@ -246,19 +340,33 @@ internal class InboundBridgeRewriter(
       }
       overriddenSymbols += inboundBridgeCall
     }
-
-    return result
   }
 
   // val service: EchoService = TestingEchoService("hello")
-  private fun irServiceProperty(inboundBridgeSubclass: IrClass): IrProperty {
+  private fun irServiceProperty(inboundCallHandlerSubclass: IrClass): IrProperty {
     return irVal(
       pluginContext = pluginContext,
       propertyType = bridgedInterface.type,
-      declaringClass = inboundBridgeSubclass,
+      declaringClass = inboundCallHandlerSubclass,
       propertyName = Name.identifier("service")
     ) {
       irExprBody(original.getValueArgument(2)!!)
+    }
+  }
+
+  // override val context: InboundCallHandler.Context = context
+  private fun irContextProperty(
+    inboundCallHandlerSubclass: IrClass,
+    contextParameter: IrValueParameter
+  ): IrProperty {
+    return irVal(
+      pluginContext = pluginContext,
+      propertyType = ziplineApis.inboundCallHandlerContext.owner.getter!!.returnType,
+      declaringClass = inboundCallHandlerSubclass,
+      propertyName = Name.identifier("context"),
+      overriddenProperty = ziplineApis.inboundCallHandlerContext
+    ) {
+      irExprBody(irGet(contextParameter))
     }
   }
 

@@ -35,7 +35,7 @@ actual abstract class Zipline {
   @PublishedApi
   internal abstract fun <T : Any> get(
     name: String,
-    outboundBridge: OutboundBridge<T>
+    bridge: OutboundBridge<T>
   ): T
 
   actual fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {

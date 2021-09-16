@@ -28,14 +28,29 @@ import okio.Buffer
  */
 @PublishedApi
 internal abstract class OutboundBridge<T : Any>(
-  serializersModule: SerializersModule
+  val serializersModule: SerializersModule
 ) {
-  val serializersModule: SerializersModule = SerializersModule {
-    include(ZiplineSerializersModule)
-    include(serializersModule)
-  }
+  abstract fun create(context: Context): T
 
-  abstract fun create(callFactory: OutboundCall.Factory): T
+  class Context(
+    private val instanceName: String,
+    val serializersModule: SerializersModule,
+    private val endpoint: Endpoint,
+    private val channel: CallChannel,
+  ) {
+    val throwableSerializer = serializersModule.serializer<Throwable>()
+
+    fun newCall(funName: String, parameterCount: Int): OutboundCall {
+      return OutboundCall(
+        this,
+        instanceName,
+        endpoint,
+        channel,
+        funName,
+        parameterCount
+      )
+    }
+  }
 }
 
 /**
@@ -47,9 +62,9 @@ internal abstract class OutboundBridge<T : Any>(
  * perform the cross-platform call.
  */
 @PublishedApi
-internal class OutboundCall private constructor(
+internal class OutboundCall(
+  private val context: OutboundBridge.Context,
   private val instanceName: String,
-  val serializersModule: SerializersModule,
   private val endpoint: Endpoint,
   private val channel: CallChannel,
   private val funName: String,
@@ -122,33 +137,12 @@ internal class OutboundCall private constructor(
       RESULT_TYPE_EXCEPTION -> {
         val byteCount = buffer.readInt()
         eachValueBuffer.write(buffer, byteCount.toLong())
-        val throwable = eachValueBuffer.readJsonUtf8(serializersModule.serializer<Throwable>())
+        val throwable = eachValueBuffer.readJsonUtf8(context.throwableSerializer)
         return Result.failure(throwable)
       }
       else -> {
         error("unexpected result type")
       }
-    }
-  }
-
-  class Factory internal constructor(
-    private val instanceName: String,
-    private val serializersModule: SerializersModule,
-    private val endpoint: Endpoint,
-    private val channel: CallChannel,
-  ) {
-    fun create(
-      funName: String,
-      parameterCount: Int
-    ): OutboundCall {
-      return OutboundCall(
-        instanceName,
-        serializersModule,
-        endpoint,
-        channel,
-        funName,
-        parameterCount
-      )
     }
   }
 }
