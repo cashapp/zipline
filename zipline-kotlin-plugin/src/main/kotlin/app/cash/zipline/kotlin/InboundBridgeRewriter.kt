@@ -64,18 +64,18 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `KtBridge.set()` that takes a name, a `SerializersModule`, and a service:
+ * Rewrites calls to `Zipline.set()` that takes a name, a `SerializersModule`, and a service:
  *
  * ```
- * ktBridge.set("helloService", EchoSerializersModule, TestingEchoService("hello"))
+ * zipline.set("helloService", EchoSerializersModule, TestingEchoService("hello"))
  * ```
  *
- * to the overload that takes a name and an `InboundService`:
+ * to the overload that takes a name and an `InboundBridge`:
  *
  * ```
- * ktBridge.set(
+ * zipline.set(
  *   "helloService",
- *   object : InboundService<EchoService>(EchoSerializersModule) {
+ *   object : InboundBridge<EchoService>(EchoSerializersModule) {
  *     val service: EchoService = TestingEchoService("hello")
  *     val serializer_0 = EchoSerializersModule.serializer<EchoRequest>()
  *     val serializer_1 = EchoSerializersModule.serializer<EchoResponse>()
@@ -99,9 +99,9 @@ import org.jetbrains.kotlin.name.Name
  * For suspending functions, everything is the same except overridden method is `callSuspending()`.
  * Both methods area always overridden, but may contain only the `unexpectedFunction()` case.
  */
-internal class KtBridgeSetRewriter(
+internal class InboundBridgeRewriter(
   private val pluginContext: IrPluginContext,
-  private val ktBridgeApis: KtBridgeApis,
+  private val ziplineApis: ZiplineApis,
   private val scope: ScopeWithIr,
   private val declarationParent: IrDeclarationParent,
   private val original: IrCall,
@@ -109,9 +109,9 @@ internal class KtBridgeSetRewriter(
 ) {
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
-    ktBridgeApis,
+    ziplineApis,
     original,
-    "KtBridge.set()",
+    "Zipline.set()",
     original.getTypeArgument(0)!!
   )
 
@@ -131,24 +131,24 @@ internal class KtBridgeSetRewriter(
     ).apply {
       dispatchReceiver = original.dispatchReceiver
       putValueArgument(0, original.getValueArgument(0))
-      putValueArgument(1, irNewInboundService())
+      putValueArgument(1, irNewInboundBridge())
       patchDeclarationParents(declarationParent)
     }
   }
 
-  private fun irNewInboundService(): IrContainerExpression {
-    val inboundServiceOfT = ktBridgeApis.inboundService.typeWith(bridgedInterface.type)
-    val inboundServiceSubclass = irFactory.buildClass {
+  private fun irNewInboundBridge(): IrContainerExpression {
+    val inboundBridgeOfT = ziplineApis.inboundBridge.typeWith(bridgedInterface.type)
+    val inboundBridgeSubclass = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
     }.apply {
-      superTypes = listOf(inboundServiceOfT)
+      superTypes = listOf(inboundBridgeOfT)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    // InboundService<EchoService>(EchoSerializersModule)
-    val superConstructor = ktBridgeApis.inboundService.constructors.single()
-    val constructor = inboundServiceSubclass.addConstructor {
+    // InboundBridge<EchoService>(EchoSerializersModule)
+    val superConstructor = ziplineApis.inboundBridge.constructors.single()
+    val constructor = inboundBridgeSubclass.addConstructor {
       origin = IrDeclarationOrigin.DEFINED
       visibility = DescriptorVisibilities.PUBLIC
       isPrimary = true
@@ -165,30 +165,30 @@ internal class KtBridgeSetRewriter(
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,
-          classSymbol = inboundServiceSubclass.symbol,
+          classSymbol = inboundBridgeSubclass.symbol,
         )
       }
     }
 
-    val serviceProperty = irServiceProperty(inboundServiceSubclass)
-    inboundServiceSubclass.declarations += serviceProperty
+    val serviceProperty = irServiceProperty(inboundBridgeSubclass)
+    inboundBridgeSubclass.declarations += serviceProperty
 
     val callFunction = irCallFunction(
-      inboundServiceSubclass = inboundServiceSubclass,
+      inboundBridgeSubclass = inboundBridgeSubclass,
       callSuspending = false
     )
     val callSuspendingFunction = irCallFunction(
-      inboundServiceSubclass = inboundServiceSubclass,
+      inboundBridgeSubclass = inboundBridgeSubclass,
       callSuspending = true
     )
 
     // We add overrides here so we can use them below.
-    inboundServiceSubclass.addFakeOverrides(
+    inboundBridgeSubclass.addFakeOverrides(
       pluginContext.irBuiltIns,
       listOf(callFunction, callSuspendingFunction)
     )
 
-    bridgedInterface.declareSerializerProperties(inboundServiceSubclass)
+    bridgedInterface.declareSerializerProperties(inboundBridgeSubclass)
 
     callFunction.irFunctionBody(
       context = pluginContext,
@@ -213,49 +213,49 @@ internal class KtBridgeSetRewriter(
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
-      resultType = inboundServiceSubclass.defaultType
-      +inboundServiceSubclass
-      +irCall(constructor.symbol, type = inboundServiceSubclass.defaultType)
+      resultType = inboundBridgeSubclass.defaultType
+      +inboundBridgeSubclass
+      +irCall(constructor.symbol, type = inboundBridgeSubclass.defaultType)
     }
   }
 
-  /** Override either `InboundService.call()` or `InboundService.callSuspending()`. */
+  /** Override either `InboundBridge.call()` or `InboundBridge.callSuspending()`. */
   private fun irCallFunction(
-    inboundServiceSubclass: IrClass,
+    inboundBridgeSubclass: IrClass,
     callSuspending: Boolean,
   ): IrSimpleFunction {
     // override fun call(inboundCall: InboundCall): ByteArray {
     // }
-    val inboundServiceCall = when {
-      callSuspending -> ktBridgeApis.inboundServiceCallSuspending
-      else -> ktBridgeApis.inboundServiceCall
+    val inboundBridgeCall = when {
+      callSuspending -> ziplineApis.inboundBridgeCallSuspending
+      else -> ziplineApis.inboundBridgeCall
     }
-    val result = inboundServiceSubclass.addFunction {
-      name = inboundServiceCall.owner.name
+    val result = inboundBridgeSubclass.addFunction {
+      name = inboundBridgeCall.owner.name
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
       returnType = pluginContext.symbols.byteArrayType
       isSuspend = callSuspending
     }.apply {
       addDispatchReceiver {
-        type = inboundServiceSubclass.defaultType
+        type = inboundBridgeSubclass.defaultType
       }
       addValueParameter {
         name = Name.identifier("inboundCall")
-        type = ktBridgeApis.inboundCall.defaultType
+        type = ziplineApis.inboundCall.defaultType
       }
-      overriddenSymbols += inboundServiceCall
+      overriddenSymbols += inboundBridgeCall
     }
 
     return result
   }
 
   // val service: EchoService = TestingEchoService("hello")
-  private fun irServiceProperty(inboundServiceSubclass: IrClass): IrProperty {
+  private fun irServiceProperty(inboundBridgeSubclass: IrClass): IrProperty {
     return irVal(
       pluginContext = pluginContext,
       propertyType = bridgedInterface.type,
-      declaringClass = inboundServiceSubclass,
+      declaringClass = inboundBridgeSubclass,
       propertyName = Name.identifier("service")
     ) {
       irExprBody(original.getValueArgument(2)!!)
@@ -263,7 +263,7 @@ internal class KtBridgeSetRewriter(
   }
 
   /**
-   * The body of either `InboundService.call()` or `InboundService.callSuspending()`.
+   * The body of either `InboundBridge.call()` or `InboundBridge.callSuspending()`.
    *
    * ```
    * when {
@@ -321,7 +321,7 @@ internal class KtBridgeSetRewriter(
     callFunction: IrSimpleFunction,
   ): IrExpression {
     return irCall(
-      callee = ktBridgeApis.inboundCall.getPropertyGetter("funName")!!,
+      callee = ziplineApis.inboundCall.getPropertyGetter("funName")!!,
       type = pluginContext.symbols.string.defaultType,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(
@@ -378,7 +378,7 @@ internal class KtBridgeSetRewriter(
     val valueParameterType = bridgedInterface.resolveTypeParameters(valueParameter.type)
     return irCall(
       type = valueParameterType,
-      callee = ktBridgeApis.inboundCallParameter,
+      callee = ziplineApis.inboundCallParameter,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)
       putTypeArgument(0, valueParameterType)
@@ -398,7 +398,7 @@ internal class KtBridgeSetRewriter(
     callFunction: IrSimpleFunction
   ): IrGetValue {
     return irGet(
-      type = ktBridgeApis.inboundCall.defaultType,
+      type = ziplineApis.inboundCall.defaultType,
       variable = callFunction.valueParameters[0].symbol,
     )
   }
@@ -410,7 +410,7 @@ internal class KtBridgeSetRewriter(
   ): IrExpression {
     return irCall(
       type = pluginContext.symbols.byteArrayType,
-      callee = ktBridgeApis.inboundCallResult,
+      callee = ziplineApis.inboundCallResult,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)
       putTypeArgument(0, resultExpression.type)
@@ -432,7 +432,7 @@ internal class KtBridgeSetRewriter(
   ): IrExpression {
     return irCall(
       type = pluginContext.symbols.byteArrayType,
-      callee = ktBridgeApis.inboundCallUnexpectedFunction,
+      callee = ziplineApis.inboundCallUnexpectedFunction,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)
     }

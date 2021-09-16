@@ -16,7 +16,6 @@
 
 package app.cash.zipline.kotlin
 
-import app.cash.zipline.ktbridge.plugin.KtBridgeTestInternals
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -28,20 +27,17 @@ import kotlin.test.assertEquals
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Test
 
-/**
- * Confirm bridge calls are rewritten to use `OutboundClientFactory` or `InboundService` as
- * appropriate.
- */
-class KtBridgePluginTest {
+/** Confirm bridge calls are rewritten to use `OutboundBridge` or `InboundBridge` as appropriate. */
+class ZiplineKotlinPluginTest {
   @Test
-  fun `ktBridge set rewritten to receive inbound calls`() {
+  fun `set rewritten to receive inbound calls`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
         package app.cash.zipline.testing
         
-        import app.cash.zipline.internal.bridge.KtBridge
+        import app.cash.zipline.internal.bridge.Endpoint
         
         class TestingEchoService(
           private val greeting: String
@@ -51,49 +47,49 @@ class KtBridgePluginTest {
           }
         }
         
-        fun prepareJsBridges(ktBridge: KtBridge) {
-          ktBridge.set<EchoService>("helloService", EchoSerializersModule, TestingEchoService("hello"))
+        fun prepareJsBridges(endpoint: Endpoint) {
+          endpoint.set<EchoService>("helloService", EchoSerializersModule, TestingEchoService("hello"))
         }
         """
       )
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
+    val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
     mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
 
-    val helloService = KtBridgeTestInternals.getEchoClient(bridgeB, "helloService")
+    val helloService = ZiplineTestInternals.getEchoClient(bridgeB, "helloService")
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("hello from the compiler plugin, Jesse"))
   }
 
   @Test
-  fun `ktBridge get rewritten to make outbound calls`() {
+  fun `get rewritten to make outbound calls`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
         package app.cash.zipline.testing
         
-        import app.cash.zipline.internal.bridge.KtBridge
+        import app.cash.zipline.internal.bridge.Endpoint
         
-        fun getHelloService(ktBridge: KtBridge): EchoService {
-          return ktBridge.get("helloService", EchoSerializersModule)
+        fun getHelloService(endpoint: Endpoint): EchoService {
+          return endpoint.get("helloService", EchoSerializersModule)
         }
         """
       )
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
+    val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
 
     val testingEchoService = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse {
         return EchoResponse("greetings from the compiler plugin, ${request.message}")
       }
     }
-    KtBridgeTestInternals.setEchoService(bridgeB, "helloService", testingEchoService)
+    ZiplineTestInternals.setEchoService(bridgeB, "helloService", testingEchoService)
 
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
     val helloService = mainKt.getDeclaredMethod("getHelloService", bridgeA::class.java)
@@ -104,17 +100,17 @@ class KtBridgePluginTest {
   }
 
   @Test
-  fun `ktBridge set type argument is not an interface`() {
+  fun `set type argument is not an interface`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
         package app.cash.zipline.testing
         
-        import app.cash.zipline.internal.bridge.KtBridge
+        import app.cash.zipline.internal.bridge.Endpoint
         
-        fun prepareJsBridges(ktBridge: KtBridge) {
-          ktBridge.set<TestingEchoService>("helloService", EchoSerializersModule, TestingEchoService)
+        fun prepareJsBridges(endpoint: Endpoint) {
+          endpoint.set<TestingEchoService>("helloService", EchoSerializersModule, TestingEchoService)
         }
 
         object TestingEchoService : EchoService {
@@ -125,28 +121,28 @@ class KtBridgePluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains("(6, 12): The type argument to KtBridge.set() must be an interface type")
+      .contains("(6, 12): The type argument to Zipline.set() must be an interface type")
   }
 
   @Test
-  fun `ktBridge get type argument is not an interface`() {
+  fun `get type argument is not an interface`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
         package app.cash.zipline.testing
         
-        import app.cash.zipline.internal.bridge.KtBridge
+        import app.cash.zipline.internal.bridge.Endpoint
         
-        fun getHelloService(ktBridge: KtBridge): String {
-          return ktBridge.get("helloService", EchoSerializersModule)
+        fun getHelloService(endpoint: Endpoint): String {
+          return endpoint.get("helloService", EchoSerializersModule)
         }
         """
       )
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains("(6, 19): The type argument to KtBridge.get() must be an interface type")
+      .contains("(6, 19): The type argument to Zipline.get() must be an interface type")
   }
 
   @Test
@@ -157,7 +153,7 @@ class KtBridgePluginTest {
         """
         package app.cash.zipline.testing
         
-        import app.cash.zipline.internal.bridge.KtBridge
+        import app.cash.zipline.internal.bridge.Endpoint
         
         class TestingGenericEchoService : GenericEchoService<String> {
           override fun genericEcho(request: String): List<String> {
@@ -165,8 +161,8 @@ class KtBridgePluginTest {
           }
         }
         
-        fun prepareJsBridges(ktBridge: KtBridge) {
-          ktBridge.set<GenericEchoService<String>>(
+        fun prepareJsBridges(endpoint: Endpoint) {
+          endpoint.set<GenericEchoService<String>>(
             "genericService",
             EchoSerializersModule,
             TestingGenericEchoService()
@@ -177,11 +173,11 @@ class KtBridgePluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
+    val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
     mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
 
-    val helloService = KtBridgeTestInternals.getGenericEchoService(bridgeB, "genericService")
+    val helloService = ZiplineTestInternals.getGenericEchoService(bridgeB, "genericService")
     assertThat(helloService.genericEcho("Jesse")).containsExactly("received a generic Jesse!")
   }
 
@@ -193,24 +189,24 @@ class KtBridgePluginTest {
         """
         package app.cash.zipline.testing
         
-        import app.cash.zipline.internal.bridge.KtBridge
+        import app.cash.zipline.internal.bridge.Endpoint
         
-        fun getGenericService(ktBridge: KtBridge): GenericEchoService<String> {
-          return ktBridge.get("genericService", EchoSerializersModule)
+        fun getGenericService(endpoint: Endpoint): GenericEchoService<String> {
+          return endpoint.get("genericService", EchoSerializersModule)
         }
         """
       )
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
+    val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
 
     val testingService = object : GenericEchoService<String> {
       override fun genericEcho(request: String): List<String> {
         return listOf("received a generic $request!")
       }
     }
-    KtBridgeTestInternals.setGenericEchoService(bridgeB, "genericService", testingService)
+    ZiplineTestInternals.setGenericEchoService(bridgeB, "genericService", testingService)
 
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
     val service = mainKt.getDeclaredMethod("getGenericService", bridgeA::class.java)
@@ -221,17 +217,17 @@ class KtBridgePluginTest {
   }
 
   @Test
-  fun `ktBridge set anonymous class`() {
+  fun `set anonymous class`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
         package app.cash.zipline.testing
         
-        import app.cash.zipline.internal.bridge.KtBridge
+        import app.cash.zipline.internal.bridge.Endpoint
         
-        fun prepareJsBridges(ktBridge: KtBridge) {
-          ktBridge.set<EchoService>("helloService", EchoSerializersModule, object : EchoService {
+        fun prepareJsBridges(endpoint: Endpoint) {
+          endpoint.set<EchoService>("helloService", EchoSerializersModule, object : EchoService {
             override fun echo(request: EchoRequest): EchoResponse {
               return EchoResponse("hello from anonymous, ${'$'}{request.message}")
             }
@@ -242,11 +238,11 @@ class KtBridgePluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
-    val (bridgeA, bridgeB) = KtBridgeTestInternals.newKtBridgePair()
+    val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
     mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
 
-    val helloService = KtBridgeTestInternals.getEchoClient(bridgeB, "helloService")
+    val helloService = ZiplineTestInternals.getEchoClient(bridgeB, "helloService")
     assertThat(helloService.echo(EchoRequest("Alec")))
       .isEqualTo(EchoResponse("hello from anonymous, Alec"))
   }
@@ -254,7 +250,7 @@ class KtBridgePluginTest {
 
 fun compile(
   sourceFiles: List<SourceFile>,
-  plugin: ComponentRegistrar = KtBridgeComponentRegistrar(),
+  plugin: ComponentRegistrar = ZiplineComponentRegistrar(),
 ): KotlinCompilation.Result {
   return KotlinCompilation().apply {
     sources = sourceFiles
@@ -266,7 +262,7 @@ fun compile(
 
 fun compile(
   sourceFile: SourceFile,
-  plugin: ComponentRegistrar = KtBridgeComponentRegistrar(),
+  plugin: ComponentRegistrar = ZiplineComponentRegistrar(),
 ): KotlinCompilation.Result {
   return compile(listOf(sourceFile), plugin)
 }

@@ -15,13 +15,13 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.KtBridge
+import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoSerializersModule
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.SuspendingEchoService
-import app.cash.zipline.testing.newKtBridgePair
+import app.cash.zipline.testing.newEndpointPair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
 import kotlinx.coroutines.Deferred
@@ -35,15 +35,15 @@ import org.junit.Assert.assertNull
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class CallBridgesTest {
+internal class EndpointTest {
   private val dispatcher = TestCoroutineDispatcher()
-  private val bridgeA: KtBridge
-  private val bridgeB: KtBridge
+  private val endpointA: Endpoint
+  private val endpointB: Endpoint
   
   init {
-    val (bridgeA, bridgeB) = newKtBridgePair(dispatcher)
-    this.bridgeA = bridgeA
-    this.bridgeB = bridgeB
+    val (endpointA, endpointB) = newEndpointPair(dispatcher)
+    this.endpointA = endpointA
+    this.endpointB = endpointB
   }
 
   @Test
@@ -57,8 +57,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<EchoService>("helloService", EchoSerializersModule, service)
-    val client = bridgeB.get<EchoService>("helloService", EchoSerializersModule)
+    endpointA.set<EchoService>("helloService", EchoSerializersModule, service)
+    val client = endpointB.get<EchoService>("helloService", EchoSerializersModule)
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -81,8 +81,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<NullableEchoService>("helloService", EchoSerializersModule, service)
-    val client = bridgeB.get<NullableEchoService>("helloService", EchoSerializersModule)
+    endpointA.set<NullableEchoService>("helloService", EchoSerializersModule, service)
+    val client = endpointB.get<NullableEchoService>("helloService", EchoSerializersModule)
 
     val response = client.echo(null)
     assertThat(response?.message).isEqualTo("received null")
@@ -97,8 +97,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<NullableEchoService>("helloService", EchoSerializersModule, service)
-    val client = bridgeB.get<NullableEchoService>("helloService", EchoSerializersModule)
+    endpointA.set<NullableEchoService>("helloService", EchoSerializersModule, service)
+    val client = endpointB.get<NullableEchoService>("helloService", EchoSerializersModule)
 
     val response = client.echo(EchoRequest("send me null please?"))
     assertNull(response)
@@ -115,8 +115,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<SuspendingEchoService>("helloService", EchoSerializersModule, service)
-    val client = bridgeB.get<SuspendingEchoService>("helloService", EchoSerializersModule)
+    endpointA.set<SuspendingEchoService>("helloService", EchoSerializersModule, service)
+    val client = endpointB.get<SuspendingEchoService>("helloService", EchoSerializersModule)
 
     val deferredResponse: Deferred<EchoResponse> = async {
       client.suspendingEcho(EchoRequest("this is a happy request"))
@@ -136,8 +136,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<EchoService>("helloService", EchoSerializersModule, service)
-    val client = bridgeB.get<EchoService>("helloService", EchoSerializersModule)
+    endpointA.set<EchoService>("helloService", EchoSerializersModule, service)
+    val client = endpointB.get<EchoService>("helloService", EchoSerializersModule)
 
     val thrownException = assertThrows<Exception> {
       client.echo(EchoRequest(""))
@@ -154,8 +154,8 @@ internal class CallBridgesTest {
       }
     }
 
-    bridgeA.set<SuspendingEchoService>("helloService", EchoSerializersModule, service)
-    val client = bridgeB.get<SuspendingEchoService>("helloService", EchoSerializersModule)
+    endpointA.set<SuspendingEchoService>("helloService", EchoSerializersModule, service)
+    val client = endpointB.get<SuspendingEchoService>("helloService", EchoSerializersModule)
 
     val thrownException = assertThrows<Exception> {
       client.suspendingEcho(EchoRequest(""))

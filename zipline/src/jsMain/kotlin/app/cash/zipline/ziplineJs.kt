@@ -15,10 +15,12 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.InboundService
-import app.cash.zipline.internal.bridge.InternalBridge
-import app.cash.zipline.internal.bridge.KtBridge
-import app.cash.zipline.internal.bridge.OutboundClientFactory
+import app.cash.zipline.internal.HostPlatform
+import app.cash.zipline.internal.JsPlatform
+import app.cash.zipline.internal.bridge.CallChannel
+import app.cash.zipline.internal.bridge.Endpoint
+import app.cash.zipline.internal.bridge.InboundBridge
+import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.bridge.ZiplineSerializersModule
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.modules.SerializersModule
@@ -33,7 +35,7 @@ actual abstract class Zipline {
   @PublishedApi
   internal abstract fun <T : Any> get(
     name: String,
-    outboundClientFactory: OutboundClientFactory<T>
+    outboundBridge: OutboundBridge<T>
   ): T
 
   actual fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
@@ -41,38 +43,38 @@ actual abstract class Zipline {
   }
 
   @PublishedApi
-  internal abstract fun set(name: String, service: InboundService<*>)
+  internal abstract fun set(name: String, bridge: InboundBridge<*>)
 
   companion object : Zipline() {
     override val engineVersion: String
       get() = THE_ONLY_ZIPLINE.engineVersion
 
-    override fun <T : Any> get(name: String, outboundClientFactory: OutboundClientFactory<T>): T {
-      return THE_ONLY_ZIPLINE.get(name, outboundClientFactory)
+    override fun <T : Any> get(name: String, outboundBridge: OutboundBridge<T>): T {
+      return THE_ONLY_ZIPLINE.get(name, outboundBridge)
     }
 
-    override fun set(name: String, service: InboundService<*>) {
-      THE_ONLY_ZIPLINE.set(name, service)
+    override fun set(name: String, bridge: InboundBridge<*>) {
+      THE_ONLY_ZIPLINE.set(name, bridge)
     }
   }
 }
 
-private class ZiplineJs : Zipline(), JsPlatform, InternalBridge  {
-  private val ktBridge = KtBridge(Dispatchers.Main, outboundBridge = this)
+private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
+  private val endpoint = Endpoint(Dispatchers.Main, outboundChannel = this)
   private val hostPlatform: HostPlatform
   private var nextTimeoutId = 1
   private val jobs = mutableMapOf<Int, Job>()
 
   /** Lazily fetch the bridge to call out. */
-  private val jsOutboundBridge: dynamic
-    get() = js("""globalThis.app_cash_zipline_outboundBridge""")
+  private val jsOutboundChannel: dynamic
+    get() = js("""globalThis.app_cash_zipline_outboundChannel""")
 
   init {
     // Eagerly publish the bridge so they can call us.
-    val inboundBridge = ktBridge.inboundBridge
+    val inboundChannel = endpoint.inboundChannel
     js(
       """
-      globalThis.app_cash_zipline_inboundBridge = inboundBridge;
+      globalThis.app_cash_zipline_inboundChannel = inboundChannel;
       """
     )
 
@@ -96,12 +98,12 @@ private class ZiplineJs : Zipline(), JsPlatform, InternalBridge  {
     )
 
     // Connect platforms using our newly-bootstrapped bridges.
-    ktBridge.set<JsPlatform>(
+    endpoint.set<JsPlatform>(
       name = "app.cash.zipline.jsPlatform",
       serializersModule = ZiplineSerializersModule,
       instance = this
     )
-    hostPlatform = ktBridge.get(
+    hostPlatform = endpoint.get(
       name = "app.cash.zipline.hostPlatform",
       serializersModule = ZiplineSerializersModule
     )
@@ -115,7 +117,7 @@ private class ZiplineJs : Zipline(), JsPlatform, InternalBridge  {
     funName: String,
     encodedArguments: ByteArray
   ): ByteArray {
-    return jsOutboundBridge.invoke(instanceName, funName, encodedArguments)
+    return jsOutboundChannel.invoke(instanceName, funName, encodedArguments)
   }
 
   override fun invokeSuspending(
@@ -124,18 +126,18 @@ private class ZiplineJs : Zipline(), JsPlatform, InternalBridge  {
     encodedArguments: ByteArray,
     callbackName: String
   ) {
-    return jsOutboundBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
+    return jsOutboundChannel.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
   }
 
   override fun <T : Any> get(
     name: String,
-    outboundClientFactory: OutboundClientFactory<T>
+    outboundBridge: OutboundBridge<T>
   ): T {
-    return ktBridge.get(name, outboundClientFactory)
+    return endpoint.get(name, outboundBridge)
   }
 
-  override fun set(name: String, service: InboundService<*>) {
-    ktBridge.set(name, service)
+  override fun set(name: String, bridge: InboundBridge<*>) {
+    endpoint.set(name, bridge)
   }
 
   override fun runJob(timeoutId: Int) {

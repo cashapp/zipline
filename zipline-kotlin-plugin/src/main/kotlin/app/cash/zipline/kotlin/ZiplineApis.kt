@@ -23,7 +23,7 @@ import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.name.FqName
 
 /** Looks up APIs used by the code rewriters. */
-internal class KtBridgeApis(
+internal class ZiplineApis(
   private val pluginContext: IrPluginContext,
 ) {
   private val packageFqName = FqName("app.cash.zipline")
@@ -32,7 +32,7 @@ internal class KtBridgeApis(
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
   private val ziplineFqName = packageFqName.child("Zipline")
   private val ziplineCompanionFqName = ziplineFqName.child("Companion")
-  private val ktBridgeFqName = bridgeFqName.child("KtBridge")
+  private val endpointFqName = bridgeFqName.child("Endpoint")
 
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!
@@ -66,17 +66,17 @@ internal class KtBridgeApis(
       bridgeFqName.child("InboundCall").child("unexpectedFunction")
     ).single()
 
-  val inboundService: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("InboundService"))!!
+  val inboundBridge: IrClassSymbol
+    get() = pluginContext.referenceClass(bridgeFqName.child("InboundBridge"))!!
 
-  val inboundServiceCall: IrSimpleFunctionSymbol
+  val inboundBridgeCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("InboundService").child("call")
+      bridgeFqName.child("InboundBridge").child("call")
     ).single()
 
-  val inboundServiceCallSuspending: IrSimpleFunctionSymbol
+  val inboundBridgeCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("InboundService").child("callSuspending")
+      bridgeFqName.child("InboundBridge").child("callSuspending")
     ).single()
 
   val outboundCallInvoke: IrSimpleFunctionSymbol
@@ -100,24 +100,24 @@ internal class KtBridgeApis(
       bridgeFqName.child("OutboundCall").child("Factory").child("create")
     ).single()
 
-  val outboundClientFactory: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("OutboundClientFactory"))!!
+  val outboundBridge: IrClassSymbol
+    get() = pluginContext.referenceClass(bridgeFqName.child("OutboundBridge"))!!
 
-  val outboundClientFactoryCreate: IrSimpleFunctionSymbol
-    get() = outboundClientFactory.functions.single { it.owner.name.identifier == "create" }
+  val outboundBridgeCreate: IrSimpleFunctionSymbol
+    get() = outboundBridge.functions.single { it.owner.name.identifier == "create" }
 
   /** Keys are functions like `Zipline.get()` and values are their rewrite targets. */
   val getRewriteFunctions: Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> = buildRewritesMap(
     ziplineFqName.child("get"),
     ziplineCompanionFqName.child("get"),
-    ktBridgeFqName.child("get"),
+    endpointFqName.child("get"),
   )
 
   /** Keys are functions like `Zipline.set()` and values are their rewrite targets. */
   val setRewriteFunctions: Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> = buildRewritesMap(
     ziplineFqName.child("set"),
     ziplineCompanionFqName.child("set"),
-    ktBridgeFqName.child("set"),
+    endpointFqName.child("set"),
   )
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
