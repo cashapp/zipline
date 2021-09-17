@@ -15,9 +15,9 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.Handle
-import app.cash.zipline.InboundHandle
-import app.cash.zipline.OutboundHandle
+import app.cash.zipline.InboundZiplineReference
+import app.cash.zipline.OutboundZiplineReference
+import app.cash.zipline.ZiplineReference
 import kotlin.js.JsName
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
@@ -34,6 +34,10 @@ import okio.BufferedSource
 
 @PublishedApi
 internal interface CallChannel {
+  /** Returns names can receive calls to [invoke] and [invokeSuspending]. */
+  @JsName("serviceNamesArray")
+  fun serviceNamesArray(): Array<String>
+
   /**
    * Internal function used to bridge method calls from Java or Android to JavaScript.
    *
@@ -55,7 +59,7 @@ internal interface CallChannel {
   @JsName("invoke")
   fun invoke(instanceName: String, funName: String, encodedArguments: ByteArray): ByteArray
 
-  /** Like [invoke], but the respose is delivered to the [SuspendCallback] named [callbackName]. */
+  /** Like [invoke], but the response is delivered to the [SuspendCallback] named [callbackName]. */
   @JsName("invokeSuspending")
   fun invokeSuspending(
     instanceName: String,
@@ -63,6 +67,15 @@ internal interface CallChannel {
     encodedArguments: ByteArray,
     callbackName: String
   )
+
+  /**
+   * Remove [instanceName] from the receiver. After making this call it is an error to make calls
+   * with this name.
+   *
+   * @return true if the instance name existed.
+   */
+  @JsName("disconnect")
+  fun disconnect(instanceName: String): Boolean
 }
 
 internal const val BYTE_COUNT_NULL = -1
@@ -102,31 +115,31 @@ private class ThrowableSurrogate(
  * This is a special serializer because it's scoped to an endpoint. It is not a general-purpose
  * serializer and only works in Zipline.
  *
- * To send a handle to an inbound service, we register it with the endpoint and transmit the
+ * To send a reference to an inbound service, we register it with the endpoint and transmit the
  * registered identifier.
  *
- * To receive a handle, we record the received identifier and return it when making calls against
+ * To receive a reference, we record the received identifier and return it when making calls against
  * the referenced service.
  */
-internal class HandleSerializer<T : Any>(
+internal class ZiplineReferenceSerializer<T : Any>(
   val endpoint: Endpoint
-) : KSerializer<Handle<T>> {
-  override val descriptor = PrimitiveSerialDescriptor("Handle", PrimitiveKind.STRING)
+) : KSerializer<ZiplineReference<T>> {
+  override val descriptor = PrimitiveSerialDescriptor("ZiplineReference", PrimitiveKind.STRING)
 
-  override fun serialize(encoder: Encoder, value: Handle<T>) {
+  override fun serialize(encoder: Encoder, value: ZiplineReference<T>) {
     val name = endpoint.generateName()
-    if (value is InboundHandle<T>) {
+    if (value is InboundZiplineReference<T>) {
       value.connect(endpoint, name)
       encoder.encodeString(name)
     } else {
-      error("serializing an outbound handle is not implemented")
+      error("serializing an outbound reference is not implemented")
     }
   }
 
-  override fun deserialize(decoder: Decoder): Handle<T> {
+  override fun deserialize(decoder: Decoder): ZiplineReference<T> {
     val name = decoder.decodeString()
-    val handle = OutboundHandle<T>()
-    handle.connect(endpoint, name)
-    return handle
+    val reference = OutboundZiplineReference<T>()
+    reference.connect(endpoint, name)
+    return reference
   }
 }

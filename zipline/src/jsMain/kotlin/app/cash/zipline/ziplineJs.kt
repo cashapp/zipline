@@ -28,6 +28,10 @@ import kotlinx.serialization.modules.SerializersModule
 actual abstract class Zipline {
   actual abstract val engineVersion: String
 
+  actual abstract val serviceNames: Set<String>
+
+  actual abstract val clientNames: Set<String>
+
   actual fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
@@ -48,6 +52,12 @@ actual abstract class Zipline {
   companion object : Zipline() {
     override val engineVersion: String
       get() = THE_ONLY_ZIPLINE.engineVersion
+
+    override val serviceNames: Set<String>
+      get() = THE_ONLY_ZIPLINE.serviceNames
+
+    override val clientNames: Set<String>
+      get() = THE_ONLY_ZIPLINE.clientNames
 
     override fun <T : Any> get(name: String, outboundBridge: OutboundBridge<T>): T {
       return THE_ONLY_ZIPLINE.get(name, outboundBridge)
@@ -99,18 +109,28 @@ private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
 
     // Connect platforms using our newly-bootstrapped bridges.
     endpoint.set<JsPlatform>(
-      name = "app.cash.zipline.jsPlatform",
+      name = "zipline/js",
       serializersModule = EmptySerializersModule,
       instance = this
     )
     hostPlatform = endpoint.get(
-      name = "app.cash.zipline.hostPlatform",
+      name = "zipline/host",
       serializersModule = EmptySerializersModule
     )
   }
 
   override val engineVersion
     get() = quickJsVersion
+
+  override val serviceNames: Set<String>
+    get() = endpoint.serviceNames
+
+  override val clientNames: Set<String>
+    get() = endpoint.clientNames
+
+  override fun serviceNamesArray(): Array<String> {
+    return jsOutboundChannel.serviceNamesArray()
+  }
 
   override fun invoke(
     instanceName: String,
@@ -127,6 +147,10 @@ private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
     callbackName: String
   ) {
     return jsOutboundChannel.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
+  }
+
+  override fun disconnect(instanceName: String): Boolean {
+    return jsOutboundChannel.disconnect(instanceName)
   }
 
   override fun <T : Any> get(

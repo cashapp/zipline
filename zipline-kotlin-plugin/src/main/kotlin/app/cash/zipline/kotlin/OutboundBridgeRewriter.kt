@@ -85,12 +85,12 @@ import org.jetbrains.kotlin.name.Name
  *
  * For suspending functions, everything is the same except the call is to `invokeSuspending()`.
  *
- * This also rewrites calls to `Handle.get()`, which is similar to `Zipline.get()` but without a
- * leading name parameter:
+ * This also rewrites calls to `ZiplineReference.get()`, which is similar to
+ * `ZiplineReference.get()` but without a leading name parameter:
  *
  * ```
- * val handle: Handle<EchoService> = ...
- * val helloService = handle.get(
+ * val reference: ZiplineReference<EchoService> = ...
+ * val helloService = reference.get(
  *   EchoSerializersModule
  * )
  * ```
@@ -98,8 +98,8 @@ import org.jetbrains.kotlin.name.Name
  * The above is rewritten to:
  *
  * ```
- * val handle: Handle<EchoService> = ...
- * val helloService = handle.get(
+ * val reference: ZiplineReference<EchoService> = ...
+ * val helloService = reference.get(
  *   object : OutboundBridge<EchoService>(EchoSerializersModule) {
  *     ...
  *   }
@@ -120,9 +120,9 @@ internal class OutboundBridgeRewriter(
       // If it's Zipline.get(), the interface type is on get().
       original.getTypeArgument(0)!!
     } else {
-      // If it's Handle.get(), the interface type is on Handle.
-      val handleType = original.dispatchReceiver!!.type as IrSimpleType
-      handleType.arguments[0].typeOrNull!!
+      // If it's ZiplineReference.get(), the interface type is on ZiplineReference.
+      val ziplineReferenceType = original.dispatchReceiver!!.type as IrSimpleType
+      ziplineReferenceType.arguments[0].typeOrNull!!
     }
   }
 

@@ -40,7 +40,7 @@ internal class EndpointTest {
   private val dispatcher = TestCoroutineDispatcher()
   private val endpointA: Endpoint
   private val endpointB: Endpoint
-  
+
   init {
     val (endpointA, endpointB) = newEndpointPair(dispatcher)
     this.endpointA = endpointA
@@ -166,63 +166,28 @@ internal class EndpointTest {
   }
 
   @Test
-  fun handleBridgesServicesBeforeEndpointsAreConnected() {
-    val requests = LinkedBlockingDeque<String>()
-    val responses = LinkedBlockingDeque<String>()
-    val service = object : EchoService {
-      override fun echo(request: EchoRequest): EchoResponse {
-        requests += request.message
-        return EchoResponse(responses.take())
+  fun suspendingCallbacksCreateTemporaryReferences(): Unit = runBlocking(dispatcher) {
+    val echoService = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        // In the middle of a suspending call there's a temporary reference to the callback.
+        assertThat(endpointA.serviceNames).containsExactly("echoService")
+        assertThat(endpointB.clientNames).containsExactly("echoService")
+        assertThat(endpointA.clientNames).containsExactly("zipline/1")
+        assertThat(endpointB.serviceNames).containsExactly("zipline/1")
+        return EchoResponse("hello, ${request.message}")
       }
     }
 
-    val handleA = Handle<EchoService>(EchoSerializersModule, service)
-    (handleA as InboundHandle<*>).connect(endpointA, "helloService")
+    endpointA.set<SuspendingEchoService>("echoService", EmptySerializersModule, echoService)
+    val client = endpointB.get<SuspendingEchoService>("echoService", EmptySerializersModule)
 
-    // Note that we cast OutboundHandle<EchoService> down to Handle<EchoService> before calling
-    // get(). This is necessary because we don't bother to rewrite calls to overrides.
-    val handleB: Handle<EchoService> = OutboundHandle()
-    (handleB as OutboundHandle<EchoService>).connect(endpointB, "helloService")
+    val echoResponse = client.suspendingEcho(EchoRequest("Jesse"))
+    assertThat(echoResponse).isEqualTo(EchoResponse("hello, Jesse"))
 
-    val client = handleB.get(EchoSerializersModule)
-
-    responses += "this is a curt response"
-    val response = client.echo(EchoRequest("this is a happy request"))
-    assertEquals("this is a curt response", response.message)
-    assertEquals("this is a happy request", requests.poll())
-    assertNull(responses.poll())
-    assertNull(requests.poll())
-  }
-
-  interface EchoServiceFactory {
-    fun create(greeting: String): Handle<EchoService>
-  }
-
-  @Test
-  fun transmitHandles() {
-    val factoryService = object : EchoServiceFactory {
-      override fun create(greeting: String): Handle<EchoService> {
-        val service = object : EchoService {
-          override fun echo(request: EchoRequest): EchoResponse {
-            return EchoResponse("$greeting ${request.message}")
-          }
-        }
-        return Handle(EmptySerializersModule, service)
-      }
-    }
-
-    endpointA.set<EchoServiceFactory>("factory", EmptySerializersModule, factoryService)
-    val factoryClient = endpointB.get<EchoServiceFactory>("factory", EmptySerializersModule)
-
-    val helloServiceHandle = factoryClient.create("hello")
-    val helloService = helloServiceHandle.get(EmptySerializersModule)
-
-    val supServiceHandle = factoryClient.create("sup")
-    val supService = supServiceHandle.get(EmptySerializersModule)
-
-    assertThat(helloService.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
-    assertThat(supService.echo(EchoRequest("Kevin"))).isEqualTo(EchoResponse("sup Kevin"))
-    assertThat(helloService.echo(EchoRequest("Jake"))).isEqualTo(EchoResponse("hello Jake"))
-    assertThat(supService.echo(EchoRequest("Stephen"))).isEqualTo(EchoResponse("sup Stephen"))
+    // Confirm that these temporary references are cleaned up when the suspending call returns.
+    assertThat(endpointA.serviceNames).containsExactly("echoService")
+    assertThat(endpointB.clientNames).containsExactly("echoService")
+    assertThat(endpointA.clientNames).isEmpty()
+    assertThat(endpointB.serviceNames).isEmpty()
   }
 }

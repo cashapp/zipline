@@ -32,11 +32,15 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual abstract class Zipline : Closeable {
-  actual abstract val engineVersion: String
-
   abstract val quickJs: QuickJs
 
   abstract val dispatcher: CoroutineDispatcher
+
+  actual abstract val engineVersion: String
+
+  actual abstract val serviceNames: Set<String>
+
+  actual abstract val clientNames: Set<String>
 
   actual fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
@@ -102,18 +106,28 @@ private class ZiplineJni(
 
     // Connect platforms using our newly-bootstrapped bridges.
     endpoint.set<HostPlatform>(
-      name = "app.cash.zipline.hostPlatform",
+      name = "zipline/host",
       serializersModule = EmptySerializersModule,
       instance = this
     )
     jsPlatform = endpoint.get(
-      name = "app.cash.zipline.jsPlatform",
+      name = "zipline/js",
       serializersModule = EmptySerializersModule
     )
   }
 
   override val engineVersion: String
     get() = quickJsVersion
+
+  override val serviceNames: Set<String>
+    get() = endpoint.serviceNames
+
+  override val clientNames: Set<String>
+    get() = endpoint.clientNames
+
+  override fun serviceNamesArray(): Array<String> {
+    return jsInboundBridge.serviceNamesArray()
+  }
 
   override fun invoke(
     instanceName: String,
@@ -132,6 +146,10 @@ private class ZiplineJni(
   ) {
     check(!closed) { "Zipline closed" }
     return jsInboundBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
+  }
+
+  override fun disconnect(instanceName: String): Boolean {
+    return jsInboundBridge.disconnect(instanceName)
   }
 
   override fun <T : Any> get(
