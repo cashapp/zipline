@@ -21,7 +21,6 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
-import app.cash.zipline.internal.bridge.ZiplineSerializersModule
 import java.io.Closeable
 import java.util.logging.Logger
 import kotlin.coroutines.EmptyCoroutineContext
@@ -29,6 +28,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual abstract class Zipline : Closeable {
@@ -53,7 +53,7 @@ actual abstract class Zipline : Closeable {
   }
 
   @PublishedApi
-  internal abstract fun set(name: String, bridge: InboundBridge<*>)
+  internal abstract fun <T : Any> set(name: String, bridge: InboundBridge<T>)
 
   /**
    * Release resources held by this instance. It is an error to do any of the following after
@@ -103,12 +103,12 @@ private class ZiplineJni(
     // Connect platforms using our newly-bootstrapped bridges.
     endpoint.set<HostPlatform>(
       name = "app.cash.zipline.hostPlatform",
-      serializersModule = ZiplineSerializersModule,
+      serializersModule = EmptySerializersModule,
       instance = this
     )
     jsPlatform = endpoint.get(
       name = "app.cash.zipline.jsPlatform",
-      serializersModule = ZiplineSerializersModule
+      serializersModule = EmptySerializersModule
     )
   }
 
@@ -142,7 +142,7 @@ private class ZiplineJni(
     return endpoint.get(name, bridge)
   }
 
-  override fun set(name: String, bridge: InboundBridge<*>) {
+  override fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
     check(!closed) { "closed" }
     endpoint.set(name, bridge)
   }

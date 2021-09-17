@@ -34,27 +34,27 @@ class ZiplineIrGenerationExtension(
         val expression = super.visitCall(expression) as IrCall
 
         try {
-          val rewrittenGetFunction = ziplineApis.getRewriteFunctions[expression.symbol]
-          if (rewrittenGetFunction != null) {
+          val newOutboundFunction = ziplineApis.outboundRewriteFunctions[expression.symbol]
+          if (newOutboundFunction != null) {
             return OutboundBridgeRewriter(
               pluginContext,
               ziplineApis,
               currentScope!!,
               currentDeclarationParent!!,
               expression,
-              rewrittenGetFunction,
+              newOutboundFunction,
             ).rewrite()
           }
 
-          val rewrittenSetFunction = ziplineApis.setRewriteFunctions[expression.symbol]
-          if (rewrittenSetFunction != null) {
+          val newInboundFunction = ziplineApis.inboundRewriteFunctions[expression.symbol]
+          if (newInboundFunction != null) {
             return InboundBridgeRewriter(
               pluginContext,
               ziplineApis,
               currentScope!!,
               currentDeclarationParent!!,
               expression,
-              rewrittenSetFunction,
+              newInboundFunction,
             ).rewrite()
           }
 

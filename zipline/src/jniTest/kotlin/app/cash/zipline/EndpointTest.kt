@@ -30,6 +30,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.serialization.modules.EmptySerializersModule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -47,7 +48,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun inboundCallRequestAndResponse() {
+  fun requestAndResponse() {
     val requests = LinkedBlockingDeque<String>()
     val responses = LinkedBlockingDeque<String>()
     val service = object : EchoService {
@@ -162,5 +163,66 @@ internal class EndpointTest {
     }
     assertThat(thrownException).hasMessageThat()
       .isEqualTo("java.lang.IllegalStateException: boom!")
+  }
+
+  @Test
+  fun handleBridgesServicesBeforeEndpointsAreConnected() {
+    val requests = LinkedBlockingDeque<String>()
+    val responses = LinkedBlockingDeque<String>()
+    val service = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        requests += request.message
+        return EchoResponse(responses.take())
+      }
+    }
+
+    val handleA = Handle<EchoService>(EchoSerializersModule, service)
+    (handleA as InboundHandle<*>).connect(endpointA, "helloService")
+
+    // Note that we cast OutboundHandle<EchoService> down to Handle<EchoService> before calling
+    // get(). This is necessary because we don't bother to rewrite calls to overrides.
+    val handleB: Handle<EchoService> = OutboundHandle()
+    (handleB as OutboundHandle<EchoService>).connect(endpointB, "helloService")
+
+    val client = handleB.get(EchoSerializersModule)
+
+    responses += "this is a curt response"
+    val response = client.echo(EchoRequest("this is a happy request"))
+    assertEquals("this is a curt response", response.message)
+    assertEquals("this is a happy request", requests.poll())
+    assertNull(responses.poll())
+    assertNull(requests.poll())
+  }
+
+  interface EchoServiceFactory {
+    fun create(greeting: String): Handle<EchoService>
+  }
+
+  @Test
+  fun transmitHandles() {
+    val factoryService = object : EchoServiceFactory {
+      override fun create(greeting: String): Handle<EchoService> {
+        val service = object : EchoService {
+          override fun echo(request: EchoRequest): EchoResponse {
+            return EchoResponse("$greeting ${request.message}")
+          }
+        }
+        return Handle(EmptySerializersModule, service)
+      }
+    }
+
+    endpointA.set<EchoServiceFactory>("factory", EmptySerializersModule, factoryService)
+    val factoryClient = endpointB.get<EchoServiceFactory>("factory", EmptySerializersModule)
+
+    val helloServiceHandle = factoryClient.create("hello")
+    val helloService = helloServiceHandle.get(EmptySerializersModule)
+
+    val supServiceHandle = factoryClient.create("sup")
+    val supService = supServiceHandle.get(EmptySerializersModule)
+
+    assertThat(helloService.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
+    assertThat(supService.echo(EchoRequest("Kevin"))).isEqualTo(EchoResponse("sup Kevin"))
+    assertThat(helloService.echo(EchoRequest("Jake"))).isEqualTo(EchoResponse("hello Jake"))
+    assertThat(supService.echo(EchoRequest("Stephen"))).isEqualTo(EchoResponse("sup Stephen"))
   }
 }

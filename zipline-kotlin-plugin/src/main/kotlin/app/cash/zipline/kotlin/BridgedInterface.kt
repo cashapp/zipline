@@ -163,7 +163,8 @@ internal class BridgedInterface(
       if (classSymbol == null || !classSymbol.owner.isInterface) {
         throw ZiplineCompilationException(
           element = element,
-          message = "The type argument to $functionName must be an interface type",
+          message = "The type argument to $functionName must be an interface type" +
+            " (but was ${type.classFqName})",
         )
       }
 

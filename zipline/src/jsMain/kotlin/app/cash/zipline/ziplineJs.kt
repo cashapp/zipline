@@ -21,8 +21,8 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
-import app.cash.zipline.internal.bridge.ZiplineSerializersModule
 import kotlinx.coroutines.Dispatchers
+import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual abstract class Zipline {
@@ -43,7 +43,7 @@ actual abstract class Zipline {
   }
 
   @PublishedApi
-  internal abstract fun set(name: String, bridge: InboundBridge<*>)
+  internal abstract fun <T : Any> set(name: String, bridge: InboundBridge<T>)
 
   companion object : Zipline() {
     override val engineVersion: String
@@ -53,7 +53,7 @@ actual abstract class Zipline {
       return THE_ONLY_ZIPLINE.get(name, outboundBridge)
     }
 
-    override fun set(name: String, bridge: InboundBridge<*>) {
+    override fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
       THE_ONLY_ZIPLINE.set(name, bridge)
     }
   }
@@ -100,12 +100,12 @@ private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
     // Connect platforms using our newly-bootstrapped bridges.
     endpoint.set<JsPlatform>(
       name = "app.cash.zipline.jsPlatform",
-      serializersModule = ZiplineSerializersModule,
+      serializersModule = EmptySerializersModule,
       instance = this
     )
     hostPlatform = endpoint.get(
       name = "app.cash.zipline.hostPlatform",
-      serializersModule = ZiplineSerializersModule
+      serializersModule = EmptySerializersModule
     )
   }
 
@@ -136,7 +136,7 @@ private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
     return endpoint.get(name, outboundBridge)
   }
 
-  override fun set(name: String, bridge: InboundBridge<*>) {
+  override fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
     endpoint.set(name, bridge)
   }
 

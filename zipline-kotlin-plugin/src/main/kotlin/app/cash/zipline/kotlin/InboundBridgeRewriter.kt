@@ -51,15 +51,21 @@ import org.jetbrains.kotlin.ir.expressions.IrBranch
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.expressions.impl.IrCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.putClassTypeArgument
+import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
+import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.getPropertyGetter
+import org.jetbrains.kotlin.ir.util.parentAsClass
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
@@ -102,6 +108,26 @@ import org.jetbrains.kotlin.name.Name
  *
  * For suspending functions, everything is the same except overridden method is `callSuspending()`.
  * Both methods area always overridden, but may contain only the `unexpectedFunction()` case.
+ *
+ * This also rewrites calls to `Handle()`, which is similar to `Zipline.set()` but without a leading
+ * name parameter:
+ *
+ * ```
+ * val handle = Handle<EchoService>(
+ *   EchoSerializersModule,
+ *   TestingEchoService("hello")
+ * )
+ * ```
+ *
+ * The above is rewritten to:
+ *
+ * ```
+ * val handle = InboundHandle<EchoService>(
+ *   object : InboundBridge<EchoService>(EchoSerializersModule) {
+ *     ...
+ *   }
+ * )
+ * ```
  */
 internal class InboundBridgeRewriter(
   private val pluginContext: IrPluginContext,
@@ -109,7 +135,7 @@ internal class InboundBridgeRewriter(
   private val scope: ScopeWithIr,
   private val declarationParent: IrDeclarationParent,
   private val original: IrCall,
-  private val rewrittenSetFunction: IrSimpleFunctionSymbol,
+  private val rewrittenFunction: IrFunctionSymbol,
 ) {
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
@@ -119,24 +145,47 @@ internal class InboundBridgeRewriter(
     original.getTypeArgument(0)!!
   )
 
-  private val irFactory: IrFactory
-    get() = pluginContext.irFactory
+  private val irFactory: IrFactory = pluginContext.irFactory
 
-  fun rewrite(): IrCall {
-    return IrCallImpl(
-      startOffset = original.startOffset,
-      endOffset = original.endOffset,
-      type = original.type,
-      symbol = rewrittenSetFunction,
-      typeArgumentsCount = 0,
-      valueArgumentsCount = 2,
-      origin = original.origin,
-      superQualifierSymbol = original.superQualifierSymbol
-    ).apply {
-      dispatchReceiver = original.dispatchReceiver
-      putValueArgument(0, original.getValueArgument(0))
-      putValueArgument(1, irNewInboundBridge())
-      patchDeclarationParents(declarationParent)
+  fun rewrite(): IrFunctionAccessExpression {
+    when (rewrittenFunction) {
+      is IrSimpleFunctionSymbol -> {
+        // Call zipline.set(...).
+        return IrCallImpl(
+          startOffset = original.startOffset,
+          endOffset = original.endOffset,
+          type = original.type,
+          symbol = rewrittenFunction,
+          typeArgumentsCount = 1,
+          valueArgumentsCount = 2,
+          origin = original.origin,
+          superQualifierSymbol = original.superQualifierSymbol,
+        ).apply {
+          dispatchReceiver = original.dispatchReceiver
+          putTypeArgument(0, bridgedInterface.type)
+          putValueArgument(0, original.getValueArgument(0))
+          putValueArgument(1, irNewInboundBridge())
+          patchDeclarationParents(declarationParent)
+        }
+      }
+      is IrConstructorSymbol -> {
+        // Construct InboundHandle<EchoService>(...).
+        return IrConstructorCallImpl(
+          startOffset = original.startOffset,
+          endOffset = original.endOffset,
+          type = rewrittenFunction.owner.parentAsClass.typeWith(bridgedInterface.type),
+          symbol = rewrittenFunction,
+          typeArgumentsCount = 1,
+          constructorTypeArgumentsCount = 0,
+          valueArgumentsCount = 1,
+          origin = original.origin,
+        ).apply {
+          putValueArgument(0, irNewInboundBridge())
+          putClassTypeArgument(0, bridgedInterface.type)
+          patchDeclarationParents(declarationParent)
+        }
+      }
+      else -> error("unexpected function")
     }
   }
 
@@ -167,7 +216,7 @@ internal class InboundBridgeRewriter(
           valueArgumentsCount = 1
         ) {
           putTypeArgument(0, bridgedInterface.type)
-          putValueArgument(0, original.getValueArgument(1))
+          putValueArgument(0, original.getValueArgument(original.valueArgumentsCount - 2))
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,
@@ -350,7 +399,7 @@ internal class InboundBridgeRewriter(
       declaringClass = inboundCallHandlerSubclass,
       propertyName = Name.identifier("service")
     ) {
-      irExprBody(original.getValueArgument(2)!!)
+      irExprBody(original.getValueArgument(original.valueArgumentsCount - 1)!!)
     }
   }
 
