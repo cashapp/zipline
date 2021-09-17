@@ -15,16 +15,20 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.Handle
+import app.cash.zipline.InboundHandle
+import app.cash.zipline.OutboundHandle
 import kotlin.js.JsName
 import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationStrategy
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
 import okio.BufferedSink
 import okio.BufferedSource
 
@@ -75,15 +79,7 @@ internal fun <T> BufferedSource.readJsonUtf8(serializer: DeserializationStrategy
   return Json.decodeFromString(serializer, json)
 }
 
-/**
- * Installed by [InboundBridge] and [OutboundBridge] to add serializers required by core
- * types like [Throwable].
- */
-internal val ZiplineSerializersModule: SerializersModule = SerializersModule {
-  contextual(Throwable::class, ThrowableSerializer)
-}
-
-private object ThrowableSerializer : KSerializer<Throwable> {
+internal object ThrowableSerializer : KSerializer<Throwable> {
   override val descriptor: SerialDescriptor = ThrowableSurrogate.serializer().descriptor
 
   override fun serialize(encoder: Encoder, value: Throwable) {
@@ -101,3 +97,36 @@ private object ThrowableSerializer : KSerializer<Throwable> {
 private class ThrowableSurrogate(
   val message: String
 )
+
+/**
+ * This is a special serializer because it's scoped to an endpoint. It is not a general-purpose
+ * serializer and only works in Zipline.
+ *
+ * To send a handle to an inbound service, we register it with the endpoint and transmit the
+ * registered identifier.
+ *
+ * To receive a handle, we record the received identifier and return it when making calls against
+ * the referenced service.
+ */
+internal class HandleSerializer<T : Any>(
+  val endpoint: Endpoint
+) : KSerializer<Handle<T>> {
+  override val descriptor = PrimitiveSerialDescriptor("Handle", PrimitiveKind.STRING)
+
+  override fun serialize(encoder: Encoder, value: Handle<T>) {
+    val name = endpoint.generateName()
+    if (value is InboundHandle<T>) {
+      value.connect(endpoint, name)
+      encoder.encodeString(name)
+    } else {
+      error("serializing an outbound handle is not implemented")
+    }
+  }
+
+  override fun deserialize(decoder: Decoder): Handle<T> {
+    val name = decoder.decodeString()
+    val handle = OutboundHandle<T>()
+    handle.connect(endpoint, name)
+    return handle
+  }
+}

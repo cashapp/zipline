@@ -44,7 +44,10 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.types.IrSimpleType
+import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.typeOrNull
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
@@ -81,6 +84,27 @@ import org.jetbrains.kotlin.name.Name
  * ```
  *
  * For suspending functions, everything is the same except the call is to `invokeSuspending()`.
+ *
+ * This also rewrites calls to `Handle.get()`, which is similar to `Zipline.get()` but without a
+ * leading name parameter:
+ *
+ * ```
+ * val handle: Handle<EchoService> = ...
+ * val helloService = handle.get(
+ *   EchoSerializersModule
+ * )
+ * ```
+ *
+ * The above is rewritten to:
+ *
+ * ```
+ * val handle: Handle<EchoService> = ...
+ * val helloService = handle.get(
+ *   object : OutboundBridge<EchoService>(EchoSerializersModule) {
+ *     ...
+ *   }
+ * )
+ * ```
  */
 internal class OutboundBridgeRewriter(
   private val pluginContext: IrPluginContext,
@@ -90,12 +114,24 @@ internal class OutboundBridgeRewriter(
   private val original: IrCall,
   private val rewrittenGetFunction: IrSimpleFunctionSymbol,
 ) {
+  /** The user-defined interface type, like `EchoService` above. */
+  private val bridgedInterfaceType: IrType = run {
+    if (original.typeArgumentsCount == 1) {
+      // If it's Zipline.get(), the interface type is on get().
+      original.getTypeArgument(0)!!
+    } else {
+      // If it's Handle.get(), the interface type is on Handle.
+      val handleType = original.dispatchReceiver!!.type as IrSimpleType
+      handleType.arguments[0].typeOrNull!!
+    }
+  }
+
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
     ziplineApis,
     original,
     "Zipline.get()",
-    original.getTypeArgument(0)!!
+    bridgedInterfaceType
   )
 
   private val irFactory: IrFactory
@@ -103,7 +139,7 @@ internal class OutboundBridgeRewriter(
 
   fun rewrite(): IrCall {
     return irCall(original, rewrittenGetFunction).apply {
-      putValueArgument(1, irNewOutboundBridge())
+      putValueArgument(valueArgumentsCount - 1, irNewOutboundBridge())
       patchDeclarationParents(declarationParent)
     }
   }
@@ -133,7 +169,7 @@ internal class OutboundBridgeRewriter(
           valueArgumentsCount = 1
         ) {
           putTypeArgument(0, bridgedInterface.type)
-          putValueArgument(0, original.getValueArgument(1))
+          putValueArgument(0, original.getValueArgument(original.valueArgumentsCount - 1))
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,

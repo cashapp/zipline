@@ -18,6 +18,7 @@ package app.cash.zipline.internal.bridge
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
 import okio.Buffer
@@ -36,7 +37,6 @@ internal abstract class OutboundBridge<T : Any>(
     private val instanceName: String,
     val serializersModule: SerializersModule,
     private val endpoint: Endpoint,
-    private val channel: CallChannel,
   ) {
     val throwableSerializer = serializersModule.serializer<Throwable>()
 
@@ -45,7 +45,6 @@ internal abstract class OutboundBridge<T : Any>(
         this,
         instanceName,
         endpoint,
-        channel,
         funName,
         parameterCount
       )
@@ -66,7 +65,6 @@ internal class OutboundCall(
   private val context: OutboundBridge.Context,
   private val instanceName: String,
   private val endpoint: Endpoint,
-  private val channel: CallChannel,
   private val funName: String,
   private val parameterCount: Int,
 ) {
@@ -91,7 +89,11 @@ internal class OutboundCall(
   fun <R> invoke(serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     val encodedArguments = buffer.readByteArray()
-    val encodedResult = channel.invoke(instanceName, funName, encodedArguments)
+    val encodedResult = endpoint.outboundChannel.invoke(
+      instanceName,
+      funName,
+      encodedArguments
+    )
     val result = encodedResult.decodeResult(serializer)
     return result.getOrThrow()
   }
@@ -102,9 +104,14 @@ internal class OutboundCall(
       require(callCount++ == parameterCount)
       val callbackName = endpoint.generateName()
       val callback = RealSuspendCallback(callbackName, continuation, serializer)
-      endpoint.set<SuspendCallback>(callbackName, ZiplineSerializersModule, callback)
+      endpoint.set<SuspendCallback>(callbackName, EmptySerializersModule, callback)
       val encodedArguments = buffer.readByteArray()
-      channel.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
+      endpoint.outboundChannel.invokeSuspending(
+        instanceName,
+        funName,
+        encodedArguments,
+        callbackName
+      )
     }
   }
 
@@ -115,7 +122,7 @@ internal class OutboundCall(
   ) : SuspendCallback {
     override fun call(encodedResponse: ByteArray) {
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
-      endpoint.remove(callbackName)
+      endpoint.inboundHandlers.remove(callbackName)
       val result = encodedResponse.decodeResult(serializer)
       continuation.resumeWith(result)
     }

@@ -17,6 +17,7 @@ package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.classFqName
@@ -137,34 +138,50 @@ internal class ZiplineApis(
   val outboundBridgeCreate: IrSimpleFunctionSymbol
     get() = outboundBridge.functions.single { it.owner.name.identifier == "create" }
 
+  private val handleFqName = FqName("app.cash.zipline.Handle")
+  private val handleGetFqName = FqName("app.cash.zipline.Handle").child("get")
+  private val inboundHandleFqName = FqName("app.cash.zipline.InboundHandle")
+
   /** Keys are functions like `Zipline.get()` and values are their rewrite targets. */
-  val getRewriteFunctions: Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> = buildRewritesMap(
-    ziplineFqName.child("get"),
-    ziplineCompanionFqName.child("get"),
-    endpointFqName.child("get"),
-  )
+  val outboundRewriteFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOfNotNull(
+    rewritePair(ziplineFqName.child("get")),
+    rewritePair(ziplineCompanionFqName.child("get")),
+    rewritePair(endpointFqName.child("get")),
+    handleGetRewritePair(),
+  ).toMap()
 
   /** Keys are functions like `Zipline.set()` and values are their rewrite targets. */
-  val setRewriteFunctions: Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> = buildRewritesMap(
-    ziplineFqName.child("set"),
-    ziplineCompanionFqName.child("set"),
-    endpointFqName.child("set"),
-  )
+  val inboundRewriteFunctions: Map<IrFunctionSymbol, IrFunctionSymbol> = listOfNotNull(
+    rewritePair(ziplineFqName.child("set")),
+    rewritePair(ziplineCompanionFqName.child("set")),
+    rewritePair(endpointFqName.child("set")),
+    inboundHandleRewritePair()
+  ).toMap()
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
-  private fun buildRewritesMap(
-    vararg functionNames: FqName
-  ): Map<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> {
-    val result = mutableMapOf<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol>()
-    for (functionName in functionNames) {
-      val overloads = pluginContext.referenceFunctions(functionName)
-      if (overloads.isEmpty()) continue // The Companion APIs are JS-only.
-      val original = overloads.single {
-        it.owner.valueParameters[1].type.classFqName == serializersModuleFqName
-      }
-      val target = overloads.single { it != original }
-      result[original] = target
+  private fun rewritePair(funName: FqName): Pair<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol>? {
+    val overloads = pluginContext.referenceFunctions(funName)
+    if (overloads.isEmpty()) return null // The Companion APIs are JS-only.
+    val original = overloads.single {
+      it.owner.valueParameters[1].type.classFqName == serializersModuleFqName
     }
-    return result
+    return original to overloads.single { it != original }
+  }
+
+  /** Maps `Handle(...)` to `InboundHandle(...)`. */
+  private fun inboundHandleRewritePair(): Pair<IrFunctionSymbol, IrFunctionSymbol> {
+    val handleFunction = pluginContext.referenceFunctions(handleFqName).single()
+    val inboundHandleConstructor = pluginContext.referenceConstructors(inboundHandleFqName)
+      .single()
+    return handleFunction to inboundHandleConstructor
+  }
+
+  /** Maps `Handle.get(SerializerModule)` to `Handle.get(OutboundBridge)`. */
+  private fun handleGetRewritePair(): Pair<IrFunctionSymbol, IrSimpleFunctionSymbol> {
+    val overloads = pluginContext.referenceFunctions(handleGetFqName)
+    val original = overloads.single {
+      it.owner.valueParameters[0].type.classFqName == serializersModuleFqName
+    }
+    return original to overloads.single { it != original }
   }
 }

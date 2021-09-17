@@ -15,10 +15,14 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.Handle
+import app.cash.zipline.InboundHandle
+import app.cash.zipline.OutboundHandle
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 /**
@@ -27,10 +31,19 @@ import kotlinx.serialization.modules.SerializersModule
  */
 class Endpoint internal constructor(
   private val dispatcher: CoroutineDispatcher,
-  private val outboundChannel: CallChannel,
+  internal val outboundChannel: CallChannel,
 ) {
-  private val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
+  internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
   private var nextId = 1
+
+  /**
+   * Installed by [InboundBridge] and [OutboundBridge] to add serializers required by core types
+   * like [Throwable].
+   */
+  internal val builtInSerializersModule = SerializersModule {
+    contextual(Throwable::class, ThrowableSerializer)
+    contextual(Handle::class) { HandleSerializer<Any>(this@Endpoint) }
+  }
 
   internal val inboundChannel = object : CallChannel {
     override fun invoke(
@@ -55,7 +68,7 @@ class Endpoint internal constructor(
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
-        val callback = get<SuspendCallback>(callbackName, ZiplineSerializersModule)
+        val callback = get<SuspendCallback>(callbackName, EmptySerializersModule)
         val inboundCall = InboundCall(handler.context, funName, encodedArguments)
         val result = try {
           handler.callSuspending(inboundCall)
@@ -72,17 +85,9 @@ class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal fun set(name: String, inboundBridge: InboundBridge<*>) {
-    val serializersModule = SerializersModule {
-      include(ZiplineSerializersModule)
-      include(inboundBridge.serializersModule)
-    }
-    inboundHandlers[name] = inboundBridge.create(InboundBridge.Context(serializersModule))
-  }
-
-  internal fun remove(name: String) {
-    val removed = inboundHandlers.remove(name)
-    require(removed != null) { "unable to find $name: was it removed twice?" }
+  internal fun <T : Any> set(name: String, inboundBridge: InboundBridge<T>) {
+    val handle = InboundHandle(inboundBridge)
+    handle.connect(this, name)
   }
 
   fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
@@ -94,13 +99,9 @@ class Endpoint internal constructor(
     name: String,
     outboundBridge: OutboundBridge<T>
   ): T {
-    val serializersModule = SerializersModule {
-      include(ZiplineSerializersModule)
-      include(outboundBridge.serializersModule)
-    }
-    return outboundBridge.create(
-      OutboundBridge.Context(name, serializersModule, this, outboundChannel)
-    )
+    val handle = OutboundHandle<T>()
+    handle.connect(this, name)
+    return handle.get(outboundBridge)
   }
 
   internal fun generateName(): String {
