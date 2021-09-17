@@ -138,16 +138,16 @@ internal class ZiplineApis(
   val outboundBridgeCreate: IrSimpleFunctionSymbol
     get() = outboundBridge.functions.single { it.owner.name.identifier == "create" }
 
-  private val handleFqName = FqName("app.cash.zipline.Handle")
-  private val handleGetFqName = FqName("app.cash.zipline.Handle").child("get")
-  private val inboundHandleFqName = FqName("app.cash.zipline.InboundHandle")
+  private val referenceFqName = FqName("app.cash.zipline.ZiplineReference")
+  private val referenceGetFqName = referenceFqName.child("get")
+  private val inboundReferenceFqName = FqName("app.cash.zipline.InboundZiplineReference")
 
   /** Keys are functions like `Zipline.get()` and values are their rewrite targets. */
   val outboundRewriteFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOfNotNull(
     rewritePair(ziplineFqName.child("get")),
     rewritePair(ziplineCompanionFqName.child("get")),
     rewritePair(endpointFqName.child("get")),
-    handleGetRewritePair(),
+    referenceGetRewritePair(),
   ).toMap()
 
   /** Keys are functions like `Zipline.set()` and values are their rewrite targets. */
@@ -155,7 +155,7 @@ internal class ZiplineApis(
     rewritePair(ziplineFqName.child("set")),
     rewritePair(ziplineCompanionFqName.child("set")),
     rewritePair(endpointFqName.child("set")),
-    inboundHandleRewritePair()
+    inboundReferenceRewritePair()
   ).toMap()
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
@@ -168,17 +168,16 @@ internal class ZiplineApis(
     return original to overloads.single { it != original }
   }
 
-  /** Maps `Handle(...)` to `InboundHandle(...)`. */
-  private fun inboundHandleRewritePair(): Pair<IrFunctionSymbol, IrFunctionSymbol> {
-    val handleFunction = pluginContext.referenceFunctions(handleFqName).single()
-    val inboundHandleConstructor = pluginContext.referenceConstructors(inboundHandleFqName)
-      .single()
-    return handleFunction to inboundHandleConstructor
+  /** Maps `ZiplineReference(...)` to `InboundZiplineReference(...)`. */
+  private fun inboundReferenceRewritePair(): Pair<IrFunctionSymbol, IrFunctionSymbol> {
+    val original = pluginContext.referenceFunctions(referenceFqName).single()
+    val rewrite = pluginContext.referenceConstructors(inboundReferenceFqName).single()
+    return original to rewrite
   }
 
-  /** Maps `Handle.get(SerializerModule)` to `Handle.get(OutboundBridge)`. */
-  private fun handleGetRewritePair(): Pair<IrFunctionSymbol, IrSimpleFunctionSymbol> {
-    val overloads = pluginContext.referenceFunctions(handleGetFqName)
+  /** Maps `ZiplineReference.get(SerializerModule)` to `ZiplineReference.get(OutboundBridge)`. */
+  private fun referenceGetRewritePair(): Pair<IrFunctionSymbol, IrSimpleFunctionSymbol> {
+    val overloads = pluginContext.referenceFunctions(referenceGetFqName)
     val original = overloads.single {
       it.owner.valueParameters[0].type.classFqName == serializersModuleFqName
     }

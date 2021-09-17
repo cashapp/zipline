@@ -22,24 +22,27 @@ import app.cash.zipline.internal.bridge.OutboundBridge
 import kotlinx.serialization.modules.SerializersModule
 import okio.Closeable
 
-abstract class Handle<T : Any> internal constructor() : Closeable {
+abstract class ZiplineReference<T : Any> internal constructor() : Closeable {
   fun get(serializersModule: SerializersModule): T {
-    error("unexpected call to Handle.get: is the Zipline plugin configured?")
+    error("unexpected call to ZiplineReference.get: is the Zipline plugin configured?")
   }
 
   @PublishedApi
   internal abstract fun get(outboundBridge: OutboundBridge<T>): T
 }
 
-fun <T : Any> Handle(serializersModule: SerializersModule, service: T): Handle<T> {
-  error("unexpected call to Handle(): is the Zipline plugin configured?")
+fun <T : Any> ZiplineReference(
+  serializersModule: SerializersModule,
+  service: T
+): ZiplineReference<T> {
+  error("unexpected call to ZiplineReference(): is the Zipline plugin configured?")
 }
 
 // Plugin-rewritten code calls the constructor of this class.
 @PublishedApi
-internal class InboundHandle<T : Any>(
+internal class InboundZiplineReference<T : Any>(
   private val inboundBridge: InboundBridge<T>
-): Handle<T>() {
+): ZiplineReference<T>() {
   private var name: String? = null
   private var endpoint: Endpoint? = null
 
@@ -76,7 +79,7 @@ internal class InboundHandle<T : Any>(
   }
 }
 
-internal class OutboundHandle<T : Any> : Handle<T>() {
+internal class OutboundZiplineReference<T : Any> : ZiplineReference<T>() {
   private var name: String? = null
   private var endpoint: Endpoint? = null
 
@@ -100,8 +103,12 @@ internal class OutboundHandle<T : Any> : Handle<T>() {
   }
 
   override fun close() {
-    // TODO(jwilson): support detaching outbound handles.
-    this.name = null
-    this.endpoint = null
+    val name = this.name
+    val endpoint = this.endpoint
+    if (name != null && endpoint != null) {
+      this.name = null
+      this.endpoint = null
+      endpoint.outboundChannel.disconnect(name)
+    }
   }
 }

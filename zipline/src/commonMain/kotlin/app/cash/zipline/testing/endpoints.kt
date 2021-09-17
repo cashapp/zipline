@@ -23,6 +23,10 @@ import kotlinx.coroutines.CoroutineDispatcher
 internal fun newEndpointPair(dipatcher: CoroutineDispatcher): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
     val a: Endpoint = Endpoint(dipatcher, object : CallChannel {
+      override fun serviceNamesArray(): Array<String> {
+        return b.inboundChannel.serviceNamesArray()
+      }
+
       override fun invoke(
         instanceName: String,
         funName: String,
@@ -40,6 +44,10 @@ internal fun newEndpointPair(dipatcher: CoroutineDispatcher): Pair<Endpoint, End
         return b.inboundChannel.invokeSuspending(
           instanceName, funName, encodedArguments, callbackName
         )
+      }
+
+      override fun disconnect(instanceName: String): Boolean {
+        return b.inboundChannel.disconnect(instanceName)
       }
     })
 

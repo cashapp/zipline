@@ -25,6 +25,7 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoSerializersModule
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.helloService
 import app.cash.zipline.testing.jsSuspendingEchoService
 import app.cash.zipline.testing.prepareSuspendingJvmBridges
@@ -33,6 +34,7 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.serialization.modules.EmptySerializersModule
 import org.junit.After
 import org.junit.Assert.assertNotEquals
 import org.junit.Before
@@ -168,6 +170,36 @@ class ZiplineTest {
     )
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callAdaptersService()"))
       .isEqualTo("JavaScript received nice adapters, Jesse")
+  }
+
+  @Test fun serviceNamesAndClientNames(): Unit = runBlocking(dispatcher) {
+    assertThat(zipline.serviceNames).containsExactly(
+      "zipline/host",
+    )
+    assertThat(zipline.clientNames).containsExactly(
+      "zipline/js",
+    )
+
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
+    assertThat(zipline.serviceNames).containsExactly(
+      "zipline/host",
+    )
+    assertThat(zipline.clientNames).containsExactly(
+      "zipline/js",
+      "helloService",
+      "yoService",
+    )
+
+    zipline.set<EchoService>("supService", EchoSerializersModule, JvmEchoService("sup"))
+    assertThat(zipline.serviceNames).containsExactly(
+      "zipline/host",
+      "supService",
+    )
+    assertThat(zipline.clientNames).containsExactly(
+      "zipline/js",
+      "helloService",
+      "yoService",
+    )
   }
 
   private class JvmEchoService(private val greeting: String) : EchoService {

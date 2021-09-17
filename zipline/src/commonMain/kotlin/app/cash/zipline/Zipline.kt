@@ -20,6 +20,12 @@ import kotlinx.serialization.modules.SerializersModule
 expect abstract class Zipline {
   abstract val engineVersion: String
 
+  /** Name of services that have been published with [set]. */
+  abstract val serviceNames: Set<String>
+
+  /** Names of services that can be consumed with [get]. */
+  abstract val clientNames: Set<String>
+
   fun <T : Any> get(name: String, serializersModule: SerializersModule): T
 
   fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T)

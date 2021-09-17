@@ -109,11 +109,11 @@ import org.jetbrains.kotlin.name.Name
  * For suspending functions, everything is the same except overridden method is `callSuspending()`.
  * Both methods area always overridden, but may contain only the `unexpectedFunction()` case.
  *
- * This also rewrites calls to `Handle()`, which is similar to `Zipline.set()` but without a leading
- * name parameter:
+ * This also rewrites calls to `ZiplineReference()`, which is similar to `Zipline.set()` but without
+ * a leading name parameter:
  *
  * ```
- * val handle = Handle<EchoService>(
+ * val reference = ZiplineReference<EchoService>(
  *   EchoSerializersModule,
  *   TestingEchoService("hello")
  * )
@@ -122,7 +122,7 @@ import org.jetbrains.kotlin.name.Name
  * The above is rewritten to:
  *
  * ```
- * val handle = InboundHandle<EchoService>(
+ * val reference = InboundZiplineReference<EchoService>(
  *   object : InboundBridge<EchoService>(EchoSerializersModule) {
  *     ...
  *   }
@@ -169,7 +169,7 @@ internal class InboundBridgeRewriter(
         }
       }
       is IrConstructorSymbol -> {
-        // Construct InboundHandle<EchoService>(...).
+        // Construct InboundZiplineReference<EchoService>(...).
         return IrConstructorCallImpl(
           startOffset = original.startOffset,
           endOffset = original.endOffset,

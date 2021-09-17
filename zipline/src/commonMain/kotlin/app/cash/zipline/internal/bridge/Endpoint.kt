@@ -15,9 +15,9 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.Handle
-import app.cash.zipline.InboundHandle
-import app.cash.zipline.OutboundHandle
+import app.cash.zipline.InboundZiplineReference
+import app.cash.zipline.OutboundZiplineReference
+import app.cash.zipline.ZiplineReference
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -36,16 +36,26 @@ class Endpoint internal constructor(
   internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
   private var nextId = 1
 
+  val serviceNames: Set<String>
+    get() = inboundHandlers.keys.toSet()
+
+  val clientNames: Set<String>
+    get() = outboundChannel.serviceNamesArray().toSet()
+
   /**
    * Installed by [InboundBridge] and [OutboundBridge] to add serializers required by core types
    * like [Throwable].
    */
   internal val builtInSerializersModule = SerializersModule {
     contextual(Throwable::class, ThrowableSerializer)
-    contextual(Handle::class) { HandleSerializer<Any>(this@Endpoint) }
+    contextual(ZiplineReference::class) { ZiplineReferenceSerializer<Any>(this@Endpoint) }
   }
 
   internal val inboundChannel = object : CallChannel {
+    override fun serviceNamesArray(): Array<String> {
+      return serviceNames.toTypedArray()
+    }
+
     override fun invoke(
       instanceName: String,
       funName: String,
@@ -78,6 +88,10 @@ class Endpoint internal constructor(
         callback.call(result)
       }
     }
+
+    override fun disconnect(instanceName: String): Boolean {
+      return inboundHandlers.remove(instanceName) != null
+    }
   }
 
   fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
@@ -86,8 +100,8 @@ class Endpoint internal constructor(
 
   @PublishedApi
   internal fun <T : Any> set(name: String, inboundBridge: InboundBridge<T>) {
-    val handle = InboundHandle(inboundBridge)
-    handle.connect(this, name)
+    val reference = InboundZiplineReference(inboundBridge)
+    reference.connect(this, name)
   }
 
   fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
@@ -99,12 +113,12 @@ class Endpoint internal constructor(
     name: String,
     outboundBridge: OutboundBridge<T>
   ): T {
-    val handle = OutboundHandle<T>()
-    handle.connect(this, name)
-    return handle.get(outboundBridge)
+    val reference = OutboundZiplineReference<T>()
+    reference.connect(this, name)
+    return reference.get(outboundBridge)
   }
 
   internal fun generateName(): String {
-    return "app.cash.zipline.${nextId++}"
+    return "zipline/${nextId++}"
   }
 }
