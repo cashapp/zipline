@@ -38,6 +38,9 @@ internal abstract class OutboundBridge<T : Any>(
     val serializersModule: SerializersModule,
     private val endpoint: Endpoint,
   ) {
+    val json = Json {
+      serializersModule = this@Context.serializersModule
+    }
     val throwableSerializer = serializersModule.serializer<Throwable>()
 
     fun newCall(funName: String, parameterCount: Int): OutboundCall {
@@ -78,7 +81,7 @@ internal class OutboundCall(
       arguments += ""
     } else {
       arguments += LABEL_VALUE
-      arguments += Json.encodeToString(serializer, value)
+      arguments += context.json.encodeToString(serializer, value)
     }
   }
 
@@ -130,10 +133,10 @@ internal class OutboundCall(
           return Result.success(null as R)
         }
         LABEL_VALUE -> {
-          return Result.success(Json.decodeFromString(serializer, this[1]))
+          return Result.success(context.json.decodeFromString(serializer, this[1]))
         }
         LABEL_EXCEPTION -> {
-          return Result.failure(Json.decodeFromString(context.throwableSerializer, this[1]))
+          return Result.failure(context.json.decodeFromString(context.throwableSerializer, this[1]))
         }
         else -> i += 2
       }
