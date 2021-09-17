@@ -82,14 +82,19 @@ internal const val BYTE_COUNT_NULL = -1
 internal const val RESULT_TYPE_NORMAL = 0 as Byte
 internal const val RESULT_TYPE_EXCEPTION = 1 as Byte
 
-internal fun <T> BufferedSink.writeJsonUtf8(serializer: SerializationStrategy<T>, value: T) {
-  val json = Json.encodeToString(serializer, value)
-  writeUtf8(json)
+internal fun <T> BufferedSink.writeJsonUtf8(
+  json: Json,
+  serializer: SerializationStrategy<T>,
+  value: T
+) {
+  writeUtf8(json.encodeToString(serializer, value))
 }
 
-internal fun <T> BufferedSource.readJsonUtf8(serializer: DeserializationStrategy<T>): T {
-  val json = readUtf8()
-  return Json.decodeFromString(serializer, json)
+internal fun <T> BufferedSource.readJsonUtf8(
+  json: Json,
+  serializer: DeserializationStrategy<T>
+): T {
+  return json.decodeFromString(serializer, readUtf8())
 }
 
 internal object ThrowableSerializer : KSerializer<Throwable> {

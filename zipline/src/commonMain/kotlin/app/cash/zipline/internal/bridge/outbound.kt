@@ -17,7 +17,9 @@ package app.cash.zipline.internal.bridge
 
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.coroutineScope
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
@@ -38,6 +40,9 @@ internal abstract class OutboundBridge<T : Any>(
     val serializersModule: SerializersModule,
     private val endpoint: Endpoint,
   ) {
+    val json = Json {
+      serializersModule = this@Context.serializersModule
+    }
     val throwableSerializer = serializersModule.serializer<Throwable>()
 
     fun newCall(funName: String, parameterCount: Int): OutboundCall {
@@ -80,7 +85,7 @@ internal class OutboundCall(
     if (value == null) {
       buffer.writeInt(BYTE_COUNT_NULL)
     } else {
-      eachValueBuffer.writeJsonUtf8(serializer, value)
+      eachValueBuffer.writeJsonUtf8(context.json, serializer, value)
       buffer.writeInt(eachValueBuffer.size.toInt())
       buffer.writeAll(eachValueBuffer)
     }
@@ -100,18 +105,20 @@ internal class OutboundCall(
 
   @PublishedApi
   internal suspend fun <R> invokeSuspending(serializer: KSerializer<R>): R {
-    return suspendCoroutine { continuation ->
-      require(callCount++ == parameterCount)
-      val callbackName = endpoint.generateName()
-      val callback = RealSuspendCallback(callbackName, continuation, serializer)
-      endpoint.set<SuspendCallback>(callbackName, EmptySerializersModule, callback)
-      val encodedArguments = buffer.readByteArray()
-      endpoint.outboundChannel.invokeSuspending(
-        instanceName,
-        funName,
-        encodedArguments,
-        callbackName
-      )
+    return coroutineScope {
+      suspendCoroutine { continuation ->
+        require(callCount++ == parameterCount)
+        val callbackName = endpoint.generateName()
+        val callback = RealSuspendCallback(callbackName, continuation, serializer)
+        endpoint.set<SuspendCallback>(callbackName, EmptySerializersModule, callback)
+        val encodedArguments = buffer.readByteArray()
+        endpoint.outboundChannel.invokeSuspending(
+          instanceName,
+          funName,
+          encodedArguments,
+          callbackName
+        )
+      }
     }
   }
 
@@ -138,13 +145,13 @@ internal class OutboundCall(
           return Result.success(null as R)
         } else {
           eachValueBuffer.write(buffer, byteCount.toLong())
-          return Result.success(eachValueBuffer.readJsonUtf8(serializer))
+          return Result.success(eachValueBuffer.readJsonUtf8(context.json, serializer))
         }
       }
       RESULT_TYPE_EXCEPTION -> {
         val byteCount = buffer.readInt()
         eachValueBuffer.write(buffer, byteCount.toLong())
-        val throwable = eachValueBuffer.readJsonUtf8(context.throwableSerializer)
+        val throwable = eachValueBuffer.readJsonUtf8(context.json, context.throwableSerializer)
         return Result.failure(throwable)
       }
       else -> {

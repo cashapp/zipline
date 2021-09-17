@@ -16,6 +16,7 @@
 package app.cash.zipline.internal.bridge
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
 import okio.Buffer
@@ -33,6 +34,9 @@ internal abstract class InboundBridge<T : Any>(
   class Context(
     val serializersModule: SerializersModule,
   ) {
+    val json = Json {
+      serializersModule = this@Context.serializersModule
+    }
     val throwableSerializer = serializersModule.serializer<Throwable>()
   }
 }
@@ -73,7 +77,7 @@ internal class InboundCall(
       return null as T
     } else {
       eachValueBuffer.write(buffer, byteCount.toLong())
-      return eachValueBuffer.readJsonUtf8(serializer)
+      return eachValueBuffer.readJsonUtf8(context.json, serializer)
     }
   }
 
@@ -83,7 +87,7 @@ internal class InboundCall(
     if (value == null) {
       buffer.writeInt(BYTE_COUNT_NULL)
     } else {
-      eachValueBuffer.writeJsonUtf8(serializer, value)
+      eachValueBuffer.writeJsonUtf8(context.json, serializer, value)
       buffer.writeInt(eachValueBuffer.size.toInt())
       buffer.writeAll(eachValueBuffer)
     }
@@ -96,7 +100,7 @@ internal class InboundCall(
   fun resultException(e: Throwable): ByteArray {
     buffer.clear()
     eachValueBuffer.clear()
-    eachValueBuffer.writeJsonUtf8(context.throwableSerializer, e)
+    eachValueBuffer.writeJsonUtf8(context.json, context.throwableSerializer, e)
     buffer.writeByte(RESULT_TYPE_EXCEPTION.toInt())
     buffer.writeInt(eachValueBuffer.size.toInt())
     buffer.writeAll(eachValueBuffer)
