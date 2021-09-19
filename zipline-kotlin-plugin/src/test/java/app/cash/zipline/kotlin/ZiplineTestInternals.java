@@ -94,7 +94,7 @@ public final class ZiplineTestInternals {
             return context;
           }
 
-          @Override public byte[] call(InboundCall inboundCall) {
+          @Override public String[] call(InboundCall inboundCall) {
             if (inboundCall.getFunName().equals("echo")) {
               return inboundCall.result(resultSerializer, echoService.echo(
                   inboundCall.parameter(parameterSerializer)));
@@ -104,7 +104,7 @@ public final class ZiplineTestInternals {
           }
 
           @Override public Object callSuspending(
-              InboundCall inboundCall, Continuation<? super byte[]> continuation) {
+              InboundCall inboundCall, Continuation<? super String[]> continuation) {
             return inboundCall.unexpectedFunction();
           }
         };
@@ -147,7 +147,7 @@ public final class ZiplineTestInternals {
             return context;
           }
 
-          @Override public byte[] call(InboundCall inboundCall) {
+          @Override public String[] call(InboundCall inboundCall) {
             if (inboundCall.getFunName().equals("genericEcho")) {
               return inboundCall.result(resultSerializer, echoService.genericEcho(
                   inboundCall.parameter(parameterSerializer)));
@@ -157,7 +157,7 @@ public final class ZiplineTestInternals {
           }
 
           @Override public Object callSuspending(
-              InboundCall inboundCall, Continuation<? super byte[]> continuation) {
+              InboundCall inboundCall, Continuation<? super String[]> continuation) {
             return inboundCall.unexpectedFunction();
           }
         };

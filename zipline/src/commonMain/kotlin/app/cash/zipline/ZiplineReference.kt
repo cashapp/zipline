@@ -20,15 +20,16 @@ import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.InboundCallHandler
 import app.cash.zipline.internal.bridge.OutboundBridge
 import kotlinx.serialization.modules.SerializersModule
-import okio.Closeable
 
-abstract class ZiplineReference<T : Any> internal constructor() : Closeable {
+abstract class ZiplineReference<T : Any> internal constructor() {
   fun get(serializersModule: SerializersModule): T {
     error("unexpected call to ZiplineReference.get: is the Zipline plugin configured?")
   }
 
   @PublishedApi
   internal abstract fun get(outboundBridge: OutboundBridge<T>): T
+
+  abstract fun close()
 }
 
 fun <T : Any> ZiplineReference(

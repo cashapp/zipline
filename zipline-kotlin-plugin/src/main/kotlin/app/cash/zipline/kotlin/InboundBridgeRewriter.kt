@@ -87,7 +87,7 @@ import org.jetbrains.kotlin.name.Name
  *         val serializer_0 = context.serializersModule.serializer<EchoRequest>()
  *         val serializer_1 = context.serializersModule.serializer<EchoResponse>()
  *         override val context: Context = context
- *         override fun call(inboundCall: InboundCall): ByteArray {
+ *         override fun call(inboundCall: InboundCall): Array<String> {
  *           return when {
  *             inboundCall.funName == "echo" -> {
  *               inboundCall.result(
@@ -367,7 +367,7 @@ internal class InboundBridgeRewriter(
     inboundCallHandler: IrClass,
     callSuspending: Boolean,
   ): IrSimpleFunction {
-    // override fun call(inboundCall: InboundCall): ByteArray {
+    // override fun call(inboundCall: InboundCall): Array<String> {
     // }
     val inboundBridgeCall = when {
       callSuspending -> ziplineApis.inboundCallHandlerCallSuspending
@@ -377,7 +377,7 @@ internal class InboundBridgeRewriter(
       name = inboundBridgeCall.owner.name
       visibility = DescriptorVisibilities.PUBLIC
       modality = Modality.OPEN
-      returnType = pluginContext.symbols.byteArrayType
+      returnType = ziplineApis.stringArrayType
       isSuspend = callSuspending
     }.apply {
       addDispatchReceiver {
@@ -468,7 +468,7 @@ internal class InboundBridgeRewriter(
     )
 
     return irWhen(
-      type = pluginContext.symbols.byteArrayType,
+      type = ziplineApis.stringArrayType,
       branches = result
     )
   }
@@ -566,7 +566,7 @@ internal class InboundBridgeRewriter(
     resultExpression: IrExpression
   ): IrExpression {
     return irCall(
-      type = pluginContext.symbols.byteArrayType,
+      type = ziplineApis.stringArrayType,
       callee = ziplineApis.inboundCallResult,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)
@@ -588,7 +588,7 @@ internal class InboundBridgeRewriter(
     callFunction: IrSimpleFunction,
   ): IrExpression {
     return irCall(
-      type = pluginContext.symbols.byteArrayType,
+      type = ziplineApis.stringArrayType,
       callee = ziplineApis.inboundCallUnexpectedFunction,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)

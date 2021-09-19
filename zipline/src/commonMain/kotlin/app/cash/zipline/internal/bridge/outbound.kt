@@ -18,10 +18,10 @@ package app.cash.zipline.internal.bridge
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
-import okio.Buffer
 
 /**
  * Generated code extends this base class to make calls into an application-layer interface that is
@@ -68,34 +68,29 @@ internal class OutboundCall(
   private val funName: String,
   private val parameterCount: Int,
 ) {
-  private val buffer = Buffer()
-    .apply {
-      writeInt(parameterCount)
-    }
+  private val arguments = mutableListOf<String>()
   private var callCount = 0
-  private val eachValueBuffer = Buffer()
 
   fun <T> parameter(serializer: KSerializer<T>, value: T) {
     require(callCount++ < parameterCount)
     if (value == null) {
-      buffer.writeInt(BYTE_COUNT_NULL)
+      arguments += LABEL_NULL
+      arguments += ""
     } else {
-      eachValueBuffer.writeJsonUtf8(serializer, value)
-      buffer.writeInt(eachValueBuffer.size.toInt())
-      buffer.writeAll(eachValueBuffer)
+      arguments += LABEL_VALUE
+      arguments += Json.encodeToString(serializer, value)
     }
   }
 
   fun <R> invoke(serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
-    val encodedArguments = buffer.readByteArray()
     val encodedResult = endpoint.outboundChannel.invoke(
       instanceName,
       funName,
-      encodedArguments
+      arguments.toTypedArray()
     )
-    val result = encodedResult.decodeResult(serializer)
-    return result.getOrThrow()
+
+    return encodedResult.decodeResult(serializer).getOrThrow()
   }
 
   @PublishedApi
@@ -105,11 +100,10 @@ internal class OutboundCall(
       val callbackName = endpoint.generateName()
       val callback = RealSuspendCallback(callbackName, continuation, serializer)
       endpoint.set<SuspendCallback>(callbackName, EmptySerializersModule, callback)
-      val encodedArguments = buffer.readByteArray()
       endpoint.outboundChannel.invokeSuspending(
         instanceName,
         funName,
-        encodedArguments,
+        arguments.toTypedArray(),
         callbackName
       )
     }
@@ -120,36 +114,30 @@ internal class OutboundCall(
     val continuation: Continuation<R>,
     val serializer: KSerializer<R>
   ) : SuspendCallback {
-    override fun call(encodedResponse: ByteArray) {
+    override fun call(response: Array<String>) {
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
       endpoint.inboundHandlers.remove(callbackName)
-      val result = encodedResponse.decodeResult(serializer)
+      val result = response.decodeResult(serializer)
       continuation.resumeWith(result)
     }
   }
 
-  @OptIn(ExperimentalStdlibApi::class)
-  private fun <R> ByteArray.decodeResult(serializer: KSerializer<R>): Result<R> {
-    buffer.write(this)
-    when (buffer.readByte()) {
-      RESULT_TYPE_NORMAL -> {
-        val byteCount = buffer.readInt()
-        if (byteCount == BYTE_COUNT_NULL) {
+  private fun <R> Array<String>.decodeResult(serializer: KSerializer<R>): Result<R> {
+    var i = 0
+    while (i < size) {
+      when (this[0]) {
+        LABEL_NULL -> {
           return Result.success(null as R)
-        } else {
-          eachValueBuffer.write(buffer, byteCount.toLong())
-          return Result.success(eachValueBuffer.readJsonUtf8(serializer))
         }
-      }
-      RESULT_TYPE_EXCEPTION -> {
-        val byteCount = buffer.readInt()
-        eachValueBuffer.write(buffer, byteCount.toLong())
-        val throwable = eachValueBuffer.readJsonUtf8(context.throwableSerializer)
-        return Result.failure(throwable)
-      }
-      else -> {
-        error("unexpected result type")
+        LABEL_VALUE -> {
+          return Result.success(Json.decodeFromString(serializer, this[1]))
+        }
+        LABEL_EXCEPTION -> {
+          return Result.failure(Json.decodeFromString(context.throwableSerializer, this[1]))
+        }
+        else -> i += 2
       }
     }
+    throw IllegalStateException("no result")
   }
 }

@@ -16,9 +16,9 @@
 package app.cash.zipline.internal.bridge
 
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
-import okio.Buffer
 
 /**
  * Generated code extends this base class to receive calls into an application-layer interface from
@@ -41,9 +41,9 @@ internal abstract class InboundBridge<T : Any>(
 internal interface InboundCallHandler {
   val context: InboundBridge.Context
 
-  fun call(inboundCall: InboundCall): ByteArray
+  fun call(inboundCall: InboundCall): Array<String>
 
-  suspend fun callSuspending(inboundCall: InboundCall): ByteArray
+  suspend fun callSuspending(inboundCall: InboundCall): Array<String>
 }
 
 /**
@@ -59,47 +59,41 @@ internal interface InboundCallHandler {
 internal class InboundCall(
   private val context: InboundBridge.Context,
   val funName: String,
-  encodedArguments: ByteArray,
+  val arguments: Array<String>,
 ) {
-  private val buffer = Buffer().write(encodedArguments)
-  private val parameterCount = buffer.readInt()
-  private var callCount = 0
-  private val eachValueBuffer = Buffer()
+  private var i = 0
 
   fun <T> parameter(serializer: KSerializer<T>): T {
-    require(callCount++ < parameterCount)
-    val byteCount = buffer.readInt()
-    if (byteCount == BYTE_COUNT_NULL) {
-      return null as T
-    } else {
-      eachValueBuffer.write(buffer, byteCount.toLong())
-      return eachValueBuffer.readJsonUtf8(serializer)
+    while (i < arguments.size) {
+      when (arguments[i]) {
+        LABEL_VALUE -> {
+          val result = Json.decodeFromString(serializer, arguments[i + 1])
+          i += 2
+          return result
+        }
+        LABEL_NULL -> {
+          i += 2
+          return null as T
+        }
+        else -> {
+          i += 2 // Ignore unknown argument.
+        }
+      }
+    }
+    throw IllegalStateException("no such parameter")
+  }
+
+  fun <R> result(serializer: KSerializer<R>, value: R): Array<String> {
+    return when {
+      value != null -> arrayOf(LABEL_VALUE, Json.encodeToString(serializer, value))
+      else -> arrayOf(LABEL_NULL, "")
     }
   }
 
-  fun <R> result(serializer: KSerializer<R>, value: R): ByteArray {
-    require(callCount++ == parameterCount)
-    buffer.writeByte(RESULT_TYPE_NORMAL.toInt())
-    if (value == null) {
-      buffer.writeInt(BYTE_COUNT_NULL)
-    } else {
-      eachValueBuffer.writeJsonUtf8(serializer, value)
-      buffer.writeInt(eachValueBuffer.size.toInt())
-      buffer.writeAll(eachValueBuffer)
-    }
-    return buffer.readByteArray()
-  }
-
-  fun unexpectedFunction(): ByteArray = error("unexpected function: $funName")
+  fun unexpectedFunction(): Array<String> = error("unexpected function: $funName")
 
   @OptIn(ExperimentalStdlibApi::class)
-  fun resultException(e: Throwable): ByteArray {
-    buffer.clear()
-    eachValueBuffer.clear()
-    eachValueBuffer.writeJsonUtf8(context.throwableSerializer, e)
-    buffer.writeByte(RESULT_TYPE_EXCEPTION.toInt())
-    buffer.writeInt(eachValueBuffer.size.toInt())
-    buffer.writeAll(eachValueBuffer)
-    return buffer.readByteArray()
+  fun resultException(e: Throwable): Array<String> {
+    return arrayOf(LABEL_EXCEPTION, Json.encodeToString(context.throwableSerializer, e))
   }
 }

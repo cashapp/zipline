@@ -135,15 +135,15 @@ private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
   override fun invoke(
     instanceName: String,
     funName: String,
-    encodedArguments: ByteArray
-  ): ByteArray {
+    encodedArguments: Array<String>
+  ): Array<String> {
     return jsOutboundChannel.invoke(instanceName, funName, encodedArguments)
   }
 
   override fun invokeSuspending(
     instanceName: String,
     funName: String,
-    encodedArguments: ByteArray,
+    encodedArguments: Array<String>,
     callbackName: String
   ) {
     return jsOutboundChannel.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
