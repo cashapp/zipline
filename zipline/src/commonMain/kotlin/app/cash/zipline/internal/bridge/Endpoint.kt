@@ -18,7 +18,6 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
@@ -30,7 +29,7 @@ import kotlinx.serialization.modules.SerializersModule
  * receiving calls from the other platform.
  */
 class Endpoint internal constructor(
-  private val dispatcher: CoroutineDispatcher,
+  internal val dispatcher: CoroutineDispatcher,
   internal val outboundChannel: CallChannel,
 ) {
   internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
@@ -77,7 +76,7 @@ class Endpoint internal constructor(
       callbackName: String
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
-      CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
+      CoroutineScope(dispatcher).launch {
         val callback = get<SuspendCallback>(callbackName, EmptySerializersModule)
         val inboundCall = InboundCall(handler.context, funName, encodedArguments)
         val result = try {

@@ -8,5 +8,6 @@ object Dependencies {
   val kotlinxSerializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.2.2"
   val kotlinxCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.1"
   val truth = "com.google.truth:truth:1.0"
+  val okHttp = "com.squareup.okhttp3:okhttp:4.9.1"
   val okio = "com.squareup.okio:okio:3.0.0-alpha.10"
 }

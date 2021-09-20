@@ -55,5 +55,5 @@ val sampleImages = listOf<EmojiImage>(
   ),
 )
 
-val initialViewModel = EmojiSearchViewModel("", sampleImages)
+val initialViewModel = EmojiSearchViewModel("", listOf())
 val sampleViewModel = EmojiSearchViewModel("donut", sampleImages)

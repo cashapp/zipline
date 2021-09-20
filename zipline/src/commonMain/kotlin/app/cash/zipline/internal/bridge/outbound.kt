@@ -17,6 +17,8 @@ package app.cash.zipline.internal.bridge
 
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -36,7 +38,7 @@ internal abstract class OutboundBridge<T : Any>(
   class Context(
     private val instanceName: String,
     val serializersModule: SerializersModule,
-    private val endpoint: Endpoint,
+    internal val endpoint: Endpoint,
   ) {
     val json = Json {
       serializersModule = this@Context.serializersModule
@@ -98,17 +100,19 @@ internal class OutboundCall(
 
   @PublishedApi
   internal suspend fun <R> invokeSuspending(serializer: KSerializer<R>): R {
+    require(callCount++ == parameterCount)
     return suspendCoroutine { continuation ->
-      require(callCount++ == parameterCount)
-      val callbackName = endpoint.generateName()
-      val callback = RealSuspendCallback(callbackName, continuation, serializer)
-      endpoint.set<SuspendCallback>(callbackName, EmptySerializersModule, callback)
-      endpoint.outboundChannel.invokeSuspending(
-        instanceName,
-        funName,
-        arguments.toTypedArray(),
-        callbackName
-      )
+      CoroutineScope(context.endpoint.dispatcher).launch {
+        val callbackName = endpoint.generateName()
+        val callback = RealSuspendCallback(callbackName, continuation, serializer)
+        endpoint.set<SuspendCallback>(callbackName, EmptySerializersModule, callback)
+        endpoint.outboundChannel.invokeSuspending(
+          instanceName,
+          funName,
+          arguments.toTypedArray(),
+          callbackName
+        )
+      }
     }
   }
 
