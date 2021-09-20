@@ -132,8 +132,8 @@ private class ZiplineJni(
   override fun invoke(
     instanceName: String,
     funName: String,
-    encodedArguments: ByteArray
-  ): ByteArray {
+    encodedArguments: Array<String>
+  ): Array<String> {
     check(!closed) { "Zipline closed" }
     return jsInboundBridge.invoke(instanceName, funName, encodedArguments)
   }
@@ -141,7 +141,7 @@ private class ZiplineJni(
   override fun invokeSuspending(
     instanceName: String,
     funName: String,
-    encodedArguments: ByteArray,
+    encodedArguments: Array<String>,
     callbackName: String
   ) {
     check(!closed) { "Zipline closed" }

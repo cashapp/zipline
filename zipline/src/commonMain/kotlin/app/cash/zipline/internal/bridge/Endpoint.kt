@@ -59,8 +59,8 @@ class Endpoint internal constructor(
     override fun invoke(
       instanceName: String,
       funName: String,
-      encodedArguments: ByteArray
-    ): ByteArray {
+      encodedArguments: Array<String>
+    ): Array<String> {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       val inboundCall = InboundCall(handler.context, funName, encodedArguments)
       return try {
@@ -73,7 +73,7 @@ class Endpoint internal constructor(
     override fun invokeSuspending(
       instanceName: String,
       funName: String,
-      encodedArguments: ByteArray,
+      encodedArguments: Array<String>,
       callbackName: String
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")

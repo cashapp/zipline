@@ -19,18 +19,13 @@ import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
 import kotlin.js.JsName
-import kotlinx.serialization.DeserializationStrategy
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.SerializationStrategy
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
-import okio.BufferedSink
-import okio.BufferedSource
 
 @PublishedApi
 internal interface CallChannel {
@@ -41,31 +36,31 @@ internal interface CallChannel {
   /**
    * Internal function used to bridge method calls from Java or Android to JavaScript.
    *
-   * The structure of [encodedArguments] is the following:
+   * The structure of [encodedArguments] is a series of alternating label/value pairs.
    *
-   *  * 1 int (4 bytes): the number of parameters
-   *  * For each parameter:
-   *    * 1 int (4 bytes): the number of bytes in the parameter value. If the parameter value is
-   *      null this is [BYTE_COUNT_NULL] and no bytes follow.
-   *    * the bytes of the parameter value, encoded using [kotlinx.serialization.json.Json]
+   *  * Label `v`: the following value is a non-null parameter value.
+   *  * Label `n`: the following value is an empty string and the parameter value is null.
    *
-   * The structure of the result is the following:
+   * The structure of the result is also a series of alternating label/value pairs.
    *
-   *  * 1 byte: the result type. Either [RESULT_TYPE_NORMAL] or [RESULT_TYPE_NORMAL]
-   *  * 1 int (4 bytes): the number of bytes in the result value. If the result is null this is
-   *    [BYTE_COUNT_NULL] and no bytes follow.
-   *  * the bytes of the result value, encoded using [kotlinx.serialization.json.Json]
+   *  * Label `v`: the following value is a non-null normal result value.
+   *  * Label `n`: the following value is an empty string and the result value is null.
+   *  * Label `t`: the following value is a non-null thrown exception value.
    */
   @JsName("invoke")
-  fun invoke(instanceName: String, funName: String, encodedArguments: ByteArray): ByteArray
+  fun invoke(
+    instanceName: String,
+    funName: String,
+    encodedArguments: Array<String>,
+  ): Array<String>
 
   /** Like [invoke], but the response is delivered to the [SuspendCallback] named [callbackName]. */
   @JsName("invokeSuspending")
   fun invokeSuspending(
     instanceName: String,
     funName: String,
-    encodedArguments: ByteArray,
-    callbackName: String
+    encodedArguments: Array<String>,
+    callbackName: String,
   )
 
   /**
@@ -78,19 +73,9 @@ internal interface CallChannel {
   fun disconnect(instanceName: String): Boolean
 }
 
-internal const val BYTE_COUNT_NULL = -1
-internal const val RESULT_TYPE_NORMAL = 0 as Byte
-internal const val RESULT_TYPE_EXCEPTION = 1 as Byte
-
-internal fun <T> BufferedSink.writeJsonUtf8(serializer: SerializationStrategy<T>, value: T) {
-  val json = Json.encodeToString(serializer, value)
-  writeUtf8(json)
-}
-
-internal fun <T> BufferedSource.readJsonUtf8(serializer: DeserializationStrategy<T>): T {
-  val json = readUtf8()
-  return Json.decodeFromString(serializer, json)
-}
+internal const val LABEL_VALUE = "v"
+internal const val LABEL_NULL = "n"
+internal const val LABEL_EXCEPTION = "t"
 
 internal object ThrowableSerializer : KSerializer<Throwable> {
   override val descriptor: SerialDescriptor = ThrowableSurrogate.serializer().descriptor

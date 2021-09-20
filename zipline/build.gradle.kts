@@ -59,7 +59,6 @@ kotlin {
       dependencies {
         api(Dependencies.kotlinxCoroutines)
         api(Dependencies.kotlinxSerializationJson)
-        api(Dependencies.okioMultiplatform)
       }
     }
     val commonTest by getting {

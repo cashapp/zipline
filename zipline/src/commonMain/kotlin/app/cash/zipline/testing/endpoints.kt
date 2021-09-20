@@ -30,15 +30,15 @@ internal fun newEndpointPair(dipatcher: CoroutineDispatcher): Pair<Endpoint, End
       override fun invoke(
         instanceName: String,
         funName: String,
-        encodedArguments: ByteArray
-      ): ByteArray {
+        encodedArguments: Array<String>
+      ): Array<String> {
         return b.inboundChannel.invoke(instanceName, funName, encodedArguments)
       }
 
       override fun invokeSuspending(
         instanceName: String,
         funName: String,
-        encodedArguments: ByteArray,
+        encodedArguments: Array<String>,
         callbackName: String
       ) {
         return b.inboundChannel.invokeSuspending(
