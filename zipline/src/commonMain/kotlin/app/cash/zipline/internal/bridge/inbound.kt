@@ -33,6 +33,9 @@ internal abstract class InboundBridge<T : Any>(
   class Context(
     val serializersModule: SerializersModule,
   ) {
+    val json = Json {
+      serializersModule = this@Context.serializersModule
+    }
     val throwableSerializer = serializersModule.serializer<Throwable>()
   }
 }
@@ -67,7 +70,7 @@ internal class InboundCall(
     while (i < arguments.size) {
       when (arguments[i]) {
         LABEL_VALUE -> {
-          val result = Json.decodeFromString(serializer, arguments[i + 1])
+          val result = context.json.decodeFromString(serializer, arguments[i + 1])
           i += 2
           return result
         }
@@ -85,7 +88,7 @@ internal class InboundCall(
 
   fun <R> result(serializer: KSerializer<R>, value: R): Array<String> {
     return when {
-      value != null -> arrayOf(LABEL_VALUE, Json.encodeToString(serializer, value))
+      value != null -> arrayOf(LABEL_VALUE, context.json.encodeToString(serializer, value))
       else -> arrayOf(LABEL_NULL, "")
     }
   }
@@ -94,6 +97,6 @@ internal class InboundCall(
 
   @OptIn(ExperimentalStdlibApi::class)
   fun resultException(e: Throwable): Array<String> {
-    return arrayOf(LABEL_EXCEPTION, Json.encodeToString(context.throwableSerializer, e))
+    return arrayOf(LABEL_EXCEPTION, context.json.encodeToString(context.throwableSerializer, e))
   }
 }
