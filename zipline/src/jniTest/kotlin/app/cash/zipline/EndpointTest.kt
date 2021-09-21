@@ -23,6 +23,7 @@ import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newEndpointPair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -40,7 +41,7 @@ internal class EndpointTest {
   private val endpointB: Endpoint
 
   init {
-    val (endpointA, endpointB) = newEndpointPair(dispatcher)
+    val (endpointA, endpointB) = newEndpointPair(CoroutineScope(dispatcher))
     this.endpointA = endpointA
     this.endpointB = endpointB
   }

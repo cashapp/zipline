@@ -17,7 +17,6 @@ package app.cash.zipline.internal.bridge
 
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
@@ -99,7 +98,7 @@ internal class OutboundCall(
   internal suspend fun <R> invokeSuspending(serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     return suspendCoroutine { continuation ->
-      CoroutineScope(context.endpoint.dispatcher).launch {
+      context.endpoint.scope.launch {
         val callbackName = endpoint.generateName()
         val callback = RealSuspendCallback(callbackName, continuation, serializer)
         endpoint.set<SuspendCallback>(callbackName, callback)

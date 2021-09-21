@@ -25,13 +25,13 @@ import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
 import app.cash.zipline.internal.hostPlatformName
 import app.cash.zipline.internal.jsPlatformName
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual class Zipline internal constructor() {
   private val endpoint = Endpoint(
-    dispatcher = Dispatchers.Main,
+    scope = GlobalScope,
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call out. */
       @Suppress("UnsafeCastFromDynamic")
