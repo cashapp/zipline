@@ -20,7 +20,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
 
-class QuickJsTest {
+class QuickJsJvmTest {
   private val quickjs = QuickJs.create()
 
   @After fun tearDown() {

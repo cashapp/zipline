@@ -77,9 +77,6 @@ actual class Zipline internal constructor() {
   actual val serializersModule: SerializersModule
     get() = endpoint.userSerializersModule!!
 
-  actual val engineVersion
-    get() = quickJsVersion
-
   actual val serviceNames: Set<String>
     get() = endpoint.serviceNames
 

@@ -17,8 +17,9 @@ package app.cash.zipline
 
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertNotEquals
 
-class QuickJsSmokeTest {
+class QuickJsTest {
   private val quickJs = QuickJs.create()
 
   @AfterTest
@@ -27,6 +28,7 @@ class QuickJsSmokeTest {
   }
 
   @Test
-  fun doNothing() {
+  fun version() {
+    assertNotEquals("", QuickJs.version)
   }
 }
