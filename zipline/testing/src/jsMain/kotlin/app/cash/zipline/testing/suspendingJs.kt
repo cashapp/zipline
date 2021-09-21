@@ -29,18 +29,19 @@ class JsSuspendingEchoService(
   }
 }
 
+private val zipline by lazy { Zipline.get() }
+
 @JsExport
 fun prepareSuspendingJsBridges() {
-  Zipline.set<SuspendingEchoService>(
+  zipline.set<SuspendingEchoService>(
     "jsSuspendingEchoService",
-    EchoSerializersModule,
     JsSuspendingEchoService("hello")
   )
 }
 
 @JsExport
 fun callSuspendingEchoService(message: String) {
-  val service = Zipline.get<SuspendingEchoService>("jvmSuspendingEchoService", EchoSerializersModule)
+  val service = zipline.get<SuspendingEchoService>("jvmSuspendingEchoService")
   CoroutineScope(EmptyCoroutineContext).launch(Dispatchers.Main) {
     service.suspendingEcho(EchoRequest(message))
   }

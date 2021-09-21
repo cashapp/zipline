@@ -16,6 +16,7 @@
 package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
@@ -35,8 +36,8 @@ internal class ZiplineApis(
   private val bridgeFqName = FqName("app.cash.zipline.internal.bridge")
   private val serializationFqName = FqName("kotlinx.serialization")
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
+  private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
   private val ziplineFqName = packageFqName.child("Zipline")
-  private val ziplineCompanionFqName = ziplineFqName.child("Companion")
   private val endpointFqName = bridgeFqName.child("Endpoint")
 
   val any: IrClassSymbol
@@ -55,8 +56,6 @@ internal class ZiplineApis(
           it.owner.valueParameters.isEmpty() &&
           it.owner.typeParameters.size == 1
       }
-
-  val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
 
   val inboundCall: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("InboundCall"))!!
@@ -149,28 +148,23 @@ internal class ZiplineApis(
   private val inboundReferenceFqName = FqName("app.cash.zipline.InboundZiplineReference")
 
   /** Keys are functions like `Zipline.get()` and values are their rewrite targets. */
-  val outboundRewriteFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOfNotNull(
+  val outboundRewriteFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(
     rewritePair(ziplineFqName.child("get")),
-    rewritePair(ziplineCompanionFqName.child("get")),
     rewritePair(endpointFqName.child("get")),
     referenceGetRewritePair(),
   ).toMap()
 
   /** Keys are functions like `Zipline.set()` and values are their rewrite targets. */
-  val inboundRewriteFunctions: Map<IrFunctionSymbol, IrFunctionSymbol> = listOfNotNull(
+  val inboundRewriteFunctions: Map<IrFunctionSymbol, IrFunctionSymbol> = listOf(
     rewritePair(ziplineFqName.child("set")),
-    rewritePair(ziplineCompanionFqName.child("set")),
     rewritePair(endpointFqName.child("set")),
     inboundReferenceRewritePair()
   ).toMap()
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
-  private fun rewritePair(funName: FqName): Pair<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol>? {
+  private fun rewritePair(funName: FqName): Pair<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> {
     val overloads = pluginContext.referenceFunctions(funName)
-    if (overloads.isEmpty()) return null // The Companion APIs are JS-only.
-    val original = overloads.single {
-      it.owner.valueParameters[1].type.classFqName == serializersModuleFqName
-    }
+    val original = overloads.single { it.owner.visibility == DescriptorVisibilities.PUBLIC }
     return original to overloads.single { it != original }
   }
 
@@ -181,12 +175,10 @@ internal class ZiplineApis(
     return original to rewrite
   }
 
-  /** Maps `ZiplineReference.get(SerializerModule)` to `ZiplineReference.get(OutboundBridge)`. */
+  /** Maps `ZiplineReference.get()` to `ZiplineReference.get(OutboundBridge)`. */
   private fun referenceGetRewritePair(): Pair<IrFunctionSymbol, IrSimpleFunctionSymbol> {
     val overloads = pluginContext.referenceFunctions(referenceGetFqName)
-    val original = overloads.single {
-      it.owner.valueParameters[0].type.classFqName == serializersModuleFqName
-    }
+    val original = overloads.single { it.owner.visibility == DescriptorVisibilities.PUBLIC }
     return original to overloads.single { it != original }
   }
 }

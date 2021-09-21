@@ -18,7 +18,6 @@ package app.cash.zipline
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
-import app.cash.zipline.testing.EchoSerializersModule
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newEndpointPair
@@ -30,7 +29,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.serialization.modules.EmptySerializersModule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -58,8 +56,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<EchoService>("helloService", EchoSerializersModule, service)
-    val client = endpointB.get<EchoService>("helloService", EchoSerializersModule)
+    endpointA.set<EchoService>("helloService", service)
+    val client = endpointB.get<EchoService>("helloService")
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -82,8 +80,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<NullableEchoService>("helloService", EchoSerializersModule, service)
-    val client = endpointB.get<NullableEchoService>("helloService", EchoSerializersModule)
+    endpointA.set<NullableEchoService>("helloService", service)
+    val client = endpointB.get<NullableEchoService>("helloService")
 
     val response = client.echo(null)
     assertThat(response?.message).isEqualTo("received null")
@@ -98,8 +96,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<NullableEchoService>("helloService", EchoSerializersModule, service)
-    val client = endpointB.get<NullableEchoService>("helloService", EchoSerializersModule)
+    endpointA.set<NullableEchoService>("helloService", service)
+    val client = endpointB.get<NullableEchoService>("helloService")
 
     val response = client.echo(EchoRequest("send me null please?"))
     assertNull(response)
@@ -116,8 +114,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<SuspendingEchoService>("helloService", EchoSerializersModule, service)
-    val client = endpointB.get<SuspendingEchoService>("helloService", EchoSerializersModule)
+    endpointA.set<SuspendingEchoService>("helloService", service)
+    val client = endpointB.get<SuspendingEchoService>("helloService")
 
     val deferredResponse: Deferred<EchoResponse> = async {
       client.suspendingEcho(EchoRequest("this is a happy request"))
@@ -137,8 +135,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<EchoService>("helloService", EchoSerializersModule, service)
-    val client = endpointB.get<EchoService>("helloService", EchoSerializersModule)
+    endpointA.set<EchoService>("helloService", service)
+    val client = endpointB.get<EchoService>("helloService")
 
     val thrownException = assertThrows<Exception> {
       client.echo(EchoRequest(""))
@@ -155,8 +153,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<SuspendingEchoService>("helloService", EchoSerializersModule, service)
-    val client = endpointB.get<SuspendingEchoService>("helloService", EchoSerializersModule)
+    endpointA.set<SuspendingEchoService>("helloService", service)
+    val client = endpointB.get<SuspendingEchoService>("helloService")
 
     val thrownException = assertThrows<Exception> {
       client.suspendingEcho(EchoRequest(""))
@@ -178,8 +176,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<SuspendingEchoService>("echoService", EmptySerializersModule, echoService)
-    val client = endpointB.get<SuspendingEchoService>("echoService", EmptySerializersModule)
+    endpointA.set<SuspendingEchoService>("echoService", echoService)
+    val client = endpointB.get<SuspendingEchoService>("echoService")
 
     val echoResponse = client.suspendingEcho(EchoRequest("Jesse"))
     assertThat(echoResponse).isEqualTo(EchoResponse("hello, Jesse"))

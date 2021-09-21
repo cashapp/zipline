@@ -70,10 +70,10 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `Zipline.set()` that takes a name, a `SerializersModule`, and a service:
+ * Rewrites calls to `Zipline.set()` that takes a name and a service:
  *
  * ```
- * zipline.set("helloService", EchoSerializersModule, TestingEchoService("hello"))
+ * zipline.set("helloService", TestingEchoService("hello"))
  * ```
  *
  * to the overload that takes a name and an `InboundBridge`:
@@ -81,7 +81,7 @@ import org.jetbrains.kotlin.name.Name
  * ```
  * zipline.set(
  *   "helloService",
- *   object : InboundBridge<EchoService>(EchoSerializersModule) {
+ *   object : InboundBridge<EchoService>() {
  *     override fun create(context: Context): InboundCallHandler {
  *       return object : InboundCallHandler {
  *         val serializer_0 = context.serializersModule.serializer<EchoRequest>()
@@ -114,7 +114,6 @@ import org.jetbrains.kotlin.name.Name
  *
  * ```
  * val reference = ZiplineReference<EchoService>(
- *   EchoSerializersModule,
  *   TestingEchoService("hello")
  * )
  * ```
@@ -123,7 +122,7 @@ import org.jetbrains.kotlin.name.Name
  *
  * ```
  * val reference = InboundZiplineReference<EchoService>(
- *   object : InboundBridge<EchoService>(EchoSerializersModule) {
+ *   object : InboundBridge<EchoService>() {
  *     ...
  *   }
  * )
@@ -189,7 +188,7 @@ internal class InboundBridgeRewriter(
     }
   }
 
-  // object : InboundBridge<EchoService>(EchoSerializersModule) {
+  // object : InboundBridge<EchoService>() {
   // }
   private fun irNewInboundBridge(): IrContainerExpression {
     val inboundBridgeOfT = ziplineApis.inboundBridge.typeWith(bridgedInterface.type)
@@ -201,7 +200,7 @@ internal class InboundBridgeRewriter(
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    // InboundBridge<EchoService>(EchoSerializersModule)
+    // InboundBridge<EchoService>()
     val superConstructor = ziplineApis.inboundBridge.constructors.single()
     val constructor = inboundBridgeSubclass.addConstructor {
       origin = IrDeclarationOrigin.DEFINED
@@ -213,10 +212,9 @@ internal class InboundBridgeRewriter(
           context = pluginContext,
           symbol = superConstructor,
           typeArgumentsCount = 1,
-          valueArgumentsCount = 1
+          valueArgumentsCount = 0,
         ) {
           putTypeArgument(0, bridgedInterface.type)
-          putValueArgument(0, original.getValueArgument(original.valueArgumentsCount - 2))
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,

@@ -18,14 +18,12 @@ package app.cash.zipline
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
-import app.cash.zipline.testing.EchoSerializersModule
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.newEndpointPair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.serialization.modules.EmptySerializersModule
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -53,7 +51,7 @@ internal class ZiplineReferenceTest {
       }
     }
 
-    val referenceA = ZiplineReference<EchoService>(EchoSerializersModule, service)
+    val referenceA = ZiplineReference<EchoService>(service)
     (referenceA as InboundZiplineReference<*>).connect(endpointA, "helloService")
 
     // Note that we cast OutboundZiplineReference<EchoService> down to ZiplineReference<EchoService>
@@ -61,7 +59,7 @@ internal class ZiplineReferenceTest {
     val referenceB: ZiplineReference<EchoService> = OutboundZiplineReference()
     (referenceB as OutboundZiplineReference<EchoService>).connect(endpointB, "helloService")
 
-    val client = referenceB.get(EchoSerializersModule)
+    val client = referenceB.get()
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -77,14 +75,14 @@ internal class ZiplineReferenceTest {
 
   @Test
   fun transmitReferences() {
-    endpointA.set<EchoServiceFactory>("factory", EmptySerializersModule, FactoryService())
-    val factoryClient = endpointB.get<EchoServiceFactory>("factory", EmptySerializersModule)
+    endpointA.set<EchoServiceFactory>("factory", FactoryService())
+    val factoryClient = endpointB.get<EchoServiceFactory>("factory")
 
     val helloServiceReference = factoryClient.create("hello")
-    val helloService = helloServiceReference.get(EmptySerializersModule)
+    val helloService = helloServiceReference.get()
 
     val supServiceReference = factoryClient.create("sup")
-    val supService = supServiceReference.get(EmptySerializersModule)
+    val supService = supServiceReference.get()
 
     assertThat(helloService.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
     assertThat(supService.echo(EchoRequest("Kevin"))).isEqualTo(EchoResponse("sup Kevin"))
@@ -94,13 +92,13 @@ internal class ZiplineReferenceTest {
 
   @Test
   fun closingAnOutboundReferenceRemovesItAndPreventsFurtherCalls() {
-    endpointA.set<EchoServiceFactory>("factory", EmptySerializersModule, FactoryService())
-    val factoryClient = endpointB.get<EchoServiceFactory>("factory", EmptySerializersModule)
+    endpointA.set<EchoServiceFactory>("factory", FactoryService())
+    val factoryClient = endpointB.get<EchoServiceFactory>("factory")
     assertThat(endpointA.serviceNames).containsExactly("factory")
 
     val outboundReference = factoryClient.create("hello")
     assertThat(endpointA.serviceNames).containsExactly("factory", "zipline/1")
-    val service = outboundReference.get(EmptySerializersModule)
+    val service = outboundReference.get()
 
     assertThat(service.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
     outboundReference.close()
@@ -114,7 +112,6 @@ internal class ZiplineReferenceTest {
   fun closingAnInboundReferenceRemovesItAndPreventsFurtherCalls() {
     // Eagerly create this so we have something to return later.
     val inboundReference = ZiplineReference<EchoService>(
-      EmptySerializersModule,
       GreetingService("hello")
     )
     class FactoryService : EchoServiceFactory {
@@ -123,13 +120,13 @@ internal class ZiplineReferenceTest {
       }
     }
 
-    endpointA.set<EchoServiceFactory>("factory", EmptySerializersModule, FactoryService())
-    val factoryClient = endpointB.get<EchoServiceFactory>("factory", EmptySerializersModule)
+    endpointA.set<EchoServiceFactory>("factory", FactoryService())
+    val factoryClient = endpointB.get<EchoServiceFactory>("factory")
     assertThat(endpointA.serviceNames).containsExactly("factory")
 
     val outboundReference = factoryClient.create("hello")
     assertThat(endpointA.serviceNames).containsExactly("factory", "zipline/1")
-    val service = outboundReference.get(EmptySerializersModule)
+    val service = outboundReference.get()
 
     assertThat(service.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
     inboundReference.close()
@@ -148,7 +145,7 @@ internal class ZiplineReferenceTest {
   class FactoryService : EchoServiceFactory {
     override fun create(greeting: String): ZiplineReference<EchoService> {
       val service = GreetingService(greeting)
-      return ZiplineReference(EmptySerializersModule, service)
+      return ZiplineReference(service)
     }
   }
 }

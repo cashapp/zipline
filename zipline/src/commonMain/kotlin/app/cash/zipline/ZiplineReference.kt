@@ -19,10 +19,9 @@ import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.InboundCallHandler
 import app.cash.zipline.internal.bridge.OutboundBridge
-import kotlinx.serialization.modules.SerializersModule
 
 abstract class ZiplineReference<T : Any> internal constructor() {
-  fun get(serializersModule: SerializersModule): T {
+  fun get(): T {
     error("unexpected call to ZiplineReference.get: is the Zipline plugin configured?")
   }
 
@@ -32,10 +31,7 @@ abstract class ZiplineReference<T : Any> internal constructor() {
   abstract fun close()
 }
 
-fun <T : Any> ZiplineReference(
-  serializersModule: SerializersModule,
-  service: T
-): ZiplineReference<T> {
+fun <T : Any> ZiplineReference(service: T): ZiplineReference<T> {
   error("unexpected call to ZiplineReference(): is the Zipline plugin configured?")
 }
 
@@ -51,13 +47,7 @@ internal class InboundZiplineReference<T : Any>(
     check(this.endpoint == null && this.name == null) { "already connected" }
     this.name = name
     this.endpoint = endpoint
-
-    val serializersModule = SerializersModule {
-      include(endpoint.builtInSerializersModule)
-      include(inboundBridge.serializersModule)
-    }
-
-    val context = InboundBridge.Context(serializersModule)
+    val context = InboundBridge.Context(endpoint.serializersModule)
     val result = inboundBridge.create(context)
     endpoint.inboundHandlers[name] = result
     return result
@@ -91,15 +81,12 @@ internal class OutboundZiplineReference<T : Any> : ZiplineReference<T>() {
   }
 
   override fun get(outboundBridge: OutboundBridge<T>): T {
-    val outboundEndpoint = this.endpoint ?: throw IllegalStateException("not connected")
-    val name = this.name!!
-
-    val serializersModule = SerializersModule {
-      include(outboundEndpoint.builtInSerializersModule)
-      include(outboundBridge.serializersModule)
-    }
-
-    val context = OutboundBridge.Context(name, serializersModule, outboundEndpoint)
+    val endpoint = this.endpoint ?: throw IllegalStateException("not connected")
+    val context = OutboundBridge.Context(
+      instanceName = this.name!!,
+      serializersModule = endpoint.serializersModule,
+      endpoint = endpoint
+    )
     return outboundBridge.create(context)
   }
 

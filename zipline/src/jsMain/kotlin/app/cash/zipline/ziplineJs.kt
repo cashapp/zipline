@@ -25,62 +25,64 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
-actual abstract class Zipline {
-  actual abstract val engineVersion: String
+actual class Zipline internal constructor() {
+  private val endpoint = Endpoint(
+    dispatcher = Dispatchers.Main,
+    outboundChannel = object : CallChannel {
+      /** Lazily fetch the channel to call out. */
+      private val jsOutboundChannel: dynamic
+        get() = js("""globalThis.app_cash_zipline_outboundChannel""")
 
-  actual abstract val serviceNames: Set<String>
+      override fun serviceNamesArray(): Array<String> {
+        return jsOutboundChannel.serviceNamesArray()
+      }
 
-  actual abstract val clientNames: Set<String>
+      override fun invoke(
+        instanceName: String,
+        funName: String,
+        encodedArguments: Array<String>
+      ): Array<String> {
+        return jsOutboundChannel.invoke(
+          instanceName,
+          funName,
+          encodedArguments
+        )
+      }
 
-  actual fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
-    error("unexpected call to Zipline.get: is the Zipline plugin configured?")
-  }
+      override fun invokeSuspending(
+        instanceName: String,
+        funName: String,
+        encodedArguments: Array<String>,
+        callbackName: String
+      ) {
+        return jsOutboundChannel.invokeSuspending(
+          instanceName,
+          funName,
+          encodedArguments,
+          callbackName
+        )
+      }
 
-  @PublishedApi
-  internal abstract fun <T : Any> get(
-    name: String,
-    bridge: OutboundBridge<T>
-  ): T
-
-  actual fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
-    error("unexpected call to Zipline.set: is the Zipline plugin configured?")
-  }
-
-  @PublishedApi
-  internal abstract fun <T : Any> set(name: String, bridge: InboundBridge<T>)
-
-  companion object : Zipline() {
-    override val engineVersion: String
-      get() = THE_ONLY_ZIPLINE.engineVersion
-
-    override val serviceNames: Set<String>
-      get() = THE_ONLY_ZIPLINE.serviceNames
-
-    override val clientNames: Set<String>
-      get() = THE_ONLY_ZIPLINE.clientNames
-
-    override fun <T : Any> get(name: String, outboundBridge: OutboundBridge<T>): T {
-      return THE_ONLY_ZIPLINE.get(name, outboundBridge)
+      override fun disconnect(instanceName: String): Boolean {
+        return jsOutboundChannel.disconnect(instanceName)
+      }
     }
+  )
 
-    override fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
-      THE_ONLY_ZIPLINE.set(name, bridge)
-    }
-  }
-}
+  actual val serializersModule: SerializersModule
+    get() = endpoint.userSerializersModule!!
 
-private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
-  private val endpoint = Endpoint(Dispatchers.Main, outboundChannel = this)
-  private val hostPlatform: HostPlatform
-  private var nextTimeoutId = 1
-  private val jobs = mutableMapOf<Int, Job>()
+  actual val engineVersion
+    get() = quickJsVersion
 
-  /** Lazily fetch the bridge to call out. */
-  private val jsOutboundChannel: dynamic
-    get() = js("""globalThis.app_cash_zipline_outboundChannel""")
+  actual val serviceNames: Set<String>
+    get() = endpoint.serviceNames
+
+  actual val clientNames: Set<String>
+    get() = endpoint.clientNames
 
   init {
-    // Eagerly publish the bridge so they can call us.
+    // Eagerly publish the channel so they can call us.
     val inboundChannel = endpoint.inboundChannel
     js(
       """
@@ -88,6 +90,54 @@ private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
       """
     )
 
+    // Connect platforms using our newly-bootstrapped channels.
+    val hostPlatform = endpoint.get<HostPlatform>(
+      name = "zipline/host"
+    )
+    endpoint.set<JsPlatform>(
+      name = "zipline/js",
+      instance = RealJsPlatform(hostPlatform)
+    )
+  }
+
+  actual fun <T : Any> get(name: String): T {
+    error("unexpected call to Zipline.get: is the Zipline plugin configured?")
+  }
+
+  @PublishedApi
+  internal fun <T : Any> get(name: String, outboundBridge: OutboundBridge<T>): T {
+    return endpoint.get(name, outboundBridge)
+  }
+
+  actual fun <T : Any> set(name: String, instance: T) {
+    error("unexpected call to Zipline.set: is the Zipline plugin configured?")
+  }
+
+  @PublishedApi
+  internal fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
+    endpoint.set(name, bridge)
+  }
+
+  companion object {
+    fun get(serializersModule: SerializersModule = EmptySerializersModule): Zipline {
+      if (THE_ONLY_ZIPLINE.endpoint.userSerializersModule == null) {
+        THE_ONLY_ZIPLINE.endpoint.userSerializersModule = serializersModule
+      }
+      require(serializersModule == THE_ONLY_ZIPLINE.endpoint.userSerializersModule) {
+        "get() called multiple times with non-equal serializersModule instances"
+      }
+      return THE_ONLY_ZIPLINE
+    }
+  }
+}
+
+private class RealJsPlatform(
+  val hostPlatform: HostPlatform
+) : JsPlatform {
+  private var nextTimeoutId = 1
+  private val jobs = mutableMapOf<Int, Job>()
+
+  init {
     // Create global functions for JavaScript callers.
     val jsPlatform = this
     js(
@@ -106,62 +156,6 @@ private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
       };
       """
     )
-
-    // Connect platforms using our newly-bootstrapped bridges.
-    endpoint.set<JsPlatform>(
-      name = "zipline/js",
-      serializersModule = EmptySerializersModule,
-      instance = this
-    )
-    hostPlatform = endpoint.get(
-      name = "zipline/host",
-      serializersModule = EmptySerializersModule
-    )
-  }
-
-  override val engineVersion
-    get() = quickJsVersion
-
-  override val serviceNames: Set<String>
-    get() = endpoint.serviceNames
-
-  override val clientNames: Set<String>
-    get() = endpoint.clientNames
-
-  override fun serviceNamesArray(): Array<String> {
-    return jsOutboundChannel.serviceNamesArray()
-  }
-
-  override fun invoke(
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>
-  ): Array<String> {
-    return jsOutboundChannel.invoke(instanceName, funName, encodedArguments)
-  }
-
-  override fun invokeSuspending(
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>,
-    callbackName: String
-  ) {
-    return jsOutboundChannel.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
-  }
-
-  override fun disconnect(instanceName: String): Boolean {
-    return jsOutboundChannel.disconnect(instanceName)
-  }
-
-  override fun <T : Any> get(
-    name: String,
-    outboundBridge: OutboundBridge<T>
-  ): T {
-    return endpoint.get(name, outboundBridge)
-  }
-
-  override fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
-    endpoint.set(name, bridge)
   }
 
   override fun runJob(timeoutId: Int) {
@@ -203,4 +197,4 @@ private class ZiplineJs : Zipline(), JsPlatform, CallChannel  {
  * the code is loaded, and we rely on that for the side-effects performed in the ZiplineJs
  * constructor.
  */
-private val THE_ONLY_ZIPLINE: Zipline = ZiplineJs()
+private val THE_ONLY_ZIPLINE = Zipline()

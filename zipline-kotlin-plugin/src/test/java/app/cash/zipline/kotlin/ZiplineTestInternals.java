@@ -36,7 +36,6 @@ import kotlin.reflect.full.KClassifiers;
 import kotlinx.coroutines.test.TestCoroutineDispatcher;
 import kotlinx.serialization.KSerializer;
 
-import static app.cash.zipline.testing.EchoKt.getEchoSerializersModule;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static kotlinx.serialization.SerializersKt.serializer;
@@ -63,7 +62,7 @@ public final class ZiplineTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static EchoService getEchoClient(Endpoint endpoint, String name) {
-    return endpoint.get(name, new OutboundBridge<EchoService>(getEchoSerializersModule()) {
+    return endpoint.get(name, new OutboundBridge<EchoService>() {
       @Override public EchoService create(OutboundBridge.Context context) {
         KSerializer<EchoRequest> parameterSerializer
             = (KSerializer) serializer(context.getSerializersModule(), echoRequestKt);
@@ -82,7 +81,7 @@ public final class ZiplineTestInternals {
 
   /** Simulate generated code for inbound calls. */
   public static void setEchoService(Endpoint endpoint, String name, EchoService echoService) {
-    endpoint.set(name, new InboundBridge<EchoService>(getEchoSerializersModule()) {
+    endpoint.set(name, new InboundBridge<EchoService>() {
       @Override public InboundCallHandler create(Context context) {
         KSerializer<EchoResponse> resultSerializer
             = (KSerializer) serializer(context.getSerializersModule(), echoResponseKt);
@@ -114,8 +113,7 @@ public final class ZiplineTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static GenericEchoService<String> getGenericEchoService(Endpoint endpoint, String name) {
-    return endpoint.get(name, new OutboundBridge<GenericEchoService<String>>(
-        getEchoSerializersModule()) {
+    return endpoint.get(name, new OutboundBridge<GenericEchoService<String>>() {
       @Override public GenericEchoService<String> create(OutboundBridge.Context context) {
         KSerializer<String> parameterSerializer
             = (KSerializer) serializer(context.getSerializersModule(), stringKt);
@@ -135,7 +133,7 @@ public final class ZiplineTestInternals {
   /** Simulate generated code for inbound calls. */
   public static void setGenericEchoService(
       Endpoint endpoint, String name, GenericEchoService<String> echoService) {
-    endpoint.set(name, new InboundBridge<GenericEchoService<String>>(getEchoSerializersModule()) {
+    endpoint.set(name, new InboundBridge<GenericEchoService<String>>() {
       @Override public InboundCallHandler create(Context context) {
         KSerializer<List<String>> resultSerializer
             = (KSerializer) serializer(context.getSerializersModule(), listOfStringKt);

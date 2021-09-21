@@ -36,9 +36,9 @@ class ZiplineKotlinPluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.Endpoint
-        
+
         class TestingEchoService(
           private val greeting: String
         ) : EchoService {
@@ -46,9 +46,9 @@ class ZiplineKotlinPluginTest {
             return EchoResponse("${'$'}greeting from the compiler plugin, ${'$'}{request.message}")
           }
         }
-        
+
         fun prepareJsBridges(endpoint: Endpoint) {
-          endpoint.set<EchoService>("helloService", EchoSerializersModule, TestingEchoService("hello"))
+          endpoint.set<EchoService>("helloService", TestingEchoService("hello"))
         }
         """
       )
@@ -71,11 +71,11 @@ class ZiplineKotlinPluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.Endpoint
-        
+
         fun getHelloService(endpoint: Endpoint): EchoService {
-          return endpoint.get("helloService", EchoSerializersModule)
+          return endpoint.get("helloService")
         }
         """
       )
@@ -106,11 +106,11 @@ class ZiplineKotlinPluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.Endpoint
-        
+
         fun prepareJsBridges(endpoint: Endpoint) {
-          endpoint.set<TestingEchoService>("helloService", EchoSerializersModule, TestingEchoService)
+          endpoint.set<TestingEchoService>("helloService", TestingEchoService)
         }
 
         object TestingEchoService : EchoService {
@@ -131,11 +131,11 @@ class ZiplineKotlinPluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.Endpoint
-        
+
         fun getHelloService(endpoint: Endpoint): String {
-          return endpoint.get("helloService", EchoSerializersModule)
+          return endpoint.get("helloService")
         }
         """
       )
@@ -152,19 +152,18 @@ class ZiplineKotlinPluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.Endpoint
-        
+
         class TestingGenericEchoService : GenericEchoService<String> {
           override fun genericEcho(request: String): List<String> {
             return listOf("received a generic ${'$'}request!")
           }
         }
-        
+
         fun prepareJsBridges(endpoint: Endpoint) {
           endpoint.set<GenericEchoService<String>>(
             "genericService",
-            EchoSerializersModule,
             TestingGenericEchoService()
           )
         }
@@ -188,11 +187,11 @@ class ZiplineKotlinPluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.Endpoint
-        
+
         fun getGenericService(endpoint: Endpoint): GenericEchoService<String> {
-          return endpoint.get("genericService", EchoSerializersModule)
+          return endpoint.get("genericService")
         }
         """
       )
@@ -223,11 +222,11 @@ class ZiplineKotlinPluginTest {
         "main.kt",
         """
         package app.cash.zipline.testing
-        
+
         import app.cash.zipline.internal.bridge.Endpoint
-        
+
         fun prepareJsBridges(endpoint: Endpoint) {
-          endpoint.set<EchoService>("helloService", EchoSerializersModule, object : EchoService {
+          endpoint.set<EchoService>("helloService", object : EchoService {
             override fun echo(request: EchoRequest): EchoResponse {
               return EchoResponse("hello from anonymous, ${'$'}{request.message}")
             }

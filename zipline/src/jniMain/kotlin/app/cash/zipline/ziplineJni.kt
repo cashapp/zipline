@@ -31,33 +31,101 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
-actual abstract class Zipline : Closeable {
-  abstract val quickJs: QuickJs
+actual class Zipline private constructor(
+  val quickJs: QuickJs,
+  dispatcher: CoroutineDispatcher,
+) : Closeable {
+  private val endpoint = Endpoint(
+    dispatcher = dispatcher,
+    outboundChannel = object : CallChannel {
+      /** Lazily fetch the channel to call into JS. */
+      private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
+        quickJs.get(
+          name = "app_cash_zipline_inboundChannel",
+          type = CallChannel::class.java
+        )
+      }
 
-  abstract val dispatcher: CoroutineDispatcher
+      override fun serviceNamesArray(): Array<String> {
+        return jsInboundBridge.serviceNamesArray()
+      }
 
-  actual abstract val engineVersion: String
+      override fun invoke(
+        instanceName: String,
+        funName: String,
+        encodedArguments: Array<String>
+      ): Array<String> {
+        check(!closed) { "Zipline closed" }
+        return jsInboundBridge.invoke(instanceName, funName, encodedArguments)
+      }
 
-  actual abstract val serviceNames: Set<String>
+      override fun invokeSuspending(
+        instanceName: String,
+        funName: String,
+        encodedArguments: Array<String>,
+        callbackName: String
+      ) {
+        check(!closed) { "Zipline closed" }
+        return jsInboundBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
+      }
 
-  actual abstract val clientNames: Set<String>
+      override fun disconnect(instanceName: String): Boolean {
+        return jsInboundBridge.disconnect(instanceName)
+      }
+    }
+  )
 
-  actual fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
+  actual val serializersModule: SerializersModule
+    get() = endpoint.userSerializersModule!!
+
+  actual val engineVersion: String
+    get() = quickJsVersion
+
+  actual val serviceNames: Set<String>
+    get() = endpoint.serviceNames
+
+  actual val clientNames: Set<String>
+    get() = endpoint.clientNames
+
+  private var closed = false
+
+  init {
+    // Eagerly publish the channel so they can call us.
+    quickJs.set(
+      name = "app_cash_zipline_outboundChannel",
+      type = CallChannel::class.java,
+      instance = endpoint.inboundChannel
+    )
+
+    // Connect platforms using our newly-bootstrapped channels.
+    val jsPlatform = endpoint.get<JsPlatform>(
+      name = "zipline/js"
+    )
+    endpoint.set<HostPlatform>(
+      name = "zipline/host",
+      instance = RealHostPlatform(dispatcher, jsPlatform)
+    )
+  }
+
+  actual fun <T : Any> get(name: String): T {
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal abstract fun <T : Any> get(
-    name: String,
-    bridge: OutboundBridge<T>
-  ): T
+  internal fun <T : Any> get(name: String, bridge: OutboundBridge<T>): T {
+    check(!closed) { "closed" }
+    return endpoint.get(name, bridge)
+  }
 
-  actual fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
+  actual fun <T : Any> set(name: String, instance: T) {
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal abstract fun <T : Any> set(name: String, bridge: InboundBridge<T>)
+  internal fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
+    check(!closed) { "closed" }
+    endpoint.set(name, bridge)
+  }
 
   /**
    * Release resources held by this instance. It is an error to do any of the following after
@@ -67,103 +135,32 @@ actual abstract class Zipline : Closeable {
    *  * Accessing [quickJs].
    *  * Accessing the objects returned from [get].
    */
-  abstract override fun close()
+  override fun close() {
+    closed = true
+    quickJs.close()
+  }
 
   companion object {
-    fun create(dispatcher: CoroutineDispatcher): Zipline {
+    fun create(
+      dispatcher: CoroutineDispatcher,
+      serializersModule: SerializersModule = EmptySerializersModule
+    ): Zipline {
       val quickJs = QuickJs.create()
       // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
       quickJs.maxStackSize = 0L
-      return ZiplineJni(quickJs, dispatcher)
+      return Zipline(quickJs, dispatcher)
+        .apply {
+          endpoint.userSerializersModule = serializersModule
+        }
     }
   }
 }
 
-private class ZiplineJni(
-  override val quickJs: QuickJs,
-  override val dispatcher: CoroutineDispatcher,
-) : Zipline(), CallChannel, HostPlatform {
-  private val endpoint = Endpoint(dispatcher, outboundChannel = this)
-  private val jsPlatform: JsPlatform
+private class RealHostPlatform(
+  val dispatcher: CoroutineDispatcher,
+  val jsPlatform: JsPlatform,
+) : HostPlatform {
   private val logger = Logger.getLogger(Zipline::class.qualifiedName)
-  private var closed = false
-
-  /** Lazily fetch the bridge to call into JS. */
-  private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
-    quickJs.get(
-      name = "app_cash_zipline_inboundChannel",
-      type = CallChannel::class.java
-    )
-  }
-
-  init {
-    // Eagerly publish the bridge so they can call us.
-    quickJs.set(
-      name = "app_cash_zipline_outboundChannel",
-      type = CallChannel::class.java,
-      instance = endpoint.inboundChannel
-    )
-
-    // Connect platforms using our newly-bootstrapped bridges.
-    endpoint.set<HostPlatform>(
-      name = "zipline/host",
-      serializersModule = EmptySerializersModule,
-      instance = this
-    )
-    jsPlatform = endpoint.get(
-      name = "zipline/js",
-      serializersModule = EmptySerializersModule
-    )
-  }
-
-  override val engineVersion: String
-    get() = quickJsVersion
-
-  override val serviceNames: Set<String>
-    get() = endpoint.serviceNames
-
-  override val clientNames: Set<String>
-    get() = endpoint.clientNames
-
-  override fun serviceNamesArray(): Array<String> {
-    return jsInboundBridge.serviceNamesArray()
-  }
-
-  override fun invoke(
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>
-  ): Array<String> {
-    check(!closed) { "Zipline closed" }
-    return jsInboundBridge.invoke(instanceName, funName, encodedArguments)
-  }
-
-  override fun invokeSuspending(
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>,
-    callbackName: String
-  ) {
-    check(!closed) { "Zipline closed" }
-    return jsInboundBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
-  }
-
-  override fun disconnect(instanceName: String): Boolean {
-    return jsInboundBridge.disconnect(instanceName)
-  }
-
-  override fun <T : Any> get(
-    name: String,
-    bridge: OutboundBridge<T>
-  ): T {
-    check(!closed) { "closed" }
-    return endpoint.get(name, bridge)
-  }
-
-  override fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
-    check(!closed) { "closed" }
-    endpoint.set(name, bridge)
-  }
 
   override fun setTimeout(timeoutId: Int, delayMillis: Int) {
     CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
@@ -178,10 +175,5 @@ private class ZiplineJni(
       "error" -> logger.severe(message)
       else -> logger.info(message)
     }
-  }
-
-  override fun close() {
-    closed = true
-    quickJs.close()
   }
 }

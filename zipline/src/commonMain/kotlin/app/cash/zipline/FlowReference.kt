@@ -34,14 +34,14 @@ class FlowReference<T> @PublishedApi internal constructor(
 ) {
   private fun getJsonFlow(): Flow<String> {
     return channelFlow {
-      val referenceFlow = referenceFlowReference.get(EmptySerializersModule)
+      val referenceFlow = referenceFlowReference.get()
       try {
         val collector: FlowCollector<String> = object : FlowCollector<String> {
           override suspend fun emit(value: String) {
             this@channelFlow.send(value)
           }
         }
-        val collectorReference = ZiplineReference(EmptySerializersModule, collector)
+        val collectorReference = ZiplineReference(collector)
         referenceFlow.collectJson(collectorReference)
         this@channelFlow.close()
       } finally {
@@ -59,7 +59,7 @@ class FlowReference<T> @PublishedApi internal constructor(
 fun <T> Flow<T>.asFlowReference(serializer: KSerializer<T>): FlowReference<T> {
   val flowOfStrings = map { Json.encodeToString(serializer, it) }
   val referenceFlow = RealReferenceFlow(flowOfStrings, EmptySerializersModule)
-  val ziplineReference = ZiplineReference<ReferenceFlow>(EmptySerializersModule, referenceFlow)
+  val ziplineReference = ZiplineReference<ReferenceFlow>(referenceFlow)
   return FlowReference(ziplineReference)
 }
 
@@ -75,7 +75,7 @@ internal class RealReferenceFlow(
 ) : ReferenceFlow {
   override suspend fun collectJson(collectorReference: ZiplineReference<FlowCollector<String>>) {
     try {
-      val collector = collectorReference.get(serializersModule)
+      val collector = collectorReference.get()
       collector.emitAll(flow)
     } finally {
       collectorReference.close()

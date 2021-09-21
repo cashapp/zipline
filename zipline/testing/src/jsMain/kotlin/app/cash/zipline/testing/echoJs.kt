@@ -25,15 +25,17 @@ class JsEchoService(
   }
 }
 
+private val zipline by lazy { Zipline.get() }
+
 @JsExport
 fun prepareJsBridges() {
-  Zipline.set<EchoService>("helloService", EchoSerializersModule, JsEchoService("hello"))
-  Zipline.set<EchoService>("yoService", EchoSerializersModule, JsEchoService("yo"))
+  zipline.set<EchoService>("helloService", JsEchoService("hello"))
+  zipline.set<EchoService>("yoService", JsEchoService("yo"))
 }
 
 @JsExport
 fun callSupService(message: String): String {
-  val supService = Zipline.get<EchoService>("supService", EchoSerializersModule)
+  val supService = zipline.get<EchoService>("supService")
   val echoResponse = supService.echo(EchoRequest(message))
   return "JavaScript received '${echoResponse.message}' from the JVM"
 }
@@ -46,5 +48,5 @@ class JsThrowingEchoService : EchoService {
 
 @JsExport
 fun prepareThrowingJsBridges() {
-  Zipline.set<EchoService>("helloService", EchoSerializersModule, JsThrowingEchoService())
+  zipline.set<EchoService>("helloService", JsThrowingEchoService())
 }
