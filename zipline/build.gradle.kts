@@ -55,7 +55,6 @@ kotlin {
 
   sourceSets {
     val commonMain by getting {
-      kotlin.srcDir(versionWriterTaskProvider)
       dependencies {
         api(Dependencies.kotlinxCoroutines)
         api(Dependencies.kotlinxSerialization)
@@ -68,7 +67,9 @@ kotlin {
       }
     }
 
-    val engineMain by creating
+    val engineMain by creating {
+      kotlin.srcDir(versionWriterTaskProvider)
+    }
     val engineTest by creating
 
     val jniMain by creating {

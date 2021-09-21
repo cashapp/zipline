@@ -57,6 +57,9 @@ actual class QuickJs private constructor(
 
     @JvmStatic
     external fun createContext(): Long
+
+    actual val version: String
+      get() = quickJsVersion
   }
 
   /** Memory usage statistics for the JavaScript engine. */

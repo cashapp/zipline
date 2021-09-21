@@ -29,7 +29,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
-import org.junit.Assert.assertNotEquals
 import org.junit.Before
 import org.junit.Test
 
@@ -44,10 +43,6 @@ class ZiplineTest {
 
   @After fun tearDown(): Unit = runBlocking(dispatcher) {
     zipline.close()
-  }
-
-  @Test fun version(): Unit = runBlocking(dispatcher) {
-    assertNotEquals("", zipline.engineVersion)
   }
 
   @Test fun cannotGetOrSetServiceAfterClose(): Unit = runBlocking(dispatcher) {

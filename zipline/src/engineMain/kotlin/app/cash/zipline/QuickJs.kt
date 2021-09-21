@@ -28,6 +28,8 @@ expect class QuickJs {
      * calls to [close] on the returned instance to avoid leaking native memory.
      */
     fun create(): QuickJs
+
+    val version: String
   }
 
   /**

@@ -18,8 +18,6 @@ package app.cash.zipline
 import kotlinx.serialization.modules.SerializersModule
 
 expect class Zipline {
-  val engineVersion: String
-
   val serializersModule: SerializersModule
 
   /** Name of services that have been published with [set]. */
