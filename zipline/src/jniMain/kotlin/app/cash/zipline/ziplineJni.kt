@@ -27,9 +27,10 @@ import app.cash.zipline.internal.hostPlatformName
 import app.cash.zipline.internal.jsPlatformName
 import java.io.Closeable
 import java.util.logging.Logger
-import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -39,6 +40,8 @@ actual class Zipline private constructor(
   val quickJs: QuickJs,
   dispatcher: CoroutineDispatcher,
 ) : Closeable {
+  private val scope = CoroutineScope(dispatcher)
+
   private val endpoint = Endpoint(
     dispatcher = dispatcher,
     outboundChannel = object : CallChannel {
@@ -107,7 +110,7 @@ actual class Zipline private constructor(
     )
     endpoint.set<HostPlatform>(
       name = hostPlatformName,
-      instance = RealHostPlatform(dispatcher, jsPlatform),
+      instance = RealHostPlatform(scope, jsPlatform),
     )
   }
 
@@ -141,6 +144,7 @@ actual class Zipline private constructor(
    */
   override fun close() {
     closed = true
+    scope.cancel()
     quickJs.close()
   }
 
@@ -161,13 +165,13 @@ actual class Zipline private constructor(
 }
 
 private class RealHostPlatform(
-  val dispatcher: CoroutineDispatcher,
+  val scope: CoroutineScope,
   val jsPlatform: JsPlatform,
 ) : HostPlatform {
   private val logger = Logger.getLogger(Zipline::class.qualifiedName)
 
   override fun setTimeout(timeoutId: Int, delayMillis: Int) {
-    CoroutineScope(EmptyCoroutineContext).launch(dispatcher) {
+    scope.launch(start = UNDISPATCHED) {
       delay(delayMillis.toLong())
       jsPlatform.runJob(timeoutId)
     }
