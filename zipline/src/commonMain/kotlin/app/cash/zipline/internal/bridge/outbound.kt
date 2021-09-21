@@ -70,7 +70,7 @@ internal class OutboundCall(
   private val funName: String,
   private val parameterCount: Int,
 ) {
-  private val arguments = mutableListOf<String>()
+  private val arguments = ArrayList<String>(parameterCount * 2)
   private var callCount = 0
 
   fun <T> parameter(serializer: KSerializer<T>, value: T) {
