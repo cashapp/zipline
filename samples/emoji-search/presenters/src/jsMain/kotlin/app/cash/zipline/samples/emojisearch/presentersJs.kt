@@ -17,19 +17,18 @@ package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.Zipline
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.modules.EmptySerializersModule
+
+private val zipline by lazy { Zipline.get() }
 
 @OptIn(ExperimentalSerializationApi::class)
 @JsExport
 fun preparePresenters() {
-  val hostApi = Zipline.get<HostApi>(
-    name = "hostApi",
-    serializersModule = EmptySerializersModule
+  val hostApi = zipline.get<HostApi>(
+    name = "hostApi"
   )
 
-  Zipline.set<EmojiSearchPresenter>(
+  zipline.set<EmojiSearchPresenter>(
     name = "emojiSearchPresenter",
-    serializersModule = EmptySerializersModule,
     instance = RealEmojiSearchPresenter(hostApi)
   )
 }

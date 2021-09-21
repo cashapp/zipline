@@ -23,18 +23,19 @@ class JsAdaptersService : AdaptersService {
   }
 }
 
+private val zipline by lazy { Zipline.get(AdaptersSerializersModule) }
+
 @JsExport
 fun prepareAdaptersJsBridges() {
-  Zipline.set<AdaptersService>(
+  zipline.set<AdaptersService>(
     "adaptersService",
-    AdaptersSerializersModule,
     JsAdaptersService()
   )
 }
 
 @JsExport
 fun callAdaptersService(): String {
-  val service = Zipline.get<AdaptersService>("adaptersService", AdaptersSerializersModule)
+  val service = zipline.get<AdaptersService>("adaptersService")
   val response = service.echo(AdaptersRequest("Jesse"))
   return "JavaScript received ${response.message}"
 }

@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.launch
-import kotlinx.serialization.modules.EmptySerializersModule
 
 class EmojiSearchZipline {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
@@ -41,14 +40,11 @@ class EmojiSearchZipline {
     val job = coroutineScope.launch(dispatcher) {
       val presentersJs = hostApi.httpCall("http://10.0.2.2:8080/presenters.js", mapOf())
       zipline.quickJs.evaluate(presentersJs, "presenters.js")
-      zipline.set<HostApi>("hostApi", EmptySerializersModule, hostApi)
+      zipline.set<HostApi>("hostApi", hostApi)
       zipline.quickJs.evaluate(
         "presenters.app.cash.zipline.samples.emojisearch.preparePresenters()"
       )
-      val presenter = zipline.get<EmojiSearchPresenter>(
-        name = "emojiSearchPresenter",
-        serializersModule = EmptySerializersModule,
-      )
+      val presenter = zipline.get<EmojiSearchPresenter>("emojiSearchPresenter")
 
       val eventsFlowReference = eventFlow.asFlowReference(EmojiSearchEvent.serializer())
       val modelsFlowReference = presenter.produceModels(eventsFlowReference)

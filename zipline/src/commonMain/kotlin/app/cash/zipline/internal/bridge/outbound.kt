@@ -21,7 +21,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
 
@@ -30,9 +29,7 @@ import kotlinx.serialization.serializer
  * implemented by another platform in the same process.
  */
 @PublishedApi
-internal abstract class OutboundBridge<T : Any>(
-  val serializersModule: SerializersModule
-) {
+internal abstract class OutboundBridge<T : Any> {
   abstract fun create(context: Context): T
 
   class Context(
@@ -105,7 +102,7 @@ internal class OutboundCall(
       CoroutineScope(context.endpoint.dispatcher).launch {
         val callbackName = endpoint.generateName()
         val callback = RealSuspendCallback(callbackName, continuation, serializer)
-        endpoint.set<SuspendCallback>(callbackName, EmptySerializersModule, callback)
+        endpoint.set<SuspendCallback>(callbackName, callback)
         endpoint.outboundChannel.invokeSuspending(
           instanceName,
           funName,

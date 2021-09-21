@@ -16,7 +16,6 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.Endpoint
-import app.cash.zipline.testing.EchoSerializersModule
 import app.cash.zipline.testing.newEndpointPair
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -69,8 +68,8 @@ internal class FlowTest {
   fun flowReturnValueWorks(): Unit = runBlocking(dispatcher) {
     val service = RealFlowEchoService()
 
-    endpointA.set<FlowEchoService>("service", EchoSerializersModule, service)
-    val client = endpointB.get<FlowEchoService>("service", EchoSerializersModule)
+    endpointA.set<FlowEchoService>("service", service)
+    val client = endpointB.get<FlowEchoService>("service")
     val initialServiceNames = endpointA.serviceNames
     val initialClientNames = endpointA.clientNames
 
@@ -87,8 +86,8 @@ internal class FlowTest {
   fun flowParameterWorks(): Unit = runBlocking(dispatcher) {
     val service = RealFlowEchoService()
 
-    endpointA.set<FlowEchoService>("service", EchoSerializersModule, service)
-    val client = endpointB.get<FlowEchoService>("service", EchoSerializersModule)
+    endpointA.set<FlowEchoService>("service", service)
+    val client = endpointB.get<FlowEchoService>("service")
     val initialServiceNames = endpointA.serviceNames
     val initialClientNames = endpointA.clientNames
 

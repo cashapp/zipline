@@ -41,13 +41,22 @@ class Endpoint internal constructor(
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
 
-  /**
-   * Installed by [InboundBridge] and [OutboundBridge] to add serializers required by core types
-   * like [Throwable].
-   */
-  internal val builtInSerializersModule = SerializersModule {
-    contextual(Throwable::class, ThrowableSerializer)
-    contextual(ZiplineReference::class) { ZiplineReferenceSerializer<Any>(this@Endpoint) }
+  /** If null, the user must still call Zipline.get() on Kotlin/JS. */
+  internal var userSerializersModule: SerializersModule? = null
+    set(value) {
+      field = value
+      serializersModule = computeSerializersModule()
+    }
+
+  /** Unions Zipline-provided serializers with user-provided serializers. */
+  internal var serializersModule: SerializersModule = computeSerializersModule()
+
+  private fun computeSerializersModule(): SerializersModule {
+    return SerializersModule {
+      contextual(Throwable::class, ThrowableSerializer)
+      contextual(ZiplineReference::class) { ZiplineReferenceSerializer<Any>(this@Endpoint) }
+      include(userSerializersModule ?: EmptySerializersModule)
+    }
   }
 
   internal val inboundChannel = object : CallChannel {
@@ -77,7 +86,7 @@ class Endpoint internal constructor(
     ) {
       val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
       CoroutineScope(dispatcher).launch {
-        val callback = get<SuspendCallback>(callbackName, EmptySerializersModule)
+        val callback = get<SuspendCallback>(callbackName)
         val inboundCall = InboundCall(handler.context, funName, encodedArguments)
         val result = try {
           handler.callSuspending(inboundCall)
@@ -93,7 +102,7 @@ class Endpoint internal constructor(
     }
   }
 
-  fun <T : Any> set(name: String, serializersModule: SerializersModule, instance: T) {
+  fun <T : Any> set(name: String, instance: T) {
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
   }
 
@@ -103,15 +112,12 @@ class Endpoint internal constructor(
     reference.connect(this, name)
   }
 
-  fun <T : Any> get(name: String, serializersModule: SerializersModule): T {
+  fun <T : Any> get(name: String): T {
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : Any> get(
-    name: String,
-    outboundBridge: OutboundBridge<T>
-  ): T {
+  internal fun <T : Any> get(name: String, outboundBridge: OutboundBridge<T>): T {
     val reference = OutboundZiplineReference<T>()
     reference.connect(this, name)
     return reference.get(outboundBridge)

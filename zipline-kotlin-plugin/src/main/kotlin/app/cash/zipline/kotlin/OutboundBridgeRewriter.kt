@@ -56,10 +56,10 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
 /**
- * Rewrites calls to `Zipline.get()` that takes a name and a `SerializersModule`:
+ * Rewrites calls to `Zipline.get()` that takes a name:
  *
  * ```
- * val helloService: EchoService = zipline.get("helloService", EchoSerializersModule)
+ * val helloService: EchoService = zipline.get("helloService")
  * ```
  *
  * to the overload that takes a name and an `OutboundBridge`:
@@ -67,7 +67,7 @@ import org.jetbrains.kotlin.name.Name
  * ```
  * val helloService: EchoService = zipline.get(
  *   "helloService",
- *   object : OutboundBridge<EchoService>(EchoSerializersModule) {
+ *   object : OutboundBridge<EchoService>() {
  *     override fun create(context: Context): EchoService {
  *       val serializer_0 = context.serializersModule.serializer<EchoRequest>()
  *       val serializer_1 = context.serializersModule.serializer<EchoResponse>()
@@ -90,9 +90,7 @@ import org.jetbrains.kotlin.name.Name
  *
  * ```
  * val reference: ZiplineReference<EchoService> = ...
- * val helloService = reference.get(
- *   EchoSerializersModule
- * )
+ * val helloService = reference.get()
  * ```
  *
  * The above is rewritten to:
@@ -100,7 +98,7 @@ import org.jetbrains.kotlin.name.Name
  * ```
  * val reference: ZiplineReference<EchoService> = ...
  * val helloService = reference.get(
- *   object : OutboundBridge<EchoService>(EchoSerializersModule) {
+ *   object : OutboundBridge<EchoService>() {
  *     ...
  *   }
  * )
@@ -154,7 +152,7 @@ internal class OutboundBridgeRewriter(
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    // OutboundBridge<EchoService>(EchoSerializersModule)
+    // OutboundBridge<EchoService>()
     val superConstructor = ziplineApis.outboundBridge.constructors.single()
     val constructor = outboundBridgeSubclass.addConstructor {
       origin = IrDeclarationOrigin.DEFINED
@@ -166,10 +164,9 @@ internal class OutboundBridgeRewriter(
           context = pluginContext,
           symbol = superConstructor,
           typeArgumentsCount = 1,
-          valueArgumentsCount = 1
+          valueArgumentsCount = 0,
         ) {
           putTypeArgument(0, bridgedInterface.type)
-          putValueArgument(0, original.getValueArgument(original.valueArgumentsCount - 1))
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,

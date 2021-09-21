@@ -18,7 +18,7 @@ package app.cash.zipline.testing
 import app.cash.zipline.Zipline
 
 val Zipline.helloService: EchoService
-  get() = get("helloService", EchoSerializersModule)
+  get() = get("helloService")
 
 val Zipline.yoService: EchoService
-  get() = get("yoService", EchoSerializersModule)
+  get() = get("yoService")

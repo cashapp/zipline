@@ -20,6 +20,7 @@ import kotlin.test.assertNotEquals
 
 class ZiplineJsTest {
   @Test fun version() {
-    assertNotEquals("", Zipline.engineVersion)
+    val zipline = Zipline.get()
+    assertNotEquals("", zipline.engineVersion)
   }
 }

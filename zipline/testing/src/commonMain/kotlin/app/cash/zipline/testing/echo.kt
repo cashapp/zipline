@@ -16,7 +16,6 @@
 package app.cash.zipline.testing
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
 
 interface EchoService {
   fun echo(request: EchoRequest): EchoResponse
@@ -31,6 +30,3 @@ data class EchoRequest(
 data class EchoResponse(
   val message: String
 )
-
-val EchoSerializersModule: SerializersModule = SerializersModule {
-}
