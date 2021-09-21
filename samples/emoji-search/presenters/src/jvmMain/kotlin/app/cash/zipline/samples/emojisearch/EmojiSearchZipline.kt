@@ -21,7 +21,7 @@ import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.launch
@@ -35,7 +35,7 @@ class EmojiSearchZipline {
 
   fun produceModelsIn(
     coroutineScope: CoroutineScope,
-    eventFlow: MutableSharedFlow<EmojiSearchEvent>,
+    eventFlow: Flow<EmojiSearchEvent>,
     modelsStateFlow: MutableStateFlow<EmojiSearchViewModel>
   ) {
     val job = coroutineScope.launch(dispatcher) {

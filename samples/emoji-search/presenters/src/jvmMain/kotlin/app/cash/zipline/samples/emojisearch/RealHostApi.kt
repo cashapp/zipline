@@ -16,7 +16,7 @@
 package app.cash.zipline.samples.emojisearch
 
 import java.io.IOException
-import kotlin.coroutines.suspendCoroutine
+import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.Headers.Companion.toHeaders
@@ -27,7 +27,7 @@ import okhttp3.Response
 class RealHostApi : HostApi {
   private val client = OkHttpClient()
   override suspend fun httpCall(url: String, headers: Map<String, String>): String {
-    return suspendCoroutine { continuation ->
+    return suspendCancellableCoroutine { continuation ->
       val call = client.newCall(
         Request.Builder()
           .url(url)
