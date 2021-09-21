@@ -46,10 +46,10 @@ class EmojiSearchZipline {
       )
       val presenter = zipline.get<EmojiSearchPresenter>("emojiSearchPresenter")
 
-      val eventsFlowReference = eventFlow.asFlowReference(EmojiSearchEvent.serializer())
+      val eventsFlowReference = eventFlow.asFlowReference()
       val modelsFlowReference = presenter.produceModels(eventsFlowReference)
 
-      val modelsFlow = modelsFlowReference.get(EmojiSearchViewModel.serializer())
+      val modelsFlow = modelsFlowReference.get()
       modelsStateFlow.emitAll(modelsFlow)
     }
 

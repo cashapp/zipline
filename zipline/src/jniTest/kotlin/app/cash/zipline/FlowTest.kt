@@ -29,7 +29,6 @@ import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.serialization.builtins.serializer
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -56,11 +55,11 @@ internal class FlowTest {
           emit("$i $message")
         }
       }
-      return flow.asFlowReference(String.serializer())
+      return flow.asFlowReference()
     }
 
     override suspend fun flowParameter(flowReference: FlowReference<String>): Int {
-      val flow = flowReference.get(String.serializer())
+      val flow = flowReference.get()
       return flow.count()
     }
   }
@@ -75,7 +74,7 @@ internal class FlowTest {
     val initialClientNames = endpointA.clientNames
 
     val flowReference = client.createFlow("hello", 3)
-    val flow = flowReference.get(String.serializer())
+    val flow = flowReference.get()
     assertThat(flow.toList()).containsExactly("0 hello", "1 hello", "2 hello")
 
     // Confirm that no services or clients were leaked.
@@ -96,7 +95,7 @@ internal class FlowTest {
     val flow = sharedFlow.takeWhile { it != null }.filterIsInstance<String>()
 
     val deferredCount = async {
-      client.flowParameter(flow.asFlowReference(String.serializer()))
+      client.flowParameter(flow.asFlowReference())
     }
 
     sharedFlow.emit("a")

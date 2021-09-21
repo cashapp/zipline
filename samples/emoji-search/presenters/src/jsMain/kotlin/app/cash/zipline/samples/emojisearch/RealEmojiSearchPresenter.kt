@@ -32,7 +32,7 @@ class RealEmojiSearchPresenter(
         loadImageIndex()
         send(produceModel())
 
-        val events = eventsReference.get(EmojiSearchEvent.serializer())
+        val events = eventsReference.get()
         events.collectLatest { event ->
           when (event) {
             is EmojiSearchEvent.SearchTermEvent -> {
@@ -42,7 +42,7 @@ class RealEmojiSearchPresenter(
           }
         }
       }
-      flow.asFlowReference(EmojiSearchViewModel.serializer())
+      flow.asFlowReference()
     }
   }
 
