@@ -23,23 +23,20 @@ import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.internal.createHostPlatform
 import app.cash.zipline.internal.hostPlatformName
 import app.cash.zipline.internal.jsPlatformName
-import java.io.Closeable
-import java.util.logging.Logger
+import kotlin.LazyThreadSafetyMode
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual class Zipline private constructor(
   val quickJs: QuickJs,
   private val scope: CoroutineScope,
-) : Closeable {
+) {
   private val endpoint = Endpoint(
     scope = scope,
     outboundChannel = object : CallChannel {
@@ -105,7 +102,7 @@ actual class Zipline private constructor(
     )
     endpoint.set<HostPlatform>(
       name = hostPlatformName,
-      instance = RealHostPlatform(scope, jsPlatform),
+      instance = createHostPlatform(scope, jsPlatform),
     )
   }
 
@@ -137,7 +134,7 @@ actual class Zipline private constructor(
    *  * Accessing [quickJs].
    *  * Accessing the objects returned from [get].
    */
-  override fun close() {
+  fun close() {
     closed = true
     scope.cancel()
     quickJs.close()
@@ -157,28 +154,6 @@ actual class Zipline private constructor(
         .apply {
           endpoint.userSerializersModule = serializersModule
         }
-    }
-  }
-}
-
-private class RealHostPlatform(
-  val scope: CoroutineScope,
-  val jsPlatform: JsPlatform,
-) : HostPlatform {
-  private val logger = Logger.getLogger(Zipline::class.qualifiedName)
-
-  override fun setTimeout(timeoutId: Int, delayMillis: Int) {
-    scope.launch(start = UNDISPATCHED) {
-      delay(delayMillis.toLong())
-      jsPlatform.runJob(timeoutId)
-    }
-  }
-
-  override fun consoleMessage(level: String, message: String) {
-    when (level) {
-      "warn" -> logger.warning(message)
-      "error" -> logger.severe(message)
-      else -> logger.info(message)
     }
   }
 }
