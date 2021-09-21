@@ -58,7 +58,8 @@ kotlin {
       kotlin.srcDir(versionWriterTaskProvider)
       dependencies {
         api(Dependencies.kotlinxCoroutines)
-        api(Dependencies.kotlinxSerializationJson)
+        api(Dependencies.kotlinxSerialization)
+        implementation(Dependencies.kotlinxSerializationJson)
       }
     }
     val commonTest by getting {
