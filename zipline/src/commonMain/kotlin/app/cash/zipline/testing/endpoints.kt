@@ -17,12 +17,12 @@ package app.cash.zipline.testing
 
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
-import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
 
 /** Returns a pair of endpoints connected to each other for testing. */
-internal fun newEndpointPair(dipatcher: CoroutineDispatcher): Pair<Endpoint, Endpoint> {
+internal fun newEndpointPair(scope: CoroutineScope): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
-    val a: Endpoint = Endpoint(dipatcher, object : CallChannel {
+    val a: Endpoint = Endpoint(scope, object : CallChannel {
       override fun serviceNamesArray(): Array<String> {
         return b.inboundChannel.serviceNamesArray()
       }
@@ -51,7 +51,7 @@ internal fun newEndpointPair(dipatcher: CoroutineDispatcher): Pair<Endpoint, End
       }
     })
 
-    val b: Endpoint = Endpoint(dipatcher, a.inboundChannel)
+    val b: Endpoint = Endpoint(scope, a.inboundChannel)
   }
 
   return pair.a to pair.b

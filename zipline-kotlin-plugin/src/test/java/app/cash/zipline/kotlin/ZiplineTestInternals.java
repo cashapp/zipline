@@ -29,11 +29,13 @@ import java.util.List;
 import kotlin.Pair;
 import kotlin.PublishedApi;
 import kotlin.coroutines.Continuation;
+import kotlin.coroutines.EmptyCoroutineContext;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KType;
 import kotlin.reflect.KTypeProjection;
 import kotlin.reflect.full.KClassifiers;
-import kotlinx.coroutines.test.TestCoroutineDispatcher;
+import kotlinx.coroutines.CoroutineScope;
+import kotlinx.coroutines.CoroutineScopeKt;
 import kotlinx.serialization.KSerializer;
 
 import static java.util.Collections.emptyList;
@@ -57,7 +59,8 @@ public final class ZiplineTestInternals {
       singletonList(KTypeProjection.invariant(stringKt)), false, emptyList());
 
   public static Pair<Endpoint, Endpoint> newEndpointPair() {
-    return app.cash.zipline.testing.EndpointsKt.newEndpointPair(new TestCoroutineDispatcher());
+    CoroutineScope scope = CoroutineScopeKt.CoroutineScope(EmptyCoroutineContext.INSTANCE);
+    return app.cash.zipline.testing.EndpointsKt.newEndpointPair(scope);
   }
 
   /** Simulate generated code for outbound calls. */

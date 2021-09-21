@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.testing.newEndpointPair
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -38,7 +39,7 @@ internal class FlowTest {
   private val endpointB: Endpoint
 
   init {
-    val (endpointA, endpointB) = newEndpointPair(dispatcher)
+    val (endpointA, endpointB) = newEndpointPair(CoroutineScope(dispatcher))
     this.endpointA = endpointA
     this.endpointB = endpointB
   }

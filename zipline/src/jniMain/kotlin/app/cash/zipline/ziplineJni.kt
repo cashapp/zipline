@@ -38,12 +38,10 @@ import kotlinx.serialization.modules.SerializersModule
 
 actual class Zipline private constructor(
   val quickJs: QuickJs,
-  dispatcher: CoroutineDispatcher,
+  private val scope: CoroutineScope,
 ) : Closeable {
-  private val scope = CoroutineScope(dispatcher)
-
   private val endpoint = Endpoint(
-    dispatcher = dispatcher,
+    scope = scope,
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call into JS. */
       private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -153,7 +151,9 @@ actual class Zipline private constructor(
       val quickJs = QuickJs.create()
       // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
       quickJs.maxStackSize = 0L
-      return Zipline(quickJs, dispatcher)
+
+      val scope = CoroutineScope(dispatcher)
+      return Zipline(quickJs, scope)
         .apply {
           endpoint.userSerializersModule = serializersModule
         }

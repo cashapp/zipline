@@ -16,9 +16,7 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
-import kotlin.coroutines.EmptyCoroutineContext
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class JsSuspendingEchoService(
@@ -42,7 +40,7 @@ fun prepareSuspendingJsBridges() {
 @JsExport
 fun callSuspendingEchoService(message: String) {
   val service = zipline.get<SuspendingEchoService>("jvmSuspendingEchoService")
-  CoroutineScope(EmptyCoroutineContext).launch(Dispatchers.Main) {
+  GlobalScope.launch {
     service.suspendingEcho(EchoRequest(message))
   }
 }
