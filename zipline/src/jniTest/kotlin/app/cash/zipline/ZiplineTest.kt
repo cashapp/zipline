@@ -15,6 +15,8 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.hostPlatformName
+import app.cash.zipline.internal.jsPlatformName
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -115,29 +117,29 @@ class ZiplineTest {
 
   @Test fun serviceNamesAndClientNames(): Unit = runBlocking(dispatcher) {
     assertThat(zipline.serviceNames).containsExactly(
-      "zipline/host",
+      hostPlatformName,
     )
     assertThat(zipline.clientNames).containsExactly(
-      "zipline/js",
+      jsPlatformName,
     )
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
     assertThat(zipline.serviceNames).containsExactly(
-      "zipline/host",
+      hostPlatformName,
     )
     assertThat(zipline.clientNames).containsExactly(
-      "zipline/js",
+      jsPlatformName,
       "helloService",
       "yoService",
     )
 
     zipline.set<EchoService>("supService", JvmEchoService("sup"))
     assertThat(zipline.serviceNames).containsExactly(
-      "zipline/host",
+      hostPlatformName,
       "supService",
     )
     assertThat(zipline.clientNames).containsExactly(
-      "zipline/js",
+      jsPlatformName,
       "helloService",
       "yoService",
     )

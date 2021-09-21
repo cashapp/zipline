@@ -27,6 +27,9 @@ import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
+internal const val inboundChannelName = "app_cash_zipline_inboundChannel"
+internal const val outboundChannelName = "app_cash_zipline_outboundChannel"
+
 @PublishedApi
 internal interface CallChannel {
   /** Returns names can receive calls to [invoke] and [invokeSuspending]. */

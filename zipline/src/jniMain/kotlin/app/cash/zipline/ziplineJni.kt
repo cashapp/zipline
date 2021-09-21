@@ -21,6 +21,10 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
+import app.cash.zipline.internal.bridge.inboundChannelName
+import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.internal.hostPlatformName
+import app.cash.zipline.internal.jsPlatformName
 import java.io.Closeable
 import java.util.logging.Logger
 import kotlin.coroutines.EmptyCoroutineContext
@@ -41,7 +45,7 @@ actual class Zipline private constructor(
       /** Lazily fetch the channel to call into JS. */
       private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
         quickJs.get(
-          name = "app_cash_zipline_inboundChannel",
+          name = inboundChannelName,
           type = CallChannel::class.java
         )
       }
@@ -92,18 +96,18 @@ actual class Zipline private constructor(
   init {
     // Eagerly publish the channel so they can call us.
     quickJs.set(
-      name = "app_cash_zipline_outboundChannel",
+      name = outboundChannelName,
       type = CallChannel::class.java,
       instance = endpoint.inboundChannel
     )
 
     // Connect platforms using our newly-bootstrapped channels.
     val jsPlatform = endpoint.get<JsPlatform>(
-      name = "zipline/js"
+      name = jsPlatformName,
     )
     endpoint.set<HostPlatform>(
-      name = "zipline/host",
-      instance = RealHostPlatform(dispatcher, jsPlatform)
+      name = hostPlatformName,
+      instance = RealHostPlatform(dispatcher, jsPlatform),
     )
   }
 
