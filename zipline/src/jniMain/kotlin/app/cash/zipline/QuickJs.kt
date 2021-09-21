@@ -67,21 +67,21 @@ actual class QuickJs private constructor(
     get() = memoryUsage(context)
 
   /** Default is -1. Use -1 for no limit. */
-  var memoryLimit: Long = -1L
+  actual var memoryLimit: Long = -1L
     set(value) {
       field = value
       setMemoryLimit(context, value)
     }
 
   /** Default is 256 KiB. Use -1 to disable automatic GC. */
-  var gcThreshold: Long = -1L
+  actual var gcThreshold: Long = -1L
     set(value) {
       field = value
       setGcThreshold(context, value)
     }
 
   /** Default is 512 KiB. Use 0 to disable the maximum stack size check. */
-  var maxStackSize: Long = -1L
+  actual var maxStackSize: Long = -1L
     set(value) {
       field = value
       setMaxStackSize(context, value)

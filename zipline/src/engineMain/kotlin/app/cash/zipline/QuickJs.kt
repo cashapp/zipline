@@ -32,6 +32,16 @@ expect class QuickJs {
     val version: String
   }
 
+
+  /** Default is -1. Use -1 for no limit. */
+  var memoryLimit: Long
+
+  /** Default is 256 KiB. Use -1 to disable automatic GC. */
+  var gcThreshold: Long
+
+  /** Default is 512 KiB. Use 0 to disable the maximum stack size check. */
+  var maxStackSize: Long
+
   /**
    * Evaluate [script] and return any result. [fileName] will be used in error
    * reporting.
