@@ -15,6 +15,9 @@
  */
 package app.cash.zipline.internal
 
+internal const val hostPlatformName = "zipline/host"
+internal const val jsPlatformName = "zipline/js"
+
 /**
  * Functions that are built in to regular JavaScript environments like the browser and NodeJS, but
  * must be added to QuickJS.

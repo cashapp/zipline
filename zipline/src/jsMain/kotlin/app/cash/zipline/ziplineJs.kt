@@ -21,6 +21,10 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
+import app.cash.zipline.internal.bridge.inboundChannelName
+import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.internal.hostPlatformName
+import app.cash.zipline.internal.jsPlatformName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
@@ -30,8 +34,9 @@ actual class Zipline internal constructor() {
     dispatcher = Dispatchers.Main,
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call out. */
-      private val jsOutboundChannel: dynamic
-        get() = js("""globalThis.app_cash_zipline_outboundChannel""")
+      @Suppress("UnsafeCastFromDynamic")
+      private val jsOutboundChannel: CallChannel
+        get() = js("globalThis.$outboundChannelName")
 
       override fun serviceNamesArray(): Array<String> {
         return jsOutboundChannel.serviceNamesArray()
@@ -83,20 +88,21 @@ actual class Zipline internal constructor() {
 
   init {
     // Eagerly publish the channel so they can call us.
+    @Suppress("UNUSED_VARIABLE") // Used in raw JS code below.
     val inboundChannel = endpoint.inboundChannel
     js(
       """
-      globalThis.app_cash_zipline_inboundChannel = inboundChannel;
+      globalThis.$inboundChannelName = inboundChannel;
       """
     )
 
     // Connect platforms using our newly-bootstrapped channels.
     val hostPlatform = endpoint.get<HostPlatform>(
-      name = "zipline/host"
+      name = hostPlatformName,
     )
     endpoint.set<JsPlatform>(
-      name = "zipline/js",
-      instance = RealJsPlatform(hostPlatform)
+      name = jsPlatformName,
+      instance = RealJsPlatform(hostPlatform),
     )
   }
 
