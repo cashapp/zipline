@@ -59,14 +59,15 @@ struct JniThreadDetacher {
 } // anonymous namespace
 
 Context::Context(JNIEnv* env)
-    : jniVersion(env->GetVersion()), jsRuntime(JS_NewRuntime()),
-      jsContext(JS_NewContext(jsRuntime)), jsClassId(0),
+    : jniVersion(env->GetVersion()),
+      jsRuntime(JS_NewRuntime()),
+      jsContext(JS_NewContext(jsRuntime)),
+      jsClassId(0),
       booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
       integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
       doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
       objectClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Object")))),
       stringClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/String")))),
-      memoryUsageClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("app/cash/zipline/MemoryUsage")))),
       stringUtf8(static_cast<jstring>(env->NewGlobalRef(env->NewStringUTF("UTF-8")))),
       quickJsExceptionClass(static_cast<jclass>(env->NewGlobalRef(
           env->FindClass("app/cash/zipline/QuickJsException")))),
@@ -78,7 +79,6 @@ Context::Context(JNIEnv* env)
       doubleGetValue(env->GetMethodID(doubleClass, "doubleValue", "()D")),
       stringGetBytes(env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B")),
       stringConstructor(env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V")),
-      memoryUsageConstructor(env->GetMethodID(memoryUsageClass, "<init>", "(JJJJJJJJJJJJJJJJJJJJJJJJJJ)V")),
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
                                                    "(Ljava/lang/String;Ljava/lang/String;)V")) {
   env->GetJavaVM(&javaVm);
@@ -166,6 +166,18 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
 }
 
 jobject Context::memoryUsage(JNIEnv* env) {
+  auto memoryUsageClass = env->FindClass("app/cash/zipline/MemoryUsage");
+  if (!memoryUsageClass) {
+    // Should be impossible. If R8 removed the type then this function can never be invoked.
+    return nullptr;
+  }
+
+  auto memoryUsageConstructor = env->GetMethodID(memoryUsageClass, "<init>", "(JJJJJJJJJJJJJJJJJJJJJJJJJJ)V");
+  if (!memoryUsageConstructor) {
+    // Should be impossible. If R8 removed the type then this function can never be invoked.
+    return nullptr;
+  }
+
   JSMemoryUsage jsMemoryUsage;
   JS_ComputeMemoryUsage(jsRuntime, &jsMemoryUsage);
 
