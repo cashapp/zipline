@@ -21,16 +21,14 @@ import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.map
 import kotlinx.serialization.Contextual
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
 
 /** A flow reference is a [Flow] that can be transmitted over a Zipline call. */
 @Serializable
 class FlowReference<T> @PublishedApi internal constructor(
-  @Contextual private val referenceFlowReference: ZiplineReference<ReferenceFlow>
+  @Contextual private val referenceFlowReference: ZiplineReference<ReferenceFlow>,
+  @Contextual private val serializer: ZiplineSerializer<T>,
 ) {
   private fun getJsonFlow(): Flow<String> {
     return channelFlow {
@@ -50,17 +48,21 @@ class FlowReference<T> @PublishedApi internal constructor(
     }
   }
 
-  fun get(serializer: KSerializer<T>): Flow<T> {
+  fun get(): Flow<T> {
     return getJsonFlow()
       .map { Json.decodeFromString(serializer, it) }
   }
 }
 
-fun <T> Flow<T>.asFlowReference(serializer: KSerializer<T>): FlowReference<T> {
-  val flowOfStrings = map { Json.encodeToString(serializer, it) }
-  val referenceFlow = RealReferenceFlow(flowOfStrings, EmptySerializersModule)
+inline fun <reified T> Flow<T>.asFlowReference(): FlowReference<T> {
+  return asFlowReference(ZiplineSerializer())
+}
+
+@PublishedApi
+internal fun <T> Flow<T>.asFlowReference(serializer: ZiplineSerializer<T>): FlowReference<T> {
+  val referenceFlow = RealReferenceFlow(this, serializer)
   val ziplineReference = ZiplineReference<ReferenceFlow>(referenceFlow)
-  return FlowReference(ziplineReference)
+  return FlowReference(ziplineReference, serializer)
 }
 
 // Zipline can only bridge interfaces, not implementations, so split this in two.
@@ -69,14 +71,14 @@ internal interface ReferenceFlow {
 }
 
 @PublishedApi
-internal class RealReferenceFlow(
-  private val flow: Flow<String>,
-  private val serializersModule: SerializersModule,
+internal class RealReferenceFlow<T>(
+  private val flow: Flow<T>,
+  private val serializer: ZiplineSerializer<T>,
 ) : ReferenceFlow {
   override suspend fun collectJson(collectorReference: ZiplineReference<FlowCollector<String>>) {
     try {
       val collector = collectorReference.get()
-      collector.emitAll(flow)
+      collector.emitAll(flow.map { Json.encodeToString(serializer, it) })
     } finally {
       collectorReference.close()
     }

@@ -18,8 +18,11 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
+import app.cash.zipline.ZiplineSerializer
+import app.cash.zipline.ZiplineSerializerSerializer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
@@ -54,6 +57,12 @@ class Endpoint internal constructor(
     return SerializersModule {
       contextual(Throwable::class, ThrowableSerializer)
       contextual(ZiplineReference::class) { ZiplineReferenceSerializer<Any>(this@Endpoint) }
+      contextual(ZiplineSerializer::class) {
+        ZiplineSerializerSerializer(
+          endpoint = this@Endpoint,
+          delegate = it[0] as KSerializer<Any>
+        )
+      }
       include(userSerializersModule ?: EmptySerializersModule)
     }
   }
