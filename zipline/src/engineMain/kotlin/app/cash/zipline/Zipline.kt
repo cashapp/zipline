@@ -26,7 +26,6 @@ import app.cash.zipline.internal.bridge.outboundChannelName
 import app.cash.zipline.internal.createHostPlatform
 import app.cash.zipline.internal.hostPlatformName
 import app.cash.zipline.internal.jsPlatformName
-import kotlin.LazyThreadSafetyMode
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
@@ -44,7 +43,7 @@ actual class Zipline private constructor(
       private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
         quickJs.get(
           name = inboundChannelName,
-          type = CallChannel::class.java
+          type = CallChannel::class
         )
       }
 
@@ -92,7 +91,7 @@ actual class Zipline private constructor(
     // Eagerly publish the channel so they can call us.
     quickJs.set(
       name = outboundChannelName,
-      type = CallChannel::class.java,
+      type = CallChannel::class,
       instance = endpoint.inboundChannel
     )
 
