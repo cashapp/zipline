@@ -15,10 +15,7 @@
  */
 package app.cash.zipline
 
-import androidx.annotation.Keep
-
 /** Introspect QuickJS for its current memory usage. */
-@Keep // Fully-qualified type and constructor used from native code.
 data class MemoryUsage(
   /** Memory allocated. */
   val memoryAllocatedCount: Long,

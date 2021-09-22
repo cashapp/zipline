@@ -64,7 +64,7 @@ actual class QuickJs private constructor(
 
   /** Memory usage statistics for the JavaScript engine. */
   val memoryUsage: MemoryUsage
-    get() = memoryUsage(context)
+    get() = memoryUsage(context) ?: throw AssertionError()
 
   /** Default is -1. Use -1 for no limit. */
   actual var memoryLimit: Long = -1L
@@ -220,7 +220,7 @@ actual class QuickJs private constructor(
   private external fun call(context: Long, instance: Long, method: Any, args: Array<Any>): Any
   private external fun execute(context: Long, bytecode: ByteArray): Any?
   private external fun compile(context: Long, sourceCode: String, fileName: String): ByteArray
-  private external fun memoryUsage(context: Long): MemoryUsage
+  private external fun memoryUsage(context: Long): MemoryUsage?
   private external fun setMemoryLimit(context: Long, limit: Long)
   private external fun setGcThreshold(context: Long, gcThreshold: Long)
   private external fun setMaxStackSize(context: Long, stackSize: Long)
