@@ -34,7 +34,7 @@ class QuickJsGetTest {
 
   @Test fun getNonInterface() {
     val t = assertThrows<UnsupportedOperationException> {
-      quickJs.get("s", String::class.java)
+      quickJs.get("s", String::class)
     }
     assertEquals("Only interfaces can be proxied. Received: class java.lang.String", t.message)
   }
@@ -45,13 +45,13 @@ class QuickJsGetTest {
 
   @Test fun get() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };")
-    val proxy = quickJs.get("value", TestInterface::class.java)
+    val proxy = quickJs.get("value", TestInterface::class)
     assertEquals("8675309", proxy.value)
   }
 
   @Test fun getMissingObjectThrows() {
     val t = assertThrows<IllegalArgumentException> {
-      quickJs.get("DoesNotExist", TestInterface::class.java)
+      quickJs.get("DoesNotExist", TestInterface::class)
     }
     assertEquals("A global JavaScript object called DoesNotExist was not found", t.message)
   }
@@ -59,7 +59,7 @@ class QuickJsGetTest {
   @Test fun getMissingMethodThrows() {
     quickJs.evaluate("var value = { getOtherValue: function() { return '8675309'; } };")
     val t = assertThrows<QuickJsException> {
-      quickJs.get("value", TestInterface::class.java)
+      quickJs.get("value", TestInterface::class)
     }
     assertEquals("JavaScript global value has no method called getValue", t.message)
   }
@@ -67,14 +67,14 @@ class QuickJsGetTest {
   @Test fun getMethodNotCallableThrows() {
     quickJs.evaluate("var value = { getValue: '8675309' };")
     val t = assertThrows<QuickJsException> {
-      quickJs.get("value", TestInterface::class.java)
+      quickJs.get("value", TestInterface::class)
     }
     assertEquals("JavaScript property value.getValue not callable", t.message)
   }
 
   @Test fun proxyCalledAfterEngineClosed() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };")
-    val proxy = quickJs.get("value", TestInterface::class.java)
+    val proxy = quickJs.get("value", TestInterface::class)
 
     // Close the context - proxy can no longer be used.
     quickJs.close()
@@ -87,7 +87,7 @@ class QuickJsGetTest {
 
   @Test fun proxyCallThrows() {
     quickJs.evaluate("var value = { getValue: function() { throw 'nope'; } };")
-    val proxy = quickJs.get("value", TestInterface::class.java)
+    val proxy = quickJs.get("value", TestInterface::class)
     val t = assertThrows<QuickJsException> {
       proxy.value
     }
@@ -97,7 +97,7 @@ class QuickJsGetTest {
   @Test fun proxyCallThrowsIncludeStacktrace() {
     quickJs.evaluate("function nop() { return 1; }")
     quickJs.evaluate("var value = { getValue: function() { return nope(); } };", "test.js")
-    val proxy = quickJs.get("value", TestInterface::class.java)
+    val proxy = quickJs.get("value", TestInterface::class)
     val t = assertThrows<QuickJsException> {
       proxy.value
     }
@@ -108,7 +108,7 @@ class QuickJsGetTest {
   @Ignore("TODO: track JsMethodProxies.")
   @Test fun replaceProxiedObjectProxyReferencesOld() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };")
-    val proxy = quickJs.get("value", TestInterface::class.java)
+    val proxy = quickJs.get("value", TestInterface::class)
 
     // Now replace the proxied object with a new global.
     quickJs.evaluate("value = { getValue: function() { return '7471111'; } };")
@@ -119,14 +119,14 @@ class QuickJsGetTest {
     assertEquals("JavaScript object value has been garbage collected", t.message)
 
     // We can create a new proxy to the new object and call it.
-    val proxy2 = quickJs.get("value", TestInterface::class.java)
+    val proxy2 = quickJs.get("value", TestInterface::class)
     assertNotEquals(proxy, proxy2)
     assertEquals("7471111", proxy2.value)
   }
 
   @Test fun replaceProxiedMethodReferencesNew() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };")
-    val proxy = quickJs.get("value", TestInterface::class.java)
+    val proxy = quickJs.get("value", TestInterface::class)
     quickJs.evaluate("value.getValue = function() { return '7471111'; };")
     assertEquals("7471111", proxy.value)
   }
@@ -134,15 +134,15 @@ class QuickJsGetTest {
   @Test fun getNonObjectThrows() {
     quickJs.evaluate("var value = 2;")
     val t = assertThrows<IllegalArgumentException> {
-      quickJs.get("value", TestInterface::class.java)
+      quickJs.get("value", TestInterface::class)
     }
     assertEquals("JavaScript global called value is not an object", t.message)
   }
 
   @Test fun getSameObjectTwice() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };")
-    val proxy1 = quickJs.get("value", TestInterface::class.java)
-    val proxy2 = quickJs.get("value", TestInterface::class.java)
+    val proxy1 = quickJs.get("value", TestInterface::class)
+    val proxy2 = quickJs.get("value", TestInterface::class)
     assertNotEquals(proxy1, proxy2)
     assertEquals(proxy1.value, proxy2.value)
   }
@@ -150,7 +150,7 @@ class QuickJsGetTest {
   @Ignore("TODO: track JsMethodProxies.")
   @Test fun proxyCalledAfterObjectGarbageCollected() {
     quickJs.evaluate("var value = { getValue: function() { return '8675309'; } };")
-    val proxy = quickJs.get("value", TestInterface::class.java)
+    val proxy = quickJs.get("value", TestInterface::class)
     quickJs.evaluate("delete value;")
     val t = assertThrows<QuickJsException> {
       proxy.value
@@ -165,7 +165,7 @@ class QuickJsGetTest {
   @Test fun proxyUnsupportedArgumentType() {
     quickJs.evaluate("var value = { set: function(d) { return d.toString(); } };")
     val t = assertThrows<IllegalArgumentException> {
-      quickJs.get("value", UnsupportedArgumentType::class.java)
+      quickJs.get("value", UnsupportedArgumentType::class)
     }
     assertEquals("Unsupported Java type java.util.Date", t.message)
   }
@@ -183,7 +183,7 @@ class QuickJsGetTest {
       |  d: function(i, v) { return v / i; }
       |};
       |""".trimMargin())
-    val proxy = quickJs.get("value", TestPrimitiveTypes::class.java)
+    val proxy = quickJs.get("value", TestPrimitiveTypes::class)
     assertEquals(false, proxy.b(true))
     assertEquals(3.14159, proxy.d(2, 6.28318), 0.001)
   }
@@ -201,7 +201,7 @@ class QuickJsGetTest {
       |  }
       |};
       |""".trimMargin())
-    val printer = quickJs.get("printer", TestMultipleArgTypes::class.java)
+    val printer = quickJs.get("printer", TestMultipleArgTypes::class)
     assertEquals("boolean: true, int: 42, double: 2.718281828459", printer.print(true, 42, 2.718281828459))
   }
 
@@ -217,7 +217,7 @@ class QuickJsGetTest {
       |  d: function(v) { return v != null ? v / 2.0 : null; }
       |};
       |""".trimMargin())
-    val proxy = quickJs.get("value", TestBoxedPrimitiveArgTypes::class.java)
+    val proxy = quickJs.get("value", TestBoxedPrimitiveArgTypes::class)
     assertEquals(true, proxy.b(false))
     assertEquals(3.14159, proxy.d(6.28318)!!, 0.001)
     assertNull(proxy.b(null))
@@ -234,7 +234,7 @@ class QuickJsGetTest {
       |  get: function() { return 2; }
       |};
       |""".trimMargin())
-    val getter = quickJs.get("value", IntegerGetter::class.java)
+    val getter = quickJs.get("value", IntegerGetter::class)
     assertEquals(2, getter.get())
   }
 
@@ -250,7 +250,7 @@ class QuickJsGetTest {
       |  return 'boolean: ' + this + ', int: ' + i + ', double: ' + d;
       |}
       |""".trimMargin())
-    val printer = quickJs.get("printer", PrinterFunction::class.java)
+    val printer = quickJs.get("printer", PrinterFunction::class)
     assertEquals("boolean: true, int: 42, double: 2.718281828459", printer.call(true, 42, 2.718281828459))
   }
 
@@ -260,7 +260,7 @@ class QuickJsGetTest {
       |  return d;
       |}
       |""".trimMargin())
-    val printer = quickJs.get("printer", PrinterFunction::class.java)
+    val printer = quickJs.get("printer", PrinterFunction::class)
     val t = assertThrows<IllegalArgumentException> {
       printer.call(true, 42, 2.718281828459)
     }
@@ -279,7 +279,7 @@ class QuickJsGetTest {
       |  }
       |};
       |""".trimMargin())
-    val printer = quickJs.get("printer", TestMultipleObjectArgs::class.java)
+    val printer = quickJs.get("printer", TestMultipleObjectArgs::class)
     assertEquals("boolean: true, int: 42, double: 2.718281828459", printer.print(true, 42, 2.718281828459))
   }
 
@@ -291,7 +291,7 @@ class QuickJsGetTest {
       |  }
       |};
       |""".trimMargin())
-    val printer = quickJs.get("printer", TestMultipleObjectArgs::class.java)
+    val printer = quickJs.get("printer", TestMultipleObjectArgs::class)
     val t = assertThrows<IllegalArgumentException> {
       printer.print(true, 42, Date())
     }
@@ -313,7 +313,7 @@ class QuickJsGetTest {
       |  return result.toString();
       |}
       |""".trimMargin())
-    val joiner = quickJs.get("joiner", TestVarArgs::class.java)
+    val joiner = quickJs.get("joiner", TestVarArgs::class)
     assertEquals("", joiner.call("-"))
     assertEquals("1 + 2 + three", joiner.call(" + ", 1, 2, "three"))
     val t = assertThrows<IllegalArgumentException> {
@@ -342,7 +342,7 @@ class QuickJsGetTest {
       |  countTrues: function() { return this.sum.apply(this, arguments); }
       |};
       |""".trimMargin())
-    val summer = quickJs.get("summer", Summer::class.java)
+    val summer = quickJs.get("summer", Summer::class)
     assertEquals(0.0, summer.sumDoubles(), 0.001)
     assertEquals(10.0, summer.sumDoubles(1.0, 2.0, 3.0, 4.0), 0.001)
     assertEquals(0.0, summer.sumIntegers(), 0.001)
@@ -357,13 +357,13 @@ class QuickJsGetTest {
 
   @Test fun marshalArrayWithManyElements() {
     quickJs.evaluate(SORTER_FUNCTOR)
-    val sorter = quickJs.get("Sorter", ObjectSorter::class.java)
+    val sorter = quickJs.get("Sorter", ObjectSorter::class)
     assertEquals(100000, sorter.sort(arrayOfNulls<Any?>(100000))!!.size)
   }
 
   @Test fun arraysOfObjects() {
     quickJs.evaluate(SORTER_FUNCTOR)
-    val sorter = quickJs.get("Sorter", ObjectSorter::class.java)
+    val sorter = quickJs.get("Sorter", ObjectSorter::class)
     assertNull(sorter.sort(null))
     val original = arrayOf<Any?>(2, 4, 3, 1)
     val sorted = sorter.sort(original)
@@ -378,7 +378,7 @@ class QuickJsGetTest {
 
   @Test fun arraysOfStrings() {
     quickJs.evaluate(SORTER_FUNCTOR)
-    val sorter = quickJs.get("Sorter", StringSorter::class.java)
+    val sorter = quickJs.get("Sorter", StringSorter::class)
     assertArrayEquals(arrayOf("a", "b", "c", "d"), sorter.sort(arrayOf("b", "d", "c", "a")))
     assertArrayEquals(arrayOf("a", "b", "d", null), sorter.sort(arrayOf("b", "d", null, "a")))
 
@@ -396,7 +396,7 @@ class QuickJsGetTest {
 
   @Test fun arraysOfDoubles() {
     quickJs.evaluate(SORTER_FUNCTOR)
-    val sorter = quickJs.get("Sorter", DoubleSorter::class.java)
+    val sorter = quickJs.get("Sorter", DoubleSorter::class)
     assertArrayEquals(doubleArrayOf(1.0, 2.3, 2.9, 3.0),
         sorter.sort(doubleArrayOf(2.9, 2.3, 3.0, 1.0)), 0.0)
 
@@ -416,7 +416,7 @@ class QuickJsGetTest {
 
   @Test fun arraysOfInts() {
     quickJs.evaluate(SORTER_FUNCTOR)
-    val sorter = quickJs.get("Sorter", IntSorter::class.java)
+    val sorter = quickJs.get("Sorter", IntSorter::class)
     assertArrayEquals(doubleArrayOf(1.0, 2.0, 3.0, 4.0), sorter.sort(intArrayOf(2, 4, 3, 1)), 0.0)
     assertArrayEquals(arrayOf(1.0, 2.0, 3.0, null), sorter.sortNullable(arrayOf(2, null, 3, 1)))
 
@@ -435,7 +435,7 @@ class QuickJsGetTest {
 
   @Test fun arraysOfBooleans() {
     quickJs.evaluate(SORTER_FUNCTOR)
-    val sorter = quickJs.get("Sorter", BoolSorter::class.java)
+    val sorter = quickJs.get("Sorter", BoolSorter::class)
     assertArrayEquals(booleanArrayOf(false, false, true, true), sorter.sort(booleanArrayOf(true, false, true, false)))
     assertArrayEquals(arrayOf(false, null, true, true), sorter.sortNullable(arrayOf(null, true, false, true)))
 
@@ -461,7 +461,7 @@ class QuickJsGetTest {
       |    });
       |};
       |""".trimMargin())
-    val transposer = quickJs.get("transpose", MatrixTransposer::class.java)
+    val transposer = quickJs.get("transpose", MatrixTransposer::class)
     val matrix = Array(2) { arrayOfNulls<Double?>(2) }
     matrix[0][0] = 1.0
     matrix[0][1] = 2.0

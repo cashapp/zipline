@@ -20,6 +20,7 @@ import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Method
 import java.lang.reflect.Proxy
 import java.util.logging.Logger
+import kotlin.reflect.KClass
 
 /**
  * An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.
@@ -106,7 +107,9 @@ actual class QuickJs private constructor(
    * Methods of the interface may return `void` or any of the following supported argument
    * types: `boolean`, [Boolean], `int`, [Integer], `double`, [Double], [String].
    */
-  operator fun <T : Any> set(name: String, type: Class<T>, instance: T) {
+  actual operator fun <T : Any> set(name: String, type: KClass<T>, instance: T) {
+    val type = type.java
+
     if (!type.isInterface) {
       throw UnsupportedOperationException(
           "Only interfaces can be bound. Received: $type")
@@ -137,7 +140,9 @@ actual class QuickJs private constructor(
    * types: `boolean`, [Boolean], `int`, [Integer], `double`,
    * [Double], [String].
    */
-  operator fun <T : Any> get(name: String, type: Class<T>): T {
+  actual operator fun <T : Any> get(name: String, type: KClass<T>): T {
+    val type = type.java
+
     if (!type.isInterface) {
       throw UnsupportedOperationException(
           "Only interfaces can be proxied. Received: $type")

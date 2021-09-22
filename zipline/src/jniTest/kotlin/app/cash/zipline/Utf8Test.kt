@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.Utf8Test.Formatter
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Test
@@ -61,12 +62,12 @@ class Utf8Test {
       |  }
       |};
       |""".trimMargin())
-    val formatter = quickjs.get("formatter", Formatter::class.java)
+    val formatter = quickjs.get("formatter", Formatter::class)
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)", formatter.format("a\uD83D\uDC1Dcdefg"))
   }
 
   @Test fun nonAsciiInBoundObjectInputAndOutput() {
-    quickjs.set("formatter", Formatter::class.java,
+    quickjs.set("formatter", Formatter::class,
         Formatter { message -> "($message, $message)" })
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)",
         quickjs.evaluate("formatter.format('a\uD83D\uDC1Dcdefg');"))
@@ -80,7 +81,7 @@ class Utf8Test {
       |  }
       |};
       |""".trimMargin())
-    val formatter = quickjs.get("formatter", Formatter::class.java)
+    val formatter = quickjs.get("formatter", Formatter::class)
     val t = assertThrows<QuickJsException> {
       formatter.format("")
     }
@@ -88,7 +89,7 @@ class Utf8Test {
   }
 
   @Test fun nonAsciiInExceptionThrownInJava() {
-    quickjs.set("formatter", Formatter::class.java,
+    quickjs.set("formatter", Formatter::class,
         Formatter { throw RuntimeException("a\uD83D\uDC1Dcdefg") })
     val t = assertThrows<RuntimeException> {
       quickjs.evaluate("formatter.format('');")
@@ -104,7 +105,7 @@ class Utf8Test {
       |  }
       |};
       |""".trimMargin())
-    val formatter = quickjs.get("formatter", Formatter::class.java)
+    val formatter = quickjs.get("formatter", Formatter::class)
     assertEquals("a\uD83D\uDC1Dcdefg", formatter.format(""))
   }
 }

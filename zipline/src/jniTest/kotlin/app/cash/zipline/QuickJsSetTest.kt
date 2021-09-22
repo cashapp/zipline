@@ -36,7 +36,7 @@ class QuickJsSetTest {
 
   @Test fun setNonInterface() {
     val t = assertThrows<UnsupportedOperationException> {
-      quickJs.set("s", String::class.java, "foo")
+      quickJs.set("s", String::class, "foo")
     }
     assertEquals("Only interfaces can be bound. Received: class java.lang.String", t.message)
   }
@@ -46,12 +46,12 @@ class QuickJsSetTest {
   }
 
   @Test fun callMethodOnJavaObject() {
-    quickJs.set("value", TestInterface::class.java, TestInterface { "8675309" })
+    quickJs.set("value", TestInterface::class, TestInterface { "8675309" })
     assertEquals("8675309", quickJs.evaluate("value.getValue();"))
   }
 
   @Test fun callMissingMethodOnJavaObjectFails() {
-    quickJs.set("value", TestInterface::class.java, TestInterface { throw AssertionError() })
+    quickJs.set("value", TestInterface::class, TestInterface { throw AssertionError() })
     val t = assertThrows<QuickJsException> {
       quickJs.evaluate("value.increment()")
     }
@@ -59,9 +59,9 @@ class QuickJsSetTest {
   }
 
   @Test fun setSameNameTwiceFails() {
-    quickJs.set("value", TestInterface::class.java, TestInterface { "foo" })
+    quickJs.set("value", TestInterface::class, TestInterface { "foo" })
     val t = assertThrows<IllegalArgumentException> {
-      quickJs.set("value", TestInterface::class.java, TestInterface { throw AssertionError() })
+      quickJs.set("value", TestInterface::class, TestInterface { throw AssertionError() })
     }
     assertEquals("A global object called value already exists", t.message)
   }
@@ -73,7 +73,7 @@ class QuickJsSetTest {
         throw UnsupportedOperationException("Cannot getValue")
       }
     }
-    quickJs.set("value", TestInterface::class.java, boundObject)
+    quickJs.set("value", TestInterface::class, boundObject)
 
     val t = assertThrows<UnsupportedOperationException> {
       quickJs.evaluate("""
@@ -122,7 +122,7 @@ class QuickJsSetTest {
   }
 
   @Test fun callMethodOnJavaObjectThrowsJavaException() {
-    quickJs.set("value", TestInterface::class.java,
+    quickJs.set("value", TestInterface::class,
         TestInterface { throw UnsupportedOperationException("This is an error message.") })
     val t = assertThrows<UnsupportedOperationException> {
       quickJs.evaluate("value.getValue()")
@@ -131,7 +131,7 @@ class QuickJsSetTest {
   }
 
   @Test fun callMethodWithArgsOnJavaObject() {
-    quickJs.set("value", TestInterfaceArgs::class.java,
+    quickJs.set("value", TestInterfaceArgs::class,
         TestInterfaceArgs { a, b, c -> if (a != null) a + b + c else null })
 
     assertEquals("This is a test", quickJs.evaluate("value.foo('This', ' is a ', 'test')"))
@@ -159,7 +159,7 @@ class QuickJsSetTest {
   }
 
   @Test fun callVoidJavaMethod() {
-    quickJs.set("value", TestInterfaceVoids::class.java, object : TestInterfaceVoids {
+    quickJs.set("value", TestInterfaceVoids::class, object : TestInterfaceVoids {
       private var result = "not called"
       override fun getResult(): String = result
       override fun func() {
@@ -179,7 +179,7 @@ class QuickJsSetTest {
 
   // Verify that primitive types can be used as both arguments and return values from Java methods.
   @Test fun callJavaMethodWithPrimitiveTypes() {
-    quickJs.set("value", TestPrimitiveTypes::class.java, object : TestPrimitiveTypes {
+    quickJs.set("value", TestPrimitiveTypes::class, object : TestPrimitiveTypes {
       override fun b(b: Boolean): Boolean = !b
       override fun i(i: Int): Int = i * i
       override fun d(d: Double): Double = d / 2.0
@@ -198,7 +198,7 @@ class QuickJsSetTest {
   // Double check that arguments of different types are processed in the correct order from the
   // QuickJs stack.
   @Test fun callJavaMethodWithAllArgTypes() {
-    quickJs.set("printer", TestMultipleArgTypes::class.java, TestMultipleArgTypes { b, i, d ->
+    quickJs.set("printer", TestMultipleArgTypes::class, TestMultipleArgTypes { b, i, d ->
       String.format("boolean: %s, int: %s, double: %s", b, i, d)
     })
     assertEquals("boolean: true, int: 42, double: 2.718281828459",
@@ -212,7 +212,7 @@ class QuickJsSetTest {
   }
 
   @Test fun callJavaMethodWithBoxedPrimitiveTypes() {
-    quickJs.set("value", TestBoxedPrimitiveArgTypes::class.java,
+    quickJs.set("value", TestBoxedPrimitiveArgTypes::class,
         object : TestBoxedPrimitiveArgTypes {
           override fun b(b: Boolean?): Boolean? = if (b != null) !b else null
           override fun i(i: Int?): Int? = if (i != null) i * i else null
@@ -234,7 +234,7 @@ class QuickJsSetTest {
 
   @Test fun setUnsupportedReturnType() {
     val t = assertThrows<IllegalArgumentException> {
-      quickJs.set("value", UnsupportedReturnType::class.java, UnsupportedReturnType { null })
+      quickJs.set("value", UnsupportedReturnType::class, UnsupportedReturnType { null })
     }
     assertEquals("Unsupported Java type java.util.Date", t.message)
   }
@@ -245,7 +245,7 @@ class QuickJsSetTest {
 
   @Test fun setUnsupportedArgumentType() {
     val t = assertThrows<IllegalArgumentException> {
-      quickJs.set("value", UnsupportedArgumentType::class.java, UnsupportedArgumentType { })
+      quickJs.set("value", UnsupportedArgumentType::class, UnsupportedArgumentType { })
     }
     assertEquals("Unsupported Java type java.util.Date", t.message)
   }
@@ -257,7 +257,7 @@ class QuickJsSetTest {
 
   @Test fun setOverloadedMethod() {
     val t = assertThrows<UnsupportedOperationException> {
-      quickJs.set("value", OverloadedMethod::class.java, object : OverloadedMethod {
+      quickJs.set("value", OverloadedMethod::class, object : OverloadedMethod {
         override fun foo(i: Int) {}
         override fun foo(d: Double) {}
       })
@@ -269,17 +269,17 @@ class QuickJsSetTest {
 
   @Test fun setExtendedInterface() {
     val t = assertThrows<UnsupportedOperationException> {
-      quickJs.set("value", ExtendedInterface::class.java, ExtendedInterface { "nope" })
+      quickJs.set("value", ExtendedInterface::class, ExtendedInterface { "nope" })
     }
     assertEquals(ExtendedInterface::class.java.toString() + " must not extend other interfaces",
         t.message)
   }
 
   @Test fun setFailureLeavesQuickJsConsistent() {
-    quickJs.set("value", TestInterface::class.java, TestInterface { "8675309" })
+    quickJs.set("value", TestInterface::class, TestInterface { "8675309" })
     quickJs.evaluate("var localVar = 42;")
     assertThrows<IllegalArgumentException> {
-      quickJs.set("illegal", UnsupportedArgumentType::class.java, UnsupportedArgumentType { })
+      quickJs.set("illegal", UnsupportedArgumentType::class, UnsupportedArgumentType { })
     }
 
     // The state of our QuickJs context is still valid, containing what was there before.
@@ -294,7 +294,7 @@ class QuickJsSetTest {
   // Double check that arguments of different types are processed in the correct order from the
   // QuickJs stack.
   @Test fun callJavaMethodObjectArgs() {
-    quickJs.set("printer", TestMultipleObjectArgs::class.java, TestMultipleObjectArgs { b, i, d ->
+    quickJs.set("printer", TestMultipleObjectArgs::class, TestMultipleObjectArgs { b, i, d ->
       String.format("boolean: %s, int: %s, double: %s", b, i, d)
     })
     assertEquals("boolean: true, int: 42, double: 2.718281828459",
@@ -302,7 +302,7 @@ class QuickJsSetTest {
   }
 
   @Test fun passUnsupportedTypeAsObjectFails() {
-    quickJs.set("printer", TestMultipleObjectArgs::class.java, TestMultipleObjectArgs { b, i, d ->
+    quickJs.set("printer", TestMultipleObjectArgs::class, TestMultipleObjectArgs { b, i, d ->
       String.format("boolean: %s, int: %s, double: %s", b, i, d)
     })
     val t = assertThrows<QuickJsException> {
@@ -316,7 +316,7 @@ class QuickJsSetTest {
   }
 
   @Test fun callVarArgMethod() {
-    quickJs.set("formatter", TestVarArgs::class.java,
+    quickJs.set("formatter", TestVarArgs::class,
         TestVarArgs { format, args -> String.format(format!!, *args) })
     assertEquals("okay", quickJs.evaluate("formatter.format('okay')"))
     assertEquals("1999-12-31 23:59:59.999 - FATAL: failure", quickJs.evaluate(
@@ -333,7 +333,7 @@ class QuickJsSetTest {
   }
 
   @Test fun callVarArgPrimitiveMethod() {
-    quickJs.set("Summer", Summer::class.java, object : Summer {
+    quickJs.set("Summer", Summer::class, object : Summer {
       override fun sumIntegers(vararg args: Int): Int {
         var v = 0
         for (arg in args) {
@@ -386,7 +386,7 @@ class QuickJsSetTest {
   }
 
   @Test fun arraysOfObjects() {
-    quickJs.set("Sorter", ObjectSorter::class.java, object : ObjectSorter {
+    quickJs.set("Sorter", ObjectSorter::class, object : ObjectSorter {
       override fun sort(args: Array<Any>?): Array<Any>? {
         if (args == null) return null
         Arrays.sort(args, Comparator<Any?> { lhs, rhs ->
@@ -417,7 +417,7 @@ class QuickJsSetTest {
   }
 
   @Test fun arraysOfStrings() {
-    quickJs.set("Sorter", StringSorter::class.java, StringSorter { args ->
+    quickJs.set("Sorter", StringSorter::class, StringSorter { args ->
       Arrays.sort(args)
       args
     })
@@ -438,7 +438,7 @@ class QuickJsSetTest {
   }
 
   @Test fun arraysOfDoubles() {
-    quickJs.set("Sorter", DoubleSorter::class.java, object : DoubleSorter {
+    quickJs.set("Sorter", DoubleSorter::class, object : DoubleSorter {
       override fun sort(args: DoubleArray): DoubleArray {
         Arrays.sort(args)
         return args
@@ -472,7 +472,7 @@ class QuickJsSetTest {
   }
 
   @Test fun arraysOfInts() {
-    quickJs.set("Sorter", IntSorter::class.java, object : IntSorter {
+    quickJs.set("Sorter", IntSorter::class, object : IntSorter {
       override fun sort(args: IntArray): IntArray {
         Arrays.sort(args)
         return args
@@ -508,7 +508,7 @@ class QuickJsSetTest {
   }
 
   @Test fun arraysOfBooleans() {
-    quickJs.set("Sorter", BoolSorter::class.java, object : BoolSorter {
+    quickJs.set("Sorter", BoolSorter::class, object : BoolSorter {
       override fun sort(args: BooleanArray): BooleanArray {
         var count = 0
         for (arg in args) {
@@ -544,7 +544,7 @@ class QuickJsSetTest {
   }
 
   @Test fun lotsOfLocalTemps() {
-    quickJs.set("foo", TestInterfaceArgs::class.java,
+    quickJs.set("foo", TestInterfaceArgs::class,
         TestInterfaceArgs { a, b, c -> a + b + c })
     val result = quickJs.evaluate("""
       |var len = 0;
@@ -1111,7 +1111,7 @@ class QuickJsSetTest {
   }
 
   @Test fun lotsOfInterfaceMethodsAndArgs() {
-    quickJs.set("foo", HugeInterface::class.java, object : HugeInterface {
+    quickJs.set("foo", HugeInterface::class, object : HugeInterface {
       override fun method01(
         a: String?, b: String?, c: String?, d: String?, e: String?, f: String?, g: String?,
         h: String?

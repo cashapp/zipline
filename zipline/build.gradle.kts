@@ -68,9 +68,12 @@ kotlin {
     }
 
     val engineMain by creating {
+      dependsOn(commonMain)
       kotlin.srcDir(versionWriterTaskProvider)
     }
-    val engineTest by creating
+    val engineTest by creating {
+      dependsOn(commonTest)
+    }
 
     val jniMain by creating {
       dependsOn(engineMain)

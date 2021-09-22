@@ -89,7 +89,7 @@ class JsTypedArraysTest {
   }
 
   @Test fun byteArrayWithProxy() {
-    quickJs.set("transformer", ByteArrayTransformer::class.java, ByteArrayTransformer { input ->
+    quickJs.set("transformer", ByteArrayTransformer::class, ByteArrayTransformer { input ->
       requireNotNull(input)
       val result = ByteArray(input.size + 2)
       result[0] = -1
@@ -111,7 +111,7 @@ class JsTypedArraysTest {
   }
 
   @Test fun byteArrayWithProxyReturnsNull() {
-    quickJs.set("transformer", ByteArrayTransformer::class.java, ByteArrayTransformer { null })
+    quickJs.set("transformer", ByteArrayTransformer::class, ByteArrayTransformer { null })
     val byteArray = quickJs.evaluate("""
       |var array = new Uint8Array(5);
       |array[0] = 86;
@@ -121,7 +121,7 @@ class JsTypedArraysTest {
   }
 
   @Test fun byteArrayWithProxyReceivesNull() {
-    quickJs.set("transformer", ByteArrayTransformer::class.java,
+    quickJs.set("transformer", ByteArrayTransformer::class,
         ByteArrayTransformer { byteArrayOf(86) })
     val byteArray = quickJs.evaluate("""
       |transformer.transform(null);
@@ -130,7 +130,7 @@ class JsTypedArraysTest {
   }
 
   @Test fun javaByteArrayConvertedToJsUint8Array() {
-    quickJs.set("transformer", ByteArrayTransformer::class.java,
+    quickJs.set("transformer", ByteArrayTransformer::class,
         ByteArrayTransformer { byteArrayOf(86) })
     val constructorName = quickJs.evaluate("""
       |var array = new Uint8Array(5);
