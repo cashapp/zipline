@@ -16,30 +16,9 @@
 package app.cash.zipline.internal
 
 import android.util.Log
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-internal actual fun createHostPlatform(
-  scope: CoroutineScope,
-  jsPlatform: JsPlatform,
-): HostPlatform {
-  return RealHostPlatform(scope, jsPlatform)
-}
-
-private class RealHostPlatform(
-  val scope: CoroutineScope,
-  val jsPlatform: JsPlatform,
-) : HostPlatform {
-  override fun setTimeout(timeoutId: Int, delayMillis: Int) {
-    scope.launch(start = UNDISPATCHED) {
-      delay(delayMillis.toLong())
-      jsPlatform.runJob(timeoutId)
-    }
-  }
-
-  override fun consoleMessage(level: String, message: String) {
+internal object HostConsole : Console {
+  override fun log(level: String, message: String) {
     val priority = when (level) {
       "warn" -> Log.WARN
       "error" -> Log.ERROR

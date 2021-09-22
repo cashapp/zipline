@@ -17,32 +17,11 @@ package app.cash.zipline.internal
 
 import app.cash.zipline.Zipline
 import java.util.logging.Logger
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-internal actual fun createHostPlatform(
-  scope: CoroutineScope,
-  jsPlatform: JsPlatform,
-): HostPlatform {
-  return RealHostPlatform(scope, jsPlatform)
-}
-
-private class RealHostPlatform(
-  val scope: CoroutineScope,
-  val jsPlatform: JsPlatform,
-) : HostPlatform {
+internal object HostConsole : Console {
   private val logger = Logger.getLogger(Zipline::class.qualifiedName)
 
-  override fun setTimeout(timeoutId: Int, delayMillis: Int) {
-    scope.launch(start = UNDISPATCHED) {
-      delay(delayMillis.toLong())
-      jsPlatform.runJob(timeoutId)
-    }
-  }
-
-  override fun consoleMessage(level: String, message: String) {
+  override fun log(level: String, message: String) {
     when (level) {
       "warn" -> logger.warning(message)
       "error" -> logger.severe(message)
