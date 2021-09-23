@@ -15,7 +15,8 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.HostPlatform
+import app.cash.zipline.internal.Console
+import app.cash.zipline.internal.EventLoop
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
@@ -23,7 +24,8 @@ import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
-import app.cash.zipline.internal.hostPlatformName
+import app.cash.zipline.internal.consoleName
+import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
 import kotlinx.coroutines.GlobalScope
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -94,12 +96,11 @@ actual class Zipline internal constructor() {
     )
 
     // Connect platforms using our newly-bootstrapped channels.
-    val hostPlatform = endpoint.get<HostPlatform>(
-      name = hostPlatformName,
-    )
+    val eventLoop = endpoint.get<EventLoop>(name = eventLoopName)
+    val console = endpoint.get<Console>(name = consoleName)
     endpoint.set<JsPlatform>(
       name = jsPlatformName,
-      instance = RealJsPlatform(hostPlatform),
+      instance = RealJsPlatform(eventLoop, console),
     )
   }
 
@@ -135,7 +136,8 @@ actual class Zipline internal constructor() {
 }
 
 private class RealJsPlatform(
-  val hostPlatform: HostPlatform
+  private val eventLoop: EventLoop,
+  private val console: Console,
 ) : JsPlatform {
   private var nextTimeoutId = 1
   private val jobs = mutableMapOf<Int, Job>()
@@ -170,14 +172,14 @@ private class RealJsPlatform(
   fun setTimeout(handler: dynamic, timeout: Int, vararg arguments: Any?): Int {
     val timeoutId = nextTimeoutId++
     jobs[timeoutId] = Job(handler, arguments)
-    hostPlatform.setTimeout(timeoutId, timeout)
+    eventLoop.setTimeout(timeoutId, timeout)
     return timeoutId
   }
 
   @JsName("clearTimeout")
-  fun clearTimeout(handle: Int) {
-    jobs.remove(handle)
-    // TODO(jwilson): tell the host platform to clear the timeout.
+  fun clearTimeout(timeoutId: Int) {
+    jobs.remove(timeoutId)
+    eventLoop.clearTimeout(timeoutId)
   }
 
   /**
@@ -186,7 +188,7 @@ private class RealJsPlatform(
    */
   @JsName("consoleMessage")
   fun consoleMessage(level: String, vararg arguments: Any?) {
-    hostPlatform.consoleMessage(level, arguments.joinToString(separator = " "))
+    console.log(level, arguments.joinToString(separator = " "))
   }
 
   private class Job(

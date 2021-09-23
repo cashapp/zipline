@@ -16,8 +16,25 @@
 package app.cash.zipline.internal
 
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
-internal expect fun createHostPlatform(
-  scope: CoroutineScope,
-  jsPlatform: JsPlatform,
-): HostPlatform
+internal class CoroutineEventLoop(
+  private val scope: CoroutineScope,
+  private val jsPlatform: JsPlatform,
+) : EventLoop {
+  private val jobs = mutableMapOf<Int, Job>()
+
+  override fun setTimeout(timeoutId: Int, delayMillis: Int) {
+    jobs[timeoutId] = scope.launch(start = UNDISPATCHED) {
+      delay(delayMillis.toLong())
+      jsPlatform.runJob(timeoutId)
+    }
+  }
+
+  override fun clearTimeout(timeoutId: Int) {
+    jobs.remove(timeoutId)?.cancel()
+  }
+}
