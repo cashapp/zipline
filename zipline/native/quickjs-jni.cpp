@@ -113,6 +113,17 @@ Java_app_cash_zipline_QuickJs_compile(JNIEnv* env, jobject thiz, jlong _context,
   return context->compile(env, sourceCode, fileName);
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_zipline_QuickJs_setInterruptHandler(JNIEnv* env, jobject type, jlong context_, jobject interruptHandler) {
+  Context* context = reinterpret_cast<Context*>(context_);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return;
+  }
+  context->setInterruptHandler(env, interruptHandler);
+}
+
 extern "C" JNIEXPORT jobject JNICALL
 Java_app_cash_zipline_QuickJs_memoryUsage(JNIEnv* env, jobject type, jlong context_) {
   Context* context = reinterpret_cast<Context*>(context_);

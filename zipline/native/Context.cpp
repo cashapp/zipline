@@ -36,6 +36,23 @@ std::string getName(JNIEnv* env, jobject javaClass) {
   return str;
 }
 
+/**
+ * This signature satisfies the JSInterruptHandler typedef. It is always installed but only does
+ * work if a Kotlin InterruptHandler is configured.
+ */
+int jsInterruptHandlerPoll(JSRuntime* jsRuntime, void *opaque) {
+  auto context = reinterpret_cast<Context*>(opaque);
+  auto interruptHandler = context->interruptHandler;
+  if (interruptHandler == nullptr) return 0;
+
+  JS_SetInterruptHandler(context->jsRuntime, NULL, NULL); // Suppress re-enter.
+  auto env = context->getEnv();
+  const jboolean halt = env->CallBooleanMethod(interruptHandler, context->interruptHandlerPoll);
+  JS_SetInterruptHandler(context->jsRuntime, &jsInterruptHandlerPoll, context); // Restore handler.
+  // TODO: propagate the interrupt handler's exceptions through JS.
+  return halt;
+}
+
 namespace {
 
 void jsFinalize(JSRuntime* jsRuntime, JSValue val) {
@@ -80,9 +97,13 @@ Context::Context(JNIEnv* env)
       stringGetBytes(env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B")),
       stringConstructor(env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V")),
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
-                                                   "(Ljava/lang/String;Ljava/lang/String;)V")) {
+                                                   "(Ljava/lang/String;Ljava/lang/String;)V")),
+      interruptHandlerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("app/cash/zipline/InterruptHandler")))),
+      interruptHandlerPoll(env->GetMethodID(interruptHandlerClass, "poll", "()Z")),
+      interruptHandler(nullptr) {
   env->GetJavaVM(&javaVm);
   JS_SetRuntimeOpaque(jsRuntime, this);
+  JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
 }
 
 Context::~Context() {
@@ -93,6 +114,10 @@ Context::~Context() {
   for (auto refs : globalReferences) {
     env->DeleteGlobalRef(refs.second);
   }
+  if (interruptHandler != nullptr) {
+    env->DeleteGlobalRef(interruptHandler);
+  }
+  env->DeleteGlobalRef(interruptHandlerClass);
   env->DeleteGlobalRef(quickJsExceptionClass);
   env->DeleteGlobalRef(stringUtf8);
   env->DeleteGlobalRef(stringClass);
@@ -163,6 +188,14 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   js_free(jsContext, buffer);
 
   return result;
+}
+
+void Context::setInterruptHandler(JNIEnv* env, jobject newInterruptHandler) {
+  jobject oldInterruptHandler = interruptHandler;
+  if (oldInterruptHandler != nullptr) {
+    env->DeleteGlobalRef(oldInterruptHandler);
+  }
+  interruptHandler = env->NewGlobalRef(newInterruptHandler);
 }
 
 jobject Context::memoryUsage(JNIEnv* env) {

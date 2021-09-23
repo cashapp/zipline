@@ -63,6 +63,18 @@ actual class QuickJs private constructor(
       get() = quickJsVersion
   }
 
+  /**
+   * The interrupt handler is polled frequently during code execution.
+   *
+   * Using any interrupt handler may have a significant performance cost. Use a null handler for
+   * best performance.
+   */
+  actual var interruptHandler: InterruptHandler? = null
+    set(value) {
+      field = value
+      setInterruptHandler(context, value)
+    }
+
   /** Memory usage statistics for the JavaScript engine. */
   val memoryUsage: MemoryUsage
     get() = memoryUsage(context) ?: throw AssertionError()
@@ -225,6 +237,7 @@ actual class QuickJs private constructor(
   private external fun call(context: Long, instance: Long, method: Any, args: Array<Any>): Any
   private external fun execute(context: Long, bytecode: ByteArray): Any?
   private external fun compile(context: Long, sourceCode: String, fileName: String): ByteArray
+  private external fun setInterruptHandler(context: Long, interruptHandler: InterruptHandler?)
   private external fun memoryUsage(context: Long): MemoryUsage?
   private external fun setMemoryLimit(context: Long, limit: Long)
   private external fun setGcThreshold(context: Long, gcThreshold: Long)
