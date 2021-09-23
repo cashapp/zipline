@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-interface InterruptHandler {
+fun interface InterruptHandler {
   /**
    * This function is called back frequently during code execution to detect asynchronous
    * interruptions. Operations performed on the [QuickJs] during interruption are not themselves
