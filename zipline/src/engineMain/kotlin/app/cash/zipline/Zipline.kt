@@ -15,7 +15,10 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.HostPlatform
+import app.cash.zipline.internal.Console
+import app.cash.zipline.internal.CoroutineEventLoop
+import app.cash.zipline.internal.EventLoop
+import app.cash.zipline.internal.HostConsole
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
@@ -23,8 +26,8 @@ import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
-import app.cash.zipline.internal.createHostPlatform
-import app.cash.zipline.internal.hostPlatformName
+import app.cash.zipline.internal.consoleName
+import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -95,13 +98,19 @@ actual class Zipline private constructor(
       instance = endpoint.inboundChannel
     )
 
+    endpoint.set<Console>(
+      name = consoleName,
+      instance = HostConsole,
+    )
+
     // Connect platforms using our newly-bootstrapped channels.
     val jsPlatform = endpoint.get<JsPlatform>(
       name = jsPlatformName,
     )
-    endpoint.set<HostPlatform>(
-      name = hostPlatformName,
-      instance = createHostPlatform(scope, jsPlatform),
+    val eventLoop = CoroutineEventLoop(scope, jsPlatform)
+    endpoint.set<EventLoop>(
+      name = eventLoopName,
+      instance = eventLoop,
     )
   }
 

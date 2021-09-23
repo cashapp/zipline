@@ -15,21 +15,18 @@
  */
 package app.cash.zipline.internal
 
-internal const val hostPlatformName = "zipline/host"
+internal const val eventLoopName = "zipline/event_loop"
+internal const val consoleName = "zipline/console"
 internal const val jsPlatformName = "zipline/js"
 
-/**
- * Functions that are built in to regular JavaScript environments like the browser and NodeJS, but
- * must be added to QuickJS.
- *
- * https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope
- */
-internal interface HostPlatform {
-  // See org.w3c.dom.WindowOrWorkerGlobalScope
+internal interface EventLoop {
   fun setTimeout(timeoutId: Int, delayMillis: Int)
+  fun clearTimeout(timeoutId: Int)
+}
 
+internal interface Console {
   /** @param level one of `log`, `info`, `warn`, or `error`. */
-  fun consoleMessage(level: String, message: String)
+  fun log(level: String, message: String)
 }
 
 internal interface JsPlatform {

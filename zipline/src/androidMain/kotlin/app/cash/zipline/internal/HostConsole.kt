@@ -15,9 +15,15 @@
  */
 package app.cash.zipline.internal
 
-import kotlinx.coroutines.CoroutineScope
+import android.util.Log
 
-internal expect fun createHostPlatform(
-  scope: CoroutineScope,
-  jsPlatform: JsPlatform,
-): HostPlatform
+internal object HostConsole : Console {
+  override fun log(level: String, message: String) {
+    val priority = when (level) {
+      "warn" -> Log.WARN
+      "error" -> Log.ERROR
+      else -> Log.INFO
+    }
+    Log.println(priority, "Zipline", message)
+  }
+}
