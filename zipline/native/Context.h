@@ -36,6 +36,7 @@ public:
   jobject eval(JNIEnv*, jstring source, jstring file);
   jobject execute(JNIEnv*, jbyteArray byteCode);
   jbyteArray compile(JNIEnv*, jstring source, jstring file);
+  void setInterruptHandler(JNIEnv* env, jobject interruptHandler);
   jobject memoryUsage(JNIEnv*);
   void setMemoryLimit(JNIEnv* env, jlong limit);
   void setGcThreshold(JNIEnv* env, jlong gcThreshold);
@@ -83,6 +84,9 @@ public:
   jmethodID stringConstructor;
   jmethodID memoryUsageConstructor;
   jmethodID quickJsExceptionConstructor;
+  jclass interruptHandlerClass;
+  jmethodID interruptHandlerPoll;
+  jobject interruptHandler;
   std::vector<JsObjectProxy*> objectProxies;
   std::unordered_map<std::string, jclass> globalReferences;
 };

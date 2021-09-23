@@ -34,6 +34,13 @@ expect class QuickJs {
     val version: String
   }
 
+  /**
+   * The interrupt handler is polled frequently during code execution.
+   *
+   * Using any interrupt handler may have a significant performance cost. Use a null handler for
+   * best performance.
+   */
+  var interruptHandler: InterruptHandler?
 
   /** Default is -1. Use -1 for no limit. */
   var memoryLimit: Long
