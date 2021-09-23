@@ -76,6 +76,11 @@ internal class ZiplineApis(
   val inboundBridge: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("InboundBridge"))!!
 
+  val inboundBridgeService: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      bridgeFqName.child("InboundBridge").child("service")
+    ).single()
+
   val inboundBridgeContextFqName = bridgeFqName.child("InboundBridge").child("Context")
 
   val inboundBridgeContext: IrClassSymbol

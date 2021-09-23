@@ -54,8 +54,7 @@ internal class InboundZiplineReference<T : Any>(
   }
 
   override fun get(outboundBridge: OutboundBridge<T>): T {
-    // TODO(jwilson): change generated subtypes to populate `T` on the super call.
-    throw IllegalStateException("get() on inbound handlers not yet implemented")
+    return inboundBridge.service
   }
 
   override fun close() {

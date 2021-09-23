@@ -42,6 +42,13 @@ internal class ZiplineReferenceTest {
   }
 
   @Test
+  fun referenceCanBeUsedWithoutPassingThroughZipline() {
+    val helloService = GreetingService("hello")
+    val reference = ZiplineReference<EchoService>(helloService)
+    assertThat(reference.get()).isSameInstanceAs(helloService)
+  }
+
+  @Test
   fun bridgeServicesBeforeEndpointsConnected() {
     val requests = LinkedBlockingDeque<String>()
     val responses = LinkedBlockingDeque<String>()
