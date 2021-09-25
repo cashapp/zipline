@@ -192,14 +192,6 @@ fun quickJsVersion(): String {
   return File(projectDir, "native/quickjs/VERSION").readText().trim()
 }
 
-// https://github.com/vanniktech/gradle-maven-publish-plugin/issues/301
-val metadataJar by tasks.getting(Jar::class)
-configure<PublishingExtension> {
-  publications.withType<MavenPublication>().named("kotlinMultiplatform").configure {
-    artifact(metadataJar)
-  }
-}
-
 configure<MavenPublishBaseExtension> {
   configure(
     KotlinMultiplatform(
