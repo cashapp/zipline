@@ -85,6 +85,10 @@ public final class ZiplineTestInternals {
   /** Simulate generated code for inbound calls. */
   public static void setEchoService(Endpoint endpoint, String name, EchoService echoService) {
     endpoint.set(name, new InboundBridge<EchoService>() {
+      @Override public EchoService getService() {
+        return echoService;
+      }
+
       @Override public InboundCallHandler create(Context context) {
         KSerializer<EchoResponse> resultSerializer
             = (KSerializer) serializer(context.getSerializersModule(), echoResponseKt);
@@ -98,7 +102,7 @@ public final class ZiplineTestInternals {
 
           @Override public String[] call(InboundCall inboundCall) {
             if (inboundCall.getFunName().equals("echo")) {
-              return inboundCall.result(resultSerializer, echoService.echo(
+              return inboundCall.result(resultSerializer, getService().echo(
                   inboundCall.parameter(parameterSerializer)));
             } else {
               return inboundCall.unexpectedFunction();
@@ -137,6 +141,10 @@ public final class ZiplineTestInternals {
   public static void setGenericEchoService(
       Endpoint endpoint, String name, GenericEchoService<String> echoService) {
     endpoint.set(name, new InboundBridge<GenericEchoService<String>>() {
+      @Override public GenericEchoService<String> getService() {
+        return echoService;
+      }
+
       @Override public InboundCallHandler create(Context context) {
         KSerializer<List<String>> resultSerializer
             = (KSerializer) serializer(context.getSerializersModule(), listOfStringKt);
@@ -150,7 +158,7 @@ public final class ZiplineTestInternals {
 
           @Override public String[] call(InboundCall inboundCall) {
             if (inboundCall.getFunName().equals("genericEcho")) {
-              return inboundCall.result(resultSerializer, echoService.genericEcho(
+              return inboundCall.result(resultSerializer, getService().genericEcho(
                   inboundCall.parameter(parameterSerializer)));
             } else {
               return inboundCall.unexpectedFunction();

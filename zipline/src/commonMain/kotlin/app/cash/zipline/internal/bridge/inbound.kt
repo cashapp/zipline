@@ -26,6 +26,8 @@ import kotlinx.serialization.serializer
  */
 @PublishedApi
 internal abstract class InboundBridge<T : Any> {
+  abstract val service: T
+
   abstract fun create(context: Context): InboundCallHandler
 
   class Context(

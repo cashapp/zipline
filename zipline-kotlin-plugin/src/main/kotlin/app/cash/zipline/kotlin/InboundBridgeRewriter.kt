@@ -82,6 +82,7 @@ import org.jetbrains.kotlin.name.Name
  * zipline.set(
  *   "helloService",
  *   object : InboundBridge<EchoService>() {
+ *     override val service: EchoService = TestingEchoService("hello")
  *     override fun create(context: Context): InboundCallHandler {
  *       return object : InboundCallHandler {
  *         val serializer_0 = context.serializersModule.serializer<EchoRequest>()
@@ -223,12 +224,15 @@ internal class InboundBridgeRewriter(
       }
     }
 
-    val createFunction = irCreateFunction(inboundBridgeSubclass)
+    val serviceProperty = irServiceProperty(inboundBridgeSubclass)
+    inboundBridgeSubclass.declarations += serviceProperty
+
+    val createFunction = irCreateFunction(inboundBridgeSubclass, serviceProperty)
 
     // We add overrides here so we can use them below.
     inboundBridgeSubclass.addFakeOverrides(
       pluginContext.irBuiltIns,
-      listOf(createFunction)
+      listOf(serviceProperty, createFunction)
     )
 
     return IrBlockBodyBuilder(
@@ -245,7 +249,8 @@ internal class InboundBridgeRewriter(
 
   /** Override `InboundBridge.create()`. */
   private fun irCreateFunction(
-    inboundBridgeSubclass: IrClass
+    inboundBridgeSubclass: IrClass,
+    serviceProperty: IrProperty,
   ): IrSimpleFunction {
     // override fun create(context: Context): InboundCallHandler {
     // }
@@ -269,7 +274,11 @@ internal class InboundBridgeRewriter(
       scopeOwnerSymbol = result.symbol,
     ) {
       +irReturn(
-        irNewInboundCallHandler(result.valueParameters[0])
+        irNewInboundCallHandler(
+          contextParameter = result.valueParameters[0],
+          inboundBridgeThis = result.dispatchReceiverParameter!!,
+          serviceProperty = serviceProperty,
+        )
       )
     }
     return result
@@ -277,6 +286,8 @@ internal class InboundBridgeRewriter(
 
   private fun irNewInboundCallHandler(
     contextParameter: IrValueParameter,
+    inboundBridgeThis: IrValueParameter,
+    serviceProperty: IrProperty,
   ): IrContainerExpression {
     // object : InboundCallHandler {
     // }
@@ -311,9 +322,6 @@ internal class InboundBridgeRewriter(
     val contextProperty = irContextProperty(inboundCallHandlerSubclass, contextParameter)
     inboundCallHandlerSubclass.declarations += contextProperty
 
-    val serviceProperty = irServiceProperty(inboundCallHandlerSubclass)
-    inboundCallHandlerSubclass.declarations += serviceProperty
-
     bridgedInterface.declareSerializerProperties(inboundCallHandlerSubclass, contextParameter)
 
     val callFunction = irCallFunction(
@@ -336,7 +344,7 @@ internal class InboundBridgeRewriter(
       scopeOwnerSymbol = callFunction.symbol,
     ) {
       +irReturn(
-        irCallFunctionBody(callFunction, serviceProperty)
+        irCallFunctionBody(callFunction, inboundBridgeThis, serviceProperty)
       )
     }
     callSuspendingFunction.irFunctionBody(
@@ -344,7 +352,7 @@ internal class InboundBridgeRewriter(
       scopeOwnerSymbol = callSuspendingFunction.symbol,
     ) {
       +irReturn(
-        irCallFunctionBody(callSuspendingFunction, serviceProperty)
+        irCallFunctionBody(callSuspendingFunction, inboundBridgeThis, serviceProperty)
       )
     }
 
@@ -389,13 +397,14 @@ internal class InboundBridgeRewriter(
     }
   }
 
-  // val service: EchoService = TestingEchoService("hello")
-  private fun irServiceProperty(inboundCallHandlerSubclass: IrClass): IrProperty {
+  // override val service: EchoService = TestingEchoService("hello")
+  private fun irServiceProperty(inboundBridgeSubclass: IrClass): IrProperty {
     return irVal(
       pluginContext = pluginContext,
       propertyType = bridgedInterface.type,
-      declaringClass = inboundCallHandlerSubclass,
-      propertyName = Name.identifier("service")
+      declaringClass = inboundBridgeSubclass,
+      propertyName = Name.identifier("service"),
+      overriddenProperty = ziplineApis.inboundBridgeService,
     ) {
       irExprBody(original.getValueArgument(original.valueArgumentsCount - 1)!!)
     }
@@ -431,6 +440,7 @@ internal class InboundBridgeRewriter(
    */
   private fun IrBlockBodyBuilder.irCallFunctionBody(
     callFunction: IrSimpleFunction,
+    inboundBridgeThis: IrValueParameter,
     serviceProperty: IrProperty,
   ): IrExpression {
     val result = mutableListOf<IrBranch>()
@@ -449,6 +459,7 @@ internal class InboundBridgeRewriter(
             callFunction = callFunction,
             resultExpression = irCallServiceFunction(
               callFunction = callFunction,
+              inboundBridgeThis = inboundBridgeThis,
               serviceProperty = serviceProperty,
               bridgedFunction = bridgedFunction
             )
@@ -485,13 +496,14 @@ internal class InboundBridgeRewriter(
     }
   }
 
-  /** `inboundCall.service.function1(...)` */
+  /** `service.function1(...)` */
   private fun IrBuilderWithScope.irCallServiceFunction(
     callFunction: IrSimpleFunction,
+    inboundBridgeThis: IrValueParameter,
     serviceProperty: IrProperty,
     bridgedFunction: IrSimpleFunctionSymbol,
   ): IrExpression {
-    val getServiceCall = irService(callFunction, serviceProperty)
+    val getServiceCall = irService(inboundBridgeThis, serviceProperty)
     val returnType = bridgedFunction.owner.returnType
 
     return irCall(
@@ -513,15 +525,15 @@ internal class InboundBridgeRewriter(
     }
   }
 
-  /** `inboundCall.service` */
+  /** `inboundBridge.service` */
   private fun IrBuilderWithScope.irService(
-    callFunction: IrSimpleFunction,
+    inboundBridgeThis: IrValueParameter,
     serviceProperty: IrProperty,
   ): IrExpression {
     return irCall(
       callee = serviceProperty.getter!!,
     ).apply {
-      dispatchReceiver = irGet(callFunction.dispatchReceiverParameter!!)
+      dispatchReceiver = irGet(inboundBridgeThis)
     }
   }
 
