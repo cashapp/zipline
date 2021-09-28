@@ -28,9 +28,9 @@ import okio.utf8Size
  * ecosystem. Documentation for this format is limited, particularly since it it was dropped as a
  * built-in format in the JVM.
  *
- * https://java.net/downloads/heap-snapshot/hprof-binary-format.html
- * https://hg.openjdk.java.net/jdk6/jdk6/jdk/raw-file/tip/src/share/demo/jvmti/hprof/manual.html
- * https://github.com/eaftan/hprof-parser
+ * - https://java.net/downloads/heap-snapshot/hprof-binary-format.html
+ * - https://hg.openjdk.java.net/jdk6/jdk6/jdk/raw-file/tip/src/share/demo/jvmti/hprof/manual.html
+ * - https://github.com/eaftan/hprof-parser
  */
 internal class HprofWriter(
   private val sink: BufferedSink,
