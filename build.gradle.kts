@@ -14,12 +14,12 @@ buildscript {
     gradlePluginPortal()
   }
   dependencies {
-    classpath("com.android.tools.build:gradle:7.0.2")
-    classpath("net.ltgt.gradle:gradle-errorprone-plugin:2.0.1")
-    classpath("com.vanniktech:gradle-maven-publish-plugin:0.18.0")
-    classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.21")
-    classpath("org.jetbrains.kotlin:kotlin-serialization:1.5.21")
-    classpath("org.jetbrains.dokka:dokka-gradle-plugin:1.5.0")
+    classpath(Dependencies.androidGradlePlugin)
+    classpath(Dependencies.errorproneGradlePlugin)
+    classpath(Dependencies.mavenPublishGradlePlugin)
+    classpath(Dependencies.kotlinGradlePlugin)
+    classpath(Dependencies.kotlinSerialization)
+    classpath(Dependencies.dokkaGradlePlugin)
   }
 }
 
@@ -69,8 +69,8 @@ subprojects {
   apply(plugin = "net.ltgt.errorprone")
 
   dependencies {
-    add("errorproneJavac", "com.google.errorprone:javac:9+181-r4173-1")
-    add("errorprone", "com.google.errorprone:error_prone_core:2.7.1")
+    add("errorproneJavac", Dependencies.errorproneJavac)
+    add("errorprone", Dependencies.errorproneCore)
   }
 
   tasks.withType(JavaCompile::class).configureEach {
