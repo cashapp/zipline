@@ -11,10 +11,6 @@ This is an Android demo of Zipline. It has two modules:
 Serving presenters.js
 ---------------------
 
-**NOTE:** There's a bug in Kotlin 1.5.21 that presents the devserver from launching. Manually edit
-the Zipline root `build.gradle.kts` to use Kotlin 1.5.31 before building this. You will need to
-change it back to 1.5.21 before installing the Android app.
-
 Run this:
 
 ```
