@@ -1,6 +1,6 @@
 # Releasing
 
-1. Update the `VERSION_NAME` in `build.gradle.kts` to the release version.
+1. Update the `version` in `build.gradle.kts` to the release version.
 
 2. Update the `CHANGELOG.md`:
    1. Change the `Unreleased` header to the release version.

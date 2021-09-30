@@ -3,6 +3,33 @@
 ## [Unreleased]
 
 
+## [0.1.0] - 2021-09-30
+
+We've changed this project to focus exclusively on executing Kotlin/JS libraries.
+
+We plan to drop support for executing arbitrary JavaScript code. If you've been using either
+QuickJS Java (this project's name until September 2021) or Duktape Android (this project's name
+until June 2021), those projects remain as git branches but will not receive further updates.
+
+The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+
+### Added
+
+* `Zipline` is a new entry point for connecting to Kotlin/JS libraries.
+* `ZiplineReference` supports sending service objects across platforms.
+* `ZiplineSerializer` supports sending serializers objects across platforms.
+* `FlowReference` supports sending `Flow` objects across platforms.
+* `InterruptHandler` interrupts executing JavaScript.
+* `MemoryUsage` interrogates the state of the JavaScript runtime.
+
+### Changed
+
+* `QuickJs` entry point moved to `app.cash.zipline`.
+
+
+# QuickJS Java change log
+
 ## [0.9.2] - 2021-08-04
 
 ### Added
@@ -49,7 +76,7 @@ The API and behavior should otherwise be unchanged.
 
 
 
-# Duktape change log
+# Duktape Android change log
 
 ## Version 1.4.0 *(2021-06-14)*
 

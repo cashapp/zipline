@@ -5,7 +5,7 @@ makes it possible to do continuously deployment of mobile apps, just like we do 
 applications.
 
 It'd be simpler to do continuous deploys via the App Store & Play Store! But that process is too
-slow. Even if we could release via these channels every day, we can’t guarantee that user’s devices 
+slow. Even if we could release via these channels every day, we can’t guarantee that user’s devices
 will take the updates immediately. For Cash App we support apps that haven’t been updated for a full
 year.
 
@@ -128,14 +128,14 @@ Log.d("Greeting", greeting);
 
 ## Download
 
-### Android
+This project supports both Android and Java. On Java only Linux and macOS are currently supported.
 
 ```groovy
 repositories {
   mavenCentral()
 }
 dependencies {
-  implementation 'app.cash.quickjs:quickjs-android:0.9.2'
+  implementation 'app.cash.zipline:zipline:0.1.0'
 }
 ```
 
@@ -157,40 +157,7 @@ repository {
   }
 }
 dependencies {
-  implementation 'app.cash.quickjs:quickjs-android:1.0.0-SNAPSHOT'
-}
-```
-
-</p>
-</details>
-
-
-### JVM
-
-```groovy
-repositories {
-  mavenCentral()
-}
-dependencies {
-  implementation 'app.cash.quickjs:quickjs-jvm:0.9.2'
-}
-```
-
-Only Linux and Mac OS are currently supported by the JVM artifact.
-
-<details>
-<summary>Snapshots of the development version are available in Sonatype's snapshots repository.</summary>
-<p>
-
-```groovy
-repository {
-  mavenCentral()
-  maven {
-    url 'https://oss.sonatype.org/content/repositories/snapshots/'
-  }
-}
-dependencies {
-  implementation 'app.cash.quickjs:quickjs-jvm:1.0.0-SNAPSHOT'
+  implementation 'app.cash.zipline:zipline:1.0.0-SNAPSHOT'
 }
 ```
 
@@ -235,7 +202,7 @@ Finally, build the platform-specific `.jar` and run the tests:
 $ ./gradlew :quickjs:jvm:build
 ```
 
-The `.jar` will be available in `quickjs/jvm/build/libs/`. 
+The `.jar` will be available in `quickjs/jvm/build/libs/`.
 
 
 ## License
