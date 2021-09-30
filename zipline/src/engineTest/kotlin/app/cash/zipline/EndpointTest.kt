@@ -15,45 +15,33 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newEndpointPair
-import com.google.common.truth.Truth.assertThat
-import java.util.concurrent.LinkedBlockingDeque
-import kotlinx.coroutines.CoroutineScope
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class EndpointTest {
-  private val dispatcher = TestCoroutineDispatcher()
-  private val endpointA: Endpoint
-  private val endpointB: Endpoint
-
-  init {
-    val (endpointA, endpointB) = newEndpointPair(CoroutineScope(dispatcher))
-    this.endpointA = endpointA
-    this.endpointB = endpointB
-  }
-
   @Test
-  fun requestAndResponse() {
-    val requests = LinkedBlockingDeque<String>()
-    val responses = LinkedBlockingDeque<String>()
+  fun requestAndResponse(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val requests = ArrayDeque<String>()
+    val responses = ArrayDeque<String>()
     val service = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse {
         requests += request.message
-        return EchoResponse(responses.take())
+        return EchoResponse(responses.removeFirst())
       }
     }
 
@@ -63,9 +51,9 @@ internal class EndpointTest {
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
     assertEquals("this is a curt response", response.message)
-    assertEquals("this is a happy request", requests.poll())
-    assertNull(responses.poll())
-    assertNull(requests.poll())
+    assertEquals("this is a happy request", requests.removeFirst())
+    assertTrue(responses.isEmpty())
+    assertTrue(requests.isEmpty())
   }
 
   interface NullableEchoService {
@@ -73,7 +61,9 @@ internal class EndpointTest {
   }
 
   @Test
-  fun nullRequest() {
+  fun nullRequest(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     val service = object : NullableEchoService {
       override fun echo(request: EchoRequest?): EchoResponse? {
         assertNull(request)
@@ -85,11 +75,13 @@ internal class EndpointTest {
     val client = endpointB.get<NullableEchoService>("helloService")
 
     val response = client.echo(null)
-    assertThat(response?.message).isEqualTo("received null")
+    assertEquals("received null", response?.message)
   }
 
   @Test
-  fun nullResponse() {
+  fun nullResponse(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     val service = object : NullableEchoService {
       override fun echo(request: EchoRequest?): EchoResponse? {
         assertEquals("send me null please?", request?.message)
@@ -105,7 +97,9 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingRequestAndResponse(): Unit = runBlocking(dispatcher) {
+  fun suspendingRequestAndResponse(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     val requests = Channel<String>(1)
     val responses = Channel<String>(1)
     val service = object : SuspendingEchoService {
@@ -129,7 +123,9 @@ internal class EndpointTest {
   }
 
   @Test
-  fun callThrowsException() {
+  fun callThrowsException(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     val service = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse {
         throw IllegalStateException("boom!")
@@ -142,12 +138,13 @@ internal class EndpointTest {
     val thrownException = assertThrows<Exception> {
       client.echo(EchoRequest(""))
     }
-    assertThat(thrownException).hasMessageThat()
-      .isEqualTo("java.lang.IllegalStateException: boom!")
+    assertEquals("java.lang.IllegalStateException: boom!", thrownException.message)
   }
 
   @Test
-  fun suspendingCallThrowsException(): Unit = runBlocking(dispatcher) {
+  fun suspendingCallThrowsException(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     val service = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
         throw IllegalStateException("boom!")
@@ -160,19 +157,20 @@ internal class EndpointTest {
     val thrownException = assertThrows<Exception> {
       client.suspendingEcho(EchoRequest(""))
     }
-    assertThat(thrownException).hasMessageThat()
-      .isEqualTo("java.lang.IllegalStateException: boom!")
+    assertEquals("java.lang.IllegalStateException: boom!", thrownException.message)
   }
 
   @Test
-  fun suspendingCallbacksCreateTemporaryReferences(): Unit = runBlocking(dispatcher) {
+  fun suspendingCallbacksCreateTemporaryReferences(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     val echoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
         // In the middle of a suspending call there's a temporary reference to the callback.
-        assertThat(endpointA.serviceNames).containsExactly("echoService")
-        assertThat(endpointB.clientNames).containsExactly("echoService")
-        assertThat(endpointA.clientNames).containsExactly("zipline/1")
-        assertThat(endpointB.serviceNames).containsExactly("zipline/1")
+        assertEquals(setOf("echoService"), endpointA.serviceNames)
+        assertEquals(setOf("echoService"), endpointB.clientNames)
+        assertEquals(setOf("zipline/1"), endpointA.clientNames)
+        assertEquals(setOf("zipline/1"), endpointB.serviceNames)
         return EchoResponse("hello, ${request.message}")
       }
     }
@@ -181,12 +179,12 @@ internal class EndpointTest {
     val client = endpointB.get<SuspendingEchoService>("echoService")
 
     val echoResponse = client.suspendingEcho(EchoRequest("Jesse"))
-    assertThat(echoResponse).isEqualTo(EchoResponse("hello, Jesse"))
+    assertEquals(EchoResponse("hello, Jesse"), echoResponse)
 
     // Confirm that these temporary references are cleaned up when the suspending call returns.
-    assertThat(endpointA.serviceNames).containsExactly("echoService")
-    assertThat(endpointB.clientNames).containsExactly("echoService")
-    assertThat(endpointA.clientNames).isEmpty()
-    assertThat(endpointB.serviceNames).isEmpty()
+    assertEquals(setOf("echoService"), endpointA.serviceNames)
+    assertEquals(setOf("echoService"), endpointB.clientNames)
+    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 }

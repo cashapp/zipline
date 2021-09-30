@@ -73,6 +73,9 @@ kotlin {
     }
     val engineTest by creating {
       dependsOn(commonTest)
+      dependencies {
+        implementation(project(":zipline:testing"))
+      }
     }
 
     val jniMain by creating {
@@ -95,7 +98,6 @@ kotlin {
       dependencies {
         implementation(Dependencies.truth)
         implementation(Dependencies.kotlinxCoroutinesTest)
-        implementation(project(":zipline:testing"))
       }
     }
   }

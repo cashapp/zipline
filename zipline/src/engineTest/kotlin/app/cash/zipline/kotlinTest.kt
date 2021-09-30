@@ -15,8 +15,6 @@
  */
 package app.cash.zipline
 
-import java.io.BufferedReader
-
 inline fun <reified T : Throwable> assertThrows(body: () -> Unit): T {
   try {
     body()
@@ -28,11 +26,4 @@ inline fun <reified T : Throwable> assertThrows(body: () -> Unit): T {
   }
   throw AssertionError(
       "Expected body to fail with ${T::class.simpleName!!} but completed successfully")
-}
-
-fun Zipline.loadTestingJs() {
-  val testingJs = Zipline::class.java.getResourceAsStream("/testing.js")!!
-    .bufferedReader()
-    .use(BufferedReader::readText)
-  quickJs.evaluate(testingJs, "testing.js")
 }
