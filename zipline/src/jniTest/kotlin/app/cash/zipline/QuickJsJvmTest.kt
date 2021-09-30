@@ -18,6 +18,7 @@ package app.cash.zipline
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class QuickJsJvmTest {
@@ -68,5 +69,13 @@ class QuickJsJvmTest {
     assertEquals("JavaScript.f1(test.js:4)", t.stackTrace[1].toString())
     assertEquals("JavaScript.<eval>(test.js:1)", t.stackTrace[2].toString())
     assertEquals("app.cash.zipline.QuickJs.evaluate(Native Method)", t.stackTrace[3].toString())
+  }
+
+  @Test fun dateNow() {
+    val beforeMillis = System.currentTimeMillis().toDouble()
+    val nowMillis = quickjs.evaluate("Date.now()") as Double
+    val afterMillis = System.currentTimeMillis().toDouble()
+    assertTrue("$beforeMillis <= $nowMillis <= $afterMillis",
+      nowMillis in beforeMillis..afterMillis)
   }
 }
