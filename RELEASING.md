@@ -22,7 +22,7 @@
    $ git tag -am "Version X.Y.Z" X.Y.Z
    ```
 
-6. Update the `VERSION_NAME` in `build.gradle.kts` to the next "SNAPSHOT" version.
+6. Update the `version` in `build.gradle.kts` to the next "SNAPSHOT" version.
 
 7. Commit
 
