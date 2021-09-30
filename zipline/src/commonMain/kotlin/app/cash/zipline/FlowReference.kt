@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.channelFlow
@@ -30,9 +31,9 @@ class FlowReference<T> @PublishedApi internal constructor(
   @Contextual private val referenceFlowReference: ZiplineReference<ReferenceFlow>,
   @Contextual private val serializer: ZiplineSerializer<T>,
 ) {
-  private fun getJsonFlow(): Flow<String> {
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private fun getJsonFlow(referenceFlow: ReferenceFlow): Flow<String> {
     return channelFlow {
-      val referenceFlow = referenceFlowReference.get()
       try {
         val collector: FlowCollector<String> = object : FlowCollector<String> {
           override suspend fun emit(value: String) {
@@ -49,8 +50,17 @@ class FlowReference<T> @PublishedApi internal constructor(
   }
 
   fun get(): Flow<T> {
-    return getJsonFlow()
-      .map { Json.decodeFromString(serializer, it) }
+    return when (val referenceFlow = referenceFlowReference.get()) {
+      is RealReferenceFlow<*> -> {
+        // If it's a RealReferenceFlow, then the instance didn't pass through Zipline. Don't attempt
+        // serialization both because it's unnecessary, and because the serializer isn't connected.
+        referenceFlow.flow as Flow<T>
+      }
+      else -> {
+        getJsonFlow(referenceFlow)
+          .map { Json.decodeFromString(serializer, it) }
+      }
+    }
   }
 }
 
@@ -72,7 +82,7 @@ internal interface ReferenceFlow {
 
 @PublishedApi
 internal class RealReferenceFlow<T>(
-  private val flow: Flow<T>,
+  val flow: Flow<T>,
   private val serializer: ZiplineSerializer<T>,
 ) : ReferenceFlow {
   override suspend fun collectJson(collectorReference: ZiplineReference<FlowCollector<String>>) {

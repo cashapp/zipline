@@ -109,4 +109,12 @@ internal class FlowTest {
     assertThat(endpointA.serviceNames).isEqualTo(initialServiceNames)
     assertThat(endpointA.clientNames).isEqualTo(initialClientNames)
   }
+
+  @Test
+  fun flowCanBeUsedWithoutPassingThroughZipline(): Unit = runBlocking(dispatcher) {
+    val service = RealFlowEchoService()
+    val flowReference = service.createFlow("hello", 3)
+    val flow = flowReference.get()
+    assertThat(flow.toList()).containsExactly("0 hello", "1 hello", "2 hello")
+  }
 }
