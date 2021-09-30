@@ -63,7 +63,8 @@ internal class ZiplineReferenceTest {
     (referenceA as InboundZiplineReference<*>).connect(endpointA, "helloService")
 
     // Note that we cast OutboundZiplineReference<EchoService> down to ZiplineReference<EchoService>
-    // before calling get(). This is necessary because we don't implement rewrites for overrides.
+    // before calling get(). This is necessary because the code rewriter doesn't rewrite for
+    // subclasses of ZiplineReference.
     val referenceB: ZiplineReference<EchoService> = OutboundZiplineReference()
     (referenceB as OutboundZiplineReference<EchoService>).connect(endpointB, "helloService")
 
