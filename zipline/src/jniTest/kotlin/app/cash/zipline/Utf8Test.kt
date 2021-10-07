@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.Utf8Test.Formatter
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -54,6 +55,7 @@ class Utf8Test {
     assertEquals("JavaScript.f1(a\uD83D\uDC1Dcdefg.js:4)", t.stackTrace[0].toString())
   }
 
+  @Ignore
   @Test fun nonAsciiInProxyInputAndOutput() {
     quickjs.evaluate("""
       |var formatter = {
@@ -66,6 +68,7 @@ class Utf8Test {
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)", formatter.format("a\uD83D\uDC1Dcdefg"))
   }
 
+  @Ignore
   @Test fun nonAsciiInBoundObjectInputAndOutput() {
     quickjs.set("formatter", Formatter::class,
         Formatter { message -> "($message, $message)" })
@@ -73,6 +76,7 @@ class Utf8Test {
         quickjs.evaluate("formatter.format('a\uD83D\uDC1Dcdefg');"))
   }
 
+  @Ignore
   @Test fun nonAsciiInExceptionThrownInJs() {
     quickjs.evaluate("""
       |var formatter = {
@@ -88,6 +92,7 @@ class Utf8Test {
     assertEquals("a\uD83D\uDC1Dcdefg", t.message)
   }
 
+  @Ignore
   @Test fun nonAsciiInExceptionThrownInJava() {
     quickjs.set("formatter", Formatter::class,
         Formatter { throw RuntimeException("a\uD83D\uDC1Dcdefg") })
@@ -97,6 +102,7 @@ class Utf8Test {
     assertEquals("a\uD83D\uDC1Dcdefg", t.message)
   }
 
+  @Ignore
   @Test fun nonAsciiInProxyResult() {
     quickjs.evaluate("""
       |var formatter = {

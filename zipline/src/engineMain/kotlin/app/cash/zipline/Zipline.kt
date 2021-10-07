@@ -44,10 +44,7 @@ actual class Zipline private constructor(
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call into JS. */
       private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
-        quickJs.get(
-          name = inboundChannelName,
-          type = CallChannel::class
-        )
+        quickJs.getInboundChannel()
       }
 
       override fun serviceNamesArray(): Array<String> {
@@ -92,11 +89,7 @@ actual class Zipline private constructor(
 
   init {
     // Eagerly publish the channel so they can call us.
-    quickJs.set(
-      name = outboundChannelName,
-      type = CallChannel::class,
-      instance = endpoint.inboundChannel
-    )
+    quickJs.initOutboundChannel(endpoint.inboundChannel)
 
     endpoint.set<Console>(
       name = consoleName,

@@ -24,8 +24,10 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Ignore
 import org.junit.Test
 
+@Ignore
 @Suppress("UNCHECKED_CAST")
 class QuickJsSetTest {
   private val quickJs = QuickJs.create()

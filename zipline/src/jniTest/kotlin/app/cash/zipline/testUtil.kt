@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import java.io.BufferedReader
+import kotlin.reflect.KClass
 
 inline fun <reified T : Throwable> assertThrows(body: () -> Unit): T {
   try {
@@ -35,4 +36,12 @@ fun Zipline.loadTestingJs() {
     .bufferedReader()
     .use(BufferedReader::readText)
   quickJs.evaluate(testingJs, "testing.js")
+}
+
+operator fun <T : Any> QuickJs.set(name: String, type: KClass<T>, instance: T) {
+  error("no longer supported")
+}
+
+operator fun <T : Any> QuickJs.get(name: String, type: KClass<T>): T {
+  error("no longer supported")
 }

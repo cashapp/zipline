@@ -25,6 +25,7 @@ import org.junit.Assert.assertNull
 import org.junit.Ignore
 import org.junit.Test
 
+@Ignore
 class QuickJsGetTest {
   private val quickJs = QuickJs.create()
 

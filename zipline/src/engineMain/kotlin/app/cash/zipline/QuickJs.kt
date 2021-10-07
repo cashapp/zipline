@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-import kotlin.reflect.KClass
+import app.cash.zipline.internal.bridge.CallChannel
 
 /**
  * An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.
@@ -74,28 +74,9 @@ expect class QuickJs {
    */
   fun execute(bytecode: ByteArray): Any?
 
-  /**
-   * Attaches to a global JavaScript object called `name` that implements `type`.
-   * `type` defines the interface implemented in JavaScript that will be accessible to Java.
-   * `type` must be an interface that does not extend any other interfaces, and cannot define
-   * any overloaded methods.
-   *
-   * Methods of the interface may return `void` or any of the following supported argument
-   * types: `boolean`, [Boolean], `int`, [Integer], `double`,
-   * [Double], [String].
-   */
-  operator fun <T : Any> get(name: String, type: KClass<T>): T
+  internal fun initOutboundChannel(outboundChannel: CallChannel)
 
-  /**
-   * Provides [instance] to JavaScript as a global object called [name]. [type]
-   * defines the interface implemented by [instance] that will be accessible to JavaScript.
-   * [type] must be an interface that does not extend any other interfaces, and cannot define
-   * any overloaded methods.
-   *
-   * Methods of the interface may return `void` or any of the following supported argument
-   * types: `boolean`, [Boolean], `int`, [Integer], `double`, [Double], [String].
-   */
-  operator fun <T : Any> set(name: String, type: KClass<T>, instance: T)
+  internal fun getInboundChannel(): CallChannel
 
   fun close()
 }

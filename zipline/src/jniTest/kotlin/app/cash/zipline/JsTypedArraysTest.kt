@@ -20,6 +20,7 @@ import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Test
 
 /**
@@ -88,6 +89,7 @@ class JsTypedArraysTest {
     fun transform(input: ByteArray?): ByteArray?
   }
 
+  @Ignore
   @Test fun byteArrayWithProxy() {
     quickJs.set("transformer", ByteArrayTransformer::class, ByteArrayTransformer { input ->
       requireNotNull(input)
@@ -110,6 +112,7 @@ class JsTypedArraysTest {
     assertArrayEquals(byteArrayOf(-2, -1, 0, 7, 9, 53, 86), byteArray)
   }
 
+  @Ignore
   @Test fun byteArrayWithProxyReturnsNull() {
     quickJs.set("transformer", ByteArrayTransformer::class, ByteArrayTransformer { null })
     val byteArray = quickJs.evaluate("""
@@ -120,6 +123,7 @@ class JsTypedArraysTest {
     assertNull(byteArray)
   }
 
+  @Ignore
   @Test fun byteArrayWithProxyReceivesNull() {
     quickJs.set("transformer", ByteArrayTransformer::class,
         ByteArrayTransformer { byteArrayOf(86) })
@@ -129,6 +133,7 @@ class JsTypedArraysTest {
     assertArrayEquals(byteArrayOf(86), byteArray)
   }
 
+  @Ignore
   @Test fun javaByteArrayConvertedToJsUint8Array() {
     quickJs.set("transformer", ByteArrayTransformer::class,
         ByteArrayTransformer { byteArrayOf(86) })

@@ -19,6 +19,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Test
 
 class QuickJsCompileTest {
@@ -92,6 +93,7 @@ class QuickJsCompileTest {
     val value: String?
   }
 
+  @Ignore
   @Test fun withAGetProxy() {
     val proxyDef = quickJs.compile("var value = { getValue: function() { return '8675309'; } };",
         "myObject.js")
@@ -110,6 +112,7 @@ class QuickJsCompileTest {
     assertEquals("8675309", proxy.value)
   }
 
+  @Ignore
   @Test fun withASetProxy() {
     val code = quickJs.compile("value.getValue();", "myFile.js")
     assertNotEquals(0, code.size)
