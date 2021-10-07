@@ -58,8 +58,6 @@ public:
   jclass getGlobalRef(JNIEnv* env, jclass clazz);
   std::string toCppString(JNIEnv* env, jstring string) const;
   jstring toJavaString(JNIEnv* env, const JSValueConst& value) const;
-  jobject toJavaByteArray(JNIEnv* env, const JSValueConst& value) const;
-  JSValue toJsByteArray(JNIEnv* env, jbyteArray value) const;
 
   JavaVM* javaVm;
   const jint jniVersion;
@@ -75,11 +73,8 @@ public:
   jstring stringUtf8;
   jclass quickJsExceptionClass;
   jmethodID booleanValueOf;
-  jmethodID booleanGetValue;
   jmethodID integerValueOf;
-  jmethodID integerGetValue;
   jmethodID doubleValueOf;
-  jmethodID doubleGetValue;
   jmethodID stringGetBytes;
   jmethodID stringConstructor;
   jmethodID memoryUsageConstructor;

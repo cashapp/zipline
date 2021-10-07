@@ -17,6 +17,7 @@ package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.inboundChannelName
 import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -37,16 +38,16 @@ class QuickJsInboundChannelTest {
   @Before
   fun setUp() {
     quickJs.evaluate("""
-      globalThis.${inboundChannelName} = {};
-      globalThis.${inboundChannelName}.serviceNamesArray = function() {
+      globalThis.$inboundChannelName = {};
+      globalThis.$inboundChannelName.serviceNamesArray = function() {
       };
-      globalThis.${inboundChannelName}.invoke = function(instanceName, funName, encodedArguments) {
+      globalThis.$inboundChannelName.invoke = function(instanceName, funName, encodedArguments) {
       };
-      globalThis.${inboundChannelName}.invokeSuspending = function(
+      globalThis.$inboundChannelName.invokeSuspending = function(
         instanceName, funName, encodedArguments, callbackName
       ) {
       };
-      globalThis.${inboundChannelName}.disconnect = function(instanceName) {
+      globalThis.$inboundChannelName.disconnect = function(instanceName) {
       };
     """.trimIndent())
 
@@ -55,7 +56,7 @@ class QuickJsInboundChannelTest {
   @Test
   fun invokeHappyPath() {
     quickJs.evaluate("""
-      globalThis.${inboundChannelName}.invoke = function(instanceName, funName, encodedArguments) {
+      globalThis.$inboundChannelName.invoke = function(instanceName, funName, encodedArguments) {
         var result = [
           'received call to invoke()',
           instanceName,
@@ -87,10 +88,10 @@ class QuickJsInboundChannelTest {
   fun invokeSuspendingHappyPath() {
     quickJs.evaluate("""
       var callLog = [];
-      globalThis.${inboundChannelName}.invoke = function(instanceName, funName, encodedArguments) {
+      globalThis.$inboundChannelName.invoke = function(instanceName, funName, encodedArguments) {
         return callLog.pop();
       };
-      globalThis.${inboundChannelName}.invokeSuspending = function(
+      globalThis.$inboundChannelName.invokeSuspending = function(
         instanceName, funName, encodedArguments, callbackName
       ) {
         var call = [
@@ -128,7 +129,7 @@ class QuickJsInboundChannelTest {
   fun serviceNamesArrayHappyPath() {
     quickJs.evaluate("""
       var callLog = [];
-      globalThis.${inboundChannelName}.serviceNamesArray = function() {
+      globalThis.$inboundChannelName.serviceNamesArray = function() {
         return ['service one', 'service two'];
       };
     """.trimIndent())
@@ -145,10 +146,10 @@ class QuickJsInboundChannelTest {
   fun disconnectHappyPath() {
     quickJs.evaluate("""
       var callLog = [];
-      globalThis.${inboundChannelName}.invoke = function(instanceName, funName, encodedArguments) {
+      globalThis.$inboundChannelName.invoke = function(instanceName, funName, encodedArguments) {
         return callLog.pop();
       };
-      globalThis.${inboundChannelName}.disconnect = function(instanceName) {
+      globalThis.$inboundChannelName.disconnect = function(instanceName) {
         callLog.push(['disconnect', instanceName]);
         return true;
       };
@@ -161,5 +162,55 @@ class QuickJsInboundChannelTest {
       "disconnect",
       "service one"
     )
+  }
+
+  @Test
+  fun noInboundChannelThrows() {
+    quickJs.evaluate("""
+      delete globalThis.$inboundChannelName;
+    """.trimIndent())
+
+    val t = assertFailsWith<IllegalArgumentException> {
+      quickJs.getInboundChannel()
+    }
+    assertThat(t)
+      .hasMessageThat()
+      .isEqualTo("A global JavaScript object called $inboundChannelName was not found")
+  }
+
+  @Test
+  fun callFunctionAfterClosingQuickJsThrows() {
+    val inboundChannel = quickJs.getInboundChannel()
+    quickJs.close()
+
+    val t = assertFailsWith<NullPointerException> {
+      inboundChannel.disconnect("service one")
+    }
+    assertThat(t)
+      .hasMessageThat()
+      .isEqualTo("Null QuickJs context - did you close your QuickJs?")
+  }
+
+  /**
+   * We expect most failures to be caught and encoded by kotlinx.serialization in Zipline. But if
+   * that crashes it could throw a JavaScript exception. Confirm such exceptions are reasonable.
+   */
+  @Test fun inboundChannelThrowsInJavaScript() {
+    quickJs.evaluate("""
+      function goBoom() {
+        noSuchMethod();
+      }
+      globalThis.$inboundChannelName.disconnect = function(instanceName) {
+        goBoom();
+      };
+    """.trimIndent(), "explode.js")
+    val inboundChannel = quickJs.getInboundChannel()
+    val t = assertFailsWith<QuickJsException> {
+      inboundChannel.disconnect("service one")
+    }
+    assertThat(t)
+      .hasMessageThat()
+      .isEqualTo("'noSuchMethod' is not defined")
+    assertThat(t.stackTraceToString()).contains("JavaScript.goBoom(explode.js:2)")
   }
 }

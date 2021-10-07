@@ -103,12 +103,12 @@ class QuickJsCompileTest {
     quickJs = QuickJs.create()
 
     val t = assertThrows<IllegalArgumentException> {
-      quickJs.get("value", QuickJsGetTest.TestInterface::class)
+      quickJs.get("value", TestInterface::class)
     }
     assertEquals("A global JavaScript object called value was not found", t.message)
 
     quickJs.execute(proxyDef)
-    val proxy = quickJs.get("value", QuickJsGetTest.TestInterface::class)
+    val proxy = quickJs.get("value", TestInterface::class)
     assertEquals("8675309", proxy.value)
   }
 

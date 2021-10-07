@@ -89,11 +89,8 @@ Context::Context(JNIEnv* env)
       quickJsExceptionClass(static_cast<jclass>(env->NewGlobalRef(
           env->FindClass("app/cash/zipline/QuickJsException")))),
       booleanValueOf(env->GetStaticMethodID(booleanClass, "valueOf", "(Z)Ljava/lang/Boolean;")),
-      booleanGetValue(env->GetMethodID(booleanClass, "booleanValue", "()Z")),
       integerValueOf(env->GetStaticMethodID(integerClass, "valueOf", "(I)Ljava/lang/Integer;")),
-      integerGetValue(env->GetMethodID(integerClass, "intValue", "()I")),
       doubleValueOf(env->GetStaticMethodID(doubleClass, "valueOf", "(D)Ljava/lang/Double;")),
-      doubleGetValue(env->GetMethodID(doubleClass, "doubleValue", "()D")),
       stringGetBytes(env->GetMethodID(stringClass, "getBytes", "(Ljava/lang/String;)[B")),
       stringConstructor(env->GetMethodID(stringClass, "<init>", "([BLjava/lang/String;)V")),
       quickJsExceptionConstructor(env->GetMethodID(quickJsExceptionClass, "<init>",
@@ -407,12 +404,6 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
           JS_FreeValue(jsContext, element);
         }
         break;
-      } else {
-        jobject javaByteArrayObject = toJavaByteArray(env, value);
-        if (javaByteArrayObject != nullptr) {
-          result = javaByteArrayObject;
-          break;
-        }
       }
       // Fall through.
     default:
@@ -453,80 +444,24 @@ Context::getJavaToJsConverter(JNIEnv* env, jclass type, bool boxed) {
                                               "()Ljava/lang/Class;");
     auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
     const auto elementTypeName = getName(env, elementType);
-    if (elementTypeName == "byte") {
-      return [](Context* c, JNIEnv* env, jvalue v) {
-        if (!v.l) return JS_NULL;
-        JSValue result = c->toJsByteArray(env, static_cast<jbyteArray>(v.l));
-        if (env->ExceptionCheck()) {
-          c->throwJavaExceptionFromJs(env);
+    auto converter = getJavaToJsConverter(env, elementType, true);
+    return [converter](Context* c, JNIEnv* env, jvalue v) {
+      if (!v.l) return JS_NULL;
+      JSValue result = JS_NewArray(c->jsContext);
+      jvalue element;
+      const auto length = env->GetArrayLength(static_cast<jarray>(v.l));
+      for (jsize i = 0; i < length && !env->ExceptionCheck(); i++) {
+        element.l = env->GetObjectArrayElement(static_cast<jobjectArray >(v.l), i);
+        if (!env->ExceptionCheck()) {
+          JS_SetPropertyUint32(c->jsContext, result, i, converter(c, env, element));
         }
-        return result;
-      };
-    } else if (elementTypeName == "double") {
-      return [](Context* c, JNIEnv* env, jvalue v) {
-        if (!v.l) return JS_NULL;
-        JSValue result = JS_NewArray(c->jsContext);
-        auto elements = env->GetDoubleArrayElements(static_cast<jdoubleArray>(v.l), nullptr);
-        const auto length = env->GetArrayLength(static_cast<jarray>(v.l));
-        for (jsize i = 0; i < length && !env->ExceptionCheck(); i++) {
-          JS_SetPropertyUint32(c->jsContext, result, i, JS_NewFloat64(c->jsContext, elements[i]));
-        }
-        env->ReleaseDoubleArrayElements(static_cast<jdoubleArray>(v.l), elements, JNI_ABORT);
-        if (env->ExceptionCheck()) {
-          c->throwJavaExceptionFromJs(env);
-        }
-        return result;
-      };
-    } else if (elementTypeName == "int") {
-      return [](Context* c, JNIEnv* env, jvalue v) {
-        if (!v.l) return JS_NULL;
-        JSValue result = JS_NewArray(c->jsContext);
-        auto elements = env->GetIntArrayElements(static_cast<jintArray >(v.l), nullptr);
-        const auto length = env->GetArrayLength(static_cast<jarray>(v.l));
-        for (jsize i = 0; i < length && !env->ExceptionCheck(); i++) {
-          JS_SetPropertyUint32(c->jsContext, result, i, JS_NewInt32(c->jsContext, elements[i]));
-        }
-        env->ReleaseIntArrayElements(static_cast<jintArray>(v.l), elements, JNI_ABORT);
-        if (env->ExceptionCheck()) {
-          c->throwJavaExceptionFromJs(env);
-        }
-        return result;
-      };
-    } else if (elementTypeName == "boolean") {
-      return [](Context* c, JNIEnv* env, jvalue v) {
-        if (!v.l) return JS_NULL;
-        JSValue result = JS_NewArray(c->jsContext);
-        auto elements = env->GetBooleanArrayElements(static_cast<jbooleanArray>(v.l), nullptr);
-        const auto length = env->GetArrayLength(static_cast<jarray>(v.l));
-        for (jsize i = 0; i < length && !env->ExceptionCheck(); i++) {
-          JS_SetPropertyUint32(c->jsContext, result, i, JS_NewBool(c->jsContext, elements[i]));
-        }
-        env->ReleaseBooleanArrayElements(static_cast<jbooleanArray>(v.l), elements, JNI_ABORT);
-        if (env->ExceptionCheck()) {
-          c->throwJavaExceptionFromJs(env);
-        }
-        return result;
-      };
-    } else {
-      auto converter = getJavaToJsConverter(env, elementType, true);
-      return [converter](Context* c, JNIEnv* env, jvalue v) {
-        if (!v.l) return JS_NULL;
-        JSValue result = JS_NewArray(c->jsContext);
-        jvalue element;
-        const auto length = env->GetArrayLength(static_cast<jarray>(v.l));
-        for (jsize i = 0; i < length && !env->ExceptionCheck(); i++) {
-          element.l = env->GetObjectArrayElement(static_cast<jobjectArray >(v.l), i);
-          if (!env->ExceptionCheck()) {
-            JS_SetPropertyUint32(c->jsContext, result, i, converter(c, env, element));
-          }
-          env->DeleteLocalRef(element.l);
-        }
-        if (env->ExceptionCheck()) {
-          c->throwJavaExceptionFromJs(env);
-        }
-        return result;
-      };
-    }
+        env->DeleteLocalRef(element.l);
+      }
+      if (env->ExceptionCheck()) {
+        c->throwJavaExceptionFromJs(env);
+      }
+      return result;
+    };
   }
 
   if (typeName == "java.lang.String") {
@@ -536,40 +471,9 @@ Context::getJavaToJsConverter(JNIEnv* env, jclass type, bool boxed) {
       auto jsString = JS_NewString(c->jsContext, string.c_str());
       return jsString;
     };
-  } else if (typeName == "java.lang.Double" || (typeName == "double" && boxed)) {
-    return [](Context* c, JNIEnv* env, jvalue v) {
-      return v.l != nullptr
-             ? JS_NewFloat64(c->jsContext, env->CallDoubleMethod(v.l, c->doubleGetValue))
-             : JS_NULL;
-    };
-  } else if (typeName == "java.lang.Integer" || (typeName == "int" && boxed)) {
-    return [](Context* c, JNIEnv* env, jvalue v) {
-      return v.l != nullptr
-             ? JS_NewInt32(c->jsContext, env->CallIntMethod(v.l, c->integerGetValue))
-             : JS_NULL;
-    };
-  } else if (typeName == "java.lang.Boolean" || (typeName == "boolean" && boxed)) {
-    return [](Context* c, JNIEnv* env, jvalue v) {
-      return v.l != nullptr
-             ? JS_NewBool(c->jsContext, env->CallBooleanMethod(v.l, c->booleanGetValue))
-             : JS_NULL;
-    };
-  } else if (typeName == "double") {
-    return [](Context* c, JNIEnv* env, jvalue v) {
-      return JS_NewFloat64(c->jsContext, v.d);
-    };
-  } else if (typeName == "int") {
-    return [](Context* c, JNIEnv* env, jvalue v) {
-      return JS_NewInt32(c->jsContext, v.i);
-    };
   } else if (typeName == "boolean") {
     return [](Context* c, JNIEnv* env, jvalue v) {
       return JS_NewBool(c->jsContext, v.z);
-    };
-  } else if (typeName == "java.lang.Object") {
-    return [](Context* c, JNIEnv* env, jvalue v) {
-      if (!v.l) return JS_NULL;
-      return c->getJavaToJsConverter(env, env->GetObjectClass(v.l), true)(c, env, v);
     };
   } else if (typeName == "void") {
     return [](Context*, JNIEnv* env, jvalue) {
@@ -595,162 +499,36 @@ Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) {
                                               "()Ljava/lang/Class;");
     auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
     const auto elementTypeName = getName(env, elementType);
-    if (elementTypeName == "byte") {
-      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-        jvalue result;
-        if (JS_IsNull(v) || JS_IsUndefined(v)) {
+    auto converter = getJsToJavaConverter(env, elementType, true);
+    auto elementTypeGlobalRef = getGlobalRef(env, elementType);
+    return [converter, elementTypeGlobalRef](Context* c, JNIEnv* env,
+                                             const JSValueConst& v) {
+      jvalue result;
+      if (JS_IsNull(v) || JS_IsUndefined(v)) {
+        result.l = nullptr;
+      } else if (JS_IsException(v)) {
+        result.l = nullptr;
+        c->throwJsException(env, v);
+      } else {
+        int length = 0;
+        auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
+        if (JS_ToInt32(c->jsContext, &length, jsLength)) {
           result.l = nullptr;
-        } else if (JS_IsException(v)) {
-          result.l = nullptr;
-          c->throwJsException(env, v);
+          c->throwJsException(env, jsLength);
         } else {
-          result.l = c->toJavaByteArray(env, v);
-        }
-        return result;
-      };
-    } else if (elementTypeName == "double") {
-      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-        jvalue result;
-        if (JS_IsNull(v) || JS_IsUndefined(v)) {
-          result.l = nullptr;
-        } else if (JS_IsException(v)) {
-          result.l = nullptr;
-          c->throwJsException(env, v);
-        } else {
-          int length = 0;
-          auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
-          if (JS_ToInt32(c->jsContext, &length, jsLength)) {
-            result.l = nullptr;
-            c->throwJsException(env, jsLength);
-          } else {
-            result.l = env->NewDoubleArray(length);
-            for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
-              double element;
-              auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
-              if (!JS_IsNumber(jsElement)) {
-                const auto str = JS_ToCString(c->jsContext, jsElement);
-                throwJavaException(env, "java/lang/IllegalArgumentException",
-                                   "Cannot convert value %s to double", str);
-                JS_FreeCString(c->jsContext, str);
-              } else if (JS_ToFloat64(c->jsContext, &element, jsElement)) {
-                c->throwJsException(env, jsElement);
-              } else {
-                env->SetDoubleArrayRegion(static_cast<jdoubleArray>(result.l), i, 1, &element);
-              }
-              JS_FreeValue(c->jsContext, jsElement);
-            }
+          result.l = env->NewObjectArray(length, elementTypeGlobalRef, nullptr);
+          for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
+            auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
+            jvalue element = converter(c, env, jsElement);
+            JS_FreeValue(c->jsContext, jsElement);
+            if (env->ExceptionCheck()) break;
+            env->SetObjectArrayElement(static_cast<jobjectArray>(result.l), i, element.l);
           }
-          JS_FreeValue(c->jsContext, jsLength);
         }
-        return result;
-      };
-    } else if (elementTypeName == "int") {
-      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-        jvalue result;
-        if (JS_IsNull(v) || JS_IsUndefined(v)) {
-          result.l = nullptr;
-        } else if (JS_IsException(v)) {
-          result.l = nullptr;
-          c->throwJsException(env, v);
-        } else {
-          int length = 0;
-          auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
-          if (JS_ToInt32(c->jsContext, &length, jsLength)) {
-            result.l = nullptr;
-            c->throwJsException(env, jsLength);
-          } else {
-            result.l = env->NewIntArray(length);
-            for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
-              int element;
-              auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
-              if (JS_VALUE_GET_TAG(jsElement) != JS_TAG_INT) {
-                const auto str = JS_ToCString(c->jsContext, jsElement);
-                throwJavaException(env, "java/lang/IllegalArgumentException",
-                                   "Cannot convert value %s to int", str);
-                JS_FreeCString(c->jsContext, str);
-              } else if (JS_ToInt32(c->jsContext, &element, jsElement)) {
-                c->throwJsException(env, jsElement);
-              } else {
-                env->SetIntArrayRegion(static_cast<jintArray>(result.l), i, 1, &element);
-              }
-              JS_FreeValue(c->jsContext, jsElement);
-            }
-          }
-          JS_FreeValue(c->jsContext, jsLength);
-        }
-        return result;
-      };
-    } else if (elementTypeName == "boolean") {
-      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-        jvalue result;
-        if (JS_IsNull(v) || JS_IsUndefined(v)) {
-          result.l = nullptr;
-        } else if (JS_IsException(v)) {
-          result.l = nullptr;
-          c->throwJsException(env, v);
-        } else {
-          int length = 0;
-          auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
-          if (JS_ToInt32(c->jsContext, &length, jsLength)) {
-            result.l = nullptr;
-            c->throwJsException(env, jsLength);
-          } else {
-            result.l = env->NewBooleanArray(length);
-            for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
-              auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
-              if (!JS_IsBool(jsElement)) {
-                const auto str = JS_ToCString(c->jsContext, jsElement);
-                throwJavaException(env, "java/lang/IllegalArgumentException",
-                                   "Cannot convert value %s to boolean", str);
-                JS_FreeCString(c->jsContext, str);
-              } else {
-                int r = JS_ToBool(c->jsContext, jsElement);
-                if (r < 0) {
-                  c->throwJsException(env, jsElement);
-                } else {
-                  jboolean element = r != 0;
-                  env->SetBooleanArrayRegion(static_cast<jbooleanArray>(result.l), i, 1, &element);
-                }
-              }
-              JS_FreeValue(c->jsContext, jsElement);
-            }
-          }
-          JS_FreeValue(c->jsContext, jsLength);
-        }
-        return result;
-      };
-    } else {
-      auto converter = getJsToJavaConverter(env, elementType, true);
-      auto elementTypeGlobalRef = getGlobalRef(env, elementType);
-      return [converter, elementTypeGlobalRef](Context* c, JNIEnv* env,
-                                               const JSValueConst& v) {
-        jvalue result;
-        if (JS_IsNull(v) || JS_IsUndefined(v)) {
-          result.l = nullptr;
-        } else if (JS_IsException(v)) {
-          result.l = nullptr;
-          c->throwJsException(env, v);
-        } else {
-          int length = 0;
-          auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
-          if (JS_ToInt32(c->jsContext, &length, jsLength)) {
-            result.l = nullptr;
-            c->throwJsException(env, jsLength);
-          } else {
-            result.l = env->NewObjectArray(length, elementTypeGlobalRef, nullptr);
-            for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
-              auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
-              jvalue element = converter(c, env, jsElement);
-              JS_FreeValue(c->jsContext, jsElement);
-              if (env->ExceptionCheck()) break;
-              env->SetObjectArrayElement(static_cast<jobjectArray>(result.l), i, element.l);
-            }
-          }
-          JS_FreeValue(c->jsContext, jsLength);
-        }
-        return result;
-      };
-    }
+        JS_FreeValue(c->jsContext, jsLength);
+      }
+      return result;
+    };
   }
 
   if (typeName == "java.lang.String") {
@@ -772,123 +550,49 @@ Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) {
       }
       return result;
     };
-  } else if (typeName == "java.lang.Double" || (typeName == "double" && boxed)) {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      if (JS_IsNull(v) || JS_IsUndefined(v)) {
-        result.l = nullptr;
-      } else if (JS_IsException(v)) {
-        result.l = nullptr;
-        c->throwJsException(env, v);
-      } else {
-        if (JS_ToFloat64(c->jsContext, &result.d, v)) {
-          c->throwJsException(env, v);
+  } else if (typeName == "boolean" && boxed) {
+    if (boxed) {
+      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
+        jvalue result;
+        if (JS_IsNull(v) || JS_IsUndefined(v)) {
           result.l = nullptr;
+        } else if (JS_IsException(v)) {
+          result.l = nullptr;
+          c->throwJsException(env, v);
         } else {
-          result.l = env->CallStaticObjectMethodA(c->doubleClass, c->doubleValueOf, &result);
+          int r = JS_ToBool(c->jsContext, v);
+          if (r < 0) {
+            c->throwJsException(env, v);
+            result.l = nullptr;
+          } else {
+            result.z = r != 0;
+            result.l = env->CallStaticObjectMethodA(c->booleanClass, c->booleanValueOf, &result);
+          }
         }
-      }
-      return result;
-    };
-  } else if (typeName == "java.lang.Integer" || (typeName == "int" && boxed)) {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      if (JS_IsNull(v) || JS_IsUndefined(v)) {
-        result.l = nullptr;
-      } else if (JS_IsException(v)) {
-        result.l = nullptr;
-        c->throwJsException(env, v);
-      } else {
-        if (JS_ToInt32(c->jsContext, &result.i, v)) {
-          c->throwJsException(env, v);
+        return result;
+      };
+    } else {
+      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
+        jvalue result;
+        if (!JS_IsBool(v)) {
           result.l = nullptr;
-        } else {
-          result.l = env->CallStaticObjectMethodA(c->integerClass, c->integerValueOf, &result);
-        }
-      }
-      return result;
-    };
-  } else if (typeName == "java.lang.Boolean" || (typeName == "boolean" && boxed)) {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      if (JS_IsNull(v) || JS_IsUndefined(v)) {
-        result.l = nullptr;
-      } else if (JS_IsException(v)) {
-        result.l = nullptr;
-        c->throwJsException(env, v);
-      } else {
-        int r = JS_ToBool(c->jsContext, v);
-        if (r < 0) {
-          c->throwJsException(env, v);
+          const auto str = JS_ToCString(c->jsContext, v);
+          throwJavaException(env, "java/lang/IllegalArgumentException",
+                             "Cannot convert value %s to boolean", str);
+          JS_FreeCString(c->jsContext, str);
+        } else if (JS_IsException(v)) {
           result.l = nullptr;
+          c->throwJsException(env, v);
         } else {
+          int r = JS_ToBool(c->jsContext, v);
+          if (r < 0) {
+            c->throwJsException(env, v);
+          }
           result.z = r != 0;
-          result.l = env->CallStaticObjectMethodA(c->booleanClass, c->booleanValueOf, &result);
         }
-      }
-      return result;
-    };
-  } else if (typeName == "double") {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      if (!JS_IsNumber(v)) {
-        result.l = nullptr;
-        const auto str = JS_ToCString(c->jsContext, v);
-        throwJavaException(env, "java/lang/IllegalArgumentException",
-                           "Cannot convert value %s to double", str);
-        JS_FreeCString(c->jsContext, str);
-      } else if (JS_IsException(v)) {
-        result.l = nullptr;
-        c->throwJsException(env, v);
-      } else if (JS_ToFloat64(c->jsContext, &result.d, v)) {
-        c->throwJsException(env, v);
-      }
-      return result;
-    };
-  } else if (typeName == "int") {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      if (JS_VALUE_GET_TAG(v) != JS_TAG_INT) {
-        result.l = nullptr;
-        const auto str = JS_ToCString(c->jsContext, v);
-        throwJavaException(env, "java/lang/IllegalArgumentException",
-                           "Cannot convert value %s to int", str);
-        JS_FreeCString(c->jsContext, str);
-      } else if (JS_IsException(v)) {
-        result.l = nullptr;
-        c->throwJsException(env, v);
-      } else if (JS_ToInt32(c->jsContext, &result.i, v)) {
-        c->throwJsException(env, v);
-      }
-      return result;
-    };
-  } else if (typeName == "boolean") {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      if (!JS_IsBool(v)) {
-        result.l = nullptr;
-        const auto str = JS_ToCString(c->jsContext, v);
-        throwJavaException(env, "java/lang/IllegalArgumentException",
-                           "Cannot convert value %s to boolean", str);
-        JS_FreeCString(c->jsContext, str);
-      } else if (JS_IsException(v)) {
-        result.l = nullptr;
-        c->throwJsException(env, v);
-      } else {
-        int r = JS_ToBool(c->jsContext, v);
-        if (r < 0) {
-          c->throwJsException(env, v);
-        }
-        result.z = r != 0;
-      }
-      return result;
-    };
-  } else if (typeName == "java.lang.Object") {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      result.l = c->toJavaObject(env, v);
-      return result;
-    };
+        return result;
+      };
+    }
   } else if (typeName == "void") {
     return [](Context* c, JNIEnv* env, const JSValueConst& v) {
       jvalue result;
@@ -1037,54 +741,4 @@ jstring Context::toJavaString(JNIEnv* env, const JSValueConst& value) const {
   jstring result = static_cast<jstring>(env->NewObject(stringClass, stringConstructor, utf8BytesObject, stringUtf8));
   env->DeleteLocalRef(utf8BytesObject);
   return result;
-}
-
-/**
- * Create a new byte[] and copy the Int8Array, Uint8Array, or Uint8ClampedArray into it. This uses
- * std::copy rather than a loop for efficiency.
- *
- * To get directly at the memory in `value` this needs to get the TypedArrayBuffer from the JS
- * TypedArray and then get an ArrayBuffer from that.
- */
-jobject Context::toJavaByteArray(JNIEnv* env, const JSValueConst& value) const {
-  jobject result = nullptr;
-  size_t jsArrayBufferElementSize;
-  JSValue jsArrayBuffer = JS_GetTypedArrayBuffer(jsContext, value, NULL, NULL, &jsArrayBufferElementSize);
-  if (jsArrayBufferElementSize == 1) {
-    size_t jsArrayLength;
-    uint8_t* jsByteArray = JS_GetArrayBuffer(jsContext, &jsArrayLength, jsArrayBuffer);
-    if (jsByteArray != NULL) {
-      jbyteArray javaByteArrayObject = env->NewByteArray(jsArrayLength);
-      jbyte* javaByteArray = env->GetByteArrayElements(javaByteArrayObject, NULL);
-      std::copy(jsByteArray, jsByteArray + jsArrayLength, javaByteArray);
-      env->ReleaseByteArrayElements(javaByteArrayObject, javaByteArray, JNI_COMMIT);
-      result = javaByteArrayObject;
-    }
-  }
-  JS_FreeValue(jsContext, jsArrayBuffer);
-  return result;
-}
-
-/**
- * Create a new Uint8Array and copy the byte[] into it. This uses std::copy rather than a loop for
- * efficiency. This needs to look up the function `Uint8Array()` on the global object, then invoke
- * it as a constructor with the size of the new array.
- */
-JSValue Context::toJsByteArray(JNIEnv* env, jbyteArray value) const {
-  const auto length = env->GetArrayLength(value);
-  JSValue globalObject = JS_GetGlobalObject(jsContext);
-  JSValue uint8Constructor = JS_GetPropertyStr(jsContext, globalObject, "Uint8Array");
-  JS_FreeValue(jsContext, globalObject);
-  JSValue jsLength = JS_NewInt32(jsContext, length);
-  JSValue jsArray = JS_CallConstructor(jsContext, uint8Constructor, 1, &jsLength);
-  JS_FreeValue(jsContext, uint8Constructor);
-  JS_FreeValue(jsContext, jsLength);
-  JSValue jsArrayBuffer = JS_GetTypedArrayBuffer(jsContext, jsArray, NULL, NULL, NULL);
-  size_t jsArrayLength;
-  uint8_t* jsByteArray = JS_GetArrayBuffer(jsContext, &jsArrayLength, jsArrayBuffer);
-  jbyte* javaBytes = env->GetByteArrayElements(value, NULL);
-  std::copy(javaBytes, javaBytes + length, jsByteArray);
-  env->ReleaseByteArrayElements(value, javaBytes, JNI_COMMIT);
-  JS_FreeValue(jsContext, jsArrayBuffer);
-  return jsArray;
 }
