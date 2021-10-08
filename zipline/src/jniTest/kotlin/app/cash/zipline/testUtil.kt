@@ -16,8 +16,6 @@
 package app.cash.zipline
 
 import java.io.BufferedReader
-import java.io.PrintWriter
-import java.io.StringWriter
 import kotlin.reflect.KClass
 
 inline fun <reified T : Throwable> assertThrows(body: () -> Unit): T {
@@ -38,12 +36,6 @@ fun Zipline.loadTestingJs() {
     .bufferedReader()
     .use(BufferedReader::readText)
   quickJs.evaluate(testingJs, "testing.js")
-}
-
-fun Throwable.stackTraceToString(): String {
-  val result = StringWriter()
-  printStackTrace(PrintWriter(result))
-  return result.toString()
 }
 
 operator fun <T : Any> QuickJs.set(name: String, type: KClass<T>, instance: T) {

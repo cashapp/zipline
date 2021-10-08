@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.outboundChannelName
 import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -101,10 +102,63 @@ class QuickJsOutboundChannelTest {
     )
   }
 
+  @Test
+  fun jvmExceptionsWithUnifiedStackTrace() {
+    callChannel.disconnectThrow = true
+    val t = assertFailsWith<UnsupportedOperationException> {
+      quickJs.evaluate("""
+        function f1() {
+          globalThis.${outboundChannelName}.disconnect('theInstanceName');
+        }
+
+        function f2() {
+          f1();
+        }
+
+        f2();
+      """.trimIndent(), "explode.js")
+    }
+    assertThat(t)
+      .hasMessageThat()
+      .isEqualTo("boom!")
+    val stackTrace = t.stackTraceToString()
+
+    // The stack trace starts with the throwing code.
+    assertThat(stackTrace).contains("LoggingCallChannel.disconnect")
+
+    // It includes JavaScript line numbers.
+    assertThat(stackTrace).contains("JavaScript.disconnect(native)")
+    assertThat(stackTrace).contains("JavaScript.f1(explode.js:2)")
+    assertThat(stackTrace).contains("JavaScript.f2(explode.js:6)")
+
+    // It includes JNI bridging into JavaScript.
+    assertThat(stackTrace).contains("QuickJs.evaluate(Native Method)")
+
+    // And this test method.
+    assertThat(stackTrace).contains("QuickJsOutboundChannelTest.jvmExceptionsWithUnifiedStackTrace")
+  }
+
+  @Test
+  fun lotsOfCalls() {
+    val count = quickJs.evaluate(
+      """
+      |var count = 0;
+      |for (var i = 0; i < 100000; i++) {
+      |  var result = globalThis.${outboundChannelName}.disconnect('theInstanceName');
+      |  if (result) count++;
+      |}
+      |count;
+      """.trimMargin()
+    ) as Int
+    assertThat(callChannel.log).hasSize(100000)
+    assertThat(count).isEqualTo(100000)
+  }
+
   private class LoggingCallChannel : CallChannel {
     val log = mutableListOf<String>()
     val serviceNamesResult = mutableListOf<String>()
     val invokeResult = mutableListOf<String>()
+    var disconnectThrow = false
     var disconnectResult = true
 
     override fun serviceNamesArray(): Array<String> {
@@ -133,6 +187,7 @@ class QuickJsOutboundChannelTest {
 
     override fun disconnect(instanceName: String): Boolean {
       log += "disconnect($instanceName)"
+      if (disconnectThrow) throw UnsupportedOperationException("boom!")
       return disconnectResult
     }
   }

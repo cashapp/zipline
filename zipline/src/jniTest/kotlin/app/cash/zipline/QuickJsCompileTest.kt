@@ -125,8 +125,11 @@ class QuickJsCompileTest {
     }
     assertEquals("'value' is not defined", t.message)
 
-    quickJs.set("value", QuickJsSetTest.TestInterface::class,
-        QuickJsSetTest.TestInterface { "8675309" })
+    quickJs.set("value", TestInterface::class,
+      object : TestInterface {
+        override val value: String get() = "8675309"
+      }
+    )
     assertEquals("8675309", quickJs.execute(code))
   }
 }
