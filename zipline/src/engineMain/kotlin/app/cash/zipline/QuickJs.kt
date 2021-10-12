@@ -42,6 +42,9 @@ expect class QuickJs {
    */
   var interruptHandler: InterruptHandler?
 
+  /** Memory usage statistics for the JavaScript engine. */
+  val memoryUsage: MemoryUsage
+
   /** Default is -1. Use -1 for no limit. */
   var memoryLimit: Long
 
