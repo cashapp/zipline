@@ -20,6 +20,7 @@ buildscript {
     classpath(Dependencies.kotlinGradlePlugin)
     classpath(Dependencies.kotlinSerialization)
     classpath(Dependencies.dokkaGradlePlugin)
+    classpath(Dependencies.shadowJarPlugin)
   }
 }
 

@@ -29,7 +29,13 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   override fun getPluginArtifact(): SubpluginArtifact = SubpluginArtifact(
     groupId = BuildConfig.KOTLIN_PLUGIN_GROUP,
     artifactId = BuildConfig.KOTLIN_PLUGIN_NAME,
-    version = BuildConfig.KOTLIN_PLUGIN_VERSION
+    version = BuildConfig.KOTLIN_PLUGIN_VERSION,
+  )
+
+  override fun getPluginArtifactForNative(): SubpluginArtifact = SubpluginArtifact(
+    groupId = BuildConfig.KOTLIN_PLUGIN_GROUP,
+    artifactId = BuildConfig.KOTLIN_PLUGIN_HOSTED_NAME,
+    version = BuildConfig.KOTLIN_PLUGIN_VERSION,
   )
 
   override fun applyToCompilation(
