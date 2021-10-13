@@ -76,7 +76,7 @@ actual class QuickJs private constructor(
     }
 
   /** Memory usage statistics for the JavaScript engine. */
-  val memoryUsage: MemoryUsage
+  actual val memoryUsage: MemoryUsage
     get() = memoryUsage(context) ?: throw AssertionError()
 
   /** Default is -1. Use -1 for no limit. */
