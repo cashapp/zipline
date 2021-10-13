@@ -26,6 +26,7 @@ import app.cash.zipline.testing.jsSuspendingEchoService
 import app.cash.zipline.testing.prepareSuspendingJvmBridges
 import app.cash.zipline.testing.yoService
 import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -48,10 +49,10 @@ class ZiplineTest {
 
   @Test fun cannotGetOrSetServiceAfterClose(): Unit = runBlocking(dispatcher) {
     zipline.close()
-    assertThat(assertThrows<IllegalStateException> {
+    assertThat(assertFailsWith<IllegalStateException> {
       zipline.get<EchoService>("helloService")
     })
-    assertThat(assertThrows<IllegalStateException> {
+    assertThat(assertFailsWith<IllegalStateException> {
       zipline.set<EchoService>("supService", JvmEchoService("sup"))
     })
   }
@@ -61,7 +62,7 @@ class ZiplineTest {
     val service = zipline.helloService
 
     zipline.close()
-    assertThat(assertThrows<IllegalStateException> {
+    assertThat(assertFailsWith<IllegalStateException> {
       service.echo(EchoRequest("Jake"))
     }).hasMessageThat().isEqualTo("Zipline closed")
   }
@@ -85,7 +86,7 @@ class ZiplineTest {
   @Test fun jvmCallJsServiceThatThrows(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareThrowingJsBridges()")
 
-    assertThat(assertThrows<Exception> {
+    assertThat(assertFailsWith<Exception> {
       zipline.helloService.echo(EchoRequest("Jake"))
     }).hasMessageThat().contains("boom!") // 'IllegalStateException' prefix lost when we minify JS.
   }
@@ -93,7 +94,7 @@ class ZiplineTest {
   @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
     zipline.set<EchoService>("supService", JvmThrowingEchoService())
 
-    assertThat(assertThrows<QuickJsException> {
+    assertThat(assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
     }).hasMessageThat().contains("java.lang.IllegalStateException: boom!")
   }

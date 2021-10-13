@@ -22,6 +22,7 @@ import app.cash.zipline.testing.AdaptersResponseSerializersModule
 import app.cash.zipline.testing.AdaptersSerializersModule
 import app.cash.zipline.testing.AdaptersService
 import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -49,13 +50,13 @@ class SerializersTest {
   }
 
   @Test fun missingGetReturnValueSerializerFailsFast(): Unit = runBlocking(dispatcher) {
-    assertThat(assertThrows<IllegalArgumentException> {
+    assertThat(assertFailsWith<IllegalArgumentException> {
       ziplineRequestOnly.get<AdaptersService>("adaptersService")
     }).hasMessageThat().contains("Serializer for class 'AdaptersResponse' is not found.")
   }
 
   @Test fun missingGetParameterSerializerFailsFast(): Unit = runBlocking(dispatcher) {
-    assertThat(assertThrows<IllegalArgumentException> {
+    assertThat(assertFailsWith<IllegalArgumentException> {
       ziplineResponseOnly.get<AdaptersService>("adaptersService")
     }).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
   }
@@ -69,7 +70,7 @@ class SerializersTest {
   }
 
   @Test fun missingSetReturnValueSerializerFailsFast(): Unit = runBlocking(dispatcher) {
-    assertThat(assertThrows<IllegalArgumentException> {
+    assertThat(assertFailsWith<IllegalArgumentException> {
       ziplineRequestOnly.set<AdaptersService>(
         "adaptersService",
         JvmAdaptersService()
@@ -78,7 +79,7 @@ class SerializersTest {
   }
 
   @Test fun missingSetParameterSerializerFailsFast(): Unit = runBlocking(dispatcher) {
-    assertThat(assertThrows<IllegalArgumentException> {
+    assertThat(assertFailsWith<IllegalArgumentException> {
       ziplineResponseOnly.set<AdaptersService>(
         "adaptersService",
         JvmAdaptersService()

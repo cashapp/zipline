@@ -23,6 +23,7 @@ import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newEndpointPair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -139,7 +140,7 @@ internal class EndpointTest {
     endpointA.set<EchoService>("helloService", service)
     val client = endpointB.get<EchoService>("helloService")
 
-    val thrownException = assertThrows<Exception> {
+    val thrownException = assertFailsWith<Exception> {
       client.echo(EchoRequest(""))
     }
     assertThat(thrownException).hasMessageThat()
@@ -157,7 +158,7 @@ internal class EndpointTest {
     endpointA.set<SuspendingEchoService>("helloService", service)
     val client = endpointB.get<SuspendingEchoService>("helloService")
 
-    val thrownException = assertThrows<Exception> {
+    val thrownException = assertFailsWith<Exception> {
       client.suspendingEcho(EchoRequest(""))
     }
     assertThat(thrownException).hasMessageThat()

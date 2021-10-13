@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -34,7 +35,7 @@ class QuickJsJvmTest {
   }
 
   @Test fun exceptionsInScriptThrowInJava() {
-    val t = assertThrows<QuickJsException> {
+    val t = assertFailsWith<QuickJsException> {
       quickjs.evaluate("nope();")
     }
     assertEquals("'nope' is not defined", t.message)
@@ -51,7 +52,7 @@ class QuickJsJvmTest {
   }
 
   @Test fun exceptionsInScriptIncludeStackTrace() {
-    val t = assertThrows<QuickJsException> {
+    val t = assertFailsWith<QuickJsException> {
       quickjs.evaluate("""
         |f1();
         |

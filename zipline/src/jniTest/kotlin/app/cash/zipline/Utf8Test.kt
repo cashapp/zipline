@@ -17,6 +17,7 @@ package app.cash.zipline
 
 import app.cash.zipline.testing.Formatter
 import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
@@ -47,7 +48,7 @@ class Utf8Test {
   }
 
   @Test fun nonAsciiInFileName(): Unit = runBlocking(dispatcher) {
-    val t = assertThrows<QuickJsException> {
+    val t = assertFailsWith<QuickJsException> {
       quickjs.evaluate("""
         |f1();
         |
@@ -79,7 +80,7 @@ class Utf8Test {
   @Test fun nonAsciiInExceptionThrownInJs(): Unit = runBlocking(dispatcher) {
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiThrower()")
     val formatter = zipline.get<Formatter>("formatter")
-    val t = assertThrows<Exception> {
+    val t = assertFailsWith<Exception> {
       formatter.format("")
     }
     assertThat(t).hasMessageThat().contains("a\uD83D\uDC1Dcdefg")
@@ -91,7 +92,7 @@ class Utf8Test {
         throw RuntimeException("a\uD83D\uDC1Dcdefg")
       }
     })
-    val t = assertThrows<RuntimeException> {
+    val t = assertFailsWith<RuntimeException> {
       quickjs.evaluate("testing.app.cash.zipline.testing.callFormatter('');")
     }
     assertEquals("java.lang.RuntimeException: a\uD83D\uDC1Dcdefg", t.message)
