@@ -15,12 +15,11 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.CallChannel
+import app.cash.zipline.internal.bridge.inboundChannelName
+import app.cash.zipline.internal.bridge.outboundChannelName
 import java.io.Closeable
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
-import java.lang.reflect.Proxy
 import java.util.logging.Logger
-import kotlin.reflect.KClass
 
 /**
  * An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.
@@ -61,6 +60,28 @@ actual class QuickJs private constructor(
 
     actual val version: String
       get() = quickJsVersion
+
+    private val stringType = String::class.java
+    private val stringArrayType = arrayOf<String>()::class.java
+
+    private val serviceNamesArrayMethod = CallChannel::class.java.getMethod(
+      "serviceNamesArray"
+    )
+    private val invokeMethod = CallChannel::class.java.getMethod(
+      "invoke", stringType, stringType, stringArrayType
+    )
+    private val invokeSuspendingMethod = CallChannel::class.java.getMethod(
+      "invokeSuspending", stringType, stringType, stringArrayType, stringType
+    )
+    private val disconnectMethod = CallChannel::class.java.getMethod(
+      "disconnect", stringType
+    )
+    private val callChannelMethods = arrayOf<Any>(
+      disconnectMethod,
+      invokeMethod,
+      invokeSuspendingMethod,
+      serviceNamesArrayMethod
+    )
   }
 
   /**
@@ -110,91 +131,59 @@ actual class QuickJs private constructor(
     return evaluate(context, script, fileName)
   }
 
-  /**
-   * Provides [instance] to JavaScript as a global object called [name]. [type]
-   * defines the interface implemented by [instance] that will be accessible to JavaScript.
-   * [type] must be an interface that does not extend any other interfaces, and cannot define
-   * any overloaded methods.
-   *
-   * Methods of the interface may return `void` or any of the following supported argument
-   * types: `boolean`, [Boolean], `int`, [Integer], `double`, [Double], [String].
-   */
-  actual operator fun <T : Any> set(name: String, type: KClass<T>, instance: T) {
-    val type = type.java
-
-    if (!type.isInterface) {
-      throw UnsupportedOperationException(
-          "Only interfaces can be bound. Received: $type")
-    }
-    if (type.interfaces.isNotEmpty()) {
-      throw UnsupportedOperationException("$type must not extend other interfaces")
-    }
-    if (!type.isInstance(instance)) {
-      throw IllegalArgumentException(
-          instance.javaClass.toString() + " is not an instance of " + type)
-    }
-    val methods = mutableMapOf<String, Method>()
-    for (method in type.methods) {
-      if (methods.put(method.name, method) != null) {
-        throw UnsupportedOperationException(method.name + " is overloaded in " + type)
-      }
-    }
-    set(context, name, instance, methods.values.toTypedArray())
+  internal actual fun initOutboundChannel(outboundChannel: CallChannel) {
+    set(context, outboundChannelName, outboundChannel, callChannelMethods)
   }
 
-  /**
-   * Attaches to a global JavaScript object called `name` that implements `type`.
-   * `type` defines the interface implemented in JavaScript that will be accessible to Java.
-   * `type` must be an interface that does not extend any other interfaces, and cannot define
-   * any overloaded methods.
-   *
-   * Methods of the interface may return `void` or any of the following supported argument
-   * types: `boolean`, [Boolean], `int`, [Integer], `double`,
-   * [Double], [String].
-   */
-  actual operator fun <T : Any> get(name: String, type: KClass<T>): T {
-    val type = type.java
+  internal actual fun getInboundChannel(): CallChannel {
+    val instance = get(
+      context,
+      inboundChannelName,
+      callChannelMethods
+    )
+    if (instance == 0L) {
+      throw OutOfMemoryError("Cannot create QuickJs proxy to inbound channel")
+    }
 
-    if (!type.isInterface) {
-      throw UnsupportedOperationException(
-          "Only interfaces can be proxied. Received: $type")
-    }
-    if (type.interfaces.isNotEmpty()) {
-      throw UnsupportedOperationException("$type must not extend other interfaces")
-    }
-    val methods = mutableMapOf<String, Method>()
-    for (method in type.methods) {
-      if (methods.put(method.name, method) != null) {
-        throw UnsupportedOperationException(method.name + " is overloaded in " + type)
+    return object : CallChannel {
+      override fun serviceNamesArray(): Array<String> {
+        val args = arrayOf<Any>()
+        return call(context, instance, serviceNamesArrayMethod, args) as Array<String>
+      }
+
+      override fun invoke(
+        instanceName: String,
+        funName: String,
+        encodedArguments: Array<String>
+      ): Array<String> {
+        val args = arrayOf<Any>(
+          instanceName,
+          funName,
+          encodedArguments
+        )
+        return call(context, instance, invokeMethod, args) as Array<String>
+      }
+
+      override fun invokeSuspending(
+        instanceName: String,
+        funName: String,
+        encodedArguments: Array<String>,
+        callbackName: String
+      ) {
+        val args = arrayOf<Any>(
+          instanceName,
+          funName,
+          encodedArguments,
+          callbackName
+        )
+        call(context, instance, invokeSuspendingMethod, args)
+      }
+
+      override fun disconnect(instanceName: String): Boolean {
+        val args = arrayOf<Any>(instanceName)
+        return call(context, instance, disconnectMethod, args) as Boolean
       }
     }
-    val instance = get(context, name, methods.values.toTypedArray())
-    if (instance == 0L) {
-      throw OutOfMemoryError("Cannot create QuickJs proxy to $name")
-    }
-    val proxy = Proxy.newProxyInstance(type.classLoader, arrayOf(type),
-      object : InvocationHandler {
-        @Throws(Throwable::class)
-        override fun invoke(
-          proxy: Any,
-          method: Method,
-          args: Array<Any>?,
-        ): Any? {
-          val nonNullArgs = args ?: emptyArray()
-          // If the method is a method from Object then defer to normal invocation.
-          return if (method.declaringClass == Any::class.java) {
-            method.invoke(this, *nonNullArgs)
-          } else {
-            call(context, instance, method, nonNullArgs)
-          }
-        }
-
-        override fun toString(): String {
-          return String.format("QuickJsProxy{name=%s, type=%s}", name, type.name)
-        }
-      })
-    @Suppress("UNCHECKED_CAST")
-    return proxy as T
   }
 
   /**

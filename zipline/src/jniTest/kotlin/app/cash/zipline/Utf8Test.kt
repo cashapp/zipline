@@ -15,9 +15,13 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.Utf8Test.Formatter
+import app.cash.zipline.testing.Formatter
+import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Before
 import org.junit.Test
 
 /**
@@ -25,22 +29,24 @@ import org.junit.Test
  * each doesn't mangle content. We've had bugs where non-ASCII characters weren't encoded properly.
  */
 class Utf8Test {
-  private val quickjs = QuickJs.create()
+  private val dispatcher = TestCoroutineDispatcher()
+  private val zipline = Zipline.create(dispatcher)
+  private val quickjs = zipline.quickJs
 
-  @After fun tearDown() {
-    quickjs.close()
+  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+    zipline.loadTestingJs()
   }
 
-  fun interface Formatter {
-    fun format(message: String): String?
+  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+    zipline.close()
   }
 
-  @Test fun nonAsciiInInputAndOutput() {
+  @Test fun nonAsciiInInputAndOutput(): Unit = runBlocking(dispatcher) {
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)",
         quickjs.evaluate("var s = \"a\uD83D\uDC1Dcdefg\"; '(' + s + ', ' + s + ')';"))
   }
 
-  @Test fun nonAsciiInFileName() {
+  @Test fun nonAsciiInFileName(): Unit = runBlocking(dispatcher) {
     val t = assertThrows<QuickJsException> {
       quickjs.evaluate("""
         |f1();
@@ -54,58 +60,40 @@ class Utf8Test {
     assertEquals("JavaScript.f1(a\uD83D\uDC1Dcdefg.js:4)", t.stackTrace[0].toString())
   }
 
-  @Test fun nonAsciiInProxyInputAndOutput() {
-    quickjs.evaluate("""
-      |var formatter = {
-      |  format: function(message) {
-      |    return '(' + message + ', ' + message + ')';
-      |  }
-      |};
-      |""".trimMargin())
-    val formatter = quickjs.get("formatter", Formatter::class)
+  @Test fun nonAsciiInboundCalls(): Unit = runBlocking(dispatcher) {
+    quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiInputAndOutput()")
+    val formatter = zipline.get<Formatter>("formatter")
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)", formatter.format("a\uD83D\uDC1Dcdefg"))
   }
 
-  @Test fun nonAsciiInBoundObjectInputAndOutput() {
-    quickjs.set("formatter", Formatter::class,
-        Formatter { message -> "($message, $message)" })
+  @Test fun nonAsciiOutboundCalls(): Unit = runBlocking(dispatcher) {
+    zipline.set<Formatter>("formatter", object : Formatter {
+      override fun format(message: String): String {
+        return "($message, $message)"
+      }
+    })
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)",
-        quickjs.evaluate("formatter.format('a\uD83D\uDC1Dcdefg');"))
+        quickjs.evaluate("testing.app.cash.zipline.testing.callFormatter('a\uD83D\uDC1Dcdefg');"))
   }
 
-  @Test fun nonAsciiInExceptionThrownInJs() {
-    quickjs.evaluate("""
-      |var formatter = {
-      |  format: function(message) {
-      |    throw 'a🐝cdefg';
-      |  }
-      |};
-      |""".trimMargin())
-    val formatter = quickjs.get("formatter", Formatter::class)
-    val t = assertThrows<QuickJsException> {
+  @Test fun nonAsciiInExceptionThrownInJs(): Unit = runBlocking(dispatcher) {
+    quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiThrower()")
+    val formatter = zipline.get<Formatter>("formatter")
+    val t = assertThrows<Exception> {
       formatter.format("")
     }
-    assertEquals("a\uD83D\uDC1Dcdefg", t.message)
+    assertThat(t).hasMessageThat().contains("a\uD83D\uDC1Dcdefg")
   }
 
-  @Test fun nonAsciiInExceptionThrownInJava() {
-    quickjs.set("formatter", Formatter::class,
-        Formatter { throw RuntimeException("a\uD83D\uDC1Dcdefg") })
+  @Test fun nonAsciiInExceptionThrownInJava(): Unit = runBlocking(dispatcher) {
+    zipline.set<Formatter>("formatter", object : Formatter {
+      override fun format(message: String): String {
+        throw RuntimeException("a\uD83D\uDC1Dcdefg")
+      }
+    })
     val t = assertThrows<RuntimeException> {
-      quickjs.evaluate("formatter.format('');")
+      quickjs.evaluate("testing.app.cash.zipline.testing.callFormatter('');")
     }
-    assertEquals("a\uD83D\uDC1Dcdefg", t.message)
-  }
-
-  @Test fun nonAsciiInProxyResult() {
-    quickjs.evaluate("""
-      |var formatter = {
-      |  format: function(message) {
-      |    return 'a🐝cdefg';
-      |  }
-      |};
-      |""".trimMargin())
-    val formatter = quickjs.get("formatter", Formatter::class)
-    assertEquals("a\uD83D\uDC1Dcdefg", formatter.format(""))
+    assertEquals("java.lang.RuntimeException: a\uD83D\uDC1Dcdefg", t.message)
   }
 }

@@ -19,6 +19,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
+import org.junit.Ignore
 import org.junit.Test
 
 class QuickJsCompileTest {
@@ -92,6 +93,7 @@ class QuickJsCompileTest {
     val value: String?
   }
 
+  @Ignore
   @Test fun withAGetProxy() {
     val proxyDef = quickJs.compile("var value = { getValue: function() { return '8675309'; } };",
         "myObject.js")
@@ -101,15 +103,16 @@ class QuickJsCompileTest {
     quickJs = QuickJs.create()
 
     val t = assertThrows<IllegalArgumentException> {
-      quickJs.get("value", QuickJsGetTest.TestInterface::class)
+      quickJs.get("value", TestInterface::class)
     }
     assertEquals("A global JavaScript object called value was not found", t.message)
 
     quickJs.execute(proxyDef)
-    val proxy = quickJs.get("value", QuickJsGetTest.TestInterface::class)
+    val proxy = quickJs.get("value", TestInterface::class)
     assertEquals("8675309", proxy.value)
   }
 
+  @Ignore
   @Test fun withASetProxy() {
     val code = quickJs.compile("value.getValue();", "myFile.js")
     assertNotEquals(0, code.size)
@@ -122,8 +125,11 @@ class QuickJsCompileTest {
     }
     assertEquals("'value' is not defined", t.message)
 
-    quickJs.set("value", QuickJsSetTest.TestInterface::class,
-        QuickJsSetTest.TestInterface { "8675309" })
+    quickJs.set("value", TestInterface::class,
+      object : TestInterface {
+        override val value: String get() = "8675309"
+      }
+    )
     assertEquals("8675309", quickJs.execute(code))
   }
 }
