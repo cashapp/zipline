@@ -18,8 +18,7 @@
 #include <memory>
 #include <assert.h>
 #include "JavaObjectProxy.h"
-#include "JsObjectProxy.h"
-#include "JsMethodProxy.h"
+#include "JsCallChannel.h"
 #include "ExceptionThrowers.h"
 #include "quickjs/quickjs.h"
 
@@ -104,8 +103,8 @@ Context::Context(JNIEnv* env)
 }
 
 Context::~Context() {
-  for (auto proxy : objectProxies) {
-    delete proxy;
+  for (auto callChannel : callChannels) {
+    delete callChannel;
   }
   auto env = getEnv();
   for (auto refs : globalReferences) {
@@ -255,44 +254,21 @@ void Context::setMaxStackSize(JNIEnv* env, jlong stackSize) {
   JS_SetMaxStackSize(jsRuntime, stackSize);
 }
 
-JsObjectProxy* Context::getObjectProxy(JNIEnv* env, jstring name, jobjectArray methods) {
+JsCallChannel* Context::getCallChannel(JNIEnv* env, jstring name) {
   JSValue global = JS_GetGlobalObject(jsContext);
 
   const char* nameStr = env->GetStringUTFChars(name, 0);
 
   JSValue obj = JS_GetPropertyStr(jsContext, global, nameStr);
 
-  JsObjectProxy* jsObjectProxy = nullptr;
+  JsCallChannel* jsCallChannel = nullptr;
   if (JS_IsObject(obj)) {
-    jsObjectProxy = new JsObjectProxy(nameStr);
-    jsize numMethods = env->GetArrayLength(methods);
-    jmethodID getName = nullptr;
-    for (int i = 0; i < numMethods && !env->ExceptionCheck(); ++i) {
-      jobject method = env->GetObjectArrayElement(methods, i);
-      if (!getName) {
-        jclass methodClass = env->GetObjectClass(method);
-        getName = env->GetMethodID(methodClass, "getName", "()Ljava/lang/String;");
-      }
-      jstring methodName = static_cast<jstring>(env->CallObjectMethod(method, getName));
-      const char* methodNameStr = env->GetStringUTFChars(methodName, 0);
-
-      JSValue prop = JS_GetPropertyStr(jsContext, obj, methodNameStr);
-      if (JS_IsFunction(jsContext, prop)) {
-        jsObjectProxy->methods.push_back(new JsMethodProxy(this, env, methodNameStr, method));
-      } else {
-        const char* msg = JS_IsUndefined(prop)
-                          ? "JavaScript global %s has no method called %s"
-                          : "JavaScript property %s.%s not callable";
-        throwJsExceptionFmt(env, this, msg, nameStr, methodNameStr);
-      }
-      JS_FreeValue(jsContext, prop);
-      env->ReleaseStringUTFChars(methodName, methodNameStr);
-    }
+    jsCallChannel = new JsCallChannel(nameStr);
     if (!env->ExceptionCheck()) {
-      objectProxies.push_back(jsObjectProxy);
+      callChannels.push_back(jsCallChannel);
     } else {
-      delete jsObjectProxy;
-      jsObjectProxy = nullptr;
+      delete jsCallChannel;
+      jsCallChannel = nullptr;
     }
   } else if (JS_IsException(obj)) {
     throwJsException(env, obj);
@@ -308,7 +284,7 @@ JsObjectProxy* Context::getObjectProxy(JNIEnv* env, jstring name, jobjectArray m
   env->ReleaseStringUTFChars(name, nameStr);
   JS_FreeValue(jsContext, global);
 
-  return jsObjectProxy;
+  return jsCallChannel;
 }
 
 void Context::setObjectProxy(JNIEnv* env, jstring name, jobject object, jobjectArray methods) {
@@ -467,9 +443,7 @@ Context::getJavaToJsConverter(JNIEnv* env, jclass type, bool boxed) {
   if (typeName == "java.lang.String") {
     return [](Context* c, JNIEnv* env, jvalue v) {
       if (!v.l) return JS_NULL;
-      std::string string = c->toCppString(env, static_cast<jstring>(v.l));
-      auto jsString = JS_NewString(c->jsContext, string.c_str());
-      return jsString;
+      return c->toJsString(env, static_cast<jstring>(v.l));
     };
   } else if (typeName == "boolean") {
     return [](Context* c, JNIEnv* env, jvalue v) {
@@ -723,6 +697,22 @@ std::string Context::toCppString(JNIEnv* env, jstring string) const {
   std::string result = std::string(reinterpret_cast<char*>(utf8Bytes), utf8Length);
   env->ReleaseByteArrayElements(utf8BytesObject, utf8Bytes, JNI_ABORT);
   env->DeleteLocalRef(utf8BytesObject);
+  return result;
+}
+
+JSValue Context::toJsString(JNIEnv* env, jstring javaString) const {
+  std::string cppString = this->toCppString(env, javaString);
+  return JS_NewString(this->jsContext, cppString.c_str());
+}
+
+JSValue Context::toJsStringArray(JNIEnv* env, jobjectArray javaStringArray) const {
+  JSValue result = JS_NewArray(this->jsContext);
+  const auto length = env->GetArrayLength(javaStringArray);
+  for (jsize i = 0; i < length; i++) {
+    jstring javaString = static_cast<jstring>(env->GetObjectArrayElement(javaStringArray, i));
+    JS_SetPropertyUint32(this->jsContext, result, i, this->toJsString(env, javaString));
+    env->DeleteLocalRef(javaString);
+  }
   return result;
 }
 

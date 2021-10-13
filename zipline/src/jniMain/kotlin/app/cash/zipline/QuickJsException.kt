@@ -59,11 +59,10 @@ actual class QuickJsException @JvmOverloads constructor(
 
       // Splice the JavaScript stack in right above the call to QuickJs.
       var spliced = false
-      val quickJsClassName = QuickJs::class.java.name
       for (stackTraceElement in stackTrace) {
         if (!spliced
-            && stackTraceElement.isNativeMethod
-            && stackTraceElement.className == quickJsClassName) {
+          && stackTraceElement.isNativeMethod
+          && stackTraceElement.isZipline) {
           spliced = true
           for (line in lines) {
             val jsElement = toStackTraceElement(line) ?: continue
@@ -74,6 +73,9 @@ actual class QuickJsException @JvmOverloads constructor(
       }
       stackTrace = elements.toTypedArray()
     }
+
+    private val StackTraceElement.isZipline: Boolean
+      get() = className == QuickJs::class.java.name || className == JniCallChannel::class.java.name
 
     private fun toStackTraceElement(s: String): StackTraceElement? {
       val m = STACK_TRACE_PATTERN.matcher(s)

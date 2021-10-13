@@ -16,7 +16,7 @@
 #include <jni.h>
 #include <new>
 #include "Context.h"
-#include "JsObjectProxy.h"
+#include "JsCallChannel.h"
 #include "ExceptionThrowers.h"
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -50,8 +50,7 @@ Java_app_cash_zipline_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_app_cash_zipline_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context, jstring name,
-                                      jobjectArray methods) {
+Java_app_cash_zipline_QuickJs_getCallChannel(JNIEnv* env, jobject thiz, jlong _context, jstring name) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",
@@ -59,7 +58,7 @@ Java_app_cash_zipline_QuickJs_get(JNIEnv* env, jobject thiz, jlong _context, jst
     return 0L;
   }
 
-  return reinterpret_cast<jlong>(context->getObjectProxy(env, name, methods));
+  return reinterpret_cast<jlong>(context->getCallChannel(env, name));
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -72,25 +71,6 @@ Java_app_cash_zipline_QuickJs_set(JNIEnv* env, jobject thiz, jlong _context, jst
     return;
   }
   context->setObjectProxy(env, name, object, methods);
-}
-
-extern "C" JNIEXPORT jobject JNICALL
-Java_app_cash_zipline_QuickJs_call(JNIEnv* env, jobject thiz, jlong _context, jlong instance,
-                                       jobject method, jobjectArray args) {
-  Context* context = reinterpret_cast<Context*>(_context);
-  if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
-    return nullptr;
-  }
-
-  const JsObjectProxy* jsObjectProxy = reinterpret_cast<const JsObjectProxy*>(instance);
-  if (!jsObjectProxy) {
-    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
-    return nullptr;
-  }
-
-  return jsObjectProxy->call(context, env, method, args);
 }
 
 extern "C" JNIEXPORT jobject JNICALL
@@ -166,4 +146,83 @@ Java_app_cash_zipline_QuickJs_setMaxStackSize(JNIEnv* env, jobject type, jlong c
     return;
   }
   context->setMaxStackSize(env, stackSize);
+}
+
+extern "C" JNIEXPORT jobjectArray JNICALL
+Java_app_cash_zipline_JniCallChannel_serviceNamesArray(JNIEnv* env, jobject thiz, jlong _context,
+                                                       jlong instance) {
+  Context* context = reinterpret_cast<Context*>(_context);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return nullptr;
+  }
+
+  const JsCallChannel* jsCallChannel = reinterpret_cast<const JsCallChannel*>(instance);
+  if (!jsCallChannel) {
+    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
+    return nullptr;
+  }
+
+  return jsCallChannel->serviceNamesArray(context, env);
+}
+
+extern "C" JNIEXPORT jobjectArray JNICALL
+Java_app_cash_zipline_JniCallChannel_invoke(JNIEnv* env, jobject thiz, jlong _context,
+                                            jlong instance, jstring instanceName, jstring funName,
+                                            jobjectArray encodedArguments) {
+  Context* context = reinterpret_cast<Context*>(_context);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return nullptr;
+  }
+
+  const JsCallChannel* jsCallChannel = reinterpret_cast<const JsCallChannel*>(instance);
+  if (!jsCallChannel) {
+    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
+    return nullptr;
+  }
+
+  return jsCallChannel->invoke(context, env, instanceName, funName, encodedArguments);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_zipline_JniCallChannel_invokeSuspending(JNIEnv* env, jobject thiz, jlong _context,
+                                                      jlong instance, jstring instanceName,
+                                                      jstring funName, jobjectArray encodedArguments,
+                                                      jstring callbackName) {
+  Context* context = reinterpret_cast<Context*>(_context);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return;
+  }
+
+  const JsCallChannel* jsCallChannel = reinterpret_cast<const JsCallChannel*>(instance);
+  if (!jsCallChannel) {
+    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
+    return;
+  }
+
+  jsCallChannel->invokeSuspending(context, env, instanceName, funName, encodedArguments, callbackName);
+}
+
+extern "C" JNIEXPORT jobject JNICALL
+Java_app_cash_zipline_JniCallChannel_disconnect(JNIEnv* env, jobject thiz, jlong _context,
+                                                jlong instance, jstring instanceName) {
+  Context* context = reinterpret_cast<Context*>(_context);
+  if (!context) {
+    throwJavaException(env, "java/lang/NullPointerException",
+                       "Null QuickJs context - did you close your QuickJs?");
+    return JNI_FALSE;
+  }
+
+  const JsCallChannel* jsCallChannel = reinterpret_cast<const JsCallChannel*>(instance);
+  if (!jsCallChannel) {
+    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
+    return JNI_FALSE;
+  }
+
+  return jsCallChannel->disconnect(context, env, instanceName);
 }

@@ -24,14 +24,14 @@
 
 class JSRuntime;
 class JSContext;
-class JsObjectProxy;
+class JsCallChannel;
 
 class Context {
 public:
   Context(JNIEnv *env);
   ~Context();
 
-  JsObjectProxy* getObjectProxy(JNIEnv*, jstring name, jobjectArray methods);
+  JsCallChannel* getCallChannel(JNIEnv*, jstring name);
   void setObjectProxy(JNIEnv*, jstring name, jobject object, jobjectArray methods);
   jobject eval(JNIEnv*, jstring source, jstring file);
   jobject execute(JNIEnv*, jbyteArray byteCode);
@@ -57,6 +57,8 @@ public:
 
   jclass getGlobalRef(JNIEnv* env, jclass clazz);
   std::string toCppString(JNIEnv* env, jstring string) const;
+  JSValue toJsString(JNIEnv* env, jstring string) const;
+  JSValue toJsStringArray(JNIEnv* env, jobjectArray javaStringArray) const;
   jstring toJavaString(JNIEnv* env, const JSValueConst& value) const;
 
   JavaVM* javaVm;
@@ -82,7 +84,7 @@ public:
   jclass interruptHandlerClass;
   jmethodID interruptHandlerPoll;
   jobject interruptHandler;
-  std::vector<JsObjectProxy*> objectProxies;
+  std::vector<JsCallChannel*> callChannels;
   std::unordered_map<std::string, jclass> globalReferences;
 };
 

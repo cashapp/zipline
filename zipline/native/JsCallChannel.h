@@ -13,30 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef QUICKJS_ANDROID_JSMETHODPROXY_H
-#define QUICKJS_ANDROID_JSMETHODPROXY_H
+#ifndef QUICKJS_ANDROID_JSCALLCHANNEL_H
+#define QUICKJS_ANDROID_JSCALLCHANNEL_H
 
 #include <jni.h>
-#include <string>
-#include <functional>
 #include <vector>
-#include "quickjs/quickjs.h"
+#include <string>
 
 class Context;
 
-class JsMethodProxy {
+class JsCallChannel {
 public:
-  JsMethodProxy(Context* context, JNIEnv*, const char* name, jobject method);
+  JsCallChannel(const char *name);
+  ~JsCallChannel();
 
-  jobject call(Context *context, JNIEnv*, JSValue thisPointer, jobjectArray pArray) const;
+  jobjectArray serviceNamesArray(Context* context, JNIEnv*) const;
+  jobjectArray invoke(Context *context, JNIEnv* env, jstring instanceName, jstring funName, jobjectArray encodedArguments) const;
+  void invokeSuspending(Context *context, JNIEnv* env, jstring instanceName, jstring funName, jobjectArray encodedArguments, jstring callbackName) const;
+  jobject disconnect(Context *context, JNIEnv* env, jstring instanceName) const;
 
   const std::string name;
-  const jmethodID methodId;
-private:
-  std::vector<std::function<JSValueConst(Context*, JNIEnv*, jvalue)>> argumentLoaders;
-  std::function<jvalue(Context*, JNIEnv*, const JSValueConst&)> resultLoader;
-  bool isVarArgs;
 };
 
-
-#endif //QUICKJS_ANDROID_JSMETHODPROXY_H
+#endif //QUICKJS_ANDROID_JSCALLCHANNEL_H

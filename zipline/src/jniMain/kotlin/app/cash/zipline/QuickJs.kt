@@ -28,7 +28,7 @@ import java.util.logging.Logger
  * synchronized externally.
  */
 actual class QuickJs private constructor(
-  private var context: Long
+  internal var context: Long
 ) : Closeable {
   actual companion object {
     init {
@@ -136,54 +136,12 @@ actual class QuickJs private constructor(
   }
 
   internal actual fun getInboundChannel(): CallChannel {
-    val instance = get(
-      context,
-      inboundChannelName,
-      callChannelMethods
-    )
+    val instance = getCallChannel(context, inboundChannelName)
     if (instance == 0L) {
       throw OutOfMemoryError("Cannot create QuickJs proxy to inbound channel")
     }
 
-    return object : CallChannel {
-      override fun serviceNamesArray(): Array<String> {
-        val args = arrayOf<Any>()
-        return call(context, instance, serviceNamesArrayMethod, args) as Array<String>
-      }
-
-      override fun invoke(
-        instanceName: String,
-        funName: String,
-        encodedArguments: Array<String>
-      ): Array<String> {
-        val args = arrayOf<Any>(
-          instanceName,
-          funName,
-          encodedArguments
-        )
-        return call(context, instance, invokeMethod, args) as Array<String>
-      }
-
-      override fun invokeSuspending(
-        instanceName: String,
-        funName: String,
-        encodedArguments: Array<String>,
-        callbackName: String
-      ) {
-        val args = arrayOf<Any>(
-          instanceName,
-          funName,
-          encodedArguments,
-          callbackName
-        )
-        call(context, instance, invokeSuspendingMethod, args)
-      }
-
-      override fun disconnect(instanceName: String): Boolean {
-        val args = arrayOf<Any>(instanceName)
-        return call(context, instance, disconnectMethod, args) as Boolean
-      }
-    }
+    return JniCallChannel(this, instance)
   }
 
   /**
@@ -221,9 +179,8 @@ actual class QuickJs private constructor(
 
   private external fun destroyContext(context: Long)
   private external fun evaluate(context: Long, sourceCode: String, fileName: String): Any?
-  private external operator fun get(context: Long, name: String, methods: Array<Any>): Long
+  private external fun getCallChannel(context: Long, name: String): Long
   private external operator fun set(context: Long, name: String, `object`: Any, methods: Array<Any>)
-  private external fun call(context: Long, instance: Long, method: Any, args: Array<Any>): Any
   private external fun execute(context: Long, bytecode: ByteArray): Any?
   private external fun compile(context: Long, sourceCode: String, fileName: String): ByteArray
   private external fun setInterruptHandler(context: Long, interruptHandler: InterruptHandler?)
