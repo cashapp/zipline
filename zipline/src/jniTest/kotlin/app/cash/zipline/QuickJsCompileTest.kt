@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -41,7 +42,7 @@ class QuickJsCompileTest {
   }
 
   @Test fun badCode() {
-    val t = assertThrows<QuickJsException> {
+    val t = assertFailsWith<QuickJsException> {
       quickJs.compile("@#%(*W#(UF(E", "myFile.js")
     }
     assertEquals("unexpected token in expression: '@'", t.message)
@@ -59,7 +60,7 @@ class QuickJsCompileTest {
       |  nope();
       |}
       |""".trimMargin(), "C:\\Documents\\myFile.js")
-    val t = assertThrows<QuickJsException> {
+    val t = assertFailsWith<QuickJsException> {
       quickJs.execute(code)
     }
     assertEquals("'nope' is not defined", t.message)
@@ -80,7 +81,7 @@ class QuickJsCompileTest {
     quickJs.close()
     quickJs = QuickJs.create()
 
-    val t = assertThrows<QuickJsException> {
+    val t = assertFailsWith<QuickJsException> {
       quickJs.execute(code)
     }
     assertEquals("'myFunction' is not defined", t.message)
@@ -102,7 +103,7 @@ class QuickJsCompileTest {
     quickJs.close()
     quickJs = QuickJs.create()
 
-    val t = assertThrows<IllegalArgumentException> {
+    val t = assertFailsWith<IllegalArgumentException> {
       quickJs.get("value", TestInterface::class)
     }
     assertEquals("A global JavaScript object called value was not found", t.message)
@@ -120,7 +121,7 @@ class QuickJsCompileTest {
     quickJs.close()
     quickJs = QuickJs.create()
 
-    val t = assertThrows<QuickJsException> {
+    val t = assertFailsWith<QuickJsException> {
       quickJs.execute(code)
     }
     assertEquals("'value' is not defined", t.message)

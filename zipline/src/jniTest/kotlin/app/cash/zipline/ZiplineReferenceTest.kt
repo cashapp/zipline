@@ -22,6 +22,7 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.newEndpointPair
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -111,7 +112,7 @@ internal class ZiplineReferenceTest {
 
     assertThat(service.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
     outboundReference.close()
-    assertThat(assertThrows<IllegalStateException> {
+    assertThat(assertFailsWith<IllegalStateException> {
       service.echo(EchoRequest("Jesse"))
     }).hasMessageThat().contains("no handler")
     assertThat(endpointA.serviceNames).containsExactly("factory")
@@ -139,7 +140,7 @@ internal class ZiplineReferenceTest {
 
     assertThat(service.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
     inboundReference.close()
-    assertThat(assertThrows<IllegalStateException> {
+    assertThat(assertFailsWith<IllegalStateException> {
       service.echo(EchoRequest("Jesse"))
     }).hasMessageThat().contains("no handler")
     assertThat(endpointA.serviceNames).containsExactly("factory")
