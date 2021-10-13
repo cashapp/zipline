@@ -17,7 +17,7 @@ package app.cash.zipline.internal
 
 import android.util.Log
 
-internal object HostConsole : Console {
+internal actual object HostConsole : Console {
   override fun log(level: String, message: String) {
     val priority = when (level) {
       "warn" -> Log.WARN
