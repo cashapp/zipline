@@ -15,11 +15,11 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.HostConsole
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
 import java.io.Closeable
-import java.util.logging.Logger
 
 /**
  * An EMCAScript (Javascript) interpreter backed by the 'QuickJS' native engine.
@@ -215,7 +215,7 @@ actual class QuickJs private constructor(
 
   protected fun finalize() {
     if (context != 0L) {
-      Logger.getLogger(javaClass.name).warning("QuickJs instance leaked!")
+      HostConsole.log("warn", "QuickJs instance leaked!")
     }
   }
 
