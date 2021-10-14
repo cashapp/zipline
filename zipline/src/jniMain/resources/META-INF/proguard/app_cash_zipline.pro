@@ -5,3 +5,6 @@
 -keepclassmembers class app.cash.zipline.MemoryUsage {
   <init>(...);
 }
+
+# Type name and functions resolved from JNI code.
+-keep app.cash.zipline.internal.bridge.CallChannel
