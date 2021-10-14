@@ -17,7 +17,7 @@
 #include <cstring>
 #include <memory>
 #include <assert.h>
-#include "JavaObjectProxy.h"
+#include "JavaCallChannel.h"
 #include "JsCallChannel.h"
 #include "ExceptionThrowers.h"
 #include "quickjs/quickjs.h"
@@ -57,7 +57,7 @@ namespace {
 void jsFinalize(JSRuntime* jsRuntime, JSValue val) {
   auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(jsRuntime));
   if (context) {
-    delete reinterpret_cast<JavaObjectProxy*>(JS_GetOpaque(val, context->jsClassId));
+    delete reinterpret_cast<JavaCallChannel*>(JS_GetOpaque(val, context->jsClassId));
   }
 }
 
@@ -287,7 +287,7 @@ JsCallChannel* Context::getCallChannel(JNIEnv* env, jstring name) {
   return jsCallChannel;
 }
 
-void Context::setObjectProxy(JNIEnv* env, jstring name, jobject object, jobjectArray methods) {
+void Context::setCallChannel(JNIEnv* env, jstring name, jobject callChannel) {
   auto global = JS_GetGlobalObject(jsContext);
 
   const char* nameStr = env->GetStringUTFChars(name, 0);
@@ -311,7 +311,7 @@ void Context::setObjectProxy(JNIEnv* env, jstring name, jobject object, jobjectA
       if (JS_IsException(proxy) || JS_SetProperty(jsContext, global, objName, proxy) <= 0) {
         throwJsException(env, proxy);
       } else {
-        std::unique_ptr<JavaObjectProxy> javaObject(new JavaObjectProxy(this, env, nameStr, object, methods, proxy));
+        std::unique_ptr<JavaCallChannel> javaObject(new JavaCallChannel(this, env, nameStr, callChannel, proxy));
         if (!env->ExceptionCheck()) {
           JS_SetOpaque(proxy, javaObject.release());
         }
@@ -410,186 +410,6 @@ jobject Context::eval(JNIEnv* env, jstring source, jstring file) {
   return result;
 }
 
-Context::JavaToJavaScript
-Context::getJavaToJsConverter(JNIEnv* env, jclass type, bool boxed) {
-  const auto typeName = getName(env, type);
-  if (!typeName.empty() && typeName[0] == '[') {
-    // type is an array.
-    const jmethodID method = env->GetMethodID(env->GetObjectClass(type),
-                                              "getComponentType",
-                                              "()Ljava/lang/Class;");
-    auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
-    const auto elementTypeName = getName(env, elementType);
-    auto converter = getJavaToJsConverter(env, elementType, true);
-    return [converter](Context* c, JNIEnv* env, jvalue v) {
-      if (!v.l) return JS_NULL;
-      JSValue result = JS_NewArray(c->jsContext);
-      jvalue element;
-      const auto length = env->GetArrayLength(static_cast<jarray>(v.l));
-      for (jsize i = 0; i < length && !env->ExceptionCheck(); i++) {
-        element.l = env->GetObjectArrayElement(static_cast<jobjectArray >(v.l), i);
-        if (!env->ExceptionCheck()) {
-          JS_SetPropertyUint32(c->jsContext, result, i, converter(c, env, element));
-        }
-        env->DeleteLocalRef(element.l);
-      }
-      if (env->ExceptionCheck()) {
-        c->throwJavaExceptionFromJs(env);
-      }
-      return result;
-    };
-  }
-
-  if (typeName == "java.lang.String") {
-    return [](Context* c, JNIEnv* env, jvalue v) {
-      if (!v.l) return JS_NULL;
-      return c->toJsString(env, static_cast<jstring>(v.l));
-    };
-  } else if (typeName == "boolean") {
-    return [](Context* c, JNIEnv* env, jvalue v) {
-      return JS_NewBool(c->jsContext, v.z);
-    };
-  } else if (typeName == "void") {
-    return [](Context*, JNIEnv* env, jvalue) {
-      return JS_UNDEFINED;
-    };
-  } else {
-    // Throw an exception for unsupported argument type.
-    throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
-                       typeName.c_str());
-    return [typeName](Context* context, JNIEnv* env, jvalue) {
-      return JS_ThrowTypeError(context->jsContext, "Unsupported Java type %s", typeName.c_str());
-    };
-  }
-}
-
-Context::JavaScriptToJava
-Context::getJsToJavaConverter(JNIEnv* env, jclass type, bool boxed) {
-  const auto typeName = getName(env, type);
-  if (!typeName.empty() && typeName[0] == '[') {
-    // type is an array.
-    const jmethodID method = env->GetMethodID(env->GetObjectClass(type),
-                                              "getComponentType",
-                                              "()Ljava/lang/Class;");
-    auto elementType = static_cast<jclass>(env->CallObjectMethod(type, method));
-    const auto elementTypeName = getName(env, elementType);
-    auto converter = getJsToJavaConverter(env, elementType, true);
-    auto elementTypeGlobalRef = getGlobalRef(env, elementType);
-    return [converter, elementTypeGlobalRef](Context* c, JNIEnv* env,
-                                             const JSValueConst& v) {
-      jvalue result;
-      if (JS_IsNull(v) || JS_IsUndefined(v)) {
-        result.l = nullptr;
-      } else if (JS_IsException(v)) {
-        result.l = nullptr;
-        c->throwJsException(env, v);
-      } else {
-        int length = 0;
-        auto jsLength = JS_GetPropertyStr(c->jsContext, v, "length");
-        if (JS_ToInt32(c->jsContext, &length, jsLength)) {
-          result.l = nullptr;
-          c->throwJsException(env, jsLength);
-        } else {
-          result.l = env->NewObjectArray(length, elementTypeGlobalRef, nullptr);
-          for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
-            auto jsElement = JS_GetPropertyUint32(c->jsContext, v, i);
-            jvalue element = converter(c, env, jsElement);
-            JS_FreeValue(c->jsContext, jsElement);
-            if (env->ExceptionCheck()) break;
-            env->SetObjectArrayElement(static_cast<jobjectArray>(result.l), i, element.l);
-          }
-        }
-        JS_FreeValue(c->jsContext, jsLength);
-      }
-      return result;
-    };
-  }
-
-  if (typeName == "java.lang.String") {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      if (JS_IsNull(v) || JS_IsUndefined(v)) {
-        result.l = nullptr;
-      } else if (JS_IsException(v)) {
-        result.l = nullptr;
-        c->throwJsException(env, v);
-      } else if (!JS_IsString(v)) {
-        result.l = nullptr;
-        const auto str = JS_ToCString(c->jsContext, v);
-        throwJavaException(env, "java/lang/IllegalArgumentException",
-                           "Cannot convert value %s to String", str);
-        JS_FreeCString(c->jsContext, str);
-      } else {
-        result.l = c->toJavaString(env, v);
-      }
-      return result;
-    };
-  } else if (typeName == "boolean" && boxed) {
-    if (boxed) {
-      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-        jvalue result;
-        if (JS_IsNull(v) || JS_IsUndefined(v)) {
-          result.l = nullptr;
-        } else if (JS_IsException(v)) {
-          result.l = nullptr;
-          c->throwJsException(env, v);
-        } else {
-          int r = JS_ToBool(c->jsContext, v);
-          if (r < 0) {
-            c->throwJsException(env, v);
-            result.l = nullptr;
-          } else {
-            result.z = r != 0;
-            result.l = env->CallStaticObjectMethodA(c->booleanClass, c->booleanValueOf, &result);
-          }
-        }
-        return result;
-      };
-    } else {
-      return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-        jvalue result;
-        if (!JS_IsBool(v)) {
-          result.l = nullptr;
-          const auto str = JS_ToCString(c->jsContext, v);
-          throwJavaException(env, "java/lang/IllegalArgumentException",
-                             "Cannot convert value %s to boolean", str);
-          JS_FreeCString(c->jsContext, str);
-        } else if (JS_IsException(v)) {
-          result.l = nullptr;
-          c->throwJsException(env, v);
-        } else {
-          int r = JS_ToBool(c->jsContext, v);
-          if (r < 0) {
-            c->throwJsException(env, v);
-          }
-          result.z = r != 0;
-        }
-        return result;
-      };
-    }
-  } else if (typeName == "void") {
-    return [](Context* c, JNIEnv* env, const JSValueConst& v) {
-      jvalue result;
-      result.l = nullptr;
-      if (JS_IsException(v)) {
-        c->throwJsException(env, v);
-      }
-      return result;
-    };
-  } else {
-    // Throw an exception for unsupported argument type.
-    throwJavaException(env, "java/lang/IllegalArgumentException", "Unsupported Java type %s",
-                       typeName.c_str());
-    return [typeName](Context* context, JNIEnv* env, const JSValueConst&) {
-      throwJavaException(env, "java/lang/IllegalArgumentException",
-                         "Unsupported Java type %s", typeName.c_str());
-      jvalue result;
-      result.l = nullptr;
-      return result;
-    };
-  }
-}
-
 void Context::throwJsException(JNIEnv* env, const JSValue& value) const {
   JSValue exceptionValue = JS_GetException(jsContext);
 
@@ -662,18 +482,6 @@ JNIEnv* Context::getEnv() const {
   return env;
 }
 
-JSValue
-Context::jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic) {
-  auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
-  if (context) {
-    auto proxy = reinterpret_cast<const JavaObjectProxy*>(JS_GetOpaque(this_val, context->jsClassId));
-    if (proxy) {
-      return proxy->call(magic, argc, argv);
-    }
-  }
-  return JS_ThrowReferenceError(ctx, "Null Java Proxy");
-}
-
 jclass Context::getGlobalRef(JNIEnv* env, jclass clazz) {
   auto name = getName(env, clazz);
   auto i = globalReferences.find(name);
@@ -730,5 +538,26 @@ jstring Context::toJavaString(JNIEnv* env, const JSValueConst& value) const {
   JS_FreeCString(jsContext, string);
   jstring result = static_cast<jstring>(env->NewObject(stringClass, stringConstructor, utf8BytesObject, stringUtf8));
   env->DeleteLocalRef(utf8BytesObject);
+  return result;
+}
+
+jobjectArray Context::toJavaStringArray(JNIEnv* env, const JSValueConst& value) const {
+  assert(JS_IsArray(this->jsContext, value));
+
+  int length = 0;
+  auto jsLength = JS_GetPropertyStr(this->jsContext, value, "length");
+  assert(!JS_ToInt32(this->jsContext, &length, jsLength));
+
+  jobjectArray result = env->NewObjectArray(length, this->stringClass, nullptr);
+  for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
+    auto jsElement = JS_GetPropertyUint32(this->jsContext, value, i);
+    jstring element = this->toJavaString(env, jsElement);
+    JS_FreeValue(this->jsContext, jsElement);
+    if (env->ExceptionCheck()) break;
+    env->SetObjectArrayElement(result, i, element);
+  }
+
+  JS_FreeValue(this->jsContext, jsLength);
+
   return result;
 }

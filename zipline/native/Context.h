@@ -32,7 +32,7 @@ public:
   ~Context();
 
   JsCallChannel* getCallChannel(JNIEnv*, jstring name);
-  void setObjectProxy(JNIEnv*, jstring name, jobject object, jobjectArray methods);
+  void setCallChannel(JNIEnv*, jstring name, jobject callChannel);
   jobject eval(JNIEnv*, jstring source, jstring file);
   jobject execute(JNIEnv*, jbyteArray byteCode);
   jbyteArray compile(JNIEnv*, jstring source, jstring file);
@@ -41,10 +41,6 @@ public:
   void setMemoryLimit(JNIEnv* env, jlong limit);
   void setGcThreshold(JNIEnv* env, jlong gcThreshold);
   void setMaxStackSize(JNIEnv* env, jlong stackSize);
-  typedef std::function<JSValueConst(Context*, JNIEnv*, jvalue)> JavaToJavaScript;
-  JavaToJavaScript getJavaToJsConverter(JNIEnv*, jclass type, bool boxed);
-  typedef std::function<jvalue(Context*, JNIEnv*, JSValueConst)> JavaScriptToJava;
-  JavaScriptToJava getJsToJavaConverter(JNIEnv*, jclass type, bool boxed);
 
   jobject toJavaObject(JNIEnv*, const JSValue& value, bool throwOnUnsupportedType = true);
   void throwJsException(JNIEnv*, const JSValue& value) const;
@@ -52,14 +48,12 @@ public:
 
   JNIEnv* getEnv() const;
 
-  static JSValue
-  jsCall(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv, int magic);
-
   jclass getGlobalRef(JNIEnv* env, jclass clazz);
   std::string toCppString(JNIEnv* env, jstring string) const;
   JSValue toJsString(JNIEnv* env, jstring string) const;
   JSValue toJsStringArray(JNIEnv* env, jobjectArray javaStringArray) const;
   jstring toJavaString(JNIEnv* env, const JSValueConst& value) const;
+  jobjectArray toJavaStringArray(JNIEnv* env, const JSValueConst& value) const;
 
   JavaVM* javaVm;
   const jint jniVersion;

@@ -77,10 +77,6 @@ actual class QuickJs private constructor(
       "disconnect", stringType
     )
     private val callChannelMethods = arrayOf<Any>(
-      disconnectMethod,
-      invokeMethod,
-      invokeSuspendingMethod,
-      serviceNamesArrayMethod
     )
   }
 
@@ -132,7 +128,7 @@ actual class QuickJs private constructor(
   }
 
   internal actual fun initOutboundChannel(outboundChannel: CallChannel) {
-    set(context, outboundChannelName, outboundChannel, callChannelMethods)
+    setCallChannel(context, outboundChannelName, outboundChannel)
   }
 
   internal actual fun getInboundChannel(): CallChannel {
@@ -180,7 +176,7 @@ actual class QuickJs private constructor(
   private external fun destroyContext(context: Long)
   private external fun evaluate(context: Long, sourceCode: String, fileName: String): Any?
   private external fun getCallChannel(context: Long, name: String): Long
-  private external operator fun set(context: Long, name: String, `object`: Any, methods: Array<Any>)
+  private external fun setCallChannel(context: Long, name: String, callChannel: CallChannel)
   private external fun execute(context: Long, bytecode: ByteArray): Any?
   private external fun compile(context: Long, sourceCode: String, fileName: String): ByteArray
   private external fun setInterruptHandler(context: Long, interruptHandler: InterruptHandler?)

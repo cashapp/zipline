@@ -62,15 +62,15 @@ Java_app_cash_zipline_QuickJs_getCallChannel(JNIEnv* env, jobject thiz, jlong _c
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_app_cash_zipline_QuickJs_set(JNIEnv* env, jobject thiz, jlong _context, jstring name,
-                                      jobject object, jobjectArray methods) {
+Java_app_cash_zipline_QuickJs_setCallChannel(JNIEnv* env, jobject thiz, jlong _context,
+                                             jstring name, jobject callChannel) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/NullPointerException",
                        "Null QuickJs context - did you close your QuickJs?");
     return;
   }
-  context->setObjectProxy(env, name, object, methods);
+  context->setCallChannel(env, name, callChannel);
 }
 
 extern "C" JNIEXPORT jobject JNICALL
