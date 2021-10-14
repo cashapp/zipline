@@ -17,8 +17,8 @@
 #include <cstring>
 #include <memory>
 #include <assert.h>
-#include "JavaCallChannel.h"
-#include "JsCallChannel.h"
+#include "OutboundCallChannel.h"
+#include "InboundCallChannel.h"
 #include "ExceptionThrowers.h"
 #include "quickjs/quickjs.h"
 
@@ -57,7 +57,7 @@ namespace {
 void jsFinalize(JSRuntime* jsRuntime, JSValue val) {
   auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(jsRuntime));
   if (context) {
-    delete reinterpret_cast<JavaCallChannel*>(JS_GetOpaque(val, context->jsClassId));
+    delete reinterpret_cast<OutboundCallChannel*>(JS_GetOpaque(val, context->jsClassId));
   }
 }
 
@@ -254,21 +254,21 @@ void Context::setMaxStackSize(JNIEnv* env, jlong stackSize) {
   JS_SetMaxStackSize(jsRuntime, stackSize);
 }
 
-JsCallChannel* Context::getCallChannel(JNIEnv* env, jstring name) {
+InboundCallChannel* Context::getInboundCallChannel(JNIEnv* env, jstring name) {
   JSValue global = JS_GetGlobalObject(jsContext);
 
   const char* nameStr = env->GetStringUTFChars(name, 0);
 
   JSValue obj = JS_GetPropertyStr(jsContext, global, nameStr);
 
-  JsCallChannel* jsCallChannel = nullptr;
+  InboundCallChannel* inboundCallChannel = nullptr;
   if (JS_IsObject(obj)) {
-    jsCallChannel = new JsCallChannel(nameStr);
+    inboundCallChannel = new InboundCallChannel(nameStr);
     if (!env->ExceptionCheck()) {
-      callChannels.push_back(jsCallChannel);
+      callChannels.push_back(inboundCallChannel);
     } else {
-      delete jsCallChannel;
-      jsCallChannel = nullptr;
+      delete inboundCallChannel;
+      inboundCallChannel = nullptr;
     }
   } else if (JS_IsException(obj)) {
     throwJsException(env, obj);
@@ -284,10 +284,10 @@ JsCallChannel* Context::getCallChannel(JNIEnv* env, jstring name) {
   env->ReleaseStringUTFChars(name, nameStr);
   JS_FreeValue(jsContext, global);
 
-  return jsCallChannel;
+  return inboundCallChannel;
 }
 
-void Context::setCallChannel(JNIEnv* env, jstring name, jobject callChannel) {
+void Context::setOutboundCallChannel(JNIEnv* env, jstring name, jobject callChannel) {
   auto global = JS_GetGlobalObject(jsContext);
 
   const char* nameStr = env->GetStringUTFChars(name, 0);
@@ -298,22 +298,22 @@ void Context::setCallChannel(JNIEnv* env, jstring name, jobject callChannel) {
       JS_NewClassID(&jsClassId);
       JSClassDef classDef;
       memset(&classDef, 0, sizeof(JSClassDef));
-      classDef.class_name = "QuickJsAndroidProxy";
+      classDef.class_name = "OutboundCallChannel";
       classDef.finalizer = jsFinalize;
       if (JS_NewClass(jsRuntime, jsClassId, &classDef)) {
         jsClassId = 0;
         throwJavaException(env, "java/lang/NullPointerException",
-                           "Failed to allocate JavaScript proxy class");
+                           "Failed to allocate JavaScript OutboundCallChannel class");
       }
     }
     if (jsClassId != 0) {
-      auto proxy = JS_NewObjectClass(jsContext, jsClassId);
-      if (JS_IsException(proxy) || JS_SetProperty(jsContext, global, objName, proxy) <= 0) {
-        throwJsException(env, proxy);
+      auto jsOutboundCallChannel = JS_NewObjectClass(jsContext, jsClassId);
+      if (JS_IsException(jsOutboundCallChannel) || JS_SetProperty(jsContext, global, objName, jsOutboundCallChannel) <= 0) {
+        throwJsException(env, jsOutboundCallChannel);
       } else {
-        std::unique_ptr<JavaCallChannel> javaObject(new JavaCallChannel(this, env, nameStr, callChannel, proxy));
+        std::unique_ptr<OutboundCallChannel> javaObject(new OutboundCallChannel(this, env, nameStr, callChannel, jsOutboundCallChannel));
         if (!env->ExceptionCheck()) {
-          JS_SetOpaque(proxy, javaObject.release());
+          JS_SetOpaque(jsOutboundCallChannel, javaObject.release());
         }
       }
     }

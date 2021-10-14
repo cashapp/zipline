@@ -13,50 +13,51 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "JavaCallChannel.h"
+#include <assert.h>
+#include "OutboundCallChannel.h"
 #include "Context.h"
 #include "ExceptionThrowers.h"
 
-JavaCallChannel::JavaCallChannel(Context* c, JNIEnv* env, const char* name, jobject object,
-                                 JSValueConst proxy)
+OutboundCallChannel::OutboundCallChannel(Context* c, JNIEnv* env, const char* name, jobject object,
+                                         JSValueConst jsOutboundCallChannel)
     : context(c),
       name(name),
       javaThis(env->NewGlobalRef(object)),
       callChannelClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("app/cash/zipline/internal/bridge/CallChannel")))),
-      callChannelServiceNamesArray(env->GetMethodID(callChannelClass, "serviceNamesArray", "()[Ljava/lang/String;")),
-      callChannelInvoke(env->GetMethodID(callChannelClass, "invoke", "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)[Ljava/lang/String;")),
-      callChannelInvokeSuspending(env->GetMethodID(callChannelClass, "invokeSuspending", "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)V")),
-      callChannelDisconnect(env->GetMethodID(callChannelClass, "disconnect", "(Ljava/lang/String;)Z")) {
-  functions.push_back(JS_CFUNC_DEF("serviceNamesArray", 0, JavaCallChannel::jsServiceNamesArray));
-  functions.push_back(JS_CFUNC_DEF("invoke", 3, JavaCallChannel::jsInvoke));
-  functions.push_back(JS_CFUNC_DEF("invokeSuspending", 4, JavaCallChannel::jsInvokeSuspending));
-  functions.push_back(JS_CFUNC_DEF("disconnect", 1, JavaCallChannel::jsDisconnect));
+      serviceNamesArrayMethod(env->GetMethodID(callChannelClass, "serviceNamesArray", "()[Ljava/lang/String;")),
+      invokeMethod(env->GetMethodID(callChannelClass, "invoke", "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;)[Ljava/lang/String;")),
+      invokeSuspendingMethod(env->GetMethodID(callChannelClass, "invokeSuspending", "(Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)V")),
+      disconnectMethod(env->GetMethodID(callChannelClass, "disconnect", "(Ljava/lang/String;)Z")) {
+  functions.push_back(JS_CFUNC_DEF("serviceNamesArray", 0, OutboundCallChannel::serviceNamesArray));
+  functions.push_back(JS_CFUNC_DEF("invoke", 3, OutboundCallChannel::invoke));
+  functions.push_back(JS_CFUNC_DEF("invokeSuspending", 4, OutboundCallChannel::invokeSuspending));
+  functions.push_back(JS_CFUNC_DEF("disconnect", 1, OutboundCallChannel::disconnect));
   if (!env->ExceptionCheck()) {
-    JS_SetPropertyFunctionList(context->jsContext, proxy, functions.data(), functions.size());
+    JS_SetPropertyFunctionList(context->jsContext, jsOutboundCallChannel, functions.data(), functions.size());
   }
 }
 
-JavaCallChannel::~JavaCallChannel() {
+OutboundCallChannel::~OutboundCallChannel() {
   context->getEnv()->DeleteGlobalRef(javaThis);
   context->getEnv()->DeleteGlobalRef(callChannelClass);
 }
 
 JSValue
-JavaCallChannel::jsServiceNamesArray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+OutboundCallChannel::serviceNamesArray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
   if (!context) {
-    return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+    return JS_ThrowReferenceError(ctx, "QuickJs closed");
   }
-  auto javaCallChannel = reinterpret_cast<const JavaCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
-  if (!javaCallChannel) {
-    return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
+  if (!channel) {
+    return JS_ThrowReferenceError(ctx, "Not an OutboundCallChannel");
   }
 
   auto env = context->getEnv();
   env->PushLocalFrame(argc + 1);
   jvalue args[0];
   jobjectArray javaResult = static_cast<jobjectArray>(env->CallObjectMethodA(
-      javaCallChannel->javaThis, javaCallChannel->callChannelServiceNamesArray, args));
+      channel->javaThis, channel->serviceNamesArrayMethod, args));
   JSValue jsResult;
   if (!env->ExceptionCheck()) {
     jsResult = context->toJsStringArray(env, javaResult);
@@ -68,14 +69,14 @@ JavaCallChannel::jsServiceNamesArray(JSContext* ctx, JSValueConst this_val, int 
 }
 
 JSValue
-JavaCallChannel::jsInvoke(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+OutboundCallChannel::invoke(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
   if (!context) {
-    return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+    return JS_ThrowReferenceError(ctx, "QuickJs closed");
   }
-  auto javaCallChannel = reinterpret_cast<const JavaCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
-  if (!javaCallChannel) {
-    return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
+  if (!channel) {
+    return JS_ThrowReferenceError(ctx, "Not an OutboundCallChannel");
   }
 
   assert(argc == 3);
@@ -88,7 +89,7 @@ JavaCallChannel::jsInvoke(JSContext* ctx, JSValueConst this_val, int argc, JSVal
   args[2].l = context->toJavaStringArray(env, argv[2]);
 
   jobjectArray javaResult = static_cast<jobjectArray>(env->CallObjectMethodA(
-      javaCallChannel->javaThis, javaCallChannel->callChannelInvoke, args));
+      channel->javaThis, channel->invokeMethod, args));
   JSValue jsResult;
   if (!env->ExceptionCheck()) {
     jsResult = context->toJsStringArray(env, javaResult);
@@ -100,14 +101,14 @@ JavaCallChannel::jsInvoke(JSContext* ctx, JSValueConst this_val, int argc, JSVal
 }
 
 JSValue
-JavaCallChannel::jsInvokeSuspending(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+OutboundCallChannel::invokeSuspending(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
   if (!context) {
-    return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+    return JS_ThrowReferenceError(ctx, "QuickJs closed");
   }
-  auto javaCallChannel = reinterpret_cast<const JavaCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
-  if (!javaCallChannel) {
-    return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
+  if (!channel) {
+    return JS_ThrowReferenceError(ctx, "Not an OutboundCallChannel");
   }
 
   assert(argc == 4);
@@ -120,7 +121,7 @@ JavaCallChannel::jsInvokeSuspending(JSContext* ctx, JSValueConst this_val, int a
   args[2].l = context->toJavaStringArray(env, argv[2]);
   args[3].l = context->toJavaString(env, argv[3]);
 
-  env->CallVoidMethodA(javaCallChannel->javaThis, javaCallChannel->callChannelInvokeSuspending, args);
+  env->CallVoidMethodA(channel->javaThis, channel->invokeSuspendingMethod, args);
   JSValue jsResult;
   if (!env->ExceptionCheck()) {
     jsResult = JS_UNDEFINED;
@@ -132,14 +133,14 @@ JavaCallChannel::jsInvokeSuspending(JSContext* ctx, JSValueConst this_val, int a
 }
 
 JSValue
-JavaCallChannel::jsDisconnect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+OutboundCallChannel::disconnect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
   if (!context) {
-    return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+    return JS_ThrowReferenceError(ctx, "QuickJs closed");
   }
-  auto javaCallChannel = reinterpret_cast<const JavaCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
-  if (!javaCallChannel) {
-    return JS_ThrowReferenceError(ctx, "Null Java Proxy");
+  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
+  if (!channel) {
+    return JS_ThrowReferenceError(ctx, "Not an OutboundCallChannel");
   }
 
   assert(argc == 1);
@@ -150,7 +151,7 @@ JavaCallChannel::jsDisconnect(JSContext* ctx, JSValueConst this_val, int argc, J
   args[0].l = context->toJavaString(env, argv[0]);
 
   jboolean javaResult = env->CallBooleanMethodA(
-      javaCallChannel->javaThis, javaCallChannel->callChannelDisconnect, args);
+      channel->javaThis, channel->disconnectMethod, args);
   JSValue jsResult;
   if (!env->ExceptionCheck()) {
     jsResult = JS_NewBool(context->jsContext, javaResult);

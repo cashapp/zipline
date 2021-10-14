@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef QUICKJS_ANDROID_JSCALLCHANNEL_H
-#define QUICKJS_ANDROID_JSCALLCHANNEL_H
+#ifndef QUICKJS_ANDROID_INBOUNDCALLCHANNEL_H
+#define QUICKJS_ANDROID_INBOUNDCALLCHANNEL_H
 
 #include <jni.h>
 #include <vector>
@@ -22,10 +22,10 @@
 
 class Context;
 
-class JsCallChannel {
+class InboundCallChannel {
 public:
-  JsCallChannel(const char *name);
-  ~JsCallChannel();
+  InboundCallChannel(const char *name);
+  ~InboundCallChannel();
 
   jobjectArray serviceNamesArray(Context* context, JNIEnv*) const;
   jobjectArray invoke(Context *context, JNIEnv* env, jstring instanceName, jstring funName, jobjectArray encodedArguments) const;
@@ -35,4 +35,4 @@ public:
   const std::string name;
 };
 
-#endif //QUICKJS_ANDROID_JSCALLCHANNEL_H
+#endif //QUICKJS_ANDROID_INBOUNDCALLCHANNEL_H

@@ -60,24 +60,6 @@ actual class QuickJs private constructor(
 
     actual val version: String
       get() = quickJsVersion
-
-    private val stringType = String::class.java
-    private val stringArrayType = arrayOf<String>()::class.java
-
-    private val serviceNamesArrayMethod = CallChannel::class.java.getMethod(
-      "serviceNamesArray"
-    )
-    private val invokeMethod = CallChannel::class.java.getMethod(
-      "invoke", stringType, stringType, stringArrayType
-    )
-    private val invokeSuspendingMethod = CallChannel::class.java.getMethod(
-      "invokeSuspending", stringType, stringType, stringArrayType, stringType
-    )
-    private val disconnectMethod = CallChannel::class.java.getMethod(
-      "disconnect", stringType
-    )
-    private val callChannelMethods = arrayOf<Any>(
-    )
   }
 
   /**
@@ -128,11 +110,11 @@ actual class QuickJs private constructor(
   }
 
   internal actual fun initOutboundChannel(outboundChannel: CallChannel) {
-    setCallChannel(context, outboundChannelName, outboundChannel)
+    setOutboundCallChannel(context, outboundChannelName, outboundChannel)
   }
 
   internal actual fun getInboundChannel(): CallChannel {
-    val instance = getCallChannel(context, inboundChannelName)
+    val instance = getInboundCallChannel(context, inboundChannelName)
     if (instance == 0L) {
       throw OutOfMemoryError("Cannot create QuickJs proxy to inbound channel")
     }
@@ -175,8 +157,8 @@ actual class QuickJs private constructor(
 
   private external fun destroyContext(context: Long)
   private external fun evaluate(context: Long, sourceCode: String, fileName: String): Any?
-  private external fun getCallChannel(context: Long, name: String): Long
-  private external fun setCallChannel(context: Long, name: String, callChannel: CallChannel)
+  private external fun getInboundCallChannel(context: Long, name: String): Long
+  private external fun setOutboundCallChannel(context: Long, name: String, callChannel: CallChannel)
   private external fun execute(context: Long, bytecode: ByteArray): Any?
   private external fun compile(context: Long, sourceCode: String, fileName: String): ByteArray
   private external fun setInterruptHandler(context: Long, interruptHandler: InterruptHandler?)

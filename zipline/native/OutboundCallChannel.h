@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef QUICKJS_ANDROID_JAVACALLCHANNEL_H
-#define QUICKJS_ANDROID_JAVACALLCHANNEL_H
+#ifndef QUICKJS_ANDROID_OUTBOUNDCALLCHANNEL_H
+#define QUICKJS_ANDROID_OUTBOUNDCALLCHANNEL_H
 
 #include <jni.h>
 #include <string>
@@ -23,27 +23,27 @@
 
 class Context;
 
-class JavaCallChannel {
+class OutboundCallChannel {
 public:
-  JavaCallChannel(Context*, JNIEnv*, const char* name, jobject object, JSValueConst proxy);
+  OutboundCallChannel(Context*, JNIEnv*, const char* name, jobject object, JSValueConst jsOutboundCallChannel);
 
-  ~JavaCallChannel();
+  ~OutboundCallChannel();
 
-  static JSValue jsServiceNamesArray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
-  static JSValue jsInvoke(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
-  static JSValue jsInvokeSuspending(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
-  static JSValue jsDisconnect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
+  static JSValue serviceNamesArray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
+  static JSValue invoke(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
+  static JSValue invokeSuspending(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
+  static JSValue disconnect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
 
 private:
   Context* context;
   const std::string name;
   jobject javaThis;
   jclass callChannelClass;
-  jmethodID callChannelServiceNamesArray;
-  jmethodID callChannelInvoke;
-  jmethodID callChannelInvokeSuspending;
-  jmethodID callChannelDisconnect;
+  jmethodID serviceNamesArrayMethod;
+  jmethodID invokeMethod;
+  jmethodID invokeSuspendingMethod;
+  jmethodID disconnectMethod;
   std::vector<JSCFunctionListEntry> functions;
 };
 
-#endif //QUICKJS_ANDROID_JAVACALLCHANNEL_H
+#endif //QUICKJS_ANDROID_OUTBOUNDCALLCHANNEL_H

@@ -24,15 +24,15 @@
 
 class JSRuntime;
 class JSContext;
-class JsCallChannel;
+class InboundCallChannel;
 
 class Context {
 public:
   Context(JNIEnv *env);
   ~Context();
 
-  JsCallChannel* getCallChannel(JNIEnv*, jstring name);
-  void setCallChannel(JNIEnv*, jstring name, jobject callChannel);
+  InboundCallChannel* getInboundCallChannel(JNIEnv*, jstring name);
+  void setOutboundCallChannel(JNIEnv*, jstring name, jobject callChannel);
   jobject eval(JNIEnv*, jstring source, jstring file);
   jobject execute(JNIEnv*, jbyteArray byteCode);
   jbyteArray compile(JNIEnv*, jstring source, jstring file);
@@ -78,7 +78,7 @@ public:
   jclass interruptHandlerClass;
   jmethodID interruptHandlerPoll;
   jobject interruptHandler;
-  std::vector<JsCallChannel*> callChannels;
+  std::vector<InboundCallChannel*> callChannels;
   std::unordered_map<std::string, jclass> globalReferences;
 };
 
