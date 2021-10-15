@@ -22,6 +22,8 @@ import app.cash.zipline.quickjs.JS_EvalFunction
 import app.cash.zipline.quickjs.JS_FreeValue
 import app.cash.zipline.quickjs.JS_GetException
 import app.cash.zipline.quickjs.JS_GetPropertyStr
+import app.cash.zipline.quickjs.JS_GetPropertyUint32
+import app.cash.zipline.quickjs.JS_IsArray
 import app.cash.zipline.quickjs.JS_IsException
 import app.cash.zipline.quickjs.JS_IsUndefined
 import app.cash.zipline.quickjs.JS_READ_OBJ_BYTECODE
@@ -33,6 +35,7 @@ import app.cash.zipline.quickjs.JS_TAG_EXCEPTION
 import app.cash.zipline.quickjs.JS_TAG_FLOAT64
 import app.cash.zipline.quickjs.JS_TAG_INT
 import app.cash.zipline.quickjs.JS_TAG_NULL
+import app.cash.zipline.quickjs.JS_TAG_OBJECT
 import app.cash.zipline.quickjs.JS_TAG_STRING
 import app.cash.zipline.quickjs.JS_TAG_UNDEFINED
 import app.cash.zipline.quickjs.JS_ToCString
@@ -148,6 +151,22 @@ private fun CValue<JSValue>.toKotlinInstanceOrNull(quickJs:QuickJs): Any? {
     JS_TAG_INT -> JsValueGetInt(this)
     JS_TAG_FLOAT64 -> JsValueGetFloat64(this)
     JS_TAG_NULL, JS_TAG_UNDEFINED -> null
+    JS_TAG_OBJECT -> {
+      if (JS_IsArray(quickJs.context, this) != 0) {
+        val lengthProperty = JS_GetPropertyStr(quickJs.context, this, "length")
+        val length = JsValueGetInt(lengthProperty)
+        JS_FreeValue(quickJs.context, lengthProperty)
+
+        Array(length) {
+          val element = JS_GetPropertyUint32(quickJs.context, this, it.convert())
+          val value = element.toKotlinInstanceOrNull(quickJs)
+          JS_FreeValue(quickJs.context, element)
+          value
+        }
+      } else {
+        null
+      }
+    }
     else -> null
   }
 }
