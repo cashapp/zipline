@@ -16,12 +16,16 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.CallChannel
+import app.cash.zipline.quickjs.JSClassDef
+import app.cash.zipline.quickjs.JSClassIDVar
 import app.cash.zipline.quickjs.JSContext
 import app.cash.zipline.quickjs.JSMemoryUsage
 import app.cash.zipline.quickjs.JSRuntime
 import app.cash.zipline.quickjs.JS_ComputeMemoryUsage
 import app.cash.zipline.quickjs.JS_FreeContext
 import app.cash.zipline.quickjs.JS_FreeRuntime
+import app.cash.zipline.quickjs.JS_NewClass
+import app.cash.zipline.quickjs.JS_NewClassID
 import app.cash.zipline.quickjs.JS_NewContext
 import app.cash.zipline.quickjs.JS_NewRuntime
 import app.cash.zipline.quickjs.JS_SetGCThreshold
@@ -34,9 +38,11 @@ import kotlinx.cinterop.StableRef
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.convert
+import kotlinx.cinterop.cstr
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.staticCFunction
+import kotlinx.cinterop.value
 
 internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COpaquePointer?): Int{
   val quickJs = opaque!!.asStableRef<QuickJs>().get()
@@ -44,7 +50,7 @@ internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COp
 }
 
 actual class QuickJs private constructor(
-  private val runtime: CPointer<JSRuntime>,
+  internal val runtime: CPointer<JSRuntime>,
   internal val context: CPointer<JSContext>
 ) {
   actual companion object {
@@ -75,6 +81,8 @@ actual class QuickJs private constructor(
   init {
     JS_SetInterruptHandler(runtime, jsInterruptHandlerCFunction, thisPtr.asCPointer())
   }
+
+  private var outboundCallChannelClassId = 0
 
   fun jsInterruptHandler(runtime: CPointer<JSRuntime>?): Int {
     val interruptHandler = interruptHandler ?: return 0
@@ -161,12 +169,25 @@ actual class QuickJs private constructor(
   actual fun execute(bytecode: ByteArray): Any? = executePlatform(bytecode)
 
   internal actual fun initOutboundChannel(outboundChannel: CallChannel) {
-    TODO()
+    var outboundCallChannelClassId = outboundCallChannelClassId
+    if (outboundCallChannelClassId == 0) {
+      outboundCallChannelClassId = memScoped {
+        val id = alloc<JSClassIDVar>()
+        JS_NewClassID(id.ptr)
+
+        val classDef = alloc<JSClassDef>()
+        classDef.class_name = "OutboundCallChannel".cstr.ptr
+        JS_NewClass(runtime, id.value, classDef.ptr)
+
+        id.value.toInt() // Why doesn't JS_NewObjectClass accept a UInt / JSClassID?
+      }
+      this.outboundCallChannelClassId = outboundCallChannelClassId
+    }
+
+    initOutboundChannelPlatform(outboundChannel, outboundCallChannelClassId)
   }
 
-  internal actual fun getInboundChannel(): CallChannel {
-    TODO()
-  }
+  internal actual fun getInboundChannel() = getInboundChannelPlatform()
 
   actual fun close() {
     JS_FreeContext(context)
@@ -180,3 +201,8 @@ internal expect fun QuickJs.throwJsException(): Nothing
 internal expect fun QuickJs.compilePlatform(sourceCode: String, fileName: String): ByteArray
 internal expect fun QuickJs.executePlatform(bytecode: ByteArray): Any?
 internal expect fun QuickJs.evaluatePlatform(script: String, fileName: String): Any?
+internal expect fun QuickJs.getInboundChannelPlatform(): CallChannel
+internal expect fun QuickJs.initOutboundChannelPlatform(
+  outboundChannel: CallChannel,
+  outboundCallChannelClassId: Int,
+)

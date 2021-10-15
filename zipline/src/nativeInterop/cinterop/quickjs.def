@@ -22,3 +22,7 @@ static inline int JsValueGetBool(JSValue v) {
 static inline double JsValueGetFloat64(JSValue v) {
   return JS_VALUE_GET_FLOAT64(v);
 }
+
+//static inline JSCFunctionListEntry JsCFuncDef(const char *name, int length, void *func1) {
+//  return JS_CFUNC_DEF(name, length, func1);
+//}

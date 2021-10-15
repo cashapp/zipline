@@ -15,19 +15,35 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.CallChannel
+import app.cash.zipline.internal.bridge.inboundChannelName
+import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.quickjs.JSContext
 import app.cash.zipline.quickjs.JSValue
+import app.cash.zipline.quickjs.JSValueVar
 import app.cash.zipline.quickjs.JS_EVAL_FLAG_COMPILE_ONLY
 import app.cash.zipline.quickjs.JS_Eval
 import app.cash.zipline.quickjs.JS_EvalFunction
+import app.cash.zipline.quickjs.JS_FreeAtom
 import app.cash.zipline.quickjs.JS_FreeValue
 import app.cash.zipline.quickjs.JS_GetException
+import app.cash.zipline.quickjs.JS_GetGlobalObject
 import app.cash.zipline.quickjs.JS_GetPropertyStr
+import app.cash.zipline.quickjs.JS_HasProperty
+import app.cash.zipline.quickjs.JS_Invoke
 import app.cash.zipline.quickjs.JS_IsException
 import app.cash.zipline.quickjs.JS_IsUndefined
+import app.cash.zipline.quickjs.JS_NewArray
+import app.cash.zipline.quickjs.JS_NewAtom
+import app.cash.zipline.quickjs.JS_NewObjectClass
+import app.cash.zipline.quickjs.JS_NewString
 import app.cash.zipline.quickjs.JS_READ_OBJ_BYTECODE
 import app.cash.zipline.quickjs.JS_READ_OBJ_REFERENCE
 import app.cash.zipline.quickjs.JS_ReadObject
 import app.cash.zipline.quickjs.JS_ResolveModule
+import app.cash.zipline.quickjs.JS_SetOpaque
+import app.cash.zipline.quickjs.JS_SetProperty
+import app.cash.zipline.quickjs.JS_SetPropertyUint32
 import app.cash.zipline.quickjs.JS_TAG_BOOL
 import app.cash.zipline.quickjs.JS_TAG_EXCEPTION
 import app.cash.zipline.quickjs.JS_TAG_FLOAT64
@@ -44,14 +60,17 @@ import app.cash.zipline.quickjs.JsValueGetFloat64
 import app.cash.zipline.quickjs.JsValueGetInt
 import app.cash.zipline.quickjs.JsValueGetNormTag
 import app.cash.zipline.quickjs.js_free
+import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CValuesRef
 import kotlinx.cinterop.UByteVar
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.allocArray
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.refTo
+import kotlinx.cinterop.set
 import kotlinx.cinterop.toKStringFromUtf8
 import kotlinx.cinterop.value
 import platform.posix.size_tVar
@@ -148,5 +167,143 @@ private fun JSValue.toKotlinInstanceOrNull(quickJs:QuickJs): Any? {
     JS_TAG_FLOAT64 -> JsValueGetFloat64(this)
     JS_TAG_NULL, JS_TAG_UNDEFINED -> null
     else -> null
+  }
+}
+
+private fun QuickJs.toJsArray(strings: Array<String>): JSValue {
+  val array = JS_NewArray(context)
+  strings.forEachIndexed { index, string ->
+    JS_SetPropertyUint32(context, array, index.convert(), JS_NewString(context, string))
+  }
+  return array
+}
+
+internal actual fun QuickJs.getInboundChannelPlatform(): CallChannel {
+  val globalThis = JS_GetGlobalObject(context)
+  val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
+  JS_FreeValue(context, globalThis)
+
+  return InboundCallChannel(this, context, inboundChannel)
+}
+
+private class InboundCallChannel(
+  private val quickJs: QuickJs,
+  private val context: CPointer<JSContext>,
+  private val inboundChannel: JSValue,
+) : CallChannel {
+  override fun serviceNamesArray(): Array<String> {
+    val property = JS_NewAtom(context, "serviceNamesArray")
+    val jsResult = JS_Invoke(context, inboundChannel, property, 0, null)
+    val kotlinResult = jsResult.toKotlinInstanceOrNull(quickJs) as Array<String>
+
+    JS_FreeAtom(context, property)
+    JS_FreeValue(context, jsResult)
+
+    return kotlinResult
+  }
+
+  override fun invoke(
+    instanceName: String,
+    funName: String,
+    encodedArguments: Array<String>,
+  ): Array<String> {
+    val property = JS_NewAtom(context, "invoke")
+    val arg0 = JS_NewString(context, instanceName)
+    val arg1 = JS_NewString(context, funName)
+    val arg2 = quickJs.toJsArray(encodedArguments)
+
+    val jsResult = memScoped {
+      val args = allocArray<JSValueVar>(3)
+      args[0] = arg0
+      args[1] = arg1
+      args[2] = arg2
+
+      JS_Invoke(context, inboundChannel, property, 3, args)
+    }
+    val kotlinResult = jsResult.toKotlinInstanceOrNull(quickJs) as Array<String>
+
+    JS_FreeAtom(context, property)
+    JS_FreeValue(context, arg0)
+    JS_FreeValue(context, arg1)
+    JS_FreeValue(context, arg2) // TODO are we leaking strings in the array?
+    JS_FreeValue(context, jsResult)
+
+    return kotlinResult
+  }
+
+  override fun invokeSuspending(
+    instanceName: String,
+    funName: String,
+    encodedArguments: Array<String>,
+    callbackName: String,
+  ) {
+    val property = JS_NewAtom(context, "invokeSuspending")
+    val arg0 = JS_NewString(context, instanceName)
+    val arg1 = JS_NewString(context, funName)
+    val arg2 = quickJs.toJsArray(encodedArguments)
+    val arg3 = JS_NewString(context, callbackName)
+
+    val jsResult = memScoped {
+      val args = allocArray<JSValueVar>(4)
+      args[0] = arg0
+      args[1] = arg1
+      args[2] = arg2
+      args[3] = arg3
+
+      JS_Invoke(context, inboundChannel, property, 4, args)
+    }
+
+    JS_FreeAtom(context, property)
+    JS_FreeValue(context, arg0)
+    JS_FreeValue(context, arg1)
+    JS_FreeValue(context, arg2) // TODO are we leaking strings in the array?
+    JS_FreeValue(context, arg3)
+    JS_FreeValue(context, jsResult)
+  }
+
+  override fun disconnect(instanceName: String): Boolean {
+    val property = JS_NewAtom(context, "disconnect")
+    val arg0 = JS_NewString(context, instanceName)
+
+    val jsResult = memScoped {
+      val args = allocArray<JSValueVar>(4)
+      args[0] = arg0
+
+      JS_Invoke(context, inboundChannel, property, 1, args)
+    }
+    val kotlinResult = jsResult.toKotlinInstanceOrNull(quickJs) as Boolean
+
+    JS_FreeAtom(context, property)
+    JS_FreeValue(context, jsResult)
+
+    return kotlinResult
+  }
+}
+
+internal actual fun QuickJs.initOutboundChannelPlatform(
+  outboundChannel: CallChannel,
+  outboundCallChannelClassId: Int,
+) {
+  val globalThis = JS_GetGlobalObject(context)
+  try {
+    val propertyName = JS_NewAtom(context, outboundChannelName)
+    try {
+      require(JS_HasProperty(context, globalThis, propertyName) == 0) {
+        "A global object called $outboundChannelName already exists"
+      }
+
+      val jsOutboundCallChannel = JS_NewObjectClass(context, outboundCallChannelClassId)
+      if (JS_IsException(jsOutboundCallChannel) != 0 ||
+        JS_SetProperty(context, globalThis, propertyName, jsOutboundCallChannel) != 0) {
+        throwJsException()
+      }
+
+      // TODO build function list entries
+      JS_SetOpaque(jsOutboundCallChannel, TODO("function list"))
+    } finally {
+      JS_FreeAtom(context, propertyName)
+    }
+  } finally {
+    JS_FreeValue(context, globalThis)
   }
 }
