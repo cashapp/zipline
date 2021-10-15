@@ -81,7 +81,7 @@ class QuickJsInboundChannelTest {
       "firstArg",
       "secondArg",
       "and the call was successful!",
-    )
+    ).inOrder()
   }
 
   @Test
@@ -118,11 +118,11 @@ class QuickJsInboundChannelTest {
       "received call to invokeSuspending()",
       "theInstanceName",
       "theFunName",
+      "theCallbackName",
       "firstArg",
       "secondArg",
-      "theCallbackName",
       "and the call was successful!",
-    )
+    ).inOrder()
   }
 
   @Test
@@ -139,7 +139,7 @@ class QuickJsInboundChannelTest {
     assertThat(result).asList().containsExactly(
       "service one",
       "service two"
-    )
+    ).inOrder()
   }
 
   @Test
@@ -161,7 +161,7 @@ class QuickJsInboundChannelTest {
     assertThat(result).asList().containsExactly(
       "disconnect",
       "service one"
-    )
+    ).inOrder()
   }
 
   @Test
