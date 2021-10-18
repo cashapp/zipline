@@ -53,11 +53,13 @@ $dokka.location:app.cash.zipline/QuickJs/evaluate/#kotlin.String#kotlin.String/P
 $dokka.location:app.cash.zipline/QuickJs/execute/#kotlin.ByteArray/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/execute.html
 $dokka.location:app.cash.zipline/QuickJs/gcThreshold/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/gc-threshold.html
 $dokka.location:app.cash.zipline/QuickJs/interruptHandler/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/interrupt-handler.html
+$dokka.location:app.cash.zipline/QuickJs/jsInterruptHandler/#CPointer<JSRuntime>[JSRuntime]?/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/js-interrupt-handler.html
 $dokka.location:app.cash.zipline/QuickJs/maxStackSize/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/max-stack-size.html
 $dokka.location:app.cash.zipline/QuickJs/memoryLimit/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/memory-limit.html
 $dokka.location:app.cash.zipline/QuickJs/memoryUsage/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/memory-usage.html
 $dokka.location:app.cash.zipline/QuickJsException///PointingToDeclaration/zipline/app.cash.zipline/-quick-js-exception/index.html
 $dokka.location:app.cash.zipline/QuickJsException/QuickJsException/#kotlin.String#kotlin.String?/PointingToDeclaration/zipline/app.cash.zipline/-quick-js-exception/-quick-js-exception.html
+$dokka.location:app.cash.zipline/QuickJsException/QuickJsException/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-quick-js-exception/-quick-js-exception.html
 $dokka.location:app.cash.zipline/Zipline.Companion///PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/index.html
 $dokka.location:app.cash.zipline/Zipline.Companion/create/#kotlinx.coroutines.CoroutineDispatcher#kotlinx.serialization.modules.SerializersModule/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[engine]-companion/create.html
 $dokka.location:app.cash.zipline/Zipline.Companion/get/#SerializersModule/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/get.html
