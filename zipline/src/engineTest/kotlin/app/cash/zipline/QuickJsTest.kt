@@ -17,6 +17,7 @@ package app.cash.zipline
 
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
@@ -53,7 +54,11 @@ class QuickJsTest {
     assertEquals(false, quickJs.evaluate("false;"))
     assertEquals(1, quickJs.evaluate("1;"))
     assertEquals(1.123, quickJs.evaluate("1.123;"))
+
     assertNull(quickJs.evaluate("undefined;"))
     assertNull(quickJs.evaluate("null;"))
+
+    assertContentEquals(arrayOf("test", true, false, 1, 1.123, null, null),
+      quickJs.evaluate("""["test", true, false, 1, 1.123, undefined, null];""") as Array<Any?>)
   }
 }

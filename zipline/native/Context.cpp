@@ -369,7 +369,10 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
 
     case JS_TAG_OBJECT:
       if (JS_IsArray(jsContext, value)) {
-        const auto arrayLength = JS_VALUE_GET_INT(JS_GetPropertyStr(jsContext, value, "length"));
+        auto arrayLengthProperty = JS_GetPropertyStr(jsContext, value, "length");
+        const auto arrayLength = JS_VALUE_GET_INT(arrayLengthProperty);
+        JS_FreeValue(jsContext, arrayLengthProperty);
+
         result = env->NewObjectArray(arrayLength, objectClass, nullptr);
         for (int i = 0; i < arrayLength && !env->ExceptionCheck(); i++) {
           auto element = JS_GetPropertyUint32(jsContext, value, i);
