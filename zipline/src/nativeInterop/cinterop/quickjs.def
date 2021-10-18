@@ -1,0 +1,24 @@
+---
+
+// Avoid types ending up in cnames.structs.* https://youtrack.jetbrains.com/issue/KT-49034
+
+typedef struct JSContext {} JSContext;
+typedef struct JSRuntime {} JSRuntime;
+
+// Exposing non-constant macros per https://kotlinlang.org/docs/native-c-interop.html#macros
+
+static inline int JsValueGetNormTag(JSValue v) {
+  return JS_VALUE_GET_NORM_TAG(v);
+}
+
+static inline int JsValueGetInt(JSValue v) {
+  return JS_VALUE_GET_INT(v);
+}
+
+static inline int JsValueGetBool(JSValue v) {
+  return JS_VALUE_GET_BOOL(v);
+}
+
+static inline double JsValueGetFloat64(JSValue v) {
+  return JS_VALUE_GET_FLOAT64(v);
+}

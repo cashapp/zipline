@@ -17,7 +17,10 @@ package app.cash.zipline
 
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNotEquals
+import kotlin.test.assertNull
 
 class QuickJsTest {
   private val quickJs = QuickJs.create()
@@ -30,5 +33,27 @@ class QuickJsTest {
   @Test
   fun version() {
     assertNotEquals("", QuickJs.version)
+  }
+
+  @Test fun helloWorld() {
+    val hello = quickJs.evaluate("'hello, world!'.toUpperCase();") as String?
+    assertEquals("HELLO, WORLD!", hello)
+  }
+
+  @Test fun exceptionsInScriptThrowInKotlin() {
+    val t = assertFailsWith<QuickJsException> {
+      quickJs.evaluate("nope();")
+    }
+    assertEquals("'nope' is not defined", t.message)
+  }
+
+  @Test fun returnTypes() {
+    assertEquals("test", quickJs.evaluate("\"test\";"))
+    assertEquals(true, quickJs.evaluate("true;"))
+    assertEquals(false, quickJs.evaluate("false;"))
+    assertEquals(1, quickJs.evaluate("1;"))
+    assertEquals(1.123, quickJs.evaluate("1.123;"))
+    assertNull(quickJs.evaluate("undefined;"))
+    assertNull(quickJs.evaluate("null;"))
   }
 }
