@@ -47,7 +47,9 @@ val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
 }
 
 kotlin {
-  android()
+  android {
+    publishLibraryVariants("release")
+  }
   jvm()
   js {
     nodejs()
