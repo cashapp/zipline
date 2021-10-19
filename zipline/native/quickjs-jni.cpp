@@ -208,7 +208,7 @@ Java_app_cash_zipline_JniCallChannel_invokeSuspending(JNIEnv* env, jobject thiz,
   channel->invokeSuspending(context, env, instanceName, funName, encodedArguments, callbackName);
 }
 
-extern "C" JNIEXPORT jobject JNICALL
+extern "C" JNIEXPORT jboolean JNICALL
 Java_app_cash_zipline_JniCallChannel_disconnect(JNIEnv* env, jobject thiz, jlong _context,
                                                 jlong instance, jstring instanceName) {
   Context* context = reinterpret_cast<Context*>(_context);

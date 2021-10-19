@@ -33,14 +33,23 @@ jobjectArray InboundCallChannel::serviceNamesArray(Context *context, JNIEnv* env
   auto property = JS_NewAtom(jsContext, "serviceNamesArray");
 
   JSValue jsResult = JS_Invoke(jsContext, thisPointer, property, 0, NULL);
-  jobject javaResult = context->toJavaObject(env, jsResult, true);
+  jobjectArray javaResult;
+  auto tag = JS_VALUE_GET_NORM_TAG(jsResult);
+  if (tag == JS_TAG_EXCEPTION) {
+    context->throwJsException(env, jsResult);
+    javaResult = nullptr;
+  } else if (tag == JS_TAG_OBJECT) {
+    javaResult = context->toJavaStringArray(env, jsResult);
+  } else {
+    assert(false); // Unexpected tag.
+  }
 
   JS_FreeAtom(jsContext, property);
   JS_FreeValue(jsContext, jsResult);
   JS_FreeValue(jsContext, thisPointer);
   JS_FreeValue(jsContext, global);
 
-  return static_cast<jobjectArray>(javaResult);
+  return javaResult;
 }
 
 jobjectArray InboundCallChannel::invoke(Context *context, JNIEnv* env, jstring instanceName,
@@ -55,7 +64,16 @@ jobjectArray InboundCallChannel::invoke(Context *context, JNIEnv* env, jstring i
   arguments[2] = context->toJsStringArray(env, encodedArguments);
 
   JSValue jsResult = JS_Invoke(jsContext, thisPointer, property, 3, arguments);
-  jobject javaResult = context->toJavaObject(env, jsResult, true);
+  jobjectArray javaResult;
+  auto tag = JS_VALUE_GET_NORM_TAG(jsResult);
+  if (tag == JS_TAG_EXCEPTION) {
+    context->throwJsException(env, jsResult);
+    javaResult = nullptr;
+  } else if (tag == JS_TAG_OBJECT) {
+    javaResult = context->toJavaStringArray(env, jsResult);
+  } else {
+    assert(false); // Unexpected tag.
+  }
 
   JS_FreeAtom(jsContext, property);
   JS_FreeValue(jsContext, arguments[0]);
@@ -65,7 +83,7 @@ jobjectArray InboundCallChannel::invoke(Context *context, JNIEnv* env, jstring i
   JS_FreeValue(jsContext, thisPointer);
   JS_FreeValue(jsContext, global);
 
-  return static_cast<jobjectArray>(javaResult);
+  return javaResult;
 }
 
 void InboundCallChannel::invokeSuspending(Context *context, JNIEnv* env, jstring instanceName,
@@ -82,7 +100,14 @@ void InboundCallChannel::invokeSuspending(Context *context, JNIEnv* env, jstring
   arguments[3] = context->toJsString(env, callbackName);
 
   JSValue jsResult = JS_Invoke(jsContext, thisPointer, property, 4, arguments);
-  jobject javaResult = context->toJavaObject(env, jsResult, true);
+  auto tag = JS_VALUE_GET_NORM_TAG(jsResult);
+  if (tag == JS_TAG_EXCEPTION) {
+    context->throwJsException(env, jsResult);
+  } else if (tag == JS_TAG_UNDEFINED) {
+    // Expected. Do nothing.
+  } else {
+    assert(false); // Unexpected tag.
+  }
 
   JS_FreeAtom(jsContext, property);
   JS_FreeValue(jsContext, arguments[0]);
@@ -91,11 +116,9 @@ void InboundCallChannel::invokeSuspending(Context *context, JNIEnv* env, jstring
   JS_FreeValue(jsContext, arguments[3]);
   JS_FreeValue(jsContext, thisPointer);
   JS_FreeValue(jsContext, global);
-
-  assert(javaResult == nullptr);
 }
 
-jobject InboundCallChannel::disconnect(Context *context, JNIEnv* env, jstring instanceName) const {
+jboolean InboundCallChannel::disconnect(Context *context, JNIEnv* env, jstring instanceName) const {
   JSContext *jsContext = context->jsContext;
   JSValue global = JS_GetGlobalObject(jsContext);
   JSValue thisPointer = JS_GetPropertyStr(jsContext, global, name.c_str());
@@ -104,7 +127,16 @@ jobject InboundCallChannel::disconnect(Context *context, JNIEnv* env, jstring in
   arguments[0] = context->toJsString(env, instanceName);
 
   JSValue jsResult = JS_Invoke(jsContext, thisPointer, property, 1, arguments);
-  jobject javaResult = context->toJavaObject(env, jsResult, true);
+  jboolean javaResult;
+  auto tag = JS_VALUE_GET_NORM_TAG(jsResult);
+  if (tag == JS_TAG_EXCEPTION) {
+    context->throwJsException(env, jsResult);
+    javaResult = JNI_FALSE;
+  } else if (tag == JS_TAG_BOOL) {
+    javaResult = static_cast<jboolean>(JS_VALUE_GET_BOOL(jsResult));
+  } else {
+    assert(false); // Unexpected tag.
+  }
 
   JS_FreeAtom(jsContext, property);
   JS_FreeValue(jsContext, arguments[0]);
