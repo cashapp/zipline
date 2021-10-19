@@ -276,7 +276,7 @@ InboundCallChannel* Context::getInboundCallChannel(JNIEnv* env, jstring name) {
     const char* msg = JS_IsUndefined(obj)
                       ? "A global JavaScript object called %s was not found"
                       : "JavaScript global called %s is not an object";
-    throwJavaException(env, "java/lang/IllegalArgumentException", msg, nameStr);
+    throwJavaException(env, "java/lang/IllegalStateException", msg, nameStr);
   }
 
   JS_FreeValue(jsContext, obj);
