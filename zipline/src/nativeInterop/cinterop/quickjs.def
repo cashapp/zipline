@@ -22,3 +22,41 @@ static inline int JsValueGetBool(JSValue v) {
 static inline double JsValueGetFloat64(JSValue v) {
   return JS_VALUE_GET_FLOAT64(v);
 }
+
+static inline JSValue JsUndefined() {
+  return JS_UNDEFINED;
+}
+
+static inline JSValue JsTrue() {
+  return JS_TRUE;
+}
+
+static inline JSValue JsFalse() {
+  return JS_FALSE;
+}
+
+// Things that could be written in Kotlin but were easier in C
+
+static inline JSCFunctionListEntry JsServiceNamesFunction(void *func) {
+  JSCFunctionListEntry entry = JS_CFUNC_DEF("serviceNamesArray", 0, func);
+  return entry;
+}
+
+static inline JSCFunctionListEntry JsInvokeFunction(void *func) {
+  JSCFunctionListEntry entry = JS_CFUNC_DEF("invoke", 3, func);
+  return entry;
+}
+
+static inline JSCFunctionListEntry JsInvokeSuspendingFunction(void *func) {
+  JSCFunctionListEntry entry = JS_CFUNC_DEF("invokeSuspending", 4, func);
+  return entry;
+}
+
+static inline JSCFunctionListEntry JsDisconnectFunction(void *func) {
+  JSCFunctionListEntry entry = JS_CFUNC_DEF("disconnect", 1, func);
+  return entry;
+}
+
+static inline JSValue JsValueArrayToInstanceRef(JSValue* v, int i) {
+  return v[i];
+}

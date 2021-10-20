@@ -158,6 +158,7 @@ cklib {
     srcDirs = project.files(file("native/quickjs"))
     compilerArgs.addAll(
       listOf(
+        //"-DDUMP_LEAKS=1", // For local testing ONLY!
         "-DKONAN_MI_MALLOC=1",
         "-DCONFIG_VERSION=\"${quickJsVersion()}\"",
         "-Wno-unknown-pragmas",
