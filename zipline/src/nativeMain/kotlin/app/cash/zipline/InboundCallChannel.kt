@@ -17,7 +17,6 @@ package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.inboundChannelName
-import app.cash.zipline.quickjs.JSValue
 import app.cash.zipline.quickjs.JS_FreeAtom
 import app.cash.zipline.quickjs.JS_FreeValue
 import app.cash.zipline.quickjs.JS_GetGlobalObject
@@ -25,12 +24,7 @@ import app.cash.zipline.quickjs.JS_GetPropertyStr
 import app.cash.zipline.quickjs.JS_Invoke
 import app.cash.zipline.quickjs.JS_NewAtom
 import app.cash.zipline.quickjs.JS_NewString
-import kotlinx.cinterop.CArrayPointer
-import kotlinx.cinterop.CValue
-import kotlinx.cinterop.allocArray
-import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
-import kotlinx.cinterop.useContents
 
 internal class InboundCallChannel(
   private val quickJs: QuickJs,
@@ -70,11 +64,7 @@ internal class InboundCallChannel(
     val arg2 = with(quickJs) { encodedArguments.toJsValue() }
 
     val jsResult = memScoped {
-      val args = allocArray<JSValue>(3)
-      args[0] = arg0
-      args[1] = arg1
-      args[2] = arg2
-
+      val args = allocArrayOf(arg0, arg1, arg2)
       JS_Invoke(context, inboundChannel, property, 3, args)
     }
     val kotlinResult = with(quickJs) { jsResult.toKotlinInstanceOrNull() } as Array<String>
@@ -107,12 +97,7 @@ internal class InboundCallChannel(
     val arg3 = JS_NewString(context, callbackName)
 
     val jsResult = memScoped {
-      val args = allocArray<JSValue>(4)
-      args[0] = arg0
-      args[1] = arg1
-      args[2] = arg2
-      args[3] = arg3
-
+      val args = allocArrayOf(arg0, arg1, arg2, arg3)
       JS_Invoke(context, inboundChannel, property, 4, args)
     }
 
@@ -135,9 +120,7 @@ internal class InboundCallChannel(
     val arg0 = JS_NewString(context, instanceName)
 
     val jsResult = memScoped {
-      val args = allocArray<JSValue>(1)
-      args[0] = arg0
-
+      val args = allocArrayOf(arg0)
       JS_Invoke(context, inboundChannel, property, 1, args)
     }
     val kotlinResult = with(quickJs) { jsResult.toKotlinInstanceOrNull() } as Boolean
@@ -148,14 +131,5 @@ internal class InboundCallChannel(
     JS_FreeValue(context, globalThis)
 
     return kotlinResult
-  }
-
-  private inline operator fun CArrayPointer<JSValue>.set(index: Int, value: CValue<JSValue>) {
-    val target = this[index]
-    value.useContents {
-      target.tag = tag
-      target.u.int32 = u.int32
-      target.u.float64 = u.float64
-    }
   }
 }
