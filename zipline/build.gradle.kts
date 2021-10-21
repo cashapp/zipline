@@ -62,15 +62,9 @@ kotlin {
   linuxX64()
   macosX64()
   macosArm64()
-  iosArm32()
   iosArm64()
   iosX64()
   iosSimulatorArm64()
-  watchosArm32()
-  watchosArm64()
-  watchosSimulatorArm64()
-  watchosX86()
-  watchosX64()
   tvosArm64()
   tvosSimulatorArm64()
   tvosX64()
@@ -128,29 +122,9 @@ kotlin {
       dependsOn(engineTest)
     }
 
-    val native32Main by creating {
-      dependsOn(nativeMain)
-    }
-    val native32Test by creating {
-      dependsOn(nativeTest)
-    }
-
-    val native64Main by creating {
-      dependsOn(nativeMain)
-    }
-    val native64Test by creating {
-      dependsOn(nativeTest)
-    }
-
     targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget> {
       val main by compilations.getting
-      main.defaultSourceSet.dependsOn(
-        if (use64BitSource(this)) {
-          native64Main
-        } else {
-          native32Main
-        }
-      )
+      main.defaultSourceSet.dependsOn(nativeMain)
 
       main.cinterops {
         create("quickjs") {
@@ -160,13 +134,7 @@ kotlin {
       }
 
       val test by compilations.getting
-      test.defaultSourceSet.dependsOn(
-        if (use64BitSource(this)) {
-          native64Test
-        } else {
-          native32Test
-        }
-      )
+      test.defaultSourceSet.dependsOn(nativeTest)
     }
 
     targets.all {
@@ -185,11 +153,6 @@ kotlin {
     }
   }
 }
-
-// The cinterop in QuickJS is slightly different between 32 and 64 bit.
-// watchosArm64 reports as 64 bit but has 32 bit pointers.
-fun use64BitSource(target:org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget): Boolean =
-  target.name != "watchosArm64" && target.konanTarget.architecture.bitness == 64
 
 cklib {
   create("quickjs") {

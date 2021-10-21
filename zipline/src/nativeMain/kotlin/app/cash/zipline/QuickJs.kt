@@ -19,24 +19,64 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.quickjs.JSContext
 import app.cash.zipline.quickjs.JSMemoryUsage
 import app.cash.zipline.quickjs.JSRuntime
+import app.cash.zipline.quickjs.JSValue
 import app.cash.zipline.quickjs.JS_ComputeMemoryUsage
+import app.cash.zipline.quickjs.JS_EVAL_FLAG_COMPILE_ONLY
+import app.cash.zipline.quickjs.JS_Eval
+import app.cash.zipline.quickjs.JS_EvalFunction
 import app.cash.zipline.quickjs.JS_FreeContext
 import app.cash.zipline.quickjs.JS_FreeRuntime
+import app.cash.zipline.quickjs.JS_FreeValue
+import app.cash.zipline.quickjs.JS_GetException
+import app.cash.zipline.quickjs.JS_GetPropertyStr
+import app.cash.zipline.quickjs.JS_GetPropertyUint32
+import app.cash.zipline.quickjs.JS_IsArray
+import app.cash.zipline.quickjs.JS_IsException
+import app.cash.zipline.quickjs.JS_IsUndefined
 import app.cash.zipline.quickjs.JS_NewContext
 import app.cash.zipline.quickjs.JS_NewRuntime
+import app.cash.zipline.quickjs.JS_READ_OBJ_BYTECODE
+import app.cash.zipline.quickjs.JS_READ_OBJ_REFERENCE
+import app.cash.zipline.quickjs.JS_ReadObject
+import app.cash.zipline.quickjs.JS_ResolveModule
 import app.cash.zipline.quickjs.JS_SetGCThreshold
 import app.cash.zipline.quickjs.JS_SetInterruptHandler
 import app.cash.zipline.quickjs.JS_SetMaxStackSize
 import app.cash.zipline.quickjs.JS_SetMemoryLimit
+import app.cash.zipline.quickjs.JS_TAG_BOOL
+import app.cash.zipline.quickjs.JS_TAG_EXCEPTION
+import app.cash.zipline.quickjs.JS_TAG_FLOAT64
+import app.cash.zipline.quickjs.JS_TAG_INT
+import app.cash.zipline.quickjs.JS_TAG_NULL
+import app.cash.zipline.quickjs.JS_TAG_OBJECT
+import app.cash.zipline.quickjs.JS_TAG_STRING
+import app.cash.zipline.quickjs.JS_TAG_UNDEFINED
+import app.cash.zipline.quickjs.JS_ToCString
+import app.cash.zipline.quickjs.JS_WRITE_OBJ_BYTECODE
+import app.cash.zipline.quickjs.JS_WRITE_OBJ_REFERENCE
+import app.cash.zipline.quickjs.JS_WriteObject
+import app.cash.zipline.quickjs.JsValueGetBool
+import app.cash.zipline.quickjs.JsValueGetFloat64
+import app.cash.zipline.quickjs.JsValueGetInt
+import app.cash.zipline.quickjs.JsValueGetNormTag
+import app.cash.zipline.quickjs.js_free
 import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.CValue
+import kotlinx.cinterop.CValuesRef
 import kotlinx.cinterop.StableRef
+import kotlinx.cinterop.UByteVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
+import kotlinx.cinterop.readBytes
+import kotlinx.cinterop.refTo
 import kotlinx.cinterop.staticCFunction
+import kotlinx.cinterop.toKStringFromUtf8
+import kotlinx.cinterop.value
+import platform.posix.size_tVar
 
 internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COpaquePointer?): Int{
   val quickJs = opaque!!.asStableRef<QuickJs>().get()
@@ -45,7 +85,7 @@ internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COp
 
 actual class QuickJs private constructor(
   private val runtime: CPointer<JSRuntime>,
-  internal val context: CPointer<JSContext>
+  private val context: CPointer<JSContext>
 ) {
   actual companion object {
     actual fun create(): QuickJs {
@@ -76,7 +116,7 @@ actual class QuickJs private constructor(
     JS_SetInterruptHandler(runtime, jsInterruptHandlerCFunction, thisPtr.asCPointer())
   }
 
-  fun jsInterruptHandler(runtime: CPointer<JSRuntime>?): Int {
+  internal fun jsInterruptHandler(runtime: CPointer<JSRuntime>?): Int {
     val interruptHandler = interruptHandler ?: return 0
 
     JS_SetInterruptHandler(runtime, null, null) // Suppress re-enter.
@@ -154,11 +194,61 @@ actual class QuickJs private constructor(
       JS_SetMaxStackSize(runtime, value.convert())
     }
 
-  actual fun evaluate(script: String, fileName: String): Any? = evaluatePlatform(script, fileName)
+  actual fun evaluate(script: String, fileName: String): Any? {
+    val evalValue = JS_Eval(context, script, script.length.convert(), fileName, 0)
+    val result = evalValue.toKotlinInstanceOrNull()
+    JS_FreeValue(context, evalValue)
+    return result
+  }
 
-  actual fun compile(sourceCode: String, fileName: String): ByteArray = compilePlatform(sourceCode, fileName)
+  actual fun compile(sourceCode: String, fileName: String): ByteArray {
+    val compiled =
+      JS_Eval(context, sourceCode, sourceCode.length.convert(), fileName, JS_EVAL_FLAG_COMPILE_ONLY)
+    if (JS_IsException(compiled) != 0) {
+      throwJsException()
+    }
+    val result = memScoped {
+      val bufferLengthVar = alloc<size_tVar>()
+      val buffer = JS_WriteObject(context, bufferLengthVar.ptr, compiled,
+        JS_WRITE_OBJ_BYTECODE or JS_WRITE_OBJ_REFERENCE
+      )
+      val bufferLength = bufferLengthVar.value.toInt()
 
-  actual fun execute(bytecode: ByteArray): Any? = executePlatform(bytecode)
+      val result = if (buffer != null && bufferLength > 0) {
+        buffer.readBytes(bufferLength)
+      } else {
+        null
+      }
+
+      JS_FreeValue(context, compiled)
+      js_free(context, buffer)
+
+      result
+    }
+    return result ?: throwJsException()
+  }
+
+  actual fun execute(bytecode: ByteArray): Any? {
+    @Suppress("UNCHECKED_CAST") // ByteVar and UByteVar have the same bit layout.
+    val bytecodeRef = bytecode.refTo(0) as CValuesRef<UByteVar>
+    val obj = JS_ReadObject(context, bytecodeRef, bytecode.size.convert(),
+      JS_READ_OBJ_BYTECODE or JS_READ_OBJ_REFERENCE
+    )
+    if (JS_IsException(obj) != 0) {
+      throwJsException()
+    }
+    if (JS_ResolveModule(context, obj) != 0) {
+      throw QuickJsException("Failed to resolve JS module")
+    }
+    val value = JS_EvalFunction(context, obj)
+    if (JS_IsException(value) != 0) {
+      JS_FreeValue(context, value)
+      throwJsException()
+    }
+    val result = value.toKotlinInstanceOrNull()
+    JS_FreeValue(context, value)
+    return result
+  }
 
   internal actual fun initOutboundChannel(outboundChannel: CallChannel) {
     TODO()
@@ -173,10 +263,52 @@ actual class QuickJs private constructor(
     JS_FreeRuntime(runtime)
     thisPtr.dispose()
   }
-}
 
-// cinterop produces slightly different code for 32 and 64 bit architectures.
-internal expect fun QuickJs.throwJsException(): Nothing
-internal expect fun QuickJs.compilePlatform(sourceCode: String, fileName: String): ByteArray
-internal expect fun QuickJs.executePlatform(bytecode: ByteArray): Any?
-internal expect fun QuickJs.evaluatePlatform(script: String, fileName: String): Any?
+  private fun throwJsException(): Nothing {
+    val exceptionValue = JS_GetException(context)
+
+    val messageValue = JS_GetPropertyStr(context, exceptionValue, "message")
+    val stackValue = JS_GetPropertyStr(context, exceptionValue, "stack")
+
+    val message = JS_ToCString(context,
+      messageValue.takeUnless { JS_IsUndefined(messageValue) != 0 } ?: exceptionValue
+    )?.toKStringFromUtf8() ?: ""
+    JS_FreeValue(context, messageValue)
+
+    val stack = JS_ToCString(context, stackValue)!!.toKStringFromUtf8()
+    JS_FreeValue(context, stackValue)
+    JS_FreeValue(context, exceptionValue)
+
+    // TODO extract cause
+
+    throw QuickJsException(message) // TODO add stack
+  }
+
+  private fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? {
+    return when (JsValueGetNormTag(this)) {
+      JS_TAG_EXCEPTION -> throwJsException()
+      JS_TAG_STRING -> JS_ToCString(context, this)!!.toKStringFromUtf8()
+      JS_TAG_BOOL -> JsValueGetBool(this) != 0
+      JS_TAG_INT -> JsValueGetInt(this)
+      JS_TAG_FLOAT64 -> JsValueGetFloat64(this)
+      JS_TAG_NULL, JS_TAG_UNDEFINED -> null
+      JS_TAG_OBJECT -> {
+        if (JS_IsArray(context, this) != 0) {
+          val lengthProperty = JS_GetPropertyStr(context, this, "length")
+          val length = JsValueGetInt(lengthProperty)
+          JS_FreeValue(context, lengthProperty)
+
+          Array(length) {
+            val element = JS_GetPropertyUint32(context, this, it.convert())
+            val value = element.toKotlinInstanceOrNull()
+            JS_FreeValue(context, element)
+            value
+          }
+        } else {
+          null
+        }
+      }
+      else -> null
+    }
+  }
+}
