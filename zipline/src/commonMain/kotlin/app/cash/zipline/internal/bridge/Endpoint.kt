@@ -21,8 +21,12 @@ import app.cash.zipline.ZiplineReference
 import app.cash.zipline.ZiplineSerializer
 import app.cash.zipline.ZiplineSerializerSerializer
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
@@ -56,6 +60,7 @@ class Endpoint internal constructor(
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
       contextual(Throwable::class, ThrowableSerializer)
+      contextual(FlowCollector::class, FlowCollectorSerializer)
       contextual(ZiplineReference::class) { ZiplineReferenceSerializer<Any>(this@Endpoint) }
       contextual(ZiplineSerializer::class) {
         ZiplineSerializerSerializer(
@@ -133,5 +138,18 @@ class Endpoint internal constructor(
 
   internal fun generateName(): String {
     return "zipline/${nextId++}"
+  }
+}
+
+private object FlowCollectorSerializer : KSerializer<FlowCollector<*>> {
+  override val descriptor: SerialDescriptor
+    get() = throw AssertionError()
+
+  override fun serialize(encoder: Encoder, value: FlowCollector<*>) {
+    throw AssertionError()
+  }
+
+  override fun deserialize(decoder: Decoder): FlowCollector<Any> {
+    throw AssertionError()
   }
 }
