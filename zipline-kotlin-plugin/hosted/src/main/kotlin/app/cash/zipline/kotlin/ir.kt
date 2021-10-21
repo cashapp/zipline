@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
-import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.IrBlockBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
@@ -72,8 +72,8 @@ class ZiplineCompilationException(
 /** Finds the line and column of [irElement] within this file. */
 fun IrFile.locationOf(irElement: IrElement?): CompilerMessageSourceLocation {
   val sourceRangeInfo = fileEntry.getSourceRangeInfo(
-    beginOffset = irElement?.startOffset ?: UNDEFINED_OFFSET,
-    endOffset = irElement?.endOffset ?: UNDEFINED_OFFSET
+    beginOffset = irElement?.startOffset ?: SYNTHETIC_OFFSET,
+    endOffset = irElement?.endOffset ?: SYNTHETIC_OFFSET
   )
   return CompilerMessageLocationWithRange.create(
     path = sourceRangeInfo.filePath,
@@ -107,8 +107,8 @@ fun IrConstructor.irConstructorBody(
   val constructorIrBuilder = DeclarationIrBuilder(
     generatorContext = context,
     symbol = IrSimpleFunctionSymbolImpl(),
-    startOffset = UNDEFINED_OFFSET,
-    endOffset = UNDEFINED_OFFSET
+    startOffset = SYNTHETIC_OFFSET,
+    endOffset = SYNTHETIC_OFFSET
   )
   body = context.irFactory.createBlockBody(
     startOffset = constructorIrBuilder.startOffset,
@@ -155,8 +155,8 @@ fun IrSimpleFunction.irFunctionBody(
   blockBody: IrBlockBodyBuilder.() -> Unit
 ) {
   val bodyBuilder = IrBlockBodyBuilder(
-    startOffset = UNDEFINED_OFFSET,
-    endOffset = UNDEFINED_OFFSET,
+    startOffset = SYNTHETIC_OFFSET,
+    endOffset = SYNTHETIC_OFFSET,
     context = context,
     scope = Scope(scopeOwnerSymbol),
   )
@@ -211,8 +211,8 @@ fun irVal(
     parent = declaringClass
     correspondingPropertySymbol = result.symbol
     val initializerBuilder = IrBlockBuilder(
-      startOffset = UNDEFINED_OFFSET,
-      endOffset = UNDEFINED_OFFSET,
+      startOffset = SYNTHETIC_OFFSET,
+      endOffset = SYNTHETIC_OFFSET,
       context = pluginContext,
       scope = Scope(symbol),
     )

@@ -21,7 +21,7 @@ import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.addDispatchReceiver
@@ -204,8 +204,8 @@ internal class OutboundBridgeRewriter(
     }
 
     return IrBlockBodyBuilder(
-      startOffset = UNDEFINED_OFFSET,
-      endOffset = UNDEFINED_OFFSET,
+      startOffset = SYNTHETIC_OFFSET,
+      endOffset = SYNTHETIC_OFFSET,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
