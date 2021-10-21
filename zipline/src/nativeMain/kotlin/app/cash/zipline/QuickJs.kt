@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.CallChannel
+import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.quickjs.JSContext
 import app.cash.zipline.quickjs.JSMemoryUsage
 import app.cash.zipline.quickjs.JSRuntime
@@ -24,17 +25,23 @@ import app.cash.zipline.quickjs.JS_ComputeMemoryUsage
 import app.cash.zipline.quickjs.JS_EVAL_FLAG_COMPILE_ONLY
 import app.cash.zipline.quickjs.JS_Eval
 import app.cash.zipline.quickjs.JS_EvalFunction
+import app.cash.zipline.quickjs.JS_FreeAtom
 import app.cash.zipline.quickjs.JS_FreeContext
 import app.cash.zipline.quickjs.JS_FreeRuntime
 import app.cash.zipline.quickjs.JS_FreeValue
 import app.cash.zipline.quickjs.JS_GetException
+import app.cash.zipline.quickjs.JS_GetGlobalObject
 import app.cash.zipline.quickjs.JS_GetPropertyStr
 import app.cash.zipline.quickjs.JS_GetPropertyUint32
+import app.cash.zipline.quickjs.JS_HasProperty
 import app.cash.zipline.quickjs.JS_IsArray
 import app.cash.zipline.quickjs.JS_IsException
 import app.cash.zipline.quickjs.JS_IsUndefined
+import app.cash.zipline.quickjs.JS_NewArray
+import app.cash.zipline.quickjs.JS_NewAtom
 import app.cash.zipline.quickjs.JS_NewContext
 import app.cash.zipline.quickjs.JS_NewRuntime
+import app.cash.zipline.quickjs.JS_NewString
 import app.cash.zipline.quickjs.JS_READ_OBJ_BYTECODE
 import app.cash.zipline.quickjs.JS_READ_OBJ_REFERENCE
 import app.cash.zipline.quickjs.JS_ReadObject
@@ -43,6 +50,7 @@ import app.cash.zipline.quickjs.JS_SetGCThreshold
 import app.cash.zipline.quickjs.JS_SetInterruptHandler
 import app.cash.zipline.quickjs.JS_SetMaxStackSize
 import app.cash.zipline.quickjs.JS_SetMemoryLimit
+import app.cash.zipline.quickjs.JS_SetPropertyUint32
 import app.cash.zipline.quickjs.JS_TAG_BOOL
 import app.cash.zipline.quickjs.JS_TAG_EXCEPTION
 import app.cash.zipline.quickjs.JS_TAG_FLOAT64
@@ -85,7 +93,7 @@ internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COp
 
 actual class QuickJs private constructor(
   private val runtime: CPointer<JSRuntime>,
-  private val context: CPointer<JSContext>
+  internal val context: CPointer<JSContext>
 ) {
   actual companion object {
     actual fun create(): QuickJs {
@@ -116,6 +124,8 @@ actual class QuickJs private constructor(
     JS_SetInterruptHandler(runtime, jsInterruptHandlerCFunction, thisPtr.asCPointer())
   }
 
+  private var closed = false
+
   internal fun jsInterruptHandler(runtime: CPointer<JSRuntime>?): Int {
     val interruptHandler = interruptHandler ?: return 0
 
@@ -135,10 +145,17 @@ actual class QuickJs private constructor(
   }
 
   actual var interruptHandler: InterruptHandler? = null
+    set(value) {
+      checkNotClosed()
+
+      field = value
+    }
 
   /** Memory usage statistics for the JavaScript engine. */
   actual val memoryUsage: MemoryUsage
     get() {
+      checkNotClosed()
+
       memScoped {
         val jsMemoryUsage = alloc<JSMemoryUsage>()
         JS_ComputeMemoryUsage(runtime, jsMemoryUsage.ptr)
@@ -176,6 +193,8 @@ actual class QuickJs private constructor(
   /** Default is -1. Use -1 for no limit. */
   actual var memoryLimit: Long = -1L
     set(value) {
+      checkNotClosed()
+
       field = value
       JS_SetMemoryLimit(runtime, value.convert())
     }
@@ -183,6 +202,8 @@ actual class QuickJs private constructor(
   /** Default is 256 KiB. Use -1 to disable automatic GC. */
   actual var gcThreshold: Long = -1L
     set(value) {
+      checkNotClosed()
+
       field = value
       JS_SetGCThreshold(runtime, value.convert())
     }
@@ -190,11 +211,15 @@ actual class QuickJs private constructor(
   /** Default is 512 KiB. Use 0 to disable the maximum stack size check. */
   actual var maxStackSize: Long = -1L
     set(value) {
+      checkNotClosed()
+
       field = value
       JS_SetMaxStackSize(runtime, value.convert())
     }
 
   actual fun evaluate(script: String, fileName: String): Any? {
+    checkNotClosed()
+
     val evalValue = JS_Eval(context, script, script.length.convert(), fileName, 0)
     val result = evalValue.toKotlinInstanceOrNull()
     JS_FreeValue(context, evalValue)
@@ -202,6 +227,8 @@ actual class QuickJs private constructor(
   }
 
   actual fun compile(sourceCode: String, fileName: String): ByteArray {
+    checkNotClosed()
+
     val compiled =
       JS_Eval(context, sourceCode, sourceCode.length.convert(), fileName, JS_EVAL_FLAG_COMPILE_ONLY)
     if (JS_IsException(compiled) != 0) {
@@ -229,6 +256,8 @@ actual class QuickJs private constructor(
   }
 
   actual fun execute(bytecode: ByteArray): Any? {
+    checkNotClosed()
+
     @Suppress("UNCHECKED_CAST") // ByteVar and UByteVar have the same bit layout.
     val bytecodeRef = bytecode.refTo(0) as CValuesRef<UByteVar>
     val obj = JS_ReadObject(context, bytecodeRef, bytecode.size.convert(),
@@ -255,13 +284,29 @@ actual class QuickJs private constructor(
   }
 
   internal actual fun getInboundChannel(): CallChannel {
-    TODO()
+    checkNotClosed()
+
+    val globalThis = JS_GetGlobalObject(context)
+    val inboundChannelAtom = JS_NewAtom(context, inboundChannelName)
+    val hasProperty = JS_HasProperty(context, globalThis, inboundChannelAtom) != 0
+    JS_FreeValue(context, globalThis)
+    JS_FreeAtom(context, inboundChannelAtom)
+    check(hasProperty) { "A global JavaScript object called $inboundChannelName was not found" }
+
+    return InboundCallChannel(this)
   }
 
   actual fun close() {
-    JS_FreeContext(context)
-    JS_FreeRuntime(runtime)
-    thisPtr.dispose()
+    if (!closed) {
+      JS_FreeContext(context)
+      JS_FreeRuntime(runtime)
+      thisPtr.dispose()
+      closed = true
+    }
+  }
+
+  internal fun checkNotClosed() {
+    check(!closed) { "QuickJs instance was closed" }
   }
 
   private fun throwJsException(): Nothing {
@@ -284,7 +329,7 @@ actual class QuickJs private constructor(
     throw QuickJsException(message) // TODO add stack
   }
 
-  private fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? {
+  internal fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? {
     return when (JsValueGetNormTag(this)) {
       JS_TAG_EXCEPTION -> throwJsException()
       JS_TAG_STRING -> JS_ToCString(context, this)!!.toKStringFromUtf8()
@@ -310,5 +355,13 @@ actual class QuickJs private constructor(
       }
       else -> null
     }
+  }
+
+  internal fun Array<String>.toJsValue(): CValue<JSValue> {
+    val array = JS_NewArray(context)
+    forEachIndexed { index, string ->
+      JS_SetPropertyUint32(context, array, index.convert(), JS_NewString(context, string))
+    }
+    return array
   }
 }

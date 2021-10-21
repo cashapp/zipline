@@ -16,11 +16,13 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.inboundChannelName
-import com.google.common.truth.Truth.assertThat
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertContentEquals
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.assertTrue
 
 /**
  * Confirm connectivity from Kotlin to a JavaScript implementation of CallChannel.
@@ -31,11 +33,11 @@ import org.junit.Test
 class QuickJsInboundChannelTest {
   private val quickJs = QuickJs.create()
 
-  @After fun tearDown() {
+  @AfterTest fun tearDown() {
     quickJs.close()
   }
 
-  @Before
+  @BeforeTest
   fun setUp() {
     quickJs.evaluate("""
       globalThis.$inboundChannelName = {};
@@ -50,7 +52,6 @@ class QuickJsInboundChannelTest {
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
       };
     """.trimIndent())
-
   }
 
   @Test
@@ -74,14 +75,17 @@ class QuickJsInboundChannelTest {
       funName = "theFunName",
       encodedArguments = arrayOf("firstArg", "secondArg"),
     )
-    assertThat(result).asList().containsExactly(
-      "received call to invoke()",
-      "theInstanceName",
-      "theFunName",
-      "firstArg",
-      "secondArg",
-      "and the call was successful!",
-    ).inOrder()
+    assertContentEquals(
+      arrayOf(
+        "received call to invoke()",
+        "theInstanceName",
+        "theFunName",
+        "firstArg",
+        "secondArg",
+        "and the call was successful!",
+      ),
+      result,
+    )
   }
 
   @Test
@@ -114,15 +118,18 @@ class QuickJsInboundChannelTest {
       callbackName = "theCallbackName",
     )
     val result = inboundChannel.invoke("", "", arrayOf())
-    assertThat(result).asList().containsExactly(
-      "received call to invokeSuspending()",
-      "theInstanceName",
-      "theFunName",
-      "theCallbackName",
-      "firstArg",
-      "secondArg",
-      "and the call was successful!",
-    ).inOrder()
+    assertContentEquals(
+      arrayOf(
+        "received call to invokeSuspending()",
+        "theInstanceName",
+        "theFunName",
+        "theCallbackName",
+        "firstArg",
+        "secondArg",
+        "and the call was successful!",
+      ),
+      result,
+    )
   }
 
   @Test
@@ -136,10 +143,13 @@ class QuickJsInboundChannelTest {
 
     val inboundChannel = quickJs.getInboundChannel()
     val result = inboundChannel.serviceNamesArray()
-    assertThat(result).asList().containsExactly(
-      "service one",
-      "service two"
-    ).inOrder()
+    assertContentEquals(
+      arrayOf(
+        "service one",
+        "service two",
+      ),
+      result,
+    )
   }
 
   @Test
@@ -156,12 +166,15 @@ class QuickJsInboundChannelTest {
     """.trimIndent())
 
     val inboundChannel = quickJs.getInboundChannel()
-    assertThat(inboundChannel.disconnect("service one")).isTrue()
+    assertTrue(inboundChannel.disconnect("service one"))
     val result = inboundChannel.invoke("", "", arrayOf())
-    assertThat(result).asList().containsExactly(
-      "disconnect",
-      "service one"
-    ).inOrder()
+    assertContentEquals(
+      arrayOf(
+        "disconnect",
+        "service one",
+      ),
+      result,
+    )
   }
 
   @Test
@@ -170,12 +183,10 @@ class QuickJsInboundChannelTest {
       delete globalThis.$inboundChannelName;
     """.trimIndent())
 
-    val t = assertFailsWith<IllegalArgumentException> {
+    val t = assertFailsWith<IllegalStateException> {
       quickJs.getInboundChannel()
     }
-    assertThat(t)
-      .hasMessageThat()
-      .isEqualTo("A global JavaScript object called $inboundChannelName was not found")
+    assertEquals("A global JavaScript object called $inboundChannelName was not found", t.message)
   }
 
   @Test
@@ -183,34 +194,9 @@ class QuickJsInboundChannelTest {
     val inboundChannel = quickJs.getInboundChannel()
     quickJs.close()
 
-    val t = assertFailsWith<NullPointerException> {
+    val t = assertFailsWith<IllegalStateException> {
       inboundChannel.disconnect("service one")
     }
-    assertThat(t)
-      .hasMessageThat()
-      .isEqualTo("Null QuickJs context - did you close your QuickJs?")
-  }
-
-  /**
-   * We expect most failures to be caught and encoded by kotlinx.serialization in Zipline. But if
-   * that crashes it could throw a JavaScript exception. Confirm such exceptions are reasonable.
-   */
-  @Test fun inboundChannelThrowsInJavaScript() {
-    quickJs.evaluate("""
-      function goBoom() {
-        noSuchMethod();
-      }
-      globalThis.$inboundChannelName.disconnect = function(instanceName) {
-        goBoom();
-      };
-    """.trimIndent(), "explode.js")
-    val inboundChannel = quickJs.getInboundChannel()
-    val t = assertFailsWith<QuickJsException> {
-      inboundChannel.disconnect("service one")
-    }
-    assertThat(t)
-      .hasMessageThat()
-      .isEqualTo("'noSuchMethod' is not defined")
-    assertThat(t.stackTraceToString()).contains("JavaScript.goBoom(explode.js:2)")
+    assertEquals("QuickJs instance was closed", t.message)
   }
 }

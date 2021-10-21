@@ -42,8 +42,7 @@ Java_app_cash_zipline_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(
                                                                                     jstring fileName) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return nullptr;
   }
   return context->eval(env, sourceCode, fileName);
@@ -53,8 +52,7 @@ extern "C" JNIEXPORT jlong JNICALL
 Java_app_cash_zipline_QuickJs_getInboundCallChannel(JNIEnv* env, jobject thiz, jlong _context, jstring name) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return 0L;
   }
 
@@ -66,8 +64,7 @@ Java_app_cash_zipline_QuickJs_setOutboundCallChannel(JNIEnv* env, jobject thiz, 
                                              jstring name, jobject callChannel) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return;
   }
   context->setOutboundCallChannel(env, name, callChannel);
@@ -77,7 +74,7 @@ extern "C" JNIEXPORT jobject JNICALL
 Java_app_cash_zipline_QuickJs_execute(JNIEnv* env, jobject thiz, jlong _context, jbyteArray bytecode) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException", "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return nullptr;
   }
   return context->execute(env, bytecode);
@@ -87,7 +84,7 @@ extern "C" JNIEXPORT jbyteArray JNICALL
 Java_app_cash_zipline_QuickJs_compile(JNIEnv* env, jobject thiz, jlong _context, jstring sourceCode, jstring fileName) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException", "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return nullptr;
   }
   return context->compile(env, sourceCode, fileName);
@@ -97,8 +94,7 @@ extern "C" JNIEXPORT void JNICALL
 Java_app_cash_zipline_QuickJs_setInterruptHandler(JNIEnv* env, jobject type, jlong context_, jobject interruptHandler) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return;
   }
   context->setInterruptHandler(env, interruptHandler);
@@ -108,8 +104,7 @@ extern "C" JNIEXPORT jobject JNICALL
 Java_app_cash_zipline_QuickJs_memoryUsage(JNIEnv* env, jobject type, jlong context_) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return nullptr;
   }
   return context->memoryUsage(env);
@@ -119,8 +114,7 @@ extern "C" JNIEXPORT void JNICALL
 Java_app_cash_zipline_QuickJs_setMemoryLimit(JNIEnv* env, jobject type, jlong context_, jlong limit) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return;
   }
   context->setMemoryLimit(env, limit);
@@ -130,8 +124,7 @@ extern "C" JNIEXPORT void JNICALL
 Java_app_cash_zipline_QuickJs_setGcThreshold(JNIEnv* env, jobject type, jlong context_, jlong gcThreshold) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return;
   }
   context->setGcThreshold(env, gcThreshold);
@@ -141,8 +134,7 @@ extern "C" JNIEXPORT void JNICALL
 Java_app_cash_zipline_QuickJs_setMaxStackSize(JNIEnv* env, jobject type, jlong context_, jlong stackSize) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return;
   }
   context->setMaxStackSize(env, stackSize);
@@ -153,14 +145,13 @@ Java_app_cash_zipline_JniCallChannel_serviceNamesArray(JNIEnv* env, jobject thiz
                                                        jlong instance) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return nullptr;
   }
 
   const InboundCallChannel* channel = reinterpret_cast<const InboundCallChannel*>(instance);
   if (!channel) {
-    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
+    throwJavaException(env, "java/lang/IllegalStateException", "Invalid JavaScript object");
     return nullptr;
   }
 
@@ -173,14 +164,13 @@ Java_app_cash_zipline_JniCallChannel_invoke(JNIEnv* env, jobject thiz, jlong _co
                                             jobjectArray encodedArguments) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return nullptr;
   }
 
   const InboundCallChannel* channel = reinterpret_cast<const InboundCallChannel*>(instance);
   if (!channel) {
-    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
+    throwJavaException(env, "java/lang/IllegalStateException", "Invalid JavaScript object");
     return nullptr;
   }
 
@@ -194,14 +184,13 @@ Java_app_cash_zipline_JniCallChannel_invokeSuspending(JNIEnv* env, jobject thiz,
                                                       jstring callbackName) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return;
   }
 
   const InboundCallChannel* channel = reinterpret_cast<const InboundCallChannel*>(instance);
   if (!channel) {
-    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
+    throwJavaException(env, "java/lang/IllegalStateException", "Invalid JavaScript object");
     return;
   }
 
@@ -213,14 +202,13 @@ Java_app_cash_zipline_JniCallChannel_disconnect(JNIEnv* env, jobject thiz, jlong
                                                 jlong instance, jstring instanceName) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Null QuickJs context - did you close your QuickJs?");
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
     return JNI_FALSE;
   }
 
   const InboundCallChannel* channel = reinterpret_cast<const InboundCallChannel*>(instance);
   if (!channel) {
-    throwJavaException(env, "java/lang/NullPointerException", "Invalid JavaScript object");
+    throwJavaException(env, "java/lang/IllegalStateException", "Invalid JavaScript object");
     return JNI_FALSE;
   }
 
