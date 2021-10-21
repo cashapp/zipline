@@ -37,6 +37,7 @@ internal abstract class OutboundBridge<T : Any> {
     internal val endpoint: Endpoint,
   ) {
     val json = Json {
+      useArrayPolymorphism = true
       serializersModule = this@Context.serializersModule
     }
     val throwableSerializer = serializersModule.serializer<Throwable>()
