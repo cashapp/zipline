@@ -15,48 +15,36 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.newEndpointPair
-import com.google.common.truth.Truth.assertThat
-import java.util.concurrent.LinkedBlockingDeque
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.assertNull
+import kotlin.test.assertSame
+import kotlin.test.assertTrue
+import kotlinx.coroutines.runBlocking
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class ZiplineReferenceTest {
-  private val dispatcher = TestCoroutineDispatcher()
-  private val endpointA: Endpoint
-  private val endpointB: Endpoint
-
-  init {
-    val (endpointA, endpointB) = newEndpointPair(CoroutineScope(dispatcher))
-    this.endpointA = endpointA
-    this.endpointB = endpointB
-  }
-
   @Test
   fun referenceCanBeUsedWithoutPassingThroughZipline() {
     val helloService = GreetingService("hello")
     val reference = ZiplineReference<EchoService>(helloService)
-    assertThat(reference.get()).isSameInstanceAs(helloService)
+    assertSame(helloService, reference.get())
   }
 
   @Test
-  fun bridgeServicesBeforeEndpointsConnected() {
-    val requests = LinkedBlockingDeque<String>()
-    val responses = LinkedBlockingDeque<String>()
+  fun bridgeServicesBeforeEndpointsConnected() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val requests = ArrayDeque<String>()
+    val responses = ArrayDeque<String>()
     val service = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse {
         requests += request.message
-        return EchoResponse(responses.take())
+        return EchoResponse(responses.removeFirst())
       }
     }
 
@@ -74,9 +62,9 @@ internal class ZiplineReferenceTest {
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
     assertEquals("this is a curt response", response.message)
-    assertEquals("this is a happy request", requests.poll())
-    assertNull(responses.poll())
-    assertNull(requests.poll())
+    assertEquals("this is a happy request", requests.removeFirst())
+    assertNull(responses.removeFirstOrNull())
+    assertNull(requests.removeFirstOrNull())
   }
 
   interface EchoServiceFactory {
@@ -84,7 +72,9 @@ internal class ZiplineReferenceTest {
   }
 
   @Test
-  fun transmitReferences() {
+  fun transmitReferences() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     endpointA.set<EchoServiceFactory>("factory", FactoryService())
     val factoryClient = endpointB.get<EchoServiceFactory>("factory")
 
@@ -94,32 +84,37 @@ internal class ZiplineReferenceTest {
     val supServiceReference = factoryClient.create("sup")
     val supService = supServiceReference.get()
 
-    assertThat(helloService.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
-    assertThat(supService.echo(EchoRequest("Kevin"))).isEqualTo(EchoResponse("sup Kevin"))
-    assertThat(helloService.echo(EchoRequest("Jake"))).isEqualTo(EchoResponse("hello Jake"))
-    assertThat(supService.echo(EchoRequest("Stephen"))).isEqualTo(EchoResponse("sup Stephen"))
+    assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
+    assertEquals(EchoResponse("sup Kevin"), supService.echo(EchoRequest("Kevin")))
+    assertEquals(EchoResponse("hello Jake"), helloService.echo(EchoRequest("Jake")))
+    assertEquals(EchoResponse("sup Stephen"), supService.echo(EchoRequest("Stephen")))
   }
 
   @Test
-  fun closingAnOutboundReferenceRemovesItAndPreventsFurtherCalls() {
+  fun closingAnOutboundReferenceRemovesItAndPreventsFurtherCalls() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     endpointA.set<EchoServiceFactory>("factory", FactoryService())
     val factoryClient = endpointB.get<EchoServiceFactory>("factory")
-    assertThat(endpointA.serviceNames).containsExactly("factory")
+    assertEquals(setOf("factory"), endpointA.serviceNames)
 
     val outboundReference = factoryClient.create("hello")
-    assertThat(endpointA.serviceNames).containsExactly("factory", "zipline/1")
+    assertEquals(setOf("factory", "zipline/1"), endpointA.serviceNames)
     val service = outboundReference.get()
 
-    assertThat(service.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
+    assertEquals(EchoResponse("hello Jesse"), service.echo(EchoRequest("Jesse")))
     outboundReference.close()
-    assertThat(assertFailsWith<IllegalStateException> {
+    val failure = assertFailsWith<IllegalStateException> {
       service.echo(EchoRequest("Jesse"))
-    }).hasMessageThat().contains("no handler")
-    assertThat(endpointA.serviceNames).containsExactly("factory")
+    }
+    assertTrue("no handler" in (failure.message ?: ""), failure.message)
+    assertEquals(setOf("factory"), endpointA.serviceNames)
   }
 
   @Test
-  fun closingAnInboundReferenceRemovesItAndPreventsFurtherCalls() {
+  fun closingAnInboundReferenceRemovesItAndPreventsFurtherCalls() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
     // Eagerly create this so we have something to return later.
     val inboundReference = ZiplineReference<EchoService>(
       GreetingService("hello")
@@ -132,18 +127,19 @@ internal class ZiplineReferenceTest {
 
     endpointA.set<EchoServiceFactory>("factory", FactoryService())
     val factoryClient = endpointB.get<EchoServiceFactory>("factory")
-    assertThat(endpointA.serviceNames).containsExactly("factory")
+    assertEquals(setOf("factory"), endpointA.serviceNames)
 
     val outboundReference = factoryClient.create("hello")
-    assertThat(endpointA.serviceNames).containsExactly("factory", "zipline/1")
+    assertEquals(setOf("factory", "zipline/1"), endpointA.serviceNames)
     val service = outboundReference.get()
 
-    assertThat(service.echo(EchoRequest("Jesse"))).isEqualTo(EchoResponse("hello Jesse"))
+    assertEquals(EchoResponse("hello Jesse"), service.echo(EchoRequest("Jesse")))
     inboundReference.close()
-    assertThat(assertFailsWith<IllegalStateException> {
+    val failure = assertFailsWith<IllegalStateException> {
       service.echo(EchoRequest("Jesse"))
-    }).hasMessageThat().contains("no handler")
-    assertThat(endpointA.serviceNames).containsExactly("factory")
+    }
+    assertTrue("no handler" in (failure.message ?: ""), failure.message)
+    assertEquals(setOf("factory"), endpointA.serviceNames)
   }
 
   class GreetingService(val greeting: String) : EchoService {
