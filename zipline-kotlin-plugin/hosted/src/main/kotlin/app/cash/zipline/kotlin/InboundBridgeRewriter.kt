@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclaration
 import org.jetbrains.kotlin.backend.common.ir.isSuspend
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
@@ -236,8 +236,8 @@ internal class InboundBridgeRewriter(
     )
 
     return IrBlockBodyBuilder(
-      startOffset = UNDEFINED_OFFSET,
-      endOffset = UNDEFINED_OFFSET,
+      startOffset = SYNTHETIC_OFFSET,
+      endOffset = SYNTHETIC_OFFSET,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
@@ -357,8 +357,8 @@ internal class InboundBridgeRewriter(
     }
 
     return IrBlockBodyBuilder(
-      startOffset = UNDEFINED_OFFSET,
-      endOffset = UNDEFINED_OFFSET,
+      startOffset = SYNTHETIC_OFFSET,
+      endOffset = SYNTHETIC_OFFSET,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
