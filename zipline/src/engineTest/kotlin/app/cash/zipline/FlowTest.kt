@@ -15,34 +15,17 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.testing.newEndpointPair
-import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlinx.coroutines.async
-import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.count
-import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class FlowTest {
-  private val dispatcher = TestCoroutineDispatcher()
-  private val endpointA: Endpoint
-  private val endpointB: Endpoint
-
-  init {
-    val (endpointA, endpointB) = newEndpointPair(CoroutineScope(dispatcher))
-    this.endpointA = endpointA
-    this.endpointB = endpointB
-  }
-
   interface FlowEchoService {
     fun createFlow(message: String, count: Int): FlowReference<String>
     suspend fun flowParameter(flowReference: FlowReference<String>): Int
@@ -52,6 +35,7 @@ internal class FlowTest {
     override fun createFlow(message: String, count: Int): FlowReference<String> {
       val flow = flow {
         for (i in 0 until count) {
+          delay(10) // Ensure we can send async through the reference.
           emit("$i $message")
         }
       }
@@ -65,7 +49,8 @@ internal class FlowTest {
   }
 
   @Test
-  fun flowReturnValueWorks(): Unit = runBlocking(dispatcher) {
+  fun flowReturnValueWorks() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
 
     endpointA.set<FlowEchoService>("service", service)
@@ -75,15 +60,16 @@ internal class FlowTest {
 
     val flowReference = client.createFlow("hello", 3)
     val flow = flowReference.get()
-    assertThat(flow.toList()).containsExactly("0 hello", "1 hello", "2 hello")
+    assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
 
     // Confirm that no services or clients were leaked.
-    assertThat(endpointA.serviceNames).isEqualTo(initialServiceNames)
-    assertThat(endpointA.clientNames).isEqualTo(initialClientNames)
+    assertEquals(initialServiceNames, endpointA.serviceNames)
+    assertEquals(initialClientNames, endpointA.clientNames)
   }
 
   @Test
-  fun flowParameterWorks(): Unit = runBlocking(dispatcher) {
+  fun flowParameterWorks() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
 
     endpointA.set<FlowEchoService>("service", service)
@@ -91,30 +77,29 @@ internal class FlowTest {
     val initialServiceNames = endpointA.serviceNames
     val initialClientNames = endpointA.clientNames
 
-    val sharedFlow = MutableSharedFlow<String?>()
-    val flow = sharedFlow.takeWhile { it != null }.filterIsInstance<String>()
+    val flow = flow {
+      for (i in 1..3) {
+        delay(10) // Ensure we can send async through the reference.
+        emit("$i")
+      }
+    }
 
     val deferredCount = async {
       client.flowParameter(flow.asFlowReference())
     }
 
-    sharedFlow.emit("a")
-    sharedFlow.emit("b")
-    sharedFlow.emit("c")
-    sharedFlow.emit(null)
-
-    assertThat(deferredCount.await()).isEqualTo(3)
+    assertEquals(3, deferredCount.await())
 
     // Confirm that no services or clients were leaked.
-    assertThat(endpointA.serviceNames).isEqualTo(initialServiceNames)
-    assertThat(endpointA.clientNames).isEqualTo(initialClientNames)
+    assertEquals(initialServiceNames, endpointA.serviceNames)
+    assertEquals(initialClientNames, endpointA.clientNames)
   }
 
   @Test
-  fun flowCanBeUsedWithoutPassingThroughZipline(): Unit = runBlocking(dispatcher) {
+  fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking {
     val service = RealFlowEchoService()
     val flowReference = service.createFlow("hello", 3)
     val flow = flowReference.get()
-    assertThat(flow.toList()).containsExactly("0 hello", "1 hello", "2 hello")
+    assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
   }
 }
