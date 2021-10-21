@@ -30,7 +30,7 @@ public:
   jobjectArray serviceNamesArray(Context* context, JNIEnv*) const;
   jobjectArray invoke(Context *context, JNIEnv* env, jstring instanceName, jstring funName, jobjectArray encodedArguments) const;
   void invokeSuspending(Context *context, JNIEnv* env, jstring instanceName, jstring funName, jobjectArray encodedArguments, jstring callbackName) const;
-  jobject disconnect(Context *context, JNIEnv* env, jstring instanceName) const;
+  jboolean disconnect(Context *context, JNIEnv* env, jstring instanceName) const;
 
   const std::string name;
 };

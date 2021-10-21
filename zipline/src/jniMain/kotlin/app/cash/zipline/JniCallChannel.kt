@@ -60,12 +60,12 @@ internal class JniCallChannel(
     callbackName: String,
   )
 
-  override fun disconnect(instanceName: String) =
-    disconnect(quickJs.context, instance, instanceName) == true
+  override fun disconnect(instanceName: String): Boolean =
+    disconnect(quickJs.context, instance, instanceName)
 
   private external fun disconnect(
     context: Long,
     instance: Long,
     instanceName: String
-  ): Boolean?
+  ): Boolean
 }
