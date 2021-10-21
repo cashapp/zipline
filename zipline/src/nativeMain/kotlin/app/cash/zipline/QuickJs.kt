@@ -17,6 +17,9 @@ package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.inboundChannelName
+import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.quickjs.JSClassDef
+import app.cash.zipline.quickjs.JSClassIDVar
 import app.cash.zipline.quickjs.JSContext
 import app.cash.zipline.quickjs.JSMemoryUsage
 import app.cash.zipline.quickjs.JSRuntime
@@ -33,13 +36,18 @@ import app.cash.zipline.quickjs.JS_GetException
 import app.cash.zipline.quickjs.JS_GetGlobalObject
 import app.cash.zipline.quickjs.JS_GetPropertyStr
 import app.cash.zipline.quickjs.JS_GetPropertyUint32
+import app.cash.zipline.quickjs.JS_GetRuntime
+import app.cash.zipline.quickjs.JS_GetRuntimeOpaque
 import app.cash.zipline.quickjs.JS_HasProperty
 import app.cash.zipline.quickjs.JS_IsArray
 import app.cash.zipline.quickjs.JS_IsException
 import app.cash.zipline.quickjs.JS_IsUndefined
 import app.cash.zipline.quickjs.JS_NewArray
 import app.cash.zipline.quickjs.JS_NewAtom
+import app.cash.zipline.quickjs.JS_NewClass
+import app.cash.zipline.quickjs.JS_NewClassID
 import app.cash.zipline.quickjs.JS_NewContext
+import app.cash.zipline.quickjs.JS_NewObjectClass
 import app.cash.zipline.quickjs.JS_NewRuntime
 import app.cash.zipline.quickjs.JS_NewString
 import app.cash.zipline.quickjs.JS_READ_OBJ_BYTECODE
@@ -50,7 +58,10 @@ import app.cash.zipline.quickjs.JS_SetGCThreshold
 import app.cash.zipline.quickjs.JS_SetInterruptHandler
 import app.cash.zipline.quickjs.JS_SetMaxStackSize
 import app.cash.zipline.quickjs.JS_SetMemoryLimit
+import app.cash.zipline.quickjs.JS_SetProperty
+import app.cash.zipline.quickjs.JS_SetPropertyFunctionList
 import app.cash.zipline.quickjs.JS_SetPropertyUint32
+import app.cash.zipline.quickjs.JS_SetRuntimeOpaque
 import app.cash.zipline.quickjs.JS_TAG_BOOL
 import app.cash.zipline.quickjs.JS_TAG_EXCEPTION
 import app.cash.zipline.quickjs.JS_TAG_FLOAT64
@@ -63,11 +74,20 @@ import app.cash.zipline.quickjs.JS_ToCString
 import app.cash.zipline.quickjs.JS_WRITE_OBJ_BYTECODE
 import app.cash.zipline.quickjs.JS_WRITE_OBJ_REFERENCE
 import app.cash.zipline.quickjs.JS_WriteObject
+import app.cash.zipline.quickjs.JsDisconnectFunction
+import app.cash.zipline.quickjs.JsFalse
+import app.cash.zipline.quickjs.JsInvokeFunction
+import app.cash.zipline.quickjs.JsInvokeSuspendingFunction
+import app.cash.zipline.quickjs.JsServiceNamesFunction
+import app.cash.zipline.quickjs.JsTrue
+import app.cash.zipline.quickjs.JsUndefined
+import app.cash.zipline.quickjs.JsValueArrayToInstanceRef
 import app.cash.zipline.quickjs.JsValueGetBool
 import app.cash.zipline.quickjs.JsValueGetFloat64
 import app.cash.zipline.quickjs.JsValueGetInt
 import app.cash.zipline.quickjs.JsValueGetNormTag
 import app.cash.zipline.quickjs.js_free
+import kotlinx.cinterop.CArrayPointer
 import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointer
 import kotlinx.cinterop.CValue
@@ -77,7 +97,9 @@ import kotlinx.cinterop.UByteVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.convert
+import kotlinx.cinterop.cstr
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.nativeHeap
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.refTo
@@ -85,11 +107,6 @@ import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKStringFromUtf8
 import kotlinx.cinterop.value
 import platform.posix.size_tVar
-
-internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COpaquePointer?): Int{
-  val quickJs = opaque!!.asStableRef<QuickJs>().get()
-  return quickJs.jsInterruptHandler(runtime)
-}
 
 actual class QuickJs private constructor(
   private val runtime: CPointer<JSRuntime>,
@@ -121,10 +138,12 @@ actual class QuickJs private constructor(
   private val jsInterruptHandlerCFunction = staticCFunction(::jsInterruptHandlerGlobal)
   private val thisPtr = StableRef.create(this)
   init {
+    JS_SetRuntimeOpaque(runtime, thisPtr.asCPointer())
     JS_SetInterruptHandler(runtime, jsInterruptHandlerCFunction, thisPtr.asCPointer())
   }
 
   private var closed = false
+  private var outboundChannel: CallChannel? = null
 
   internal fun jsInterruptHandler(runtime: CPointer<JSRuntime>?): Int {
     val interruptHandler = interruptHandler ?: return 0
@@ -280,7 +299,77 @@ actual class QuickJs private constructor(
   }
 
   internal actual fun initOutboundChannel(outboundChannel: CallChannel) {
-    TODO()
+    checkNotClosed()
+
+    val globalThis = JS_GetGlobalObject(context)
+    val propertyName = JS_NewAtom(context, outboundChannelName)
+    try {
+      if (JS_HasProperty(context, globalThis, propertyName) != 0) {
+        throw IllegalStateException("A global object called $outboundChannelName already exists")
+      }
+
+      val outboundCallChannelClassId = memScoped {
+        val id = alloc<JSClassIDVar>()
+        JS_NewClassID(id.ptr)
+
+        val classDef = alloc<JSClassDef>()
+        classDef.class_name = "OutboundCallChannel".cstr.ptr
+        JS_NewClass(runtime, id.value, classDef.ptr)
+
+        id.value.toInt() // Why doesn't JS_NewObjectClass accept a UInt / JSClassID?
+      }
+
+      val jsOutboundCallChannel = JS_NewObjectClass(context, outboundCallChannelClassId)
+      if (JS_IsException(jsOutboundCallChannel) != 0 ||
+          JS_SetProperty(context, globalThis, propertyName, jsOutboundCallChannel) <= 0) {
+        throwJsException()
+      }
+
+      val functionList = nativeHeap.allocArrayOf(
+        JsServiceNamesFunction(staticCFunction(::outboundServiceNames)),
+        JsInvokeFunction(staticCFunction(::outboundInvoke)),
+        JsInvokeSuspendingFunction(staticCFunction(::outboundInvokeSuspending)),
+        JsDisconnectFunction(staticCFunction(::outboundDisconnect)),
+      )
+      JS_SetPropertyFunctionList(context, jsOutboundCallChannel, functionList, 4)
+    } finally {
+      JS_FreeAtom(context, propertyName)
+      JS_FreeValue(context, globalThis)
+    }
+
+    this.outboundChannel = outboundChannel
+  }
+
+  internal fun jsOutboundServiceNames(argc: Int): CValue<JSValue> {
+    assert(argc == 0)
+    val result = outboundChannel!!.serviceNamesArray()
+    return result.toJsValue()
+  }
+
+  internal fun jsOutboundInvoke(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
+    assert(argc == 3)
+    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as String
+    val arg1 = JsValueArrayToInstanceRef(argv, 1).toKotlinInstanceOrNull() as String
+    val arg2 = JsValueArrayToInstanceRef(argv, 2).toKotlinInstanceOrNull() as Array<String>
+    val result = outboundChannel!!.invoke(arg0, arg1, arg2)
+    return result.toJsValue()
+  }
+
+  internal fun jsOutboundInvokeSuspending(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
+    assert(argc == 4)
+    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as String
+    val arg1 = JsValueArrayToInstanceRef(argv, 1).toKotlinInstanceOrNull() as String
+    val arg2 = JsValueArrayToInstanceRef(argv, 2).toKotlinInstanceOrNull() as Array<String>
+    val arg3 = JsValueArrayToInstanceRef(argv, 3).toKotlinInstanceOrNull() as String
+    outboundChannel!!.invokeSuspending(arg0, arg1, arg2, arg3)
+    return JsUndefined()
+  }
+
+  internal fun jsOutboundDisconnect(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
+    assert(argc == 1)
+    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as String
+    val result = outboundChannel!!.disconnect(arg0)
+    return result.toJsValue()
   }
 
   internal actual fun getInboundChannel(): CallChannel {
@@ -363,5 +452,78 @@ actual class QuickJs private constructor(
       JS_SetPropertyUint32(context, array, index.convert(), JS_NewString(context, string))
     }
     return array
+  }
+
+  private fun Boolean.toJsValue(): CValue<JSValue> {
+    return if (this) JsTrue() else JsFalse()
+  }
+}
+
+internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COpaquePointer?): Int {
+  val quickJs = opaque!!.asStableRef<QuickJs>().get()
+  return quickJs.jsInterruptHandler(runtime)
+}
+
+@Suppress("UNUSED_PARAMETER") // API shape mandated by QuickJs.
+internal fun outboundServiceNames(
+  context: CPointer<JSContext>,
+  thisVal: CValue<JSValue>,
+  argc: Int,
+  argv: CArrayPointer<JSValue>,
+): CValue<JSValue> {
+  val quickJs = JS_GetRuntimeOpaque(JS_GetRuntime(context))!!.asStableRef<QuickJs>().get()
+  return try {
+    quickJs.jsOutboundServiceNames(argc)
+  } catch (t: Throwable) {
+    t.printStackTrace() // TODO throw to JS return null
+    throw t
+  }
+}
+
+@Suppress("UNUSED_PARAMETER") // API shape mandated by QuickJs.
+internal fun outboundInvoke(
+  context: CPointer<JSContext>,
+  thisVal: CValue<JSValue>,
+  argc: Int,
+  argv: CArrayPointer<JSValue>,
+): CValue<JSValue> {
+  val quickJs = JS_GetRuntimeOpaque(JS_GetRuntime(context))!!.asStableRef<QuickJs>().get()
+  return try {
+    quickJs.jsOutboundInvoke(argc, argv)
+  } catch (t: Throwable) {
+    t.printStackTrace() // TODO throw to JS return null
+    throw t
+  }
+}
+
+@Suppress("UNUSED_PARAMETER") // API shape mandated by QuickJs.
+internal fun outboundInvokeSuspending(
+  context: CPointer<JSContext>,
+  thisVal: CValue<JSValue>,
+  argc: Int,
+  argv: CArrayPointer<JSValue>,
+): CValue<JSValue> {
+  val quickJs = JS_GetRuntimeOpaque(JS_GetRuntime(context))!!.asStableRef<QuickJs>().get()
+  return try {
+    quickJs.jsOutboundInvokeSuspending(argc, argv)
+  } catch (t: Throwable) {
+    t.printStackTrace() // TODO throw to JS return null
+    throw t
+  }
+}
+
+@Suppress("UNUSED_PARAMETER") // API shape mandated by QuickJs.
+internal fun outboundDisconnect(
+  context: CPointer<JSContext>,
+  thisVal: CValue<JSValue>,
+  argc: Int,
+  argv: CArrayPointer<JSValue>,
+): CValue<JSValue> {
+  val quickJs = JS_GetRuntimeOpaque(JS_GetRuntime(context))!!.asStableRef<QuickJs>().get()
+  return try {
+    quickJs.jsOutboundDisconnect(argc, argv)
+  } catch (t: Throwable) {
+    t.printStackTrace() // TODO throw to JS return null
+    throw t
   }
 }
