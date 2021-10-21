@@ -53,7 +53,6 @@ $dokka.location:app.cash.zipline/QuickJs/evaluate/#kotlin.String#kotlin.String/P
 $dokka.location:app.cash.zipline/QuickJs/execute/#kotlin.ByteArray/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/execute.html
 $dokka.location:app.cash.zipline/QuickJs/gcThreshold/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/gc-threshold.html
 $dokka.location:app.cash.zipline/QuickJs/interruptHandler/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/interrupt-handler.html
-$dokka.location:app.cash.zipline/QuickJs/jsInterruptHandler/#CPointer<JSRuntime>[JSRuntime]?/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/js-interrupt-handler.html
 $dokka.location:app.cash.zipline/QuickJs/maxStackSize/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/max-stack-size.html
 $dokka.location:app.cash.zipline/QuickJs/memoryLimit/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/memory-limit.html
 $dokka.location:app.cash.zipline/QuickJs/memoryUsage/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/memory-usage.html
