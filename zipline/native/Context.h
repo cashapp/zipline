@@ -60,6 +60,11 @@ public:
   JSRuntime *jsRuntime;
   JSContext *jsContext;
   JSClassID jsClassId;
+  JSAtom lengthAtom;
+  JSAtom serviceNamesArrayAtom;
+  JSAtom invokeAtom;
+  JSAtom invokeSuspendingAtom;
+  JSAtom disconnectAtom;
   jclass booleanClass;
   jclass integerClass;
   jclass doubleClass;
