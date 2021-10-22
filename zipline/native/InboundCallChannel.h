@@ -19,12 +19,13 @@
 #include <jni.h>
 #include <vector>
 #include <string>
+#include "quickjs/quickjs.h"
 
 class Context;
 
 class InboundCallChannel {
 public:
-  InboundCallChannel(const char *name);
+  InboundCallChannel(JSContext *jsContext, const char *name);
   ~InboundCallChannel();
 
   jobjectArray serviceNamesArray(Context* context, JNIEnv*) const;
@@ -32,7 +33,8 @@ public:
   void invokeSuspending(Context *context, JNIEnv* env, jstring instanceName, jstring funName, jobjectArray encodedArguments, jstring callbackName) const;
   jboolean disconnect(Context *context, JNIEnv* env, jstring instanceName) const;
 
-  const std::string name;
+  JSContext *jsContext;
+  JSAtom nameAtom;
 };
 
 #endif //QUICKJS_ANDROID_INBOUNDCALLCHANNEL_H

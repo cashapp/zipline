@@ -79,6 +79,11 @@ Context::Context(JNIEnv* env)
       jsRuntime(JS_NewRuntime()),
       jsContext(JS_NewContext(jsRuntime)),
       jsClassId(0),
+      lengthAtom(JS_NewAtom(jsContext, "length")),
+      serviceNamesArrayAtom(JS_NewAtom(jsContext, "serviceNamesArray")),
+      invokeAtom(JS_NewAtom(jsContext, "invoke")),
+      invokeSuspendingAtom(JS_NewAtom(jsContext, "invokeSuspending")),
+      disconnectAtom(JS_NewAtom(jsContext, "disconnect")),
       booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
       integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
       doubleClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Double")))),
@@ -121,6 +126,11 @@ Context::~Context() {
   env->DeleteGlobalRef(doubleClass);
   env->DeleteGlobalRef(integerClass);
   env->DeleteGlobalRef(booleanClass);
+  JS_FreeAtom(jsContext, lengthAtom);
+  JS_FreeAtom(jsContext, serviceNamesArrayAtom);
+  JS_FreeAtom(jsContext, invokeAtom);
+  JS_FreeAtom(jsContext, invokeSuspendingAtom);
+  JS_FreeAtom(jsContext, disconnectAtom);
   JS_FreeContext(jsContext);
   JS_FreeRuntime(jsRuntime);
 }
@@ -263,7 +273,7 @@ InboundCallChannel* Context::getInboundCallChannel(JNIEnv* env, jstring name) {
 
   InboundCallChannel* inboundCallChannel = nullptr;
   if (JS_IsObject(obj)) {
-    inboundCallChannel = new InboundCallChannel(nameStr);
+    inboundCallChannel = new InboundCallChannel(jsContext, nameStr);
     if (!env->ExceptionCheck()) {
       callChannels.push_back(inboundCallChannel);
     } else {
@@ -545,22 +555,24 @@ jstring Context::toJavaString(JNIEnv* env, const JSValueConst& value) const {
 }
 
 jobjectArray Context::toJavaStringArray(JNIEnv* env, const JSValueConst& value) const {
-  assert(JS_IsArray(this->jsContext, value));
+  auto jsContext = this->jsContext;
+  assert(JS_IsArray(jsContext, value));
 
+  auto jsLength = JS_GetProperty(jsContext, value, this->lengthAtom);
   int length = 0;
-  auto jsLength = JS_GetPropertyStr(this->jsContext, value, "length");
-  assert(!JS_ToInt32(this->jsContext, &length, jsLength));
+  auto convertResult = JS_ToInt32(jsContext, &length, jsLength);
+  assert(convertResult == 0);
 
   jobjectArray result = env->NewObjectArray(length, this->stringClass, nullptr);
   for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
-    auto jsElement = JS_GetPropertyUint32(this->jsContext, value, i);
+    auto jsElement = JS_GetPropertyUint32(jsContext, value, i);
     jstring element = this->toJavaString(env, jsElement);
-    JS_FreeValue(this->jsContext, jsElement);
+    JS_FreeValue(jsContext, jsElement);
     if (env->ExceptionCheck()) break;
     env->SetObjectArrayElement(result, i, element);
   }
 
-  JS_FreeValue(this->jsContext, jsLength);
+  JS_FreeValue(jsContext, jsLength);
 
   return result;
 }
