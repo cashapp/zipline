@@ -109,14 +109,14 @@ private class ThrowableSurrogate(
  * To receive a reference, we record the received identifier and return it when making calls against
  * the referenced service.
  */
-internal class ZiplineReferenceSerializer<T : Any>(
+internal class ZiplineReferenceSerializer(
   val endpoint: Endpoint
-) : KSerializer<ZiplineReference<T>> {
+) : KSerializer<ZiplineReference<*>> {
   override val descriptor = PrimitiveSerialDescriptor("ZiplineReference", PrimitiveKind.STRING)
 
-  override fun serialize(encoder: Encoder, value: ZiplineReference<T>) {
+  override fun serialize(encoder: Encoder, value: ZiplineReference<*>) {
     val name = endpoint.generateName()
-    if (value is InboundZiplineReference<T>) {
+    if (value is InboundZiplineReference<*>) {
       value.connect(endpoint, name)
       encoder.encodeString(name)
     } else {
@@ -124,9 +124,9 @@ internal class ZiplineReferenceSerializer<T : Any>(
     }
   }
 
-  override fun deserialize(decoder: Decoder): ZiplineReference<T> {
+  override fun deserialize(decoder: Decoder): ZiplineReference<*> {
     val name = decoder.decodeString()
-    val reference = OutboundZiplineReference<T>()
+    val reference = OutboundZiplineReference<Any>()
     reference.connect(endpoint, name)
     return reference
   }
