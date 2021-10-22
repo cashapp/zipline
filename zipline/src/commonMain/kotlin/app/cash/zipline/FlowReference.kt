@@ -19,8 +19,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.emitAll
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.collect
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -32,12 +31,13 @@ class FlowReference<T> @PublishedApi internal constructor(
   @Contextual private val serializer: ZiplineSerializer<T>,
 ) {
   @OptIn(ExperimentalCoroutinesApi::class)
-  private fun getJsonFlow(referenceFlow: ReferenceFlow): Flow<String> {
+  private fun getDecodingFlow(referenceFlow: ReferenceFlow): Flow<T> {
     return channelFlow {
       try {
         val collector: FlowCollector<String> = object : FlowCollector<String> {
           override suspend fun emit(value: String) {
-            this@channelFlow.send(value)
+            val item = Json.decodeFromString(serializer, value)
+            this@channelFlow.send(item)
           }
         }
         val collectorReference = ZiplineReference(collector)
@@ -56,10 +56,7 @@ class FlowReference<T> @PublishedApi internal constructor(
         // serialization both because it's unnecessary, and because the serializer isn't connected.
         referenceFlow.flow as Flow<T>
       }
-      else -> {
-        getJsonFlow(referenceFlow)
-          .map { Json.decodeFromString(serializer, it) }
-      }
+      else -> getDecodingFlow(referenceFlow)
     }
   }
 }
@@ -88,7 +85,10 @@ internal class RealReferenceFlow<T>(
   override suspend fun collectJson(collectorReference: ZiplineReference<FlowCollector<String>>) {
     try {
       val collector = collectorReference.get()
-      collector.emitAll(flow.map { Json.encodeToString(serializer, it) })
+      flow.collect {
+        val value = Json.encodeToString(serializer, it)
+        collector.emit(value)
+      }
     } finally {
       collectorReference.close()
     }
