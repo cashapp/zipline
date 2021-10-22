@@ -47,7 +47,7 @@ internal class InboundZiplineReference<T : Any>(
     check(this.endpoint == null && this.name == null) { "already connected" }
     this.name = name
     this.endpoint = endpoint
-    val context = InboundBridge.Context(endpoint.serializersModule)
+    val context = InboundBridge.Context(endpoint.serializersModule, endpoint)
     val result = inboundBridge.create(context)
     endpoint.inboundHandlers[name] = result
     return result

@@ -100,13 +100,6 @@ internal class BridgedInterface(
     type: IrType,
     name: Name
   ): IrProperty {
-    val serializersModuleProperty = when (contextParameter.type.classFqName) {
-      ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextSerializersModule
-      ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextSerializersModule
-      else -> error("unexpected Context type")
-    }
-
-    // val serializer_0: KSerializer<EchoRequest> = context.serializersModule.serializer<EchoRequest>()
     val kSerializerOfT = ziplineApis.kSerializer.typeWith(type)
     return irVal(
       pluginContext = pluginContext,
@@ -114,18 +107,49 @@ internal class BridgedInterface(
       declaringClass = declaringClass,
       propertyName = name,
     ) {
-      irExprBody(
-        irCall(
-          callee = ziplineApis.serializerFunction,
-          type = kSerializerOfT,
-        ).apply {
-          putTypeArgument(0, type)
-          extensionReceiver = irCall(
-            callee = serializersModuleProperty.owner.getter!!,
+      if (type.classFqName == ziplineApis.ziplineReferenceFqName) {
+        // val serializer_0: KSerializer<EchoRequest> = context.endpoint.ziplineReferenceSerializer
+        //
+        // The generic type parameter of a ZiplineReference is likely not serializable. Therefore,
+        // look its serializer up directly rather than using the serialization module which would
+        // otherwise force lookup of the generic type parameter's serializer as well.
+        val endpointProperty = when (contextParameter.type.classFqName) {
+          ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextEndpoint
+          ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextEndpoint
+          else -> error("unexpected Context type")
+        }
+        irExprBody(
+          irCall(
+            callee = ziplineApis.endpointZiplineReferenceSerializer.owner.getter!!,
           ).apply {
-            dispatchReceiver = irGet(contextParameter)
+            dispatchReceiver = irCall(
+              callee = endpointProperty.owner.getter!!,
+            ).apply {
+              dispatchReceiver = irGet(contextParameter)
+            }
           }
-        })
+        )
+      } else {
+        // val serializer_0: KSerializer<EchoRequest> = context.serializersModule.serializer<EchoRequest>()
+        val serializersModuleProperty = when (contextParameter.type.classFqName) {
+          ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextSerializersModule
+          ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextSerializersModule
+          else -> error("unexpected Context type")
+        }
+        irExprBody(
+          irCall(
+            callee = ziplineApis.serializerFunction,
+            type = kSerializerOfT,
+          ).apply {
+            putTypeArgument(0, type)
+            extensionReceiver = irCall(
+              callee = serializersModuleProperty.owner.getter!!,
+            ).apply {
+              dispatchReceiver = irGet(contextParameter)
+            }
+          }
+        )
+      }
     }
   }
 

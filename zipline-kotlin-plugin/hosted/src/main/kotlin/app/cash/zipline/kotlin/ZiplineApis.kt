@@ -38,6 +38,7 @@ internal class ZiplineApis(
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
   private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
   private val ziplineFqName = packageFqName.child("Zipline")
+  val ziplineReferenceFqName = packageFqName.child("ZiplineReference")
   private val endpointFqName = bridgeFqName.child("Endpoint")
 
   val any: IrClassSymbol
@@ -56,6 +57,11 @@ internal class ZiplineApis(
           it.owner.valueParameters.isEmpty() &&
           it.owner.typeParameters.size == 1
       }
+
+  val endpointZiplineReferenceSerializer: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      endpointFqName.child("ziplineReferenceSerializer")
+    ).single()
 
   val inboundCall: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("InboundCall"))!!
@@ -89,6 +95,11 @@ internal class ZiplineApis(
   val inboundBridgeContextSerializersModule: IrPropertySymbol
     get() = pluginContext.referenceProperties(
       inboundBridgeContextFqName.child("serializersModule")
+    ).single()
+
+  val inboundBridgeContextEndpoint: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      inboundBridgeContextFqName.child("endpoint")
     ).single()
 
   val inboundBridgeCreate: IrSimpleFunctionSymbol
@@ -143,6 +154,11 @@ internal class ZiplineApis(
   val outboundBridgeContextSerializersModule: IrPropertySymbol
     get() = pluginContext.referenceProperties(
       outboundBridgeContextFqName.child("serializersModule")
+    ).single()
+
+  val outboundBridgeContextEndpoint: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      outboundBridgeContextFqName.child("endpoint")
     ).single()
 
   val outboundBridgeCreate: IrSimpleFunctionSymbol

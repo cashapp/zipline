@@ -24,6 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
@@ -135,7 +136,7 @@ internal class EndpointTest {
     val thrownException = assertFailsWith<Exception> {
       client.echo(EchoRequest(""))
     }
-    assertEquals("java.lang.IllegalStateException: boom!", thrownException.message)
+    assertTrue(thrownException.message!!.endsWith(".IllegalStateException: boom!"))
   }
 
   @Test
@@ -154,7 +155,7 @@ internal class EndpointTest {
     val thrownException = assertFailsWith<Exception> {
       client.suspendingEcho(EchoRequest(""))
     }
-    assertEquals("java.lang.IllegalStateException: boom!", thrownException.message)
+    assertTrue(thrownException.message!!.endsWith(".IllegalStateException: boom!"))
   }
 
   @Test

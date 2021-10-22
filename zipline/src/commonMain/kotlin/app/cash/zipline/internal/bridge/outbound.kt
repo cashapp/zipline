@@ -34,7 +34,7 @@ internal abstract class OutboundBridge<T : Any> {
   class Context(
     private val instanceName: String,
     val serializersModule: SerializersModule,
-    internal val endpoint: Endpoint,
+    @PublishedApi internal val endpoint: Endpoint,
   ) {
     val json = Json {
       useArrayPolymorphism = true

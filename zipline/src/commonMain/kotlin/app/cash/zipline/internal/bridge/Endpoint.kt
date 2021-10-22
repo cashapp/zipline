@@ -21,12 +21,8 @@ import app.cash.zipline.ZiplineReference
 import app.cash.zipline.ZiplineSerializer
 import app.cash.zipline.ZiplineSerializerSerializer
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.SerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
@@ -47,6 +43,10 @@ class Endpoint internal constructor(
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
 
+  @PublishedApi
+  internal val ziplineReferenceSerializer: KSerializer<ZiplineReference<*>> =
+    ZiplineReferenceSerializer(this)
+
   /** If null, the user must still call Zipline.get() on Kotlin/JS. */
   internal var userSerializersModule: SerializersModule? = null
     set(value) {
@@ -59,9 +59,11 @@ class Endpoint internal constructor(
 
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
+      // TODO eliminate the need to have this, possibly by special-casing FlowReference in the
+      //  compiler plugin the same way we are currently special-casing ZiplineReference.
+      contextual(ZiplineReference::class, ziplineReferenceSerializer)
+
       contextual(Throwable::class, ThrowableSerializer)
-      contextual(FlowCollector::class, FlowCollectorSerializer)
-      contextual(ZiplineReference::class, ZiplineReferenceSerializer(this@Endpoint))
       contextual(ZiplineSerializer::class) {
         ZiplineSerializerSerializer(
           endpoint = this@Endpoint,
@@ -138,18 +140,5 @@ class Endpoint internal constructor(
 
   internal fun generateName(): String {
     return "zipline/${nextId++}"
-  }
-}
-
-private object FlowCollectorSerializer : KSerializer<FlowCollector<*>> {
-  override val descriptor: SerialDescriptor
-    get() = throw AssertionError()
-
-  override fun serialize(encoder: Encoder, value: FlowCollector<*>) {
-    throw AssertionError()
-  }
-
-  override fun deserialize(decoder: Decoder): FlowCollector<Any> {
-    throw AssertionError()
   }
 }

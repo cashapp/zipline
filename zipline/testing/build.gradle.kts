@@ -1,5 +1,6 @@
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
   kotlin("multiplatform")
@@ -14,11 +15,34 @@ kotlin {
     binaries.executable()
   }
 
+  linuxX64()
+  macosX64()
+  macosArm64()
+  iosArm64()
+  iosX64()
+  iosSimulatorArm64()
+  tvosArm64()
+  tvosSimulatorArm64()
+  tvosX64()
+
   sourceSets {
     val commonMain by getting {
       dependencies {
         implementation(project(":zipline"))
       }
+    }
+
+    val engineMain by creating {
+      dependsOn(commonMain)
+    }
+
+    val jvmMain by getting {
+      dependsOn(engineMain)
+    }
+
+    targets.withType<KotlinNativeTarget> {
+      val main by compilations.getting
+      main.defaultSourceSet.dependsOn(engineMain)
     }
   }
 
