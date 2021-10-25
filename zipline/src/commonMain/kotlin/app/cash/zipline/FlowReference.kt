@@ -20,15 +20,16 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
-import kotlinx.serialization.Contextual
-import kotlinx.serialization.Serializable
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
 
 /** A flow reference is a [Flow] that can be transmitted over a Zipline call. */
-@Serializable
 class FlowReference<T> @PublishedApi internal constructor(
-  @Contextual private val referenceFlowReference: ZiplineReference<ReferenceFlow>,
-  @Contextual private val serializer: ZiplineSerializer<T>,
+  internal val referenceFlowReference: ZiplineReference<ReferenceFlow>,
+  internal val itemSerializer: KSerializer<T>,
 ) {
   @OptIn(ExperimentalCoroutinesApi::class)
   private fun getDecodingFlow(referenceFlow: ReferenceFlow): Flow<T> {
@@ -36,7 +37,7 @@ class FlowReference<T> @PublishedApi internal constructor(
       try {
         val collector: FlowCollector<String> = object : FlowCollector<String> {
           override suspend fun emit(value: String) {
-            val item = Json.decodeFromString(serializer, value)
+            val item = Json.decodeFromString(itemSerializer, value)
             this@channelFlow.send(item)
           }
         }
@@ -61,12 +62,8 @@ class FlowReference<T> @PublishedApi internal constructor(
   }
 }
 
-inline fun <reified T> Flow<T>.asFlowReference(): FlowReference<T> {
-  return asFlowReference(ZiplineSerializer())
-}
-
-@PublishedApi
-internal fun <T> Flow<T>.asFlowReference(serializer: ZiplineSerializer<T>): FlowReference<T> {
+fun <T> Flow<T>.asFlowReference(): FlowReference<T> {
+  val serializer = DeferredSerializer<T>()
   val referenceFlow = RealReferenceFlow(this, serializer)
   val ziplineReference = ZiplineReference<ReferenceFlow>(referenceFlow)
   return FlowReference(ziplineReference, serializer)
@@ -77,10 +74,9 @@ internal interface ReferenceFlow {
   suspend fun collectJson(collectorReference: ZiplineReference<FlowCollector<String>>)
 }
 
-@PublishedApi
-internal class RealReferenceFlow<T>(
+private class RealReferenceFlow<T>(
   val flow: Flow<T>,
-  private val serializer: ZiplineSerializer<T>,
+  private val serializer: KSerializer<T>,
 ) : ReferenceFlow {
   override suspend fun collectJson(collectorReference: ZiplineReference<FlowCollector<String>>) {
     try {
@@ -92,5 +88,48 @@ internal class RealReferenceFlow<T>(
     } finally {
       collectorReference.close()
     }
+  }
+}
+
+internal class FlowReferenceSerializer<T>(
+  private val ziplineReferenceSerializer: KSerializer<ZiplineReference<*>>,
+  private val itemSerializer: KSerializer<T>,
+) : KSerializer<FlowReference<T>> {
+  override val descriptor get() = ziplineReferenceSerializer.descriptor
+
+  override fun deserialize(decoder: Decoder): FlowReference<T> {
+    @Suppress("UNCHECKED_CAST")
+    val ziplineReference = ziplineReferenceSerializer.deserialize(decoder) as ZiplineReference<ReferenceFlow>
+    return FlowReference(ziplineReference, itemSerializer)
+  }
+
+  override fun serialize(encoder: Encoder, value: FlowReference<T>) {
+    val itemSerializer = value.itemSerializer
+    if (itemSerializer is DeferredSerializer<T>) {
+      itemSerializer.delegate = this.itemSerializer
+    }
+    ziplineReferenceSerializer.serialize(encoder, value.referenceFlowReference)
+  }
+}
+
+/** This [KSerializer] can't decode anything until [delegate] is set. */
+private class DeferredSerializer<T>(
+): KSerializer<T> {
+  var delegate: KSerializer<T>? = null
+
+  override val descriptor: SerialDescriptor
+    get() {
+      val delegate = this.delegate ?: throw IllegalStateException("no delegate set")
+      return delegate.descriptor
+    }
+
+  override fun deserialize(decoder: Decoder): T {
+    val delegate = this.delegate ?: throw IllegalStateException("no delegate set")
+    return delegate.deserialize(decoder)
+  }
+
+  override fun serialize(encoder: Encoder, value: T) {
+    val delegate = this.delegate ?: throw IllegalStateException("not connected")
+    delegate.serialize(encoder, value)
   }
 }

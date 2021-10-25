@@ -15,11 +15,11 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.FlowReference
+import app.cash.zipline.FlowReferenceSerializer
 import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
-import app.cash.zipline.ZiplineSerializer
-import app.cash.zipline.ZiplineSerializerSerializer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
@@ -59,17 +59,11 @@ class Endpoint internal constructor(
 
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
-      // TODO eliminate the need to have this, possibly by special-casing FlowReference in the
-      //  compiler plugin the same way we are currently special-casing ZiplineReference.
-      contextual(ZiplineReference::class, ziplineReferenceSerializer)
-
       contextual(Throwable::class, ThrowableSerializer)
-      contextual(ZiplineSerializer::class) {
-        ZiplineSerializerSerializer(
-          endpoint = this@Endpoint,
-          delegate = it[0] as KSerializer<Any>
-        )
+      contextual(FlowReference::class) {
+        FlowReferenceSerializer(ziplineReferenceSerializer, it[0])
       }
+
       include(userSerializersModule ?: EmptySerializersModule)
     }
   }
