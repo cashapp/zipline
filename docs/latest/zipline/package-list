@@ -7,8 +7,8 @@ $dokka.location:app.cash.zipline.internal.bridge/Endpoint/get/#kotlin.String/Poi
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/service-names.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/set/#kotlin.String#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/set.html
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
+$dokka.location:app.cash.zipline//CURRENT_ZIPLINE_VERSION/#/PointingToDeclaration/zipline/app.cash.zipline/-c-u-r-r-e-n-t_-z-i-p-l-i-n-e_-v-e-r-s-i-o-n.html
 $dokka.location:app.cash.zipline//ZiplineReference/#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference.html
-$dokka.location:app.cash.zipline//ZiplineSerializer/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-serializer.html
 $dokka.location:app.cash.zipline//asFlowReference/kotlinx.coroutines.flow.Flow[TypeParam(bounds=[kotlin.Any?])]#/PointingToDeclaration/zipline/app.cash.zipline/as-flow-reference.html
 $dokka.location:app.cash.zipline/FlowReference///PointingToDeclaration/zipline/app.cash.zipline/-flow-reference/index.html
 $dokka.location:app.cash.zipline/FlowReference/get/#/PointingToDeclaration/zipline/app.cash.zipline/-flow-reference/get.html
@@ -70,10 +70,20 @@ $dokka.location:app.cash.zipline/Zipline/quickJs/#/PointingToDeclaration/ziplin
 $dokka.location:app.cash.zipline/Zipline/serializersModule/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/serializers-module.html
 $dokka.location:app.cash.zipline/Zipline/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/service-names.html
 $dokka.location:app.cash.zipline/Zipline/set/#kotlin.String#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline/-zipline/set.html
+$dokka.location:app.cash.zipline/ZiplineFile///PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/index.html
+$dokka.location:app.cash.zipline/ZiplineFile/ZiplineFile/#kotlin.Int#okio.ByteString/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/-zipline-file.html
+$dokka.location:app.cash.zipline/ZiplineFile/quickjsBytecode/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/quickjs-bytecode.html
+$dokka.location:app.cash.zipline/ZiplineFile/ziplineVersion/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/zipline-version.html
+$dokka.location:app.cash.zipline/ZiplineFileReader///PointingToDeclaration/zipline/app.cash.zipline/-zipline-file-reader/index.html
+$dokka.location:app.cash.zipline/ZiplineFileReader/ZiplineFileReader/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file-reader/-zipline-file-reader.html
+$dokka.location:app.cash.zipline/ZiplineFileReader/quickjsBytecode/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file-reader/quickjs-bytecode.html
+$dokka.location:app.cash.zipline/ZiplineFileReader/read/#okio.BufferedSource/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file-reader/read.html
+$dokka.location:app.cash.zipline/ZiplineFileWriter///PointingToDeclaration/zipline/app.cash.zipline/-zipline-file-writer/index.html
+$dokka.location:app.cash.zipline/ZiplineFileWriter/ZiplineFileWriter/#app.cash.zipline.ZiplineFile/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file-writer/-zipline-file-writer.html
+$dokka.location:app.cash.zipline/ZiplineFileWriter/write/#okio.BufferedSink/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file-writer/write.html
 $dokka.location:app.cash.zipline/ZiplineReference///PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/index.html
 $dokka.location:app.cash.zipline/ZiplineReference/close/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/close.html
 $dokka.location:app.cash.zipline/ZiplineReference/get/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/get.html
-$dokka.location:app.cash.zipline/ZiplineSerializer///PointingToDeclaration/zipline/app.cash.zipline/-zipline-serializer/index.html
 app.cash.zipline
 app.cash.zipline.internal.bridge
 
