@@ -108,7 +108,7 @@ internal class BridgedInterface(
       propertyName = name,
     ) {
       if (type.classFqName == ziplineApis.ziplineReferenceFqName) {
-        // val serializer_0: KSerializer<EchoRequest> = context.endpoint.ziplineReferenceSerializer
+        // val serializer_0: KSerializer<ZiplineReference> = context.endpoint.ziplineReferenceSerializer
         //
         // The generic type parameter of a ZiplineReference is likely not serializable. Therefore,
         // look its serializer up directly rather than using the serialization module which would
