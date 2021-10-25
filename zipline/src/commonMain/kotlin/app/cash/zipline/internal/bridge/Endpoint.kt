@@ -61,7 +61,7 @@ class Endpoint internal constructor(
     return SerializersModule {
       contextual(Throwable::class, ThrowableSerializer)
       contextual(FlowCollector::class, FlowCollectorSerializer)
-      contextual(ZiplineReference::class) { ZiplineReferenceSerializer<Any>(this@Endpoint) }
+      contextual(ZiplineReference::class, ZiplineReferenceSerializer(this@Endpoint))
       contextual(ZiplineSerializer::class) {
         ZiplineSerializerSerializer(
           endpoint = this@Endpoint,
