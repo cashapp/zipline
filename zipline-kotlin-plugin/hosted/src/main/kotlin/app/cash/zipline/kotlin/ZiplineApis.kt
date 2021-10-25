@@ -40,6 +40,7 @@ internal class ZiplineApis(
   private val ziplineFqName = packageFqName.child("Zipline")
   val ziplineReferenceFqName = packageFqName.child("ZiplineReference")
   private val endpointFqName = bridgeFqName.child("Endpoint")
+  val flowFqName = FqName("kotlinx.coroutines.flow.Flow")
 
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!
@@ -61,6 +62,11 @@ internal class ZiplineApis(
   val endpointZiplineReferenceSerializer: IrPropertySymbol
     get() = pluginContext.referenceProperties(
       endpointFqName.child("ziplineReferenceSerializer")
+    ).single()
+
+  val endpointFlowSerializer: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(
+      endpointFqName.child("flowSerializer")
     ).single()
 
   val inboundCall: IrClassSymbol

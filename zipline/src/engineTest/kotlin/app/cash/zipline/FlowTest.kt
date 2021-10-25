@@ -19,32 +19,65 @@ import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
 
 internal class FlowTest {
   interface FlowEchoService {
-    fun createFlow(message: String, count: Int): FlowReference<String>
-    suspend fun flowParameter(flowReference: FlowReference<String>): Int
+    fun createFlow(message: String, count: Int): Flow<String>
+    fun createTwoFlows(message: String, count: Int): TwoFlows<String>
+    suspend fun flowParameter(flow: Flow<String>): Int
+    suspend fun twoFlowsParameter(twoFlows: TwoFlows<String>): Int
   }
 
+  @Serializable
+  data class TwoFlows<T>(
+    @Contextual val first: Flow<T>,
+    @Contextual val second: Flow<T>,
+  )
+
   class RealFlowEchoService : FlowEchoService {
-    override fun createFlow(message: String, count: Int): FlowReference<String> {
-      val flow = flow {
+    override fun createFlow(message: String, count: Int): Flow<String> {
+      return flow {
         for (i in 0 until count) {
           delay(10) // Ensure we can send async through the reference.
-          emit("$i $message")
+          this.emit("$i $message")
         }
       }
-      return flow.asFlowReference()
     }
 
-    override suspend fun flowParameter(flowReference: FlowReference<String>): Int {
-      val flow = flowReference.get()
+    override fun createTwoFlows(message: String, count: Int): TwoFlows<String> {
+      val countingFlow = flow {
+        for (i in 0 until count) {
+          delay(10) // Ensure we can send async through the reference.
+          emit(i)
+        }
+      }
+      return TwoFlows(
+        first = countingFlow.map { "$it $message" },
+        second = countingFlow.map { "$message $it" },
+      )
+    }
+
+    override suspend fun flowParameter(flow: Flow<String>): Int {
       return flow.count()
+    }
+
+    override suspend fun twoFlowsParameter(twoFlows: TwoFlows<String>): Int {
+      return coroutineScope {
+        val firstCount = async { twoFlows.first.count() }
+        val secondCount = async { twoFlows.second.count() }
+        firstCount.await() + secondCount.await()
+      }
     }
   }
 
@@ -58,9 +91,27 @@ internal class FlowTest {
     val initialServiceNames = endpointA.serviceNames
     val initialClientNames = endpointA.clientNames
 
-    val flowReference = client.createFlow("hello", 3)
-    val flow = flowReference.get()
+    val flow = client.createFlow("hello", 3)
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
+
+    // Confirm that no services or clients were leaked.
+    assertEquals(initialServiceNames, endpointA.serviceNames)
+    assertEquals(initialClientNames, endpointA.clientNames)
+  }
+
+  @Test
+  fun twoFlowsReturnValueWorks() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = RealFlowEchoService()
+
+    endpointA.set<FlowEchoService>("service", service)
+    val client = endpointB.get<FlowEchoService>("service")
+    val initialServiceNames = endpointA.serviceNames
+    val initialClientNames = endpointA.clientNames
+
+    val twoFlows = client.createTwoFlows("hello", 3)
+    assertEquals(listOf("0 hello", "1 hello", "2 hello"), twoFlows.first.toList())
+    assertEquals(listOf("hello 0", "hello 1", "hello 2"), twoFlows.second.toList())
 
     // Confirm that no services or clients were leaked.
     assertEquals(initialServiceNames, endpointA.serviceNames)
@@ -85,7 +136,7 @@ internal class FlowTest {
     }
 
     val deferredCount = async {
-      client.flowParameter(flow.asFlowReference())
+      client.flowParameter(flow)
     }
 
     assertEquals(3, deferredCount.await())
@@ -96,10 +147,34 @@ internal class FlowTest {
   }
 
   @Test
-  fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking {
+  fun twoFlowsParameterWorks() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
-    val flowReference = service.createFlow("hello", 3)
-    val flow = flowReference.get()
-    assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
+
+    endpointA.set<FlowEchoService>("service", service)
+    val client = endpointB.get<FlowEchoService>("service")
+    val initialServiceNames = endpointA.serviceNames
+    val initialClientNames = endpointA.clientNames
+
+    val countingFlow = flow {
+      for (i in 1..3) {
+        delay(10) // Ensure we can send async through the reference.
+        emit("$i")
+      }
+    }
+    val twoFlows = TwoFlows(
+      first = countingFlow,
+      second = countingFlow.take(2),
+    )
+
+    val deferredCount = async {
+      client.twoFlowsParameter(twoFlows)
+    }
+
+    assertEquals(5, deferredCount.await())
+
+    // Confirm that no services or clients were leaked.
+    assertEquals(initialServiceNames, endpointA.serviceNames)
+    assertEquals(initialClientNames, endpointA.clientNames)
   }
 }

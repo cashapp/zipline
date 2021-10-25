@@ -15,16 +15,16 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.FlowReference
-import app.cash.zipline.FlowReferenceSerializer
 import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 
 /**
  * An outbound channel for delivering calls to the other platform, and an inbound channel for
@@ -47,6 +47,11 @@ class Endpoint internal constructor(
   internal val ziplineReferenceSerializer: KSerializer<ZiplineReference<*>> =
     ZiplineReferenceSerializer(this)
 
+  @PublishedApi
+  internal inline fun <reified T> flowSerializer(): KSerializer<Flow<T>> {
+    return FlowSerializer(ziplineReferenceSerializer, serializersModule.serializer<T>())
+  }
+
   /** If null, the user must still call Zipline.get() on Kotlin/JS. */
   internal var userSerializersModule: SerializersModule? = null
     set(value) {
@@ -55,13 +60,14 @@ class Endpoint internal constructor(
     }
 
   /** Unions Zipline-provided serializers with user-provided serializers. */
+  @PublishedApi
   internal var serializersModule: SerializersModule = computeSerializersModule()
 
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
       contextual(Throwable::class, ThrowableSerializer)
-      contextual(FlowReference::class) {
-        FlowReferenceSerializer(ziplineReferenceSerializer, it[0])
+      contextual(Flow::class) {
+        FlowSerializer(ziplineReferenceSerializer, it[0])
       }
 
       include(userSerializersModule ?: EmptySerializersModule)

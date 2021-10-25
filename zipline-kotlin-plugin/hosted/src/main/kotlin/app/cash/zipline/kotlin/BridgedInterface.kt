@@ -30,6 +30,7 @@ import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.typeOrNull
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -100,6 +101,17 @@ internal class BridgedInterface(
     type: IrType,
     name: Name
   ): IrProperty {
+    val serializersModuleProperty = when (contextParameter.type.classFqName) {
+      ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextSerializersModule
+      ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextSerializersModule
+      else -> error("unexpected Context type")
+    }
+    val endpointProperty = when (contextParameter.type.classFqName) {
+      ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextEndpoint
+      ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextEndpoint
+      else -> error("unexpected Context type")
+    }
+
     val kSerializerOfT = ziplineApis.kSerializer.typeWith(type)
     return irVal(
       pluginContext = pluginContext,
@@ -107,17 +119,30 @@ internal class BridgedInterface(
       declaringClass = declaringClass,
       propertyName = name,
     ) {
-      if (type.classFqName == ziplineApis.ziplineReferenceFqName) {
-        // val serializer_0: KSerializer<EchoRequest> = context.endpoint.ziplineReferenceSerializer
+      if (type.classFqName == ziplineApis.flowFqName) {
+        // val serializer_0: KSerializer<Flow<String>> =
+        //     context.endpoint.flowSerializer<String>()
+        //
+        // TODO comment
+        irExprBody(
+          irCall(
+            callee = ziplineApis.endpointFlowSerializer,
+          ).apply {
+            putTypeArgument(0, (type as IrSimpleType).arguments[0].typeOrNull!!)
+            dispatchReceiver = irCall(
+              callee = endpointProperty.owner.getter!!,
+            ).apply {
+              dispatchReceiver = irGet(contextParameter)
+            }
+          }
+        )
+      } else if (type.classFqName == ziplineApis.ziplineReferenceFqName) {
+        // val serializer_0: KSerializer<ZiplineReference<*>>> =
+        //     context.endpoint.ziplineReferenceSerializer
         //
         // The generic type parameter of a ZiplineReference is likely not serializable. Therefore,
         // look its serializer up directly rather than using the serialization module which would
         // otherwise force lookup of the generic type parameter's serializer as well.
-        val endpointProperty = when (contextParameter.type.classFqName) {
-          ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextEndpoint
-          ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextEndpoint
-          else -> error("unexpected Context type")
-        }
         irExprBody(
           irCall(
             callee = ziplineApis.endpointZiplineReferenceSerializer.owner.getter!!,
@@ -130,12 +155,8 @@ internal class BridgedInterface(
           }
         )
       } else {
-        // val serializer_0: KSerializer<EchoRequest> = context.serializersModule.serializer<EchoRequest>()
-        val serializersModuleProperty = when (contextParameter.type.classFqName) {
-          ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextSerializersModule
-          ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextSerializersModule
-          else -> error("unexpected Context type")
-        }
+        // val serializer_0: KSerializer<EchoRequest> =
+        //     context.serializersModule.serializer<EchoRequest>()
         irExprBody(
           irCall(
             callee = ziplineApis.serializerFunction,
