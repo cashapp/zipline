@@ -85,6 +85,9 @@ kotlin {
 
     val engineMain by creating {
       dependsOn(commonMain)
+      dependencies {
+        api(Dependencies.okio)
+      }
       kotlin.srcDir(versionWriterTaskProvider)
     }
     val engineTest by creating {

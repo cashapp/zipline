@@ -12,6 +12,9 @@ plugins {
 
 dependencies {
   implementation(kotlin("gradle-plugin-api"))
+  implementation(project(":zipline"))
+  implementation(Dependencies.okio)
+  testImplementation(Dependencies.junit)
 }
 
 buildConfig {
