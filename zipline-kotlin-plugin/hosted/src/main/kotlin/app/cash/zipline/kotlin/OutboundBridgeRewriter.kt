@@ -21,7 +21,6 @@ import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.addDispatchReceiver
@@ -147,6 +146,8 @@ internal class OutboundBridgeRewriter(
     val outboundBridgeSubclass = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
+      startOffset = original.startOffset
+      endOffset = original.endOffset
     }.apply {
       superTypes = listOf(outboundBridgeOfT)
       createImplicitParameterDeclarationWithWrappedDescriptor()
@@ -159,7 +160,7 @@ internal class OutboundBridgeRewriter(
       visibility = DescriptorVisibilities.PUBLIC
       isPrimary = true
     }.apply {
-      irConstructorBody(pluginContext) { statements ->
+      irConstructorBody(pluginContext, original.startOffset, original.endOffset) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = superConstructor,
@@ -198,14 +199,16 @@ internal class OutboundBridgeRewriter(
 
     createFunction.irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = scope.scope.scopeOwnerSymbol
+      scopeOwnerSymbol = scope.scope.scopeOwnerSymbol,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
     ) {
       irCreateFunctionBody(createFunction, createFunction.valueParameters[0])
     }
 
     return IrBlockBodyBuilder(
-      startOffset = SYNTHETIC_OFFSET,
-      endOffset = SYNTHETIC_OFFSET,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
@@ -225,6 +228,8 @@ internal class OutboundBridgeRewriter(
     val clientImplementation = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
+      startOffset = original.startOffset
+      endOffset = original.endOffset
     }.apply {
       parent = createFunction
       superTypes = listOf(bridgedInterface.type)
@@ -236,7 +241,7 @@ internal class OutboundBridgeRewriter(
       visibility = DescriptorVisibilities.PUBLIC
       isPrimary = true
     }
-    constructor.irConstructorBody(pluginContext) { statements ->
+    constructor.irConstructorBody(pluginContext, original.startOffset, original.endOffset) { statements ->
       statements += irDelegatingConstructorCall(
         context = pluginContext,
         symbol = ziplineApis.any.constructors.single(),
@@ -297,7 +302,9 @@ internal class OutboundBridgeRewriter(
 
     result.irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = result.symbol
+      scopeOwnerSymbol = result.symbol,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
     ) {
       val newCall = irCall(ziplineApis.outboundBridgeContextNewCall).apply {
         dispatchReceiver = irGet(createFunction.valueParameters[0])

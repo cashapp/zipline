@@ -22,7 +22,6 @@ import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclaration
 import org.jetbrains.kotlin.backend.common.ir.isSuspend
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
@@ -62,6 +61,7 @@ import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.getPropertyGetter
@@ -196,6 +196,8 @@ internal class InboundBridgeRewriter(
     val inboundBridgeSubclass = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
+      startOffset = original.startOffset
+      endOffset = original.endOffset
     }.apply {
       superTypes = listOf(inboundBridgeOfT)
       createImplicitParameterDeclarationWithWrappedDescriptor()
@@ -208,7 +210,7 @@ internal class InboundBridgeRewriter(
       visibility = DescriptorVisibilities.PUBLIC
       isPrimary = true
     }.apply {
-      irConstructorBody(pluginContext) { statements ->
+      irConstructorBody(pluginContext, original.startOffset, original.endOffset) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = superConstructor,
@@ -236,8 +238,8 @@ internal class InboundBridgeRewriter(
     )
 
     return IrBlockBodyBuilder(
-      startOffset = SYNTHETIC_OFFSET,
-      endOffset = SYNTHETIC_OFFSET,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
@@ -272,6 +274,8 @@ internal class InboundBridgeRewriter(
     result.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = result.symbol,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
     ) {
       +irReturn(
         irNewInboundCallHandler(
@@ -295,6 +299,8 @@ internal class InboundBridgeRewriter(
     val inboundCallHandlerSubclass = irFactory.buildClass {
       name = Name.special("<no name provided>")
       visibility = DescriptorVisibilities.LOCAL
+      startOffset = original.startOffset
+      endOffset = original.endOffset
     }.apply {
       superTypes = listOf(inboundCallHandler)
       createImplicitParameterDeclarationWithWrappedDescriptor()
@@ -305,7 +311,7 @@ internal class InboundBridgeRewriter(
       visibility = DescriptorVisibilities.PUBLIC
       isPrimary = true
     }.apply {
-      irConstructorBody(pluginContext) { statements ->
+      irConstructorBody(pluginContext, original.startOffset, original.endOffset) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = ziplineApis.any.constructors.single(),
@@ -342,6 +348,8 @@ internal class InboundBridgeRewriter(
     callFunction.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = callFunction.symbol,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
     ) {
       +irReturn(
         irCallFunctionBody(callFunction, inboundBridgeThis, serviceProperty)
@@ -350,6 +358,8 @@ internal class InboundBridgeRewriter(
     callSuspendingFunction.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = callSuspendingFunction.symbol,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
     ) {
       +irReturn(
         irCallFunctionBody(callSuspendingFunction, inboundBridgeThis, serviceProperty)
@@ -357,8 +367,8 @@ internal class InboundBridgeRewriter(
     }
 
     return IrBlockBodyBuilder(
-      startOffset = SYNTHETIC_OFFSET,
-      endOffset = SYNTHETIC_OFFSET,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {

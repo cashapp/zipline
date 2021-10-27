@@ -25,7 +25,6 @@ import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
-import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.IrBlockBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
@@ -57,6 +56,7 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
@@ -102,13 +102,15 @@ internal fun IrBuilderWithScope.irReturn(
 
 fun IrConstructor.irConstructorBody(
   context: IrGeneratorContext,
+  startOffset: Int,
+  endOffset: Int,
   blockBody: DeclarationIrBuilder.(MutableList<IrStatement>) -> Unit
 ) {
   val constructorIrBuilder = DeclarationIrBuilder(
     generatorContext = context,
     symbol = IrSimpleFunctionSymbolImpl(),
-    startOffset = SYNTHETIC_OFFSET,
-    endOffset = SYNTHETIC_OFFSET
+    startOffset = startOffset,
+    endOffset = endOffset
   )
   body = context.irFactory.createBlockBody(
     startOffset = constructorIrBuilder.startOffset,
@@ -152,13 +154,15 @@ fun DeclarationIrBuilder.irInstanceInitializerCall(
 fun IrSimpleFunction.irFunctionBody(
   context: IrGeneratorContext,
   scopeOwnerSymbol: IrSymbol,
+  startOffset: Int,
+  endOffset: Int,
   blockBody: IrBlockBodyBuilder.() -> Unit
 ) {
   val bodyBuilder = IrBlockBodyBuilder(
-    startOffset = SYNTHETIC_OFFSET,
-    endOffset = SYNTHETIC_OFFSET,
     context = context,
     scope = Scope(scopeOwnerSymbol),
+    startOffset = startOffset,
+    endOffset = endOffset,
   )
   body = bodyBuilder.blockBody {
     blockBody()
@@ -211,8 +215,8 @@ fun irVal(
     parent = declaringClass
     correspondingPropertySymbol = result.symbol
     val initializerBuilder = IrBlockBuilder(
-      startOffset = SYNTHETIC_OFFSET,
-      endOffset = SYNTHETIC_OFFSET,
+      startOffset = declaringClass.startOffset,
+      endOffset = declaringClass.endOffset,
       context = pluginContext,
       scope = Scope(symbol),
     )
@@ -244,7 +248,9 @@ fun irVal(
     createDispatchReceiverParameter()
     irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = symbol
+      scopeOwnerSymbol = symbol,
+      startOffset = declaringClass.startOffset,
+      endOffset = declaringClass.endOffset,
     ) {
       +irReturn(
         value = irGetField(

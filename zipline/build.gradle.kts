@@ -4,6 +4,9 @@ import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
+import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
+import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
 
 plugins {
   kotlin("multiplatform")
@@ -138,19 +141,38 @@ kotlin {
       val test by compilations.getting
       test.defaultSourceSet.dependsOn(nativeTest)
     }
+  }
 
-    targets.all {
-      compilations.all {
-        val pluginDependency = if (this is AbstractKotlinNativeCompilation) {
-          project(":zipline-kotlin-plugin:hosted")
-        } else {
-          project(":zipline-kotlin-plugin")
-        }
-        // Naming logic from https://github.com/JetBrains/kotlin/blob/a0e6fb03f0288f0bff12be80c402d8a62b5b045a/libraries/tools/kotlin-gradle-plugin/src/main/kotlin/org/jetbrains/kotlin/gradle/plugin/KotlinTargetConfigurator.kt#L519-L520
-        val pluginConfigurationName = PLUGIN_CLASSPATH_CONFIGURATION_NAME +
-          target.disambiguationClassifier.orEmpty().capitalize() +
-          compilationName.capitalize()
-        project.dependencies.add(pluginConfigurationName, pluginDependency)
+  targets.all {
+    compilations.all {
+      val pluginDependency = if (this is AbstractKotlinNativeCompilation) {
+        project(":zipline-kotlin-plugin:hosted")
+      } else {
+        project(":zipline-kotlin-plugin")
+      }
+      // Naming logic from https://github.com/JetBrains/kotlin/blob/a0e6fb03f0288f0bff12be80c402d8a62b5b045a/libraries/tools/kotlin-gradle-plugin/src/main/kotlin/org/jetbrains/kotlin/gradle/plugin/KotlinTargetConfigurator.kt#L519-L520
+      val pluginConfigurationName = PLUGIN_CLASSPATH_CONFIGURATION_NAME +
+        target.disambiguationClassifier.orEmpty().capitalize() +
+        compilationName.capitalize()
+      project.dependencies.add(pluginConfigurationName, pluginDependency)
+    }
+  }
+
+  targets.withType<KotlinNativeTargetWithTests<*>> {
+    binaries {
+      // Configure a separate test where code runs in a worker thread.
+      test("background", setOf(NativeBuildType.DEBUG)) {
+        freeCompilerArgs += "-trw"
+      }
+      // Configure a separate test where code is compiled in release mode.
+      test(setOf(NativeBuildType.RELEASE))
+    }
+    testRuns {
+      val background by creating {
+        setExecutionSourceFrom(binaries.getByName("backgroundDebugTest") as TestExecutable)
+      }
+      val release by creating {
+        setExecutionSourceFrom(binaries.getByName("releaseTest") as TestExecutable)
       }
     }
   }
