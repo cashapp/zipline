@@ -66,6 +66,7 @@ class ZiplineIrGenerationExtension(
       }
     }
 
-    moduleFragment.transform(transformer, null)
+    val transform = moduleFragment.transform(transformer, null)
+//    println(transform.dump())
   }
 }

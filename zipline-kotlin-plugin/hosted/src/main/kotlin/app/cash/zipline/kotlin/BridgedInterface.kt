@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
+import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin.GET_PROPERTY
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
@@ -144,6 +145,7 @@ internal class BridgedInterface(
             putTypeArgument(0, type)
             extensionReceiver = irCall(
               callee = serializersModuleProperty.owner.getter!!,
+              origin = GET_PROPERTY,
             ).apply {
               dispatchReceiver = irGet(contextParameter)
             }
@@ -169,7 +171,8 @@ internal class BridgedInterface(
   ): IrFunctionAccessExpression {
     val property = typeToSerializerProperty[serializerType]!!
     return irBuilder.irCall(
-      callee = property.getter!!
+      callee = property.getter!!,
+      origin = GET_PROPERTY,
     ).apply {
       dispatchReceiver = irBuilder.irGet(declaringInstance)
     }

@@ -15,12 +15,16 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.InboundBridge
+import app.cash.zipline.internal.bridge.InboundCall
+import app.cash.zipline.internal.bridge.InboundCallHandler
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -49,6 +53,36 @@ class FlowReference<T> @PublishedApi internal constructor(
       }
     }
   }
+
+  interface FooService {
+    suspend fun stuff(name: String): String
+    suspend fun otherStuff(): Int
+  }
+
+  private val stringSerializer = String.serializer()
+  private val intSerializer = Int.serializer()
+
+  private val fooService: FooService = TODO()
+
+  internal val HAND_WRITTEN = object : InboundCallHandler {
+    override val context: InboundBridge.Context
+      get() = TODO("Not yet implemented")
+
+    override fun call(inboundCall: InboundCall): Array<String> {
+      TODO("Not yet implemented")
+    }
+
+    override suspend fun callSuspending(inboundCall: InboundCall): Array<String> {
+      return when {
+        inboundCall.funName == "stuff" -> inboundCall.result(stringSerializer,
+          fooService.stuff(inboundCall.parameter(stringSerializer)))
+        inboundCall.funName == "otherStuff" -> inboundCall.result(intSerializer,
+          fooService.otherStuff())
+        true -> inboundCall.unexpectedFunction()
+      }
+    }
+  }
+
 
   fun get(): Flow<T> {
     return when (val referenceFlow = referenceFlowReference.get()) {

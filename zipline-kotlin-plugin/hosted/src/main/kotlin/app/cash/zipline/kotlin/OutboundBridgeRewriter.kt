@@ -68,9 +68,9 @@ import org.jetbrains.kotlin.name.Name
  *   "helloService",
  *   object : OutboundBridge<EchoService>() {
  *     override fun create(context: Context): EchoService {
- *       val serializer_0 = context.serializersModule.serializer<EchoRequest>()
- *       val serializer_1 = context.serializersModule.serializer<EchoResponse>()
  *       return object : EchoService {
+ *         private val serializer_0 = context.serializersModule.serializer<EchoRequest>()
+ *         private val serializer_1 = context.serializersModule.serializer<EchoResponse>()
  *         override fun echo(request: EchoRequest): EchoResponse {
  *           val outboundCall = context.newCall("echo", 1)
  *           outboundCall.parameter<EchoRequest>(serializer_0, request)
@@ -351,7 +351,8 @@ internal class OutboundBridgeRewriter(
         bridgedFunction.isSuspend -> ziplineApis.outboundCallInvokeSuspending
         else -> ziplineApis.outboundCallInvoke
       }
-      +irReturn(
+      val returnValue = irTemporary(
+        nameHint = "result",
         value = irCall(callee = invoke).apply {
           dispatchReceiver = irGet(outboundCallLocal)
           type = functionReturnType
@@ -364,7 +365,10 @@ internal class OutboundBridgeRewriter(
               result.dispatchReceiverParameter!!
             )
           )
-        },
+        }
+      )
+      +irReturn(
+        value = irGet(returnValue),
         returnTargetSymbol = result.symbol,
         type = pluginContext.irBuiltIns.nothingType,
       )
