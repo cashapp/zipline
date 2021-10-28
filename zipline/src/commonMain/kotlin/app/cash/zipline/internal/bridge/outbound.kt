@@ -21,7 +21,6 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.serializer
 
 /**
  * Generated code extends this base class to make calls into an application-layer interface that is
@@ -40,7 +39,6 @@ internal abstract class OutboundBridge<T : Any> {
       useArrayPolymorphism = true
       serializersModule = this@Context.serializersModule
     }
-    val throwableSerializer = serializersModule.serializer<Throwable>()
 
     fun newCall(funName: String, parameterCount: Int): OutboundCall {
       return OutboundCall(
@@ -137,7 +135,7 @@ internal class OutboundCall(
           return Result.success(context.json.decodeFromString(serializer, this[1]))
         }
         LABEL_EXCEPTION -> {
-          return Result.failure(context.json.decodeFromString(context.throwableSerializer, this[1]))
+          return Result.failure(context.json.decodeFromString(ThrowableSerializer, this[1]))
         }
         else -> i += 2
       }
