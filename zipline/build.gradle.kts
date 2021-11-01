@@ -101,7 +101,6 @@ kotlin {
       dependsOn(engineMain)
       dependencies {
         api(Dependencies.androidxAnnotation)
-        api(Dependencies.kotlinReflect)
       }
     }
     val androidMain by getting {

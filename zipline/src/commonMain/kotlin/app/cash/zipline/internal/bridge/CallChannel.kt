@@ -20,10 +20,8 @@ import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
 import kotlin.js.JsName
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
@@ -81,23 +79,16 @@ internal const val LABEL_NULL = "n"
 internal const val LABEL_EXCEPTION = "t"
 
 internal object ThrowableSerializer : KSerializer<Throwable> {
-  override val descriptor: SerialDescriptor = ThrowableSurrogate.serializer().descriptor
+  override val descriptor = PrimitiveSerialDescriptor("ZiplineThrowable", PrimitiveKind.STRING)
 
   override fun serialize(encoder: Encoder, value: Throwable) {
-    val surrogate = ThrowableSurrogate(value.toString())
-    encoder.encodeSerializableValue(ThrowableSurrogate.serializer(), surrogate)
+    encoder.encodeString(value.toString())
   }
 
   override fun deserialize(decoder: Decoder): Throwable {
-    val surrogate = decoder.decodeSerializableValue(ThrowableSurrogate.serializer())
-    return Exception(surrogate.message)
+    return Exception(decoder.decodeString())
   }
 }
-
-@Serializable
-private class ThrowableSurrogate(
-  val message: String
-)
 
 /**
  * This is a special serializer because it's scoped to an endpoint. It is not a general-purpose

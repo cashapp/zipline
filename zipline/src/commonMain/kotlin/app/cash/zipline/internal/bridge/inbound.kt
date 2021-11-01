@@ -18,7 +18,6 @@ package app.cash.zipline.internal.bridge
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.serializer
 
 /**
  * Generated code extends this base class to receive calls into an application-layer interface from
@@ -38,7 +37,6 @@ internal abstract class InboundBridge<T : Any> {
       useArrayPolymorphism = true
       serializersModule = this@Context.serializersModule
     }
-    val throwableSerializer = serializersModule.serializer<Throwable>()
   }
 }
 
@@ -97,8 +95,7 @@ internal class InboundCall(
 
   fun unexpectedFunction(): Array<String> = error("unexpected function: $funName")
 
-  @OptIn(ExperimentalStdlibApi::class)
   fun resultException(e: Throwable): Array<String> {
-    return arrayOf(LABEL_EXCEPTION, context.json.encodeToString(context.throwableSerializer, e))
+    return arrayOf(LABEL_EXCEPTION, context.json.encodeToString(ThrowableSerializer, e))
   }
 }
