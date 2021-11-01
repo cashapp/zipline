@@ -136,7 +136,7 @@ internal class EndpointTest {
     val thrownException = assertFailsWith<Exception> {
       client.echo(EchoRequest(""))
     }
-    assertTrue(thrownException.message!!.endsWith(".IllegalStateException: boom!"))
+    assertTrue(thrownException.message!!.contains(".IllegalStateException: boom!"))
   }
 
   @Test
@@ -155,7 +155,7 @@ internal class EndpointTest {
     val thrownException = assertFailsWith<Exception> {
       client.suspendingEcho(EchoRequest(""))
     }
-    assertTrue(thrownException.message!!.endsWith(".IllegalStateException: boom!"))
+    assertTrue(thrownException.message!!.contains(".IllegalStateException: boom!"))
   }
 
   @Test
