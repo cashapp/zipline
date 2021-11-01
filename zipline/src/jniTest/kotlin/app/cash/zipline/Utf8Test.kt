@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.testing.Formatter
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
@@ -95,6 +96,6 @@ class Utf8Test {
     val t = assertFailsWith<RuntimeException> {
       quickjs.evaluate("testing.app.cash.zipline.testing.callFormatter('');")
     }
-    assertEquals("java.lang.RuntimeException: a\uD83D\uDC1Dcdefg", t.message)
+    assertTrue(t.message?.contains("java.lang.RuntimeException: a\uD83D\uDC1Dcdefg") ?: false)
   }
 }

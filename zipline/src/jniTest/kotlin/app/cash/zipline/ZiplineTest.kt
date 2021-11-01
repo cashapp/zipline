@@ -88,7 +88,15 @@ class ZiplineTest {
 
     assertThat(assertFailsWith<Exception> {
       zipline.helloService.echo(EchoRequest("Jake"))
-    }).hasMessageThat().contains("boom!") // 'IllegalStateException' prefix lost when we minify JS.
+    }.stackTraceToString()).apply {
+      matches(
+        """(?s).*IllegalStateException: boom!""" +
+          """.*at goBoom1""" +
+          """.*at goBoom2""" +
+          """.*at goBoom3""" +
+          """.*"""
+      )
+    }
   }
 
   @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
@@ -96,7 +104,16 @@ class ZiplineTest {
 
     assertThat(assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
-    }).hasMessageThat().contains("java.lang.IllegalStateException: boom!")
+    }.stackTraceToString()).apply {
+      matches(
+        """(?s).*java\.lang\.IllegalStateException: boom!""" +
+          """.*JvmThrowingEchoService\.goBoom1""" +
+          """.*JvmThrowingEchoService\.goBoom2""" +
+          """.*JvmThrowingEchoService\.goBoom3""" +
+          """.*JvmThrowingEchoService\.echo""" +
+          """.*"""
+      )
+    }
   }
 
   @Test fun suspendingJvmCallJsService(): Unit = runBlocking(dispatcher) {
@@ -153,6 +170,15 @@ class ZiplineTest {
 
   private class JvmThrowingEchoService : EchoService {
     override fun echo(request: EchoRequest): EchoResponse {
+      goBoom3()
+    }
+    private fun goBoom3(): Nothing {
+      goBoom2()
+    }
+    private fun goBoom2(): Nothing {
+      goBoom1()
+    }
+    private fun goBoom1(): Nothing {
       throw IllegalStateException("boom!")
     }
   }

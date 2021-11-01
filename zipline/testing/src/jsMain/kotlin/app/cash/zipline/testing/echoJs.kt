@@ -42,6 +42,15 @@ fun callSupService(message: String): String {
 
 class JsThrowingEchoService : EchoService {
   override fun echo(request: EchoRequest): EchoResponse {
+    goBoom3()
+  }
+  private fun goBoom3(): Nothing {
+    goBoom2()
+  }
+  private fun goBoom2(): Nothing {
+    goBoom1()
+  }
+  private fun goBoom1(): Nothing {
     throw IllegalStateException("boom!")
   }
 }
