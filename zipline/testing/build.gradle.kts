@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -12,7 +13,7 @@ kotlin {
 
   js {
     browser()
-    binaries.executable()
+    binaries.library()
   }
 
   linuxX64()
@@ -58,6 +59,16 @@ kotlin {
         target.disambiguationClassifier.orEmpty().capitalize() +
         compilationName.capitalize()
       project.dependencies.add(pluginConfigurationName, pluginDependency)
+    }
+  }
+}
+
+tasks {
+  withType(KotlinJsCompile::class.java).all {
+    kotlinOptions {
+//      sourceMap = true
+//      sourceMapEmbedSources = "always"
+      freeCompilerArgs += listOf("-Xir-per-module")
     }
   }
 }
