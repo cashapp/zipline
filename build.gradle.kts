@@ -110,7 +110,12 @@ allprojects {
       signAllPublications()
       pom {
         description.set("Runs Kotlin/JS libraries in Kotlin/JVM and Kotlin/Native programs")
-        name.set(project.name)
+        name.set(
+          when (val parentProject = project.parent) {
+            null, rootProject -> project.name // like "zipline-kotlin-plugin"
+            else -> "${parentProject.name}-${project.name}" // like "zipline-kotlin-plugin-hosted"
+          }
+        )
         url.set("https://github.com/cashapp/zipline/")
         licenses {
           license {
