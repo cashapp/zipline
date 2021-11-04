@@ -25,12 +25,14 @@ import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
-import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.IrBlockBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.IrGeneratorContext
 import org.jetbrains.kotlin.ir.builders.Scope
+import org.jetbrains.kotlin.ir.builders.declarations.IrClassBuilder
+import org.jetbrains.kotlin.ir.builders.declarations.IrFunctionBuilder
+import org.jetbrains.kotlin.ir.builders.declarations.IrValueParameterBuilder
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetField
 import org.jetbrains.kotlin.ir.builders.irReturn
@@ -57,6 +59,7 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
@@ -100,6 +103,30 @@ internal fun IrBuilderWithScope.irReturn(
   )
 }
 
+/** Set up reasonable defaults for a generated function or constructor. */
+fun IrFunctionBuilder.initDefaults(original: IrElement) {
+  this.startOffset = original.startOffset
+  this.endOffset = original.endOffset
+  this.origin = IrDeclarationOrigin.DEFINED
+  this.visibility = DescriptorVisibilities.PUBLIC
+  this.modality = Modality.OPEN
+  this.isPrimary = true
+}
+
+/** Set up reasonable defaults for a generated class. */
+fun IrClassBuilder.initDefaults(original: IrElement) {
+  this.startOffset = original.startOffset
+  this.endOffset = original.endOffset
+  this.name = Name.special("<no name provided>")
+  this.visibility = DescriptorVisibilities.LOCAL
+}
+
+/** Set up reasonable defaults for a value parameter. */
+fun IrValueParameterBuilder.initDefaults(original: IrElement) {
+  this.startOffset = original.startOffset
+  this.endOffset = original.endOffset
+}
+
 fun IrConstructor.irConstructorBody(
   context: IrGeneratorContext,
   blockBody: DeclarationIrBuilder.(MutableList<IrStatement>) -> Unit
@@ -107,8 +134,8 @@ fun IrConstructor.irConstructorBody(
   val constructorIrBuilder = DeclarationIrBuilder(
     generatorContext = context,
     symbol = IrSimpleFunctionSymbolImpl(),
-    startOffset = SYNTHETIC_OFFSET,
-    endOffset = SYNTHETIC_OFFSET
+    startOffset = startOffset,
+    endOffset = endOffset
   )
   body = context.irFactory.createBlockBody(
     startOffset = constructorIrBuilder.startOffset,
@@ -155,8 +182,8 @@ fun IrSimpleFunction.irFunctionBody(
   blockBody: IrBlockBodyBuilder.() -> Unit
 ) {
   val bodyBuilder = IrBlockBodyBuilder(
-    startOffset = SYNTHETIC_OFFSET,
-    endOffset = SYNTHETIC_OFFSET,
+    startOffset = startOffset,
+    endOffset = endOffset,
     context = context,
     scope = Scope(scopeOwnerSymbol),
   )
@@ -211,8 +238,8 @@ fun irVal(
     parent = declaringClass
     correspondingPropertySymbol = result.symbol
     val initializerBuilder = IrBlockBuilder(
-      startOffset = SYNTHETIC_OFFSET,
-      endOffset = SYNTHETIC_OFFSET,
+      startOffset = declaringClass.startOffset,
+      endOffset = declaringClass.endOffset,
       context = pluginContext,
       scope = Scope(symbol),
     )
