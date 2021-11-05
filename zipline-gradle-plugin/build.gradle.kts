@@ -19,7 +19,7 @@ dependencies {
 
 buildConfig {
   val compilerPlugin = project(":zipline-kotlin-plugin")
-  val compilerPluginHosted = project(":zipline-kotlin-plugin:hosted")
+  val compilerPluginHosted = project(":zipline-kotlin-plugin:zipline-kotlin-plugin-hosted")
   packageName("app.cash.zipline.gradle")
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${Ext.kotlinPluginId}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_GROUP", "\"${compilerPlugin.group}\"")

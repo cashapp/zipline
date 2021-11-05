@@ -138,7 +138,7 @@ kotlin {
     targets.all {
       compilations.all {
         val pluginDependency = if (this is AbstractKotlinNativeCompilation) {
-          project(":zipline-kotlin-plugin:hosted")
+          project(":zipline-kotlin-plugin:zipline-kotlin-plugin-hosted")
         } else {
           project(":zipline-kotlin-plugin")
         }
