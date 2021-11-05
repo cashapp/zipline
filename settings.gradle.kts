@@ -4,7 +4,7 @@ include(":zipline")
 include(":zipline:testing")
 include(":zipline-gradle-plugin")
 include(":zipline-kotlin-plugin")
-include(":zipline-kotlin-plugin:hosted")
+include(":zipline-kotlin-plugin-hosted")
 include(":zipline-kotlin-plugin:tests")
 include(":zipline-tools")
 
