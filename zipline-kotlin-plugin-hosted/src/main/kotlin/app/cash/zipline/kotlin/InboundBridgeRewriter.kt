@@ -20,8 +20,6 @@ import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.backend.common.ir.isSuspend
-import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
-import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
@@ -40,7 +38,6 @@ import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irWhen
 import org.jetbrains.kotlin.ir.declarations.IrClass
-import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.declarations.IrFactory
 import org.jetbrains.kotlin.ir.declarations.IrProperty
@@ -61,7 +58,6 @@ import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
-import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.getPropertyGetter
@@ -194,8 +190,7 @@ internal class InboundBridgeRewriter(
   private fun irNewInboundBridge(): IrContainerExpression {
     val inboundBridgeOfT = ziplineApis.inboundBridge.typeWith(bridgedInterface.type)
     val inboundBridgeSubclass = irFactory.buildClass {
-      name = Name.special("<no name provided>")
-      visibility = DescriptorVisibilities.LOCAL
+      initDefaults(original)
     }.apply {
       superTypes = listOf(inboundBridgeOfT)
       createImplicitParameterDeclarationWithWrappedDescriptor()
@@ -204,9 +199,7 @@ internal class InboundBridgeRewriter(
     // InboundBridge<EchoService>()
     val superConstructor = ziplineApis.inboundBridge.constructors.single()
     val constructor = inboundBridgeSubclass.addConstructor {
-      origin = IrDeclarationOrigin.DEFINED
-      visibility = DescriptorVisibilities.PUBLIC
-      isPrimary = true
+      initDefaults(original)
     }.apply {
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
@@ -236,8 +229,8 @@ internal class InboundBridgeRewriter(
     )
 
     return IrBlockBodyBuilder(
-      startOffset = SYNTHETIC_OFFSET,
-      endOffset = SYNTHETIC_OFFSET,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
@@ -255,15 +248,16 @@ internal class InboundBridgeRewriter(
     // override fun create(context: Context): InboundCallHandler {
     // }
     val result = inboundBridgeSubclass.addFunction {
+      initDefaults(original)
       name = ziplineApis.inboundBridgeCreate.owner.name
-      visibility = DescriptorVisibilities.PUBLIC
-      modality = Modality.OPEN
       returnType = ziplineApis.inboundCallHandler.defaultType
     }.apply {
       addDispatchReceiver {
+        initDefaults(original)
         type = inboundBridgeSubclass.defaultType
       }
       addValueParameter {
+        initDefaults(original)
         name = Name.identifier("context")
         type = ziplineApis.inboundBridgeContext.defaultType
       }
@@ -293,17 +287,14 @@ internal class InboundBridgeRewriter(
     // }
     val inboundCallHandler = ziplineApis.inboundCallHandler.defaultType
     val inboundCallHandlerSubclass = irFactory.buildClass {
-      name = Name.special("<no name provided>")
-      visibility = DescriptorVisibilities.LOCAL
+      initDefaults(original)
     }.apply {
       superTypes = listOf(inboundCallHandler)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
     val constructor = inboundCallHandlerSubclass.addConstructor {
-      origin = IrDeclarationOrigin.DEFINED
-      visibility = DescriptorVisibilities.PUBLIC
-      isPrimary = true
+      initDefaults(original)
     }.apply {
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
@@ -357,8 +348,8 @@ internal class InboundBridgeRewriter(
     }
 
     return IrBlockBodyBuilder(
-      startOffset = SYNTHETIC_OFFSET,
-      endOffset = SYNTHETIC_OFFSET,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
@@ -380,16 +371,17 @@ internal class InboundBridgeRewriter(
       else -> ziplineApis.inboundCallHandlerCall
     }
     return inboundCallHandler.addFunction {
+      initDefaults(original)
       name = inboundBridgeCall.owner.name
-      visibility = DescriptorVisibilities.PUBLIC
-      modality = Modality.OPEN
       returnType = ziplineApis.stringArrayType
       isSuspend = callSuspending
     }.apply {
       addDispatchReceiver {
+        initDefaults(original)
         type = inboundCallHandler.defaultType
       }
       addValueParameter {
+        initDefaults(original)
         name = Name.identifier("inboundCall")
         type = ziplineApis.inboundCall.defaultType
       }

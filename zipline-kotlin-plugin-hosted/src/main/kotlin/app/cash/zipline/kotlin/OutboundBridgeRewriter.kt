@@ -19,9 +19,6 @@ import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
-import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
-import org.jetbrains.kotlin.descriptors.Modality
-import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.addDispatchReceiver
@@ -145,8 +142,7 @@ internal class OutboundBridgeRewriter(
   private fun irNewOutboundBridge(): IrContainerExpression {
     val outboundBridgeOfT = ziplineApis.outboundBridge.typeWith(bridgedInterface.type)
     val outboundBridgeSubclass = irFactory.buildClass {
-      name = Name.special("<no name provided>")
-      visibility = DescriptorVisibilities.LOCAL
+      initDefaults(original)
     }.apply {
       superTypes = listOf(outboundBridgeOfT)
       createImplicitParameterDeclarationWithWrappedDescriptor()
@@ -155,9 +151,7 @@ internal class OutboundBridgeRewriter(
     // OutboundBridge<EchoService>()
     val superConstructor = ziplineApis.outboundBridge.constructors.single()
     val constructor = outboundBridgeSubclass.addConstructor {
-      origin = IrDeclarationOrigin.DEFINED
-      visibility = DescriptorVisibilities.PUBLIC
-      isPrimary = true
+      initDefaults(original)
     }.apply {
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
@@ -178,15 +172,16 @@ internal class OutboundBridgeRewriter(
     // override fun create(callFactory: OutboundCall.Factory): EchoService {
     // }
     val createFunction = outboundBridgeSubclass.addFunction {
+      initDefaults(original)
       name = Name.identifier("create")
-      visibility = DescriptorVisibilities.PUBLIC
-      modality = Modality.OPEN
       returnType = bridgedInterface.type
     }.apply {
       addDispatchReceiver {
+        initDefaults(original)
         type = outboundBridgeSubclass.defaultType
       }
       addValueParameter {
+        initDefaults(original)
         name = Name.identifier("context")
         type = ziplineApis.outboundBridgeContext.defaultType
       }
@@ -204,8 +199,8 @@ internal class OutboundBridgeRewriter(
     }
 
     return IrBlockBodyBuilder(
-      startOffset = SYNTHETIC_OFFSET,
-      endOffset = SYNTHETIC_OFFSET,
+      startOffset = original.startOffset,
+      endOffset = original.endOffset,
       context = pluginContext,
       scope = scope.scope,
     ).irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
@@ -223,8 +218,7 @@ internal class OutboundBridgeRewriter(
     //   ...
     // }
     val clientImplementation = irFactory.buildClass {
-      name = Name.special("<no name provided>")
-      visibility = DescriptorVisibilities.LOCAL
+      initDefaults(original)
     }.apply {
       parent = createFunction
       superTypes = listOf(bridgedInterface.type)
@@ -232,9 +226,7 @@ internal class OutboundBridgeRewriter(
     }
 
     val constructor = clientImplementation.addConstructor {
-      origin = IrDeclarationOrigin.DEFINED
-      visibility = DescriptorVisibilities.PUBLIC
-      isPrimary = true
+      initDefaults(original)
     }
     constructor.irConstructorBody(pluginContext) { statements ->
       statements += irDelegatingConstructorCall(
@@ -276,20 +268,21 @@ internal class OutboundBridgeRewriter(
   ): IrSimpleFunction {
     val functionReturnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
     val result = addFunction {
+      initDefaults(original)
       name = bridgedFunction.name
-      visibility = DescriptorVisibilities.PUBLIC
-      modality = Modality.OPEN
       isSuspend = bridgedFunction.isSuspend
       returnType = functionReturnType
     }.apply {
       overriddenSymbols = listOf(bridgedFunction.symbol)
       addDispatchReceiver {
+        initDefaults(original)
         type = defaultType
       }
     }
 
     for (valueParameter in bridgedFunction.valueParameters) {
       result.addValueParameter {
+        initDefaults(original)
         name = valueParameter.name
         type = bridgedInterface.resolveTypeParameters(valueParameter.type)
       }
