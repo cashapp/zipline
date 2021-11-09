@@ -1,7 +1,7 @@
 # Zipline
 
 This library streamlines using Kotlin/JS libraries from Kotlin/JVM and Kotlin/Native programs. It
-makes it possible to do continuously deployment of mobile apps, just like we do for servers and web
+makes it possible to do continuous deployment of mobile apps, just like we do for servers and web
 applications.
 
 It'd be simpler to do continuous deploys via the App Store & Play Store! But that process is too
