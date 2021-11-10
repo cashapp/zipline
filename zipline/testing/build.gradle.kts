@@ -66,8 +66,6 @@ kotlin {
 tasks {
   withType(KotlinJsCompile::class.java).all {
     kotlinOptions {
-//      sourceMap = true
-//      sourceMapEmbedSources = "always"
       freeCompilerArgs += listOf("-Xir-per-module")
     }
   }
