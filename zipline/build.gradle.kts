@@ -37,10 +37,9 @@ abstract class VersionWriterTask : DefaultTask() {
 val versionWriterTaskProvider = tasks.register("writeVersion", VersionWriterTask::class)
 
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
-  // Development is not minified and has useful stack traces.
-  dependsOn(":zipline:testing:jsBrowserDevelopmentWebpack")
+  dependsOn(":zipline:testing:compileDevelopmentLibraryKotlinJs")
   destinationDir = buildDir.resolve("generated/testingJs")
-  from(projectDir.resolve("testing/build/developmentExecutable/testing.js"))
+  from(projectDir.resolve("testing/build/compileSync/main/developmentLibrary/kotlin"))
 }
 
 kotlin {

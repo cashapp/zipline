@@ -18,11 +18,25 @@ package app.cash.zipline
 import java.io.BufferedReader
 import kotlin.reflect.KClass
 
+/** Load our testing libraries into QuickJS. */
 fun Zipline.loadTestingJs() {
-  val testingJs = Zipline::class.java.getResourceAsStream("/testing.js")!!
+  // TODO: currently our module loader requires modules to be topologically-sorted and loaded leaves
+  //     first. We could use some easier-to-use abstractions here.
+  loadJsModuleFromResource("./kotlin-kotlin-stdlib-js-ir.js")
+  loadJsModuleFromResource("./88b0986a7186d029-atomicfu-js-ir.js")
+  loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-core-js-ir.js")
+  loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-json-js-ir.js")
+  loadJsModuleFromResource("./kotlinx.coroutines-kotlinx-coroutines-core-js-ir.js")
+  loadJsModuleFromResource("./zipline-root-zipline.js")
+  loadJsModuleFromResource("./zipline-root-testing.js")
+  quickJs.evaluate("globalThis['testing'] = require('./zipline-root-testing.js');")
+}
+
+private fun Zipline.loadJsModuleFromResource(fileName: String) {
+  val fileJs = Zipline::class.java.getResourceAsStream(fileName.removePrefix("."))!!
     .bufferedReader()
     .use(BufferedReader::readText)
-  quickJs.evaluate(testingJs, "testing.js")
+  loadJsModule(fileJs, fileName)
 }
 
 operator fun <T : Any> QuickJs.set(name: String, type: KClass<T>, instance: T) {

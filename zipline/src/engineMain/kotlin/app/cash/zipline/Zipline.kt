@@ -24,9 +24,9 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
-import app.cash.zipline.internal.bridge.inboundChannelName
-import app.cash.zipline.internal.bridge.outboundChannelName
 import app.cash.zipline.internal.consoleName
+import app.cash.zipline.internal.currentModuleId
+import app.cash.zipline.internal.defineJs
 import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
 import kotlinx.coroutines.CoroutineDispatcher
@@ -141,6 +141,12 @@ actual class Zipline private constructor(
     quickJs.close()
   }
 
+  fun loadJsModule(script: String, id: String) {
+    quickJs.evaluate("globalThis.$currentModuleId = '$id';")
+    quickJs.evaluate(script, id)
+    quickJs.evaluate("delete globalThis.$currentModuleId;")
+  }
+
   companion object {
     fun create(
       dispatcher: CoroutineDispatcher,
@@ -149,6 +155,7 @@ actual class Zipline private constructor(
       val quickJs = QuickJs.create()
       // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
       quickJs.maxStackSize = 0L
+      quickJs.evaluate(defineJs, "define.js")
 
       val scope = CoroutineScope(dispatcher)
       return Zipline(quickJs, scope)
