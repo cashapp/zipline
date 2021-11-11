@@ -66,6 +66,7 @@ $dokka.location:app.cash.zipline/Zipline///PointingToDeclaration/zipline/app.ca
 $dokka.location:app.cash.zipline/Zipline/clientNames/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/client-names.html
 $dokka.location:app.cash.zipline/Zipline/close/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/close.html
 $dokka.location:app.cash.zipline/Zipline/get/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-zipline/get.html
+$dokka.location:app.cash.zipline/Zipline/loadJsModule/#kotlin.String#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-zipline/load-js-module.html
 $dokka.location:app.cash.zipline/Zipline/quickJs/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/quick-js.html
 $dokka.location:app.cash.zipline/Zipline/serializersModule/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/serializers-module.html
 $dokka.location:app.cash.zipline/Zipline/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/service-names.html
