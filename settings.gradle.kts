@@ -7,6 +7,7 @@ include(":zipline-kotlin-plugin")
 include(":zipline-kotlin-plugin-hosted")
 include(":zipline-kotlin-plugin:tests")
 include(":zipline-tools")
+include(":zipline-bytecode")
 
 include(":samples:emoji-search")
 include(":samples:emoji-search:presenters")
