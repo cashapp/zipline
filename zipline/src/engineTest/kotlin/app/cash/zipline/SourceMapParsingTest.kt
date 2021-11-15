@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.SourceMapParser
+import app.cash.zipline.internal.SourceMap
 import app.cash.zipline.internal.readVarint
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -24,7 +24,7 @@ import okio.Buffer
 import okio.FileSystem
 import okio.Path.Companion.toPath
 
-class SourceMapParserTest {
+class SourceMapParsingTest {
   @Test fun simpleSourceMap() {
     val sourceMapJson = """
       {
@@ -108,7 +108,7 @@ class SourceMapParserTest {
   ): String {
     return buildString {
       for (element in stackTrace) {
-        val sourceMap = SourceMapParser().parse(sourceMapJsonLoader.invoke(element))
+        val sourceMap = SourceMap.parse(sourceMapJsonLoader.invoke(element))
         val segment = sourceMap.find(element.lineNumber)
         appendLine(
           "at ${element.line} ${segment?.source ?: element.fileName}:${segment?.sourceLine}"
