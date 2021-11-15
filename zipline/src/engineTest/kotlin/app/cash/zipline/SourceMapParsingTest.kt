@@ -15,15 +15,49 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.Segment
 import app.cash.zipline.internal.SourceMap
 import app.cash.zipline.internal.readVarint
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import okio.Buffer
 
 class SourceMapParsingTest {
   @Test fun simpleSourceMap() {
+    // main.kt
+    //
+    // 1   fun main() {
+    // 2     val hello = "Hello world!"
+    // 3     console.log(hello)
+    // 4   }
+
+    // kotlin-js-demo.js
+    //
+    // 1   (function (root, factory) {
+    // 2     if (typeof define === 'function' && define.amd)
+    // 3       define(['exports', 'kotlin'], factory);
+    // 4     else if (typeof exports === 'object')
+    // 5       factory(module.exports, require('kotlin'));
+    // 6     else {
+    // 7       if (typeof kotlin === 'undefined') {
+    // 8         throw new Error("Error loading module 'kotlin-js-demo'. Its dependency 'kotlin' was not found. Please, check whether 'kotlin' is loaded prior to 'kotlin-js-demo'.");
+    // 9       }root['kotlin-js-demo'] = factory(typeof this['kotlin-js-demo'] === 'undefined' ? {} : this['kotlin-js-demo'], kotlin);
+    // 10    }
+    // 11  }(this, function (_, Kotlin) {
+    // 12    'use strict';
+    // 13    function main() {
+    // 14      var hello = 'Hello world!';
+    // 15      console.log(hello);
+    // 16    }
+    // 17    _.main = main;
+    // 18    main();
+    // 19    Kotlin.defineModule('kotlin-js-demo', _);
+    // 20    return _;
+    // 21  }));
+
+    // kotlin-js-demo.js.map
     val sourceMapJson = """
       {
         "version": 3,
@@ -38,21 +72,24 @@ class SourceMapParsingTest {
         "mappings": ";;;;;;;;;;;;EAAA,gB;IACE,YAAY,c;IACZ,OAAQ,KAAI,KAAJ,C;EACV,C;;;;;;"
       }
       """.trimIndent()
-    val element = Element(
-      line = "<anonymous>",
-      fileName = "demo.js",
-      lineNumber = 14,
-    )
 
+    val sourceMap = SourceMap.parse(sourceMapJson)
+    assertEquals(3, sourceMap.version)
+    assertEquals("kotlin-js-demo.js", sourceMap.file)
+
+    // Matches line 2 in the source file.
     assertEquals(
-      """
-      at <anonymous> ../../../../../src/main/kotlin/main.kt:2
-      """.trimIndent(),
-      decodeStackTrace(
-        stackTrace = listOf(element),
-        sourceMapJsonLoader = { sourceMapJson },
-      )
+      Segment(
+        startingColumn = 5,
+        source = "../../../../../src/main/kotlin/main.kt",
+        sourceLine = 2,
+        sourceColumn = 3,
+        name = null,
+      ),
+      sourceMap.find(lineNumber = 14)
     )
+    // Doesn't match any lines in the source file.
+    assertNull(sourceMap.find(lineNumber = 17))
   }
 
   @Test fun readVarints() {
@@ -63,25 +100,4 @@ class SourceMapParsingTest {
     assertEquals(4L, buffer.readVarint())
     assertTrue(buffer.exhausted())
   }
-
-  private fun decodeStackTrace(
-    stackTrace: List<Element>,
-    sourceMapJsonLoader: (Element) -> String,
-  ): String {
-    return buildString {
-      for (element in stackTrace) {
-        val sourceMap = SourceMap.parse(sourceMapJsonLoader.invoke(element))
-        val segment = sourceMap.find(element.lineNumber)
-        appendLine(
-          "at ${element.line} ${segment?.source ?: element.fileName}:${segment?.sourceLine}"
-        )
-      }
-    }.trim()
-  }
-
-  class Element(
-    val line: String,
-    val fileName: String,
-    val lineNumber: Int
-  )
 }
