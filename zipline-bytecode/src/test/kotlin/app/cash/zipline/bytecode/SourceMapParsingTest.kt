@@ -13,16 +13,13 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package app.cash.zipline
+package app.cash.zipline.bytecode
 
-import app.cash.zipline.internal.Segment
-import app.cash.zipline.internal.SourceMap
-import app.cash.zipline.internal.readVarint
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import okio.Buffer
+import org.junit.Test
 
 class SourceMapParsingTest {
   @Test fun simpleSourceMap() {

@@ -16,36 +16,58 @@
 package app.cash.zipline.bytecode
 
 /**
- * Maps each commonly-used string to an integer index for performance. Strings built into QuickJS
- * are assigned an index statically; user-provided strings get an index dynamically.
+ * Maps each commonly-used string to an integer ID for performance. Strings built into QuickJS
+ * are assigned an ID statically; user-provided strings get an ID dynamically.
  *
  * When encoding an object, built-in strings are not encoded.
  */
-class AtomSet(
+interface AtomSet {
   val strings: List<String>
-) {
-  private val stringToIndex = mutableMapOf<String, Int>()
+  fun get(id: Int): String
+  fun idOf(value: String): Int
+  fun toMutableAtomSet(): MutableAtomSet
+}
+
+class MutableAtomSet(
+  strings: List<String>
+) : AtomSet {
+  private val _strings = strings.toMutableList()
+  private val stringToId = mutableMapOf<String, Int>()
 
   init {
     for ((index, string) in BUILT_IN_ATOMS.withIndex()) {
-      stringToIndex[string] = index
+      stringToId[string] = index
     }
     for ((index, string) in strings.withIndex()) {
-      stringToIndex[string] = index + BUILT_IN_ATOMS.size
+      stringToId[string] = index + BUILT_IN_ATOMS.size
     }
   }
 
-  fun get(value: Int): String {
+  override val strings: List<String> = _strings
+
+  override fun get(id: Int): String {
     return when {
-      value < BUILT_IN_ATOMS.size -> BUILT_IN_ATOMS[value]
-      else -> strings[value - BUILT_IN_ATOMS.size]
+      id < BUILT_IN_ATOMS.size -> BUILT_IN_ATOMS[id]
+      else -> _strings[id - BUILT_IN_ATOMS.size]
     }
   }
 
-  fun indexOf(value: String): Int {
-    val result = stringToIndex[value]
+  override fun idOf(value: String): Int {
+    val result = stringToId[value]
     return result ?: throw IllegalArgumentException("not an atom: $value")
   }
+
+  /** Returns true if [string] was added to this set. */
+  fun add(string: String): Boolean {
+    if (stringToId[string] != null) return false
+
+    val newIndex = BUILT_IN_ATOMS.size + _strings.size
+    _strings += string
+    stringToId[string] = newIndex
+    return true
+  }
+
+  override fun toMutableAtomSet(): MutableAtomSet = MutableAtomSet(_strings)
 }
 
 /** This is computed dynamically at QuickJS boot, and depends on build flags. */

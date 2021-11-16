@@ -20,6 +20,9 @@ import okio.BufferedSource
 import okio.IOException
 
 @Suppress("NOTHING_TO_INLINE") // Syntactic sugar.
+internal inline infix fun Byte.shl(other: Int): Int = toInt() shl other
+
+@Suppress("NOTHING_TO_INLINE") // Syntactic sugar.
 internal inline infix fun Byte.and(other: Int): Int = toInt() and other
 
 /** Like QuickJS' `bc_get_flags` where n is 1. */
