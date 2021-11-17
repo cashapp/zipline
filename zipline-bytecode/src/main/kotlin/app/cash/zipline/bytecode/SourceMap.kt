@@ -13,7 +13,7 @@
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package app.cash.zipline.internal
+package app.cash.zipline.bytecode
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -49,7 +49,10 @@ internal data class SourceMap(
   val sourcesContent: List<String?>,
   val groups: List<Group>,
 ) {
-  fun find(lineNumber: Int): Segment? = groups[lineNumber - 1].segments.firstOrNull()
+  fun find(lineNumber: Int): Segment? {
+    if (lineNumber < 1 || lineNumber > groups.size) return null
+    return groups[lineNumber - 1].segments.firstOrNull()
+  }
 
   companion object {
     /**
@@ -170,9 +173,3 @@ internal fun BufferedSource.readBase64Character(): Int {
     else -> throw IOException("Unexpected character")
   }
 }
-
-@Suppress("NOTHING_TO_INLINE") // Syntactic sugar.
-internal inline infix fun Byte.and(other: Int): Int = toInt() and other
-
-@Suppress("NOTHING_TO_INLINE") // Syntactic sugar.
-internal inline infix fun Byte.shl(other: Int): Int = toInt() shl other

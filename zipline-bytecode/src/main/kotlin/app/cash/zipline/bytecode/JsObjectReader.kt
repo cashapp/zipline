@@ -44,7 +44,7 @@ class JsObjectReader(
     for (i in 0 until atomCount) {
       result += readJsString()
     }
-    return AtomSet(result)
+    return MutableAtomSet(result)
   }
 
   private fun readJsString(): String {

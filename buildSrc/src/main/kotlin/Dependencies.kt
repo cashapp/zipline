@@ -23,6 +23,7 @@ object Dependencies {
   val kotlinGradlePlugin = "org.jetbrains.kotlin:kotlin-gradle-plugin:${baseKotlin}"
   val kotlinReflect = "org.jetbrains.kotlin:kotlin-reflect"
   val kotlinSerialization = "org.jetbrains.kotlin:kotlin-serialization:${baseKotlin}"
+  val kotlinTest = "org.jetbrains.kotlin:kotlin-test"
   val kotlinxCoroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt"
   val kotlinxCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2-native-mt"
   val kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.0"

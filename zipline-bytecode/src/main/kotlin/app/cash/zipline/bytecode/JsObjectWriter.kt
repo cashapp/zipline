@@ -119,7 +119,7 @@ class JsObjectWriter(
   }
 
   private fun writeAtom(value: String) {
-    val valueAndType = atoms.indexOf(value) shl 1
+    val valueAndType = atoms.idOf(value) shl 1
     sink.writeLeb128(valueAndType)
   }
 
