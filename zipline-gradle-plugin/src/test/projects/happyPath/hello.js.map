@@ -1,0 +1,13 @@
+{
+  "version": 3,
+  "sources": [
+    "throwException.kt",
+    "<js-code>"
+  ],
+  "sourcesContent": [
+    null,
+    null
+  ],
+  "names": [],
+  "mappings": ";;;;;;;;;;IAEE,S;;;IAGA,S;;;IAGA,S;;;IAGA,MCXI,KAAK,CAAC,OAAD,C;;;;;"
+}

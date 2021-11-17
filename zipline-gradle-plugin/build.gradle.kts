@@ -13,8 +13,11 @@ plugins {
 dependencies {
   implementation(kotlin("gradle-plugin-api"))
   implementation(project(":zipline"))
+  implementation(project(":zipline-bytecode"))
   implementation(Dependencies.okio)
   testImplementation(Dependencies.junit)
+  testImplementation(Dependencies.kotlinTest)
+  testImplementation(Dependencies.truth)
 }
 
 buildConfig {
