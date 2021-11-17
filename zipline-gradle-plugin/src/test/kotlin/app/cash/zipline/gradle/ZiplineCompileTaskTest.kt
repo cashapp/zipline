@@ -15,7 +15,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ZiplineCompileTaskTest {
-  var quickJs: QuickJs? = null
+  private var quickJs: QuickJs? = null
 
   @After
   fun tearDown() {
@@ -23,18 +23,49 @@ class ZiplineCompileTaskTest {
   }
 
   @Test
-  fun `write to and read from a zipline file`() {
+  fun `write to and read from zipline`() {
     val rootProject = File("src/test/projects/happyPath")
+    val ziplineDir = File("$rootProject/build/zipline")
 
+    runGradleCompileZiplineTask(rootProject)
+
+    assertEquals(rootProject.listFiles()!!.size/2, ziplineDir.listFiles()?.size ?: 0)
+
+    ziplineDir.listFiles()!!.forEach { ziplineFile ->
+      assertFileWithSourceMap(ziplineFile)
+    }
+  }
+
+  @Test
+  fun `no source map`() {
+    val rootProject = File("src/test/projects/happyPathNoSourceMap")
+    val ziplineDir = File("$rootProject/build/zipline")
+
+    runGradleCompileZiplineTask(rootProject)
+
+    assertEquals(rootProject.listFiles()!!.size/2, ziplineDir.listFiles()?.size ?: 0)
+
+    ziplineDir.listFiles()!!.forEach { ziplineFile ->
+      assertFileWithoutSourceMap(ziplineFile)
+    }
+  }
+
+  private fun runGradleCompileZiplineTask(
+    rootProject: File
+  ) {
+    val taskName = "compileZipline"
     val gradleRunner = GradleRunner.create()
       .withPluginClasspath()
-      .withArguments("--info", "--stacktrace", "compileHello")
+      .withArguments("--info", "--stacktrace", taskName)
       .withProjectDir(rootProject)
 
     val result = gradleRunner.build()
-    assertEquals(TaskOutcome.SUCCESS, result.task(":compileHello")!!.outcome)
+    assertEquals(TaskOutcome.SUCCESS, result.task(":$taskName")!!.outcome)
+  }
 
-    val ziplineFile = File("$rootProject/build/zipline/hello.zipline")
+  private fun assertFileWithSourceMap(
+    ziplineFile: File
+  ) {
     val readZiplineFile = ziplineFile.source().buffer().use { source ->
       ZiplineFileReader().read(source)
     }
@@ -56,19 +87,7 @@ class ZiplineCompileTaskTest {
       |""".trimMargin())
   }
 
-  @Test
-  fun `no source map`() {
-    val rootProject = File("src/test/projects/happyPathNoSourceMap")
-
-    val gradleRunner = GradleRunner.create()
-      .withPluginClasspath()
-      .withArguments("--info", "--stacktrace", "compileHello")
-      .withProjectDir(rootProject)
-
-    val result = gradleRunner.build()
-    assertEquals(TaskOutcome.SUCCESS, result.task(":compileHello")!!.outcome)
-
-    val ziplineFile = File("$rootProject/build/zipline/hello.zipline")
+  private fun assertFileWithoutSourceMap(ziplineFile: File) {
     val readZiplineFile = ziplineFile.source().buffer().use { source ->
       ZiplineFileReader().read(source)
     }

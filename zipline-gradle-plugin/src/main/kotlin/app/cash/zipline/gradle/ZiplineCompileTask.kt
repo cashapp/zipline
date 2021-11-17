@@ -10,47 +10,62 @@ import okio.ByteString.Companion.toByteString
 import okio.buffer
 import okio.sink
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.InputFile
-import org.gradle.api.tasks.Optional
-import org.gradle.api.tasks.OutputFile
-
+import org.gradle.api.tasks.InputDirectory
+import org.gradle.api.tasks.OutputDirectory
 
 open class ZiplineCompileTask : DefaultTask() {
-  @InputFile
-  var inputJs: File? = null
+  @InputDirectory
+  var inputDir: File? = null
 
-  @InputFile
-  @Optional
-  var inputSourceMap: File? = null
-
-  @OutputFile
-  var outputZipline: File? = null
+  @OutputDirectory
+  var outputDir: File? = null
 
   init {
     super.doLast {
-      if (inputJs == null) {
-        logger.info("inputJs file null")
+      if (inputDir == null) {
+        logger.info("inputDirectory file null")
         return@doLast
       }
 
-      if (outputZipline == null) {
-        logger.info("outputZipline file null")
+      if (outputDir == null) {
+        logger.info("outputDirectory file null")
         return@doLast
       }
 
-      val inputJavaScript = inputJs!!.readText()
-      val quickJs = QuickJs.create()
-      var bytecode = quickJs.compile(inputJavaScript, inputJs!!.name)
-      inputSourceMap?.let {
-        // rewrite the bytecode with source line numbers
-        bytecode = applySourceMapToBytecode(bytecode, it.readText())
+      if (inputDir != null && outputDir != null) {
+        val files = inputDir!!.listFiles()
+        files!!.forEach { jsFile ->
+          if (jsFile.path.endsWith(".js")) {
+            val jsSourceMapFile = files.singleOrNull { smp -> smp.path == "${jsFile.path}.map" }
+            // TODO name the zipline as the SHA of the source code, only compile a new file when the SHA changes
+            compileFile(
+              inputJs = jsFile,
+              inputJsSourceMap = jsSourceMapFile,
+              outputZipline = File(outputDir!!.path, jsFile.nameWithoutExtension + ".zipline")
+            )
+          }
+        }
       }
-      val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode.toByteString())
+    }
+  }
 
-      // Use executes block then closes the sink.
-      outputZipline!!.sink().buffer().use {
-        ZiplineFileWriter(ziplineFile).write(it)
-      }
+  private fun compileFile(
+    inputJs: File,
+    inputJsSourceMap: File?,
+    outputZipline: File
+  ) {
+    val quickJs = QuickJs.create()
+    var bytecode = quickJs.compile(inputJs.readText(), inputJs.name)
+    quickJs.close()
+    if (inputJsSourceMap != null) {
+      // rewrite the bytecode with source line numbers
+      bytecode = applySourceMapToBytecode(bytecode, inputJsSourceMap.readText())
+    }
+    val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode.toByteString())
+
+    // Use executes block then closes the sink.
+    outputZipline.sink().buffer().use {
+      ZiplineFileWriter(ziplineFile).write(it)
     }
   }
 }

@@ -4,7 +4,7 @@ plugins {
   id("app.cash.zipline")
 }
 
-val compileHello by tasks.creating(ZiplineCompileTask::class) {
-  inputJs = file("$projectDir/hello.js")
-  outputZipline = file("$buildDir/zipline/hello.zipline")
+val compileZipline by tasks.creating(ZiplineCompileTask::class) {
+  inputDir = file("$projectDir/jsBuild")
+  outputDir = file("$buildDir/zipline")
 }

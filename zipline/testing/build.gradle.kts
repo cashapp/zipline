@@ -13,7 +13,9 @@ kotlin {
 
   js {
     browser()
+    // TODO upstream this to ZiplinePlugin
     binaries.library()
+    binaries.executable()
   }
 
   linuxX64()
@@ -63,6 +65,7 @@ kotlin {
   }
 }
 
+// TODO upstream this to ZiplinePlugin
 tasks {
   withType(KotlinJsCompile::class.java).all {
     kotlinOptions {
