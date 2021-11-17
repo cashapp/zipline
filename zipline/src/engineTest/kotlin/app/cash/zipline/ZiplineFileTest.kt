@@ -1,12 +1,28 @@
+/*
+ * Copyright (C) 2021 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.cash.zipline
 
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import okio.Buffer
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
 import okio.IOException
-import org.junit.Test
 
 class ZiplineFileTest {
   private val bytecode = "sample bytecode".encodeUtf8()
@@ -15,8 +31,8 @@ class ZiplineFileTest {
   fun encodeAndDecode() {
     val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode)
     val buffer = Buffer()
-    ZiplineFileWriter(ziplineFile).write(buffer)
-    val decodedZiplineFile = ZiplineFileReader().read(buffer)
+    ziplineFile.writeTo(buffer)
+    val decodedZiplineFile = ZiplineFile.read(buffer)
     assertEquals(CURRENT_ZIPLINE_VERSION, decodedZiplineFile.ziplineVersion)
     assertEquals(bytecode, decodedZiplineFile.quickjsBytecode)
   }
@@ -26,7 +42,7 @@ class ZiplineFileTest {
     val goldenFile =
       "5a49504c494e45000134654c000000010000000f73616d706c652062797465636f6465".decodeHex()
     val buffer = Buffer().write(goldenFile)
-    val decodedZiplineFile = ZiplineFileReader().read(buffer)
+    val decodedZiplineFile = ZiplineFile.read(buffer)
     assertEquals(CURRENT_ZIPLINE_VERSION, decodedZiplineFile.ziplineVersion)
     assertEquals(bytecode, decodedZiplineFile.quickjsBytecode)
   }
@@ -42,7 +58,7 @@ class ZiplineFileTest {
     buffer.writeInt(9999) // Section 9999 is unlikely
     buffer.writeInt(5) // Section 9999 length
     buffer.writeUtf8("hello")
-    val decodedZiplineFile = ZiplineFileReader().read(buffer)
+    val decodedZiplineFile = ZiplineFile.read(buffer)
     assertEquals(CURRENT_ZIPLINE_VERSION, decodedZiplineFile.ziplineVersion)
     assertEquals(bytecode, decodedZiplineFile.quickjsBytecode)
   }
@@ -54,9 +70,9 @@ class ZiplineFileTest {
       "5a49504c494e45000134654e000000010000000f73616d706c652062797465636f6465".decodeHex()
     val buffer = Buffer().write(goldenFile)
     val e = assertFailsWith<IOException> {
-      ZiplineFileReader().read(buffer)
+      ZiplineFile.read(buffer)
     }
-    assertEquals("unsupported version: 20211022", e.message)
+    assertEquals("unsupported version [version=20211022][currentVersion=20211020]", e.message)
   }
 
   @Test
@@ -66,7 +82,7 @@ class ZiplineFileTest {
       "5a49504c494e45000134654c000000010000000f73616d706c652062797465636f64".decodeHex()
     val buffer = Buffer().write(goldenFile)
     assertFailsWith<IOException> {
-      ZiplineFileReader().read(buffer)
+      ZiplineFile.read(buffer)
     }
   }
 
@@ -74,7 +90,7 @@ class ZiplineFileTest {
   fun decodeNonZiplineFileCrashes() {
     val buffer = Buffer().writeUtf8("function hello() { };")
     val e = assertFailsWith<IOException> {
-      ZiplineFileReader().read(buffer)
+      ZiplineFile.read(buffer)
     }
     assertEquals("not a zipline file", e.message)
   }
@@ -84,7 +100,7 @@ class ZiplineFileTest {
     val goldenFile = "5a49504c494e45000134654c".decodeHex()
     val buffer = Buffer().write(goldenFile)
     val e = assertFailsWith<IOException> {
-      ZiplineFileReader().read(buffer)
+      ZiplineFile.read(buffer)
     }
     assertEquals("QuickJS bytecode section missing", e.message)
   }
