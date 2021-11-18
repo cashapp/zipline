@@ -39,23 +39,3 @@ fun callSupService(message: String): String {
   val echoResponse = supService.echo(EchoRequest(message))
   return "JavaScript received '${echoResponse.message}' from the JVM"
 }
-
-class JsThrowingEchoService : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    goBoom3()
-  }
-  private fun goBoom3(): Nothing {
-    goBoom2()
-  }
-  private fun goBoom2(): Nothing {
-    goBoom1()
-  }
-  private fun goBoom1(): Nothing {
-    throw IllegalStateException("boom!")
-  }
-}
-
-@JsExport
-fun prepareThrowingJsBridges() {
-  zipline.set<EchoService>("helloService", JsThrowingEchoService())
-}

@@ -82,11 +82,11 @@ internal object ThrowableSerializer : KSerializer<Throwable> {
   override val descriptor = PrimitiveSerialDescriptor("ZiplineThrowable", PrimitiveKind.STRING)
 
   override fun serialize(encoder: Encoder, value: Throwable) {
-    encoder.encodeString(value.stackTraceToString())
+    encoder.encodeString(toOutboundString(value))
   }
 
   override fun deserialize(decoder: Decoder): Throwable {
-    return Exception(decoder.decodeString())
+    return toInboundThrowable(decoder.decodeString())
   }
 }
 
