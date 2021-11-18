@@ -91,7 +91,7 @@ class ZiplineCompileTaskTest {
     quickJs = QuickJs.create()
     quickJs!!.execute(readZiplineFile.quickjsBytecode.toByteArray())
     val exception = assertFailsWith<Exception> {
-      quickJs!!.evaluate("demo.sayHello()")
+      quickJs!!.evaluate("demo.sayHello()", "test.js")
     }
     // .kt files in the stacktrace means that the sourcemap was applied correctly.
     assertThat(exception.stackTraceToString()).startsWith("""
@@ -100,7 +100,7 @@ class ZiplineCompileTaskTest {
       |	at JavaScript.goBoom2(throwException.kt:9)
       |	at JavaScript.goBoom3(throwException.kt:6)
       |	at JavaScript.sayHello(throwException.kt:3)
-      |	at JavaScript.<eval>(?)
+      |	at JavaScript.<eval>(test.js)
       |""".trimMargin())
   }
 

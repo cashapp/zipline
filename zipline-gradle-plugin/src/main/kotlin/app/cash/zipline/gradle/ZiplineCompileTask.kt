@@ -25,49 +25,45 @@ import okio.ByteString.Companion.toByteString
 import okio.buffer
 import okio.sink
 import org.gradle.api.DefaultTask
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import org.gradle.work.Incremental
 
-abstract class ZiplineCompileTask : DefaultTask() {
+open class ZiplineCompileTask : DefaultTask() {
   // TODO handle incremental and skip the quickjs compile when incremental
   // https://docs.gradle.org/current/userguide/custom_tasks.html#incremental_tasks
   // https://docs.gradle.org/current/userguide/lazy_configuration.html#working_with_files_in_lazy_properties
-  @get:Incremental
-  @get:InputDirectory
-  abstract val inputDir: DirectoryProperty
+  // @get:Incremental
+  @InputDirectory
+  var inputDir: File? = null
 
-  @get:OutputDirectory
-  abstract val outputDir: DirectoryProperty
+  @OutputDirectory
+  var outputDir: File? = null
 
   private lateinit var quickJs: QuickJs
 
   @TaskAction
   fun task() {
-    if (!inputDir.isPresent) {
+    if (inputDir == null) {
       logger.info("inputDirectory file null")
       return
     }
 
-    if (!outputDir.isPresent) {
+    if (outputDir == null) {
       logger.info("outputDirectory file null")
       return
     }
 
-    if (inputDir.isPresent && outputDir.isPresent) {
-      val files = inputDir.files().files
-      files.forEach { jsFile ->
-        if (jsFile.path.endsWith(".js")) {
-          val jsSourceMapFile = files.singleOrNull { smp -> smp.path == "${jsFile.path}.map" }
-          // TODO name the zipline as the SHA of the source code, only compile a new file when the SHA changes
-          compileFile(
-            inputJs = jsFile,
-            inputJsSourceMap = jsSourceMapFile,
-            outputZipline = File(outputDir.get().asFile.path, jsFile.nameWithoutExtension + ".zipline")
-          )
-        }
+    val files = inputDir!!.listFiles()
+    files!!.forEach { jsFile ->
+      if (jsFile.path.endsWith(".js")) {
+        val jsSourceMapFile = files.singleOrNull { smp -> smp.path == "${jsFile.path}.map" }
+        // TODO name the zipline as the SHA of the source code, only compile a new file when the SHA changes
+        compileFile(
+          inputJs = jsFile,
+          inputJsSourceMap = jsSourceMapFile,
+          outputZipline = File(outputDir!!.path, jsFile.nameWithoutExtension + ".zipline")
+        )
       }
     }
   }

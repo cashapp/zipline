@@ -5,6 +5,6 @@ plugins {
 }
 
 val compileZipline by tasks.creating(ZiplineCompileTask::class) {
-  inputDir.set(file("$projectDir/jsBuild"))
-  outputDir.set(file("$buildDir/zipline"))
+  inputDir = file("$projectDir/jsBuild")
+  outputDir = file("$buildDir/zipline")
 }
