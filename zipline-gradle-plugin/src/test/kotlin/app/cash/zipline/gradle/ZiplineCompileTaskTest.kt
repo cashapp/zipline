@@ -1,8 +1,24 @@
+/*
+ * Copyright (C) 2021 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.cash.zipline.gradle
 
 import app.cash.zipline.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.QuickJs
-import app.cash.zipline.ZiplineFileReader
+import app.cash.zipline.ZiplineFile
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import kotlin.test.assertFailsWith
@@ -15,7 +31,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class ZiplineCompileTaskTest {
-  var quickJs: QuickJs? = null
+  private var quickJs: QuickJs? = null
 
   @After
   fun tearDown() {
@@ -23,27 +39,59 @@ class ZiplineCompileTaskTest {
   }
 
   @Test
-  fun `write to and read from a zipline file`() {
+  fun `write to and read from zipline`() {
     val rootProject = File("src/test/projects/happyPath")
+    val ziplineDir = File("$rootProject/build/zipline")
 
+    runGradleCompileZiplineTask(rootProject)
+
+    assertEquals(rootProject.listFiles()!!.size/2, ziplineDir.listFiles()?.size ?: 0)
+
+    ziplineDir.listFiles()!!.forEach { ziplineFile ->
+      assertFileWithSourceMap(ziplineFile)
+    }
+  }
+
+  @Test
+  fun `no source map`() {
+    val rootProject = File("src/test/projects/happyPathNoSourceMap")
+    val ziplineDir = File("$rootProject/build/zipline")
+
+    runGradleCompileZiplineTask(rootProject)
+
+    assertEquals(rootProject.listFiles()!!.size/2, ziplineDir.listFiles()?.size ?: 0)
+
+    ziplineDir.listFiles()!!.forEach { ziplineFile ->
+      assertFileWithoutSourceMap(ziplineFile)
+    }
+  }
+
+  private fun runGradleCompileZiplineTask(
+    rootProject: File
+  ) {
+    val taskName = "compileZipline"
     val gradleRunner = GradleRunner.create()
       .withPluginClasspath()
-      .withArguments("--info", "--stacktrace", "compileHello")
+      .withArguments("--info", "--stacktrace", taskName)
       .withProjectDir(rootProject)
 
     val result = gradleRunner.build()
-    assertEquals(TaskOutcome.SUCCESS, result.task(":compileHello")!!.outcome)
+    assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+      .contains(result.task(":$taskName")!!.outcome)
+  }
 
-    val ziplineFile = File("$rootProject/build/zipline/hello.zipline")
+  private fun assertFileWithSourceMap(
+    ziplineFile: File
+  ) {
     val readZiplineFile = ziplineFile.source().buffer().use { source ->
-      ZiplineFileReader().read(source)
+      ZiplineFile.read(source)
     }
     assertEquals(CURRENT_ZIPLINE_VERSION, readZiplineFile.ziplineVersion)
 
     quickJs = QuickJs.create()
     quickJs!!.execute(readZiplineFile.quickjsBytecode.toByteArray())
     val exception = assertFailsWith<Exception> {
-      quickJs!!.evaluate("demo.sayHello()")
+      quickJs!!.evaluate("demo.sayHello()", "test.js")
     }
     // .kt files in the stacktrace means that the sourcemap was applied correctly.
     assertThat(exception.stackTraceToString()).startsWith("""
@@ -52,25 +100,13 @@ class ZiplineCompileTaskTest {
       |	at JavaScript.goBoom2(throwException.kt:9)
       |	at JavaScript.goBoom3(throwException.kt:6)
       |	at JavaScript.sayHello(throwException.kt:3)
-      |	at JavaScript.<eval>(?)
+      |	at JavaScript.<eval>(test.js)
       |""".trimMargin())
   }
 
-  @Test
-  fun `no source map`() {
-    val rootProject = File("src/test/projects/happyPathNoSourceMap")
-
-    val gradleRunner = GradleRunner.create()
-      .withPluginClasspath()
-      .withArguments("--info", "--stacktrace", "compileHello")
-      .withProjectDir(rootProject)
-
-    val result = gradleRunner.build()
-    assertEquals(TaskOutcome.SUCCESS, result.task(":compileHello")!!.outcome)
-
-    val ziplineFile = File("$rootProject/build/zipline/hello.zipline")
+  private fun assertFileWithoutSourceMap(ziplineFile: File) {
     val readZiplineFile = ziplineFile.source().buffer().use { source ->
-      ZiplineFileReader().read(source)
+      ZiplineFile.read(source)
     }
     assertEquals(CURRENT_ZIPLINE_VERSION, readZiplineFile.ziplineVersion)
 
