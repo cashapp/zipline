@@ -83,39 +83,6 @@ class ZiplineTest {
       .isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
   }
 
-  @Test fun jvmCallJsServiceThatThrows(): Unit = runBlocking(dispatcher) {
-    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareThrowingJsBridges()")
-
-    assertThat(assertFailsWith<Exception> {
-      zipline.helloService.echo(EchoRequest("Jake"))
-    }.stackTraceToString()).apply {
-      matches(
-        """(?s).*IllegalStateException: boom!""" +
-          """.*at goBoom1""" +
-          """.*at goBoom2""" +
-          """.*at goBoom3""" +
-          """.*"""
-      )
-    }
-  }
-
-  @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
-    zipline.set<EchoService>("supService", JvmThrowingEchoService())
-
-    assertThat(assertFailsWith<QuickJsException> {
-      zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
-    }.stackTraceToString()).apply {
-      matches(
-        """(?s).*java\.lang\.IllegalStateException: boom!""" +
-          """.*JvmThrowingEchoService\.goBoom1""" +
-          """.*JvmThrowingEchoService\.goBoom2""" +
-          """.*JvmThrowingEchoService\.goBoom3""" +
-          """.*JvmThrowingEchoService\.echo""" +
-          """.*"""
-      )
-    }
-  }
-
   @Test fun suspendingJvmCallJsService(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
 
@@ -165,21 +132,6 @@ class ZiplineTest {
   private class JvmEchoService(private val greeting: String) : EchoService {
     override fun echo(request: EchoRequest): EchoResponse {
       return EchoResponse("$greeting from the JVM, ${request.message}")
-    }
-  }
-
-  private class JvmThrowingEchoService : EchoService {
-    override fun echo(request: EchoRequest): EchoResponse {
-      goBoom3()
-    }
-    private fun goBoom3(): Nothing {
-      goBoom2()
-    }
-    private fun goBoom2(): Nothing {
-      goBoom1()
-    }
-    private fun goBoom1(): Nothing {
-      throw IllegalStateException("boom!")
     }
   }
 }
