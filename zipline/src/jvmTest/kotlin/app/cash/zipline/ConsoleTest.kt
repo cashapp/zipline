@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.logging.Handler
 import java.util.logging.Level
@@ -34,10 +35,10 @@ class ConsoleTest {
   private val dispatcher = TestCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  private val logMessages = LinkedBlockingDeque<String>()
+  private val logRecords = LinkedBlockingDeque<LogRecord>()
   private val logHandler = object : Handler() {
     override fun publish(record: LogRecord) {
-      logMessages += "${record.level}: ${record.message}"
+      logRecords += record
     }
 
     override fun flush() {
@@ -65,12 +66,51 @@ class ConsoleTest {
 
   @Test fun logAllLevels(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogAllLevels()")
-    assertEquals("INFO: 1. this is message 1 of 5. Its level is 'info'.", logMessages.poll())
-    assertEquals("INFO: 2. this message has level 'log'.", logMessages.poll())
-    assertEquals("WARNING: 3. this message has level 'warn'.", logMessages.poll())
-    assertEquals("SEVERE: 4. this message has level 'error'.", logMessages.poll())
-    assertEquals("INFO: 5. this is the last message", logMessages.poll())
-    assertNull(logMessages.poll())
+    assertEquals("INFO: 1. this is message 1 of 5. Its level is 'info'.", takeLogMessage())
+    assertEquals("INFO: 2. this message has level 'log'.", takeLogMessage())
+    assertEquals("WARNING: 3. this message has level 'warn'.", takeLogMessage())
+    assertEquals("SEVERE: 4. this message has level 'error'.", takeLogMessage())
+    assertEquals("INFO: 5. this is the last message", takeLogMessage())
+    assertNull(takeLogMessage())
+  }
+
+  @Test fun logWithThrowable(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogWithThrowable()")
+
+    val record1 = logRecords.take()
+    assertThat(record1.level).isEqualTo(Level.SEVERE)
+    assertThat(record1.message).isEqualTo("1. something went wrong")
+    assertThat(record1.thrown.stackTraceToString()).matches(
+      """(?s).*IllegalStateException: boom!""" +
+        """.*at goBoom1""" +
+        """.*at goBoom2""" +
+        """.*at goBoom3""" +
+        """.*at consoleLogWithThrowable""" +
+        """.*"""
+    )
+
+    val record2 = logRecords.take()
+    assertThat(record2.message).isEqualTo("")
+    assertThat(record2.thrown.stackTraceToString()).contains("2. exception only")
+
+    val record3 = logRecords.take()
+    assertThat(record3.message)
+      .isEqualTo("3. multiple exceptions IllegalStateException: number two!")
+    assertThat(record3.thrown.stackTraceToString()).contains("IllegalStateException: number one!")
+
+    val record4 = logRecords.take()
+    assertThat(record4.message)
+      .isEqualTo("4. message second")
+    assertThat(record4.thrown.stackTraceToString())
+      .contains("IllegalStateException: exception first!")
+
+    val record5 = logRecords.take()
+    assertThat(record5.level).isEqualTo(Level.INFO)
+    assertThat(record5.message)
+      .isEqualTo("5. info with exception")
+    assertThat(record4.thrown.stackTraceToString()).contains("IllegalStateException")
+
+    assertNull(takeLogMessage())
   }
 
   /**
@@ -79,7 +119,12 @@ class ConsoleTest {
    */
   @Test fun logWithArguments(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogWithArguments()")
-    assertEquals("INFO: this message for %s is a %d out of %d Jesse 8 10", logMessages.poll())
-    assertNull(logMessages.poll())
+    assertEquals("INFO: this message for %s is a %d out of %d Jesse 8 10", takeLogMessage())
+    assertNull(takeLogMessage())
+  }
+
+  private fun takeLogMessage(): String? {
+    val record = logRecords.poll() ?: return null
+    return "${record.level}: ${record.message}"
   }
 }

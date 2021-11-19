@@ -26,7 +26,7 @@ internal interface EventLoop {
 
 internal interface Console {
   /** @param level one of `log`, `info`, `warn`, or `error`. */
-  fun log(level: String, message: String)
+  fun log(level: String, message: String, throwable: Throwable?)
 }
 
 internal interface JsPlatform {

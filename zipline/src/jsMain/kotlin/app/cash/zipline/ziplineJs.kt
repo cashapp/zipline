@@ -188,7 +188,16 @@ private class RealJsPlatform(
    */
   @JsName("consoleMessage")
   fun consoleMessage(level: String, vararg arguments: Any?) {
-    console.log(level, arguments.joinToString(separator = " "))
+    var throwable: Throwable? = null
+    val argumentsList = mutableListOf<Any?>()
+    for (argument in arguments) {
+      if (throwable == null && argument is Throwable) {
+        throwable = argument
+      } else {
+        argumentsList += argument
+      }
+    }
+    console.log(level, argumentsList.joinToString(separator = " "), throwable)
   }
 
   private class Job(

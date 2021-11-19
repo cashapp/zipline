@@ -28,3 +28,32 @@ fun consoleLogAllLevels() {
 fun consoleLogWithArguments() {
   console.info("this message for %s is a %d out of %d", "Jesse", 8, 10)
 }
+
+@JsExport
+fun consoleLogWithThrowable() {
+  try {
+    goBoom3()
+  } catch (e: Throwable) {
+    console.error("1. something went wrong", e)
+  }
+  console.error(IllegalStateException("2. exception only"))
+  console.error(
+    "3. multiple exceptions",
+    IllegalStateException("number one!"),
+    IllegalStateException("number two!")
+  )
+  console.error(IllegalStateException("exception first!"), "4. message second")
+  console.info("5. info with exception", IllegalStateException())
+}
+
+private fun goBoom3(): Nothing {
+  goBoom2()
+}
+
+private fun goBoom2(): Nothing {
+  goBoom1()
+}
+
+private fun goBoom1(): Nothing {
+  throw IllegalStateException("boom!")
+}
