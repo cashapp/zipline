@@ -16,7 +16,11 @@
 package app.cash.zipline.internal
 
 internal actual object HostConsole : Console {
-  override fun log(level: String, message: String) {
-    println("Zipline[$level]: $message")
+  override fun log(level: String, message: String, throwable: Throwable?) {
+    if (throwable != null) {
+      println("Zipline[$level]: $message\n${throwable.stackTraceToString()}")
+    } else {
+      println("Zipline[$level]: $message")
+    }
   }
 }

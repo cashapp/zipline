@@ -152,7 +152,7 @@ actual class QuickJs private constructor(
 
   protected fun finalize() {
     if (context != 0L) {
-      HostConsole.log("warn", "QuickJs instance leaked!")
+      HostConsole.log("warn", "QuickJs instance leaked!", null)
     }
   }
 
