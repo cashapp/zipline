@@ -59,9 +59,9 @@ internal const val defineJs =
         }
       });
 
-      factory(...args);
+      var result = factory(...args);
 
-      idToExports[id] = exports;
+      idToExports[id] = result || exports;
     };
 
     // By convention, we set 'define.amd' to an object to declare we confirm to the AMD spec.
