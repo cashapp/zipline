@@ -10,3 +10,6 @@ reports
 jacoco.exec
 .externalNativeBuild
 .cxx
+
+# Release
+docs/0.x
