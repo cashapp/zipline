@@ -147,6 +147,12 @@ actual class Zipline private constructor(
     quickJs.evaluate("delete globalThis.$currentModuleId;")
   }
 
+  fun loadJsModule(bytecode: ByteArray, id: String) {
+    quickJs.evaluate("globalThis.$currentModuleId = '$id';")
+    quickJs.execute(bytecode)
+    quickJs.evaluate("delete globalThis.$currentModuleId;")
+  }
+
   companion object {
     fun create(
       dispatcher: CoroutineDispatcher,
