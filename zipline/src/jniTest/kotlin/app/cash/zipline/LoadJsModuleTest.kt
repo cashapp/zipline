@@ -51,7 +51,7 @@ class LoadJsModuleTest {
       }(this, function (_) {
         _.someValue = 4321;
       }));
-    """.trimIndent()
+      """.trimIndent()
     zipline.loadJsModule(moduleJs, "example")
     assertThat(zipline.quickJs.evaluate("JSON.stringify(require('example'))"))
       .isEqualTo("""{"someValue":4321}""")
@@ -73,9 +73,23 @@ class LoadJsModuleTest {
           someValue: 1234
         };
       });
-    """.trimIndent()
+      """.trimIndent()
     zipline.loadJsModule(moduleJs, "example")
     assertThat(zipline.quickJs.evaluate("JSON.stringify(require('example'))"))
       .isEqualTo("""{"someValue":1234}""")
+  }
+
+  @Test fun loadModuleBytecode(): Unit = runBlocking(dispatcher) {
+    val moduleJs = """
+      define(function () {
+        return {
+          bytecodeValue: 5678
+        };
+      });
+      """.trimIndent()
+    val bytecode = zipline.quickJs.compile(moduleJs, "example.js")
+    zipline.loadJsModule(bytecode, "example")
+    assertThat(zipline.quickJs.evaluate("JSON.stringify(require('example'))"))
+      .isEqualTo("""{"bytecodeValue":5678}""")
   }
 }
