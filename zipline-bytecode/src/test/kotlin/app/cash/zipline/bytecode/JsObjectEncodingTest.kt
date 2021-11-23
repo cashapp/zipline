@@ -106,6 +106,20 @@ class JsObjectEncodingTest {
       .containsExactly(2, 5, 6, 8, 9)
   }
 
+  @Test fun wideChars() {
+    assertRoundTrip(
+      """
+      |function utf16Values() {
+      |  return [
+      |    "…",
+      |    "Café 🍩", // NFC (6 code points)
+      |    "Café 🍩", // NFD (7 code points)
+      |  ];
+      |}
+      """.trimMargin()
+    )
+  }
+
   /** Returns the model object for the bytecode of [script]. */
   private fun assertRoundTrip(
     script: String,

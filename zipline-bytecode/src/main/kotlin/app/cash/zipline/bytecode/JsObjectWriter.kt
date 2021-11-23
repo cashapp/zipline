@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.bytecode
 
+import kotlin.text.Charsets.UTF_16LE
 import okio.BufferedSink
 import okio.Closeable
 import okio.utf8Size
@@ -48,11 +49,18 @@ class JsObjectWriter(
   }
 
   private fun writeJsString(value: String) {
-    val isWideChar = 0x0
-    val byteCount = value.utf8Size().toInt()
-    val byteCountAndType = (byteCount shl 1) or isWideChar
-    sink.writeLeb128(byteCountAndType)
-    sink.writeUtf8(value)
+    when {
+      // Regular chars are US-ASCII.
+      value.length == value.utf8Size().toInt() -> {
+        sink.writeLeb128((value.length shl 1) or 0x0)
+        sink.writeUtf8(value)
+      }
+      // Wide chars are UTF-16LE.
+      else -> {
+        sink.writeLeb128((value.length shl 1) or 0x1)
+        sink.writeString(value, UTF_16LE)
+      }
+    }
   }
 
   private fun writeObjectRecursive(value: JsObject) {

@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.bytecode
 
+import kotlin.text.Charsets.UTF_16LE
 import okio.Buffer
 import okio.BufferedSource
 import okio.Closeable
@@ -51,7 +52,10 @@ class JsObjectReader(
     val byteCountAndType = source.readLeb128()
     val isWideChar = byteCountAndType and 0x1
     val byteCount = byteCountAndType shr 1
-    return source.readUtf8(byteCount.toLong())
+    return when (isWideChar) {
+      0x1 -> source.readString(byteCount.toLong() * 2, UTF_16LE)
+      else -> source.readUtf8(byteCount.toLong())
+    }
   }
 
   private fun readObjectRecursive(): JsObject {
