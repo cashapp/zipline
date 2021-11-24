@@ -193,9 +193,6 @@ android {
     }
 
     packagingOptions {
-      // Ensure we do not rely on the presence of metadata or module files for Kotlin reflection.
-      exclude("META-INF/*.kotlin_module")
-      exclude("kotlin/**")
       // We get multiple copies of some license files via JNA, which is a transitive dependency of
       // kotlinx-coroutines-test. Don't fail the build on these duplicates.
       exclude("META-INF/AL2.0")
