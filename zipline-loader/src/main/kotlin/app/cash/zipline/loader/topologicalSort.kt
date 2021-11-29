@@ -1,63 +1,50 @@
 package app.cash.zipline.loader
 
 /**
- * @param upstreamEdges a function that returns nodes upstream from the input node connected by an edge.
+ * Returns a new list where each element is preceded by its results in [sourceToTarget]. The first
+ * element will return no values in [sourceToTarget].
  *
- * https://www.interviewcake.com/concept/java/topological-sort
+ * @param sourceToTarget a function that returns nodes that should precede the argument in the result.
+ *
+ * Implementation inspiration: https://www.interviewcake.com/concept/java/topological-sort
  */
-fun <T> List<T>.topologicalSort(upstreamEdges: (T) -> Iterable<T>): List<T> {
-  // map of node to nodes that depend on it
-  val downstreamMap = mutableMapOf<T, MutableSet<T>>()
-  // map of node to nodes that it depends on
-  val upstreamMap = mutableMapOf<T, Set<T>>()
-
-  // populate downstreamMap and upstreamMap
-  forEach { node ->
-    val upstreamNodes = upstreamEdges(node).toSet()
-    upstreamMap[node] = upstreamNodes
-    upstreamNodes.forEach { upstream ->
-      if (!downstreamMap.containsKey(upstream)) {
-        downstreamMap[upstream] = mutableSetOf()
-      }
-      downstreamMap[upstream]!!.add(node)
+fun <T> List<T>.topologicalSort(sourceToTarget: (T) -> Iterable<T>): List<T> {
+  // Build a reverse index, from targets to sources.
+  val targetToSources = mutableMapOf<T, MutableSet<T>>()
+  val queue = ArrayDeque<T>()
+  for (source in this) {
+    var hasTargets = false
+    for (target in sourceToTarget(source)) {
+      val set = targetToSources.getOrPut(target) { mutableSetOf() }
+      set += source
+      hasTargets = true
     }
 
-
-
-
-//    val downstreamNodes = upstreamEdges(node)
-//    downstreamMap[node] = downstreamNodes.toSet()
-//    downstreamNodes.forEach { downstream ->
-//      if (!upstreamMap.containsKey(downstream)) {
-//        upstreamMap[downstream] = mutableSetOf()
-//      }
-//      upstreamMap[downstream]!!.add(node)
-//    }
+    // No targets means all this source's targets are satisfied, queue it up.
+    if (!hasTargets) {
+      queue += source
+    }
   }
 
-  val nodesWithNoIncomingEdges = mutableListOf<T>()
-  nodesWithNoIncomingEdges.addAll(filter { upstreamMap[it]?.isEmpty() ?: false })
+  val result = mutableListOf<T>()
+  while (queue.isNotEmpty()) {
+    val node = queue.removeFirst()
+    result += node
 
- // nodesWithNoIncomingEdges: [b,c]
- //
-
-
-  val topologicalOrdering = mutableListOf<T>()
-  while (nodesWithNoIncomingEdges.isNotEmpty()) {
-    // TODO consider if removeLast is better match to .pop()
-    val node = nodesWithNoIncomingEdges.removeFirst()
-    if (!topologicalOrdering.contains(node)) topologicalOrdering.add(node)
-
-    downstreamMap[node]?.let { nodesWithNoIncomingEdges.addAll(it.filter { downstream ->
-      downstream !in nodesWithNoIncomingEdges
-        // Don't add all downstream nodes unless their dependencies have already been included in ordering
-        && (topologicalOrdering + nodesWithNoIncomingEdges).containsAll(upstreamMap[downstream] ?: setOf())
-    }) }
+    val potentiallySatisfied = targetToSources[node] ?: setOf()
+    for (source in potentiallySatisfied) {
+      // If all a source's targets are satisfied, queue up the source.
+      if (source !in queue &&
+        sourceToTarget(source).all { target -> target in result || target in queue }
+      ) {
+        queue += source
+      }
+    }
   }
 
-  require(topologicalOrdering.size == this.size) {
-    "All elements aren't included in  Topological Ordering [outputSize=${topologicalOrdering.size}] does not include all elements to be ordered [inputSize=${this.size}]"
+  require(result.size == this.size) {
+    "No topological ordering is possible for $this"
   }
 
-  return topologicalOrdering
+  return result
 }

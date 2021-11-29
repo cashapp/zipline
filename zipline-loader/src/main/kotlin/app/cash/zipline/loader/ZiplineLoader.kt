@@ -22,44 +22,8 @@ class ZiplineLoader(
 //  val cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
   val client: ZiplineHttpClient,
 ) {
-  /*
-  file a.js:
-  globalThis.loadedFiles = globalThis.loadedFiles || [];
-  globalThis.loadedFiles += 'A';
-   */
-
-  /**
-   * This returns once all of the modules in [manifest] have been loaded into [zipline].
-   * This function can be canceled, but doing so leaves [zipline] in an undefined state.
-   *
-   * version zero:
-   * download each file sequentially
-   * call Zipline.loadJsModule()
-   *
-   * version one:
-   * download each file sequentially if not stored on disk
-   * store files on disk using okio.FileSystem
-   * gotcha: atomicMove()
-   * gotcha: download fails, this will leave garbage around forever
-   * call Zipline.loadJsModule()
-   *
-   * version two:
-   * same as version one, but it doesn't leave garbage around forever
-   * probably Sqlite to store downloads in flight
-   * call Zipline.loadJsModule()
-   *
-   * version three:
-   * download in parallel
-   * load as soon as downloads finish
-   * honor topo sort
-   * https://github.com/square/okhttp/blob/master/okhttp/src/main/kotlin/okhttp3/internal/cache/DiskLruCache.kt
-   *
-   * version four:
-   * prune old files
-   * note that a file that has been pruned might also be loaded shortly after pruning; perhaps
-   * even between deleting on disk and deleting in DB
-   */
   suspend fun load(scope: CoroutineScope, zipline: Zipline, manifest: ZiplineManifest) {
+    // TODO consider moving this to `async` on the Zipline's dispatcher, which is guaranteed single-threaded
     val ziplineMutex = Mutex()
     val concurrentDownloadsSemaphore = Semaphore(3)
 
@@ -93,6 +57,11 @@ class ZiplineLoader(
       println("Loading ${it.module.id}...")
 
       // download the file from url
+      //
+      // TODO Setup integration test that can assert that the loaded file now is in the global list
+      //  file a.js:
+      //  globalThis.loadedFiles = globalThis.loadedFiles || [];
+      //  globalThis.loadedFiles += 'A';
       //
     }
   }
