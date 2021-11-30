@@ -1,6 +1,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
+import java.nio.ByteBuffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -9,6 +10,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import okio.ByteString
+import okio.ByteString.Companion.toByteString
 
 /**
  * Gets code from an HTTP server or a local cache,
@@ -50,20 +52,6 @@ class ZiplineLoader(
         downstream.upstreams += deferred
       }
     }
-
-
-
-    loadsSorted.forEach {
-      println("Loading ${it.module.id}...")
-
-      // download the file from url
-      //
-      // TODO Setup integration test that can assert that the loaded file now is in the global list
-      //  file a.js:
-      //  globalThis.loadedFiles = globalThis.loadedFiles || [];
-      //  globalThis.loadedFiles += 'A';
-      //
-    }
   }
 
   private inner class ModuleLoad(
@@ -75,13 +63,13 @@ class ZiplineLoader(
   ) {
     suspend fun load() {
       val download = concurrentDownloadsSemaphore.withPermit {
-        client.download(module.url)
+        client.download(module.filePath)
       }
       for (upstream in upstreams) {
         upstream.await()
       }
       ziplineMutex.withLock {
-//        zipline.loadJsModule(download.toByteArray(), module.id)
+        zipline.loadJsModule(download.toByteArray(), module.id, module.filePath)
       }
     }
   }
@@ -94,15 +82,15 @@ class ZiplineLoader(
 
 //expect
 interface ZiplineHttpClient {
-  suspend fun download(url: String): ByteString
+  suspend fun download(filePath: String): ByteString
 }
 
-class JvmZiplineHttpClient: ZiplineHttpClient {
-  override suspend fun download(url: String): ByteString {
-    println("Downloading $url...")
-    return ByteString.EMPTY
-  }
+class FakeZiplineHttpClient: ZiplineHttpClient {
+  var filePathToByteString: Map<String, ByteString> = mapOf()
 
+  override suspend fun download(filePath: String): ByteString {
+    return filePathToByteString[filePath] ?: throw IllegalArgumentException("404: $filePath not found")
+  }
 }
 
 class ZiplineManifest(
@@ -111,7 +99,7 @@ class ZiplineManifest(
 
 data class ZiplineModule(
   val id: String,
-  val url: String,
+  val filePath: String,
   val sha256: ByteString,
   val patchFrom: String? = null,
   val patchUrl: String? = null,
@@ -120,6 +108,10 @@ data class ZiplineModule(
   init {
     require (id !in dependsOnIds) {
       "Invalid circular dependency on self for [id=$id]"
+    }
+
+    require(!filePath.startsWith("http")) {
+      "[filePath=$filePath] should be a relative path to the base configured in ZiplineHttpClient, not an absolute URL"
     }
   }
 }

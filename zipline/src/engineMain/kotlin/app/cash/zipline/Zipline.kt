@@ -25,8 +25,8 @@ import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.consoleName
-import app.cash.zipline.internal.currentModuleId
-import app.cash.zipline.internal.defineJs
+import app.cash.zipline.internal.CURRENT_MODULE_ID
+import app.cash.zipline.internal.DEFINE_JS
 import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
 import kotlinx.coroutines.CoroutineDispatcher
@@ -141,10 +141,20 @@ actual class Zipline private constructor(
     quickJs.close()
   }
 
-  fun loadJsModule(script: String, id: String) {
-    quickJs.evaluate("globalThis.$currentModuleId = '$id';")
+  fun loadJsModule(script: String, id: String, fileName: String) {
+    quickJs.evaluate("globalThis.loadedFiles = globalThis.loadedFiles || [];")
+    quickJs.evaluate("globalThis.loadedFiles += '$fileName';")
+    quickJs.evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
     quickJs.evaluate(script, id)
-    quickJs.evaluate("delete globalThis.$currentModuleId;")
+    quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
+  }
+
+  fun loadJsModule(bytecode: ByteArray, id: String, fileName: String) {
+    quickJs.evaluate("globalThis.loadedFiles = globalThis.loadedFiles || [];")
+    quickJs.evaluate("globalThis.loadedFiles += '$fileName';")
+    quickJs.evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
+    quickJs.execute(bytecode)
+    quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
   }
 
   fun loadJsModule(bytecode: ByteArray, id: String) {
@@ -161,7 +171,7 @@ actual class Zipline private constructor(
       val quickJs = QuickJs.create()
       // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
       quickJs.maxStackSize = 0L
-      quickJs.evaluate(defineJs, "define.js")
+      quickJs.evaluate(DEFINE_JS, "define.js")
 
       val scope = CoroutineScope(dispatcher)
       return Zipline(quickJs, scope)
