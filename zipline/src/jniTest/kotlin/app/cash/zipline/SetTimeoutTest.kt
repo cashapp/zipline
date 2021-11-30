@@ -53,4 +53,18 @@ class SetTimeoutTest {
     dispatcher.advanceTimeBy(200L)
     assertEquals("goodbye", zipline.quickJs.evaluate("greeting"))
   }
+
+  @Test fun ziplineCloseSilentlyCancelsQueuedTasks(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate(
+      """
+      var doNothing = function() {
+      };
+
+      setTimeout(doNothing, 100);
+      """
+    )
+
+    zipline.close()
+    dispatcher.advanceTimeBy(200L)
+  }
 }

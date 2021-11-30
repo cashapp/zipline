@@ -97,6 +97,7 @@ internal class OutboundCall(
   internal suspend fun <R> invokeSuspending(serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     return suspendCoroutine { continuation ->
+      context.endpoint.incompleteContinuations += continuation
       context.endpoint.scope.launch {
         val callbackName = endpoint.generateName()
         val callback = RealSuspendCallback(callbackName, continuation, serializer)
@@ -120,6 +121,7 @@ internal class OutboundCall(
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
       endpoint.inboundHandlers.remove(callbackName)
       val result = response.decodeResult(serializer)
+      context.endpoint.incompleteContinuations -= continuation
       continuation.resumeWith(result)
     }
   }
