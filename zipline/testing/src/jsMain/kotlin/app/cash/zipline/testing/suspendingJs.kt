@@ -18,16 +18,22 @@ package app.cash.zipline.testing
 import app.cash.zipline.Zipline
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class JsSuspendingEchoService(
   private val greeting: String
 ) : SuspendingEchoService {
   override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-    return EchoResponse("$greeting from suspending JavaScript, ${request.message}")
+    mutex.withLock {
+      return EchoResponse("$greeting from suspending JavaScript, ${request.message}")
+    }
   }
 }
 
 private val zipline by lazy { Zipline.get() }
+
+private val mutex = Mutex(locked = true)
 
 @JsExport
 fun prepareSuspendingJsBridges() {
@@ -38,9 +44,17 @@ fun prepareSuspendingJsBridges() {
 }
 
 @JsExport
+fun unblockSuspendingJs() {
+  mutex.unlock()
+}
+
+@JsExport
 fun callSuspendingEchoService(message: String) {
   val service = zipline.get<SuspendingEchoService>("jvmSuspendingEchoService")
   GlobalScope.launch {
-    service.suspendingEcho(EchoRequest(message))
+    suspendingEchoResult = service.suspendingEcho(EchoRequest(message)).message
   }
 }
+
+@JsExport
+var suspendingEchoResult: String? = null

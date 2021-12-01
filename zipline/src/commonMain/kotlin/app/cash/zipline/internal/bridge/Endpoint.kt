@@ -20,7 +20,9 @@ import app.cash.zipline.FlowReferenceSerializer
 import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
+import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -36,6 +38,8 @@ class Endpoint internal constructor(
 ) {
   internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
   private var nextId = 1
+
+  internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
 
   val serviceNames: Set<String>
     get() = inboundHandlers.keys.toSet()
@@ -102,6 +106,7 @@ class Endpoint internal constructor(
         } catch (e: Exception) {
           inboundCall.resultException(e)
         }
+        scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
         callback.call(result)
       }
     }

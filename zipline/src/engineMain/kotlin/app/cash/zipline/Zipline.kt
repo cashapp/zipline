@@ -29,9 +29,12 @@ import app.cash.zipline.internal.currentModuleId
 import app.cash.zipline.internal.defineJs
 import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
+import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.isActive
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
@@ -56,7 +59,7 @@ actual class Zipline private constructor(
         funName: String,
         encodedArguments: Array<String>
       ): Array<String> {
-        check(!closed) { "Zipline closed" }
+        check(scope.isActive) { "Zipline closed" }
         return jsInboundBridge.invoke(instanceName, funName, encodedArguments)
       }
 
@@ -66,7 +69,7 @@ actual class Zipline private constructor(
         encodedArguments: Array<String>,
         callbackName: String
       ) {
-        check(!closed) { "Zipline closed" }
+        check(scope.isActive) { "Zipline closed" }
         return jsInboundBridge.invokeSuspending(instanceName, funName, encodedArguments, callbackName)
       }
 
@@ -84,8 +87,6 @@ actual class Zipline private constructor(
 
   actual val clientNames: Set<String>
     get() = endpoint.clientNames
-
-  private var closed = false
 
   init {
     // Eagerly publish the channel so they can call us.
@@ -113,7 +114,7 @@ actual class Zipline private constructor(
 
   @PublishedApi
   internal fun <T : Any> get(name: String, bridge: OutboundBridge<T>): T {
-    check(!closed) { "closed" }
+    check(scope.isActive) { "closed" }
     return endpoint.get(name, bridge)
   }
 
@@ -123,7 +124,7 @@ actual class Zipline private constructor(
 
   @PublishedApi
   internal fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
-    check(!closed) { "closed" }
+    check(scope.isActive) { "closed" }
     endpoint.set(name, bridge)
   }
 
@@ -136,9 +137,15 @@ actual class Zipline private constructor(
    *  * Accessing the objects returned from [get].
    */
   fun close() {
-    closed = true
     scope.cancel()
     quickJs.close()
+
+    // Don't wait for a JS continuation to resume, it never will. Canceling `scope` doesn't do this
+    // because each continuation is in its caller's scope.
+    for (continuation in endpoint.incompleteContinuations) {
+      continuation.resumeWithException(CancellationException("Zipline closed"))
+    }
+    endpoint.incompleteContinuations.clear()
   }
 
   fun loadJsModule(script: String, id: String) {

@@ -21,14 +21,17 @@ import app.cash.zipline.internal.jsPlatformName
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.helloService
-import app.cash.zipline.testing.jsSuspendingEchoService
-import app.cash.zipline.testing.prepareSuspendingJvmBridges
 import app.cash.zipline.testing.yoService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
@@ -38,13 +41,16 @@ import org.junit.Test
 class ZiplineTest {
   private val dispatcher = TestCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher)
+  private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
   @Before fun setUp(): Unit = runBlocking(dispatcher) {
     zipline.loadTestingJs()
+    uncaughtExceptionHandler.setUp()
   }
 
   @After fun tearDown(): Unit = runBlocking(dispatcher) {
     zipline.close()
+    uncaughtExceptionHandler.tearDown()
   }
 
   @Test fun cannotGetOrSetServiceAfterClose(): Unit = runBlocking(dispatcher) {
@@ -86,14 +92,79 @@ class ZiplineTest {
   @Test fun suspendingJvmCallJsService(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
 
-    assertThat(zipline.jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake")))
+    val jsSuspendingEchoService = zipline.get<SuspendingEchoService>("jsSuspendingEchoService")
+
+    val deferred = async {
+      jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake"))
+    }
+
+    assertThat(deferred.isCompleted).isFalse()
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.unblockSuspendingJs()")
+
+    assertThat(deferred.await())
       .isEqualTo(EchoResponse("hello from suspending JavaScript, Jake"))
   }
 
   @Test fun suspendingJsCallJvmService(): Unit = runBlocking(dispatcher) {
-    prepareSuspendingJvmBridges(zipline)
+    val jvmSuspendingEchoService = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        return EchoResponse("hello from the suspending JVM, ${request.message}")
+      }
+    }
+
+    zipline.set<SuspendingEchoService>(
+      "jvmSuspendingEchoService",
+      jvmSuspendingEchoService
+    )
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('Eric')")
+    assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult"))
+      .isEqualTo("hello from the suspending JVM, Eric")
+  }
+
+  /**
+   * Don't crash and don't log exceptions if a suspending call completes after the QuickJS instance
+   * is closed. Just ignore the response.
+   */
+  @Test fun suspendingJvmCallCompletesAfterClose(): Unit = runBlocking(dispatcher) {
+    val lock = Semaphore(1)
+    val jvmSuspendingEchoService = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        lock.withPermit {
+          zipline.close()
+        }
+        return EchoResponse("sup from the suspending JVM, ${request.message}")
+      }
+    }
+
+    zipline.set<SuspendingEchoService>(
+      "jvmSuspendingEchoService",
+      jvmSuspendingEchoService
+    )
+
+    lock.withPermit {
+      zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('Eric')")
+    }
+    val e = assertFailsWith<IllegalStateException> {
+      zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult")
+    }
+    assertThat(e).hasMessageThat().isEqualTo("QuickJs instance was closed")
+  }
+
+  @Test fun suspendingJsCallCompletesAfterClose(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
+
+    val jsSuspendingEchoService = zipline.get<SuspendingEchoService>("jsSuspendingEchoService")
+
+    val deferred = async {
+      jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake"))
+    }
+
+    zipline.close()
+
+    assertFailsWith<CancellationException> {
+      deferred.await()
+    }
   }
 
   @Test fun serviceNamesAndClientNames(): Unit = runBlocking(dispatcher) {
