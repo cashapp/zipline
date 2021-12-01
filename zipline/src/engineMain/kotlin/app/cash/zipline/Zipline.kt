@@ -141,26 +141,16 @@ actual class Zipline private constructor(
     quickJs.close()
   }
 
-  fun loadJsModule(script: String, id: String, fileName: String) {
-    quickJs.evaluate("globalThis.loadedFiles = globalThis.loadedFiles || [];")
-    quickJs.evaluate("globalThis.loadedFiles += '$fileName';")
+  fun loadJsModule(script: String, id: String) {
     quickJs.evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
     quickJs.evaluate(script, id)
     quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
   }
 
-  fun loadJsModule(bytecode: ByteArray, id: String, fileName: String) {
-    quickJs.evaluate("globalThis.loadedFiles = globalThis.loadedFiles || [];")
-    quickJs.evaluate("globalThis.loadedFiles += '$fileName';")
+  fun loadJsModule(bytecode: ByteArray, id: String) {
     quickJs.evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
     quickJs.execute(bytecode)
     quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
-  }
-
-  fun loadJsModule(bytecode: ByteArray, id: String) {
-    quickJs.evaluate("globalThis.$currentModuleId = '$id';")
-    quickJs.execute(bytecode)
-    quickJs.evaluate("delete globalThis.$currentModuleId;")
   }
 
   companion object {

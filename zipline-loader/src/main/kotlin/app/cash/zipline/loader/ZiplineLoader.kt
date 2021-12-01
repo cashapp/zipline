@@ -1,7 +1,6 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
-import java.nio.ByteBuffer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -10,7 +9,6 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
 import okio.ByteString
-import okio.ByteString.Companion.toByteString
 
 /**
  * Gets code from an HTTP server or a local cache,
@@ -69,7 +67,7 @@ class ZiplineLoader(
         upstream.await()
       }
       ziplineMutex.withLock {
-        zipline.loadJsModule(download.toByteArray(), module.id, module.filePath)
+        zipline.loadJsModule(download.toByteArray(), module.id)
       }
     }
   }
@@ -108,10 +106,6 @@ data class ZiplineModule(
   init {
     require (id !in dependsOnIds) {
       "Invalid circular dependency on self for [id=$id]"
-    }
-
-    require(!filePath.startsWith("http")) {
-      "[filePath=$filePath] should be a relative path to the base configured in ZiplineHttpClient, not an absolute URL"
     }
   }
 }

@@ -101,20 +101,4 @@ class ZiplineLoaderTest {
     }
     assertEquals("Invalid circular dependency on self for [id=alpha]", exception.message)
   }
-
-  @Test
-  fun `non-relative filePath fails`() {
-    val exception = assertFailsWith<IllegalArgumentException> {
-      ZiplineModule(
-        id = "alpha",
-        filePath = "http://cash-cdn.app/alpha.zipline",
-        sha256 = "abc123".encodeUtf8(),
-        dependsOnIds = listOf("kotlin"),
-      )
-    }
-    assertEquals(
-      "[filePath=http://cash-cdn.app/alpha.zipline] should be a relative path to the base configured in ZiplineHttpClient, not an absolute URL",
-      exception.message
-    )
-  }
 }
