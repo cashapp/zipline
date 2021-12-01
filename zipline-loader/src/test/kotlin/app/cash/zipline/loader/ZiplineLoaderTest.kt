@@ -52,17 +52,15 @@ class ZiplineLoaderTest {
     val bravoBytecode = quickJs.compile(bravoJs, "bravo.js")
     val bravoFilePath = "/bravo.zipline"
 
-    val manifest = ZiplineManifest(
-      files = listOf(
-        ZiplineModule(
-          id = "bravo",
-          filePath = bravoFilePath,
+    val manifest = ZiplineManifest.create(
+      modules = mapOf(
+        "bravo" to ZiplineModule(
+          url = bravoFilePath,
           sha256 = bravoBytecode.asSha256(),
           dependsOnIds = listOf("alpha"),
         ),
-        ZiplineModule(
-          id = "alpha",
-          filePath = alphaFilePath,
+        "alpha" to ZiplineModule(
+          url = alphaFilePath,
           sha256 = alphaBytecode.asSha256(),
           dependsOnIds = listOf(),
         ),
@@ -88,17 +86,4 @@ class ZiplineLoaderTest {
 
   private fun ByteArray.asSha256() =
     ByteBuffer.wrap(Hashing.sha256().hashBytes(this).asBytes()).toByteString()
-
-  @Test
-  fun `circular dependency fails`() {
-    val exception = assertFailsWith<IllegalArgumentException> {
-      ZiplineModule(
-        id = "alpha",
-        filePath = "/alpha.zipline",
-        sha256 = "abc123".encodeUtf8(),
-        dependsOnIds = listOf("alpha"),
-      )
-    }
-    assertEquals("Invalid circular dependency on self for [id=alpha]", exception.message)
-  }
 }

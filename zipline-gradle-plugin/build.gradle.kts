@@ -14,6 +14,7 @@ dependencies {
   implementation(kotlin("gradle-plugin-api"))
   implementation(project(":zipline"))
   implementation(project(":zipline-bytecode"))
+  implementation(project(":zipline-loader"))
   implementation(Dependencies.okio)
   testImplementation(Dependencies.junit)
   testImplementation(Dependencies.kotlinTest)

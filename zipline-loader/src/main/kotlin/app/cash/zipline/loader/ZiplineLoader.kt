@@ -1,3 +1,18 @@
+/*
+ * Copyright (C) 2021 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
@@ -22,20 +37,24 @@ class ZiplineLoader(
 //  val cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
   val client: ZiplineHttpClient,
 ) {
+  suspend fun load(scope: CoroutineScope, zipline: Zipline, url: String) {
+    //  TODO load manifest from URL then call load(...manifest)
+  }
+
   suspend fun load(scope: CoroutineScope, zipline: Zipline, manifest: ZiplineManifest) {
     // TODO consider moving this to `async` on the Zipline's dispatcher, which is guaranteed single-threaded
     val ziplineMutex = Mutex()
     val concurrentDownloadsSemaphore = Semaphore(3)
 
-    val loads = manifest.files.map {
-      ModuleLoad(zipline, ziplineMutex, concurrentDownloadsSemaphore, it, mutableListOf())
+    val loads = manifest.modules.map {
+      ModuleLoad(zipline, ziplineMutex, concurrentDownloadsSemaphore, it.key, it.value, mutableListOf())
     }
 
-    val idToLoad = loads.associateBy { it.module.id }
+    val idToLoad = loads.associateBy { it.id }
 
     val loadsSorted = loads.topologicalSort { load ->
       load.module.dependsOnIds.map { upstream ->
-        idToLoad[upstream] ?: throw IllegalArgumentException("${load.module.id} depends on unknown module $upstream")
+        idToLoad[upstream] ?: throw IllegalArgumentException("${load.id} depends on unknown module $upstream")
       }
     }
 
@@ -44,7 +63,7 @@ class ZiplineLoader(
         load.load()
       }
 
-      val downstreams = loads.filter { load.module.id in it.module.dependsOnIds }
+      val downstreams = loads.filter { load.id in it.module.dependsOnIds }
 
       for (downstream in downstreams) {
         downstream.upstreams += deferred
@@ -56,18 +75,19 @@ class ZiplineLoader(
     val zipline: Zipline,
     val ziplineMutex: Mutex,
     val concurrentDownloadsSemaphore: Semaphore,
+    val id: String,
     val module: ZiplineModule,
     val upstreams: MutableList<Deferred<*>>,
   ) {
     suspend fun load() {
       val download = concurrentDownloadsSemaphore.withPermit {
-        client.download(module.filePath)
+        client.download(module.url)
       }
       for (upstream in upstreams) {
         upstream.await()
       }
       ziplineMutex.withLock {
-        zipline.loadJsModule(download.toByteArray(), module.id)
+        zipline.loadJsModule(download.toByteArray(), id)
       }
     }
   }
@@ -78,34 +98,3 @@ class ZiplineLoader(
   }
 }
 
-//expect
-interface ZiplineHttpClient {
-  suspend fun download(filePath: String): ByteString
-}
-
-class FakeZiplineHttpClient: ZiplineHttpClient {
-  var filePathToByteString: Map<String, ByteString> = mapOf()
-
-  override suspend fun download(filePath: String): ByteString {
-    return filePathToByteString[filePath] ?: throw IllegalArgumentException("404: $filePath not found")
-  }
-}
-
-class ZiplineManifest(
-  val files: List<ZiplineModule>
-)
-
-data class ZiplineModule(
-  val id: String,
-  val filePath: String,
-  val sha256: ByteString,
-  val patchFrom: String? = null,
-  val patchUrl: String? = null,
-  val dependsOnIds: List<String> = listOf()
-) {
-  init {
-    require (id !in dependsOnIds) {
-      "Invalid circular dependency on self for [id=$id]"
-    }
-  }
-}

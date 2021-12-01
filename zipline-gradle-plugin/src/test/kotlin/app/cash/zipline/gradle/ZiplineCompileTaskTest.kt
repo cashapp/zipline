@@ -16,9 +16,9 @@
 
 package app.cash.zipline.gradle
 
-import app.cash.zipline.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.QuickJs
-import app.cash.zipline.ZiplineFile
+import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
+import app.cash.zipline.loader.ZiplineFile
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import kotlin.test.assertFailsWith

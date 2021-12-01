@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package app.cash.zipline
+package app.cash.zipline.loader
 
 import okio.BufferedSink
 import okio.BufferedSource

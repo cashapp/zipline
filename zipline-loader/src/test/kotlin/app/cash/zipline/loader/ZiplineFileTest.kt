@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package app.cash.zipline
+package app.cash.zipline.loader
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

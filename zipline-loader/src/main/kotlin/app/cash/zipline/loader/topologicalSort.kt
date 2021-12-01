@@ -48,3 +48,12 @@ fun <T> List<T>.topologicalSort(sourceToTarget: (T) -> Iterable<T>): List<T> {
 
   return result
 }
+
+fun <T> List<T>.isTopologicallySorted(sourceToTarget: (T) -> Iterable<T>): Boolean {
+  val seenNodes = mutableSetOf<T>()
+  for (node in this) {
+    if (!seenNodes.containsAll(sourceToTarget(node).toSet())) return false
+    seenNodes.add(node)
+  }
+  return true
+}
