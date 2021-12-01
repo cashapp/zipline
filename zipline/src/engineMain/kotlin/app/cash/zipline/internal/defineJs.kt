@@ -15,13 +15,13 @@
  */
 package app.cash.zipline.internal
 
-internal const val currentModuleId = "app_cash_zipline_currentModuleId"
+internal const val CURRENT_MODULE_ID = "app_cash_zipline_currentModuleId"
 
 /**
  * Implement a AMD module loader for Kotlin/JS AMD modules running on QuickJS.
  * https://github.com/amdjs/amdjs-api/blob/master/AMD.md
  */
-internal const val defineJs =
+internal const val DEFINE_JS =
   """
   (function initJsModuleApi() {
     // Maps module IDs (like './kotlin-kotlin-stdlib-js-ir' or 'export') to their exports.
@@ -46,7 +46,7 @@ internal const val defineJs =
       var args = Array.from(arguments);
       var factory = args.pop();
       var dependencies = (args.length > 0) ? args.pop() : [];
-      var id = (args.length > 0) ? args.pop() : globalThis.$currentModuleId;
+      var id = (args.length > 0) ? args.pop() : globalThis.$CURRENT_MODULE_ID;
       var exports = {};
 
       var args = dependencies.map(dependency => {

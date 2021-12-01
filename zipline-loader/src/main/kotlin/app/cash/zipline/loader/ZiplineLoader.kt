@@ -50,20 +50,6 @@ class ZiplineLoader(
         downstream.upstreams += deferred
       }
     }
-
-
-
-    loadsSorted.forEach {
-      println("Loading ${it.module.id}...")
-
-      // download the file from url
-      //
-      // TODO Setup integration test that can assert that the loaded file now is in the global list
-      //  file a.js:
-      //  globalThis.loadedFiles = globalThis.loadedFiles || [];
-      //  globalThis.loadedFiles += 'A';
-      //
-    }
   }
 
   private inner class ModuleLoad(
@@ -75,13 +61,13 @@ class ZiplineLoader(
   ) {
     suspend fun load() {
       val download = concurrentDownloadsSemaphore.withPermit {
-        client.download(module.url)
+        client.download(module.filePath)
       }
       for (upstream in upstreams) {
         upstream.await()
       }
       ziplineMutex.withLock {
-//        zipline.loadJsModule(download.toByteArray(), module.id)
+        zipline.loadJsModule(download.toByteArray(), module.id)
       }
     }
   }
@@ -94,15 +80,15 @@ class ZiplineLoader(
 
 //expect
 interface ZiplineHttpClient {
-  suspend fun download(url: String): ByteString
+  suspend fun download(filePath: String): ByteString
 }
 
-class JvmZiplineHttpClient: ZiplineHttpClient {
-  override suspend fun download(url: String): ByteString {
-    println("Downloading $url...")
-    return ByteString.EMPTY
-  }
+class FakeZiplineHttpClient: ZiplineHttpClient {
+  var filePathToByteString: Map<String, ByteString> = mapOf()
 
+  override suspend fun download(filePath: String): ByteString {
+    return filePathToByteString[filePath] ?: throw IllegalArgumentException("404: $filePath not found")
+  }
 }
 
 class ZiplineManifest(
@@ -111,7 +97,7 @@ class ZiplineManifest(
 
 data class ZiplineModule(
   val id: String,
-  val url: String,
+  val filePath: String,
   val sha256: ByteString,
   val patchFrom: String? = null,
   val patchUrl: String? = null,
