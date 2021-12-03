@@ -7,7 +7,6 @@ plugins {
 dependencies {
   api(project(":zipline"))
   api(Dependencies.okio)
-  api(Dependencies.kotlinxSerialization)
   implementation(Dependencies.kotlinxSerializationJson)
 
   testImplementation(Dependencies.junit)

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2021 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
@@ -52,17 +68,15 @@ class ZiplineLoaderTest {
     val bravoBytecode = quickJs.compile(bravoJs, "bravo.js")
     val bravoFilePath = "/bravo.zipline"
 
-    val manifest = ZiplineManifest(
-      files = listOf(
-        ZiplineModule(
-          id = "bravo",
-          filePath = bravoFilePath,
+    val manifest = ZiplineManifest.create(
+      modules = mapOf(
+        "bravo" to ZiplineModule(
+          url = bravoFilePath,
           sha256 = bravoBytecode.asSha256(),
           dependsOnIds = listOf("alpha"),
         ),
-        ZiplineModule(
-          id = "alpha",
-          filePath = alphaFilePath,
+        "alpha" to ZiplineModule(
+          url = alphaFilePath,
           sha256 = alphaBytecode.asSha256(),
           dependsOnIds = listOf(),
         ),
@@ -88,17 +102,4 @@ class ZiplineLoaderTest {
 
   private fun ByteArray.asSha256() =
     ByteBuffer.wrap(Hashing.sha256().hashBytes(this).asBytes()).toByteString()
-
-  @Test
-  fun `circular dependency fails`() {
-    val exception = assertFailsWith<IllegalArgumentException> {
-      ZiplineModule(
-        id = "alpha",
-        filePath = "/alpha.zipline",
-        sha256 = "abc123".encodeUtf8(),
-        dependsOnIds = listOf("alpha"),
-      )
-    }
-    assertEquals("Invalid circular dependency on self for [id=alpha]", exception.message)
-  }
 }
