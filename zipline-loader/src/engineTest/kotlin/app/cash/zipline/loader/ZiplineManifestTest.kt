@@ -16,15 +16,14 @@
 
 package app.cash.zipline.loader
 
-import com.google.common.truth.Truth.assertThat
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
-import org.junit.Test
 
-// for some reason naming this file ZiplineManifestTest.kt breaks this file in Intellij
 class ZiplineManifestTest {
   @Test
   fun `manifest sorts modules on create`() {
@@ -56,7 +55,7 @@ class ZiplineManifestTest {
         ),
       )
     )
-    assertThat(unsorted).isEqualTo(sorted)
+    assertEquals(sorted, unsorted)
   }
 
   @Test
@@ -81,7 +80,10 @@ class ZiplineManifestTest {
           )
       )
     }
-    assertThat(unsortedException.message).isEqualTo("Modules are not topologically sorted and can not be loaded")
+    assertEquals(
+      "Modules are not topologically sorted and can not be loaded",
+      unsortedException.message
+    )
   }
 
   @Test
@@ -97,7 +99,10 @@ class ZiplineManifestTest {
         )
       )
     }
-    assertThat(selfDependencyException.message).isEqualTo("No topological ordering is possible for [alpha]")
+    assertEquals(
+      "No topological ordering is possible for [alpha]",
+      selfDependencyException.message
+    )
 
     val cyclicalException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
@@ -115,7 +120,10 @@ class ZiplineManifestTest {
         )
       )
     }
-    assertThat(cyclicalException.message).isEqualTo("No topological ordering is possible for [alpha, bravo]")
+    assertEquals(
+      "No topological ordering is possible for [alpha, bravo]",
+      cyclicalException.message
+    )
   }
 
   @Test
@@ -136,27 +144,28 @@ class ZiplineManifestTest {
     )
 
     val serialized = Json { prettyPrint = true }.encodeToString(original)
-    assertThat(serialized).isEqualTo(
-      """
-      |{
-      |    "modules": {
-      |        "alpha": {
-      |            "url": "/alpha.zipline",
-      |            "sha256": "616263313233"
-      |        },
-      |        "bravo": {
-      |            "url": "/bravo.zipline",
-      |            "sha256": "616263313233",
-      |            "dependsOnIds": [
-      |                "alpha"
-      |            ]
-      |        }
-      |    }
-      |}
-    """.trimMargin()
+    assertEquals(
+        """
+        |{
+        |    "modules": {
+        |        "alpha": {
+        |            "url": "/alpha.zipline",
+        |            "sha256": "616263313233"
+        |        },
+        |        "bravo": {
+        |            "url": "/bravo.zipline",
+        |            "sha256": "616263313233",
+        |            "dependsOnIds": [
+        |                "alpha"
+        |            ]
+        |        }
+        |    }
+        |}
+      """.trimMargin(),
+      serialized
     )
 
     val parsed = Json.decodeFromString<ZiplineManifest>(serialized)
-    assertThat(parsed).isEqualTo(original)
+    assertEquals(original, parsed)
   }
 }

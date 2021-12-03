@@ -16,9 +16,11 @@
 
 package app.cash.zipline.loader
 
-import com.google.common.truth.Truth.assertThat
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import org.junit.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class TopologicalSortTest {
   @Test
@@ -27,8 +29,8 @@ class TopologicalSortTest {
     val sorted = listOf("a", "b", "c")
     val sourceToTarget = edges()
     val actual = unsorted.topologicalSort(sourceToTarget)
-    assertThat(sorted.isTopologicallySorted(sourceToTarget)).isTrue()
-    assertThat(actual).isEqualTo(sorted)
+    assertTrue(sorted.isTopologicallySorted(sourceToTarget))
+    assertEquals(sorted, actual)
   }
 
   @Test
@@ -37,8 +39,8 @@ class TopologicalSortTest {
     val unsorted = listOf("a", "b", "c")
     val sorted = listOf("a", "b", "c")
     val actual = unsorted.topologicalSort(sourceToTarget)
-    assertThat(sorted.isTopologicallySorted(sourceToTarget)).isTrue()
-    assertThat(actual).isEqualTo(sorted)
+    assertTrue(sorted.isTopologicallySorted(sourceToTarget))
+    assertEquals(sorted, actual)
   }
 
   @Test
@@ -75,14 +77,14 @@ class TopologicalSortTest {
 
   private fun assertTopologicalSort(unsorted: List<String>, sorted: List<String>, vararg edges: String) {
     val sourceToTarget = edges(*edges)
-    assertThat(unsorted.isTopologicallySorted(sourceToTarget)).isFalse()
-    assertThat(sorted.isTopologicallySorted(sourceToTarget)).isTrue()
+    assertFalse(unsorted.isTopologicallySorted(sourceToTarget))
+    assertTrue(sorted.isTopologicallySorted(sourceToTarget))
 
     val actual = unsorted
       .topologicalSort(sourceToTarget)
 
-    assertThat(actual.isTopologicallySorted(sourceToTarget)).isTrue()
-    assertThat(actual).isEqualTo(sorted)
+    assertTrue(actual.isTopologicallySorted(sourceToTarget))
+    assertEquals(sorted, actual)
   }
 
   /** Each string is two characters, source and destination of an edge. */
