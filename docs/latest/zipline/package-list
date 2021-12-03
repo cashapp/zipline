@@ -7,7 +7,6 @@ $dokka.location:app.cash.zipline.internal.bridge/Endpoint/get/#kotlin.String/Poi
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/service-names.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/set/#kotlin.String#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/set.html
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
-$dokka.location:app.cash.zipline//CURRENT_ZIPLINE_VERSION/#/PointingToDeclaration/zipline/app.cash.zipline/-c-u-r-r-e-n-t_-z-i-p-l-i-n-e_-v-e-r-s-i-o-n.html
 $dokka.location:app.cash.zipline//ZiplineReference/#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference.html
 $dokka.location:app.cash.zipline//asFlowReference/kotlinx.coroutines.flow.Flow[TypeParam(bounds=[kotlin.Any?])]#/PointingToDeclaration/zipline/app.cash.zipline/as-flow-reference.html
 $dokka.location:app.cash.zipline/FlowReference///PointingToDeclaration/zipline/app.cash.zipline/-flow-reference/index.html
@@ -72,13 +71,6 @@ $dokka.location:app.cash.zipline/Zipline/quickJs/#/PointingToDeclaration/ziplin
 $dokka.location:app.cash.zipline/Zipline/serializersModule/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/serializers-module.html
 $dokka.location:app.cash.zipline/Zipline/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/service-names.html
 $dokka.location:app.cash.zipline/Zipline/set/#kotlin.String#TypeParam(bounds=[kotlin.Any])/PointingToDeclaration/zipline/app.cash.zipline/-zipline/set.html
-$dokka.location:app.cash.zipline/ZiplineFile.Companion///PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/-companion/index.html
-$dokka.location:app.cash.zipline/ZiplineFile.Companion/read/#BufferedSource/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/-companion/read.html
-$dokka.location:app.cash.zipline/ZiplineFile///PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/index.html
-$dokka.location:app.cash.zipline/ZiplineFile/ZiplineFile/#kotlin.Int#ByteString/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/-zipline-file.html
-$dokka.location:app.cash.zipline/ZiplineFile/quickjsBytecode/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/quickjs-bytecode.html
-$dokka.location:app.cash.zipline/ZiplineFile/writeTo/#BufferedSink/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/write-to.html
-$dokka.location:app.cash.zipline/ZiplineFile/ziplineVersion/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-file/zipline-version.html
 $dokka.location:app.cash.zipline/ZiplineReference///PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/index.html
 $dokka.location:app.cash.zipline/ZiplineReference/close/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/close.html
 $dokka.location:app.cash.zipline/ZiplineReference/get/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/get.html
