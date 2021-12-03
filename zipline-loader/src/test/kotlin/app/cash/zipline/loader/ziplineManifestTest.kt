@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2021 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package app.cash.zipline.loader
 
 import com.google.common.truth.Truth.assertThat
@@ -81,7 +97,7 @@ class ZiplineManifestTest {
         )
       )
     }
-    assertThat(selfDependencyException.message).isEqualTo("No topological ordering is possible for [(alpha, ZiplineModule(url=/alpha.zipline, sha256=[text=abc123], patchFrom=null, patchUrl=null, dependsOnIds=[alpha]))]")
+    assertThat(selfDependencyException.message).isEqualTo("No topological ordering is possible for [alpha]")
 
     val cyclicalException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
@@ -99,7 +115,7 @@ class ZiplineManifestTest {
         )
       )
     }
-    assertThat(cyclicalException.message).isEqualTo("No topological ordering is possible for [(alpha, ZiplineModule(url=/alpha.zipline, sha256=[text=abc123], patchFrom=null, patchUrl=null, dependsOnIds=[bravo])), (bravo, ZiplineModule(url=/bravo.zipline, sha256=[text=abc123], patchFrom=null, patchUrl=null, dependsOnIds=[alpha]))]")
+    assertThat(cyclicalException.message).isEqualTo("No topological ordering is possible for [alpha, bravo]")
   }
 
   @Test
@@ -140,7 +156,7 @@ class ZiplineManifestTest {
     """.trimMargin()
     )
 
-    val parsed = Json { }.decodeFromString<ZiplineManifest>(serialized)
+    val parsed = Json.decodeFromString<ZiplineManifest>(serialized)
     assertThat(parsed).isEqualTo(original)
   }
 }

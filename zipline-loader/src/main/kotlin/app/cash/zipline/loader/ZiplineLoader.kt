@@ -50,15 +50,7 @@ class ZiplineLoader(
       ModuleLoad(zipline, ziplineMutex, concurrentDownloadsSemaphore, it.key, it.value, mutableListOf())
     }
 
-    val idToLoad = loads.associateBy { it.id }
-
-    val loadsSorted = loads.topologicalSort { load ->
-      load.module.dependsOnIds.map { upstream ->
-        idToLoad[upstream] ?: throw IllegalArgumentException("${load.id} depends on unknown module $upstream")
-      }
-    }
-
-    for (load in loadsSorted) {
+    for (load in loads) {
       val deferred: Deferred<*> = scope.async {
         load.load()
       }

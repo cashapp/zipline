@@ -17,24 +17,32 @@ package app.cash.zipline.loader
 
 import kotlinx.serialization.Serializable
 
-// Constructor is still accesible from .copy() on data class, alternatively can implement without the data class but
-// with manual equals/hashCode to support value equality
+/**
+ * Preferred construction is via [ZiplineManifest.create]
+ * Constructor is still accessible from .copy() on data class, alternatively can implement without the data class but
+ * with manual equals/hashCode to support value equality
+ */
 @Serializable
 data class ZiplineManifest private constructor(
   /** This is an ordered map; its modules are always topologically sorted. */
   val modules: Map<String, ZiplineModule>
 ) {
   init {
-    require(modules.toList().isTopologicallySorted { (_, module) -> module.sourceToTarget(modules) }) {
+    require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
       "Modules are not topologically sorted and can not be loaded"
     }
   }
 
   companion object {
-    private fun ZiplineModule.sourceToTarget(modules: Map<String, ZiplineModule>) =
-      dependsOnIds.map { dependsOnId -> dependsOnId to modules[dependsOnId]!! }
-
     fun create(modules: Map<String, ZiplineModule>): ZiplineManifest =
-      ZiplineManifest(modules.toList().topologicalSort { (_, module) -> module.sourceToTarget(modules) }.toMap())
+      ZiplineManifest(modules.keys
+        .toList()
+        .topologicalSort { id -> modules[id]?.dependsOnIds
+          ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
+        }
+        .associateWith { id -> modules[id]
+          ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
+        }
+      )
   }
 }
