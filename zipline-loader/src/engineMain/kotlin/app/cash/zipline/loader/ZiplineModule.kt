@@ -24,7 +24,7 @@ data class ZiplineModule(
   val url: String,
   @Serializable(with = ByteStringAsHexSerializer::class)
   val sha256: ByteString,
+  val dependsOnIds: List<String> = listOf(),
   val patchFrom: String? = null,
   val patchUrl: String? = null,
-  val dependsOnIds: List<String> = listOf()
 )
