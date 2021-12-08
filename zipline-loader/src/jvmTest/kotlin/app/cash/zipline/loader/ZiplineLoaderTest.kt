@@ -25,16 +25,20 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
 
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class ZiplineLoaderTest {
   private val httpClient = FakeZiplineHttpClient()
-  private val loader = ZiplineLoader(
-    client = httpClient
-  )
   private val dispatcher = TestCoroutineDispatcher()
+  private val loader = ZiplineLoader(
+    client = httpClient,
+    dispatcher = dispatcher
+  )
   private lateinit var quickJs: QuickJs
 
   @BeforeTest
@@ -49,41 +53,14 @@ class ZiplineLoaderTest {
 
   @Test
   fun `happy path`() {
-    val alphaJs = """
-      |globalThis.log = globalThis.log || "";
-      |globalThis.log += "alpha loaded\n"
-    """.trimMargin()
-    val alphaBytecode = quickJs.compile(alphaJs, "alpha.js")
-    val alphaFilePath = "/alpha.zipline"
-    val bravoJs = """
-      |globalThis.log = globalThis.log || "";
-      |globalThis.log += "bravo loaded\n"
-    """.trimMargin()
-    val bravoBytecode = quickJs.compile(bravoJs, "bravo.js")
-    val bravoFilePath = "/bravo.zipline"
-
-    val manifest = ZiplineManifest.create(
-      modules = mapOf(
-        "bravo" to ZiplineModule(
-          url = bravoFilePath,
-          sha256 = bravoBytecode.toByteString().sha256(),
-          dependsOnIds = listOf("alpha"),
-        ),
-        "alpha" to ZiplineModule(
-          url = alphaFilePath,
-          sha256 = alphaBytecode.toByteString().sha256(),
-          dependsOnIds = listOf(),
-        ),
-      )
-    )
     httpClient.filePathToByteString = mapOf(
-      alphaFilePath to alphaBytecode.toByteString(),
-      bravoFilePath to bravoBytecode.toByteString()
+      alphaFilePath to alphaBytecode(quickJs).toByteString(),
+      bravoFilePath to bravoBytecode(quickJs).toByteString()
     )
     val zipline = Zipline.create(dispatcher)
     dispatcher.runBlockingTest {
       coroutineScope {
-        loader.load(this@coroutineScope, zipline, manifest)
+        loader.load(this@coroutineScope, zipline, manifest(quickJs))
       }
     }
     assertEquals(
@@ -92,6 +69,58 @@ class ZiplineLoaderTest {
       |alpha loaded
       |bravo loaded
       |""".trimMargin()
+    )
+  }
+
+  @Test
+  fun `load manifest from url`() {
+    httpClient.filePathToByteString = mapOf(
+      manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
+      alphaFilePath to alphaBytecode(quickJs).toByteString(),
+      bravoFilePath to bravoBytecode(quickJs).toByteString()
+    )
+    val zipline = Zipline.create(dispatcher)
+    dispatcher.runBlockingTest {
+      coroutineScope {
+        loader.load(this@coroutineScope, zipline, manifestPath)
+      }
+    }
+    assertEquals(
+      zipline.quickJs.evaluate("globalThis.log", "assert.js"),
+      """
+      |alpha loaded
+      |bravo loaded
+      |""".trimMargin()
+    )
+  }
+
+  companion object {
+    private val alphaJs = """
+      |globalThis.log = globalThis.log || "";
+      |globalThis.log += "alpha loaded\n"
+    """.trimMargin()
+    private fun alphaBytecode(quickJs: QuickJs) = quickJs.compile(alphaJs, "alpha.js")
+    private const val alphaFilePath = "/alpha.zipline"
+    private val bravoJs = """
+      |globalThis.log = globalThis.log || "";
+      |globalThis.log += "bravo loaded\n"
+    """.trimMargin()
+    private fun bravoBytecode(quickJs: QuickJs) = quickJs.compile(bravoJs, "bravo.js")
+    private const val bravoFilePath = "/bravo.zipline"
+    private const val manifestPath = "/manifest.zipline.json"
+    private fun manifest(quickJs: QuickJs) = ZiplineManifest.create(
+      modules = mapOf(
+        "bravo" to ZiplineModule(
+          url = bravoFilePath,
+          sha256 = bravoBytecode(quickJs).toByteString().sha256(),
+          dependsOnIds = listOf("alpha"),
+        ),
+        "alpha" to ZiplineModule(
+          url = alphaFilePath,
+          sha256 = alphaBytecode(quickJs).toByteString().sha256(),
+          dependsOnIds = listOf(),
+        ),
+      )
     )
   }
 }
