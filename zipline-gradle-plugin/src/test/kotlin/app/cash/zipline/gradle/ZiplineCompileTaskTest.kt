@@ -41,29 +41,7 @@ class ZiplineCompileTaskTest {
   @Test
   fun `write to and read from zipline`() {
     val rootProject = File("src/test/projects/happyPath")
-    val ziplineDir = File("$rootProject/build/zipline")
-
-    runGradleCompileZiplineTask(rootProject)
-
-    assertEquals(rootProject.listFiles()!!.size/2, ziplineDir.listFiles()?.size ?: 0)
-
-    ziplineDir.listFiles()!!.forEach { ziplineFile ->
-      assertFileWithSourceMap(ziplineFile)
-    }
-  }
-
-  @Test
-  fun `no source map`() {
-    val rootProject = File("src/test/projects/happyPathNoSourceMap")
-    val ziplineDir = File("$rootProject/build/zipline")
-
-    runGradleCompileZiplineTask(rootProject)
-
-    assertEquals(rootProject.listFiles()!!.size/2, ziplineDir.listFiles()?.size ?: 0)
-
-    ziplineDir.listFiles()!!.forEach { ziplineFile ->
-      assertFileWithoutSourceMap(ziplineFile)
-    }
+    assertZiplineCompileTask(rootProject, true)
   }
 
   private fun runGradleCompileZiplineTask(
@@ -80,9 +58,28 @@ class ZiplineCompileTaskTest {
       .contains(result.task(":$taskName")!!.outcome)
   }
 
+  private fun assertZiplineCompileTask(rootProject: File, dirHasSourceMaps: Boolean) {
+    val jsDir = File("$rootProject/jsBuild")
+    val ziplineDir = File("$rootProject/build/zipline")
+
+    runGradleCompileZiplineTask(rootProject)
+
+    val expectedNumberFiles = if (dirHasSourceMaps) jsDir.listFiles()!!.size / 2 else jsDir.listFiles()!!.size
+    // Don't include Zipline manifest
+    val actualNumberFiles = (ziplineDir.listFiles()?.size ?: 0) - 1
+    assertEquals(expectedNumberFiles, actualNumberFiles)
+
+    ziplineDir.listFiles()!!.forEach { ziplineFile ->
+      if (dirHasSourceMaps) assertFileWithSourceMap(ziplineFile) else assertFileWithoutSourceMap(ziplineFile)
+    }
+  }
+
   private fun assertFileWithSourceMap(
     ziplineFile: File
   ) {
+    // Ignore the Zipline Manifest JSON file
+    if (ziplineFile.extension == "json") return
+
     val readZiplineFile = ziplineFile.source().buffer().use { source ->
       ZiplineFile.read(source)
     }
