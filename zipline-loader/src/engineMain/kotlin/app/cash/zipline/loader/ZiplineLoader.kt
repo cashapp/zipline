@@ -16,13 +16,15 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
-import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import okio.ByteString
 
 /**
@@ -35,19 +37,28 @@ class ZiplineLoader(
 // TODO add caching
 //  val cacheDirectory: Path,
 //  val cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
+  val dispatcher: CoroutineDispatcher,
   val client: ZiplineHttpClient,
 ) {
+  private var concurrentDownloadsSemaphore = Semaphore(3)
+  var concurrentDownloads = 3
+    set(value) {
+      require(value > 0)
+      field = value
+      concurrentDownloadsSemaphore = Semaphore(value)
+    }
+
   suspend fun load(scope: CoroutineScope, zipline: Zipline, url: String) {
-    //  TODO load manifest from URL then call load(...manifest)
+    val manifestString = concurrentDownloadsSemaphore.withPermit {
+      client.download(url).utf8()
+    }
+    val manifest = Json.decodeFromString<ZiplineManifest>(manifestString)
+    load(scope, zipline, manifest)
   }
 
   suspend fun load(scope: CoroutineScope, zipline: Zipline, manifest: ZiplineManifest) {
-    // TODO consider moving this to `async` on the Zipline's dispatcher, which is guaranteed single-threaded
-    val ziplineMutex = Mutex()
-    val concurrentDownloadsSemaphore = Semaphore(3)
-
     val loads = manifest.modules.map {
-      ModuleLoad(zipline, ziplineMutex, concurrentDownloadsSemaphore, it.key, it.value, mutableListOf())
+      ModuleLoad(zipline, it.key, it.value)
     }
 
     for (load in loads) {
@@ -65,12 +76,11 @@ class ZiplineLoader(
 
   private inner class ModuleLoad(
     val zipline: Zipline,
-    val ziplineMutex: Mutex,
-    val concurrentDownloadsSemaphore: Semaphore,
     val id: String,
     val module: ZiplineModule,
-    val upstreams: MutableList<Deferred<*>>,
   ) {
+    val upstreams = mutableListOf<Deferred<*>>()
+
     suspend fun load() {
       val download = concurrentDownloadsSemaphore.withPermit {
         client.download(module.url)
@@ -78,7 +88,7 @@ class ZiplineLoader(
       for (upstream in upstreams) {
         upstream.await()
       }
-      ziplineMutex.withLock {
+      withContext(dispatcher) {
         zipline.loadJsModule(download.toByteArray(), id)
       }
     }
