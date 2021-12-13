@@ -1,8 +1,10 @@
+import app.cash.zipline.gradle.ZiplineCompileTask
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
+  id("app.cash.zipline")
 }
 
 kotlin {
@@ -10,13 +12,13 @@ kotlin {
 
   js {
     browser()
-    binaries.executable()
+    binaries.library()
   }
 
   sourceSets {
     val commonMain by getting {
       dependencies {
-        implementation(project(":zipline"))
+        implementation("app.cash.zipline:zipline")
       }
     }
     val jvmMain by getting {
@@ -28,5 +30,11 @@ kotlin {
 }
 
 dependencies {
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, "app.cash.zipline:zipline-kotlin-plugin")
+}
+
+val compileZipline by tasks.creating(ZiplineCompileTask::class) {
+  dependsOn(":samples:emoji-search:presenters:compileDevelopmentLibraryKotlinJs")
+  inputDir = file("$buildDir/compileSync/main/developmentLibrary/kotlin")
+  outputDir = file("$buildDir/zipline")
 }

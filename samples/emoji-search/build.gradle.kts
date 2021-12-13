@@ -47,7 +47,7 @@ android {
 }
 
 dependencies {
-  implementation(project(":zipline"))
+  implementation("app.cash.zipline:zipline")
   implementation(project(":samples:emoji-search:presenters"))
   implementation(Dependencies.androidMaterial)
   implementation(Dependencies.androidxActivityCompose)
@@ -59,5 +59,5 @@ dependencies {
   implementation(Dependencies.composeUi)
   implementation(Dependencies.composeUiToolingPreview)
   debugImplementation(Dependencies.composeUiTooling)
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, "app.cash.zipline:zipline-kotlin-plugin")
 }
