@@ -33,7 +33,7 @@ apply(plugin = "com.vanniktech.maven.publish.base")
 
 allprojects {
   group = "app.cash.zipline"
-  version = "1.0.0-SNAPSHOT"
+  version = "0.1.0-square.20"
 
   repositories {
     mavenCentral()
@@ -105,9 +105,19 @@ allprojects {
   }
 
   plugins.withId("com.vanniktech.maven.publish.base") {
+    configure<PublishingExtension> {
+      repositories {
+        maven {
+          name = "artifactory"
+          url = java.net.URI("https://maven.global.square/artifactory/releases/")
+          credentials(org.gradle.api.credentials.PasswordCredentials::class.java)
+        }
+      }
+    }
+
     configure<MavenPublishBaseExtension> {
       publishToMavenCentral(SonatypeHost.DEFAULT)
-      signAllPublications()
+      // signAllPublications()
       pom {
         description.set("Runs Kotlin/JS libraries in Kotlin/JVM and Kotlin/Native programs")
         name.set(project.name)
