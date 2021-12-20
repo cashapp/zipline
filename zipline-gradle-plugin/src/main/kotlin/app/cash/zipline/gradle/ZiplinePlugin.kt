@@ -16,6 +16,7 @@
 package app.cash.zipline.gradle
 
 import org.gradle.api.provider.Provider
+import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
@@ -42,6 +43,13 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     kotlinCompilation: KotlinCompilation<*>
   ): Provider<List<SubpluginOption>> {
     val project = kotlinCompilation.target.project
+
+    // Configure Kotlin JS to generate modular JS files
+    project.tasks.withType(KotlinJsCompile::class.java).configureEach {
+      it.kotlinOptions {
+        freeCompilerArgs += listOf("-Xir-per-module")
+      }
+    }
     return project.provider {
       listOf() // No options.
     }
