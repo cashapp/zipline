@@ -15,6 +15,7 @@ dependencies {
   implementation(project(":zipline"))
   implementation(project(":zipline-bytecode"))
   implementation(project(":zipline-loader"))
+  implementation(Dependencies.kotlinGradlePlugin)
   implementation(Dependencies.kotlinxSerializationJson)
   implementation(Dependencies.okio)
   testImplementation(Dependencies.junit)
