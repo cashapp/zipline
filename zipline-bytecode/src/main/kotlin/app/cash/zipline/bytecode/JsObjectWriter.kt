@@ -15,10 +15,8 @@
  */
 package app.cash.zipline.bytecode
 
-import kotlin.text.Charsets.UTF_16LE
 import okio.BufferedSink
 import okio.Closeable
-import okio.utf8Size
 
 /**
  * Encodes a [JsObject] as bytes.
@@ -48,18 +46,15 @@ class JsObjectWriter(
     }
   }
 
-  private fun writeJsString(value: String) {
-    when {
-      // Regular chars are US-ASCII.
-      value.length == value.utf8Size().toInt() -> {
-        sink.writeLeb128((value.length shl 1) or 0x0)
-        sink.writeUtf8(value)
-      }
-      // Wide chars are UTF-16LE.
-      else -> {
-        sink.writeLeb128((value.length shl 1) or 0x1)
-        sink.writeString(value, UTF_16LE)
-      }
+  private fun writeJsString(value: JsString) {
+    if (value.isWideChar) {
+      val stringLength = value.bytes.size / 2
+      sink.writeLeb128((stringLength shl 1) or 0x1)
+      sink.write(value.bytes)
+    } else {
+      val stringLength = value.bytes.size
+      sink.writeLeb128((stringLength shl 1) or 0x0)
+      sink.write(value.bytes)
     }
   }
 
@@ -84,7 +79,7 @@ class JsObjectWriter(
       }
       is JsString -> {
         sink.writeByte(BC_TAG_STRING)
-        writeJsString(value.value)
+        writeJsString(value)
       }
       is JsFunctionBytecode -> {
         sink.writeByte(BC_TAG_FUNCTION_BYTECODE)
@@ -96,7 +91,7 @@ class JsObjectWriter(
   private fun writeFunction(value: JsFunctionBytecode) {
     sink.writeShort(value.flags)
     sink.writeByte(value.jsMode.toInt())
-    writeAtom(value.name)
+    writeAtom(value.name.toJsString())
     sink.writeLeb128(value.argCount)
     sink.writeLeb128(value.varCount)
     sink.writeLeb128(value.definedArgCount)
@@ -126,13 +121,13 @@ class JsObjectWriter(
     }
   }
 
-  private fun writeAtom(value: String) {
+  private fun writeAtom(value: JsString) {
     val valueAndType = atoms.idOf(value) shl 1
     sink.writeLeb128(valueAndType)
   }
 
   private fun writeVarDef(value: JsVarDef) {
-    writeAtom(value.name)
+    writeAtom(value.name.toJsString())
     sink.writeLeb128(value.scopeLevel)
     sink.writeLeb128(value.scopeNext + 1)
     sink.writeByte(
@@ -144,7 +139,7 @@ class JsObjectWriter(
   }
 
   private fun writeClosureVar(value: JsClosureVar) {
-    writeAtom(value.name)
+    writeAtom(value.name.toJsString())
     sink.writeLeb128(value.varIndex)
     sink.writeByte(
       value.isLocal.toBit(0) or
@@ -156,7 +151,7 @@ class JsObjectWriter(
   }
 
   private fun writeDebug(debug: Debug) {
-    writeAtom(debug.fileName)
+    writeAtom(debug.fileName.toJsString())
     sink.writeLeb128(debug.lineNumber)
     sink.writeLeb128(debug.pc2Line.size)
     sink.write(debug.pc2Line)
