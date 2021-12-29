@@ -112,6 +112,10 @@ actual class Zipline private constructor(
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
 
+  actual fun <T : ZiplineService> getService(name: String): T {
+    error("unexpected call to Zipline.getService: is the Zipline plugin configured?")
+  }
+
   @PublishedApi
   internal fun <T : Any> get(name: String, bridge: OutboundBridge<T>): T {
     check(scope.isActive) { "closed" }
@@ -120,6 +124,10 @@ actual class Zipline private constructor(
 
   actual fun <T : Any> set(name: String, instance: T) {
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
+  }
+
+  actual fun <T : ZiplineService> setService(name: String, instance: T) {
+    error("unexpected call to Zipline.setService: is the Zipline plugin configured?")
   }
 
   @PublishedApi

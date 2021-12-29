@@ -23,15 +23,17 @@ import kotlinx.serialization.modules.SerializersModule
  * Generated code extends this base class to receive calls into an application-layer interface from
  * another platform in the same process.
  */
-@PublishedApi
-internal abstract class InboundBridge<T : Any> {
+// @PublishedApi
+// internal
+abstract class InboundBridge<T : Any> {
   abstract val service: T
 
   abstract fun create(context: Context): InboundCallHandler
 
   class Context(
     val serializersModule: SerializersModule,
-    @PublishedApi internal val endpoint: Endpoint,
+    // @PublishedApi internal
+    val endpoint: Endpoint,
   ) {
     val json = Json {
       useArrayPolymorphism = true
@@ -40,8 +42,9 @@ internal abstract class InboundBridge<T : Any> {
   }
 }
 
-@PublishedApi
-internal interface InboundCallHandler {
+// @PublishedApi
+// internal
+interface InboundCallHandler {
   val context: InboundBridge.Context
 
   fun call(inboundCall: InboundCall): Array<String>
@@ -58,8 +61,9 @@ internal interface InboundCallHandler {
  *
  * Call [unexpectedFunction] if an unexpected function is encountered.
  */
-@PublishedApi
-internal class InboundCall(
+// @PublishedApi
+// internal
+class InboundCall(
   private val context: InboundBridge.Context,
   val funName: String,
   val arguments: Array<String>,

@@ -20,6 +20,7 @@ import app.cash.zipline.FlowReferenceSerializer
 import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
+import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
@@ -36,7 +37,7 @@ class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val outboundChannel: CallChannel,
 ) {
-  internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
+  private val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
   private var nextId = 1
 
   internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
@@ -59,7 +60,7 @@ class Endpoint internal constructor(
     }
 
   /** Unions Zipline-provided serializers with user-provided serializers. */
-  internal var serializersModule: SerializersModule = computeSerializersModule()
+  private var serializersModule: SerializersModule = computeSerializersModule()
 
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
@@ -120,14 +121,31 @@ class Endpoint internal constructor(
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
   }
 
+  fun <T : ZiplineService> setService(name: String, instance: T) {
+    error("unexpected call to Zipline.setService: is the Zipline plugin configured?")
+  }
+
   @PublishedApi
   internal fun <T : Any> set(name: String, inboundBridge: InboundBridge<T>) {
     val reference = InboundZiplineReference(inboundBridge)
     reference.connect(this, name)
   }
 
+  @PublishedApi
+  internal fun setService(name: String, inboundCallHandler: InboundCallHandler) {
+    inboundHandlers[name] = inboundCallHandler
+  }
+
+  fun remove(name: String): InboundCallHandler? {
+    return inboundHandlers.remove(name)
+  }
+
   fun <T : Any> get(name: String): T {
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
+  }
+
+  fun <T : ZiplineService> getService(name: String): T {
+    error("unexpected call to Zipline.getService: is the Zipline plugin configured?")
   }
 
   @PublishedApi
@@ -140,4 +158,8 @@ class Endpoint internal constructor(
   internal fun generateName(): String {
     return "zipline/${nextId++}"
   }
+
+  fun newInboundContext() = InboundBridge.Context(serializersModule, this)
+
+  fun newOutboundContext(name: String) = OutboundBridge.Context(name, serializersModule, this)
 }

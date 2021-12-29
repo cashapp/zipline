@@ -26,14 +26,16 @@ import kotlinx.serialization.modules.SerializersModule
  * Generated code extends this base class to make calls into an application-layer interface that is
  * implemented by another platform in the same process.
  */
-@PublishedApi
-internal abstract class OutboundBridge<T : Any> {
+// @PublishedApi
+// internal
+abstract class OutboundBridge<T : Any> {
   abstract fun create(context: Context): T
 
   class Context(
     private val instanceName: String,
     val serializersModule: SerializersModule,
-    @PublishedApi internal val endpoint: Endpoint,
+    // @PublishedApi internal
+    val endpoint: Endpoint,
   ) {
     val json = Json {
       useArrayPolymorphism = true
@@ -60,8 +62,9 @@ internal abstract class OutboundBridge<T : Any> {
  * [Factory.create], pass in each received argument to [parameter], and then call [invoke] to
  * perform the cross-platform call.
  */
-@PublishedApi
-internal class OutboundCall(
+// @PublishedApi
+// internal
+class OutboundCall(
   private val context: OutboundBridge.Context,
   private val instanceName: String,
   private val endpoint: Endpoint,
@@ -119,7 +122,7 @@ internal class OutboundCall(
   ) : SuspendCallback {
     override fun call(response: Array<String>) {
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
-      endpoint.inboundHandlers.remove(callbackName)
+      endpoint.remove(callbackName)
       val result = response.decodeResult(serializer)
       context.endpoint.incompleteContinuations -= continuation
       continuation.resumeWith(result)
