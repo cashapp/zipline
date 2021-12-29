@@ -17,34 +17,61 @@ package app.cash.zipline.bytecode
 
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
+import okio.ByteString.Companion.decodeHex
 import org.junit.Test
 
 class AtomSetTest {
+  private val helloJsString = "hello".toJsString()
+  private val worldJsString = "world".toJsString()
+  private val nullJsString = "null".toJsString()
+  private val trueJsString = "true".toJsString()
+  private val noSuchJsString = "no-such-string".toJsString()
+
   @Test fun happyPath() {
-    val atomSet = MutableAtomSet(listOf("hello", "world"))
+    val atomSet = MutableAtomSet(listOf(helloJsString, worldJsString))
 
     // Null and true are built-in atoms.
-    assertThat(atomSet.idOf("null")).isAtLeast(0)
-    assertThat(atomSet.idOf("true")).isAtLeast(0)
+    assertThat(atomSet.idOf(nullJsString)).isAtLeast(0)
+    assertThat(atomSet.idOf(trueJsString)).isAtLeast(0)
 
     // 'hello' and 'world' are not built-in atoms.
-    assertThat(atomSet.idOf("hello")).isAtLeast(0)
-    assertThat(atomSet.idOf("world")).isAtLeast(0)
+    assertThat(atomSet.idOf(helloJsString)).isAtLeast(0)
+    assertThat(atomSet.idOf(worldJsString)).isAtLeast(0)
 
     assertFailsWith<IllegalArgumentException> {
-      atomSet.idOf("no-such-string")
+      atomSet.idOf(noSuchJsString)
     }
   }
 
   @Test fun addNewAtom() {
-    val atomSet = MutableAtomSet(listOf("hello"))
-    assertThat(atomSet.add("world")).isTrue()
-    assertThat(atomSet.idOf("world")).isAtLeast(0)
+    val atomSet = MutableAtomSet(listOf(helloJsString))
+    assertThat(atomSet.add(worldJsString)).isTrue()
+    assertThat(atomSet.idOf(worldJsString)).isAtLeast(0)
   }
 
   @Test fun addExistingAtom() {
-    val atomSet = MutableAtomSet(listOf("hello"))
-    assertThat(atomSet.add("true")).isFalse()
-    assertThat(atomSet.idOf("true")).isAtLeast(0)
+    val atomSet = MutableAtomSet(listOf(helloJsString))
+    assertThat(atomSet.add(trueJsString)).isFalse()
+    assertThat(atomSet.idOf(trueJsString)).isAtLeast(0)
+  }
+
+  /**
+   * Confirm that [AtomSet] keeps distinct indexes for values that have the same UTF-8 bytes but are
+   * otherwise distinct. When encoding regex bytecode, QuickJS uses 8-bit strings that are not valid
+   * UTF-8.
+   */
+  @Test fun atomSetHoldsNonUtf8Strings() {
+    val unicodeReplacementChar = "\ufffd"
+    val atomSet = MutableAtomSet(listOf())
+
+    val fe = JsString(isWideChar = false, "fe".decodeHex())
+    assertThat(fe.string).isEqualTo(unicodeReplacementChar)
+    assertThat(atomSet.add(fe)).isTrue()
+
+    val ff = JsString(isWideChar = false, "ff".decodeHex())
+    assertThat(ff.string).isEqualTo(unicodeReplacementChar)
+    assertThat(atomSet.add(ff)).isTrue()
+
+    assertThat(atomSet.idOf(fe)).isNotEqualTo(atomSet.idOf(ff))
   }
 }

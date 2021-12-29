@@ -22,17 +22,17 @@ package app.cash.zipline.bytecode
  * When encoding an object, built-in strings are not encoded.
  */
 interface AtomSet {
-  val strings: List<String>
-  fun get(id: Int): String
-  fun idOf(value: String): Int
+  val strings: List<JsString>
+  fun get(id: Int): JsString
+  fun idOf(value: JsString): Int
   fun toMutableAtomSet(): MutableAtomSet
 }
 
 class MutableAtomSet(
-  strings: List<String>
+  strings: List<JsString>
 ) : AtomSet {
   private val _strings = strings.toMutableList()
-  private val stringToId = mutableMapOf<String, Int>()
+  private val stringToId = mutableMapOf<JsString, Int>()
 
   init {
     for ((index, string) in BUILT_IN_ATOMS.withIndex()) {
@@ -43,22 +43,22 @@ class MutableAtomSet(
     }
   }
 
-  override val strings: List<String> = _strings
+  override val strings: List<JsString> = _strings
 
-  override fun get(id: Int): String {
+  override fun get(id: Int): JsString {
     return when {
       id < BUILT_IN_ATOMS.size -> BUILT_IN_ATOMS[id]
       else -> _strings[id - BUILT_IN_ATOMS.size]
     }
   }
 
-  override fun idOf(value: String): Int {
+  override fun idOf(value: JsString): Int {
     val result = stringToId[value]
     return result ?: throw IllegalArgumentException("not an atom: $value")
   }
 
   /** Returns true if [string] was added to this set. */
-  fun add(string: String): Boolean {
+  fun add(string: JsString): Boolean {
     if (stringToId[string] != null) return false
 
     val newIndex = BUILT_IN_ATOMS.size + _strings.size
@@ -67,11 +67,13 @@ class MutableAtomSet(
     return true
   }
 
+  fun add(string: String): Boolean = add(string.toJsString())
+
   override fun toMutableAtomSet(): MutableAtomSet = MutableAtomSet(_strings)
 }
 
 /** This is computed dynamically at QuickJS boot, and depends on build flags. */
-private val BUILT_IN_ATOMS = listOf(
+private val BUILT_IN_ATOMS: List<JsString> = listOf(
   "\u0000", // JS_ATOM_NULL
   "null",
   "false",
@@ -282,4 +284,4 @@ private val BUILT_IN_ATOMS = listOf(
   "Symbol.species",  // Symbols
   "Symbol.unscopables",  // Symbols
   "Symbol.asyncIterator",  // Symbols
-)
+).map { it.toJsString() }

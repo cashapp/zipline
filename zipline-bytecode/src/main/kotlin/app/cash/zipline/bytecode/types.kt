@@ -16,6 +16,9 @@
 package app.cash.zipline.bytecode
 
 import okio.ByteString
+import okio.ByteString.Companion.encode
+import okio.ByteString.Companion.encodeUtf8
+import okio.utf8Size
 
 sealed class JsObject
 
@@ -29,7 +32,23 @@ data class JsInt(val value: Int) : JsObject()
 
 data class JsDouble(val value: Double) : JsObject()
 
-data class JsString(val value: String) : JsObject()
+data class JsString(
+  val isWideChar: Boolean,
+  val bytes: ByteString,
+) : JsObject() {
+  val string: String
+    get() = when {
+      isWideChar -> bytes.string(Charsets.UTF_16LE)
+      else -> bytes.utf8()
+    }
+}
+
+fun String.toJsString(): JsString {
+  return when (length) {
+    utf8Size().toInt() -> JsString(isWideChar = false, bytes = encodeUtf8())
+    else -> JsString(isWideChar = true, bytes = encode(Charsets.UTF_16LE))
+  }
+}
 
 data class JsFunctionBytecode(
   val flags: Int,

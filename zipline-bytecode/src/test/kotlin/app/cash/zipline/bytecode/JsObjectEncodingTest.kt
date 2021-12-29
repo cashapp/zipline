@@ -120,6 +120,19 @@ class JsObjectEncodingTest {
     )
   }
 
+  @Test fun nonUtf8Strings() {
+    assertRoundTrip(
+      """
+      |function nonUtf8Strings() {
+      |  return [
+      |    "\u00fe",
+      |    "\u00ff"
+      |  ];
+      |}
+      """.trimMargin()
+    )
+  }
+
   /** Returns the model object for the bytecode of [script]. */
   private fun assertRoundTrip(
     script: String,
