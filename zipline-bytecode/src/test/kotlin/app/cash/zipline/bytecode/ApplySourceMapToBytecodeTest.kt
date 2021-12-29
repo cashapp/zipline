@@ -24,6 +24,17 @@ import org.junit.Test
 class ApplySourceMapToBytecodeTest {
   private val quickJs = QuickJs.create()
 
+  private val emptySourceMap = """
+    |{
+    |  "version": 3,
+    |  "sources": [],
+    |  "sourcesContent": [],
+    |  "names": [],
+    |  "mappings": ";;"
+    |}
+    """.trimMargin()
+
+
   @After fun tearDown() {
     quickJs.close()
   }
@@ -110,23 +121,35 @@ class ApplySourceMapToBytecodeTest {
 
   @Test fun functionWithNoInstructions() {
     val js = """
-       function doNothing() {
-       }
-       """.trimIndent()
-
-    // kotlin-js-demo.js.map
-    val sourceMap = """
-      {
-        "version": 3,
-        "sources": [],
-        "sourcesContent": [],
-        "names": [],
-        "mappings": ";;"
-      }
-      """.trimIndent()
+      |function doNothing() {
+      |}
+      |""".trimMargin()
 
     // Just confirm the empty function can be transformed successfully.
     val bytecode = quickJs.compile(js, "demo.js")
-    applySourceMapToBytecode(bytecode, sourceMap)
+    applySourceMapToBytecode(bytecode, emptySourceMap)
+  }
+
+  /**
+   * We had a bug where we assume we can roundtrip JS strings through UTF-8. For true string values
+   * this is safe, but QuickJS also uses the 'string' type for non-string things, notably regular
+   * expression bytecode.
+   */
+  @Test fun regularExpressionBytecode() {
+    val js = """
+      |function doubleToDisplayString(target) {
+      |  return target.replace(/(-?)(\d*)\.?(\d*)e([+-]\d+)/,
+      |    function(a,b,c,d,e) {
+      |      return e < 0
+      |        ? b + '0.' + Array(1-e-c.length).join(0) + c + d
+      |        : b + c + d + Array(e-d.length+1).join(0);
+      |    });
+      |}
+      |""".trimMargin()
+
+    val bytecode = quickJs.compile(js, "demo.js")
+    val bytecodeWithSourceMap = applySourceMapToBytecode(bytecode, emptySourceMap)
+    quickJs.execute(bytecodeWithSourceMap)
+    assertThat(quickJs.evaluate("doubleToDisplayString('1000.0')")).isEqualTo("1000")
   }
 }
