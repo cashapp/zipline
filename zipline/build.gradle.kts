@@ -197,6 +197,11 @@ android {
       // kotlinx-coroutines-test. Don't fail the build on these duplicates.
       exclude("META-INF/AL2.0")
       exclude("META-INF/LGPL2.1")
+
+      // Keep debug symbols to get function names if QuickJS crashes in native code. This grows the
+      // release libquickjs.so artifact from 793 KiB to 2.1 MiB. (We expect that release builds of
+      // applications will strip these away later.)
+      jniLibs.keepDebugSymbols += "**/libquickjs.so"
     }
   }
 
