@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.bytecode
 
-import kotlin.text.Charsets.UTF_16LE
 import okio.Buffer
 import okio.BufferedSource
 import okio.Closeable
@@ -41,20 +40,26 @@ class JsObjectReader(
       throw IOException("unexpected version (expected $BC_VERSION)")
     }
     val atomCount = source.readLeb128()
-    val result = mutableListOf<String>()
+    val result = mutableListOf<JsString>()
     for (i in 0 until atomCount) {
       result += readJsString()
     }
     return MutableAtomSet(result)
   }
 
-  private fun readJsString(): String {
-    val byteCountAndType = source.readLeb128()
-    val isWideChar = byteCountAndType and 0x1
-    val byteCount = byteCountAndType shr 1
+  private fun readJsString(): JsString {
+    val stringLengthAndType = source.readLeb128()
+    val isWideChar = stringLengthAndType and 0x1
+    val stringLength = stringLengthAndType shr 1
     return when (isWideChar) {
-      0x1 -> source.readString(byteCount.toLong() * 2, UTF_16LE)
-      else -> source.readUtf8(byteCount.toLong())
+      0x1 -> {
+        val byteCount = stringLength.toLong() * 2
+        JsString(isWideChar = true, bytes = source.readByteString(byteCount))
+      }
+      else -> {
+        val byteCount = stringLength.toLong()
+        JsString(isWideChar = false, bytes = source.readByteString(byteCount))
+      }
     }
   }
 
@@ -66,7 +71,7 @@ class JsObjectReader(
       BC_TAG_BOOL_TRUE -> JsBoolean(true)
       BC_TAG_INT32 -> JsInt(source.readSleb128())
       BC_TAG_FLOAT64 -> JsDouble(Double.fromBits(source.readLong()))
-      BC_TAG_STRING -> JsString(readJsString())
+      BC_TAG_STRING -> readJsString()
       BC_TAG_FUNCTION_BYTECODE -> readFunction()
       else -> throw IOException("unsupported tag: $tag")
     }
@@ -109,7 +114,7 @@ class JsObjectReader(
     return JsFunctionBytecode(
       flags = flags,
       jsMode = jsMode,
-      name = functionName,
+      name = functionName.string,
       argCount = argCount,
       varCount = varCount,
       definedArgCount = definedArgCount,
@@ -122,7 +127,7 @@ class JsObjectReader(
     )
   }
 
-  private fun readAtomString(): String {
+  private fun readAtomString(): JsString {
     val valueAndType = source.readLeb128()
     val value = valueAndType shr 1
     check(valueAndType and 0x1 != 0x1) { "expected a string but got an int" }
@@ -142,7 +147,7 @@ class JsObjectReader(
     val scopeNext = source.readLeb128() - 1
     val flags = source.readByte().toInt()
     return JsVarDef(
-      name = name,
+      name = name.string,
       scopeLevel = scopeLevel,
       scopeNext = scopeNext,
       kind = flags.bits(bit = 0, bitCount = 4),
@@ -157,7 +162,7 @@ class JsObjectReader(
     val varIndex = source.readLeb128()
     val flags = source.readByte().toInt()
     return JsClosureVar(
-      name = name,
+      name = name.string,
       varIndex = varIndex,
       isLocal = flags.bit(0),
       isArg = flags.bit(1),
@@ -173,7 +178,7 @@ class JsObjectReader(
     val pc2lineLength = source.readLeb128()
     val pc2line = source.readByteString(pc2lineLength.toLong())
     return Debug(
-      fileName = fileName,
+      fileName = fileName.string,
       lineNumber = lineNumber,
       pc2Line = pc2line
     )

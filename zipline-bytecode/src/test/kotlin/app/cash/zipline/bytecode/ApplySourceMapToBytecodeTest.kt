@@ -150,6 +150,6 @@ class ApplySourceMapToBytecodeTest {
     val bytecode = quickJs.compile(js, "demo.js")
     val bytecodeWithSourceMap = applySourceMapToBytecode(bytecode, emptySourceMap)
     quickJs.execute(bytecodeWithSourceMap)
-    assertThat(quickJs.evaluate("doubleToDisplayString('1000.0')")).isEqualTo("1000")
+    assertThat(quickJs.evaluate("doubleToDisplayString('1000.0')")).isEqualTo("1000.0")
   }
 }
