@@ -37,7 +37,7 @@ class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val outboundChannel: CallChannel,
 ) {
-  private val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
+  internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
   private var nextId = 1
 
   internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
@@ -83,7 +83,7 @@ class Endpoint internal constructor(
       funName: String,
       encodedArguments: Array<String>
     ): Array<String> {
-      val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
+      val handler = takeHandler(instanceName, funName)
       val inboundCall = InboundCall(handler.context, funName, encodedArguments)
       return try {
         handler.call(inboundCall)
@@ -98,7 +98,7 @@ class Endpoint internal constructor(
       encodedArguments: Array<String>,
       callbackName: String
     ) {
-      val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
+      val handler = takeHandler(instanceName, funName)
       scope.launch {
         val callback = get<SuspendCallback>(callbackName)
         val inboundCall = InboundCall(handler.context, funName, encodedArguments)
@@ -110,6 +110,18 @@ class Endpoint internal constructor(
         scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
         callback.call(result)
       }
+    }
+
+    /**
+     * Note that this removes the handler for calls to is [ZiplineService.close]. We remove before
+     * dispatching so it'll always be removed even if the call stalls or throws.
+     */
+    private fun takeHandler(instanceName: String, funName: String): InboundCallHandler {
+      val result = when (funName) {
+        "close" -> inboundHandlers.remove(instanceName)
+        else -> inboundHandlers[instanceName]
+      }
+      return result ?: error("no handler for $instanceName")
     }
 
     override fun disconnect(instanceName: String): Boolean {
@@ -132,8 +144,12 @@ class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal fun setService(name: String, inboundCallHandler: InboundCallHandler) {
-    inboundHandlers[name] = inboundCallHandler
+  internal fun <T : ZiplineService> setService(
+    name: String,
+    service: T,
+    adapter: ZiplineServiceAdapter<T>
+  ) {
+    inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext())
   }
 
   fun remove(name: String): InboundCallHandler? {
@@ -153,6 +169,11 @@ class Endpoint internal constructor(
     val reference = OutboundZiplineReference<T>()
     reference.connect(this, name)
     return reference.get(outboundBridge)
+  }
+
+  @PublishedApi
+  internal fun <T : ZiplineService> getService(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    return adapter.outboundService(newOutboundContext(name))
   }
 
   internal fun generateName(): String {

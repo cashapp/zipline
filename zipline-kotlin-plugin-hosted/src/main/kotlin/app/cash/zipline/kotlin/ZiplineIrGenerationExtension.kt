@@ -58,6 +58,18 @@ class ZiplineIrGenerationExtension(
             ).rewrite()
           }
 
+          val getOrSetFunction = ziplineApis.getOrSetServiceRewriteFunctions[expression.symbol]
+          if (getOrSetFunction != null) {
+            return AddAdapterArgumentRewriter(
+              pluginContext,
+              ziplineApis,
+              currentScope!!,
+              currentDeclarationParent!!,
+              expression,
+              getOrSetFunction,
+            ).rewrite()
+          }
+
           return expression
         } catch (e: ZiplineCompilationException) {
           messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))

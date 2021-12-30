@@ -21,10 +21,12 @@ import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
+import org.jetbrains.kotlin.ir.expressions.IrGetObjectValue
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
@@ -173,6 +175,14 @@ internal class BridgedInterface(
     ).apply {
       dispatchReceiver = irBuilder.irGet(declaringInstance)
     }
+  }
+
+  /** Returns an expression that gets the `Adapter` object for this interface. */
+  fun getAdapterVarExpression(irBuilder: IrBuilderWithScope): IrGetObjectValue? {
+    val classFqName = type.classFqName ?: return null
+    val adapterSymbol = classFqName.child("Companion").child("Adapter")
+    val classSymbol = pluginContext.referenceClass(adapterSymbol) ?: return null
+    return irBuilder.irGetObject(classSymbol)
   }
 
   companion object {

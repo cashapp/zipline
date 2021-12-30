@@ -175,6 +175,14 @@ internal class ZiplineApis(
     referenceGetRewritePair(),
   ).toMap()
 
+  /** Keys are functions like `Zipline.getService()` and values are their rewrite targets. */
+  val getOrSetServiceRewriteFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(
+    rewritePair(ziplineFqName.child("getService")),
+    rewritePair(endpointFqName.child("getService")),
+    rewritePair(ziplineFqName.child("setService")),
+    rewritePair(endpointFqName.child("setService")),
+  ).toMap()
+
   /** Keys are functions like `Zipline.set()` and values are their rewrite targets. */
   val inboundRewriteFunctions: Map<IrFunctionSymbol, IrFunctionSymbol> = listOf(
     rewritePair(ziplineFqName.child("set")),

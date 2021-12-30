@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.kotlin
 
+import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.createDispatchReceiverParameter
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
@@ -285,3 +286,15 @@ fun irVal(
   return result
 }
 
+fun irBlockBodyBuilder(
+  irPluginContext: IrGeneratorContext,
+  scopeWithIr: ScopeWithIr,
+  original: IrElement
+): IrBlockBodyBuilder {
+  return IrBlockBodyBuilder(
+    irPluginContext,
+    scopeWithIr.scope,
+    original.startOffset,
+    original.endOffset
+  )
+}

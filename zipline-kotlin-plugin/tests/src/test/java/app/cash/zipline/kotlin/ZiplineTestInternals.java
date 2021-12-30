@@ -24,6 +24,7 @@ import app.cash.zipline.internal.bridge.OutboundCall;
 import app.cash.zipline.testing.EchoRequest;
 import app.cash.zipline.testing.EchoResponse;
 import app.cash.zipline.testing.EchoService;
+import app.cash.zipline.testing.EchoZiplineService;
 import app.cash.zipline.testing.GenericEchoService;
 import java.util.List;
 import kotlin.Pair;
@@ -41,6 +42,7 @@ import kotlinx.serialization.KSerializer;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static kotlinx.serialization.SerializersKt.serializer;
+import static app.cash.zipline.testing.EchoZiplineService.Companion.Adapter.INSTANCE;
 
 /**
  * Call these {@link PublishedApi} internal APIs from Java rather than from Kotlin to hack around
@@ -172,6 +174,17 @@ public final class ZiplineTestInternals {
         };
       }
     });
+  }
+
+  /** Simulate generated code for inbound calls. */
+  public static void setEchoZiplineService(
+      Endpoint endpoint, String name, EchoZiplineService service) {
+    endpoint.setService(name, service, INSTANCE);
+  }
+
+  /** Simulate generated code for inbound calls. */
+  public static EchoZiplineService getEchoZiplineService(Endpoint endpoint, String name) {
+    return endpoint.getService(name, INSTANCE);
   }
 
   private ZiplineTestInternals() {

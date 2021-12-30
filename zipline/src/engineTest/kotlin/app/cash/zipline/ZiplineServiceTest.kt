@@ -42,21 +42,11 @@ internal class ZiplineServiceTest {
       }
     }
 
-    // TODO: rewrite from this:
-    // endpointA.setService<EchoZiplineService>("helloService", service)
-    endpointA.setService(
-      "helloService",
-      EchoZiplineService.Companion.Adapter.inboundCallHandler(
-        service,
-        endpointA.newInboundContext()
-      )
-    )
+    endpointA.setService<EchoZiplineService>("helloService", service)
+    assertEquals(setOf("helloService"), endpointA.serviceNames)
 
-    // TODO: rewrite from this:
-    // val client = endpointB.getService<EchoZiplineService>("helloService")
-    val client = EchoZiplineService.Companion.Adapter.outboundService(
-      endpointB.newOutboundContext("helloService")
-    )
+    val client = endpointB.getService<EchoZiplineService>("helloService")
+    assertEquals(setOf("helloService"), endpointB.clientNames)
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -65,6 +55,8 @@ internal class ZiplineServiceTest {
 
     client.close()
     assertEquals("close", events.removeFirst())
+    assertEquals(setOf(), endpointB.clientNames)
+    assertEquals(setOf(), endpointA.serviceNames)
 
     assertNull(events.removeFirstOrNull())
   }

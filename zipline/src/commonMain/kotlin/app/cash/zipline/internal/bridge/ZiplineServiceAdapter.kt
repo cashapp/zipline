@@ -44,7 +44,7 @@ abstract class ZiplineServiceAdapter<T : ZiplineService> {
 
       override fun serialize(encoder: Encoder, value: T) {
         val name = endpoint.generateName()
-        endpoint.setService(name, inboundCallHandler(value, endpoint.newInboundContext()))
+        endpoint.setService(name, value, this@ZiplineServiceAdapter)
         encoder.encodeString(name)
       }
 

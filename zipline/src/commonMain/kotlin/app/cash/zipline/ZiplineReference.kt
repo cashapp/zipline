@@ -49,7 +49,7 @@ internal class InboundZiplineReference<T : Any>(
     this.endpoint = endpoint
     val context = endpoint.newInboundContext()
     val result = inboundBridge.create(context)
-    endpoint.setService(name, result)
+    endpoint.inboundHandlers[name] = result
     return result
   }
 
