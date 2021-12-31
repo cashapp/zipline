@@ -19,6 +19,7 @@ package app.cash.zipline.kotlin
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.EchoZiplineService
 import app.cash.zipline.testing.GenericEchoService
 import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
@@ -29,6 +30,32 @@ import org.junit.Test
 
 /** Confirm bridge calls are rewritten to use `OutboundBridge` or `InboundBridge` as appropriate. */
 class ZiplineKotlinPluginTest {
+  @Test
+  fun `zipline service rewritten with adapter`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "SampleService.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.ZiplineService
+
+        interface SampleService : ZiplineService {
+          fun hello(request: EchoRequest): EchoResponse
+          override fun close()
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val adapterClass = result.classLoader.loadClass(
+      "app.cash.zipline.testing.SampleService\$Companion\$Adapter"
+    )
+    assertThat(adapterClass).isNotNull()
+  }
+
+  // TODO(jwilson): delete this with Zipline.set(); it's redundant with the test that follows.
   @Test
   fun `set rewritten to receive inbound calls`() {
     val result = compile(
@@ -65,6 +92,44 @@ class ZiplineKotlinPluginTest {
   }
 
   @Test
+  fun `setService rewritten to receive inbound calls`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.internal.bridge.Endpoint
+
+        class TestingEchoService(
+          private val greeting: String
+        ) : EchoZiplineService {
+          override fun echo(request: EchoRequest): EchoResponse {
+            return EchoResponse("${'$'}greeting from the compiler plugin, ${'$'}{request.message}")
+          }
+          override fun close() {
+          }
+        }
+
+        fun prepareJsBridges(endpoint: Endpoint) {
+          endpoint.setService<EchoZiplineService>("helloService", TestingEchoService("hello"))
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
+    val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
+    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
+
+    val helloService = ZiplineTestInternals.getEchoZiplineService(bridgeB, "helloService")
+    assertThat(helloService.echo(EchoRequest("Jesse")))
+      .isEqualTo(EchoResponse("hello from the compiler plugin, Jesse"))
+  }
+
+  // TODO(jwilson): delete this with Zipline.get(); it's redundant with the test that follows.
+  @Test
   fun `get rewritten to make outbound calls`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
@@ -94,6 +159,43 @@ class ZiplineKotlinPluginTest {
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
     val helloService = mainKt.getDeclaredMethod("getHelloService", bridgeA::class.java)
       .invoke(null, bridgeA) as EchoService
+
+    assertThat(helloService.echo(EchoRequest("Jesse")))
+      .isEqualTo(EchoResponse("greetings from the compiler plugin, Jesse"))
+  }
+
+  @Test
+  fun `getService rewritten to make outbound calls`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.internal.bridge.Endpoint
+
+        fun getHelloService(endpoint: Endpoint): EchoZiplineService {
+          return endpoint.getService("helloService")
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
+
+    val testingEchoService = object : EchoZiplineService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        return EchoResponse("greetings from the compiler plugin, ${request.message}")
+      }
+      override fun close() {
+      }
+    }
+    ZiplineTestInternals.setEchoZiplineService(bridgeB, "helloService", testingEchoService)
+
+    val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
+    val helloService = mainKt.getDeclaredMethod("getHelloService", bridgeA::class.java)
+      .invoke(null, bridgeA) as EchoZiplineService
 
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("greetings from the compiler plugin, Jesse"))

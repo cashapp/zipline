@@ -13,24 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline
+package app.cash.zipline.testing
 
-import kotlinx.serialization.modules.SerializersModule
+import app.cash.zipline.ZiplineService
 
-expect class Zipline {
-  val serializersModule: SerializersModule
-
-  /** Name of services that have been published with [set]. */
-  val serviceNames: Set<String>
-
-  /** Names of services that can be consumed with [get]. */
-  val clientNames: Set<String>
-
-  fun <T : Any> get(name: String): T
-
-  fun <T : Any> set(name: String, instance: T)
-
-  fun <T : ZiplineService> getService(name: String): T
-
-  fun <T : ZiplineService> setService(name: String, instance: T)
+interface EchoZiplineService : ZiplineService {
+  fun echo(request: EchoRequest): EchoResponse
+  override fun close()
 }

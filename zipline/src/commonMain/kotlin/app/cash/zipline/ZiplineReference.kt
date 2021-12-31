@@ -47,7 +47,7 @@ internal class InboundZiplineReference<T : Any>(
     check(this.endpoint == null && this.name == null) { "already connected" }
     this.name = name
     this.endpoint = endpoint
-    val context = InboundBridge.Context(endpoint.serializersModule, endpoint)
+    val context = endpoint.newInboundContext()
     val result = inboundBridge.create(context)
     endpoint.inboundHandlers[name] = result
     return result
@@ -61,7 +61,7 @@ internal class InboundZiplineReference<T : Any>(
     val endpoint = this.endpoint
     val name = this.name
     if (endpoint != null && name != null) {
-      val removed = endpoint.inboundHandlers.remove(name)
+      val removed = endpoint.remove(name)
       this.endpoint = null
       this.name = null
       require(removed != null) { "unable to find $name: was it removed twice?" }
@@ -81,11 +81,7 @@ internal class OutboundZiplineReference<T : Any> : ZiplineReference<T>() {
 
   override fun get(outboundBridge: OutboundBridge<T>): T {
     val endpoint = this.endpoint ?: throw IllegalStateException("not connected")
-    val context = OutboundBridge.Context(
-      instanceName = this.name!!,
-      serializersModule = endpoint.serializersModule,
-      endpoint = endpoint
-    )
+    val context = endpoint.newOutboundContext(this.name!!)
     return outboundBridge.create(context)
   }
 

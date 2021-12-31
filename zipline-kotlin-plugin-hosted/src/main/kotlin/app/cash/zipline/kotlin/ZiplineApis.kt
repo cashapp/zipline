@@ -39,6 +39,8 @@ internal class ZiplineApis(
   private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
   private val ziplineFqName = packageFqName.child("Zipline")
   val ziplineReferenceFqName = packageFqName.child("ZiplineReference")
+  val ziplineServiceFqName = packageFqName.child("ZiplineService")
+  private val ziplineServiceAdapterFqName = bridgeFqName.child("ZiplineServiceAdapter")
   private val endpointFqName = bridgeFqName.child("Endpoint")
 
   val any: IrClassSymbol
@@ -164,6 +166,27 @@ internal class ZiplineApis(
   val outboundBridgeCreate: IrSimpleFunctionSymbol
     get() = outboundBridge.functions.single { it.owner.name.identifier == "create" }
 
+  val ziplineService: IrClassSymbol
+    get() = pluginContext.referenceClass(ziplineServiceFqName)!!
+
+  val ziplineServiceAdapter: IrClassSymbol
+    get() = pluginContext.referenceClass(ziplineServiceAdapterFqName)!!
+
+  val ziplineServiceAdapterSerialName: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      ziplineServiceAdapterFqName.child("serialName")
+    ).single()
+
+  val ziplineServiceAdapterInboundCallHandler: IrSimpleFunctionSymbol
+    get() = ziplineServiceAdapter.functions.single {
+      it.owner.name.identifier == "inboundCallHandler"
+    }
+
+  val ziplineServiceAdapterOutboundService: IrSimpleFunctionSymbol
+    get() = ziplineServiceAdapter.functions.single {
+      it.owner.name.identifier == "outboundService"
+    }
+
   private val referenceFqName = FqName("app.cash.zipline.ZiplineReference")
   private val referenceGetFqName = referenceFqName.child("get")
   private val inboundReferenceFqName = FqName("app.cash.zipline.InboundZiplineReference")
@@ -173,6 +196,14 @@ internal class ZiplineApis(
     rewritePair(ziplineFqName.child("get")),
     rewritePair(endpointFqName.child("get")),
     referenceGetRewritePair(),
+  ).toMap()
+
+  /** Keys are functions like `Zipline.getService()` and values are their rewrite targets. */
+  val getOrSetServiceRewriteFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(
+    rewritePair(ziplineFqName.child("getService")),
+    rewritePair(endpointFqName.child("getService")),
+    rewritePair(ziplineFqName.child("setService")),
+    rewritePair(endpointFqName.child("setService")),
   ).toMap()
 
   /** Keys are functions like `Zipline.set()` and values are their rewrite targets. */
