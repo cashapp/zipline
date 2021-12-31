@@ -17,6 +17,7 @@ package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
@@ -49,7 +50,7 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
  */
 internal class AddAdapterArgumentRewriter(
   private val pluginContext: IrPluginContext,
-  ziplineApis: ZiplineApis,
+  private val ziplineApis: ZiplineApis,
   private val scope: ScopeWithIr,
   private val declarationParent: IrDeclarationParent,
   private val original: IrCall,
@@ -67,10 +68,16 @@ internal class AddAdapterArgumentRewriter(
   )
 
   fun rewrite(): IrCall {
+    // Make sure there's an adapter for this class so we have something to reference.
+    val adapterClass = AdapterGenerator(
+      pluginContext,
+      ziplineApis,
+      bridgedInterface.typeIrClass
+    ).generateAdapterIfAbsent()
+
     return irCall(original, rewrittenFunction).apply {
-      irBlockBodyBuilder(pluginContext, scope, original).apply {
-        putValueArgument(valueArgumentsCount - 1, bridgedInterface.getAdapterVarExpression(this))
-      }
+      val irBlockBodyBuilder = irBlockBodyBuilder(pluginContext, scope, original)
+      putValueArgument(valueArgumentsCount - 1, irBlockBodyBuilder.irGetObject(adapterClass.symbol))
       patchDeclarationParents(declarationParent)
     }
   }

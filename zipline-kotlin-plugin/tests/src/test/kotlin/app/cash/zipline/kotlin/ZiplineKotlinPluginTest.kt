@@ -16,6 +16,7 @@
 
 package app.cash.zipline.kotlin
 
+import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -30,6 +31,31 @@ import org.junit.Test
 
 /** Confirm bridge calls are rewritten to use `OutboundBridge` or `InboundBridge` as appropriate. */
 class ZiplineKotlinPluginTest {
+  @Test
+  fun `zipline service rewritten with adapter`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "SampleService.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.ZiplineService
+
+        interface SampleService : ZiplineService {
+          fun hello(request: EchoRequest): EchoResponse
+          override fun close()
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val adapterClass = result.classLoader.loadClass(
+      "app.cash.zipline.testing.SampleService\$Companion\$Adapter"
+    )
+    assertThat(adapterClass).isAssignableTo(ZiplineServiceAdapter::class.java)
+  }
+
   // TODO(jwilson): delete this with Zipline.set(); it's redundant with the test that follows.
   @Test
   fun `set rewritten to receive inbound calls`() {

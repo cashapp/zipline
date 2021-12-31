@@ -42,7 +42,7 @@ import kotlinx.serialization.KSerializer;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static kotlinx.serialization.SerializersKt.serializer;
-import static app.cash.zipline.testing.EchoZiplineService.Companion.Adapter.INSTANCE;
+import static app.cash.zipline.testing.EchoZiplineService.Companion.ManualAdapter.INSTANCE;
 
 /**
  * Call these {@link PublishedApi} internal APIs from Java rather than from Kotlin to hack around

@@ -18,10 +18,12 @@ package app.cash.zipline.kotlin
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.createDispatchReceiverParameter
+import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocationWithRange
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSourceLocation
+import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrElement
@@ -34,6 +36,8 @@ import org.jetbrains.kotlin.ir.builders.Scope
 import org.jetbrains.kotlin.ir.builders.declarations.IrClassBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrFunctionBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrValueParameterBuilder
+import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
+import org.jetbrains.kotlin.ir.builders.declarations.buildClass
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetField
 import org.jetbrains.kotlin.ir.builders.irReturn
@@ -60,7 +64,9 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
@@ -297,4 +303,47 @@ fun irBlockBodyBuilder(
     original.startOffset,
     original.endOffset
   )
+}
+
+/** This creates `companion object` if it doesn't exist already. */
+fun IrClass.getOrCreateCompanion(
+  irPluginContext: IrPluginContext,
+): IrClass {
+  val existing = declarations.firstOrNull {
+    it is IrClass && it.name.identifier == "Companion"
+  }
+  if (existing != null) return existing as IrClass
+
+  val irFactory = irPluginContext.irFactory
+  val anyType = irPluginContext.referenceClass(irPluginContext.irBuiltIns.anyType.classFqName!!)!!
+  val companionClass = irFactory.buildClass {
+    initDefaults(this@getOrCreateCompanion)
+    name = Name.identifier("Companion")
+    visibility = DescriptorVisibilities.PUBLIC
+    kind = ClassKind.OBJECT
+    isCompanion = true
+  }.apply {
+    parent = this@getOrCreateCompanion
+    superTypes = listOf(irPluginContext.irBuiltIns.anyType)
+    createImplicitParameterDeclarationWithWrappedDescriptor()
+  }
+
+  companionClass.addConstructor {
+    initDefaults(this@getOrCreateCompanion)
+    visibility = DescriptorVisibilities.PRIVATE
+  }.apply {
+    irConstructorBody(irPluginContext) { statements ->
+      statements += irDelegatingConstructorCall(
+        context = irPluginContext,
+        symbol = anyType.constructors.single()
+      )
+      statements += irInstanceInitializerCall(
+        context = irPluginContext,
+        classSymbol = companionClass.symbol,
+      )
+    }
+  }
+
+  declarations.add(companionClass)
+  return companionClass
 }

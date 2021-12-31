@@ -19,9 +19,13 @@ import org.jetbrains.kotlin.backend.common.IrElementTransformerVoidWithContext
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
+import org.jetbrains.kotlin.ir.IrStatement
+import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.util.isInterface
 
 class ZiplineIrGenerationExtension(
   private val messageCollector: MessageCollector,
@@ -30,6 +34,26 @@ class ZiplineIrGenerationExtension(
     val ziplineApis = ZiplineApis(pluginContext)
 
     val transformer = object : IrElementTransformerVoidWithContext() {
+      override fun visitClassNew(declaration: IrClass): IrStatement {
+        val declaration = super.visitClassNew(declaration) as IrClass
+
+        try {
+          if (declaration.isInterface &&
+            declaration.superTypes.any { it.classFqName == ziplineApis.ziplineServiceFqName }
+          ) {
+            AdapterGenerator(
+              pluginContext,
+              ziplineApis,
+              declaration
+            ).generateAdapterIfAbsent()
+          }
+        } catch (e: ZiplineCompilationException) {
+          messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+        }
+
+        return declaration
+      }
+
       override fun visitCall(expression: IrCall): IrExpression {
         val expression = super.visitCall(expression) as IrCall
 
@@ -69,12 +93,11 @@ class ZiplineIrGenerationExtension(
               getOrSetFunction,
             ).rewrite()
           }
-
-          return expression
         } catch (e: ZiplineCompilationException) {
           messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
-          return expression
         }
+
+        return expression
       }
     }
 

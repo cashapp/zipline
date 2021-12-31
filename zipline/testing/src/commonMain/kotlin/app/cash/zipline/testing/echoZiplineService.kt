@@ -26,10 +26,15 @@ import kotlinx.serialization.serializer
 
 interface EchoZiplineService : ZiplineService {
   fun echo(request: EchoRequest): EchoResponse
+  override fun close()
 
-  // TODO: generate this:
   companion object {
-    object Adapter : ZiplineServiceAdapter<EchoZiplineService>() {
+    /**
+     * We expect this manually-written adapter to be consistent with the generated one. This exists
+     * mostly to model what the expected generated code should look like when making changes to
+     * `AdapterGenerator`.
+     */
+    object ManualAdapter : ZiplineServiceAdapter<EchoZiplineService>() {
       override val serialName: String = "EchoZiplineService"
 
       override fun inboundCallHandler(
@@ -78,25 +83,24 @@ interface EchoZiplineService : ZiplineService {
           }
         }
       }
-    }
 
-    private class GeneratedOutboundService(
-      private val context: OutboundBridge.Context
-    ) : EchoZiplineService {
-      private val requestSerializer = context.serializersModule.serializer<EchoRequest>()
-      private val responseSerializer = context.serializersModule.serializer<EchoResponse>()
+      private class GeneratedOutboundService(
+        private val context: OutboundBridge.Context
+      ) : EchoZiplineService {
+        private val requestSerializer = context.serializersModule.serializer<EchoRequest>()
+        private val responseSerializer = context.serializersModule.serializer<EchoResponse>()
 
-      override fun echo(request: EchoRequest): EchoResponse {
-        val call = context.newCall("echo", 1)
-        call.parameter(requestSerializer, request)
-        return call.invoke(responseSerializer)
-      }
+        override fun echo(request: EchoRequest): EchoResponse {
+          val call = context.newCall("echo", 1)
+          call.parameter(requestSerializer, request)
+          return call.invoke(responseSerializer)
+        }
 
-      override fun close() {
-        val call = context.newCall("close", 0)
-        return call.invoke(Unit.serializer())
+        override fun close() {
+          val call = context.newCall("close", 0)
+          return call.invoke(Unit.serializer())
+        }
       }
     }
   }
 }
-
