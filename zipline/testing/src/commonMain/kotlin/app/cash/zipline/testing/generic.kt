@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.testing
 
-interface GenericEchoService<T> {
+import app.cash.zipline.ZiplineService
+
+interface GenericEchoService<T> : ZiplineService {
   fun genericEcho(request: T): List<T>
 }

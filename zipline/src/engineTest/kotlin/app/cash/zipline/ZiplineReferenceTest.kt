@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.ziplineServiceAdapter
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -54,7 +55,8 @@ internal class ZiplineReferenceTest {
     // Note that we cast OutboundZiplineReference<EchoService> down to ZiplineReference<EchoService>
     // before calling get(). This is necessary because the code rewriter doesn't rewrite for
     // subclasses of ZiplineReference.
-    val referenceB: ZiplineReference<EchoService> = OutboundZiplineReference()
+    val referenceB: ZiplineReference<EchoService> =
+      OutboundZiplineReference(ziplineServiceAdapter())
     (referenceB as OutboundZiplineReference<EchoService>).connect(endpointB, "helloService")
 
     val client = referenceB.get()
@@ -67,7 +69,7 @@ internal class ZiplineReferenceTest {
     assertNull(requests.removeFirstOrNull())
   }
 
-  interface EchoServiceFactory {
+  interface EchoServiceFactory : ZiplineService {
     fun create(greeting: String): ZiplineReference<EchoService>
   }
 

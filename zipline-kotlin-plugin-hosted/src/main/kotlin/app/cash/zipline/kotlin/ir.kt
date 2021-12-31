@@ -306,10 +306,11 @@ fun irBlockBodyBuilder(
 }
 
 /** This creates `companion object` if it doesn't exist already. */
-fun IrClass.getOrCreateCompanion(
+fun getOrCreateCompanion(
+  enclosing: IrClass,
   irPluginContext: IrPluginContext,
 ): IrClass {
-  val existing = declarations.firstOrNull {
+  val existing = enclosing.declarations.firstOrNull {
     it is IrClass && it.name.identifier == "Companion"
   }
   if (existing != null) return existing as IrClass
@@ -317,19 +318,19 @@ fun IrClass.getOrCreateCompanion(
   val irFactory = irPluginContext.irFactory
   val anyType = irPluginContext.referenceClass(irPluginContext.irBuiltIns.anyType.classFqName!!)!!
   val companionClass = irFactory.buildClass {
-    initDefaults(this@getOrCreateCompanion)
+    initDefaults(enclosing)
     name = Name.identifier("Companion")
     visibility = DescriptorVisibilities.PUBLIC
     kind = ClassKind.OBJECT
     isCompanion = true
   }.apply {
-    parent = this@getOrCreateCompanion
+    parent = enclosing
     superTypes = listOf(irPluginContext.irBuiltIns.anyType)
     createImplicitParameterDeclarationWithWrappedDescriptor()
   }
 
   companionClass.addConstructor {
-    initDefaults(this@getOrCreateCompanion)
+    initDefaults(enclosing)
     visibility = DescriptorVisibilities.PRIVATE
   }.apply {
     irConstructorBody(irPluginContext) { statements ->
@@ -344,6 +345,6 @@ fun IrClass.getOrCreateCompanion(
     }
   }
 
-  declarations.add(companionClass)
+  enclosing.declarations.add(companionClass)
   return companionClass
 }

@@ -15,7 +15,9 @@
  */
 package app.cash.zipline.samples.emojisearch
 
-interface HostApi {
+import app.cash.zipline.ZiplineService
+
+interface HostApi : ZiplineService {
   /** Decodes the response as a string and returns it. */
   suspend fun httpCall(url: String, headers: Map<String, String>): String
 }

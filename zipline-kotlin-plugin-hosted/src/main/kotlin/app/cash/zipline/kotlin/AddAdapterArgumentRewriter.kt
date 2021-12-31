@@ -17,7 +17,7 @@ package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.ir.builders.irGetObject
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
@@ -26,13 +26,13 @@ import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 
 /**
- * Rewrites calls to `Zipline.getService()` and `Zipline.setService()` to also pass an additional
- * argument, the generated `ZiplineServiceAdapter`.
+ * Rewrites calls to `Zipline.set()` and `Zipline.get()` to also pass an additional argument, the
+ * generated `ZiplineServiceAdapter`.
  *
  * This call:
  *
  * ```
- * val helloService: SampleService = zipline.getService(
+ * val helloService: SampleService = zipline.get(
  *   "helloService"
  * )
  * ```
@@ -40,16 +40,17 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
  * is rewritten to:
  *
  * ```
- * val helloService: SampleService = zipline.getService(
+ * val helloService: SampleService = zipline.get(
  *   "helloService",
  *   SampleService.Companion.Adapter
  * )
  * ```
  *
- * This also rewrites calls on `Endpoint`.
+ * This rewrites all calls specified by [ZiplineApis.ziplineServiceAdapterFunctions]
  */
 internal class AddAdapterArgumentRewriter(
   private val pluginContext: IrPluginContext,
+  private val messageCollector: MessageCollector,
   private val ziplineApis: ZiplineApis,
   private val scope: ScopeWithIr,
   private val declarationParent: IrDeclarationParent,
@@ -61,23 +62,25 @@ internal class AddAdapterArgumentRewriter(
 
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
+    messageCollector,
     ziplineApis,
+    scope,
     original,
     "Zipline.${original.symbol.owner.name.identifier}()",
     bridgedInterfaceType
   )
 
   fun rewrite(): IrCall {
-    // Make sure there's an adapter for this class so we have something to reference.
-    val adapterClass = AdapterGenerator(
+    val adapterExpression = AdapterGenerator(
       pluginContext,
+      messageCollector,
       ziplineApis,
+      scope,
       bridgedInterface.typeIrClass
-    ).generateAdapterIfAbsent()
+    ).adapterExpression()
 
     return irCall(original, rewrittenFunction).apply {
-      val irBlockBodyBuilder = irBlockBodyBuilder(pluginContext, scope, original)
-      putValueArgument(valueArgumentsCount - 1, irBlockBodyBuilder.irGetObject(adapterClass.symbol))
+      putValueArgument(valueArgumentsCount - 1, adapterExpression)
       patchDeclarationParents(declarationParent)
     }
   }

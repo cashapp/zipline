@@ -43,7 +43,9 @@ class ZiplineIrGenerationExtension(
           ) {
             AdapterGenerator(
               pluginContext,
+              messageCollector,
               ziplineApis,
+              currentScope!!,
               declaration
             ).generateAdapterIfAbsent()
           }
@@ -58,34 +60,11 @@ class ZiplineIrGenerationExtension(
         val expression = super.visitCall(expression) as IrCall
 
         try {
-          val newOutboundFunction = ziplineApis.outboundRewriteFunctions[expression.symbol]
-          if (newOutboundFunction != null) {
-            return OutboundBridgeRewriter(
-              pluginContext,
-              ziplineApis,
-              currentScope!!,
-              currentDeclarationParent!!,
-              expression,
-              newOutboundFunction,
-            ).rewrite()
-          }
-
-          val newInboundFunction = ziplineApis.inboundRewriteFunctions[expression.symbol]
-          if (newInboundFunction != null) {
-            return InboundBridgeRewriter(
-              pluginContext,
-              ziplineApis,
-              currentScope!!,
-              currentDeclarationParent!!,
-              expression,
-              newInboundFunction,
-            ).rewrite()
-          }
-
-          val getOrSetFunction = ziplineApis.getOrSetServiceRewriteFunctions[expression.symbol]
+          val getOrSetFunction = ziplineApis.ziplineServiceAdapterFunctions[expression.symbol]
           if (getOrSetFunction != null) {
             return AddAdapterArgumentRewriter(
               pluginContext,
+              messageCollector,
               ziplineApis,
               currentScope!!,
               currentDeclarationParent!!,

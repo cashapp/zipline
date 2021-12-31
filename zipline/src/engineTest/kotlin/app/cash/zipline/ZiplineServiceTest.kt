@@ -42,10 +42,10 @@ internal class ZiplineServiceTest {
       }
     }
 
-    endpointA.setService<EchoZiplineService>("helloService", service)
+    endpointA.set<EchoZiplineService>("helloService", service)
     assertEquals(setOf("helloService"), endpointA.serviceNames)
 
-    val client = endpointB.getService<EchoZiplineService>("helloService")
+    val client = endpointB.get<EchoZiplineService>("helloService")
     assertEquals(setOf("helloService"), endpointB.clientNames)
 
     responses += "this is a curt response"

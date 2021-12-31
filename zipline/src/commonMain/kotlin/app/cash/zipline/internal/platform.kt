@@ -15,20 +15,22 @@
  */
 package app.cash.zipline.internal
 
+import app.cash.zipline.ZiplineService
+
 internal const val eventLoopName = "zipline/event_loop"
 internal const val consoleName = "zipline/console"
 internal const val jsPlatformName = "zipline/js"
 
-internal interface EventLoop {
+internal interface EventLoop : ZiplineService {
   fun setTimeout(timeoutId: Int, delayMillis: Int)
   fun clearTimeout(timeoutId: Int)
 }
 
-internal interface Console {
+internal interface Console : ZiplineService {
   /** @param level one of `log`, `info`, `warn`, or `error`. */
   fun log(level: String, message: String, throwable: Throwable?)
 }
 
-internal interface JsPlatform {
+internal interface JsPlatform : ZiplineService {
   fun runJob(timeoutId: Int)
 }

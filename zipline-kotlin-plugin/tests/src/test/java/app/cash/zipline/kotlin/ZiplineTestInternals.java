@@ -68,113 +68,178 @@ public final class ZiplineTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static EchoService getEchoClient(Endpoint endpoint, String name) {
-    return endpoint.get(name, new OutboundBridge<EchoService>() {
-      @Override public EchoService create(OutboundBridge.Context context) {
-        KSerializer<EchoRequest> parameterSerializer
-            = (KSerializer) serializer(context.getSerializersModule(), echoRequestKt);
-        KSerializer<EchoResponse> resultSerializer
-            = (KSerializer) serializer(context.getSerializersModule(), echoResponseKt);
-        return new EchoService() {
-          @Override public EchoResponse echo(EchoRequest request) {
-            OutboundCall outboundCall = context.newCall("echo", 1);
-            outboundCall.parameter(parameterSerializer, request);
-            return outboundCall.invoke(resultSerializer);
-          }
-        };
-      }
-    });
+    return endpoint.get(name, EchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for inbound calls. */
   public static void setEchoService(Endpoint endpoint, String name, EchoService echoService) {
-    endpoint.set(name, new InboundBridge<EchoService>() {
-      @Override public EchoService getService() {
-        return echoService;
-      }
-
-      @Override public InboundCallHandler create(Context context) {
-        KSerializer<EchoResponse> resultSerializer
-            = (KSerializer) serializer(context.getSerializersModule(), echoResponseKt);
-        KSerializer<EchoRequest> parameterSerializer
-            = (KSerializer) serializer(context.getSerializersModule(), echoRequestKt);
-
-        return new InboundCallHandler() {
-          @Override public Context getContext() {
-            return context;
-          }
-
-          @Override public String[] call(InboundCall inboundCall) {
-            if (inboundCall.getFunName().equals("echo")) {
-              return inboundCall.result(resultSerializer, getService().echo(
-                  inboundCall.parameter(parameterSerializer)));
-            } else {
-              return inboundCall.unexpectedFunction();
-            }
-          }
-
-          @Override public Object callSuspending(
-              InboundCall inboundCall, Continuation<? super String[]> continuation) {
-            return inboundCall.unexpectedFunction();
-          }
-        };
-      }
-    });
+    endpoint.set(name, echoService, EchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for outbound calls. */
   public static GenericEchoService<String> getGenericEchoService(Endpoint endpoint, String name) {
-    return endpoint.get(name, new OutboundBridge<GenericEchoService<String>>() {
-      @Override public GenericEchoService<String> create(OutboundBridge.Context context) {
-        KSerializer<String> parameterSerializer
-            = (KSerializer) serializer(context.getSerializersModule(), stringKt);
-        KSerializer<List<String>> resultSerializer
-            = (KSerializer) serializer(context.getSerializersModule(), listOfStringKt);
-        return new GenericEchoService<String>() {
-          @Override public List<String> genericEcho(String request) {
-            OutboundCall outboundCall = context.newCall("genericEcho", 1);
-            outboundCall.parameter(parameterSerializer, request);
-            return outboundCall.invoke(resultSerializer);
-          }
-        };
-      }
-    });
+    return endpoint.get(name, GenericEchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for inbound calls. */
   public static void setGenericEchoService(
       Endpoint endpoint, String name, GenericEchoService<String> echoService) {
-    endpoint.set(name, new InboundBridge<GenericEchoService<String>>() {
-      @Override public GenericEchoService<String> getService() {
-        return echoService;
+  }
+
+  /** Simulate a generated subclass of ZiplineServiceAdapter. */
+  public static class EchoServiceAdapter extends ZiplineServiceAdapter<EchoService> {
+    public static final EchoServiceAdapter INSTANCE = new EchoServiceAdapter();
+
+    @Override public String getSerialName() {
+      return "EchoService";
+    }
+
+    @Override public InboundCallHandler inboundCallHandler(
+        EchoService service, InboundBridge.Context context) {
+      return new GeneratedInboundCallHandler(service, context);
+    }
+
+    @Override public EchoService outboundService(OutboundBridge.Context context) {
+      return new GeneratedOutboundService(context);
+    }
+
+    private static class GeneratedInboundCallHandler implements InboundCallHandler {
+      private final EchoService service;
+      private final InboundBridge.Context context;
+      private final KSerializer<EchoRequest> requestSerializer;
+      private final KSerializer<EchoResponse> responseSerializer;
+
+      GeneratedInboundCallHandler(EchoService service, InboundBridge.Context context) {
+        this.service = service;
+        this.context = context;
+        this.requestSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
+        this.responseSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
       }
 
-      @Override public InboundCallHandler create(Context context) {
-        KSerializer<List<String>> resultSerializer
-            = (KSerializer) serializer(context.getSerializersModule(), listOfStringKt);
-        KSerializer<String> parameterSerializer
-            = (KSerializer) serializer(context.getSerializersModule(), stringKt);
-
-        return new InboundCallHandler() {
-          @Override public Context getContext() {
-            return context;
-          }
-
-          @Override public String[] call(InboundCall inboundCall) {
-            if (inboundCall.getFunName().equals("genericEcho")) {
-              return inboundCall.result(resultSerializer, getService().genericEcho(
-                  inboundCall.parameter(parameterSerializer)));
-            } else {
-              return inboundCall.unexpectedFunction();
-            }
-          }
-
-          @Override public Object callSuspending(
-              InboundCall inboundCall, Continuation<? super String[]> continuation) {
-            return inboundCall.unexpectedFunction();
-          }
-        };
+      @Override
+      public InboundBridge.Context getContext() {
+        return context;
       }
-    });
+
+      @Override
+      public String[] call(InboundCall inboundCall) {
+        if (inboundCall.getFunName().equals("echo")) {
+          return inboundCall.result(responseSerializer, service.echo(
+            inboundCall.parameter(requestSerializer)));
+        } else {
+          return inboundCall.unexpectedFunction();
+        }
+      }
+
+      @Override public Object callSuspending(
+          InboundCall inboundCall, Continuation<? super String[]> continuation) {
+        return inboundCall.unexpectedFunction();
+      }
+    }
+
+    private static class GeneratedOutboundService implements EchoService {
+      private final OutboundBridge.Context context;
+      private final KSerializer<EchoRequest> requestSerializer;
+      private final KSerializer<EchoResponse> responseSerializer;
+
+      GeneratedOutboundService(OutboundBridge.Context context) {
+        this.context = context;
+        this.requestSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
+        this.responseSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
+      }
+
+      @Override public EchoResponse echo(EchoRequest request) {
+        OutboundCall outboundCall = context.newCall("echo", 1);
+        outboundCall.parameter(requestSerializer, request);
+        return outboundCall.invoke(responseSerializer);
+      }
+
+      @Override public void close() {
+      }
+    }
+  }
+
+  /** Simulate a generated subclass of ZiplineServiceAdapter. */
+  public static class GenericEchoServiceAdapter
+      extends ZiplineServiceAdapter<GenericEchoService<String>> {
+    public static final GenericEchoServiceAdapter INSTANCE = new GenericEchoServiceAdapter();
+
+    @Override public String getSerialName() {
+      return "GenericEchoService";
+    }
+
+    @Override public InboundCallHandler inboundCallHandler(
+        GenericEchoService<String> service, InboundBridge.Context context) {
+      return new GeneratedInboundCallHandler(service, context);
+    }
+
+    @Override public GenericEchoService<String> outboundService(OutboundBridge.Context context) {
+      return new GeneratedOutboundService(context);
+    }
+
+    private static class GeneratedInboundCallHandler implements InboundCallHandler {
+      private final GenericEchoService<String> service;
+      private final InboundBridge.Context context;
+      private final KSerializer<String> requestSerializer;
+      private final KSerializer<List<String>> responseSerializer;
+
+      GeneratedInboundCallHandler(
+          GenericEchoService<String> service, InboundBridge.Context context) {
+        this.service = service;
+        this.context = context;
+        this.requestSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), stringKt);
+        this.responseSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), listOfStringKt);
+      }
+
+      @Override
+      public InboundBridge.Context getContext() {
+        return context;
+      }
+
+      @Override
+      public String[] call(InboundCall inboundCall) {
+        if (inboundCall.getFunName().equals("genericEcho")) {
+          return inboundCall.result(responseSerializer, service.genericEcho(
+            inboundCall.parameter(requestSerializer)));
+        } else {
+          return inboundCall.unexpectedFunction();
+        }
+      }
+
+      @Override public Object callSuspending(
+          InboundCall inboundCall, Continuation<? super String[]> continuation) {
+        return inboundCall.unexpectedFunction();
+      }
+    }
+
+    private static class GeneratedOutboundService implements GenericEchoService<String> {
+      private final OutboundBridge.Context context;
+      private final KSerializer<String> requestSerializer;
+      private final KSerializer<List<String>> responseSerializer;
+
+      GeneratedOutboundService(OutboundBridge.Context context) {
+        this.context = context;
+        this.requestSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), stringKt);
+        this.responseSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), listOfStringKt);
+      }
+
+      @Override public List<String> genericEcho(String request) {
+        OutboundCall outboundCall = context.newCall("genericEcho", 1);
+        outboundCall.parameter(requestSerializer, request);
+        return outboundCall.invoke(responseSerializer);
+      }
+
+      @Override public void close() {
+      }
+    }
   }
 
   /** Simulate a generated subclass of ZiplineServiceAdapter. */
@@ -262,12 +327,12 @@ public final class ZiplineTestInternals {
   /** Simulate generated code for inbound calls. */
   public static void setEchoZiplineService(
       Endpoint endpoint, String name, EchoZiplineService service) {
-    endpoint.setService(name, service, EchoZiplineServiceAdapter.INSTANCE);
+    endpoint.set(name, service, EchoZiplineServiceAdapter.INSTANCE);
   }
 
-  /** Simulate generated code for inbound calls. */
+  /** Simulate generated code for outbound calls. */
   public static EchoZiplineService getEchoZiplineService(Endpoint endpoint, String name) {
-    return endpoint.getService(name, EchoZiplineServiceAdapter.INSTANCE);
+    return endpoint.get(name, EchoZiplineServiceAdapter.INSTANCE);
   }
 
   private ZiplineTestInternals() {

@@ -16,29 +16,30 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.Endpoint
-import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.InboundCallHandler
-import app.cash.zipline.internal.bridge.OutboundBridge
+import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 
-abstract class ZiplineReference<T : Any> internal constructor() {
-  fun get(): T {
-    error("unexpected call to ZiplineReference.get: is the Zipline plugin configured?")
-  }
-
-  @PublishedApi
-  internal abstract fun get(outboundBridge: OutboundBridge<T>): T
+abstract class ZiplineReference<T : ZiplineService> internal constructor() {
+  abstract fun get(): T
 
   abstract fun close()
 }
 
-fun <T : Any> ZiplineReference(service: T): ZiplineReference<T> {
+fun <T : ZiplineService> ZiplineReference(service: T): ZiplineReference<T> {
   error("unexpected call to ZiplineReference(): is the Zipline plugin configured?")
 }
 
+@PublishedApi
+internal fun <T : ZiplineService> ZiplineReference(
+  service: T,
+  adapter: ZiplineServiceAdapter<T>
+): ZiplineReference<T> = InboundZiplineReference(service, adapter)
+
 // Plugin-rewritten code calls the constructor of this class.
 @PublishedApi
-internal class InboundZiplineReference<T : Any>(
-  private val inboundBridge: InboundBridge<T>
+internal class InboundZiplineReference<T : ZiplineService>(
+  private val service: T,
+  private val adapter: ZiplineServiceAdapter<T>,
 ): ZiplineReference<T>() {
   private var name: String? = null
   private var endpoint: Endpoint? = null
@@ -48,13 +49,13 @@ internal class InboundZiplineReference<T : Any>(
     this.name = name
     this.endpoint = endpoint
     val context = endpoint.newInboundContext()
-    val result = inboundBridge.create(context)
+    val result = adapter.inboundCallHandler(service, context)
     endpoint.inboundHandlers[name] = result
     return result
   }
 
-  override fun get(outboundBridge: OutboundBridge<T>): T {
-    return inboundBridge.service
+  override fun get(): T {
+    return service
   }
 
   override fun close() {
@@ -69,7 +70,9 @@ internal class InboundZiplineReference<T : Any>(
   }
 }
 
-internal class OutboundZiplineReference<T : Any> : ZiplineReference<T>() {
+internal class OutboundZiplineReference<T : ZiplineService>(
+  private val adapter: ZiplineServiceAdapter<T>,
+) : ZiplineReference<T>() {
   private var name: String? = null
   private var endpoint: Endpoint? = null
 
@@ -79,10 +82,10 @@ internal class OutboundZiplineReference<T : Any> : ZiplineReference<T>() {
     this.endpoint = endpoint
   }
 
-  override fun get(outboundBridge: OutboundBridge<T>): T {
+  override fun get(): T {
     val endpoint = this.endpoint ?: throw IllegalStateException("not connected")
     val context = endpoint.newOutboundContext(this.name!!)
-    return outboundBridge.create(context)
+    return adapter.outboundService(context)
   }
 
   override fun close() {

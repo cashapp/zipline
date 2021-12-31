@@ -15,10 +15,12 @@
  */
 package app.cash.zipline.kotlin
 
+import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.backend.common.ir.isSuspend
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
@@ -35,6 +37,7 @@ import org.jetbrains.kotlin.ir.builders.irElseBranch
 import org.jetbrains.kotlin.ir.builders.irEquals
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
@@ -66,18 +69,25 @@ import org.jetbrains.kotlin.name.Name
  */
 internal class AdapterGenerator(
   private val pluginContext: IrPluginContext,
+  private val messageCollector: MessageCollector,
   private val ziplineApis: ZiplineApis,
+  private val scope: ScopeWithIr,
   private val original: IrClass
 ) {
   private val irFactory = pluginContext.irFactory
   private val irTypeSystemContext = IrTypeSystemContextImpl(pluginContext.irBuiltIns)
 
+  /** Returns an expression that references the adapter, creating it if necessary. */
+  fun adapterExpression(): IrExpression {
+    val adapterClass = generateAdapterIfAbsent()
+    val irBlockBodyBuilder = irBlockBodyBuilder(pluginContext, scope, original)
+    return irBlockBodyBuilder.irGetObject(adapterClass.symbol)
+  }
+
+  /** Creates the adapter if necessary. */
   fun generateAdapterIfAbsent(): IrClass {
-    val companion = original.getOrCreateCompanion(pluginContext)
-    val adapterClass = getOrCreateAdapterClass(companion)
-    companion.declarations += adapterClass
-    companion.patchDeclarationParents(original)
-    return adapterClass
+    val companion = getOrCreateCompanion(original, pluginContext)
+    return getOrCreateAdapterClass(companion)
   }
 
   private fun getOrCreateAdapterClass(
@@ -126,14 +136,18 @@ internal class AdapterGenerator(
 
     val inboundBridgedInterface = BridgedInterface.create(
       pluginContext,
+      messageCollector,
       ziplineApis,
+      scope,
       original,
       "Zipline.get()",
       original.defaultType
     )
     val outboundBridgedInterface = BridgedInterface.create(
       pluginContext,
+      messageCollector,
       ziplineApis,
+      scope,
       original,
       "Zipline.get()",
       original.defaultType
@@ -165,6 +179,8 @@ internal class AdapterGenerator(
       )
     )
 
+    companion.declarations += adapterClass
+    companion.patchDeclarationParents(original)
     return adapterClass
   }
 
@@ -621,7 +637,6 @@ internal class AdapterGenerator(
   //   private val serializer_1 = context.serializersModule.serializer<SampleResponse>()
   //
   //   override fun ping(request: SampleRequest): SampleResponse { ... }
-  //   override fun close() { ... }
   // }
   private fun irOutboundServiceClass(
     bridgedInterface: BridgedInterface,

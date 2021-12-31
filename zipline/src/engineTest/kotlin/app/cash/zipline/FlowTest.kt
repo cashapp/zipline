@@ -26,7 +26,7 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 
 internal class FlowTest {
-  interface FlowEchoService {
+  interface FlowEchoService : ZiplineService {
     fun createFlow(message: String, count: Int): FlowReference<String>
     suspend fun flowParameter(flowReference: FlowReference<String>): Int
   }

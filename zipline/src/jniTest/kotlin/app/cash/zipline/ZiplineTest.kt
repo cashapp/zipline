@@ -154,7 +154,8 @@ class ZiplineTest {
   @Test fun suspendingJsCallCompletesAfterClose(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
 
-    val jsSuspendingEchoService = zipline.get<SuspendingEchoService>("jsSuspendingEchoService")
+    val jsSuspendingEchoService =
+      zipline.get<SuspendingEchoService>("jsSuspendingEchoService")
 
     val deferred = async {
       jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake"))
