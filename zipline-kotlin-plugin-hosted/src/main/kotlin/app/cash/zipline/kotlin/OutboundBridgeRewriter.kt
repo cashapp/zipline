@@ -34,7 +34,6 @@ import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
-import org.jetbrains.kotlin.ir.declarations.IrFactory
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrCall
@@ -43,6 +42,7 @@ import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeOrNull
 import org.jetbrains.kotlin.ir.types.typeWith
@@ -129,8 +129,8 @@ internal class OutboundBridgeRewriter(
     bridgedInterfaceType
   )
 
-  private val irFactory: IrFactory
-    get() = pluginContext.irFactory
+  private val irFactory = pluginContext.irFactory
+  private val irTypeSystemContext = IrTypeSystemContextImpl(pluginContext.irBuiltIns)
 
   fun rewrite(): IrCall {
     return irCall(original, rewrittenGetFunction).apply {
@@ -189,7 +189,7 @@ internal class OutboundBridgeRewriter(
     }
 
     // We add overrides here so we can use them below.
-    outboundBridgeSubclass.addFakeOverrides(pluginContext.irBuiltIns, listOf(createFunction))
+    outboundBridgeSubclass.addFakeOverrides(irTypeSystemContext, listOf(createFunction))
 
     createFunction.irFunctionBody(
       context = pluginContext,
@@ -248,7 +248,7 @@ internal class OutboundBridgeRewriter(
       )
     }
 
-    clientImplementation.addFakeOverrides(pluginContext.irBuiltIns, listOf())
+    clientImplementation.addFakeOverrides(irTypeSystemContext, listOf())
 
     +irReturn(
       value = irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {

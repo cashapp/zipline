@@ -43,7 +43,7 @@ jobs:
           mkdir -p zipline/src/jvmMain/resources/
           cp -v build/jni/libquickjs.* zipline/src/jvmMain/resources/
 
-      - run: ./gradlew build
+      - run: ./gradlew build --stacktrace
 
       - uses: actions/upload-artifact@v2
         with:
