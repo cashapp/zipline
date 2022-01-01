@@ -21,9 +21,11 @@ import app.cash.zipline.internal.bridge.InboundCall;
 import app.cash.zipline.internal.bridge.InboundCallHandler;
 import app.cash.zipline.internal.bridge.OutboundBridge;
 import app.cash.zipline.internal.bridge.OutboundCall;
+import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
 import app.cash.zipline.testing.EchoRequest;
 import app.cash.zipline.testing.EchoResponse;
 import app.cash.zipline.testing.EchoService;
+import app.cash.zipline.testing.EchoZiplineService;
 import app.cash.zipline.testing.GenericEchoService;
 import java.util.List;
 import kotlin.Pair;
@@ -37,6 +39,7 @@ import kotlin.reflect.full.KClassifiers;
 import kotlinx.coroutines.CoroutineScope;
 import kotlinx.coroutines.CoroutineScopeKt;
 import kotlinx.serialization.KSerializer;
+import kotlinx.serialization.SerializersKt;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -172,6 +175,99 @@ public final class ZiplineTestInternals {
         };
       }
     });
+  }
+
+  /** Simulate a generated subclass of ZiplineServiceAdapter. */
+  public static class EchoZiplineServiceAdapter extends ZiplineServiceAdapter<EchoZiplineService> {
+    public static final EchoZiplineServiceAdapter INSTANCE = new EchoZiplineServiceAdapter();
+
+    @Override public String getSerialName() {
+      return "EchoZiplineService";
+    }
+
+    @Override public InboundCallHandler inboundCallHandler(
+        EchoZiplineService service,
+        InboundBridge.Context context) {
+      return new GeneratedInboundCallHandler(service, context);
+    }
+
+    @Override public EchoZiplineService outboundService(
+      OutboundBridge.Context context) {
+      return new GeneratedOutboundService(context);
+    }
+
+    private static class GeneratedInboundCallHandler
+        implements InboundCallHandler {
+      private final EchoZiplineService service;
+      private final InboundBridge.Context context;
+      private final KSerializer<EchoRequest> requestSerializer;
+      private final KSerializer<EchoResponse> responseSerializer;
+
+      GeneratedInboundCallHandler(EchoZiplineService service,
+          InboundBridge.Context context) {
+        this.service = service;
+        this.context = context;
+        this.requestSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
+        this.responseSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
+      }
+
+      @Override
+      public InboundBridge.Context getContext() {
+        return context;
+      }
+
+      @Override
+      public String[] call(InboundCall inboundCall) {
+        if (inboundCall.getFunName().equals("echo")) {
+          return inboundCall.result(responseSerializer, service.echo(
+            inboundCall.parameter(requestSerializer)));
+        } else {
+          return inboundCall.unexpectedFunction();
+        }
+      }
+
+      @Override public Object callSuspending(
+          InboundCall inboundCall, Continuation<? super String[]> continuation) {
+        return inboundCall.unexpectedFunction();
+      }
+    }
+
+    private static class GeneratedOutboundService
+        implements EchoZiplineService {
+      private final OutboundBridge.Context context;
+      private final KSerializer<EchoRequest> requestSerializer;
+      private final KSerializer<EchoResponse> responseSerializer;
+
+      GeneratedOutboundService(OutboundBridge.Context context) {
+        this.context = context;
+        this.requestSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
+        this.responseSerializer
+          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
+      }
+
+      @Override public EchoResponse echo(EchoRequest request) {
+        OutboundCall outboundCall = context.newCall("echo", 1);
+        outboundCall.parameter(requestSerializer, request);
+        return outboundCall.invoke(responseSerializer);
+      }
+
+      @Override public void close() {
+      }
+    }
+  }
+
+  /** Simulate generated code for inbound calls. */
+  public static void setEchoZiplineService(
+      Endpoint endpoint, String name, EchoZiplineService service) {
+    endpoint.setService(name, service, EchoZiplineServiceAdapter.INSTANCE);
+  }
+
+  /** Simulate generated code for inbound calls. */
+  public static EchoZiplineService getEchoZiplineService(Endpoint endpoint, String name) {
+    return endpoint.getService(name, EchoZiplineServiceAdapter.INSTANCE);
   }
 
   private ZiplineTestInternals() {

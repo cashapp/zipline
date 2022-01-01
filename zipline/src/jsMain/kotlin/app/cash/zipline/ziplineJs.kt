@@ -22,6 +22,7 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
+import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
 import app.cash.zipline.internal.consoleName
@@ -108,6 +109,15 @@ actual class Zipline internal constructor() {
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
 
+  actual fun <T : ZiplineService> getService(name: String): T {
+    error("unexpected call to Zipline.getService: is the Zipline plugin configured?")
+  }
+
+  @PublishedApi
+  internal fun <T : ZiplineService> getService(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    return endpoint.getService(name, adapter)
+  }
+
   @PublishedApi
   internal fun <T : Any> get(name: String, outboundBridge: OutboundBridge<T>): T {
     return endpoint.get(name, outboundBridge)
@@ -115,6 +125,19 @@ actual class Zipline internal constructor() {
 
   actual fun <T : Any> set(name: String, instance: T) {
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
+  }
+
+  actual fun <T : ZiplineService> setService(name: String, instance: T) {
+    error("unexpected call to Zipline.setService: is the Zipline plugin configured?")
+  }
+
+  @PublishedApi
+  internal fun <T : ZiplineService> setService(
+    name: String,
+    service: T,
+    adapter: ZiplineServiceAdapter<T>
+  ) {
+    endpoint.setService(name, service, adapter)
   }
 
   @PublishedApi

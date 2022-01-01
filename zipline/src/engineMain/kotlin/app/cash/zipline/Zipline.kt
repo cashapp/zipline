@@ -15,8 +15,10 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.CURRENT_MODULE_ID
 import app.cash.zipline.internal.Console
 import app.cash.zipline.internal.CoroutineEventLoop
+import app.cash.zipline.internal.DEFINE_JS
 import app.cash.zipline.internal.EventLoop
 import app.cash.zipline.internal.HostConsole
 import app.cash.zipline.internal.JsPlatform
@@ -24,9 +26,8 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.InboundBridge
 import app.cash.zipline.internal.bridge.OutboundBridge
+import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.consoleName
-import app.cash.zipline.internal.CURRENT_MODULE_ID
-import app.cash.zipline.internal.DEFINE_JS
 import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
 import kotlin.coroutines.resumeWithException
@@ -112,20 +113,44 @@ actual class Zipline private constructor(
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
 
+  actual fun <T : ZiplineService> getService(name: String): T {
+    error("unexpected call to Zipline.getService: is the Zipline plugin configured?")
+  }
+
   @PublishedApi
   internal fun <T : Any> get(name: String, bridge: OutboundBridge<T>): T {
     check(scope.isActive) { "closed" }
     return endpoint.get(name, bridge)
   }
 
+  @PublishedApi
+  internal fun <T : ZiplineService> getService(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    check(scope.isActive) { "closed" }
+    return endpoint.getService(name, adapter)
+  }
+
   actual fun <T : Any> set(name: String, instance: T) {
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
+  }
+
+  actual fun <T : ZiplineService> setService(name: String, instance: T) {
+    error("unexpected call to Zipline.setService: is the Zipline plugin configured?")
   }
 
   @PublishedApi
   internal fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
     check(scope.isActive) { "closed" }
     endpoint.set(name, bridge)
+  }
+
+  @PublishedApi
+  internal fun <T : ZiplineService> setService(
+    name: String,
+    service: T,
+    adapter: ZiplineServiceAdapter<T>,
+  ) {
+    check(scope.isActive) { "closed" }
+    endpoint.setService(name, service, adapter)
   }
 
   /**

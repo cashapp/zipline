@@ -119,7 +119,7 @@ internal class OutboundCall(
   ) : SuspendCallback {
     override fun call(response: Array<String>) {
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
-      endpoint.inboundHandlers.remove(callbackName)
+      endpoint.remove(callbackName)
       val result = response.decodeResult(serializer)
       context.endpoint.incompleteContinuations -= continuation
       continuation.resumeWith(result)

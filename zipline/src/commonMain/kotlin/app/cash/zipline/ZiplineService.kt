@@ -15,22 +15,14 @@
  */
 package app.cash.zipline
 
-import kotlinx.serialization.modules.SerializersModule
-
-expect class Zipline {
-  val serializersModule: SerializersModule
-
-  /** Name of services that have been published with [set]. */
-  val serviceNames: Set<String>
-
-  /** Names of services that can be consumed with [get]. */
-  val clientNames: Set<String>
-
-  fun <T : Any> get(name: String): T
-
-  fun <T : Any> set(name: String, instance: T)
-
-  fun <T : ZiplineService> getService(name: String): T
-
-  fun <T : ZiplineService> setService(name: String, instance: T)
+/**
+ * Implemented by all interfaces that can safely be passed from the host platform to Kotlin/JS or
+ * vice versa.
+ *
+ * When an instance of a service is passed between platforms, the receiving platform **must** call
+ * [close] when it is done. This releases the handle on the inbound side, and prevents a resource
+ * leak. It is an error to call any method on a service after it is closed.
+ */
+interface ZiplineService {
+  fun close()
 }

@@ -20,6 +20,7 @@ import app.cash.zipline.FlowReferenceSerializer
 import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
+import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
@@ -59,7 +60,7 @@ class Endpoint internal constructor(
     }
 
   /** Unions Zipline-provided serializers with user-provided serializers. */
-  internal var serializersModule: SerializersModule = computeSerializersModule()
+  private var serializersModule: SerializersModule = computeSerializersModule()
 
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
@@ -82,7 +83,7 @@ class Endpoint internal constructor(
       funName: String,
       encodedArguments: Array<String>
     ): Array<String> {
-      val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
+      val handler = takeHandler(instanceName, funName)
       val inboundCall = InboundCall(handler.context, funName, encodedArguments)
       return try {
         handler.call(inboundCall)
@@ -97,7 +98,7 @@ class Endpoint internal constructor(
       encodedArguments: Array<String>,
       callbackName: String
     ) {
-      val handler = inboundHandlers[instanceName] ?: error("no handler for $instanceName")
+      val handler = takeHandler(instanceName, funName)
       scope.launch {
         val callback = get<SuspendCallback>(callbackName)
         val inboundCall = InboundCall(handler.context, funName, encodedArguments)
@@ -111,6 +112,18 @@ class Endpoint internal constructor(
       }
     }
 
+    /**
+     * Note that this removes the handler for calls to is [ZiplineService.close]. We remove before
+     * dispatching so it'll always be removed even if the call stalls or throws.
+     */
+    private fun takeHandler(instanceName: String, funName: String): InboundCallHandler {
+      val result = when (funName) {
+        "close" -> inboundHandlers.remove(instanceName)
+        else -> inboundHandlers[instanceName]
+      }
+      return result ?: error("no handler for $instanceName")
+    }
+
     override fun disconnect(instanceName: String): Boolean {
       return inboundHandlers.remove(instanceName) != null
     }
@@ -120,14 +133,36 @@ class Endpoint internal constructor(
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
   }
 
+  fun <T : ZiplineService> setService(name: String, instance: T) {
+    error("unexpected call to Zipline.setService: is the Zipline plugin configured?")
+  }
+
   @PublishedApi
   internal fun <T : Any> set(name: String, inboundBridge: InboundBridge<T>) {
     val reference = InboundZiplineReference(inboundBridge)
     reference.connect(this, name)
   }
 
+  @PublishedApi
+  internal fun <T : ZiplineService> setService(
+    name: String,
+    service: T,
+    adapter: ZiplineServiceAdapter<T>
+  ) {
+    inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext())
+  }
+
+  @PublishedApi
+  internal fun remove(name: String): InboundCallHandler? {
+    return inboundHandlers.remove(name)
+  }
+
   fun <T : Any> get(name: String): T {
     error("unexpected call to Zipline.get: is the Zipline plugin configured?")
+  }
+
+  fun <T : ZiplineService> getService(name: String): T {
+    error("unexpected call to Zipline.getService: is the Zipline plugin configured?")
   }
 
   @PublishedApi
@@ -137,7 +172,19 @@ class Endpoint internal constructor(
     return reference.get(outboundBridge)
   }
 
+  @PublishedApi
+  internal fun <T : ZiplineService> getService(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    return adapter.outboundService(newOutboundContext(name))
+  }
+
   internal fun generateName(): String {
     return "zipline/${nextId++}"
   }
+
+  @PublishedApi
+  internal fun newInboundContext() = InboundBridge.Context(serializersModule, this)
+
+  @PublishedApi
+  internal fun newOutboundContext(name: String) =
+    OutboundBridge.Context(name, serializersModule, this)
 }
