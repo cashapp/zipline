@@ -42,7 +42,6 @@ import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.builders.irWhen
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
-import org.jetbrains.kotlin.ir.declarations.IrFactory
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
@@ -50,6 +49,7 @@ import org.jetbrains.kotlin.ir.expressions.IrBranch
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
@@ -68,8 +68,8 @@ internal class AdapterGenerator(
   private val ziplineApis: ZiplineApis,
   private val original: IrClass
 ) {
-  private val irFactory: IrFactory
-    get() = pluginContext.irFactory
+  private val irFactory = pluginContext.irFactory
+  private val irTypeSystemContext = IrTypeSystemContextImpl(pluginContext.irBuiltIns)
 
   fun generateAdapterIfAbsent(): IrClass {
     val companion = original.getOrCreateCompanion(pluginContext)
@@ -156,7 +156,7 @@ internal class AdapterGenerator(
     adapterClass.declarations += outboundServiceClass
 
     adapterClass.addFakeOverrides(
-      pluginContext.irBuiltIns,
+      irTypeSystemContext,
       listOf(
         serialNameProperty,
         inboundCallHandlerFunction,
@@ -307,7 +307,7 @@ internal class AdapterGenerator(
 
     // We add overrides here so we can call them below.
     inboundCallHandler.addFakeOverrides(
-      pluginContext.irBuiltIns,
+      irTypeSystemContext,
       listOf(contextProperty, callFunction, callSuspendingFunction)
     )
 
@@ -675,7 +675,7 @@ internal class AdapterGenerator(
       )
     }
 
-    outboundServiceClass.addFakeOverrides(pluginContext.irBuiltIns, listOf())
+    outboundServiceClass.addFakeOverrides(irTypeSystemContext, listOf())
 
     return outboundServiceClass
   }
