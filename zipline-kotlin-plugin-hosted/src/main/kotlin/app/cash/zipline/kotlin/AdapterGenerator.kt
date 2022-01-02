@@ -54,6 +54,7 @@ import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.getPropertyGetter
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
@@ -667,15 +668,18 @@ internal class AdapterGenerator(
       constructor.valueParameters[0]
     )
 
-    for (bridgedFunction in bridgedInterface.bridgedFunctions) {
+    for (overridesList in bridgedInterface.bridgedFunctionsWithOverrides.values) {
       outboundServiceClass.irBridgedFunction(
         bridgedInterface = bridgedInterface,
         outboundContextProperty = contextProperty,
-        bridgedFunction = bridgedFunction.owner,
+        overridesList = overridesList,
       )
     }
 
-    outboundServiceClass.addFakeOverrides(pluginContext.irBuiltIns, listOf())
+    outboundServiceClass.addFakeOverrides(
+      pluginContext.irBuiltIns,
+      outboundServiceClass.functions.toList(),
+    )
 
     return outboundServiceClass
   }
@@ -698,8 +702,9 @@ internal class AdapterGenerator(
   private fun IrClass.irBridgedFunction(
     bridgedInterface: BridgedInterface,
     outboundContextProperty: IrProperty,
-    bridgedFunction: IrSimpleFunction,
+    overridesList: List<IrSimpleFunctionSymbol>,
   ): IrSimpleFunction {
+    val bridgedFunction = overridesList[0].owner
     val functionReturnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
     val result = addFunction {
       initDefaults(original)
@@ -707,7 +712,7 @@ internal class AdapterGenerator(
       isSuspend = bridgedFunction.isSuspend
       returnType = functionReturnType
     }.apply {
-      overriddenSymbols = listOf(bridgedFunction.symbol)
+      overriddenSymbols = overridesList
       addDispatchReceiver {
         initDefaults(original)
         type = defaultType

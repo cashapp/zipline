@@ -42,7 +42,6 @@ class ZiplineKotlinPluginTest {
 
         interface SampleService : ZiplineService {
           fun hello(request: EchoRequest): EchoResponse
-          override fun close()
         }
         """
       )
@@ -106,8 +105,6 @@ class ZiplineKotlinPluginTest {
         ) : EchoZiplineService {
           override fun echo(request: EchoRequest): EchoResponse {
             return EchoResponse("${'$'}greeting from the compiler plugin, ${'$'}{request.message}")
-          }
-          override fun close() {
           }
         }
 
@@ -187,8 +184,6 @@ class ZiplineKotlinPluginTest {
     val testingEchoService = object : EchoZiplineService {
       override fun echo(request: EchoRequest): EchoResponse {
         return EchoResponse("greetings from the compiler plugin, ${request.message}")
-      }
-      override fun close() {
       }
     }
     ZiplineTestInternals.setEchoZiplineService(bridgeB, "helloService", testingEchoService)

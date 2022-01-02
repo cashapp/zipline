@@ -24,5 +24,6 @@ package app.cash.zipline
  * leak. It is an error to call any method on a service after it is closed.
  */
 interface ZiplineService {
-  fun close()
+  fun close() {
+  }
 }

@@ -30,7 +30,9 @@ import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.typeWith
+import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
 import org.jetbrains.kotlin.ir.util.substitute
@@ -64,10 +66,23 @@ internal class BridgedInterface(
 
   val typeIrClass = classSymbol.owner
 
+  // TODO(jwilson): support overloaded functions?
+  val bridgedFunctionsWithOverrides: Map<String, List<IrSimpleFunctionSymbol>>
+    get() {
+      val result = mutableMapOf<String, MutableList<IrSimpleFunctionSymbol>>()
+      for (supertype in listOf(classSymbol.owner.defaultType) + classSymbol.owner.superTypes) {
+        val supertypeClass = supertype.getClass() ?: continue
+        for (function in supertypeClass.functions) {
+          if (function.name.identifier in NON_INTERFACE_FUNCTION_NAMES) continue
+          val overrides = result.getOrPut(function.name.identifier) { mutableListOf() }
+          overrides += function.symbol
+        }
+      }
+      return result
+    }
+
   val bridgedFunctions: List<IrSimpleFunctionSymbol>
-    // TODO(jwilson): find a better way to skip equals()/hashCode()/toString()
-    get() = classSymbol.functions.toList()
-      .filterNot { it.owner.isFakeOverride }
+    get() = bridgedFunctionsWithOverrides.values.map { it[0] }
 
   /** Declares properties for all the serializers needed to bridge this interface. */
   fun declareSerializerProperties(
@@ -178,6 +193,13 @@ internal class BridgedInterface(
   }
 
   companion object {
+    /** Don't bridge these. */
+    private val NON_INTERFACE_FUNCTION_NAMES = mutableSetOf(
+      "equals",
+      "hashCode",
+      "toString",
+    )
+
     fun create(
       pluginContext: IrPluginContext,
       ziplineApis: ZiplineApis,
