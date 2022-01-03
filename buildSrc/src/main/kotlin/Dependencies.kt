@@ -1,5 +1,6 @@
 object Dependencies {
   val baseKotlin = "1.6.10"
+
   val androidGradlePlugin = "com.android.tools.build:gradle:7.0.2"
   val androidMaterial = "com.google.android.material:material:1.4.0"
   val androidxActivityCompose = "androidx.activity:activity-compose:1.4.0-alpha01"
