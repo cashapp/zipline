@@ -19,5 +19,4 @@ import app.cash.zipline.ZiplineService
 
 interface EchoZiplineService : ZiplineService {
   fun echo(request: EchoRequest): EchoResponse
-  override fun close()
 }
