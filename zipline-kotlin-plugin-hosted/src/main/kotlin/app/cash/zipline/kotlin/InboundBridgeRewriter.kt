@@ -39,7 +39,6 @@ import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irWhen
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
-import org.jetbrains.kotlin.ir.declarations.IrFactory
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
@@ -56,6 +55,7 @@ import org.jetbrains.kotlin.ir.expressions.putClassTypeArgument
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
@@ -141,7 +141,8 @@ internal class InboundBridgeRewriter(
     original.getTypeArgument(0)!!
   )
 
-  private val irFactory: IrFactory = pluginContext.irFactory
+  private val irFactory = pluginContext.irFactory
+  private val irTypeSystemContext = IrTypeSystemContextImpl(pluginContext.irBuiltIns)
 
   fun rewrite(): IrFunctionAccessExpression {
     when (rewrittenFunction) {
@@ -224,7 +225,7 @@ internal class InboundBridgeRewriter(
 
     // We add overrides here so we can use them below.
     inboundBridgeSubclass.addFakeOverrides(
-      pluginContext.irBuiltIns,
+      irTypeSystemContext,
       listOf(serviceProperty, createFunction)
     )
 
@@ -326,7 +327,7 @@ internal class InboundBridgeRewriter(
 
     // We add overrides here so we can call them below.
     inboundCallHandlerSubclass.addFakeOverrides(
-      pluginContext.irBuiltIns,
+      irTypeSystemContext,
       listOf(contextProperty, callFunction, callSuspendingFunction)
     )
 

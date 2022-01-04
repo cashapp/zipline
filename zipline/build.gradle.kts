@@ -152,6 +152,7 @@ kotlin {
 }
 
 cklib {
+  config.kotlinVersion = Dependencies.baseKotlin
   create("quickjs") {
     language = C
     srcDirs = project.files(file("native/quickjs"))

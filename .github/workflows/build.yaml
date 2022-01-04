@@ -53,7 +53,7 @@ jobs:
           cmake --build build/jni/${{ matrix.arch }}/ --verbose
           cp -v build/jni/${{ matrix.arch }}/libquickjs.* zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
 
-      - run: ./gradlew build
+      - run: ./gradlew build --stacktrace
         # TODO: configure builds to run on the same architecture they produce so we can test what we've built.
         if: matrix.arch == 'amd64'
 
