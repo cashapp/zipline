@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.testing
 
-interface SuspendingEchoService {
+import app.cash.zipline.ZiplineService
+
+interface SuspendingEchoService : ZiplineService {
   suspend fun suspendingEcho(request: EchoRequest): EchoResponse
 }

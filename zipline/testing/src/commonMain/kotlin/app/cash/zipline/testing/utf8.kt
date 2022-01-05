@@ -15,7 +15,9 @@
  */
 package app.cash.zipline.testing
 
-fun interface Formatter {
+import app.cash.zipline.ZiplineService
+
+interface Formatter : ZiplineService {
   fun format(message: String): String?
 }
 

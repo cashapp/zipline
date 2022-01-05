@@ -45,7 +45,7 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> {
 
       override fun serialize(encoder: Encoder, value: T) {
         val name = endpoint.generateName()
-        endpoint.setService(name, value, this@ZiplineServiceAdapter)
+        endpoint.set(name, value, this@ZiplineServiceAdapter)
         encoder.encodeString(name)
       }
 
@@ -55,4 +55,16 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> {
       }
     }
   }
+}
+
+@PublishedApi
+internal fun <T : ZiplineService> ziplineServiceAdapter() : ZiplineServiceAdapter<T> {
+  error("unexpected call to ziplineServiceAdapter(): is the Zipline plugin configured?")
+}
+
+@PublishedApi
+internal fun <T : ZiplineService> ziplineServiceAdapter(
+  ziplineServiceAdapter: ZiplineServiceAdapter<T>
+) : ZiplineServiceAdapter<T> {
+  return ziplineServiceAdapter
 }

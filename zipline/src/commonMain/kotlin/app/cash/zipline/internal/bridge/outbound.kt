@@ -27,9 +27,7 @@ import kotlinx.serialization.modules.SerializersModule
  * implemented by another platform in the same process.
  */
 @PublishedApi
-internal abstract class OutboundBridge<T : Any> {
-  abstract fun create(context: Context): T
-
+internal interface OutboundBridge {
   class Context(
     private val instanceName: String,
     val serializersModule: SerializersModule,

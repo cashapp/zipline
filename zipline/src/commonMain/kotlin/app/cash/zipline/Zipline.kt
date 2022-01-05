@@ -26,11 +26,7 @@ expect class Zipline {
   /** Names of services that can be consumed with [get]. */
   val clientNames: Set<String>
 
-  fun <T : Any> get(name: String): T
+  fun <T : ZiplineService> set(name: String, instance: T)
 
-  fun <T : Any> set(name: String, instance: T)
-
-  fun <T : ZiplineService> getService(name: String): T
-
-  fun <T : ZiplineService> setService(name: String, instance: T)
+  fun <T : ZiplineService> get(name: String): T
 }

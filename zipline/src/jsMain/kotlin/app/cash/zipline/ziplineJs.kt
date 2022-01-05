@@ -20,8 +20,6 @@ import app.cash.zipline.internal.EventLoop
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
-import app.cash.zipline.internal.bridge.InboundBridge
-import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
@@ -105,44 +103,26 @@ actual class Zipline internal constructor() {
     )
   }
 
-  actual fun <T : Any> get(name: String): T {
-    error("unexpected call to Zipline.get: is the Zipline plugin configured?")
-  }
-
-  actual fun <T : ZiplineService> getService(name: String): T {
-    error("unexpected call to Zipline.getService: is the Zipline plugin configured?")
-  }
-
-  @PublishedApi
-  internal fun <T : ZiplineService> getService(name: String, adapter: ZiplineServiceAdapter<T>): T {
-    return endpoint.getService(name, adapter)
-  }
-
-  @PublishedApi
-  internal fun <T : Any> get(name: String, outboundBridge: OutboundBridge<T>): T {
-    return endpoint.get(name, outboundBridge)
-  }
-
-  actual fun <T : Any> set(name: String, instance: T) {
+  actual fun <T : ZiplineService> set(name: String, instance: T) {
     error("unexpected call to Zipline.set: is the Zipline plugin configured?")
   }
 
-  actual fun <T : ZiplineService> setService(name: String, instance: T) {
-    error("unexpected call to Zipline.setService: is the Zipline plugin configured?")
-  }
-
   @PublishedApi
-  internal fun <T : ZiplineService> setService(
+  internal fun <T : ZiplineService> set(
     name: String,
     service: T,
     adapter: ZiplineServiceAdapter<T>
   ) {
-    endpoint.setService(name, service, adapter)
+    endpoint.set(name, service, adapter)
+  }
+
+  actual fun <T : ZiplineService> get(name: String): T {
+    error("unexpected call to Zipline.get: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
-    endpoint.set(name, bridge)
+  internal fun <T : ZiplineService> get(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    return endpoint.get(name, adapter)
   }
 
   companion object {
@@ -189,6 +169,9 @@ private class RealJsPlatform(
   override fun runJob(timeoutId: Int) {
     val job = jobs.remove(timeoutId) ?: return
     job.handler.apply(null, job.arguments)
+  }
+
+  override fun close() {
   }
 
   @JsName("setTimeout")

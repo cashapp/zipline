@@ -54,7 +54,7 @@ internal class EndpointTest {
     assertNull(requests.removeFirstOrNull())
   }
 
-  interface NullableEchoService {
+  interface NullableEchoService : ZiplineService {
     fun echo(request: EchoRequest?): EchoResponse?
   }
 

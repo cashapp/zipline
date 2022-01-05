@@ -16,7 +16,6 @@
 package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
@@ -40,6 +39,7 @@ internal class ZiplineApis(
   private val ziplineFqName = packageFqName.child("Zipline")
   val ziplineReferenceFqName = packageFqName.child("ZiplineReference")
   val ziplineServiceFqName = packageFqName.child("ZiplineService")
+  private val ziplineServiceAdapterFunctionFqName = bridgeFqName.child("ziplineServiceAdapter")
   private val ziplineServiceAdapterFqName = bridgeFqName.child("ZiplineServiceAdapter")
   private val endpointFqName = bridgeFqName.child("Endpoint")
 
@@ -60,10 +60,9 @@ internal class ZiplineApis(
           it.owner.typeParameters.size == 1
       }
 
-  val endpointZiplineReferenceSerializer: IrPropertySymbol
-    get() = pluginContext.referenceProperties(
-      endpointFqName.child("ziplineReferenceSerializer")
-    ).single()
+  val endpointZiplineReferenceSerializer: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(endpointFqName.child("ziplineReferenceSerializer"))
+      .single()
 
   val inboundCall: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("InboundCall"))!!
@@ -81,14 +80,6 @@ internal class ZiplineApis(
       bridgeFqName.child("InboundCall").child("unexpectedFunction")
     ).single()
 
-  val inboundBridge: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("InboundBridge"))!!
-
-  val inboundBridgeService: IrPropertySymbol
-    get() = pluginContext.referenceProperties(
-      bridgeFqName.child("InboundBridge").child("service")
-    ).single()
-
   val inboundBridgeContextFqName = bridgeFqName.child("InboundBridge").child("Context")
 
   val inboundBridgeContext: IrClassSymbol
@@ -102,11 +93,6 @@ internal class ZiplineApis(
   val inboundBridgeContextEndpoint: IrPropertySymbol
     get() = pluginContext.referenceProperties(
       inboundBridgeContextFqName.child("endpoint")
-    ).single()
-
-  val inboundBridgeCreate: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("InboundBridge").child("create")
     ).single()
 
   val inboundCallHandler: IrClassSymbol
@@ -140,9 +126,6 @@ internal class ZiplineApis(
     get() = pluginContext.referenceFunctions(bridgeFqName.child("OutboundCall").child("parameter"))
       .single()
 
-  val outboundBridge: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("OutboundBridge"))!!
-
   val outboundBridgeContextFqName = bridgeFqName.child("OutboundBridge").child("Context")
 
   val outboundBridgeContext: IrClassSymbol
@@ -163,12 +146,6 @@ internal class ZiplineApis(
       outboundBridgeContextFqName.child("endpoint")
     ).single()
 
-  val outboundBridgeCreate: IrSimpleFunctionSymbol
-    get() = outboundBridge.functions.single { it.owner.name.identifier == "create" }
-
-  val ziplineService: IrClassSymbol
-    get() = pluginContext.referenceClass(ziplineServiceFqName)!!
-
   val ziplineServiceAdapter: IrClassSymbol
     get() = pluginContext.referenceClass(ziplineServiceAdapterFqName)!!
 
@@ -187,50 +164,23 @@ internal class ZiplineApis(
       it.owner.name.identifier == "outboundService"
     }
 
-  private val referenceFqName = FqName("app.cash.zipline.ZiplineReference")
-  private val referenceGetFqName = referenceFqName.child("get")
-  private val inboundReferenceFqName = FqName("app.cash.zipline.InboundZiplineReference")
-
   /** Keys are functions like `Zipline.get()` and values are their rewrite targets. */
-  val outboundRewriteFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(
+  val ziplineServiceAdapterFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(
     rewritePair(ziplineFqName.child("get")),
     rewritePair(endpointFqName.child("get")),
-    referenceGetRewritePair(),
-  ).toMap()
-
-  /** Keys are functions like `Zipline.getService()` and values are their rewrite targets. */
-  val getOrSetServiceRewriteFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(
-    rewritePair(ziplineFqName.child("getService")),
-    rewritePair(endpointFqName.child("getService")),
-    rewritePair(ziplineFqName.child("setService")),
-    rewritePair(endpointFqName.child("setService")),
-  ).toMap()
-
-  /** Keys are functions like `Zipline.set()` and values are their rewrite targets. */
-  val inboundRewriteFunctions: Map<IrFunctionSymbol, IrFunctionSymbol> = listOf(
     rewritePair(ziplineFqName.child("set")),
     rewritePair(endpointFqName.child("set")),
-    inboundReferenceRewritePair()
+    rewritePair(ziplineReferenceFqName),
+    rewritePair(ziplineServiceAdapterFunctionFqName),
   ).toMap()
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
   private fun rewritePair(funName: FqName): Pair<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> {
     val overloads = pluginContext.referenceFunctions(funName)
-    val original = overloads.single { it.owner.visibility == DescriptorVisibilities.PUBLIC }
-    return original to overloads.single { it != original }
-  }
-
-  /** Maps `ZiplineReference(...)` to `InboundZiplineReference(...)`. */
-  private fun inboundReferenceRewritePair(): Pair<IrFunctionSymbol, IrFunctionSymbol> {
-    val original = pluginContext.referenceFunctions(referenceFqName).single()
-    val rewrite = pluginContext.referenceConstructors(inboundReferenceFqName).single()
-    return original to rewrite
-  }
-
-  /** Maps `ZiplineReference.get()` to `ZiplineReference.get(OutboundBridge)`. */
-  private fun referenceGetRewritePair(): Pair<IrFunctionSymbol, IrSimpleFunctionSymbol> {
-    val overloads = pluginContext.referenceFunctions(referenceGetFqName)
-    val original = overloads.single { it.owner.visibility == DescriptorVisibilities.PUBLIC }
-    return original to overloads.single { it != original }
+    val rewriteTarget = overloads.single {
+      it.owner.valueParameters.lastOrNull()?.type?.classFqName == ziplineServiceAdapterFqName
+    }
+    val original = overloads.single { it != rewriteTarget }
+    return original to rewriteTarget
   }
 }

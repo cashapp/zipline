@@ -15,10 +15,12 @@
  */
 package app.cash.zipline.testing
 
-interface PotatoService {
+import app.cash.zipline.ZiplineService
+
+interface PotatoService : ZiplineService {
   fun echo(): EchoResponse
 }
 
-interface SuspendingPotatoService {
+interface SuspendingPotatoService : ZiplineService {
   suspend fun echo(): EchoResponse
 }

@@ -15,14 +15,15 @@
  */
 package app.cash.zipline.testing
 
+import app.cash.zipline.ZiplineService
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
 
-interface RequestInterfaceService {
+interface RequestInterfaceService : ZiplineService {
   fun echo(request: MessageInterface): String
 }
 
-interface ResponseInterfaceService {
+interface ResponseInterfaceService : ZiplineService {
   fun echo(request: String): MessageInterface
 }
 
