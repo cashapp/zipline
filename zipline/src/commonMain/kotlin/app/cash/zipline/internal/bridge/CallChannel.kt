@@ -18,6 +18,7 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.InboundZiplineReference
 import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
+import app.cash.zipline.ZiplineService
 import kotlin.js.JsName
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -100,12 +101,13 @@ internal object ThrowableSerializer : KSerializer<Throwable> {
  * To receive a reference, we record the received identifier and return it when making calls against
  * the referenced service.
  */
-internal class ZiplineReferenceSerializer(
-  val endpoint: Endpoint
-) : KSerializer<ZiplineReference<*>> {
+internal class ZiplineReferenceSerializer<T : ZiplineService>(
+  val endpoint: Endpoint,
+  val adapter: ZiplineServiceAdapter<T>,
+) : KSerializer<ZiplineReference<T>> {
   override val descriptor = PrimitiveSerialDescriptor("ZiplineReference", PrimitiveKind.STRING)
 
-  override fun serialize(encoder: Encoder, value: ZiplineReference<*>) {
+  override fun serialize(encoder: Encoder, value: ZiplineReference<T>) {
     val name = endpoint.generateName()
     if (value is InboundZiplineReference<*>) {
       value.connect(endpoint, name)
@@ -115,9 +117,9 @@ internal class ZiplineReferenceSerializer(
     }
   }
 
-  override fun deserialize(decoder: Decoder): ZiplineReference<*> {
+  override fun deserialize(decoder: Decoder): ZiplineReference<T> {
     val name = decoder.decodeString()
-    val reference = OutboundZiplineReference<Any>()
+    val reference = OutboundZiplineReference(adapter)
     reference.connect(endpoint, name)
     return reference
   }

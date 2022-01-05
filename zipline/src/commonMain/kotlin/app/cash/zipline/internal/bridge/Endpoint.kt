@@ -17,8 +17,6 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.FlowReference
 import app.cash.zipline.FlowReferenceSerializer
-import app.cash.zipline.InboundZiplineReference
-import app.cash.zipline.OutboundZiplineReference
 import app.cash.zipline.ZiplineReference
 import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
@@ -48,10 +46,6 @@ class Endpoint internal constructor(
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
 
-  @PublishedApi
-  internal val ziplineReferenceSerializer: KSerializer<ZiplineReference<*>> =
-    ZiplineReferenceSerializer(this)
-
   /** If null, the user must still call Zipline.get() on Kotlin/JS. */
   internal var userSerializersModule: SerializersModule? = null
     set(value) {
@@ -66,7 +60,7 @@ class Endpoint internal constructor(
     return SerializersModule {
       contextual(Throwable::class, ThrowableSerializer)
       contextual(FlowReference::class) {
-        FlowReferenceSerializer(ziplineReferenceSerializer, it[0])
+        FlowReferenceSerializer(ziplineReferenceSerializer(ziplineServiceAdapter()), it[0])
       }
 
       include(userSerializersModule ?: EmptySerializersModule)
@@ -129,22 +123,17 @@ class Endpoint internal constructor(
     }
   }
 
-  fun <T : Any> set(name: String, instance: T) {
-    error("unexpected call to Zipline.set: is the Zipline plugin configured?")
-  }
+  @PublishedApi
+  internal fun <T : ZiplineService> ziplineReferenceSerializer(
+    adapter: ZiplineServiceAdapter<T>
+  ): KSerializer<ZiplineReference<T>> = ZiplineReferenceSerializer(this, adapter)
 
-  fun <T : ZiplineService> setService(name: String, instance: T) {
-    error("unexpected call to Zipline.setService: is the Zipline plugin configured?")
+  fun <T : ZiplineService> set(name: String, instance: T) {
+    error("unexpected call to Endpoint.set: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : Any> set(name: String, inboundBridge: InboundBridge<T>) {
-    val reference = InboundZiplineReference(inboundBridge)
-    reference.connect(this, name)
-  }
-
-  @PublishedApi
-  internal fun <T : ZiplineService> setService(
+  internal fun <T : ZiplineService> set(
     name: String,
     service: T,
     adapter: ZiplineServiceAdapter<T>
@@ -152,29 +141,18 @@ class Endpoint internal constructor(
     inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext())
   }
 
+  fun <T : ZiplineService> get(name: String): T {
+    error("unexpected call to Endpoint.get: is the Zipline plugin configured?")
+  }
+
+  @PublishedApi
+  internal fun <T : ZiplineService> get(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    return adapter.outboundService(newOutboundContext(name))
+  }
+
   @PublishedApi
   internal fun remove(name: String): InboundCallHandler? {
     return inboundHandlers.remove(name)
-  }
-
-  fun <T : Any> get(name: String): T {
-    error("unexpected call to Zipline.get: is the Zipline plugin configured?")
-  }
-
-  fun <T : ZiplineService> getService(name: String): T {
-    error("unexpected call to Zipline.getService: is the Zipline plugin configured?")
-  }
-
-  @PublishedApi
-  internal fun <T : Any> get(name: String, outboundBridge: OutboundBridge<T>): T {
-    val reference = OutboundZiplineReference<T>()
-    reference.connect(this, name)
-    return reference.get(outboundBridge)
-  }
-
-  @PublishedApi
-  internal fun <T : ZiplineService> getService(name: String, adapter: ZiplineServiceAdapter<T>): T {
-    return adapter.outboundService(newOutboundContext(name))
   }
 
   internal fun generateName(): String {

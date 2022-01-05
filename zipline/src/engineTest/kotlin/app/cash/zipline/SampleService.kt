@@ -40,7 +40,6 @@ data class SampleResponse(
  */
 interface SampleService : ZiplineService {
   fun ping(request: SampleRequest): SampleResponse
-  override fun close()
 
   companion object {
     /**
