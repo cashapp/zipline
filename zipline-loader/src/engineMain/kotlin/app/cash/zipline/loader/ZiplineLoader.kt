@@ -17,14 +17,16 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import okio.Buffer
 import okio.ByteString
 
 /**
@@ -48,28 +50,30 @@ class ZiplineLoader(
       concurrentDownloadsSemaphore = Semaphore(value)
     }
 
-  suspend fun load(scope: CoroutineScope, zipline: Zipline, url: String) {
+  suspend fun load(zipline: Zipline, url: String) {
     val manifestString = concurrentDownloadsSemaphore.withPermit {
       client.download(url).utf8()
     }
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestString)
-    load(scope, zipline, manifest)
+    load(zipline, manifest)
   }
 
-  suspend fun load(scope: CoroutineScope, zipline: Zipline, manifest: ZiplineManifest) {
-    val loads = manifest.modules.map {
-      ModuleLoad(zipline, it.key, it.value)
-    }
-
-    for (load in loads) {
-      val deferred: Deferred<*> = scope.async {
-        load.load()
+  suspend fun load(zipline: Zipline, manifest: ZiplineManifest) {
+    coroutineScope {
+      val loads = manifest.modules.map {
+        ModuleLoad(zipline, it.key, it.value)
       }
 
-      val downstreams = loads.filter { load.id in it.module.dependsOnIds }
+      for (load in loads) {
+        val deferred: Deferred<*> = async {
+          load.load()
+        }
 
-      for (downstream in downstreams) {
-        downstream.upstreams += deferred
+        val downstreams = loads.filter { load.id in it.module.dependsOnIds }
+
+        for (downstream in downstreams) {
+          downstream.upstreams += deferred
+        }
       }
     }
   }
@@ -82,14 +86,13 @@ class ZiplineLoader(
     val upstreams = mutableListOf<Deferred<*>>()
 
     suspend fun load() {
-      val download = concurrentDownloadsSemaphore.withPermit {
-        client.download(module.url)
+      val ziplineFile = concurrentDownloadsSemaphore.withPermit {
+        val ziplineFileBytes = client.download(module.url)
+        ZiplineFile.read(Buffer().write(ziplineFileBytes))
       }
-      for (upstream in upstreams) {
-        upstream.await()
-      }
+      upstreams.awaitAll()
       withContext(dispatcher) {
-        zipline.loadJsModule(download.toByteArray(), id)
+        zipline.loadJsModule(ziplineFile.quickjsBytecode.toByteArray(), id)
       }
     }
   }
