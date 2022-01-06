@@ -2,35 +2,28 @@
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
     <title>MemoryUsage</title>
-<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script>    <script>const storage = localStorage.getItem("dokka-dark-mode")
-const savedDarkMode = storage ? JSON.parse(storage) : false
-if(savedDarkMode === true){
-    document.getElementsByTagName("html")[0].classList.add("theme-dark")
-}</script>
-<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><link href="../../../styles/prism.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" defer="defer"></script><script type="text/javascript" src="../../../scripts/prism.js" async="async"></script>  </head>
+<link href="../../../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../";</script><script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async="async"></script><link href="../../../styles/style.css" rel="Stylesheet"><link href="../../../styles/logo-styles.css" rel="Stylesheet"><link href="../../../styles/jetbrains-mono.css" rel="Stylesheet"><link href="../../../styles/main.css" rel="Stylesheet"><script type="text/javascript" src="../../../scripts/clipboard.js" async="async"></script><script type="text/javascript" src="../../../scripts/navigation-loader.js" async="async"></script><script type="text/javascript" src="../../../scripts/platform-content-handler.js" async="async"></script><script type="text/javascript" src="../../../scripts/main.js" async="async"></script>  </head>
   <body>
-    <div class="navigation-wrapper" id="navigation-wrapper">
-      <div id="leftToggler"><span class="icon-toggler"></span></div>
-      <div class="library-name"><a href="../../../index.html">zipline</a></div>
-      <div>1.0.0-SNAPSHOT</div>
-      <div class="pull-right d-flex">
-        <div class="filter-section" id="filter-section"><button class="platform-tag platform-selector common-like" data-active="" data-filter=":zipline:dokkaHtml/engineMain">engine</button></div>
-<button id="theme-toggle-button"><span id="theme-toggle"></span></button>
-        <div id="searchBar"></div>
-      </div>
-    </div>
     <div id="container">
-      <div id="leftColumn">
+      <div id="leftColumn"><a href="../../../index.html">
+          <div id="logo"></div>
+        </a>
+        <div id="paneSearch"></div>
         <div id="sideMenu"></div>
       </div>
       <div id="main">
-        <div class="main-content" id="content" pageIds="zipline::app.cash.zipline/MemoryUsage///PointingToDeclaration//583509653">
-          <div class="breadcrumbs"><a href="../../../index.html">zipline</a>/<a href="../index.html">app.cash.zipline</a>/<a href="index.html">MemoryUsage</a></div>
+        <div id="leftToggler"><span class="icon-toggler"></span></div>
+<script type="text/javascript" src="../../../scripts/main.js"></script>        <div class="main-content" id="content" pageIds="zipline::app.cash.zipline/MemoryUsage///PointingToDeclaration//583509653">
+          <div class="navigation-wrapper" id="navigation-wrapper">
+            <div class="breadcrumbs"><a href="../../../index.html">zipline</a>/<a href="../index.html">app.cash.zipline</a>/<a href="index.html">MemoryUsage</a></div>
+            <div class="pull-right d-flex">
+              <div class="filter-section" id="filter-section"><button class="platform-tag platform-selector common-like" data-active="" data-filter=":zipline:dokkaHtml/engineMain">engine</button></div>
+              <div id="searchBar"></div>
+            </div>
+          </div>
           <div class="cover ">
-            <h1 class="cover"><span>Memory</span><wbr></wbr><span><span>Usage</span></span></h1>
-            <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-              <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><div class="symbol monospace"><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">MemoryUsage</a><span class="token punctuation">(</span>memoryAllocatedCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>memoryAllocatedSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>memoryAllocatedLimit<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>memoryUsedCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>memoryUsedSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>atomsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>atomsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>stringsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>stringsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>objectsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>objectsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>propertiesCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>propertiesSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>shapeCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>shapeSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsCodeSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsLineNumberTablesCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsLineNumberTablesSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>cFunctionsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>arraysCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>fastArraysCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>fastArraysElementsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>binaryObjectsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>binaryObjectsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Introspect QuickJS for its current memory usage.</p></div>            </div>
+            <h1 class="cover"><span>Memory</span><wbr></wbr><span>Usage</span></h1>
+            <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><div class="symbol monospace">data class <a href="index.html">MemoryUsage</a>(memoryAllocatedCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, memoryAllocatedSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, memoryAllocatedLimit: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, memoryUsedCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, memoryUsedSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, atomsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, atomsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, stringsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, stringsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, objectsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, objectsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, propertiesCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, propertiesSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, shapeCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, shapeSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsCodeSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsLineNumberTablesCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsLineNumberTablesSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, cFunctionsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, arraysCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, fastArraysCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, fastArraysElementsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, binaryObjectsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, binaryObjectsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Introspect QuickJS for its current memory usage.</p></div></div>
           </div>
           <div class="tabbedcontent">
             <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Properties">Properties</button></div>
@@ -39,16 +32,15 @@ if(savedDarkMode === true){
               <div class="table" data-togglable="Constructors"><a data-name="635855119%2FConstructors%2F583509653" anchor-label="MemoryUsage" id="635855119%2FConstructors%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue TabbedContent">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="-memory-usage.html"><span>Memory</span><wbr></wbr><span><span>Usage</span></span></a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="635855119%2FConstructors%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="-memory-usage.html">MemoryUsage</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="635855119%2FConstructors%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">fun </span><a href="-memory-usage.html"><span class="token function">MemoryUsage</span></a><span class="token punctuation">(</span>memoryAllocatedCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>memoryAllocatedSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>memoryAllocatedLimit<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>memoryUsedCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>memoryUsedSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>atomsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>atomsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>stringsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>stringsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>objectsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>objectsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>propertiesCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>propertiesSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>shapeCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>shapeSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsCodeSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsLineNumberTablesCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>jsFunctionsLineNumberTablesSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>cFunctionsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>arraysCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>fastArraysCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>fastArraysElementsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>binaryObjectsCount<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">, </span>binaryObjectsSize<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token punctuation">)</span><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><div class="symbol monospace">fun <a href="-memory-usage.html">MemoryUsage</a>(memoryAllocatedCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, memoryAllocatedSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, memoryAllocatedLimit: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, memoryUsedCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, memoryUsedSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, atomsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, atomsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, stringsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, stringsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, objectsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, objectsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, propertiesCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, propertiesSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, shapeCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, shapeSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsCodeSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsLineNumberTablesCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, jsFunctionsLineNumberTablesSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, cFunctionsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, arraysCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, fastArraysCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, fastArraysElementsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, binaryObjectsCount: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>, binaryObjectsSize: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a>)<span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -58,16 +50,15 @@ if(savedDarkMode === true){
               <div class="table" data-togglable="Properties"><a data-name="1669215391%2FProperties%2F583509653" anchor-label="arraysCount" id="1669215391%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="arrays-count.html">arraysCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1669215391%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="arrays-count.html">arraysCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1669215391%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="1669215391%2FProperties%2F583509653" anchor-label="arraysCount" id="1669215391%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="arrays-count.html">arraysCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1669215391%2FProperties%2F583509653" anchor-label="arraysCount" id="1669215391%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Arrays.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="1669215391%2FProperties%2F583509653" anchor-label="arraysCount" id="1669215391%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="arrays-count.html">arraysCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="1669215391%2FProperties%2F583509653" anchor-label="arraysCount" id="1669215391%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Arrays.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -75,16 +66,15 @@ if(savedDarkMode === true){
 <a data-name="240119129%2FProperties%2F583509653" anchor-label="atomsCount" id="240119129%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="atoms-count.html">atomsCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="240119129%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="atoms-count.html">atomsCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="240119129%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="240119129%2FProperties%2F583509653" anchor-label="atomsCount" id="240119129%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="atoms-count.html">atomsCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="240119129%2FProperties%2F583509653" anchor-label="atomsCount" id="240119129%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Atoms.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="240119129%2FProperties%2F583509653" anchor-label="atomsCount" id="240119129%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="atoms-count.html">atomsCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="240119129%2FProperties%2F583509653" anchor-label="atomsCount" id="240119129%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Atoms.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -92,16 +82,15 @@ if(savedDarkMode === true){
 <a data-name="1724405169%2FProperties%2F583509653" anchor-label="atomsSize" id="1724405169%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="atoms-size.html">atomsSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1724405169%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="atoms-size.html">atomsSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1724405169%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="1724405169%2FProperties%2F583509653" anchor-label="atomsSize" id="1724405169%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="atoms-size.html">atomsSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="1724405169%2FProperties%2F583509653" anchor-label="atomsSize" id="1724405169%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="atoms-size.html">atomsSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -109,16 +98,15 @@ if(savedDarkMode === true){
 <a data-name="-1063973590%2FProperties%2F583509653" anchor-label="binaryObjectsCount" id="-1063973590%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="binary-objects-count.html">binaryObjectsCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1063973590%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="binary-objects-count.html">binaryObjectsCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1063973590%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1063973590%2FProperties%2F583509653" anchor-label="binaryObjectsCount" id="-1063973590%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="binary-objects-count.html">binaryObjectsCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1063973590%2FProperties%2F583509653" anchor-label="binaryObjectsCount" id="-1063973590%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Binary objects.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1063973590%2FProperties%2F583509653" anchor-label="binaryObjectsCount" id="-1063973590%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="binary-objects-count.html">binaryObjectsCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1063973590%2FProperties%2F583509653" anchor-label="binaryObjectsCount" id="-1063973590%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Binary objects.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -126,16 +114,15 @@ if(savedDarkMode === true){
 <a data-name="-395872320%2FProperties%2F583509653" anchor-label="binaryObjectsSize" id="-395872320%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="binary-objects-size.html">binaryObjectsSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-395872320%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="binary-objects-size.html">binaryObjectsSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-395872320%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-395872320%2FProperties%2F583509653" anchor-label="binaryObjectsSize" id="-395872320%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="binary-objects-size.html">binaryObjectsSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-395872320%2FProperties%2F583509653" anchor-label="binaryObjectsSize" id="-395872320%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="binary-objects-size.html">binaryObjectsSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -143,16 +130,15 @@ if(savedDarkMode === true){
 <a data-name="-629174819%2FProperties%2F583509653" anchor-label="cFunctionsCount" id="-629174819%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="c-functions-count.html">cFunctionsCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-629174819%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="c-functions-count.html">cFunctionsCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-629174819%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-629174819%2FProperties%2F583509653" anchor-label="cFunctionsCount" id="-629174819%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="c-functions-count.html">cFunctionsCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-629174819%2FProperties%2F583509653" anchor-label="cFunctionsCount" id="-629174819%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">C functions.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-629174819%2FProperties%2F583509653" anchor-label="cFunctionsCount" id="-629174819%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="c-functions-count.html">cFunctionsCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-629174819%2FProperties%2F583509653" anchor-label="cFunctionsCount" id="-629174819%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>C functions.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -160,16 +146,15 @@ if(savedDarkMode === true){
 <a data-name="-1500868709%2FProperties%2F583509653" anchor-label="fastArraysCount" id="-1500868709%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="fast-arrays-count.html">fastArraysCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1500868709%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="fast-arrays-count.html">fastArraysCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1500868709%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1500868709%2FProperties%2F583509653" anchor-label="fastArraysCount" id="-1500868709%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="fast-arrays-count.html">fastArraysCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1500868709%2FProperties%2F583509653" anchor-label="fastArraysCount" id="-1500868709%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Fast arrays.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1500868709%2FProperties%2F583509653" anchor-label="fastArraysCount" id="-1500868709%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="fast-arrays-count.html">fastArraysCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1500868709%2FProperties%2F583509653" anchor-label="fastArraysCount" id="-1500868709%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Fast arrays.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -177,16 +162,15 @@ if(savedDarkMode === true){
 <a data-name="1285207410%2FProperties%2F583509653" anchor-label="fastArraysElementsCount" id="1285207410%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="fast-arrays-elements-count.html">fastArraysElementsCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1285207410%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="fast-arrays-elements-count.html">fastArraysElementsCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1285207410%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="1285207410%2FProperties%2F583509653" anchor-label="fastArraysElementsCount" id="1285207410%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="fast-arrays-elements-count.html">fastArraysElementsCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="1285207410%2FProperties%2F583509653" anchor-label="fastArraysElementsCount" id="1285207410%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="fast-arrays-elements-count.html">fastArraysElementsCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -194,16 +178,15 @@ if(savedDarkMode === true){
 <a data-name="-1100518924%2FProperties%2F583509653" anchor-label="jsFunctionsCodeSize" id="-1100518924%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="js-functions-code-size.html">jsFunctionsCodeSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1100518924%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="js-functions-code-size.html">jsFunctionsCodeSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1100518924%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1100518924%2FProperties%2F583509653" anchor-label="jsFunctionsCodeSize" id="-1100518924%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="js-functions-code-size.html">jsFunctionsCodeSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1100518924%2FProperties%2F583509653" anchor-label="jsFunctionsCodeSize" id="-1100518924%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="js-functions-code-size.html">jsFunctionsCodeSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -211,16 +194,15 @@ if(savedDarkMode === true){
 <a data-name="-993719895%2FProperties%2F583509653" anchor-label="jsFunctionsCount" id="-993719895%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="js-functions-count.html">jsFunctionsCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-993719895%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="js-functions-count.html">jsFunctionsCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-993719895%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-993719895%2FProperties%2F583509653" anchor-label="jsFunctionsCount" id="-993719895%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="js-functions-count.html">jsFunctionsCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-993719895%2FProperties%2F583509653" anchor-label="jsFunctionsCount" id="-993719895%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Bytecode functions.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-993719895%2FProperties%2F583509653" anchor-label="jsFunctionsCount" id="-993719895%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="js-functions-count.html">jsFunctionsCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-993719895%2FProperties%2F583509653" anchor-label="jsFunctionsCount" id="-993719895%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Bytecode functions.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -228,16 +210,15 @@ if(savedDarkMode === true){
 <a data-name="-510510741%2FProperties%2F583509653" anchor-label="jsFunctionsLineNumberTablesCount" id="-510510741%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="js-functions-line-number-tables-count.html">jsFunctionsLineNumberTablesCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-510510741%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="js-functions-line-number-tables-count.html">jsFunctionsLineNumberTablesCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-510510741%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-510510741%2FProperties%2F583509653" anchor-label="jsFunctionsLineNumberTablesCount" id="-510510741%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="js-functions-line-number-tables-count.html">jsFunctionsLineNumberTablesCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-510510741%2FProperties%2F583509653" anchor-label="jsFunctionsLineNumberTablesCount" id="-510510741%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="js-functions-line-number-tables-count.html">jsFunctionsLineNumberTablesCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -245,16 +226,15 @@ if(savedDarkMode === true){
 <a data-name="-1763492001%2FProperties%2F583509653" anchor-label="jsFunctionsLineNumberTablesSize" id="-1763492001%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="js-functions-line-number-tables-size.html">jsFunctionsLineNumberTablesSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1763492001%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="js-functions-line-number-tables-size.html">jsFunctionsLineNumberTablesSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1763492001%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1763492001%2FProperties%2F583509653" anchor-label="jsFunctionsLineNumberTablesSize" id="-1763492001%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="js-functions-line-number-tables-size.html">jsFunctionsLineNumberTablesSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1763492001%2FProperties%2F583509653" anchor-label="jsFunctionsLineNumberTablesSize" id="-1763492001%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="js-functions-line-number-tables-size.html">jsFunctionsLineNumberTablesSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -262,16 +242,15 @@ if(savedDarkMode === true){
 <a data-name="437677921%2FProperties%2F583509653" anchor-label="jsFunctionsSize" id="437677921%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="js-functions-size.html">jsFunctionsSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="437677921%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="js-functions-size.html">jsFunctionsSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="437677921%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="437677921%2FProperties%2F583509653" anchor-label="jsFunctionsSize" id="437677921%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="js-functions-size.html">jsFunctionsSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="437677921%2FProperties%2F583509653" anchor-label="jsFunctionsSize" id="437677921%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="js-functions-size.html">jsFunctionsSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -279,16 +258,15 @@ if(savedDarkMode === true){
 <a data-name="938302109%2FProperties%2F583509653" anchor-label="memoryAllocatedCount" id="938302109%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="memory-allocated-count.html">memoryAllocatedCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="938302109%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="memory-allocated-count.html">memoryAllocatedCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="938302109%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="938302109%2FProperties%2F583509653" anchor-label="memoryAllocatedCount" id="938302109%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="memory-allocated-count.html">memoryAllocatedCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="938302109%2FProperties%2F583509653" anchor-label="memoryAllocatedCount" id="938302109%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Memory allocated.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="938302109%2FProperties%2F583509653" anchor-label="memoryAllocatedCount" id="938302109%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="memory-allocated-count.html">memoryAllocatedCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="938302109%2FProperties%2F583509653" anchor-label="memoryAllocatedCount" id="938302109%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Memory allocated.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -296,16 +274,15 @@ if(savedDarkMode === true){
 <a data-name="-1593673359%2FProperties%2F583509653" anchor-label="memoryAllocatedLimit" id="-1593673359%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="memory-allocated-limit.html">memoryAllocatedLimit</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1593673359%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="memory-allocated-limit.html">memoryAllocatedLimit</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1593673359%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1593673359%2FProperties%2F583509653" anchor-label="memoryAllocatedLimit" id="-1593673359%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="memory-allocated-limit.html">memoryAllocatedLimit</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1593673359%2FProperties%2F583509653" anchor-label="memoryAllocatedLimit" id="-1593673359%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="memory-allocated-limit.html">memoryAllocatedLimit</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -313,16 +290,15 @@ if(savedDarkMode === true){
 <a data-name="-2132398099%2FProperties%2F583509653" anchor-label="memoryAllocatedSize" id="-2132398099%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="memory-allocated-size.html">memoryAllocatedSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2132398099%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="memory-allocated-size.html">memoryAllocatedSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-2132398099%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-2132398099%2FProperties%2F583509653" anchor-label="memoryAllocatedSize" id="-2132398099%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="memory-allocated-size.html">memoryAllocatedSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-2132398099%2FProperties%2F583509653" anchor-label="memoryAllocatedSize" id="-2132398099%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="memory-allocated-size.html">memoryAllocatedSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -330,16 +306,15 @@ if(savedDarkMode === true){
 <a data-name="-1587968701%2FProperties%2F583509653" anchor-label="memoryUsedCount" id="-1587968701%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="memory-used-count.html">memoryUsedCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1587968701%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="memory-used-count.html">memoryUsedCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1587968701%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1587968701%2FProperties%2F583509653" anchor-label="memoryUsedCount" id="-1587968701%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="memory-used-count.html">memoryUsedCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1587968701%2FProperties%2F583509653" anchor-label="memoryUsedCount" id="-1587968701%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Memory used.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1587968701%2FProperties%2F583509653" anchor-label="memoryUsedCount" id="-1587968701%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="memory-used-count.html">memoryUsedCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1587968701%2FProperties%2F583509653" anchor-label="memoryUsedCount" id="-1587968701%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Memory used.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -347,16 +322,15 @@ if(savedDarkMode === true){
 <a data-name="-1382606713%2FProperties%2F583509653" anchor-label="memoryUsedSize" id="-1382606713%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="memory-used-size.html">memoryUsedSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1382606713%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="memory-used-size.html">memoryUsedSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1382606713%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1382606713%2FProperties%2F583509653" anchor-label="memoryUsedSize" id="-1382606713%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="memory-used-size.html">memoryUsedSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1382606713%2FProperties%2F583509653" anchor-label="memoryUsedSize" id="-1382606713%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="memory-used-size.html">memoryUsedSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -364,16 +338,15 @@ if(savedDarkMode === true){
 <a data-name="-1006661781%2FProperties%2F583509653" anchor-label="objectsCount" id="-1006661781%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="objects-count.html">objectsCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1006661781%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="objects-count.html">objectsCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1006661781%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1006661781%2FProperties%2F583509653" anchor-label="objectsCount" id="-1006661781%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="objects-count.html">objectsCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1006661781%2FProperties%2F583509653" anchor-label="objectsCount" id="-1006661781%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Objects.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1006661781%2FProperties%2F583509653" anchor-label="objectsCount" id="-1006661781%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="objects-count.html">objectsCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1006661781%2FProperties%2F583509653" anchor-label="objectsCount" id="-1006661781%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Objects.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -381,16 +354,15 @@ if(savedDarkMode === true){
 <a data-name="-1502402209%2FProperties%2F583509653" anchor-label="objectsSize" id="-1502402209%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="objects-size.html">objectsSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1502402209%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="objects-size.html">objectsSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1502402209%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1502402209%2FProperties%2F583509653" anchor-label="objectsSize" id="-1502402209%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="objects-size.html">objectsSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1502402209%2FProperties%2F583509653" anchor-label="objectsSize" id="-1502402209%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="objects-size.html">objectsSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -398,16 +370,15 @@ if(savedDarkMode === true){
 <a data-name="-1325860008%2FProperties%2F583509653" anchor-label="propertiesCount" id="-1325860008%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="properties-count.html">propertiesCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1325860008%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="properties-count.html">propertiesCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1325860008%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1325860008%2FProperties%2F583509653" anchor-label="propertiesCount" id="-1325860008%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="properties-count.html">propertiesCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1325860008%2FProperties%2F583509653" anchor-label="propertiesCount" id="-1325860008%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Properties.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1325860008%2FProperties%2F583509653" anchor-label="propertiesCount" id="-1325860008%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="properties-count.html">propertiesCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-1325860008%2FProperties%2F583509653" anchor-label="propertiesCount" id="-1325860008%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Properties.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -415,16 +386,15 @@ if(savedDarkMode === true){
 <a data-name="-1512698926%2FProperties%2F583509653" anchor-label="propertiesSize" id="-1512698926%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="properties-size.html">propertiesSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1512698926%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="properties-size.html">propertiesSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1512698926%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1512698926%2FProperties%2F583509653" anchor-label="propertiesSize" id="-1512698926%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="properties-size.html">propertiesSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1512698926%2FProperties%2F583509653" anchor-label="propertiesSize" id="-1512698926%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="properties-size.html">propertiesSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -432,16 +402,15 @@ if(savedDarkMode === true){
 <a data-name="-31868040%2FProperties%2F583509653" anchor-label="shapeCount" id="-31868040%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="shape-count.html">shapeCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-31868040%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="shape-count.html">shapeCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-31868040%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-31868040%2FProperties%2F583509653" anchor-label="shapeCount" id="-31868040%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="shape-count.html">shapeCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-31868040%2FProperties%2F583509653" anchor-label="shapeCount" id="-31868040%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Shapes.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-31868040%2FProperties%2F583509653" anchor-label="shapeCount" id="-31868040%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="shape-count.html">shapeCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-31868040%2FProperties%2F583509653" anchor-label="shapeCount" id="-31868040%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Shapes.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -449,16 +418,15 @@ if(savedDarkMode === true){
 <a data-name="-1886599246%2FProperties%2F583509653" anchor-label="shapeSize" id="-1886599246%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="shape-size.html">shapeSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1886599246%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="shape-size.html">shapeSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1886599246%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1886599246%2FProperties%2F583509653" anchor-label="shapeSize" id="-1886599246%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="shape-size.html">shapeSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-1886599246%2FProperties%2F583509653" anchor-label="shapeSize" id="-1886599246%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="shape-size.html">shapeSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -466,16 +434,15 @@ if(savedDarkMode === true){
 <a data-name="-400050087%2FProperties%2F583509653" anchor-label="stringsCount" id="-400050087%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="strings-count.html">stringsCount</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-400050087%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="strings-count.html">stringsCount</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-400050087%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-400050087%2FProperties%2F583509653" anchor-label="stringsCount" id="-400050087%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="strings-count.html">stringsCount</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-400050087%2FProperties%2F583509653" anchor-label="stringsCount" id="-400050087%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><p class="paragraph">Strings.</p></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="-400050087%2FProperties%2F583509653" anchor-label="stringsCount" id="-400050087%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="strings-count.html">stringsCount</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><div class="brief "><a data-name="-400050087%2FProperties%2F583509653" anchor-label="stringsCount" id="-400050087%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>Strings.</div></div></div>
                       </div>
                     </div>
                   </div>
@@ -483,16 +450,15 @@ if(savedDarkMode === true){
 <a data-name="1565207217%2FProperties%2F583509653" anchor-label="stringsSize" id="1565207217%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a>
                 <div class="table-row" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain">
                   <div class="main-subrow keyValue ">
-                    <div class=""><span class="inline-flex">
-                        <div><a href="strings-size.html">stringsSize</a></div>
-<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1565207217%2FProperties%2F583509653"></span>
+                    <div class=""><span class="inline-flex"><a href="strings-size.html">stringsSize</a><span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1565207217%2FProperties%2F583509653"></span>
                           <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                         </span></span></div>
                     <div>
+                      <div class="platform-tags ">
+                        <div class="platform-tag common-like">engine</div>
+                      </div>
                       <div class="title">
-                        <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
-                          <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline:dokkaHtml/engineMain" data-filterable-set=":zipline:dokkaHtml/engineMain" data-active="" data-toggle=":zipline:dokkaHtml/engineMain">engine</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="1565207217%2FProperties%2F583509653" anchor-label="stringsSize" id="1565207217%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="strings-size.html">stringsSize</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                        </div>
+                        <div class="platform-hinted " data-platform-hinted="data-platform-hinted" data-togglable="Properties"><div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline:dokkaHtml/engineMain"><a data-name="1565207217%2FProperties%2F583509653" anchor-label="stringsSize" id="1565207217%2FProperties%2F583509653" data-filterable-set=":zipline:dokkaHtml/engineMain"></a><div class="symbol monospace">val <a href="strings-size.html">stringsSize</a>: <a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div></div>
                       </div>
                     </div>
                   </div>
@@ -501,7 +467,7 @@ if(savedDarkMode === true){
             </div>
           </div>
         </div>
-        <div class="footer"><span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2022 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
+        <div class="footer"><span class="go-to-top-icon"><a href="#content"></a></span><span>© 2022 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span></div>
       </div>
     </div>
   </body>
