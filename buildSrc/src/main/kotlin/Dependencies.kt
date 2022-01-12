@@ -30,5 +30,9 @@ object Dependencies {
   val okHttp = "com.squareup.okhttp3:okhttp:4.9.1"
   val okio = "com.squareup.okio:okio:3.0.0"
   val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
+  val sqldelightGradle = "com.squareup.sqldelight:gradle-plugin:1.5.3"
+  val sqldelightDriverAndroid = "com.squareup.sqldelight:android-driver:1.5.3"
+  val sqldelightDriverJvm = "com.squareup.sqldelight:sqlite-driver:1.5.3"
+  val sqldelightDriverNative = "com.squareup.sqldelight:native-driver:1.5.3"
   val truth = "com.google.truth:truth:1.0"
 }

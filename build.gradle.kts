@@ -19,6 +19,7 @@ buildscript {
     classpath(Dependencies.dokkaGradlePlugin)
     classpath(Dependencies.shadowJarPlugin)
     classpath(Dependencies.cklibGradlePlugin)
+    classpath(Dependencies.sqldelightGradle)
   }
 }
 

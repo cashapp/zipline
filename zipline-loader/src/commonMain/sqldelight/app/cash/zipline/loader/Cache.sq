@@ -1,0 +1,44 @@
+CREATE TABLE files (
+  sha256_hex TEXT NOT NULL,
+  file_state TEXT AS FileState NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  last_used_at_epoch_ms INTEGER NOT NULL
+);
+
+CREATE INDEX files_sha256_hex ON files(sha256_hex);
+
+selectAll:
+SELECT *
+FROM files;
+
+selectByLastUsedDesc:
+SELECT *
+FROM files
+ORDER BY last_used_at_epoch_ms DESC;
+
+selectCacheSumBytes:
+SELECT SUM(last_used_at_epoch_ms)
+FROM files;
+
+get:
+SELECT *
+FROM files
+WHERE sha256_hex LIKE ('%' || :sha256_hex)
+LIMIT 1;
+
+insert:
+INSERT INTO files(sha256_hex, file_state, size_bytes, last_used_at_epoch_ms)
+VALUES (?, ?, ?, ?);
+
+insertFullFileObject:
+INSERT INTO files(sha256_hex, file_state, size_bytes, last_used_at_epoch_ms)
+VALUES ?;
+
+update:
+UPDATE files
+SET file_state = :file_state, size_bytes = :size_bytes, last_used_at_epoch_ms = :last_used_at_epoch_ms
+WHERE sha256_hex = :sha256_hex;
+
+delete:
+DELETE FROM files
+WHERE sha256_hex = :sha256_hex;
