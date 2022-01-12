@@ -1,0 +1,28 @@
+CREATE TABLE hockeyPlayer (
+  player_number INTEGER NOT NULL,
+  full_name TEXT NOT NULL
+);
+
+
+CREATE TABLE files (
+  sha256_hex TEXT NOT NULL,
+  file_state TEXT AS FileState NOT NULL,
+  size_bytes INTEGER  NOT NULL,
+  last_used_at INTEGER NOT NULL
+);
+
+
+
+CREATE INDEX hockeyPlayer_full_name ON hockeyPlayer(full_name);
+
+selectAll:
+SELECT *
+FROM hockeyPlayer;
+
+insert:
+INSERT INTO hockeyPlayer(player_number, full_name)
+VALUES (?, ?);
+
+insertFullPlayerObject:
+INSERT INTO hockeyPlayer(player_number, full_name)
+VALUES ?;

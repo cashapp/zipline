@@ -28,6 +28,8 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.Buffer
 import okio.ByteString
+import okio.FileSystem
+import okio.Path
 
 /**
  * Gets code from an HTTP server or a local cache,
@@ -36,11 +38,11 @@ import okio.ByteString
  * concurrently download and load code.
  */
 class ZiplineLoader(
-// TODO add caching
-//  val cacheDirectory: Path,
-//  val cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
   val dispatcher: CoroutineDispatcher,
   val client: ZiplineHttpClient,
+  // val fileSystem: FileSystem,
+  // val cacheDirectory: Path,
+  val cacheMaxSizeInBytes: Int = 100 * 1024 * 1024, // 100mb
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3
