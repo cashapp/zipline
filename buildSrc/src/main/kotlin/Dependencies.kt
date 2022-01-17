@@ -26,6 +26,7 @@ object Dependencies {
   val kotlinTest = "org.jetbrains.kotlin:kotlin-test"
   val kotlinxCoroutines = "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2-native-mt"
   val kotlinxCoroutinesTest = "org.jetbrains.kotlinx:kotlinx-coroutines-test:1.5.2-native-mt"
+  val kotlinxDateTime = "org.jetbrains.kotlinx:kotlinx-datetime:0.3.2"
   val kotlinxSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-core:1.3.0"
   val kotlinxSerializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.0"
   val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
