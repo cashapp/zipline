@@ -37,7 +37,7 @@ class ZiplineLoaderTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val loader = ZiplineLoader(
-    client = httpClient,
+    httpClient = httpClient,
     dispatcher = dispatcher
   )
   private lateinit var quickJs: QuickJs

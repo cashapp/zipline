@@ -39,9 +39,9 @@ import okio.Path
  */
 class ZiplineLoader(
   val dispatcher: CoroutineDispatcher,
-  val client: ZiplineHttpClient,
-  // val fileSystem: FileSystem,
-  // val cacheDirectory: Path,
+  val httpClient: ZiplineHttpClient,
+  val fileSystem: FileSystem,
+  val cacheDirectory: Path,
   val cacheMaxSizeInBytes: Int = 100 * 1024 * 1024, // 100mb
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
@@ -54,9 +54,10 @@ class ZiplineLoader(
 
   suspend fun load(zipline: Zipline, url: String) {
     val manifestString = concurrentDownloadsSemaphore.withPermit {
-      client.download(url).utf8()
+      httpClient.download(url).utf8()
     }
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestString)
+    // TODO save manifest
     load(zipline, manifest)
   }
 
@@ -65,7 +66,6 @@ class ZiplineLoader(
       val loads = manifest.modules.map {
         ModuleLoad(zipline, it.key, it.value)
       }
-
       for (load in loads) {
         val deferred: Deferred<*> = async {
           load.load()
@@ -89,7 +89,8 @@ class ZiplineLoader(
 
     suspend fun load() {
       val ziplineFile = concurrentDownloadsSemaphore.withPermit {
-        val ziplineFileBytes = client.download(module.url)
+        val ziplineFileBytes = httpClient.download(module.url)
+        // TODO write to disk
         ZiplineFile.read(Buffer().write(ziplineFileBytes))
       }
       upstreams.awaitAll()

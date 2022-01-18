@@ -2,10 +2,15 @@ package app.cash.zipline.loader
 
 import kotlinx.datetime.Clock
 import okio.ByteString
+import okio.FileSystem
+import okio.Path
+import okio.Path.Companion.toPath
 
 class ZiplineCache(
+  private val fileSystem: FileSystem,
+  private val directory: Path,
   private val database: Database,
-  private val cacheMaxSizeInBytes: Int = 100 * 1024 * 1024, // 100mb
+  private val maxSizeInBytes: Int = 100 * 1024 * 1024, // 100mb
 ) {
   fun setDirty(
     sha256: ByteString,
@@ -22,7 +27,7 @@ class ZiplineCache(
     sha256: ByteString,
     fileSizeBytes: Long
   ) {
-    database.cacheQueries.insert(
+    database.cacheQueries.update(
       sha256_hex = sha256.hex(),
       file_state = FileState.READY,
       size_bytes = fileSizeBytes,
@@ -36,19 +41,23 @@ class ZiplineCache(
 
   fun prune() {
     val currentSize = database.cacheQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
-    if (currentSize < cacheMaxSizeInBytes) return
+    if (currentSize < maxSizeInBytes) return
 
     val files = database.cacheQueries.selectAll().executeAsList()
 
-    var remainingQuota = cacheMaxSizeInBytes
     val toDelete = mutableListOf<Files>()
+    var remainingQuota = maxSizeInBytes
     for (currentFile in files.sortedByDescending { it.last_used_at_epoch_ms }) {
       if ((remainingQuota - currentFile.size_bytes) < 0) break
-
       remainingQuota -= currentFile.size_bytes.toInt()
       toDelete.drop(1)
     }
 
-
+    toDelete.forEach {
+      fileSystem.delete(
+        (directory.toString() + it.sha256_hex).toPath()
+      )
+      database.cacheQueries.delete(it.sha256_hex)
+    }
   }
 }
