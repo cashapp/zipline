@@ -187,14 +187,14 @@ $ ./gradlew :quickjs:android:connectedCheck
 
 First, build the native library for your host OS:
 ```
-$ cmake -S quickjs/jvm/ -B build/jni/ -DQUICKJS_VERSION="$(cat quickjs/common/native/quickjs/VERSION)"
+$ cmake -S zipline/src/jvmMain/ -B build/jni/ -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)"
 $ cmake --build build/jni/ --verbose
 ```
 
 Next, copy the resulting binary into the resources of the JVM project:
 ```
-$ mkdir -p quickjs/jvm/src/main/resources/
-$ cp -v build/jni/libquickjs.* quickjs/jvm/src/main/resources/
+$ mkdir -p zipline/src/jvmMain/resources/
+$ cp -v build/jni/libquickjs.* zipline/src/jvmMain/resources/
 ```
 
 Finally, build the platform-specific `.jar` and run the tests:
