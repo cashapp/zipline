@@ -31,6 +31,6 @@ object Dependencies {
   val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
   val okHttp = "com.squareup.okhttp3:okhttp:4.9.1"
   val okio = "com.squareup.okio:okio:3.0.0"
-  val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.0"
+  val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
   val truth = "com.google.truth:truth:1.0"
 }
