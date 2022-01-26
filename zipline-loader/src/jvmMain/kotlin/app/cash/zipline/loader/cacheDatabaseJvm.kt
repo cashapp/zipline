@@ -10,3 +10,6 @@ actual class DriverFactory {
     return driver
   }
 }
+
+actual typealias SQLiteException = org.sqlite.SQLiteException
+actual typealias SQLException = java.sql.SQLException

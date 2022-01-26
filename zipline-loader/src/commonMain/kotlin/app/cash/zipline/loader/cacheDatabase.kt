@@ -8,6 +8,10 @@ expect class DriverFactory {
   fun createDriver(): SqlDriver
 }
 
+// TODO make internal / upstream to SqlDelight
+expect class SQLiteException : SQLException
+expect open class SQLException : Exception
+
 fun createDatabase(driverFactory: DriverFactory): Database {
   val driver = driverFactory.createDriver()
   val database = Database(
@@ -16,5 +20,16 @@ fun createDatabase(driverFactory: DriverFactory): Database {
       file_stateAdapter = EnumColumnAdapter()
     )
   )
+  return database
+}
+
+fun createDatabase(driver: SqlDriver): Database {
+  val database = Database(
+    driver,
+    filesAdapter = Files.Adapter(
+      file_stateAdapter = EnumColumnAdapter()
+    )
+  )
+  Database.Schema.create(driver)
   return database
 }

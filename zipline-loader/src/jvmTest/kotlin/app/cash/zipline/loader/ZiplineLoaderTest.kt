@@ -30,6 +30,8 @@ import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
+import okio.Path.Companion.toPath
+import okio.fakefilesystem.FakeFileSystem
 
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
@@ -38,7 +40,9 @@ class ZiplineLoaderTest {
   private val dispatcher = TestCoroutineDispatcher()
   private val loader = ZiplineLoader(
     httpClient = httpClient,
-    dispatcher = dispatcher
+    dispatcher = dispatcher,
+    fileSystem = FakeFileSystem(),
+    cacheDirectory = "/zipline/cache".toPath(),
   )
   private lateinit var quickJs: QuickJs
 

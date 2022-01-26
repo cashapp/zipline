@@ -43,6 +43,7 @@ kotlin {
       dependencies {
         implementation(Dependencies.okHttp)
         implementation(Dependencies.sqldelightDriverJvm)
+        implementation(Dependencies.sqldelightJdbc)
       }
     }
     val androidMain by getting {
@@ -66,6 +67,7 @@ kotlin {
     val jvmTest by getting {
       dependencies {
         implementation(Dependencies.kotlinxCoroutinesTest)
+        implementation(Dependencies.okioFakeFileSystem)
       }
     }
   }

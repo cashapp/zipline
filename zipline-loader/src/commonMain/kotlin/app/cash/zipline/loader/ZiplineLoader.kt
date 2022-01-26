@@ -90,7 +90,7 @@ class ZiplineLoader(
     suspend fun load() {
       val ziplineFile = concurrentDownloadsSemaphore.withPermit {
         val ziplineFileBytes = httpClient.download(module.url)
-        // TODO write to disk
+        // TODO write to disk using ZiplineCache
         ZiplineFile.read(Buffer().write(ziplineFileBytes))
       }
       upstreams.awaitAll()
