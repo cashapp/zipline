@@ -39,10 +39,10 @@ class EmojiSearchZipline {
   ) {
     val job = coroutineScope.launch(dispatcher) {
       val presentersJs = hostApi.httpCall("http://10.0.2.2:8080/presenters.js", mapOf())
-      zipline.quickJs.evaluate(presentersJs, "presenters.js")
+      zipline.loadJsModule(presentersJs, "presenters")
       zipline.set<HostApi>("hostApi", hostApi)
       zipline.quickJs.evaluate(
-        "presenters.app.cash.zipline.samples.emojisearch.preparePresenters()"
+        "require('presenters').app.cash.zipline.samples.emojisearch.preparePresenters()"
       )
       val presenter = zipline.get<EmojiSearchPresenter>("emojiSearchPresenter")
 

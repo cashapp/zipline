@@ -37,7 +37,7 @@ class FlowReference<T> @PublishedApi internal constructor(
       try {
         val collector: FlowCollector<String> = object : FlowCollector<String> {
           override suspend fun emit(value: String) {
-            val item = Json.decodeFromString(itemSerializer, value)
+            val item = json.decodeFromString(itemSerializer, value)
             this@channelFlow.send(item)
           }
         }
@@ -82,7 +82,7 @@ private class RealReferenceFlow<T>(
     try {
       val collector = collectorReference.get()
       flow.collect {
-        val value = Json.encodeToString(serializer, it)
+        val value = json.encodeToString(serializer, it)
         collector.emit(value)
       }
     } finally {
@@ -132,4 +132,8 @@ private class DeferredSerializer<T>(
     val delegate = this.delegate ?: throw IllegalStateException("not connected")
     delegate.serialize(encoder, value)
   }
+}
+
+private val json = Json {
+  useArrayPolymorphism = true
 }
