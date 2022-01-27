@@ -1,6 +1,5 @@
 package app.cash.zipline.loader
 
-import com.squareup.sqldelight.db.migrateWithCallbacks
 import kotlinx.datetime.Clock
 import okio.ByteString
 import okio.FileSystem
@@ -48,26 +47,24 @@ class ZiplineCache(
    */
   fun setDirty(
     sha256: ByteString,
-  ): Boolean {
-    return try {
-      database.cacheQueries.insert(
-        sha256_hex = sha256.hex(),
-        file_state = FileState.DIRTY,
-        size_bytes = 0L,
-        last_used_at_epoch_ms = Clock.System.now().toEpochMilliseconds()
-      )
-      true
-    } catch (e: SQLiteException) {
-      // Presumably the file is already dirty.
-      false
-    }
+  ): Boolean = try {
+    database.cacheQueries.insert(
+      sha256_hex = sha256.hex(),
+      file_state = FileState.DIRTY,
+      size_bytes = 0L,
+      last_used_at_epoch_ms = Clock.System.now().toEpochMilliseconds()
+    )
+    true
+  } catch (e: SQLiteException) {
+    // Presumably the file is already dirty.
+    false
   }
 
   fun setReady(
     sha256: ByteString,
     fileSizeBytes: Long
-  ): Boolean {
-    return try {
+  ): Boolean = try {
+    if (getOrNull(sha256)?.file_state == FileState.DIRTY) {
       database.cacheQueries.update(
         sha256_hex = sha256.hex(),
         file_state = FileState.READY,
@@ -75,10 +72,47 @@ class ZiplineCache(
         last_used_at_epoch_ms = Clock.System.now().toEpochMilliseconds()
       )
       true
-    } catch (e: SQLiteException) {
-      // Presumably the dirty file record doesn't exist as expected.
+    } else {
+      // File is not present in DB in DIRTY state as expected.
       false
     }
+  } catch (e: SQLiteException) {
+    // Presumably the update failed.
+    false
+  }
+
+  fun deleteDirty(
+    sha256: ByteString
+  ): Boolean = try {
+    if (getOrNull(sha256)?.file_state == FileState.DIRTY) {
+      database.cacheQueries.delete(
+        sha256_hex = sha256.hex(),
+      )
+      true
+    } else {
+      // File is not present in DB in DIRTY state as expected.
+      false
+    }
+  } catch (e: SQLiteException) {
+    // Presumably the update failed.
+    false
+  }
+
+  fun deleteReady(
+    sha256: ByteString
+  ): Boolean = try {
+    if (getOrNull(sha256)?.file_state == FileState.READY) {
+      database.cacheQueries.delete(
+        sha256_hex = sha256.hex(),
+      )
+      true
+    } else {
+      // File is not present in DB in DIRTY state as expected.
+      false
+    }
+  } catch (e: SQLiteException) {
+    // Presumably the update failed.
+    false
   }
 
   fun getOrNull(
