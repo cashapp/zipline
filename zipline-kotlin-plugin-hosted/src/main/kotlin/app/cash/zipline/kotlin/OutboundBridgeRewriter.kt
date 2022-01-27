@@ -70,7 +70,7 @@ import org.jetbrains.kotlin.name.Name
  *       val serializer_1 = context.serializersModule.serializer<EchoResponse>()
  *       return object : EchoService {
  *         override fun echo(request: EchoRequest): EchoResponse {
- *           val outboundCall = context.newCall("echo", 1)
+ *           val outboundCall = context.newCall("fun echo(com.example.EchoService): com.example.EchoRequest", 1)
  *           outboundCall.parameter<EchoRequest>(serializer_0, request)
  *           return outboundCall.invoke(serializer_1)
  *         }
@@ -294,7 +294,7 @@ internal class OutboundBridgeRewriter(
     ) {
       val newCall = irCall(ziplineApis.outboundBridgeContextNewCall).apply {
         dispatchReceiver = irGet(createFunction.valueParameters[0])
-        putValueArgument(0, irString(bridgedFunction.name.identifier))
+        putValueArgument(0, irString(bridgedFunction.signature))
         putValueArgument(1, irInt(bridgedFunction.valueParameters.size))
       }
 

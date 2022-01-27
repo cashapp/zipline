@@ -56,19 +56,53 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrReturnImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrClassifierSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrReturnTargetSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
+import org.jetbrains.kotlin.ir.symbols.IrTypeParameterSymbol
 import org.jetbrains.kotlin.ir.symbols.impl.IrFieldSymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
+import org.jetbrains.kotlin.ir.types.IrSimpleType
+import org.jetbrains.kotlin.ir.types.IrStarProjection
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.IrTypeArgument
+import org.jetbrains.kotlin.ir.types.IrTypeProjection
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructors
+import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.types.Variance
+import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
+
+internal val IrSimpleFunction.signature: String
+  get() = "fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}"
+
+/** Inspired by [org.jetbrains.kotlin.ir.backend.js.utils.asString]. */
+fun IrSimpleType.asString(): String =
+  classifier.asString() +
+    (if (hasQuestionMark) "?" else "") +
+    (arguments.ifNotEmpty {
+      joinToString(separator = ",", prefix = "<", postfix = ">") { it.asString() }
+    } ?: "")
+
+/** Copied from [org.jetbrains.kotlin.ir.backend.js.utils.asString]. */
+private fun IrTypeArgument.asString(): String = when (this) {
+  is IrStarProjection -> "*"
+  is IrTypeProjection -> variance.label + (if (variance != Variance.INVARIANT) " " else "") + (type as IrSimpleType).asString()
+  else -> error("Unexpected kind of IrTypeArgument: " + javaClass.simpleName)
+}
+
+/** Copied from [org.jetbrains.kotlin.ir.backend.js.utils.asString]. */
+private fun IrClassifierSymbol.asString() = when (this) {
+  is IrTypeParameterSymbol -> this.owner.name.asString()
+  is IrClassSymbol -> this.owner.fqNameWhenAvailable!!.asString()
+  else -> error("Unexpected kind of IrClassifierSymbol: " + javaClass.typeName)
+}
 
 internal fun FqName.child(name: String) = child(Name.identifier(name))
 
