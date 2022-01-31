@@ -80,7 +80,12 @@ import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 
 internal val IrSimpleFunction.signature: String
-  get() = "fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}"
+  get() = buildString {
+    if (isSuspend) {
+      append("suspend ")
+    }
+    append("fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}")
+  }
 
 /** Inspired by [org.jetbrains.kotlin.ir.backend.js.utils.asString]. */
 fun IrSimpleType.asString(): String =

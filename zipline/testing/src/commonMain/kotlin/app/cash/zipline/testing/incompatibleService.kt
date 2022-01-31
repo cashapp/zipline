@@ -18,3 +18,7 @@ package app.cash.zipline.testing
 interface PotatoService {
   fun echo(): EchoResponse
 }
+
+interface SuspendingPotatoService {
+  suspend fun echo(): EchoResponse
+}
