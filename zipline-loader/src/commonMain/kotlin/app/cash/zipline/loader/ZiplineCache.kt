@@ -125,12 +125,12 @@ class ZiplineCache(
 
     val files = database.cacheQueries.selectAll().executeAsList()
 
-    val toDelete = mutableListOf<Files>()
+    val toDelete = files.toMutableList()
     var remainingQuota = maxSizeInBytes
     for (currentFile in files.sortedByDescending { it.last_used_at_epoch_ms }) {
       if ((remainingQuota - currentFile.size_bytes) < 0) break
       remainingQuota -= currentFile.size_bytes.toInt()
-      toDelete.drop(1)
+      toDelete.removeLast()
     }
 
     toDelete.forEach {
