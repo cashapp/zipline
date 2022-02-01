@@ -90,10 +90,10 @@ internal val IrSimpleFunction.signature: String
 /** Inspired by [org.jetbrains.kotlin.ir.backend.js.utils.asString]. */
 fun IrSimpleType.asString(): String =
   classifier.asString() +
-    (if (hasQuestionMark) "?" else "") +
     (arguments.ifNotEmpty {
       joinToString(separator = ",", prefix = "<", postfix = ">") { it.asString() }
-    } ?: "")
+    } ?: "") +
+    (if (hasQuestionMark) "?" else "")
 
 /** Copied from [org.jetbrains.kotlin.ir.backend.js.utils.asString]. */
 private fun IrTypeArgument.asString(): String = when (this) {
