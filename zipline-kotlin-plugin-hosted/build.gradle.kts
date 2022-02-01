@@ -13,7 +13,7 @@ plugins {
 dependencies {
   compileOnly(kotlin("compiler"))
 
-  annotationProcessor("com.google.auto.service:auto-service:1.0")
+  kapt("com.google.auto.service:auto-service:1.0")
   compileOnly("com.google.auto.service:auto-service-annotations:1.0")
 }
 
