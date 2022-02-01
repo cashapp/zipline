@@ -21,7 +21,9 @@ import app.cash.zipline.internal.jsPlatformName
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
+import app.cash.zipline.testing.SuspendingPotatoService
 import app.cash.zipline.testing.helloService
 import app.cash.zipline.testing.yoService
 import com.google.common.truth.Truth.assertThat
@@ -200,9 +202,65 @@ class ZiplineTest {
     )
   }
 
+  @Test fun jvmCallIncompatibleJsService(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
+
+    assertThat(assertFailsWith<Exception> {
+      zipline.get<PotatoService>("helloService").echo()
+    }).hasMessageThat().startsWith("""
+      IllegalStateException: unexpected function: fun echo(): app.cash.zipline.testing.EchoResponse
+     		at
+      """.trimIndent()
+    )
+  }
+
+  @Test fun suspendingJvmCallIncompatibleJsService(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
+
+    assertThat(assertFailsWith<Exception> {
+      zipline.get<SuspendingPotatoService>("helloService").echo()
+    }).hasMessageThat().startsWith("""
+      IllegalStateException: unexpected function: suspend fun echo(): app.cash.zipline.testing.EchoResponse
+     		at
+      """.trimIndent()
+    )
+  }
+
+  @Test fun jsCallIncompatibleJvmService(): Unit = runBlocking(dispatcher) {
+    zipline.set<PotatoService>("supService", JvmPotatoService("sup"))
+
+    assertThat(assertFailsWith<QuickJsException> {
+      zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
+    }).hasMessageThat().startsWith("""
+      java.lang.IllegalStateException: unexpected function: fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+     		at
+      """.trimIndent()
+    )
+  }
+
+  @Test fun suspendingJsCallIncompatibleJvmService(): Unit = runBlocking(dispatcher) {
+    zipline.set<PotatoService>("jvmSuspendingPotatoService", JvmPotatoService("Veyndan"))
+
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingPotatoService('Veyndan')")
+    assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingPotatoResult") as String?)
+      .isNull()
+
+    assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingPotatoException") as String?)
+      .startsWith("""
+        Exception: java.lang.IllegalStateException: unexpected function: suspend fun echo(): app.cash.zipline.testing.EchoResponse
+        	at
+      """.trimIndent())
+  }
+
   private class JvmEchoService(private val greeting: String) : EchoService {
     override fun echo(request: EchoRequest): EchoResponse {
       return EchoResponse("$greeting from the JVM, ${request.message}")
+    }
+  }
+
+  private class JvmPotatoService(private val greeting: String) : PotatoService {
+    override fun echo(): EchoResponse {
+      return EchoResponse("$greeting from the JVM, anonymous")
     }
   }
 }

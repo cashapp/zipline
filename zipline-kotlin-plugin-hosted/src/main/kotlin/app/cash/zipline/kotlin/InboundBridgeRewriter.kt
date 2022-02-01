@@ -86,7 +86,7 @@ import org.jetbrains.kotlin.name.Name
  *         override val context: Context = context
  *         override fun call(inboundCall: InboundCall): Array<String> {
  *           return when {
- *             inboundCall.funName == "echo" -> {
+ *             inboundCall.funName == "fun echo(com.example.EchoRequest): com.example.EchoResponse" -> {
  *               inboundCall.result(
  *                 serializer_1,
  *                 s.echo(
@@ -423,8 +423,8 @@ internal class InboundBridgeRewriter(
    *
    * ```
    * when {
-   *   inboundCall.funName == "function1" -> ...
-   *   inboundCall.funName == "function2" -> ...
+   *   inboundCall.funName == "fun function1(com.example.RequestType1): com.example.ResponseType1" -> ...
+   *   inboundCall.funName == "fun function2(com.example.RequestType2): com.example.ResponseType2" -> ...
    *   ...
    *   else -> ...
    * }
@@ -444,7 +444,7 @@ internal class InboundBridgeRewriter(
       result += irBranch(
         condition = irEquals(
           arg1 = irFunName(callFunction),
-          arg2 = irString(bridgedFunction.owner.name.identifier)
+          arg2 = irString(bridgedFunction.owner.signature)
         ),
         result = irBlock {
           +irCallEncodeResult(

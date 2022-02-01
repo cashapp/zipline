@@ -118,7 +118,7 @@ class Endpoint internal constructor(
      */
     private fun takeHandler(instanceName: String, funName: String): InboundCallHandler {
       val result = when (funName) {
-        "close" -> inboundHandlers.remove(instanceName)
+        "fun close(): kotlin.Unit" -> inboundHandlers.remove(instanceName)
         else -> inboundHandlers[instanceName]
       }
       return result ?: error("no handler for $instanceName")

@@ -76,7 +76,7 @@ public final class ZiplineTestInternals {
             = (KSerializer) serializer(context.getSerializersModule(), echoResponseKt);
         return new EchoService() {
           @Override public EchoResponse echo(EchoRequest request) {
-            OutboundCall outboundCall = context.newCall("echo", 1);
+            OutboundCall outboundCall = context.newCall("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse", 1);
             outboundCall.parameter(parameterSerializer, request);
             return outboundCall.invoke(resultSerializer);
           }
@@ -104,7 +104,7 @@ public final class ZiplineTestInternals {
           }
 
           @Override public String[] call(InboundCall inboundCall) {
-            if (inboundCall.getFunName().equals("echo")) {
+            if (inboundCall.getFunName().equals("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse")) {
               return inboundCall.result(resultSerializer, getService().echo(
                   inboundCall.parameter(parameterSerializer)));
             } else {
@@ -131,7 +131,7 @@ public final class ZiplineTestInternals {
             = (KSerializer) serializer(context.getSerializersModule(), listOfStringKt);
         return new GenericEchoService<String>() {
           @Override public List<String> genericEcho(String request) {
-            OutboundCall outboundCall = context.newCall("genericEcho", 1);
+            OutboundCall outboundCall = context.newCall("fun genericEcho(T): kotlin.collections.List<T>", 1);
             outboundCall.parameter(parameterSerializer, request);
             return outboundCall.invoke(resultSerializer);
           }
@@ -160,7 +160,7 @@ public final class ZiplineTestInternals {
           }
 
           @Override public String[] call(InboundCall inboundCall) {
-            if (inboundCall.getFunName().equals("genericEcho")) {
+            if (inboundCall.getFunName().equals("fun genericEcho(T): kotlin.collections.List<T>")) {
               return inboundCall.result(resultSerializer, getService().genericEcho(
                   inboundCall.parameter(parameterSerializer)));
             } else {
@@ -220,7 +220,7 @@ public final class ZiplineTestInternals {
 
       @Override
       public String[] call(InboundCall inboundCall) {
-        if (inboundCall.getFunName().equals("echo")) {
+        if (inboundCall.getFunName().equals("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse")) {
           return inboundCall.result(responseSerializer, service.echo(
             inboundCall.parameter(requestSerializer)));
         } else {
@@ -249,7 +249,7 @@ public final class ZiplineTestInternals {
       }
 
       @Override public EchoResponse echo(EchoRequest request) {
-        OutboundCall outboundCall = context.newCall("echo", 1);
+        OutboundCall outboundCall = context.newCall("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse", 1);
         outboundCall.parameter(requestSerializer, request);
         return outboundCall.invoke(responseSerializer);
       }

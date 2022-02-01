@@ -69,7 +69,7 @@ interface SampleService : ZiplineService {
 
         override fun call(inboundCall: InboundCall): Array<String> {
           return when (inboundCall.funName) {
-            "ping" -> {
+            "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse" -> {
               inboundCall.result(
                 responseSerializer,
                 service.ping(
@@ -77,7 +77,7 @@ interface SampleService : ZiplineService {
                 )
               )
             }
-            "close" -> {
+            "fun close(): kotlin.Unit" -> {
               inboundCall.result(
                 Unit.serializer(),
                 service.close()
@@ -105,13 +105,13 @@ interface SampleService : ZiplineService {
         private val responseSerializer = context.serializersModule.serializer<SampleResponse>()
 
         override fun ping(request: SampleRequest): SampleResponse {
-          val call = context.newCall("ping", 1)
+          val call = context.newCall("fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse", 1)
           call.parameter(requestSerializer, request)
           return call.invoke(responseSerializer)
         }
 
         override fun close() {
-          val call = context.newCall("close", 0)
+          val call = context.newCall("fun close(): kotlin.Unit", 0)
           return call.invoke(Unit.serializer())
         }
       }

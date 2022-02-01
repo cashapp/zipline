@@ -399,8 +399,8 @@ internal class AdapterGenerator(
    *
    * ```
    * when {
-   *   inboundCall.funName == "function1" -> ...
-   *   inboundCall.funName == "function2" -> ...
+   *   inboundCall.funName == "fun function1(com.example.RequestType1): com.example.ResponseType1" -> ...
+   *   inboundCall.funName == "fun function2(com.example.RequestType2): com.example.ResponseType2" -> ...
    *   ...
    *   else -> ...
    * }
@@ -421,7 +421,7 @@ internal class AdapterGenerator(
       result += irBranch(
         condition = irEquals(
           arg1 = irFunName(callFunction),
-          arg2 = irString(bridgedFunction.owner.name.identifier)
+          arg2 = irString(bridgedFunction.owner.signature)
         ),
         result = irBlock {
           +irCallEncodeResult(
@@ -737,7 +737,7 @@ internal class AdapterGenerator(
         ).apply {
           dispatchReceiver = irGet(result.dispatchReceiverParameter!!)
         }
-        putValueArgument(0, irString(bridgedFunction.name.identifier))
+        putValueArgument(0, irString(bridgedFunction.signature))
         putValueArgument(1, irInt(bridgedFunction.valueParameters.size))
       }
 
