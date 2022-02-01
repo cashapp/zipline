@@ -209,7 +209,12 @@ class ZiplineTest {
     assertThat(assertFailsWith<Exception> {
       zipline.get<PotatoService>("helloService").echo()
     }).hasMessageThat().startsWith("""
-      IllegalStateException: unexpected function: fun echo(): app.cash.zipline.testing.EchoResponse
+      ZiplineApiMismatchException: no such method (incompatible API versions?)
+      	called:
+      		fun echo(): app.cash.zipline.testing.EchoResponse
+      	available:
+      		fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      		fun close(): kotlin.Unit
      		at
       """.trimIndent()
     )
@@ -221,7 +226,12 @@ class ZiplineTest {
     assertThat(assertFailsWith<Exception> {
       zipline.get<SuspendingPotatoService>("helloService").echo()
     }).hasMessageThat().startsWith("""
-      IllegalStateException: unexpected function: suspend fun echo(): app.cash.zipline.testing.EchoResponse
+      ZiplineApiMismatchException: no such method (incompatible API versions?)
+      	called:
+      		suspend fun echo(): app.cash.zipline.testing.EchoResponse
+      	available:
+      		fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      		fun close(): kotlin.Unit
      		at
       """.trimIndent()
     )
@@ -233,7 +243,12 @@ class ZiplineTest {
     assertThat(assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
     }).hasMessageThat().startsWith("""
-      java.lang.IllegalStateException: unexpected function: fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      app.cash.zipline.ZiplineApiMismatchException: no such method (incompatible API versions?)
+      	called:
+      		fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      	available:
+      		fun echo(): app.cash.zipline.testing.EchoResponse
+      		fun close(): kotlin.Unit
      		at
       """.trimIndent()
     )
@@ -248,9 +263,15 @@ class ZiplineTest {
 
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingPotatoException") as String?)
       .startsWith("""
-        Exception: java.lang.IllegalStateException: unexpected function: suspend fun echo(): app.cash.zipline.testing.EchoResponse
+        Exception: app.cash.zipline.ZiplineApiMismatchException: no such method (incompatible API versions?)
+        	called:
+        		suspend fun echo(): app.cash.zipline.testing.EchoResponse
+        	available:
+        		fun echo(): app.cash.zipline.testing.EchoResponse
+        		fun close(): kotlin.Unit
         	at
-      """.trimIndent())
+        """.trimIndent()
+      )
   }
 
   private class JvmEchoService(private val greeting: String) : EchoService {

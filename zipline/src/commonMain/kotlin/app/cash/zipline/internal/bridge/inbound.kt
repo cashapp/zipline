@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineApiMismatchException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -89,7 +90,16 @@ internal class InboundCall(
     }
   }
 
-  fun unexpectedFunction(): Array<String> = error("unexpected function: $funName")
+  fun unexpectedFunction(supportedFunctionNames: List<String>): Array<String> = throw ZiplineApiMismatchException(
+    buildString {
+      appendLine("no such method (incompatible API versions?)")
+      appendLine("\tcalled:")
+      append("\t\t")
+      appendLine(funName)
+      appendLine("\tavailable:")
+      append(supportedFunctionNames.joinToString(separator = "\n") { "\t\t$it" })
+    }
+  )
 
   fun resultException(e: Throwable): Array<String> {
     return arrayOf(LABEL_EXCEPTION, context.json.encodeToString(ThrowableSerializer, e))
