@@ -17,16 +17,41 @@ class ZiplineCacheTest {
   private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
   private lateinit var fileSystem: FileSystem
   private lateinit var ziplineCache: ZiplineCache
+  private val directory = "/zipline/cache".toPath()
 
   @Before
   fun setUp() {
     fileSystem = FakeFileSystem()
-    ziplineCache = openZiplineCache(driver, fileSystem, "/zipline/cache".toPath())
+    ziplineCache = openZiplineCache(driver, fileSystem, directory)
   }
 
   @After
   fun tearDown() {
     ziplineCache.close()
+  }
+
+  @Test
+  fun `read opens file that has been downloaded or null if not ready`() {
+    val fileSha = "abc123".encodeUtf8().sha256()
+    val fileShaContents = "abc123".encodeUtf8().sha256()
+
+    // File not READY
+    assertNull(ziplineCache.read(fileSha))
+    assertFalse(fileSystem.exists(directory / fileSha.hex()))
+
+    // File downloaded
+    ziplineCache.write(fileSha, fileShaContents)
+    assertTrue(fileSystem.exists(directory / fileSha.hex()))
+
+
+
+
+
+  }
+
+  @Test
+  fun `read triggers download for file that is not on filesystem yet`() {
+    TODO("Not yet implemented")
   }
 
   @Test
