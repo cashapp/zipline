@@ -13,12 +13,13 @@ We look in three places:
  - network
 
 If a file is not built-in, and not in the cache, we:
- - create it as DIRTY in the cache DB and set its last_used_at date to now
+ - create it as `DIRTY` in the cache DB and set its `last_used_at` date to now
  - download
- - if download completes successfully, mark it as READY in the cache DB
- - otherwise delete that row from the cache DB
+ - if download completes successfully, mark it as `READY` in the cache DB
+ - otherwise, delete that row from the cache DB
 
-
+// TODO (adrw) review missing pieces in here like thread contention while loop, listeners on rows
+```
 class DownloadCache(
   val fileSystem: FileSystem,
   val cacheDirectory: Path,
@@ -76,14 +77,14 @@ suspend fun Query.waitUntilChanged() {
     query.addListener(listener)
   }
 }
-
+```
 
 Pruning
 -------
 
-When the loader is created we immediately prune all DIRTY files (if they exist).
+When the loader is created we immediately prune all `DIRTY` files (if they exist).
 We also prune files ordered by least-recently used at until the total cache size is within
-our MAX_CACHE_SIZE limit.
+our `maxSizeInBytes` limit.
 
 
 

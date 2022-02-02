@@ -9,24 +9,24 @@ import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 class ZiplineCacheTest {
   private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private lateinit var db: Database
   private lateinit var fileSystem: FileSystem
   private lateinit var ziplineCache: ZiplineCache
 
   @Before
   fun setUp() {
-    db = createDatabase(driver)
     fileSystem = FakeFileSystem()
-    ziplineCache = ZiplineCache(
-      fileSystem = fileSystem,
-      directory = "/zipline/cache".toPath(),
-      database = db,
-    )
+    ziplineCache = openZiplineCache(driver, fileSystem, "/zipline/cache".toPath())
+  }
+
+  @After
+  fun tearDown() {
+    ziplineCache.close()
   }
 
   @Test
