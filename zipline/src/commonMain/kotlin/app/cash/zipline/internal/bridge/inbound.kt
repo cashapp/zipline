@@ -97,7 +97,7 @@ internal class InboundCall(
       append("\t\t")
       appendLine(funName)
       appendLine("\tavailable:")
-      append(supportedFunctionNames.joinToString(separator = "\n") { "\t\t$it" })
+      supportedFunctionNames.joinTo(this, separator = "\n") { "\t\t$it" }
     }
   )
 
