@@ -37,7 +37,7 @@ private val mutex = Mutex(locked = true)
 
 @JsExport
 fun prepareSuspendingJsBridges() {
-  zipline.set<SuspendingEchoService>(
+  zipline.bind<SuspendingEchoService>(
     "jsSuspendingEchoService",
     JsSuspendingEchoService("hello")
   )
@@ -50,7 +50,7 @@ fun unblockSuspendingJs() {
 
 @JsExport
 fun callSuspendingEchoService(message: String) {
-  val service = zipline.get<SuspendingEchoService>("jvmSuspendingEchoService")
+  val service = zipline.take<SuspendingEchoService>("jvmSuspendingEchoService")
   GlobalScope.launch {
     suspendingEchoResult = service.suspendingEcho(EchoRequest(message)).message
   }

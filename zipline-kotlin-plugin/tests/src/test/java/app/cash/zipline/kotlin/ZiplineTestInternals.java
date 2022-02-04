@@ -67,22 +67,22 @@ public final class ZiplineTestInternals {
   }
 
   /** Simulate generated code for outbound calls. */
-  public static EchoService getEchoClient(Endpoint endpoint, String name) {
-    return endpoint.get(name, EchoServiceAdapter.INSTANCE);
+  public static EchoService takeEchoClient(Endpoint endpoint, String name) {
+    return endpoint.take(name, EchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for inbound calls. */
-  public static void setEchoService(Endpoint endpoint, String name, EchoService echoService) {
-    endpoint.set(name, echoService, EchoServiceAdapter.INSTANCE);
+  public static void bindEchoService(Endpoint endpoint, String name, EchoService echoService) {
+    endpoint.bind(name, echoService, EchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for outbound calls. */
-  public static GenericEchoService<String> getGenericEchoService(Endpoint endpoint, String name) {
-    return endpoint.get(name, GenericEchoServiceAdapter.INSTANCE);
+  public static GenericEchoService<String> takeGenericEchoService(Endpoint endpoint, String name) {
+    return endpoint.take(name, GenericEchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for inbound calls. */
-  public static void setGenericEchoService(
+  public static void bindGenericEchoService(
       Endpoint endpoint, String name, GenericEchoService<String> echoService) {
   }
 
@@ -325,14 +325,14 @@ public final class ZiplineTestInternals {
   }
 
   /** Simulate generated code for inbound calls. */
-  public static void setEchoZiplineService(
+  public static void bindEchoZiplineService(
       Endpoint endpoint, String name, EchoZiplineService service) {
-    endpoint.set(name, service, EchoZiplineServiceAdapter.INSTANCE);
+    endpoint.bind(name, service, EchoZiplineServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for outbound calls. */
-  public static EchoZiplineService getEchoZiplineService(Endpoint endpoint, String name) {
-    return endpoint.get(name, EchoZiplineServiceAdapter.INSTANCE);
+  public static EchoZiplineService takeEchoZiplineService(Endpoint endpoint, String name) {
+    return endpoint.take(name, EchoZiplineServiceAdapter.INSTANCE);
   }
 
   private ZiplineTestInternals() {

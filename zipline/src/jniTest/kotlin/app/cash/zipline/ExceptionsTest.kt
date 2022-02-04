@@ -43,7 +43,7 @@ class ExceptionsTest {
   @Test fun jvmCallJsServiceThatThrows(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareThrowingJsBridges()")
 
-    val service = zipline.get<EchoService>("throwingService")
+    val service = zipline.take<EchoService>("throwingService")
 
     assertThat(assertFailsWith<Exception> {
       service.echo(EchoRequest("Jake"))
@@ -59,7 +59,7 @@ class ExceptionsTest {
   }
 
   @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
-    zipline.set<EchoService>("throwingService", JvmThrowingEchoService())
+    zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
 
     assertThat(assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callThrowingService('homie')")
@@ -76,10 +76,10 @@ class ExceptionsTest {
   }
 
   @Test fun jvmCallJsCallsJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
-    zipline.set<EchoService>("throwingService", JvmThrowingEchoService())
+    zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareDelegatingService()")
 
-    val service = zipline.get<EchoService>("delegatingService")
+    val service = zipline.take<EchoService>("delegatingService")
 
     assertThat(assertFailsWith<Exception> {
       service.echo(EchoRequest("Jake"))

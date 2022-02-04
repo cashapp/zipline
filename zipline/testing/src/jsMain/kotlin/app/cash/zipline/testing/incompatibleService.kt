@@ -16,7 +16,7 @@ private val zipline by lazy { Zipline.get() }
 
 @JsExport
 fun prepareSuspendingPotatoJsBridges() {
-  zipline.set<SuspendingPotatoService>(
+  zipline.bind<SuspendingPotatoService>(
     "jsSuspendingPotatoService",
     JsSuspendingPotatoService("hello")
   )
@@ -24,7 +24,7 @@ fun prepareSuspendingPotatoJsBridges() {
 
 @JsExport
 fun callSuspendingPotatoService() {
-  val service = zipline.get<SuspendingPotatoService>("jvmSuspendingPotatoService")
+  val service = zipline.take<SuspendingPotatoService>("jvmSuspendingPotatoService")
   GlobalScope.launch {
     try {
       suspendingPotatoResult = service.echo().message

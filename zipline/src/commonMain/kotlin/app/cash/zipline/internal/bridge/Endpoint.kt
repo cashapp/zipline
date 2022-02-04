@@ -94,7 +94,7 @@ class Endpoint internal constructor(
     ) {
       val handler = takeHandler(instanceName, funName)
       scope.launch {
-        val callback = get<SuspendCallback>(callbackName)
+        val callback = take<SuspendCallback>(callbackName)
         val inboundCall = InboundCall(handler.context, funName, encodedArguments)
         val result = try {
           handler.callSuspending(inboundCall)
@@ -128,12 +128,12 @@ class Endpoint internal constructor(
     adapter: ZiplineServiceAdapter<T>
   ): KSerializer<ZiplineReference<T>> = ZiplineReferenceSerializer(this, adapter)
 
-  fun <T : ZiplineService> set(name: String, instance: T) {
-    error("unexpected call to Endpoint.set: is the Zipline plugin configured?")
+  fun <T : ZiplineService> bind(name: String, instance: T) {
+    error("unexpected call to Endpoint.bind: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : ZiplineService> set(
+  internal fun <T : ZiplineService> bind(
     name: String,
     service: T,
     adapter: ZiplineServiceAdapter<T>
@@ -141,12 +141,12 @@ class Endpoint internal constructor(
     inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext())
   }
 
-  fun <T : ZiplineService> get(name: String): T {
-    error("unexpected call to Endpoint.get: is the Zipline plugin configured?")
+  fun <T : ZiplineService> take(name: String): T {
+    error("unexpected call to Endpoint.take: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : ZiplineService> get(name: String, adapter: ZiplineServiceAdapter<T>): T {
+  internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
     return adapter.outboundService(newOutboundContext(name))
   }
 

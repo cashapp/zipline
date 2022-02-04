@@ -20,7 +20,7 @@ import app.cash.zipline.internal.bridge.InboundCallHandler
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 
 abstract class ZiplineReference<T : ZiplineService> internal constructor() {
-  abstract fun get(): T
+  abstract fun take(): T
 
   abstract fun close()
 }
@@ -54,7 +54,7 @@ internal class InboundZiplineReference<T : ZiplineService>(
     return result
   }
 
-  override fun get(): T {
+  override fun take(): T {
     return service
   }
 
@@ -82,7 +82,7 @@ internal class OutboundZiplineReference<T : ZiplineService>(
     this.endpoint = endpoint
   }
 
-  override fun get(): T {
+  override fun take(): T {
     val endpoint = this.endpoint ?: throw IllegalStateException("not connected")
     val context = endpoint.newOutboundContext(this.name!!)
     return adapter.outboundService(context)

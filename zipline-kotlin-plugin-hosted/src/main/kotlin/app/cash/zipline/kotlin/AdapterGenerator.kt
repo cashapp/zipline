@@ -140,7 +140,7 @@ internal class AdapterGenerator(
       ziplineApis,
       scope,
       original,
-      "Zipline.get()",
+      "Zipline.take()",
       original.defaultType
     )
     val outboundBridgedInterface = BridgedInterface.create(
@@ -149,7 +149,7 @@ internal class AdapterGenerator(
       ziplineApis,
       scope,
       original,
-      "Zipline.get()",
+      "Zipline.take()",
       original.defaultType
     )
 

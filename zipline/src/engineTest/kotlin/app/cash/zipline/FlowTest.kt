@@ -43,7 +43,7 @@ internal class FlowTest {
     }
 
     override suspend fun flowParameter(flowReference: FlowReference<String>): Int {
-      val flow = flowReference.get()
+      val flow = flowReference.take()
       return flow.count()
     }
   }
@@ -53,13 +53,13 @@ internal class FlowTest {
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
 
-    endpointA.set<FlowEchoService>("service", service)
-    val client = endpointB.get<FlowEchoService>("service")
+    endpointA.bind<FlowEchoService>("service", service)
+    val client = endpointB.take<FlowEchoService>("service")
     val initialServiceNames = endpointA.serviceNames
     val initialClientNames = endpointA.clientNames
 
     val flowReference = client.createFlow("hello", 3)
-    val flow = flowReference.get()
+    val flow = flowReference.take()
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
 
     // Confirm that no services or clients were leaked.
@@ -72,8 +72,8 @@ internal class FlowTest {
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
 
-    endpointA.set<FlowEchoService>("service", service)
-    val client = endpointB.get<FlowEchoService>("service")
+    endpointA.bind<FlowEchoService>("service", service)
+    val client = endpointB.take<FlowEchoService>("service")
     val initialServiceNames = endpointA.serviceNames
     val initialClientNames = endpointA.clientNames
 
@@ -99,7 +99,7 @@ internal class FlowTest {
   fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking {
     val service = RealFlowEchoService()
     val flowReference = service.createFlow("hello", 3)
-    val flow = flowReference.get()
+    val flow = flowReference.take()
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
   }
 }

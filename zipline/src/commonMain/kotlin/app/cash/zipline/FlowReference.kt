@@ -18,7 +18,6 @@ package app.cash.zipline
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
@@ -49,8 +48,8 @@ class FlowReference<T> @PublishedApi internal constructor(
     }
   }
 
-  fun get(): Flow<T> {
-    return when (val referenceFlow = referenceFlowReference.get()) {
+  fun take(): Flow<T> {
+    return when (val referenceFlow = referenceFlowReference.take()) {
       is RealReferenceFlow<*> -> {
         // If it's a RealReferenceFlow, then the instance didn't pass through Zipline. Don't attempt
         // serialization both because it's unnecessary, and because the serializer isn't connected.
@@ -81,7 +80,7 @@ private class RealReferenceFlow<T>(
     collectorReference: ZiplineReference<ZiplineFlowCollector>
   ) {
     try {
-      val collector = collectorReference.get()
+      val collector = collectorReference.take()
       flow.collect {
         val value = json.encodeToString(serializer, it)
         collector.emit(value)

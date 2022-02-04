@@ -20,13 +20,13 @@ import kotlinx.serialization.modules.SerializersModule
 expect class Zipline {
   val serializersModule: SerializersModule
 
-  /** Name of services that have been published with [set]. */
+  /** Name of services that have been published with [bind]. */
   val serviceNames: Set<String>
 
-  /** Names of services that can be consumed with [get]. */
+  /** Names of services that can be consumed with [take]. */
   val clientNames: Set<String>
 
-  fun <T : ZiplineService> set(name: String, instance: T)
+  fun <T : ZiplineService> bind(name: String, instance: T)
 
-  fun <T : ZiplineService> get(name: String): T
+  fun <T : ZiplineService> take(name: String): T
 }

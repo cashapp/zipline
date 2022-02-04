@@ -95,34 +95,34 @@ actual class Zipline internal constructor() {
     )
 
     // Connect platforms using our newly-bootstrapped channels.
-    val eventLoop = endpoint.get<EventLoop>(name = eventLoopName)
-    val console = endpoint.get<Console>(name = consoleName)
-    endpoint.set<JsPlatform>(
+    val eventLoop = endpoint.take<EventLoop>(name = eventLoopName)
+    val console = endpoint.take<Console>(name = consoleName)
+    endpoint.bind<JsPlatform>(
       name = jsPlatformName,
       instance = RealJsPlatform(eventLoop, console),
     )
   }
 
-  actual fun <T : ZiplineService> set(name: String, instance: T) {
-    error("unexpected call to Zipline.set: is the Zipline plugin configured?")
+  actual fun <T : ZiplineService> bind(name: String, instance: T) {
+    error("unexpected call to Zipline.bind: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : ZiplineService> set(
+  internal fun <T : ZiplineService> bind(
     name: String,
     service: T,
     adapter: ZiplineServiceAdapter<T>
   ) {
-    endpoint.set(name, service, adapter)
+    endpoint.bind(name, service, adapter)
   }
 
-  actual fun <T : ZiplineService> get(name: String): T {
-    error("unexpected call to Zipline.get: is the Zipline plugin configured?")
+  actual fun <T : ZiplineService> take(name: String): T {
+    error("unexpected call to Zipline.take: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : ZiplineService> get(name: String, adapter: ZiplineServiceAdapter<T>): T {
-    return endpoint.get(name, adapter)
+  internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    return endpoint.take(name, adapter)
   }
 
   companion object {
