@@ -9,4 +9,7 @@ if (config.devServer) {
 
   // Don't open Chrome.
   delete config.devServer.open;
+
+  // Serve .zipline files.
+  config.devServer.static.push('../../../../samples/emoji-search/presenters/build/zipline');
 }

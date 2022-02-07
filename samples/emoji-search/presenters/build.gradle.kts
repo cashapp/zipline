@@ -22,6 +22,7 @@ kotlin {
     val jvmMain by getting {
       dependencies {
         implementation(Dependencies.okHttp)
+        implementation(project(":zipline-loader"))
       }
     }
   }
@@ -33,6 +34,26 @@ rootProject.plugins.withType(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJ
   rootProject.the<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension>().versions.webpackCli.version = "4.9.0"
 }
 
+val compilerConfiguration by configurations.creating {
+}
+
 dependencies {
   add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
+  compilerConfiguration(project(":zipline-gradle-plugin"))
+}
+
+
+// We can't use the Zipline Gradle plugin because it shares our parent project.
+val compileZipline by tasks.creating(JavaExec::class) {
+  dependsOn("compileProductionExecutableKotlinJs")
+  classpath = compilerConfiguration
+  main = "app.cash.zipline.gradle.ZiplineCompilerKt"
+  args = listOf(
+    "$buildDir/compileSync/main/ProductionExecutable/kotlin",
+    "$buildDir/zipline",
+  )
+}
+
+val jsBrowserProductionRun by tasks.getting {
+  dependsOn(compileZipline)
 }

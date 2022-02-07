@@ -83,3 +83,13 @@ class ZiplineCompiler {
     manifestFile.writeText(Json.encodeToString(manifest))
   }
 }
+
+/**
+ * Compile .js files to .zipline files. This is intended for internal use only; callers should
+ * instead use the Gradle plugin.
+ */
+fun main(vararg args: String) {
+  val outputDir = File(args[1])
+  outputDir.mkdirs()
+  ZiplineCompiler().compile(inputDir = File(args[0]), outputDir = outputDir)
+}
