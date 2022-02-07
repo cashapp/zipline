@@ -313,6 +313,11 @@ internal class AdapterGenerator(
       constructor.valueParameters[1]
     )
 
+    val supportedFunctionNamesProperty = bridgedInterface.irSupportedFunctionNamesProperty(
+      inboundCallHandler,
+    )
+    inboundCallHandler.declarations += supportedFunctionNamesProperty
+
     val callFunction = irCallFunction(
       inboundCallHandler = inboundCallHandler,
       callSuspending = false
@@ -333,7 +338,7 @@ internal class AdapterGenerator(
       scopeOwnerSymbol = callFunction.symbol,
     ) {
       +irReturn(
-        irCallFunctionBody(bridgedInterface, callFunction, serviceProperty)
+        irCallFunctionBody(bridgedInterface, callFunction, serviceProperty, supportedFunctionNamesProperty)
       )
     }
     callSuspendingFunction.irFunctionBody(
@@ -341,7 +346,7 @@ internal class AdapterGenerator(
       scopeOwnerSymbol = callSuspendingFunction.symbol,
     ) {
       +irReturn(
-        irCallFunctionBody(bridgedInterface, callSuspendingFunction, serviceProperty)
+        irCallFunctionBody(bridgedInterface, callSuspendingFunction, serviceProperty, supportedFunctionNamesProperty)
       )
     }
 
@@ -426,6 +431,7 @@ internal class AdapterGenerator(
     bridgedInterface: BridgedInterface,
     callFunction: IrSimpleFunction,
     serviceProperty: IrProperty,
+    supportedFunctionNamesProperty: IrProperty,
   ): IrExpression {
     val result = mutableListOf<IrBranch>()
     val inboundBridgeThis = callFunction.dispatchReceiverParameter!!
@@ -455,8 +461,8 @@ internal class AdapterGenerator(
       )
     }
 
-    // Add an else clause that calls unexpectedFunction().
-    result += irElseBranch(irCallUnexpectedFunction(callFunction))
+    // Add an else clause that calls unexpectedFunction(supportedFunctionNames).
+    result += irElseBranch(irCallUnexpectedFunction(callFunction, supportedFunctionNamesProperty))
 
     return irWhen(
       type = ziplineApis.stringArrayType,
@@ -579,15 +585,23 @@ internal class AdapterGenerator(
     }
   }
 
-  /** `inboundCall.unexpectedFunction()` */
+  /** `inboundCall.unexpectedFunction(supportedFunctionNames)` */
   private fun IrBuilderWithScope.irCallUnexpectedFunction(
     callFunction: IrSimpleFunction,
+    supportedFunctionNamesProperty: IrProperty,
   ): IrExpression {
     return irCall(
       type = ziplineApis.stringArrayType,
       callee = ziplineApis.inboundCallUnexpectedFunction,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)
+
+      putValueArgument(
+        0,
+        irCall(supportedFunctionNamesProperty.getter!!).apply {
+          dispatchReceiver = irGet(callFunction.dispatchReceiverParameter!!)
+        },
+      )
     }
   }
 

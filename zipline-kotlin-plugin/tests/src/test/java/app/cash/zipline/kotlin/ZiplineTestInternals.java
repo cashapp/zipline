@@ -27,6 +27,7 @@ import app.cash.zipline.testing.EchoResponse;
 import app.cash.zipline.testing.EchoService;
 import app.cash.zipline.testing.EchoZiplineService;
 import app.cash.zipline.testing.GenericEchoService;
+import java.util.Arrays;
 import java.util.List;
 import kotlin.Pair;
 import kotlin.PublishedApi;
@@ -109,6 +110,10 @@ public final class ZiplineTestInternals {
       private final KSerializer<EchoRequest> requestSerializer;
       private final KSerializer<EchoResponse> responseSerializer;
 
+      private final List<String> supportedFunctionNames = Arrays.asList(
+        "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
+      );
+
       GeneratedInboundCallHandler(EchoService service, InboundBridge.Context context) {
         this.service = service;
         this.context = context;
@@ -129,13 +134,13 @@ public final class ZiplineTestInternals {
           return inboundCall.result(responseSerializer, service.echo(
             inboundCall.parameter(requestSerializer)));
         } else {
-          return inboundCall.unexpectedFunction();
+          return inboundCall.unexpectedFunction(supportedFunctionNames);
         }
       }
 
       @Override public Object callSuspending(
           InboundCall inboundCall, Continuation<? super String[]> continuation) {
-        return inboundCall.unexpectedFunction();
+        return inboundCall.unexpectedFunction(supportedFunctionNames);
       }
     }
 
@@ -187,6 +192,10 @@ public final class ZiplineTestInternals {
       private final KSerializer<String> requestSerializer;
       private final KSerializer<List<String>> responseSerializer;
 
+      private final List<String> supportedFunctionNames = Arrays.asList(
+        "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
+      );
+
       GeneratedInboundCallHandler(
           GenericEchoService<String> service, InboundBridge.Context context) {
         this.service = service;
@@ -208,13 +217,13 @@ public final class ZiplineTestInternals {
           return inboundCall.result(responseSerializer, service.genericEcho(
             inboundCall.parameter(requestSerializer)));
         } else {
-          return inboundCall.unexpectedFunction();
+          return inboundCall.unexpectedFunction(supportedFunctionNames);
         }
       }
 
       @Override public Object callSuspending(
           InboundCall inboundCall, Continuation<? super String[]> continuation) {
-        return inboundCall.unexpectedFunction();
+        return inboundCall.unexpectedFunction(supportedFunctionNames);
       }
     }
 
@@ -268,6 +277,10 @@ public final class ZiplineTestInternals {
       private final KSerializer<EchoRequest> requestSerializer;
       private final KSerializer<EchoResponse> responseSerializer;
 
+      private final List<String> supportedFunctionNames = Arrays.asList(
+        "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
+      );
+
       GeneratedInboundCallHandler(EchoZiplineService service,
           InboundBridge.Context context) {
         this.service = service;
@@ -289,13 +302,13 @@ public final class ZiplineTestInternals {
           return inboundCall.result(responseSerializer, service.echo(
             inboundCall.parameter(requestSerializer)));
         } else {
-          return inboundCall.unexpectedFunction();
+          return inboundCall.unexpectedFunction(supportedFunctionNames);
         }
       }
 
       @Override public Object callSuspending(
           InboundCall inboundCall, Continuation<? super String[]> continuation) {
-        return inboundCall.unexpectedFunction();
+        return inboundCall.unexpectedFunction(supportedFunctionNames);
       }
     }
 
