@@ -49,7 +49,7 @@ val compileZipline by tasks.creating(JavaExec::class) {
   classpath = compilerConfiguration
   main = "app.cash.zipline.gradle.ZiplineCompilerKt"
   args = listOf(
-    "$buildDir/compileSync/main/ProductionExecutable/kotlin",
+    "$buildDir/compileSync/main/productionExecutable/kotlin",
     "$buildDir/zipline",
   )
 }
