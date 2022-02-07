@@ -24,8 +24,9 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 
-class RealHostApi : HostApi {
-  private val client = OkHttpClient()
+class RealHostApi(
+  private val client: OkHttpClient
+) : HostApi {
   override suspend fun httpCall(url: String, headers: Map<String, String>): String {
     return suspendCancellableCoroutine { continuation ->
       val call = client.newCall(

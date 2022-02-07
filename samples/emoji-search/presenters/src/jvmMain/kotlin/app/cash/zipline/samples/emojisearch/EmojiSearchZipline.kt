@@ -17,6 +17,8 @@ package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.asFlowReference
+import app.cash.zipline.loader.OkHttpZiplineHttpClient
+import app.cash.zipline.loader.ZiplineLoader
 import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
@@ -25,12 +27,19 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.launch
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.OkHttpClient
 
 class EmojiSearchZipline {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher)
-  private val hostApi = RealHostApi()
+  private val client = OkHttpClient()
+  private val hostApi = RealHostApi(client)
+
+  private val baseUrl = "http://10.0.2.2:8080/".toHttpUrl()
+  private val manifestPath = "/manifest.zipline.json"
+  private val moduleName = "./zipline-root-presenters.js"
 
   fun produceModelsIn(
     coroutineScope: CoroutineScope,
@@ -38,11 +47,11 @@ class EmojiSearchZipline {
     modelsStateFlow: MutableStateFlow<EmojiSearchViewModel>
   ) {
     val job = coroutineScope.launch(dispatcher) {
-      val presentersJs = hostApi.httpCall("http://10.0.2.2:8080/presenters.js", mapOf())
-      zipline.loadJsModule(presentersJs, "presenters")
+      val loader = ZiplineLoader(dispatcher, OkHttpZiplineHttpClient(baseUrl, OkHttpClient()))
+      loader.load(zipline, manifestPath)
       zipline.set<HostApi>("hostApi", hostApi)
       zipline.quickJs.evaluate(
-        "require('presenters').app.cash.zipline.samples.emojisearch.preparePresenters()"
+        "require('$moduleName').app.cash.zipline.samples.emojisearch.preparePresenters()"
       )
       val presenter = zipline.get<EmojiSearchPresenter>("emojiSearchPresenter")
 

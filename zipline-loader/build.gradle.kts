@@ -34,6 +34,9 @@ kotlin {
     }
     val jvmMain by getting {
       dependsOn(engineMain)
+      dependencies {
+        implementation(Dependencies.okHttp)
+      }
     }
     targets.withType<KotlinNativeTarget> {
       val main by compilations.getting
