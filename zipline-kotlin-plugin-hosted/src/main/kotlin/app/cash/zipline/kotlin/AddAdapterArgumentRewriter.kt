@@ -26,13 +26,13 @@ import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 
 /**
- * Rewrites calls to `Zipline.set()` and `Zipline.get()` to also pass an additional argument, the
+ * Rewrites calls to `Zipline.bind()` and `Zipline.take()` to also pass an additional argument, the
  * generated `ZiplineServiceAdapter`.
  *
  * This call:
  *
  * ```
- * val helloService: SampleService = zipline.get(
+ * val helloService: SampleService = zipline.take(
  *   "helloService"
  * )
  * ```
@@ -40,7 +40,7 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
  * is rewritten to:
  *
  * ```
- * val helloService: SampleService = zipline.get(
+ * val helloService: SampleService = zipline.take(
  *   "helloService",
  *   SampleService.Companion.Adapter
  * )

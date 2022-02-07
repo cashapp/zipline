@@ -29,13 +29,13 @@ private val zipline by lazy { Zipline.get() }
 
 @JsExport
 fun prepareJsBridges() {
-  zipline.set<EchoService>("helloService", JsEchoService("hello"))
-  zipline.set<EchoService>("yoService", JsEchoService("yo"))
+  zipline.bind<EchoService>("helloService", JsEchoService("hello"))
+  zipline.bind<EchoService>("yoService", JsEchoService("yo"))
 }
 
 @JsExport
 fun callSupService(message: String): String {
-  val supService = zipline.get<EchoService>("supService")
+  val supService = zipline.take<EchoService>("supService")
   val echoResponse = supService.echo(EchoRequest(message))
   return "JavaScript received '${echoResponse.message}' from the JVM"
 }

@@ -53,18 +53,18 @@ private val zipline by lazy { Zipline.get() }
 
 @JsExport
 fun prepareThrowingJsBridges() {
-  zipline.set<EchoService>("throwingService", JsThrowingEchoService())
+  zipline.bind<EchoService>("throwingService", JsThrowingEchoService())
 }
 
 @JsExport
 fun callThrowingService(message: String): String {
-  val service = zipline.get<EchoService>("throwingService")
+  val service = zipline.take<EchoService>("throwingService")
   val echoResponse = service.echo(EchoRequest(message))
   return "JavaScript received '${echoResponse.message}' from the JVM"
 }
 
 @JsExport
 fun prepareDelegatingService() {
-  val delegate = zipline.get<EchoService>("throwingService")
-  zipline.set<EchoService>("delegatingService", JsDelegatingEchoService(delegate))
+  val delegate = zipline.take<EchoService>("throwingService")
+  zipline.bind<EchoService>("delegatingService", JsDelegatingEchoService(delegate))
 }

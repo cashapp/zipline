@@ -64,12 +64,12 @@ class Utf8Test {
 
   @Test fun nonAsciiInboundCalls(): Unit = runBlocking(dispatcher) {
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiInputAndOutput()")
-    val formatter = zipline.get<Formatter>("formatter")
+    val formatter = zipline.take<Formatter>("formatter")
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)", formatter.format("a\uD83D\uDC1Dcdefg"))
   }
 
   @Test fun nonAsciiOutboundCalls(): Unit = runBlocking(dispatcher) {
-    zipline.set<Formatter>("formatter", object : Formatter {
+    zipline.bind<Formatter>("formatter", object : Formatter {
       override fun format(message: String): String {
         return "($message, $message)"
       }
@@ -80,7 +80,7 @@ class Utf8Test {
 
   @Test fun nonAsciiInExceptionThrownInJs(): Unit = runBlocking(dispatcher) {
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiThrower()")
-    val formatter = zipline.get<Formatter>("formatter")
+    val formatter = zipline.take<Formatter>("formatter")
     val t = assertFailsWith<Exception> {
       formatter.format("")
     }
@@ -88,7 +88,7 @@ class Utf8Test {
   }
 
   @Test fun nonAsciiInExceptionThrownInJava(): Unit = runBlocking(dispatcher) {
-    zipline.set<Formatter>("formatter", object : Formatter {
+    zipline.bind<Formatter>("formatter", object : Formatter {
       override fun format(message: String): String {
         throw RuntimeException("a\uD83D\uDC1Dcdefg")
       }

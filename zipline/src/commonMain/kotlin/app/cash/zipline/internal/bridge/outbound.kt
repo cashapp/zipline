@@ -99,7 +99,7 @@ internal class OutboundCall(
       context.endpoint.scope.launch {
         val callbackName = endpoint.generateName()
         val callback = RealSuspendCallback(callbackName, continuation, serializer)
-        endpoint.set<SuspendCallback>(callbackName, callback)
+        endpoint.bind<SuspendCallback>(callbackName, callback)
         endpoint.outboundChannel.invokeSuspending(
           instanceName,
           funName,

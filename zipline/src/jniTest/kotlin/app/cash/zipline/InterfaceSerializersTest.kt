@@ -53,7 +53,7 @@ class InterfaceSerializersTest {
     zipline.quickJs.evaluate(
       "testing.app.cash.zipline.testing.prepareInterfaceSerializersJsBridges()"
     )
-    val service = zipline.get<RequestInterfaceService>("requestInterfaceService")
+    val service = zipline.take<RequestInterfaceService>("requestInterfaceService")
     assertThat(service.echo(RealMessageInterface("Andrew")))
       .isEqualTo("JS received an interface, Andrew")
   }
@@ -62,13 +62,13 @@ class InterfaceSerializersTest {
     zipline.quickJs.evaluate(
       "testing.app.cash.zipline.testing.prepareInterfaceSerializersJsBridges()"
     )
-    val service = zipline.get<ResponseInterfaceService>("responseInterfaceService")
+    val service = zipline.take<ResponseInterfaceService>("responseInterfaceService")
     assertThat(service.echo("Andrew"))
       .isEqualTo(RealMessageInterface("JS returned an interface, Andrew"))
   }
 
   @Test fun jsToJvmRequestInterfaceSucceeds(): Unit = runBlocking(dispatcher) {
-    zipline.set<RequestInterfaceService>(
+    zipline.bind<RequestInterfaceService>(
       "requestInterfaceService",
       JvmMessageInterfaceService()
     )
@@ -80,7 +80,7 @@ class InterfaceSerializersTest {
   }
 
   @Test fun jsToJvmResponseInterfaceSucceeds(): Unit = runBlocking(dispatcher) {
-    zipline.set<ResponseInterfaceService>(
+    zipline.bind<ResponseInterfaceService>(
       "responseInterfaceService",
       JvmMessageInterfaceService()
     )
@@ -92,7 +92,7 @@ class InterfaceSerializersTest {
   }
 
   @Test fun jsToJvmInterfaceRequestFailsLate(): Unit = runBlocking(dispatcher) {
-    ziplineNoSerializer.set<RequestInterfaceService>(
+    ziplineNoSerializer.bind<RequestInterfaceService>(
       "requestInterfaceService",
       JvmMessageInterfaceService()
     )
@@ -107,7 +107,7 @@ class InterfaceSerializersTest {
   }
 
   @Test fun jsToJvmInterfaceResponseFailsLate(): Unit = runBlocking(dispatcher) {
-    ziplineNoSerializer.set<ResponseInterfaceService>(
+    ziplineNoSerializer.bind<ResponseInterfaceService>(
       "responseInterfaceService",
       JvmMessageInterfaceService()
     )

@@ -21,7 +21,7 @@ private val zipline by lazy { Zipline.get() }
 
 @JsExport
 fun prepareNonAsciiInputAndOutput() {
-  zipline.set<Formatter>("formatter", object : Formatter {
+  zipline.bind<Formatter>("formatter", object : Formatter {
     override fun format(message: String): String {
       return "($message, $message)"
     }
@@ -30,7 +30,7 @@ fun prepareNonAsciiInputAndOutput() {
 
 @JsExport
 fun prepareNonAsciiThrower() {
-  zipline.set<Formatter>("formatter", object : Formatter {
+  zipline.bind<Formatter>("formatter", object : Formatter {
     override fun format(message: String): String {
       throw Exception("a🐝cdefg")
     }
@@ -39,6 +39,6 @@ fun prepareNonAsciiThrower() {
 
 @JsExport
 fun callFormatter(message: String): String? {
-  val formatter = zipline.get<Formatter>("formatter")
+  val formatter = zipline.take<Formatter>("formatter")
   return formatter.format(message)
 }

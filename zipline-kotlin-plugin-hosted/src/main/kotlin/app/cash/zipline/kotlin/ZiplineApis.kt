@@ -164,12 +164,12 @@ internal class ZiplineApis(
       it.owner.name.identifier == "outboundService"
     }
 
-  /** Keys are functions like `Zipline.get()` and values are their rewrite targets. */
+  /** Keys are functions like `Zipline.take()` and values are their rewrite targets. */
   val ziplineServiceAdapterFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(
-    rewritePair(ziplineFqName.child("get")),
-    rewritePair(endpointFqName.child("get")),
-    rewritePair(ziplineFqName.child("set")),
-    rewritePair(endpointFqName.child("set")),
+    rewritePair(ziplineFqName.child("take")),
+    rewritePair(endpointFqName.child("take")),
+    rewritePair(ziplineFqName.child("bind")),
+    rewritePair(endpointFqName.child("bind")),
     rewritePair(ziplineReferenceFqName),
     rewritePair(ziplineServiceAdapterFunctionFqName),
   ).toMap()

@@ -27,7 +27,7 @@ private val zipline by lazy { Zipline.get(AdaptersSerializersModule) }
 
 @JsExport
 fun prepareAdaptersJsBridges() {
-  zipline.set<AdaptersService>(
+  zipline.bind<AdaptersService>(
     "adaptersService",
     JsAdaptersService()
   )
@@ -35,7 +35,7 @@ fun prepareAdaptersJsBridges() {
 
 @JsExport
 fun callAdaptersService(): String {
-  val service = zipline.get<AdaptersService>("adaptersService")
+  val service = zipline.take<AdaptersService>("adaptersService")
   val response = service.echo(AdaptersRequest("Jesse"))
   return "JavaScript received ${response.message}"
 }

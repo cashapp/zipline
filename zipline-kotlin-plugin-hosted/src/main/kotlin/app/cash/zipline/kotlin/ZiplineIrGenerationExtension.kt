@@ -60,8 +60,8 @@ class ZiplineIrGenerationExtension(
         val expression = super.visitCall(expression) as IrCall
 
         try {
-          val getOrSetFunction = ziplineApis.ziplineServiceAdapterFunctions[expression.symbol]
-          if (getOrSetFunction != null) {
+          val takeOrBindFunction = ziplineApis.ziplineServiceAdapterFunctions[expression.symbol]
+          if (takeOrBindFunction != null) {
             return AddAdapterArgumentRewriter(
               pluginContext,
               messageCollector,
@@ -69,7 +69,7 @@ class ZiplineIrGenerationExtension(
               currentScope!!,
               currentDeclarationParent!!,
               expression,
-              getOrSetFunction,
+              takeOrBindFunction,
             ).rewrite()
           }
         } catch (e: ZiplineCompilationException) {

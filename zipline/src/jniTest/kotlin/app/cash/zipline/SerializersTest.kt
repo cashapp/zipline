@@ -51,18 +51,18 @@ class SerializersTest {
 
   @Test fun missingGetReturnValueSerializerFailsFast(): Unit = runBlocking(dispatcher) {
     assertThat(assertFailsWith<IllegalArgumentException> {
-      ziplineRequestOnly.get<AdaptersService>("adaptersService")
+      ziplineRequestOnly.take<AdaptersService>("adaptersService")
     }).hasMessageThat().contains("Serializer for class 'AdaptersResponse' is not found.")
   }
 
   @Test fun missingGetParameterSerializerFailsFast(): Unit = runBlocking(dispatcher) {
     assertThat(assertFailsWith<IllegalArgumentException> {
-      ziplineResponseOnly.get<AdaptersService>("adaptersService")
+      ziplineResponseOnly.take<AdaptersService>("adaptersService")
     }).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
   }
 
   @Test fun presentGetSerializersSucceeds(): Unit = runBlocking(dispatcher) {
-    val service = zipline.get<AdaptersService>("adaptersService")
+    val service = zipline.take<AdaptersService>("adaptersService")
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareAdaptersJsBridges()")
 
     assertThat(service.echo(AdaptersRequest("Andrew")))
@@ -71,7 +71,7 @@ class SerializersTest {
 
   @Test fun missingSetReturnValueSerializerFailsFast(): Unit = runBlocking(dispatcher) {
     assertThat(assertFailsWith<IllegalArgumentException> {
-      ziplineRequestOnly.set<AdaptersService>(
+      ziplineRequestOnly.bind<AdaptersService>(
         "adaptersService",
         JvmAdaptersService()
       )
@@ -80,7 +80,7 @@ class SerializersTest {
 
   @Test fun missingSetParameterSerializerFailsFast(): Unit = runBlocking(dispatcher) {
     assertThat(assertFailsWith<IllegalArgumentException> {
-      ziplineResponseOnly.set<AdaptersService>(
+      ziplineResponseOnly.bind<AdaptersService>(
         "adaptersService",
         JvmAdaptersService()
       )
@@ -88,7 +88,7 @@ class SerializersTest {
   }
 
   @Test fun presentSetSerializersSucceeds(): Unit = runBlocking(dispatcher) {
-    zipline.set<AdaptersService>(
+    zipline.bind<AdaptersService>(
       "adaptersService",
       JvmAdaptersService()
     )
