@@ -1,8 +1,6 @@
 import com.android.build.gradle.BaseExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
-import net.ltgt.gradle.errorprone.CheckSeverity
-import net.ltgt.gradle.errorprone.errorprone
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.dokka.gradle.DokkaTask
@@ -15,7 +13,6 @@ buildscript {
   }
   dependencies {
     classpath(Dependencies.androidGradlePlugin)
-    classpath(Dependencies.errorproneGradlePlugin)
     classpath(Dependencies.mavenPublishGradlePlugin)
     classpath(Dependencies.kotlinGradlePlugin)
     classpath(Dependencies.kotlinSerialization)
@@ -65,25 +62,6 @@ subprojects {
         events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.PASSED)
       }
       exceptionFormat = TestExceptionFormat.FULL
-    }
-  }
-
-  apply(plugin = "net.ltgt.errorprone")
-
-  dependencies {
-    add("errorproneJavac", Dependencies.errorproneJavac)
-    add("errorprone", Dependencies.errorproneCore)
-  }
-
-  tasks.withType(JavaCompile::class).configureEach {
-    options.errorprone {
-      check("MissingFail", CheckSeverity.ERROR)
-      check("MissingOverride", CheckSeverity.ERROR)
-      check("UnsafeFinalization", CheckSeverity.ERROR)
-      check("UnusedException", CheckSeverity.ERROR)
-      check("UnusedMethod", CheckSeverity.ERROR)
-      check("UnusedNestedClass", CheckSeverity.ERROR)
-      check("UnusedVariable", CheckSeverity.ERROR)
     }
   }
 }
