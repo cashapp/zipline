@@ -48,6 +48,7 @@ android {
 
 dependencies {
   implementation(project(":zipline"))
+  implementation(project(":zipline-tools"))
   implementation(project(":samples:emoji-search:presenters"))
   implementation(Dependencies.androidMaterial)
   implementation(Dependencies.androidxActivityCompose)
