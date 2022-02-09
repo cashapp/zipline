@@ -51,7 +51,7 @@ class ProfilerToggle(
   }
 
   private inner class Idle : ProfilerState {
-    override val action = "Start"
+    override val action get() = "Start"
 
     override fun toggle(): ProfilerState {
       val now = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(Date())
