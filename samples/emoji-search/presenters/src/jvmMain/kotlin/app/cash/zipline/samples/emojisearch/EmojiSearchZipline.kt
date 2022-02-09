@@ -33,7 +33,7 @@ import okhttp3.OkHttpClient
 class EmojiSearchZipline {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
-  private val zipline = Zipline.create(dispatcher)
+  val zipline = Zipline.create(dispatcher)
   private val client = OkHttpClient()
   private val hostApi = RealHostApi(client)
 

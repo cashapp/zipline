@@ -31,7 +31,7 @@ import okio.sink
  * While sampling this replaces [QuickJs.interruptHandler] with one that captures the JavaScript
  * stack on each interrupt poll.
  *
- * @param hprofFile a new file to write profiling data to. Typically such files end with `.hprof`.
+ * @param hprofFile a new file to write profiling data to. Typically, such files end with `.hprof`.
  */
 fun QuickJs.startCpuSampling(hprofFile: File): Closeable {
   return startCpuSampling(hprofFile.sink().buffer())

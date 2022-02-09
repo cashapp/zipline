@@ -14,6 +14,12 @@ android {
     targetSdk = Ext.targetSdk
   }
 
+  compileOptions {
+    isCoreLibraryDesugaringEnabled = true
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+  }
+
   buildFeatures {
     compose = true
   }
@@ -48,6 +54,7 @@ android {
 
 dependencies {
   implementation(project(":zipline"))
+  implementation(project(":zipline-tools"))
   implementation(project(":samples:emoji-search:presenters"))
   implementation(Dependencies.androidMaterial)
   implementation(Dependencies.androidxActivityCompose)
@@ -60,4 +67,5 @@ dependencies {
   implementation(Dependencies.composeUiToolingPreview)
   debugImplementation(Dependencies.composeUiTooling)
   add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
+  coreLibraryDesugaring(Dependencies.desugarJdkLibs)
 }

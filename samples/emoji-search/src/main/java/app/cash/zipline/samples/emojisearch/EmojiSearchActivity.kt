@@ -58,11 +58,18 @@ class EmojiSearchActivity : ComponentActivity() {
     val emojiSearchZipline = EmojiSearchZipline()
     emojiSearchZipline.produceModelsIn(scope, events, models)
 
+    val profilerToggle = ProfilerToggle(
+      baseDir = getDir("profiler", MODE_PRIVATE),
+      quickJs = emojiSearchZipline.zipline.quickJs
+    )
+
     setContent {
-      val modelsState = models.collectAsState()
-      EmojiSearchTheme {
-        EmojiSearch(modelsState.value) { event ->
-          events.tryEmit(event)
+      profilerToggle.Wrap {
+        val modelsState = models.collectAsState()
+        EmojiSearchTheme {
+          EmojiSearch(modelsState.value) { event ->
+            events.tryEmit(event)
+          }
         }
       }
     }
