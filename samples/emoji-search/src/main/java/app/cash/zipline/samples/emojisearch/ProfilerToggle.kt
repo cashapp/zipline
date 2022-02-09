@@ -29,9 +29,8 @@ import androidx.compose.ui.unit.dp
 import app.cash.zipline.QuickJs
 import app.cash.zipline.tools.startCpuSampling
 import java.io.File
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
+import java.time.Instant
+import java.time.format.DateTimeFormatter
 import okio.Closeable
 
 /**
@@ -69,7 +68,7 @@ class ProfilerToggle(
     override val action get() = "Start"
 
     override fun toggle(): ProfilerState {
-      val now = SimpleDateFormat("yyyyMMdd-HHmmss", Locale.ROOT).format(Date())
+      val now = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
       val out = File(baseDir, "emoji-search-$now.hprof")
       val closeable = quickJs.startCpuSampling(out)
       return Running(closeable)
