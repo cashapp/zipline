@@ -64,7 +64,7 @@ class ProfilerToggle(
   private inner class Running(
     private val closeable: Closeable
   ) : ProfilerState {
-    override val action = "Stop"
+    override val action get() = "Stop"
 
     override fun toggle(): ProfilerState {
       closeable.close()
