@@ -34,7 +34,6 @@ kotlin {
         api(Dependencies.kotlinxCoroutines)
         api(project(":zipline"))
         api(Dependencies.okio)
-        implementation(Dependencies.kotlinxDateTime)
         implementation(Dependencies.kotlinxSerializationJson)
       }
     }
@@ -43,7 +42,6 @@ kotlin {
         api(Dependencies.kotlinxCoroutines)
         api(project(":zipline"))
         api(Dependencies.okio)
-        implementation(Dependencies.kotlinxDateTime)
         implementation(Dependencies.kotlinxSerializationJson)
       }
     }

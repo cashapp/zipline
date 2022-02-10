@@ -2,7 +2,6 @@ package app.cash.zipline.loader
 
 import com.squareup.sqldelight.db.Closeable
 import com.squareup.sqldelight.db.SqlDriver
-import kotlinx.datetime.Clock
 import okio.ByteString
 import okio.FileNotFoundException
 import okio.FileSystem
@@ -46,9 +45,10 @@ class ZiplineCache internal constructor(
   private val driver: SqlDriver,
   private val fileSystem: FileSystem,
   private val directory: Path,
-  private val maxSizeInBytes: Long
+  private val maxSizeInBytes: Long,
+  private val nowMs: () -> Long,
 ) : Closeable {
-  val database = createDatabase(driver)
+  private val database = createDatabase(driver)
 
   override fun close() {
     driver.close()
@@ -71,7 +71,12 @@ class ZiplineCache internal constructor(
    * Concurrent downloads on the same [sha256] are not ever done. One thread loses and suspends.
    */
   suspend fun getOrPut(sha256: ByteString, download: suspend () -> ByteString): ByteString {
-    TODO()
+    val read = read(sha256)
+    if (read != null) return read
+
+    val contents = download()
+    write(sha256, contents)
+    return contents
   }
 
   fun read(
@@ -101,7 +106,7 @@ class ZiplineCache internal constructor(
       sha256_hex = sha256.hex(),
       file_state = FileState.DIRTY,
       size_bytes = 0L,
-      last_used_at_epoch_ms = Clock.System.now().toEpochMilliseconds()
+      last_used_at_epoch_ms = nowMs()
     )
     true
   } catch (e: SQLiteException) {
@@ -131,7 +136,7 @@ class ZiplineCache internal constructor(
         sha256_hex = sha256.hex(),
         file_state = FileState.READY,
         size_bytes = fileSizeBytes,
-        last_used_at_epoch_ms = Clock.System.now().toEpochMilliseconds()
+        last_used_at_epoch_ms = nowMs()
       )
     }
 
@@ -196,19 +201,9 @@ class ZiplineCache internal constructor(
 
 // TODO make this an expect with actual impl taking path instead of driver and per platform impl that sets up the driver
 //   expect fun getDriver(path): Driver
-
-fun openZiplineCache(
-  driver: SqlDriver,
+expect fun openZiplineCache(
   fileSystem: FileSystem,
+  dbPath: Path,
   directory: Path,
   maxSizeInBytes: Long = 100L * 1024L * 1024L, // 100 MiB.
-): ZiplineCache {
-  val ziplineCache = ZiplineCache(
-    driver = driver,
-    fileSystem = fileSystem,
-    directory = directory,
-    maxSizeInBytes = maxSizeInBytes,
-  )
-  ziplineCache.prune()
-  return ziplineCache
-}
+): ZiplineCache

@@ -14,13 +14,7 @@ expect open class SQLException : Exception
 
 fun createDatabase(driverFactory: DriverFactory): Database {
   val driver = driverFactory.createDriver()
-  val database = Database(
-    driver,
-    filesAdapter = Files.Adapter(
-      file_stateAdapter = EnumColumnAdapter()
-    )
-  )
-  return database
+  return createDatabase(driver)
 }
 
 fun createDatabase(driver: SqlDriver): Database {
