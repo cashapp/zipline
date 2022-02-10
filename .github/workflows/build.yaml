@@ -16,16 +16,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - macOS-latest
-          - ubuntu-latest
+        os: [ubuntu-latest]
+        arch: [amd64]
+        cmake-arch: [x86_64]
+        include:
+          - os: macOS-latest
+            arch: x86_64
+            cmake-arch: x86_64
+          - os: macOS-latest
+            arch: aarch64
+            cmake-arch: arm64
           # TODO: build on 'windows-latest'
-        arch:
-          - amd64
-          - aarch64
-        exclude:
-          - os: ubuntu-latest
-            arch: arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -48,7 +49,7 @@ jobs:
           mkdir -p zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
           cmake -S zipline/src/jvmMain/ -B build/jni/${{ matrix.arch }}/ \
             -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)" \
-            -DCMAKE_SYSTEM_PROCESSOR=${{ fromJson('{ "amd64": "x86_64", "aarch64": "arm64" }')[matrix.arch] }}
+            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake-arch }}
           cmake --build build/jni/${{ matrix.arch }}/ --verbose
           cp -v build/jni/${{ matrix.arch }}/libquickjs.* zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
 
