@@ -48,11 +48,13 @@ jobs:
           mkdir -p zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
           cmake -S zipline/src/jvmMain/ -B build/jni/${{ matrix.arch }}/ \
             -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)" \
-            -DCMAKE_SYSTEM_PROCESSOR=${{ fromJson('{ "x86_64": "x86_64", "aarch64": "arm64" }')[matrix.arch] }}
+            -DCMAKE_SYSTEM_PROCESSOR=${{ fromJson('{ "x86_64": "amd64", "aarch64": "arm64" }')[matrix.arch] }}
           cmake --build build/jni/${{ matrix.arch }}/ --verbose
           cp -v build/jni/${{ matrix.arch }}/libquickjs.* zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
 
       - run: ./gradlew build
+        # TODO: configure builds to run on the same architecture they produce so we can test what we've built.
+        if: matrix.arch == 'x86_64'
 
       - uses: actions/upload-artifact@v2
         with:
