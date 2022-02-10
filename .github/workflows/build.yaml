@@ -16,9 +16,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - macOS-latest
-          - ubuntu-latest
+        os: [ubuntu-latest]
+        arch: [amd64]
+        cmake-arch: [x86_64]
+        include:
+          - os: macOS-latest
+            arch: x86_64
+            cmake-arch: x86_64
+          - os: macOS-latest
+            arch: aarch64
+            cmake-arch: arm64
           # TODO: build on 'windows-latest'
 
     runs-on: ${{ matrix.os }}
@@ -38,12 +45,17 @@ jobs:
 
       - name: Build native library
         run: |
-          cmake -S zipline/src/jvmMain/ -B build/jni/ -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)"
-          cmake --build build/jni/ --verbose
-          mkdir -p zipline/src/jvmMain/resources/
-          cp -v build/jni/libquickjs.* zipline/src/jvmMain/resources/
+          mkdir -p build/jni/${{ matrix.arch }}/
+          mkdir -p zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
+          cmake -S zipline/src/jvmMain/ -B build/jni/${{ matrix.arch }}/ \
+            -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)" \
+            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake-arch }}
+          cmake --build build/jni/${{ matrix.arch }}/ --verbose
+          cp -v build/jni/${{ matrix.arch }}/libquickjs.* zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
 
       - run: ./gradlew build
+        # TODO: configure builds to run on the same architecture they produce so we can test what we've built.
+        if: matrix.arch == 'amd64'
 
       - uses: actions/upload-artifact@v2
         with:
@@ -86,7 +98,7 @@ jobs:
       - uses: actions/download-artifact@v2
       - run: |
           mkdir -p zipline/src/jvmMain/resources/
-          cp -v jvm-native-libraries/* zipline/src/jvmMain/resources/
+          cp -av jvm-native-libraries/* zipline/src/jvmMain/resources/
 
       - run: ./gradlew assemble dokkaHtml
 

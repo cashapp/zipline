@@ -24,10 +24,11 @@ import java.util.Locale.US
 @Suppress("UnsafeDynamicallyLoadedCode") // Only loading from our own JAR contents.
 internal fun loadNativeLibrary() {
   val osName = System.getProperty("os.name").lowercase(US)
+  val osArch = System.getProperty("os.arch").lowercase(US)
   val nativeLibraryJarPath = if (osName.contains("linux")) {
-    "/libquickjs.so"
+    "/jni/$osArch/libquickjs.so"
   } else if (osName.contains("mac")) {
-    "/libquickjs.dylib"
+    "/jni/$osArch/libquickjs.dylib"
   } else {
     throw IllegalStateException("Unsupported OS: $osName")
   }
