@@ -38,6 +38,15 @@ kotlin {
         implementation(Dependencies.kotlinxSerializationJson)
       }
     }
+    val engineMain by creating {
+      dependencies {
+        api(Dependencies.kotlinxCoroutines)
+        api(project(":zipline"))
+        api(Dependencies.okio)
+        implementation(Dependencies.kotlinxDateTime)
+        implementation(Dependencies.kotlinxSerializationJson)
+      }
+    }
     val jvmMain by getting {
       dependsOn(engineMain)
       dependencies {
@@ -64,14 +73,26 @@ kotlin {
         implementation(kotlin("test"))
       }
     }
+    val engineTest by creating {
+      dependencies {
+        implementation(kotlin("test"))
+      }
+    }
     val jvmTest by getting {
+      dependsOn(engineTest)
       dependencies {
         implementation(Dependencies.kotlinxCoroutinesTest)
         implementation(Dependencies.okioFakeFileSystem)
       }
     }
+
+    targets.withType<KotlinNativeTarget> {
+      val test by compilations.getting
+      test.defaultSourceSet.dependsOn(engineTest)
+    }
   }
 }
+
 
 android {
   compileSdkVersion(Ext.compileSdk)

@@ -1,8 +1,12 @@
 package app.cash.zipline.loader
 
+import com.squareup.sqldelight.db.Closeable
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.datetime.Clock
-import okio.*
+import okio.ByteString
+import okio.FileNotFoundException
+import okio.FileSystem
+import okio.Path
 
 /**
  * Stores downloaded files. Files are named by their SHA-256 hashes. We use a SQLite database for file metadata: which
@@ -52,6 +56,7 @@ class ZiplineCache internal constructor(
 
   fun write(sha256: ByteString, content: ByteString) {
     if (!setDirty(sha256)) return
+    fileSystem.createDirectories(directory)
     fileSystem.write(path(sha256)) {
       write(content)
     }
