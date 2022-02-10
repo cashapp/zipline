@@ -1,5 +1,6 @@
 package app.cash.zipline.loader
 
+import java.time.Clock
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -27,7 +28,7 @@ class ZiplineCacheTest {
   @Before
   fun setUp() {
     fileSystem = FakeFileSystem()
-    ziplineCache = openZiplineCacheForTesting(fileSystem, directory, cacheSize.toLong())
+    ziplineCache = openZiplineCacheForTesting(fileSystem, directory, cacheSize.toLong()) { Clock.systemDefaultZone().instant().toEpochMilli() }
   }
 
   @After

@@ -136,7 +136,7 @@ class ZiplineCache internal constructor(
         sha256_hex = sha256.hex(),
         file_state = FileState.READY,
         size_bytes = fileSizeBytes,
-        last_used_at_epoch_ms = nowMs()
+        last_used_at_epoch_ms = Clock.System.now().toEpochMilliseconds()
       )
     }
 
@@ -199,11 +199,23 @@ class ZiplineCache internal constructor(
   private fun path(sha256: String): Path = directory / sha256
 }
 
-// TODO make this an expect with actual impl taking path instead of driver and per platform impl that sets up the driver
-//   expect fun getDriver(path): Driver
-expect fun openZiplineCache(
+expect fun getDriver(path: Path): SqlDriver
+
+fun openZiplineCache(
   fileSystem: FileSystem,
   dbPath: Path,
   directory: Path,
-  maxSizeInBytes: Long = 100L * 1024L * 1024L, // 100 MiB.
-): ZiplineCache
+  maxSizeInBytes: Long,
+  nowMs: () -> Long,
+): ZiplineCache {
+  val driver = getDriver(dbPath)
+  val ziplineCache = ZiplineCache(
+    driver = driver,
+    fileSystem = fileSystem,
+    directory = directory,
+    maxSizeInBytes = maxSizeInBytes,
+    nowMs = nowMs,
+  )
+  ziplineCache.prune()
+  return ziplineCache
+}
