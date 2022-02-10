@@ -20,6 +20,12 @@ jobs:
           - macOS-latest
           - ubuntu-latest
           # TODO: build on 'windows-latest'
+        arch:
+          - x86_64
+          - aarch64
+        exclude:
+          - os: ubuntu-latest
+            arch: arm64
 
     runs-on: ${{ matrix.os }}
 
@@ -38,10 +44,13 @@ jobs:
 
       - name: Build native library
         run: |
-          cmake -S zipline/src/jvmMain/ -B build/jni/ -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)"
-          cmake --build build/jni/ --verbose
-          mkdir -p zipline/src/jvmMain/resources/
-          cp -v build/jni/libquickjs.* zipline/src/jvmMain/resources/
+          mkdir -p build/jni/${{ matrix.arch }}/
+          mkdir -p zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
+          cmake -S zipline/src/jvmMain/ -B build/jni/${{ matrix.arch }}/ \
+            -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)" \
+            -DCMAKE_SYSTEM_PROCESSOR=${{ fromJson('{ "x86_64": "x86_64", "aarch64": "arm64" }')[matrix.arch] }}
+          cmake --build build/jni/${{ matrix.arch }}/ --verbose
+          cp -v build/jni/${{ matrix.arch }}/libquickjs.* zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
 
       - run: ./gradlew build
 
