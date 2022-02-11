@@ -9,14 +9,14 @@ import okio.Path
 actual fun getDriver(path: Path): SqlDriver = JdbcSqliteDriver(IN_MEMORY + path.toString())
 
 fun openZiplineCacheForTesting(
+  database: Database,
   fileSystem: FileSystem,
   directory: Path,
   maxSizeInBytes: Long,
   nowMs: () -> Long
 ): ZiplineCache {
-  val driver = JdbcSqliteDriver(IN_MEMORY)
   val ziplineCache = ZiplineCache(
-    driver = driver,
+    database = database,
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,

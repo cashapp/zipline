@@ -1,6 +1,5 @@
 package app.cash.zipline.loader
 
-import com.squareup.sqldelight.db.Closeable
 import com.squareup.sqldelight.db.SqlDriver
 import okio.ByteString
 import okio.FileNotFoundException
@@ -42,25 +41,19 @@ import okio.Path
  * the cache and behavior is undefined.
  */
 class ZiplineCache internal constructor(
-  private val driver: SqlDriver,
+  private val database: Database,
   private val fileSystem: FileSystem,
   private val directory: Path,
   private val maxSizeInBytes: Long,
   private val nowMs: () -> Long,
-) : Closeable {
-  private val database = createDatabase(driver)
-
-  override fun close() {
-    driver.close()
-  }
-
+) {
   fun write(sha256: ByteString, content: ByteString) {
-    if (!setDirty(sha256)) return
+    val metadata = openForWrite(sha256) ?: return
     fileSystem.createDirectories(directory)
-    fileSystem.write(path(sha256)) {
+    fileSystem.write(path(metadata)) {
       write(content)
     }
-    setReady(sha256, content.size.toLong())
+    setReady(metadata, content.size.toLong())
   }
 
   /**
@@ -82,11 +75,17 @@ class ZiplineCache internal constructor(
   fun read(
     sha256: ByteString
   ): ByteString? {
-    // TODO: consider preventing TERRIBLE RACES where the file is pruned and then made DIRTY all while we read.
     val metadata = database.cacheQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
     if (metadata.file_state != FileState.READY) return null
+    // Update the used at timestamp
+    database.cacheQueries.update(
+      id = metadata.id,
+      file_state = metadata.file_state,
+      size_bytes = metadata.size_bytes,
+      last_used_at_epoch_ms = nowMs(),
+    )
     return try {
-      fileSystem.read(path(sha256)) {
+      fileSystem.read(path(metadata)) {
         readByteString()
       }
     } catch (e: FileNotFoundException) {
@@ -98,9 +97,9 @@ class ZiplineCache internal constructor(
    * Returns true if the file was absent and is now `DIRTY`. The caller is now the exclusive owner of this file
    * and should proceed to write the file to the file system.
    */
-  private fun setDirty(
+  private fun openForWrite(
     sha256: ByteString,
-  ): Boolean = try {
+  ): Files? = try {
     // Go from absent to DIRTY.
     database.cacheQueries.insert(
       sha256_hex = sha256.hex(),
@@ -108,10 +107,10 @@ class ZiplineCache internal constructor(
       size_bytes = 0L,
       last_used_at_epoch_ms = nowMs()
     )
-    true
+    getOrNull(sha256)!!
   } catch (e: SQLiteException) {
     // Presumably the file is already dirty.
-    false
+    null
   }
 
   /**
@@ -123,20 +122,20 @@ class ZiplineCache internal constructor(
    * this method if that's problematic.
    */
   private fun setReady(
-    sha256: ByteString,
+    metadata: Files,
     fileSizeBytes: Long
   ) {
     database.transaction {
       // Go from DIRTY to READY.
-      require(getOrNull(sha256)?.file_state == FileState.DIRTY) {
-        "file $sha256 was not DIRTY ... multiple processes sharing a cache?"
+      require(getOrNull(metadata.id)?.file_state == FileState.DIRTY) {
+        "file ${metadata.sha256_hex} was not DIRTY ... multiple processes sharing a cache?"
       }
 
       database.cacheQueries.update(
-        sha256_hex = sha256.hex(),
+        id = metadata.id,
         file_state = FileState.READY,
         size_bytes = fileSizeBytes,
-        last_used_at_epoch_ms = Clock.System.now().toEpochMilliseconds()
+        last_used_at_epoch_ms = nowMs(),
       )
     }
 
@@ -145,21 +144,25 @@ class ZiplineCache internal constructor(
 
   /** Deletes the file from the file system and the metadata DB. */
   private fun deleteDirty(
-    sha256: ByteString
+    metadata: Files
   ) {
     // Go from DIRTY to absent.
-    fileSystem.delete(path(sha256))
+    fileSystem.delete(path(metadata))
     database.transaction {
-      require(getOrNull(sha256)?.file_state == FileState.DIRTY) {
-        "file $sha256 was not DIRTY ... multiple processes sharing a cache?"
+      require(getOrNull(metadata.id)?.file_state == FileState.DIRTY) {
+        "file ${metadata.id} was not DIRTY ... multiple processes sharing a cache?"
       }
-      database.cacheQueries.delete(sha256_hex = sha256.hex())
+      database.cacheQueries.delete(metadata.id)
     }
   }
 
   private fun getOrNull(
     sha256: ByteString
   ): Files? = database.cacheQueries.get(sha256.hex()).executeAsOneOrNull()
+
+  private fun getOrNull(
+    id: Long
+  ): Files? = database.cacheQueries.getById(id).executeAsOneOrNull()
 
   /**
    * Prune should be called on app boot to take into account any in-flight failed downloads or limit changes.
@@ -174,43 +177,35 @@ class ZiplineCache internal constructor(
   internal fun prune() {
     // TODO rewrite with prune then recalculate after each file to prevent disk contention risk
     //  select * Ready files order by last used at limit 1
-    val currentSize = database.cacheQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
-    if (currentSize < maxSizeInBytes) return
+    while (true) {
+      val currentSize = database.cacheQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
+      if (currentSize <= maxSizeInBytes) return
 
-    val files = database.cacheQueries.selectAll().executeAsList()
+      val toDelete = database.cacheQueries.selectOldestReady().executeAsOneOrNull() ?: return
 
-    val toDelete = files.toMutableList()
-    var remainingQuota = maxSizeInBytes
-    for (currentFile in files.sortedByDescending { it.last_used_at_epoch_ms }) {
-      if ((remainingQuota - currentFile.size_bytes) < 0) break
-      remainingQuota -= currentFile.size_bytes.toInt()
-      toDelete.removeLast()
-    }
-
-    toDelete.forEach {
-      fileSystem.delete(path(it.sha256_hex))
-      // TODO enforce that this file is READY so we don't delete partial downloads
-      database.cacheQueries.delete(it.sha256_hex)
+      fileSystem.delete(path(toDelete))
+      database.cacheQueries.delete(toDelete.id)
     }
   }
 
-  private fun path(sha256: ByteString): Path = directory / sha256.hex()
-
-  private fun path(sha256: String): Path = directory / sha256
+  private fun path(metadata: Files): Path {
+    return directory / "entry-${metadata.id}.bin"
+  }
 }
 
 expect fun getDriver(path: Path): SqlDriver
 
 fun openZiplineCache(
+  driver: SqlDriver,
   fileSystem: FileSystem,
-  dbPath: Path,
   directory: Path,
   maxSizeInBytes: Long,
   nowMs: () -> Long,
 ): ZiplineCache {
-  val driver = getDriver(dbPath)
+  // todo maybe pass this in
+  val database = createDatabase(driver)
   val ziplineCache = ZiplineCache(
-    driver = driver,
+    database = database,
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,

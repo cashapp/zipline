@@ -1,6 +1,7 @@
 import app.cash.zipline.loader.FileState;
 
 CREATE TABLE files (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   sha256_hex TEXT NOT NULL,
   file_state TEXT AS FileState NOT NULL,
   size_bytes INTEGER NOT NULL,
@@ -19,13 +20,19 @@ FROM files
 ORDER BY last_used_at_epoch_ms DESC;
 
 selectCacheSumBytes:
-SELECT SUM(last_used_at_epoch_ms)
+SELECT SUM(size_bytes)
 FROM files;
 
 get:
 SELECT *
 FROM files
 WHERE sha256_hex LIKE ('%' || :sha256_hex)
+LIMIT 1;
+
+getById:
+SELECT *
+FROM files
+WHERE id = :id
 LIMIT 1;
 
 insert:
@@ -39,8 +46,15 @@ VALUES ?;
 update:
 UPDATE files
 SET file_state = :file_state, size_bytes = :size_bytes, last_used_at_epoch_ms = :last_used_at_epoch_ms
-WHERE sha256_hex = :sha256_hex;
+WHERE id = :id;
+
+selectOldestReady:
+SELECT *
+FROM files
+WHERE file_state = 'READY'
+ORDER BY last_used_at_epoch_ms ASC
+LIMIT 1;
 
 delete:
 DELETE FROM files
-WHERE sha256_hex = :sha256_hex;
+WHERE id = :id;
