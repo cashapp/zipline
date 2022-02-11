@@ -10,15 +10,6 @@ CREATE TABLE files (
 
 CREATE UNIQUE INDEX files_sha256_hex ON files(sha256_hex);
 
-selectAll:
-SELECT *
-FROM files;
-
-selectByLastUsedDesc:
-SELECT *
-FROM files
-ORDER BY last_used_at_epoch_ms DESC;
-
 selectCacheSumBytes:
 SELECT SUM(size_bytes)
 FROM files;
@@ -38,10 +29,6 @@ LIMIT 1;
 insert:
 INSERT INTO files(sha256_hex, file_state, size_bytes, last_used_at_epoch_ms)
 VALUES (?, ?, ?, ?);
-
-insertFullFileObject:
-INSERT INTO files(sha256_hex, file_state, size_bytes, last_used_at_epoch_ms)
-VALUES ?;
 
 update:
 UPDATE files

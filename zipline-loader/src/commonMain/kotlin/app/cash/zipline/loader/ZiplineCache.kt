@@ -190,8 +190,6 @@ class ZiplineCache internal constructor(
    * open files are not deleted from under processes that have opened them.
    */
   internal fun prune() {
-    // TODO rewrite with prune then recalculate after each file to prevent disk contention risk
-    //  select * Ready files order by last used at limit 1
     while (true) {
       val currentSize = database.cacheQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
       if (currentSize <= maxSizeInBytes) return
@@ -208,16 +206,13 @@ class ZiplineCache internal constructor(
   }
 }
 
-expect fun getDriver(path: Path): SqlDriver
-
-fun openZiplineCache(
+fun createZiplineCache(
   driver: SqlDriver,
   fileSystem: FileSystem,
   directory: Path,
   maxSizeInBytes: Long,
   nowMs: () -> Long,
 ): ZiplineCache {
-  // todo maybe pass this in
   val database = createDatabase(driver)
   val ziplineCache = ZiplineCache(
     database = database,
