@@ -15,8 +15,10 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineService
+
 /** A bridged interface to pass results from suspending calls. */
 @PublishedApi
-internal interface SuspendCallback {
+internal interface SuspendCallback : ZiplineService {
   fun call(response: Array<String>)
 }

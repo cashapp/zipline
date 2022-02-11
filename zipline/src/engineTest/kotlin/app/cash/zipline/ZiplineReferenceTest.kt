@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.ziplineServiceAdapter
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -32,7 +33,7 @@ internal class ZiplineReferenceTest {
   fun referenceCanBeUsedWithoutPassingThroughZipline() {
     val helloService = GreetingService("hello")
     val reference = ZiplineReference<EchoService>(helloService)
-    assertSame(helloService, reference.get())
+    assertSame(helloService, reference.take())
   }
 
   @Test
@@ -54,10 +55,11 @@ internal class ZiplineReferenceTest {
     // Note that we cast OutboundZiplineReference<EchoService> down to ZiplineReference<EchoService>
     // before calling get(). This is necessary because the code rewriter doesn't rewrite for
     // subclasses of ZiplineReference.
-    val referenceB: ZiplineReference<EchoService> = OutboundZiplineReference()
+    val referenceB: ZiplineReference<EchoService> =
+      OutboundZiplineReference(ziplineServiceAdapter())
     (referenceB as OutboundZiplineReference<EchoService>).connect(endpointB, "helloService")
 
-    val client = referenceB.get()
+    val client = referenceB.take()
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -67,7 +69,7 @@ internal class ZiplineReferenceTest {
     assertNull(requests.removeFirstOrNull())
   }
 
-  interface EchoServiceFactory {
+  interface EchoServiceFactory : ZiplineService {
     fun create(greeting: String): ZiplineReference<EchoService>
   }
 
@@ -75,14 +77,14 @@ internal class ZiplineReferenceTest {
   fun transmitReferences() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
-    endpointA.set<EchoServiceFactory>("factory", FactoryService())
-    val factoryClient = endpointB.get<EchoServiceFactory>("factory")
+    endpointA.bind<EchoServiceFactory>("factory", FactoryService())
+    val factoryClient = endpointB.take<EchoServiceFactory>("factory")
 
     val helloServiceReference = factoryClient.create("hello")
-    val helloService = helloServiceReference.get()
+    val helloService = helloServiceReference.take()
 
     val supServiceReference = factoryClient.create("sup")
-    val supService = supServiceReference.get()
+    val supService = supServiceReference.take()
 
     assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
     assertEquals(EchoResponse("sup Kevin"), supService.echo(EchoRequest("Kevin")))
@@ -94,13 +96,13 @@ internal class ZiplineReferenceTest {
   fun closingAnOutboundReferenceRemovesItAndPreventsFurtherCalls() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
-    endpointA.set<EchoServiceFactory>("factory", FactoryService())
-    val factoryClient = endpointB.get<EchoServiceFactory>("factory")
+    endpointA.bind<EchoServiceFactory>("factory", FactoryService())
+    val factoryClient = endpointB.take<EchoServiceFactory>("factory")
     assertEquals(setOf("factory"), endpointA.serviceNames)
 
     val outboundReference = factoryClient.create("hello")
     assertEquals(setOf("factory", "zipline/1"), endpointA.serviceNames)
-    val service = outboundReference.get()
+    val service = outboundReference.take()
 
     assertEquals(EchoResponse("hello Jesse"), service.echo(EchoRequest("Jesse")))
     outboundReference.close()
@@ -125,13 +127,13 @@ internal class ZiplineReferenceTest {
       }
     }
 
-    endpointA.set<EchoServiceFactory>("factory", FactoryService())
-    val factoryClient = endpointB.get<EchoServiceFactory>("factory")
+    endpointA.bind<EchoServiceFactory>("factory", FactoryService())
+    val factoryClient = endpointB.take<EchoServiceFactory>("factory")
     assertEquals(setOf("factory"), endpointA.serviceNames)
 
     val outboundReference = factoryClient.create("hello")
     assertEquals(setOf("factory", "zipline/1"), endpointA.serviceNames)
-    val service = outboundReference.get()
+    val service = outboundReference.take()
 
     assertEquals(EchoResponse("hello Jesse"), service.echo(EchoRequest("Jesse")))
     inboundReference.close()

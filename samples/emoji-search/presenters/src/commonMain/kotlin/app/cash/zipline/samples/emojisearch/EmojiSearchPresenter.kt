@@ -16,8 +16,9 @@
 package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.FlowReference
+import app.cash.zipline.ZiplineService
 
-interface EmojiSearchPresenter {
+interface EmojiSearchPresenter : ZiplineService {
   suspend fun produceModels(
     eventsReference: FlowReference<EmojiSearchEvent>
   ): FlowReference<EmojiSearchViewModel>

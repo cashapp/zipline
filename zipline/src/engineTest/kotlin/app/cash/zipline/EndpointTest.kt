@@ -43,8 +43,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<EchoService>("helloService", service)
-    val client = endpointB.get<EchoService>("helloService")
+    endpointA.bind<EchoService>("helloService", service)
+    val client = endpointB.take<EchoService>("helloService")
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -54,7 +54,7 @@ internal class EndpointTest {
     assertNull(requests.removeFirstOrNull())
   }
 
-  interface NullableEchoService {
+  interface NullableEchoService : ZiplineService {
     fun echo(request: EchoRequest?): EchoResponse?
   }
 
@@ -69,8 +69,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<NullableEchoService>("helloService", service)
-    val client = endpointB.get<NullableEchoService>("helloService")
+    endpointA.bind<NullableEchoService>("helloService", service)
+    val client = endpointB.take<NullableEchoService>("helloService")
 
     val response = client.echo(null)
     assertEquals("received null", response?.message)
@@ -87,8 +87,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<NullableEchoService>("helloService", service)
-    val client = endpointB.get<NullableEchoService>("helloService")
+    endpointA.bind<NullableEchoService>("helloService", service)
+    val client = endpointB.take<NullableEchoService>("helloService")
 
     val response = client.echo(EchoRequest("send me null please?"))
     assertNull(response)
@@ -107,8 +107,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<SuspendingEchoService>("helloService", service)
-    val client = endpointB.get<SuspendingEchoService>("helloService")
+    endpointA.bind<SuspendingEchoService>("helloService", service)
+    val client = endpointB.take<SuspendingEchoService>("helloService")
 
     val deferredResponse = async {
       client.suspendingEcho(EchoRequest("this is a happy request"))
@@ -130,8 +130,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<EchoService>("helloService", service)
-    val client = endpointB.get<EchoService>("helloService")
+    endpointA.bind<EchoService>("helloService", service)
+    val client = endpointB.take<EchoService>("helloService")
 
     val thrownException = assertFailsWith<Exception> {
       client.echo(EchoRequest(""))
@@ -149,8 +149,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<SuspendingEchoService>("helloService", service)
-    val client = endpointB.get<SuspendingEchoService>("helloService")
+    endpointA.bind<SuspendingEchoService>("helloService", service)
+    val client = endpointB.take<SuspendingEchoService>("helloService")
 
     val thrownException = assertFailsWith<Exception> {
       client.suspendingEcho(EchoRequest(""))
@@ -173,8 +173,8 @@ internal class EndpointTest {
       }
     }
 
-    endpointA.set<SuspendingEchoService>("echoService", echoService)
-    val client = endpointB.get<SuspendingEchoService>("echoService")
+    endpointA.bind<SuspendingEchoService>("echoService", echoService)
+    val client = endpointB.take<SuspendingEchoService>("echoService")
 
     val echoResponse = client.suspendingEcho(EchoRequest("Jesse"))
     assertEquals(EchoResponse("hello, Jesse"), echoResponse)

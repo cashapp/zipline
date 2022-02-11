@@ -27,9 +27,7 @@ import kotlinx.serialization.modules.SerializersModule
  * implemented by another platform in the same process.
  */
 @PublishedApi
-internal abstract class OutboundBridge<T : Any> {
-  abstract fun create(context: Context): T
-
+internal interface OutboundBridge {
   class Context(
     private val instanceName: String,
     val serializersModule: SerializersModule,
@@ -101,7 +99,7 @@ internal class OutboundCall(
       context.endpoint.scope.launch {
         val callbackName = endpoint.generateName()
         val callback = RealSuspendCallback(callbackName, continuation, serializer)
-        endpoint.set<SuspendCallback>(callbackName, callback)
+        endpoint.bind<SuspendCallback>(callbackName, callback)
         endpoint.outboundChannel.invokeSuspending(
           instanceName,
           funName,

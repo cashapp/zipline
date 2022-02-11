@@ -40,7 +40,6 @@ data class SampleResponse(
  */
 interface SampleService : ZiplineService {
   fun ping(request: SampleRequest): SampleResponse
-  override fun close()
 
   companion object {
     /**
@@ -67,6 +66,11 @@ interface SampleService : ZiplineService {
         private val requestSerializer = context.serializersModule.serializer<SampleRequest>()
         private val responseSerializer = context.serializersModule.serializer<SampleResponse>()
 
+        private val supportedFunctionNames = listOf(
+          "fun close(): kotlin.Unit",
+          "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
+        )
+
         override fun call(inboundCall: InboundCall): Array<String> {
           return when (inboundCall.funName) {
             "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse" -> {
@@ -84,7 +88,7 @@ interface SampleService : ZiplineService {
               )
             }
             else -> {
-              inboundCall.unexpectedFunction()
+              inboundCall.unexpectedFunction(supportedFunctionNames)
             }
           }
         }
@@ -92,7 +96,7 @@ interface SampleService : ZiplineService {
         override suspend fun callSuspending(inboundCall: InboundCall): Array<String> {
           return when (inboundCall.funName) {
             else -> {
-              inboundCall.unexpectedFunction()
+              inboundCall.unexpectedFunction(supportedFunctionNames)
             }
           }
         }

@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.testing
 
+import app.cash.zipline.ZiplineService
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -23,7 +24,7 @@ import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 
 /** This is a service that requires a kotlinx.serialization adapter to be registered for use. */
-interface AdaptersService {
+interface AdaptersService : ZiplineService {
   fun echo(request: AdaptersRequest): AdaptersResponse
 }
 

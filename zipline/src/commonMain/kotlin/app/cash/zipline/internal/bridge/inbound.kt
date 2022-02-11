@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineApiMismatchException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -24,11 +25,7 @@ import kotlinx.serialization.modules.SerializersModule
  * another platform in the same process.
  */
 @PublishedApi
-internal abstract class InboundBridge<T : Any> {
-  abstract val service: T
-
-  abstract fun create(context: Context): InboundCallHandler
-
+internal interface InboundBridge {
   class Context(
     val serializersModule: SerializersModule,
     @PublishedApi internal val endpoint: Endpoint,
@@ -93,7 +90,16 @@ internal class InboundCall(
     }
   }
 
-  fun unexpectedFunction(): Array<String> = error("unexpected function: $funName")
+  fun unexpectedFunction(supportedFunctionNames: List<String>): Array<String> = throw ZiplineApiMismatchException(
+    buildString {
+      appendLine("no such method (incompatible API versions?)")
+      appendLine("\tcalled:")
+      append("\t\t")
+      appendLine(funName)
+      appendLine("\tavailable:")
+      supportedFunctionNames.joinTo(this, separator = "\n") { "\t\t$it" }
+    }
+  )
 
   fun resultException(e: Throwable): Array<String> {
     return arrayOf(LABEL_EXCEPTION, context.json.encodeToString(ThrowableSerializer, e))

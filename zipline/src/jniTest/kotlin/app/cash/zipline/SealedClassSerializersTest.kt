@@ -42,7 +42,7 @@ class SealedClassSerializersTest {
   }
 
   @Test fun sealedClassesEncodeAndDecode(): Unit = runBlocking(dispatcher) {
-    val service = zipline.get<SealedClassMessageService>("sealedClassMessageService")
+    val service = zipline.take<SealedClassMessageService>("sealedClassMessageService")
     zipline.quickJs.evaluate(
       "testing.app.cash.zipline.testing.prepareSealedClassMessageService()"
     )
@@ -56,7 +56,7 @@ class SealedClassSerializersTest {
    * which prevented us from decoding what was encoded.
    */
   @Test fun sealedClassesFlow(): Unit = runBlocking(dispatcher) {
-    val service = zipline.get<SealedClassMessageService>("sealedClassMessageService")
+    val service = zipline.take<SealedClassMessageService>("sealedClassMessageService")
     zipline.quickJs.evaluate(
       "testing.app.cash.zipline.testing.prepareSealedClassMessageService()"
     )
@@ -67,7 +67,7 @@ class SealedClassSerializersTest {
       emit(RedMessage("c"))
     }
     val swappedFlowReference = service.colorSwapFlow(sealedMessageFlow.asFlowReference())
-    val swappedFlow = swappedFlowReference.get()
+    val swappedFlow = swappedFlowReference.take()
 
     assertThat(swappedFlow.toList()).containsExactly(
       BlueMessage("a"),

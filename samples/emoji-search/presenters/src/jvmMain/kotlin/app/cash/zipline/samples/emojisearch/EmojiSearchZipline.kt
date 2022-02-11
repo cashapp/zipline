@@ -49,16 +49,16 @@ class EmojiSearchZipline {
     val job = coroutineScope.launch(dispatcher) {
       val loader = ZiplineLoader(dispatcher, OkHttpZiplineHttpClient(baseUrl, OkHttpClient()))
       loader.load(zipline, manifestPath)
-      zipline.set<HostApi>("hostApi", hostApi)
+      zipline.bind<HostApi>("hostApi", hostApi)
       zipline.quickJs.evaluate(
         "require('$moduleName').app.cash.zipline.samples.emojisearch.preparePresenters()"
       )
-      val presenter = zipline.get<EmojiSearchPresenter>("emojiSearchPresenter")
+      val presenter = zipline.take<EmojiSearchPresenter>("emojiSearchPresenter")
 
       val eventsFlowReference = eventFlow.asFlowReference()
       val modelsFlowReference = presenter.produceModels(eventsFlowReference)
 
-      val modelsFlow = modelsFlowReference.get()
+      val modelsFlow = modelsFlowReference.take()
       modelsStateFlow.emitAll(modelsFlow)
     }
 

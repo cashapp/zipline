@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
+import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
 
 plugins {
   kotlin("multiplatform")
@@ -28,10 +30,16 @@ kotlin {
   }
 }
 
-// TODO(jwilson): remove this once the Kotlin/JS devserver doesn't crash on boot.
-// https://stackoverflow.com/questions/69537840/kotlin-js-gradle-plugin-unable-to-load-webpack-cli-serve-command
-rootProject.plugins.withType(org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin::class.java) {
-  rootProject.the<org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension>().versions.webpackCli.version = "4.9.0"
+rootProject.plugins.withType<NodeJsRootPlugin> {
+  val nodeJsRootExtension = rootProject.the<NodeJsRootExtension>()
+
+  // TODO(jwilson): remove this once the Kotlin/JS devserver doesn't crash on boot.
+  // https://stackoverflow.com/questions/69537840/kotlin-js-gradle-plugin-unable-to-load-webpack-cli-serve-command
+  nodeJsRootExtension.versions.webpackCli.version = "4.9.0"
+
+  // TODO(jwilson): remove this once Kotlin's built-in Node.js supports Apple Silicon.
+  //  https://youtrack.jetbrains.com/issue/KT-49109
+  nodeJsRootExtension.nodeVersion = "16.0.0"
 }
 
 val compilerConfiguration by configurations.creating {

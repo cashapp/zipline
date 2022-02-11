@@ -21,7 +21,6 @@ import app.cash.zipline.asFlowReference
 import app.cash.zipline.testing.SealedMessage.BlueMessage
 import app.cash.zipline.testing.SealedMessage.RedMessage
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flow
 
 class JsSealedClassMessageService : SealedClassMessageService {
@@ -33,7 +32,7 @@ class JsSealedClassMessageService : SealedClassMessageService {
   }
 
   override fun colorSwapFlow(request: FlowReference<SealedMessage>): FlowReference<SealedMessage> {
-    val requestFlow = request.get()
+    val requestFlow = request.take()
     val flow: Flow<SealedMessage> = flow {
       requestFlow.collect { message ->
         emit(colorSwap(message))
@@ -47,7 +46,7 @@ private val zipline by lazy { Zipline.get() }
 
 @JsExport
 fun prepareSealedClassMessageService() {
-  zipline.set<SealedClassMessageService>(
+  zipline.bind<SealedClassMessageService>(
     "sealedClassMessageService",
     JsSealedClassMessageService()
   )

@@ -24,8 +24,6 @@ import app.cash.zipline.internal.HostConsole
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
-import app.cash.zipline.internal.bridge.InboundBridge
-import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventLoopName
@@ -93,73 +91,53 @@ actual class Zipline private constructor(
     // Eagerly publish the channel so they can call us.
     quickJs.initOutboundChannel(endpoint.inboundChannel)
 
-    endpoint.set<Console>(
+    endpoint.bind<Console>(
       name = consoleName,
       instance = HostConsole,
     )
 
     // Connect platforms using our newly-bootstrapped channels.
-    val jsPlatform = endpoint.get<JsPlatform>(
+    val jsPlatform = endpoint.take<JsPlatform>(
       name = jsPlatformName,
     )
     val eventLoop = CoroutineEventLoop(scope, jsPlatform)
-    endpoint.set<EventLoop>(
+    endpoint.bind<EventLoop>(
       name = eventLoopName,
       instance = eventLoop,
     )
   }
 
-  actual fun <T : Any> get(name: String): T {
-    error("unexpected call to Zipline.get: is the Zipline plugin configured?")
-  }
-
-  actual fun <T : ZiplineService> getService(name: String): T {
-    error("unexpected call to Zipline.getService: is the Zipline plugin configured?")
+  actual fun <T : ZiplineService> bind(name: String, instance: T) {
+    error("unexpected call to Zipline.bind: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : Any> get(name: String, bridge: OutboundBridge<T>): T {
-    check(scope.isActive) { "closed" }
-    return endpoint.get(name, bridge)
-  }
-
-  @PublishedApi
-  internal fun <T : ZiplineService> getService(name: String, adapter: ZiplineServiceAdapter<T>): T {
-    check(scope.isActive) { "closed" }
-    return endpoint.getService(name, adapter)
-  }
-
-  actual fun <T : Any> set(name: String, instance: T) {
-    error("unexpected call to Zipline.set: is the Zipline plugin configured?")
-  }
-
-  actual fun <T : ZiplineService> setService(name: String, instance: T) {
-    error("unexpected call to Zipline.setService: is the Zipline plugin configured?")
-  }
-
-  @PublishedApi
-  internal fun <T : Any> set(name: String, bridge: InboundBridge<T>) {
-    check(scope.isActive) { "closed" }
-    endpoint.set(name, bridge)
-  }
-
-  @PublishedApi
-  internal fun <T : ZiplineService> setService(
+  internal fun <T : ZiplineService> bind(
     name: String,
     service: T,
     adapter: ZiplineServiceAdapter<T>,
   ) {
     check(scope.isActive) { "closed" }
-    endpoint.setService(name, service, adapter)
+    endpoint.bind(name, service, adapter)
+  }
+
+  actual fun <T : ZiplineService> take(name: String): T {
+    error("unexpected call to Zipline.take: is the Zipline plugin configured?")
+  }
+
+  @PublishedApi
+  internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    check(scope.isActive) { "closed" }
+    return endpoint.take(name, adapter)
   }
 
   /**
    * Release resources held by this instance. It is an error to do any of the following after
    * calling close:
    *
-   *  * Call [get] or [set].
+   *  * Call [take] or [bind].
    *  * Accessing [quickJs].
-   *  * Accessing the objects returned from [get].
+   *  * Accessing the objects returned from [take].
    */
   fun close() {
     scope.cancel()

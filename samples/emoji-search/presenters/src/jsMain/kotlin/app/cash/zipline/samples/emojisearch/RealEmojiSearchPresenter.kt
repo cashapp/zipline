@@ -32,7 +32,7 @@ class RealEmojiSearchPresenter(
         loadImageIndex()
         send(produceModel())
 
-        val events = eventsReference.get()
+        val events = eventsReference.take()
         events.collectLatest { event ->
           when (event) {
             is EmojiSearchEvent.SearchTermEvent -> {

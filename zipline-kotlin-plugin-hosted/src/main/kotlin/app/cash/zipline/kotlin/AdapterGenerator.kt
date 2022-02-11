@@ -15,10 +15,12 @@
  */
 package app.cash.zipline.kotlin
 
+import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addFakeOverrides
 import org.jetbrains.kotlin.backend.common.ir.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.backend.common.ir.isSuspend
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
@@ -35,6 +37,7 @@ import org.jetbrains.kotlin.ir.builders.irElseBranch
 import org.jetbrains.kotlin.ir.builders.irEquals
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
@@ -42,7 +45,6 @@ import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.builders.irWhen
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
-import org.jetbrains.kotlin.ir.declarations.IrFactory
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
@@ -50,6 +52,7 @@ import org.jetbrains.kotlin.ir.expressions.IrBranch
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrGetValue
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
@@ -66,18 +69,25 @@ import org.jetbrains.kotlin.name.Name
  */
 internal class AdapterGenerator(
   private val pluginContext: IrPluginContext,
+  private val messageCollector: MessageCollector,
   private val ziplineApis: ZiplineApis,
+  private val scope: ScopeWithIr,
   private val original: IrClass
 ) {
-  private val irFactory: IrFactory
-    get() = pluginContext.irFactory
+  private val irFactory = pluginContext.irFactory
+  private val irTypeSystemContext = IrTypeSystemContextImpl(pluginContext.irBuiltIns)
 
+  /** Returns an expression that references the adapter, creating it if necessary. */
+  fun adapterExpression(): IrExpression {
+    val adapterClass = generateAdapterIfAbsent()
+    val irBlockBodyBuilder = irBlockBodyBuilder(pluginContext, scope, original)
+    return irBlockBodyBuilder.irGetObject(adapterClass.symbol)
+  }
+
+  /** Creates the adapter if necessary. */
   fun generateAdapterIfAbsent(): IrClass {
-    val companion = original.getOrCreateCompanion(pluginContext)
-    val adapterClass = getOrCreateAdapterClass(companion)
-    companion.declarations += adapterClass
-    companion.patchDeclarationParents(original)
-    return adapterClass
+    val companion = getOrCreateCompanion(original, pluginContext)
+    return getOrCreateAdapterClass(companion)
   }
 
   private fun getOrCreateAdapterClass(
@@ -126,16 +136,20 @@ internal class AdapterGenerator(
 
     val inboundBridgedInterface = BridgedInterface.create(
       pluginContext,
+      messageCollector,
       ziplineApis,
+      scope,
       original,
-      "Zipline.get()",
+      "Zipline.take()",
       original.defaultType
     )
     val outboundBridgedInterface = BridgedInterface.create(
       pluginContext,
+      messageCollector,
       ziplineApis,
+      scope,
       original,
-      "Zipline.get()",
+      "Zipline.take()",
       original.defaultType
     )
 
@@ -157,7 +171,7 @@ internal class AdapterGenerator(
     adapterClass.declarations += outboundServiceClass
 
     adapterClass.addFakeOverrides(
-      pluginContext.irBuiltIns,
+      irTypeSystemContext,
       listOf(
         serialNameProperty,
         inboundCallHandlerFunction,
@@ -165,6 +179,8 @@ internal class AdapterGenerator(
       )
     )
 
+    companion.declarations += adapterClass
+    companion.patchDeclarationParents(original)
     return adapterClass
   }
 
@@ -297,6 +313,11 @@ internal class AdapterGenerator(
       constructor.valueParameters[1]
     )
 
+    val supportedFunctionNamesProperty = bridgedInterface.irSupportedFunctionNamesProperty(
+      inboundCallHandler,
+    )
+    inboundCallHandler.declarations += supportedFunctionNamesProperty
+
     val callFunction = irCallFunction(
       inboundCallHandler = inboundCallHandler,
       callSuspending = false
@@ -308,7 +329,7 @@ internal class AdapterGenerator(
 
     // We add overrides here so we can call them below.
     inboundCallHandler.addFakeOverrides(
-      pluginContext.irBuiltIns,
+      irTypeSystemContext,
       listOf(contextProperty, callFunction, callSuspendingFunction)
     )
 
@@ -317,7 +338,7 @@ internal class AdapterGenerator(
       scopeOwnerSymbol = callFunction.symbol,
     ) {
       +irReturn(
-        irCallFunctionBody(bridgedInterface, callFunction, serviceProperty)
+        irCallFunctionBody(bridgedInterface, callFunction, serviceProperty, supportedFunctionNamesProperty)
       )
     }
     callSuspendingFunction.irFunctionBody(
@@ -325,7 +346,7 @@ internal class AdapterGenerator(
       scopeOwnerSymbol = callSuspendingFunction.symbol,
     ) {
       +irReturn(
-        irCallFunctionBody(bridgedInterface, callSuspendingFunction, serviceProperty)
+        irCallFunctionBody(bridgedInterface, callSuspendingFunction, serviceProperty, supportedFunctionNamesProperty)
       )
     }
 
@@ -410,6 +431,7 @@ internal class AdapterGenerator(
     bridgedInterface: BridgedInterface,
     callFunction: IrSimpleFunction,
     serviceProperty: IrProperty,
+    supportedFunctionNamesProperty: IrProperty,
   ): IrExpression {
     val result = mutableListOf<IrBranch>()
     val inboundBridgeThis = callFunction.dispatchReceiverParameter!!
@@ -439,8 +461,8 @@ internal class AdapterGenerator(
       )
     }
 
-    // Add an else clause that calls unexpectedFunction().
-    result += irElseBranch(irCallUnexpectedFunction(callFunction))
+    // Add an else clause that calls unexpectedFunction(supportedFunctionNames).
+    result += irElseBranch(irCallUnexpectedFunction(callFunction, supportedFunctionNamesProperty))
 
     return irWhen(
       type = ziplineApis.stringArrayType,
@@ -563,15 +585,23 @@ internal class AdapterGenerator(
     }
   }
 
-  /** `inboundCall.unexpectedFunction()` */
+  /** `inboundCall.unexpectedFunction(supportedFunctionNames)` */
   private fun IrBuilderWithScope.irCallUnexpectedFunction(
     callFunction: IrSimpleFunction,
+    supportedFunctionNamesProperty: IrProperty,
   ): IrExpression {
     return irCall(
       type = ziplineApis.stringArrayType,
       callee = ziplineApis.inboundCallUnexpectedFunction,
     ).apply {
       dispatchReceiver = irGetInboundCallParameter(callFunction)
+
+      putValueArgument(
+        0,
+        irCall(supportedFunctionNamesProperty.getter!!).apply {
+          dispatchReceiver = irGet(callFunction.dispatchReceiverParameter!!)
+        },
+      )
     }
   }
 
@@ -621,7 +651,6 @@ internal class AdapterGenerator(
   //   private val serializer_1 = context.serializersModule.serializer<SampleResponse>()
   //
   //   override fun ping(request: SampleRequest): SampleResponse { ... }
-  //   override fun close() { ... }
   // }
   private fun irOutboundServiceClass(
     bridgedInterface: BridgedInterface,
@@ -677,7 +706,7 @@ internal class AdapterGenerator(
     }
 
     outboundServiceClass.addFakeOverrides(
-      pluginContext.irBuiltIns,
+      irTypeSystemContext,
       outboundServiceClass.functions.toList(),
     )
 

@@ -15,21 +15,27 @@
  */
 package app.cash.zipline.kotlin
 
+import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrElement
+import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
+import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.defaultType
@@ -40,8 +46,8 @@ import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /**
- * A user-defined interface (like `EchoService` or `Callback<String>`) and support for either
- * implementing it ([OutboundBridgeRewriter]) or calling it ([InboundBridgeRewriter]).
+ * A user-defined interface (like `EchoService` or `Callback<String>`) and support for generating
+ * its `ZiplineServiceAdapter`.
  *
  * This class tracks the interface type (like `EchoService` or `Callback<String>`) and its
  * implementation class (that doesn't know its generic parameters).
@@ -53,7 +59,9 @@ import org.jetbrains.kotlin.name.Name
  */
 internal class BridgedInterface(
   private val pluginContext: IrPluginContext,
+  private val messageCollector: MessageCollector,
   private val ziplineApis: ZiplineApis,
+  private val scope: ScopeWithIr,
 
   /** A specific type identifier that knows the values of its generic parameters. */
   val type: IrType,
@@ -125,7 +133,10 @@ internal class BridgedInterface(
       propertyName = name,
     ) {
       if (type.classFqName == ziplineApis.ziplineReferenceFqName) {
-        // val serializer_0: KSerializer<ZiplineReference> = context.endpoint.ziplineReferenceSerializer
+        // val serializer_0: KSerializer<ZiplineReference> =
+        //     context.endpoint.ziplineReferenceSerializer<SampleService>(
+        //       SampleService.Companion.Adapter
+        //     )
         //
         // The generic type parameter of a ZiplineReference is likely not serializable. Therefore,
         // look its serializer up directly rather than using the serialization module which would
@@ -137,13 +148,28 @@ internal class BridgedInterface(
         }
         irExprBody(
           irCall(
-            callee = ziplineApis.endpointZiplineReferenceSerializer.owner.getter!!,
+            callee = ziplineApis.endpointZiplineReferenceSerializer.owner,
           ).apply {
             dispatchReceiver = irCall(
               callee = endpointProperty.owner.getter!!,
             ).apply {
               dispatchReceiver = irGet(contextParameter)
             }
+            val ziplineServiceType = (type as IrSimpleType).arguments[0] as IrType
+            putTypeArgument(0, ziplineServiceType)
+
+            // TODO(jwilson): this could be recursive (and fail with a stackoverflow) if a service
+            //     has functions that take its own type. Fix by recursively applying the adapter
+            //     transform?
+            val adapterExpression = AdapterGenerator(
+              pluginContext,
+              messageCollector,
+              ziplineApis,
+              this@BridgedInterface.scope,
+              ziplineServiceType.getClass()!!
+            ).adapterExpression()
+
+            putValueArgument(0, adapterExpression)
           }
         )
       } else {
@@ -167,6 +193,34 @@ internal class BridgedInterface(
           }
         )
       }
+    }
+  }
+
+  fun irSupportedFunctionNamesProperty(declaringClass: IrClass): IrProperty {
+    val stringListType = pluginContext.symbols.list.typeWith(pluginContext.symbols.string.defaultType)
+    return irVal(
+      pluginContext = pluginContext,
+      propertyType = stringListType,
+      declaringClass = declaringClass,
+      propertyName = Name.identifier("supportedFunctionNames"),
+    ) {
+      val listOfFunctionSymbol = pluginContext.referenceFunctions(FqName("kotlin.collections.listOf"))
+        .single { it.owner.valueParameters.any { it.varargElementType != null } }
+      irExprBody(
+        irCall(listOfFunctionSymbol, stringListType).apply {
+          putValueArgument(
+            0,
+            IrVarargImpl(
+              UNDEFINED_OFFSET,
+              UNDEFINED_OFFSET,
+              context.irBuiltIns.arrayClass.typeWith(pluginContext.symbols.string.defaultType),
+              pluginContext.symbols.string.defaultType,
+              bridgedFunctions.map { it.owner.signature }
+                .map { irString(it) },
+            )
+          )
+        }
+      )
     }
   }
 
@@ -202,7 +256,9 @@ internal class BridgedInterface(
 
     fun create(
       pluginContext: IrPluginContext,
+      messageCollector: MessageCollector,
       ziplineApis: ZiplineApis,
+      scope: ScopeWithIr,
       element: IrElement,
       functionName: String,
       type: IrType,
@@ -216,7 +272,14 @@ internal class BridgedInterface(
         )
       }
 
-      return BridgedInterface(pluginContext, ziplineApis, type, classSymbol)
+      return BridgedInterface(
+        pluginContext,
+        messageCollector,
+        ziplineApis,
+        scope,
+        type,
+        classSymbol
+      )
     }
   }
 }
