@@ -6,6 +6,7 @@ $dokka.location:app.cash.zipline.internal.bridge/Endpoint/bind/#kotlin.String#Ty
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/clientNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/client-names.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/service-names.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/take/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/take.html
+$dokka.location:app.cash.zipline.internal.bridge/SerializableEndpoint///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-serializable-endpoint/index.html
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
 $dokka.location:app.cash.zipline//ZiplineReference/#TypeParam(bounds=[app.cash.zipline.ZiplineService])/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference.html
 $dokka.location:app.cash.zipline//asFlowReference/kotlinx.coroutines.flow.Flow[TypeParam(bounds=[kotlin.Any?])]#/PointingToDeclaration/zipline/app.cash.zipline/as-flow-reference.html
