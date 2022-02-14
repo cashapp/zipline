@@ -5,28 +5,21 @@ on:
   push:
     branches:
       - '**'
-    tags-ignore:
+    tags:
       - '**'
 
 env:
   GRADLE_OPTS: "-Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.daemon=false -Dkotlin.incremental=false"
 
 jobs:
-  build:
+  jvm-test:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest]
-        arch: [amd64]
-        cmake-arch: [x86_64]
-        include:
-          - os: macOS-latest
-            arch: x86_64
-            cmake-arch: x86_64
-          - os: macOS-latest
-            arch: aarch64
-            cmake-arch: arm64
-          # TODO: build on 'windows-latest'
+        os:
+          - ubuntu-latest
+          - macos-latest
+          # TODO windows
 
     runs-on: ${{ matrix.os }}
 
@@ -38,32 +31,21 @@ jobs:
           distribution: 'zulu'
           java-version: 11
 
-      # Clang is seemingly already installed on Ubuntu but fails to build the project with errors
-      # like "file not found" for `#include <string>`. Explicitly (re?)installing fixes things.
-      - run: sudo apt-get install clang
+      - run: brew install zig
+        if: matrix.os == 'macos-latest'
+      - run: sudo snap install zig --classic --beta
         if: matrix.os == 'ubuntu-latest'
 
-      - name: Build native library
+      - name: Build native libraries
         run: |
-          mkdir -p build/jni/${{ matrix.arch }}/
-          mkdir -p zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
-          cmake -S zipline/src/jvmMain/ -B build/jni/${{ matrix.arch }}/ \
-            -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)" \
-            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake-arch }}
-          cmake --build build/jni/${{ matrix.arch }}/ --verbose
-          cp -v build/jni/${{ matrix.arch }}/libquickjs.* zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
+          cd zipline
+          mkdir -p src/jvmMain/resources/jni
+          zig build
+          cp -Rv zig-out/* src/jvmMain/resources/jni/
 
       - run: ./gradlew build --stacktrace
-        # TODO: configure builds to run on the same architecture they produce so we can test what we've built.
-        if: matrix.arch == 'amd64'
 
-      - uses: actions/upload-artifact@v2
-        with:
-          name: jvm-native-libraries
-          path: zipline/src/jvmMain/resources/*
-          if-no-files-found: error
-
-  android-emulator:
+  android-test:
     # We build on a Mac to get hardware acceleration for the Android emulator.
     runs-on: macos-latest
 
@@ -85,8 +67,8 @@ jobs:
   publish:
     runs-on: ubuntu-latest
     needs:
-      - build
-      - android-emulator
+      - jvm-test
+      - android-test
 
     steps:
       - uses: actions/checkout@v2
@@ -95,10 +77,17 @@ jobs:
           distribution: 'zulu'
           java-version: 11
 
-      - uses: actions/download-artifact@v2
-      - run: |
-          mkdir -p zipline/src/jvmMain/resources/
-          cp -av jvm-native-libraries/* zipline/src/jvmMain/resources/
+      - run: brew install zig
+        if: matrix.os == 'macos-latest'
+      - run: sudo snap install zig --classic --beta
+        if: matrix.os == 'ubuntu-latest'
+
+      - name: Build native libraries
+        run: |
+          cd zipline
+          mkdir -p src/jvmMain/resources/jni
+          zig build
+          cp -Rv zig-out/* src/jvmMain/resources/jni/
 
       - run: ./gradlew assemble dokkaHtml
 
@@ -115,13 +104,13 @@ jobs:
           if-no-files-found: error
 
       - run: ./gradlew publish
-        if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/zipline' }}
+        if: ${{ (github.ref == 'refs/heads/trunk' || startsWith(github.ref, 'refs/tags/')) && github.repository == 'cashapp/zipline' }}
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ARTIFACT_SIGNING_PRIVATE_KEY }}
 
-      - name: Deploy docs to website
+      - name: Deploy snapshot docs to website
         if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/zipline' }}
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
@@ -129,4 +118,14 @@ jobs:
           BRANCH: site
           FOLDER: zipline/build/dokka/html
           TARGET_FOLDER: docs/latest/
+          CLEAN: true
+
+      - name: Deploy release docs to website
+        if: ${{ startsWith(github.ref, 'refs/tags/') && github.repository == 'cashapp/zipline' }}
+        uses: JamesIves/github-pages-deploy-action@releases/v3
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: site
+          FOLDER: zipline/build/dokka/html
+          TARGET_FOLDER: docs/0.x/
           CLEAN: true
