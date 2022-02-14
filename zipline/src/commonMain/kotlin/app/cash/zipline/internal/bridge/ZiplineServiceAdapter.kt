@@ -16,6 +16,7 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineService
+import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -27,8 +28,11 @@ import kotlinx.serialization.encoding.Encoder
  * implementations are generated.
  */
 @PublishedApi
-internal abstract class ZiplineServiceAdapter<T : ZiplineService> {
+internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
   abstract val serialName: String
+
+  override val descriptor
+    get() = PrimitiveSerialDescriptor(serialName, PrimitiveKind.STRING)
 
   abstract fun inboundCallHandler(
     service: T,
@@ -39,21 +43,19 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> {
     context: OutboundBridge.Context
   ): T
 
-  fun serializer(endpoint: Endpoint) : KSerializer<T> {
-    return object : KSerializer<T> {
-      override val descriptor = PrimitiveSerialDescriptor(serialName, PrimitiveKind.STRING)
+  override fun serialize(encoder: Encoder, value: T) {
+    encoder.encodeSerializableValue(
+      ContextualSerializer(SerializableEndpoint::class),
+      SerializedEndpoint(value, this),
+    )
+  }
 
-      override fun serialize(encoder: Encoder, value: T) {
-        val name = endpoint.generateName()
-        endpoint.bind(name, value, this@ZiplineServiceAdapter)
-        encoder.encodeString(name)
-      }
-
-      override fun deserialize(decoder: Decoder): T {
-        val name = decoder.decodeString()
-        return outboundService(endpoint.newOutboundContext(name))
-      }
-    }
+  override fun deserialize(decoder: Decoder): T {
+    val endpoint = decoder.decodeSerializableValue(
+      ContextualSerializer(SerializableEndpoint::class),
+    )
+    require(endpoint is DeserializedEndpoint)
+    return endpoint.endpoint.take(endpoint.name, this)
   }
 }
 

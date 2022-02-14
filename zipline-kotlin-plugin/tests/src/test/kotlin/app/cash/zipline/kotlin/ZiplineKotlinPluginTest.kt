@@ -24,6 +24,7 @@ import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
+import kotlinx.serialization.KSerializer
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Ignore
 import org.junit.Test
@@ -52,6 +53,7 @@ class ZiplineKotlinPluginTest {
       "app.cash.zipline.testing.SampleService\$Companion\$Adapter"
     )
     assertThat(adapterClass).isNotNull()
+    assertThat(adapterClass.interfaces).asList().containsExactly(KSerializer::class.java)
   }
 
   @Test

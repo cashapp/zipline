@@ -17,6 +17,7 @@ package app.cash.zipline
 
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
+import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.EchoZiplineService
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
@@ -59,5 +60,37 @@ internal class ZiplineServiceTest {
     assertEquals(setOf(), endpointA.serviceNames)
 
     assertNull(events.removeFirstOrNull())
+  }
+
+  @Test
+  fun transmitServices() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    endpointA.bind<EchoServiceFactory>("factory", FactoryService())
+    val factoryClient = endpointB.take<EchoServiceFactory>("factory")
+
+    val helloService = factoryClient.create("hello")
+    val supService = factoryClient.create("sup")
+
+    assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
+    assertEquals(EchoResponse("sup Kevin"), supService.echo(EchoRequest("Kevin")))
+    assertEquals(EchoResponse("hello Jake"), helloService.echo(EchoRequest("Jake")))
+    assertEquals(EchoResponse("sup Stephen"), supService.echo(EchoRequest("Stephen")))
+  }
+
+  interface EchoServiceFactory : ZiplineService {
+    fun create(greeting: String): EchoService
+  }
+
+  class GreetingService(val greeting: String) : EchoService {
+    override fun echo(request: EchoRequest): EchoResponse {
+      return EchoResponse("$greeting ${request.message}")
+    }
+  }
+
+  class FactoryService : EchoServiceFactory {
+    override fun create(greeting: String): EchoService {
+      return GreetingService(greeting)
+    }
   }
 }

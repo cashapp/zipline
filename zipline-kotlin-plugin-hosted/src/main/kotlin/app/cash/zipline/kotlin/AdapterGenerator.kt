@@ -93,7 +93,7 @@ internal class AdapterGenerator(
   private fun getOrCreateAdapterClass(
     companion: IrClass
   ): IrClass {
-    // object Adapter : ZiplineServiceAdapter<SampleService>() {
+    // object Adapter : ZiplineServiceAdapter<SampleService>(), KSerializer<SampleService> {
     //   ...
     // }
     val existing = companion.declarations.firstOrNull {
@@ -108,7 +108,10 @@ internal class AdapterGenerator(
       visibility = DescriptorVisibilities.PUBLIC
     }.apply {
       parent = companion
-      superTypes = listOf(ziplineApis.ziplineServiceAdapter.typeWith(original.defaultType))
+      superTypes = listOf(
+        ziplineApis.ziplineServiceAdapter.typeWith(original.defaultType),
+        ziplineApis.kSerializer.typeWith(original.defaultType),
+      )
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
