@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.getClass
+import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
@@ -132,7 +133,20 @@ internal class BridgedInterface(
       declaringClass = declaringClass,
       propertyName = name,
     ) {
-      if (type.classFqName == ziplineApis.ziplineReferenceFqName) {
+      if (type.isSubtypeOfClass(ziplineApis.ziplineService)) {
+        // TODO(jwilson): this could be recursive (and fail with a stackoverflow) if a service
+        //     has functions that take its own type. Fix by recursively applying the adapter
+        //     transform?
+        irExprBody(
+          AdapterGenerator(
+            pluginContext,
+            messageCollector,
+            ziplineApis,
+            this@BridgedInterface.scope,
+            type.getClass()!!,
+          ).adapterExpression()
+        )
+      } else if (type.classFqName == ziplineApis.ziplineReferenceFqName) {
         // val serializer_0: KSerializer<ZiplineReference> =
         //     context.endpoint.ziplineReferenceSerializer<SampleService>(
         //       SampleService.Companion.Adapter

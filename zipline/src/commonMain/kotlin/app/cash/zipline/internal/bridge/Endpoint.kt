@@ -58,6 +58,7 @@ class Endpoint internal constructor(
 
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
+      contextual(SerializableEndpoint::class, SerializableEndpointSerializer(this@Endpoint))
       contextual(Throwable::class, ThrowableSerializer)
       contextual(FlowReference::class) {
         FlowReferenceSerializer(ziplineReferenceSerializer(ziplineServiceAdapter()), it[0])

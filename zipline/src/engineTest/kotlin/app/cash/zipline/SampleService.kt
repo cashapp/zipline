@@ -20,6 +20,7 @@ import app.cash.zipline.internal.bridge.InboundCall
 import app.cash.zipline.internal.bridge.InboundCallHandler
 import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.serializer
@@ -47,7 +48,8 @@ interface SampleService : ZiplineService {
      * mostly to model what the expected generated code should look like when making changes to
      * `AdapterGenerator`.
      */
-    internal object ManualAdapter : ZiplineServiceAdapter<SampleService>() {
+    internal object ManualAdapter
+      : ZiplineServiceAdapter<SampleService>(), KSerializer<SampleService> {
       override val serialName: String = "SampleService"
 
       override fun inboundCallHandler(
