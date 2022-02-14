@@ -37,7 +37,6 @@ internal class ZiplineApis(
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
   private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
   private val ziplineFqName = packageFqName.child("Zipline")
-  val ziplineReferenceFqName = packageFqName.child("ZiplineReference")
   val ziplineServiceFqName = packageFqName.child("ZiplineService")
   private val ziplineServiceAdapterFunctionFqName = bridgeFqName.child("ziplineServiceAdapter")
   private val ziplineServiceAdapterFqName = bridgeFqName.child("ZiplineServiceAdapter")
@@ -59,10 +58,6 @@ internal class ZiplineApis(
           it.owner.valueParameters.isEmpty() &&
           it.owner.typeParameters.size == 1
       }
-
-  val endpointZiplineReferenceSerializer: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(endpointFqName.child("ziplineReferenceSerializer"))
-      .single()
 
   val inboundCall: IrClassSymbol
     get() = pluginContext.referenceClass(bridgeFqName.child("InboundCall"))!!
@@ -173,7 +168,6 @@ internal class ZiplineApis(
     rewritePair(endpointFqName.child("take")),
     rewritePair(ziplineFqName.child("bind")),
     rewritePair(endpointFqName.child("bind")),
-    rewritePair(ziplineReferenceFqName),
     rewritePair(ziplineServiceAdapterFunctionFqName),
   ).toMap()
 

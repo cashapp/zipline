@@ -146,46 +146,6 @@ internal class BridgedInterface(
             type.getClass()!!,
           ).adapterExpression()
         )
-      } else if (type.classFqName == ziplineApis.ziplineReferenceFqName) {
-        // val serializer_0: KSerializer<ZiplineReference> =
-        //     context.endpoint.ziplineReferenceSerializer<SampleService>(
-        //       SampleService.Companion.Adapter
-        //     )
-        //
-        // The generic type parameter of a ZiplineReference is likely not serializable. Therefore,
-        // look its serializer up directly rather than using the serialization module which would
-        // otherwise force lookup of the generic type parameter's serializer as well.
-        val endpointProperty = when (contextParameter.type.classFqName) {
-          ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextEndpoint
-          ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextEndpoint
-          else -> error("unexpected Context type")
-        }
-        irExprBody(
-          irCall(
-            callee = ziplineApis.endpointZiplineReferenceSerializer.owner,
-          ).apply {
-            dispatchReceiver = irCall(
-              callee = endpointProperty.owner.getter!!,
-            ).apply {
-              dispatchReceiver = irGet(contextParameter)
-            }
-            val ziplineServiceType = (type as IrSimpleType).arguments[0] as IrType
-            putTypeArgument(0, ziplineServiceType)
-
-            // TODO(jwilson): this could be recursive (and fail with a stackoverflow) if a service
-            //     has functions that take its own type. Fix by recursively applying the adapter
-            //     transform?
-            val adapterExpression = AdapterGenerator(
-              pluginContext,
-              messageCollector,
-              ziplineApis,
-              this@BridgedInterface.scope,
-              ziplineServiceType.getClass()!!
-            ).adapterExpression()
-
-            putValueArgument(0, adapterExpression)
-          }
-        )
       } else {
         // val serializer_0: KSerializer<EchoRequest> = context.serializersModule.serializer<EchoRequest>()
         val serializersModuleProperty = when (contextParameter.type.classFqName) {
