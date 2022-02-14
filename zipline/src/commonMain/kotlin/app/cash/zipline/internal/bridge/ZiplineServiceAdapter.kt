@@ -45,17 +45,16 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
 
   override fun serialize(encoder: Encoder, value: T) {
     encoder.encodeSerializableValue(
-      ContextualSerializer(SerializableEndpoint::class),
-      SerializedEndpoint(value, this),
+      ContextualSerializer(PassByReference::class),
+      SendByReference(value, this),
     )
   }
 
   override fun deserialize(decoder: Decoder): T {
-    val endpoint = decoder.decodeSerializableValue(
-      ContextualSerializer(SerializableEndpoint::class),
-    )
-    require(endpoint is DeserializedEndpoint)
-    return endpoint.endpoint.take(endpoint.name, this)
+    val reference = decoder.decodeSerializableValue(
+      ContextualSerializer(PassByReference::class),
+    ) as ReceiveByReference
+    return reference.take(this)
   }
 }
 

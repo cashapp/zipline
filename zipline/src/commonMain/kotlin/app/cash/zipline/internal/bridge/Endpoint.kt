@@ -56,7 +56,7 @@ class Endpoint internal constructor(
 
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
-      contextual(SerializableEndpoint::class, SerializableEndpointSerializer(this@Endpoint))
+      contextual(PassByReference::class, PassByReferenceSerializer(this@Endpoint))
       contextual(Throwable::class, ThrowableSerializer)
       contextual(FlowReference::class) {
         FlowReferenceSerializer(it[0])

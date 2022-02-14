@@ -15,9 +15,9 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.DeserializedEndpoint
-import app.cash.zipline.internal.bridge.SerializableEndpoint
-import app.cash.zipline.internal.bridge.SerializedEndpoint
+import app.cash.zipline.internal.bridge.PassByReference
+import app.cash.zipline.internal.bridge.ReceiveByReference
+import app.cash.zipline.internal.bridge.SendByReference
 import app.cash.zipline.internal.bridge.ziplineServiceAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -98,24 +98,23 @@ internal class FlowReferenceSerializer<T>(
 ) : KSerializer<FlowReference<T>> {
   override val descriptor = PrimitiveSerialDescriptor("FlowReference", PrimitiveKind.STRING)
 
-  override fun deserialize(decoder: Decoder): FlowReference<T> {
-    val endpoint = decoder.decodeSerializableValue(
-      ContextualSerializer(SerializableEndpoint::class),
-    )
-    require(endpoint is DeserializedEndpoint)
-    val flowZiplineService = endpoint.endpoint.take<FlowZiplineService>(endpoint.name)
-    return FlowReference(flowZiplineService, itemSerializer)
-  }
-
   override fun serialize(encoder: Encoder, value: FlowReference<T>) {
     val itemSerializer = value.itemSerializer
     if (itemSerializer is DeferredSerializer<T>) {
       itemSerializer.delegate = this.itemSerializer
     }
     encoder.encodeSerializableValue(
-      ContextualSerializer(SerializableEndpoint::class),
-      SerializedEndpoint(value.flowZiplineService, ziplineServiceAdapter()),
+      ContextualSerializer(PassByReference::class),
+      SendByReference(value.flowZiplineService, ziplineServiceAdapter()),
     )
+  }
+
+  override fun deserialize(decoder: Decoder): FlowReference<T> {
+    val reference = decoder.decodeSerializableValue(
+      ContextualSerializer(PassByReference::class),
+    ) as ReceiveByReference
+    val service = reference.take<FlowZiplineService>(ziplineServiceAdapter())
+    return FlowReference(service, itemSerializer)
   }
 }
 

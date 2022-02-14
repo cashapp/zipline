@@ -26,36 +26,40 @@ import kotlinx.serialization.encoding.Encoder
  * This is used with [ZiplineServiceAdapter] to pass services between runtimes by reference and not
  * by value. This calls [Endpoint.bind] when serializing, and deserializers call [Endpoint.take].
  */
-interface SerializableEndpoint
+interface PassByReference
 
-internal class DeserializedEndpoint(
+internal class ReceiveByReference(
   var name: String,
   var endpoint: Endpoint,
-) : SerializableEndpoint
+) : PassByReference {
+  fun <T : ZiplineService> take(adapter: ZiplineServiceAdapter<T>): T {
+    return endpoint.take(name, adapter)
+  }
+}
 
-internal class SerializedEndpoint<T : ZiplineService>(
+internal class SendByReference<T : ZiplineService>(
   val service: T,
   val adapter: ZiplineServiceAdapter<T>,
-) : SerializableEndpoint {
-  fun bindToEndpoint(endpoint: Endpoint, name: String) {
+) : PassByReference {
+  fun bind(endpoint: Endpoint, name: String) {
     endpoint.bind(name, service, adapter)
   }
 }
 
-internal class SerializableEndpointSerializer(
+internal class PassByReferenceSerializer(
   val endpoint: Endpoint,
-) : KSerializer<SerializableEndpoint> {
-  override val descriptor = PrimitiveSerialDescriptor("SerializableEndpoint", PrimitiveKind.STRING)
+) : KSerializer<PassByReference> {
+  override val descriptor = PrimitiveSerialDescriptor("PassByReference", PrimitiveKind.STRING)
 
-  override fun serialize(encoder: Encoder, value: SerializableEndpoint) {
-    require(value is SerializedEndpoint<*>)
+  override fun serialize(encoder: Encoder, value: PassByReference) {
+    require(value is SendByReference<*>)
     val name = endpoint.generateName()
-    value.bindToEndpoint(endpoint, name)
+    value.bind(endpoint, name)
     encoder.encodeString(name)
   }
 
-  override fun deserialize(decoder: Decoder): SerializableEndpoint {
+  override fun deserialize(decoder: Decoder): PassByReference {
     val name = decoder.decodeString()
-    return DeserializedEndpoint(name, endpoint)
+    return ReceiveByReference(name, endpoint)
   }
 }
