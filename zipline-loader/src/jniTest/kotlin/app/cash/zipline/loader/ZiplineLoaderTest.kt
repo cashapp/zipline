@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
+import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -30,6 +31,7 @@ import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
+import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 
@@ -38,22 +40,34 @@ import okio.fakefilesystem.FakeFileSystem
 class ZiplineLoaderTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val loader = ZiplineLoader(
-    httpClient = httpClient,
-    dispatcher = dispatcher,
-    fileSystem = FakeFileSystem(),
-    cacheDirectory = "/zipline/cache".toPath(),
-  )
+  private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+  private val cacheSize = 64
+  private var nowMillis = 1_000L
+
+  private lateinit var loader: ZiplineLoader
+
+  private lateinit var fileSystem: FileSystem
   private lateinit var quickJs: QuickJs
 
   @BeforeTest
   fun setUp() {
     quickJs = QuickJs.create()
+    fileSystem = FakeFileSystem()
+    loader = ZiplineLoader(
+      httpClient = httpClient,
+      dispatcher = dispatcher,
+      fileSystem = fileSystem,
+      cacheDirectory = "/zipline/cache".toPath(),
+      cacheDbDriver = driver,
+      cacheMaxSizeInBytes = cacheSize,
+      nowMs = { nowMillis }
+    )
   }
 
   @AfterTest
   fun tearDown() {
     quickJs.close()
+    driver.close()
   }
 
   @Test
@@ -100,6 +114,7 @@ class ZiplineLoaderTest {
       |globalThis.log = globalThis.log || "";
       |globalThis.log += "alpha loaded\n"
       |""".trimMargin()
+
     private fun alphaBytecode(quickJs: QuickJs) = ziplineFile(quickJs, alphaJs, "alpha.js")
     private const val alphaFilePath = "/alpha.zipline"
 
@@ -107,6 +122,7 @@ class ZiplineLoaderTest {
       |globalThis.log = globalThis.log || "";
       |globalThis.log += "bravo loaded\n"
       |""".trimMargin()
+
     private fun bravoBytecode(quickJs: QuickJs) = ziplineFile(quickJs, bravoJs, "bravo.js")
     private const val bravoFilePath = "/bravo.zipline"
 

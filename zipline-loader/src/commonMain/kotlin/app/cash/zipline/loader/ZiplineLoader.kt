@@ -16,6 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
+import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
@@ -28,6 +29,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.Buffer
 import okio.ByteString
+import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path
 
@@ -40,9 +42,11 @@ import okio.Path
 class ZiplineLoader(
   val dispatcher: CoroutineDispatcher,
   val httpClient: ZiplineHttpClient,
-  val fileSystem: FileSystem,
-  val cacheDirectory: Path,
-  val cacheMaxSizeInBytes: Int = 100 * 1024 * 1024, // 100mb
+  fileSystem: FileSystem,
+  cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
+  cacheDirectory: Path,
+  cacheMaxSizeInBytes: Int = 100 * 1024 * 1024, // 100mb
+  nowMs: () -> Long,
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3
@@ -52,12 +56,27 @@ class ZiplineLoader(
       concurrentDownloadsSemaphore = Semaphore(value)
     }
 
+  // TODO add schema version checker and automigration
+  private val cache = createZiplineCache(
+    driver = cacheDbDriver,
+    fileSystem = fileSystem,
+    directory = cacheDirectory,
+    maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
+    nowMs = nowMs
+  )
+
   suspend fun load(zipline: Zipline, url: String) {
-    val manifestString = concurrentDownloadsSemaphore.withPermit {
-      httpClient.download(url).utf8()
+    // Use the url SHA to write manifest to disk
+    val urlSha = url.encodeUtf8().sha256()
+
+    val manifestByteString = cache.getOrPut(urlSha) {
+      concurrentDownloadsSemaphore.withPermit {
+        httpClient.download(url)
+      }
     }
-    val manifest = Json.decodeFromString<ZiplineManifest>(manifestString)
-    // TODO save manifest
+
+    val manifest = Json.decodeFromString<ZiplineManifest>(manifestByteString.utf8())
+
     load(zipline, manifest)
   }
 
@@ -88,11 +107,12 @@ class ZiplineLoader(
     val upstreams = mutableListOf<Deferred<*>>()
 
     suspend fun load() {
-      val ziplineFile = concurrentDownloadsSemaphore.withPermit {
-        val ziplineFileBytes = httpClient.download(module.url)
-        // TODO write to disk using ZiplineCache
-        ZiplineFile.read(Buffer().write(ziplineFileBytes))
+      val ziplineFileBytes = cache.getOrPut(module.sha256) {
+        concurrentDownloadsSemaphore.withPermit {
+          httpClient.download(module.url)
+        }
       }
+      val ziplineFile = ZiplineFile.read(Buffer().write(ziplineFileBytes))
       upstreams.awaitAll()
       withContext(dispatcher) {
         zipline.multiplatformLoadJsModule(ziplineFile.quickjsBytecode.toByteArray(), id)
