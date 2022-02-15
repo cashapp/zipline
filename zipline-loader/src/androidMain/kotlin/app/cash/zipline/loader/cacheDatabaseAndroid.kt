@@ -15,30 +15,18 @@
  */
 package app.cash.zipline.loader
 
-import com.squareup.sqldelight.EnumColumnAdapter
+import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
 
-// in src/commonMain/kotlin
-expect class DriverFactory {
-  fun createDriver(): SqlDriver
-}
-
-// TODO make internal / upstream to SqlDelight
-expect class SQLiteException : SQLException
-expect open class SQLException : Exception
-
-fun createDatabase(driverFactory: DriverFactory): Database {
-  val driver = driverFactory.createDriver()
-  return createDatabase(driver)
-}
-
-fun createDatabase(driver: SqlDriver): Database {
-  val database = Database(
-    driver,
-    filesAdapter = Files.Adapter(
-      file_stateAdapter = EnumColumnAdapter()
+actual class DriverFactory(private val context: android.content.Context) {
+  actual fun createDriver(): SqlDriver {
+    return AndroidSqliteDriver(
+      schema = Database.Schema,
+      context = context,
+      name = "zipline-loader.db",
+      useNoBackupDirectory = true,
     )
-  )
-  Database.Schema.create(driver)
-  return database
+  }
 }
+
+actual fun isSqlException(e: Exception) = e is android.database.SQLException

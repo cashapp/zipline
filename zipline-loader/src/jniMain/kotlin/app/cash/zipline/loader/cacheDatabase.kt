@@ -15,15 +15,29 @@
  */
 package app.cash.zipline.loader
 
+import com.squareup.sqldelight.EnumColumnAdapter
 import com.squareup.sqldelight.db.SqlDriver
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 
-actual class DriverFactory {
-  actual fun createDriver(): SqlDriver {
-    val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-    Database.Schema.create(driver)
-    return driver
-  }
+// in src/commonMain/kotlin
+expect class DriverFactory {
+  fun createDriver(): SqlDriver
 }
 
-actual fun isSqlException(e: Exception) = e is java.sql.SQLException
+// TODO: get SQLDelight to support multiplatform exceptions.
+expect fun isSqlException(e: Exception): Boolean
+
+fun createDatabase(driverFactory: DriverFactory): Database {
+  val driver = driverFactory.createDriver()
+  return createDatabase(driver)
+}
+
+fun createDatabase(driver: SqlDriver): Database {
+  val database = Database(
+    driver,
+    filesAdapter = Files.Adapter(
+      file_stateAdapter = EnumColumnAdapter()
+    )
+  )
+  Database.Schema.create(driver)
+  return database
+}

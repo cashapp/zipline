@@ -15,15 +15,7 @@
  */
 package app.cash.zipline.loader
 
-import com.squareup.sqldelight.db.SqlDriver
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
+import app.cash.zipline.Zipline
 
-actual class DriverFactory {
-  actual fun createDriver(): SqlDriver {
-    val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-    Database.Schema.create(driver)
-    return driver
-  }
-}
-
-actual fun isSqlException(e: Exception) = e is java.sql.SQLException
+// TODO: drop this once we adopt Kotlin Hierarchical Multiplatform projects
+expect fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String)

@@ -95,7 +95,7 @@ class ZiplineLoader(
       }
       upstreams.awaitAll()
       withContext(dispatcher) {
-        zipline.loadJsModule(ziplineFile.quickjsBytecode.toByteArray(), id)
+        zipline.multiplatformLoadJsModule(ziplineFile.quickjsBytecode.toByteArray(), id)
       }
     }
   }

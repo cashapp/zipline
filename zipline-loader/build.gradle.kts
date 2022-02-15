@@ -17,15 +17,18 @@ kotlin {
   android {
     publishAllLibraryVariants()
   }
-  linuxX64()
-  macosX64()
-  macosArm64()
-  iosArm64()
-  iosX64()
-  iosSimulatorArm64()
-  tvosArm64()
-  tvosSimulatorArm64()
-  tvosX64()
+  // TODO: figure out how to get sqlite working on native platforms, then restore this.
+  if (false) {
+    linuxX64()
+    macosX64()
+    macosArm64()
+    iosArm64()
+    iosX64()
+    iosSimulatorArm64()
+    tvosArm64()
+    tvosSimulatorArm64()
+    tvosX64()
+  }
 
   sourceSets {
     val commonMain by getting {
@@ -37,31 +40,33 @@ kotlin {
       }
     }
     val engineMain by creating {
-      dependencies {
-        api(Dependencies.kotlinxCoroutines)
-        api(project(":zipline"))
-        api(Dependencies.okio)
-        implementation(Dependencies.kotlinxSerializationJson)
-      }
+      dependsOn(commonMain)
     }
-    val jvmMain by getting {
+    val jniMain by creating {
       dependsOn(engineMain)
       dependencies {
         implementation(Dependencies.okHttp)
+      }
+    }
+    val jvmMain by getting {
+      dependsOn(jniMain)
+      dependencies {
         implementation(Dependencies.sqldelightDriverJvm)
         implementation(Dependencies.sqldelightJdbc)
       }
     }
     val androidMain by getting {
+      dependsOn(jniMain)
       dependencies {
         implementation(Dependencies.sqldelightDriverAndroid)
       }
     }
+    val nativeMain by creating {
+      dependsOn(engineMain)
+    }
     targets.withType<KotlinNativeTarget> {
       val main by compilations.getting {
-        dependencies {
-          implementation(Dependencies.sqldelightDriverNative)
-        }
+        defaultSourceSet.dependsOn(nativeMain)
       }
     }
 
@@ -93,6 +98,17 @@ kotlin {
 
 android {
   compileSdkVersion(Ext.compileSdk)
+
+  defaultConfig {
+    minSdkVersion(18)
+    multiDexEnabled = true
+  }
+
+  sourceSets {
+    getByName("main") {
+      manifest.srcFile("src/androidMain/AndroidManifest.xml")
+    }
+  }
 }
 
 sqldelight {

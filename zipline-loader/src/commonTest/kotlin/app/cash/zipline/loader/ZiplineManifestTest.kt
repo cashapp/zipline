@@ -26,7 +26,7 @@ import okio.ByteString.Companion.encodeUtf8
 
 class ZiplineManifestTest {
   @Test
-  fun `manifest sorts modules on create`() {
+  fun manifestSortsModulesOnCreate() {
     val unsorted = ZiplineManifest.create(
       modules = mapOf(
         "bravo" to ZiplineModule(
@@ -59,7 +59,7 @@ class ZiplineManifestTest {
   }
 
   @Test
-  fun `manifest checks that modules are sorted if class is copied`() {
+  fun manifestChecksThatModulesAreSortedIfClassIsCopied() {
     val empty = ZiplineManifest.create(
       modules = mapOf()
     )
@@ -87,7 +87,7 @@ class ZiplineManifestTest {
   }
 
   @Test
-  fun `fails on create when cyclical dependencies`() {
+  fun failsOnCreateWhenCyclicalDependencies() {
     val selfDependencyException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
         modules = mapOf(
@@ -127,7 +127,7 @@ class ZiplineManifestTest {
   }
 
   @Test
-  fun `serializes to json`() {
+  fun serializesToJson() {
     val original = ZiplineManifest.create(
       modules = mapOf(
         "alpha" to ZiplineModule(

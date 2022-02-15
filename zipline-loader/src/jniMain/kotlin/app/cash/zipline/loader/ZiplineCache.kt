@@ -123,9 +123,9 @@ class ZiplineCache internal constructor(
       last_used_at_epoch_ms = nowMs()
     )
     getOrNull(sha256)!!
-  } catch (e: SQLiteException) {
-    // Presumably the file is already dirty.
-    null
+  } catch (e: Exception) {
+    if (!isSqlException(e)) throw e
+    null // Presumably the file is already dirty.
   }
 
   /**
