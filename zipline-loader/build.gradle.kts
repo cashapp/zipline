@@ -117,6 +117,11 @@ android {
   }
 }
 
+dependencies {
+  androidTestImplementation(Dependencies.kotlinxCoroutinesTest)
+  androidTestImplementation(Dependencies.okioFakeFileSystem)
+}
+
 sqldelight {
   database("Database") {
     packageName = "app.cash.zipline.loader"
