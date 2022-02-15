@@ -57,7 +57,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun `happy path`() {
+  fun happyPath() {
     httpClient.filePathToByteString = mapOf(
       alphaFilePath to alphaBytecode(quickJs),
       bravoFilePath to bravoBytecode(quickJs)
@@ -76,7 +76,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun `load manifest from url`() {
+  fun loadManifestFromUrl() {
     httpClient.filePathToByteString = mapOf(
       manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
       alphaFilePath to alphaBytecode(quickJs),
