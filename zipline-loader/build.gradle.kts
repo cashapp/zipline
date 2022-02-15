@@ -80,12 +80,18 @@ kotlin {
         implementation(kotlin("test"))
       }
     }
-    val jvmTest by getting {
+    val jniTest by creating {
       dependsOn(engineTest)
       dependencies {
         implementation(Dependencies.kotlinxCoroutinesTest)
         implementation(Dependencies.okioFakeFileSystem)
       }
+    }
+    val jvmTest by getting {
+      dependsOn(jniTest)
+    }
+    val androidTest by getting {
+      dependsOn(jniTest)
     }
 
     targets.withType<KotlinNativeTarget> {
