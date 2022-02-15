@@ -90,9 +90,6 @@ kotlin {
     val jvmTest by getting {
       dependsOn(jniTest)
     }
-    val androidTest by getting {
-      dependsOn(jniTest)
-    }
 
     targets.withType<KotlinNativeTarget> {
       val test by compilations.getting
@@ -113,6 +110,9 @@ android {
   sourceSets {
     getByName("main") {
       manifest.srcFile("src/androidMain/AndroidManifest.xml")
+    }
+    getByName("androidTest") {
+      java.srcDirs("src/jniTest/kotlin/")
     }
   }
 }
