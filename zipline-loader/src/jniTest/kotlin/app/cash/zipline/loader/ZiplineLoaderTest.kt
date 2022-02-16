@@ -30,6 +30,8 @@ import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
+import okio.Path.Companion.toPath
+import okio.fakefilesystem.FakeFileSystem
 
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
@@ -37,8 +39,10 @@ class ZiplineLoaderTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val loader = ZiplineLoader(
-    client = httpClient,
-    dispatcher = dispatcher
+    httpClient = httpClient,
+    dispatcher = dispatcher,
+    fileSystem = FakeFileSystem(),
+    cacheDirectory = "/zipline/cache".toPath(),
   )
   private lateinit var quickJs: QuickJs
 
@@ -53,7 +57,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun `happy path`() {
+  fun happyPath() {
     httpClient.filePathToByteString = mapOf(
       alphaFilePath to alphaBytecode(quickJs),
       bravoFilePath to bravoBytecode(quickJs)
@@ -72,7 +76,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun `load manifest from url`() {
+  fun loadManifestFromUrl() {
     httpClient.filePathToByteString = mapOf(
       manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
       alphaFilePath to alphaBytecode(quickJs),
