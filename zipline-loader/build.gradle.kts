@@ -76,13 +76,12 @@ kotlin {
       }
     }
     val engineTest by creating {
-      dependencies {
-        implementation(kotlin("test"))
-      }
+      dependsOn(commonTest)
     }
     val jniTest by creating {
       dependsOn(engineTest)
       dependencies {
+        implementation(Dependencies.junit)
         implementation(Dependencies.kotlinxCoroutinesTest)
         implementation(Dependencies.okioFakeFileSystem)
       }
@@ -105,6 +104,7 @@ android {
   defaultConfig {
     minSdkVersion(18)
     multiDexEnabled = true
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   sourceSets {
@@ -118,6 +118,8 @@ android {
 }
 
 dependencies {
+  androidTestImplementation(Dependencies.androidxTestRunner)
+  androidTestImplementation(Dependencies.junit)
   androidTestImplementation(Dependencies.kotlinxCoroutinesTest)
   androidTestImplementation(Dependencies.okioFakeFileSystem)
 }
