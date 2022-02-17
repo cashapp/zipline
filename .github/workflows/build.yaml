@@ -40,7 +40,7 @@ jobs:
 
       # Clang is seemingly already installed on Ubuntu but fails to build the project with errors
       # like "file not found" for `#include <string>`. Explicitly (re?)installing fixes things.
-      - run: sudo apt-get install clang
+      - run: sudo apt-get install libsqlite3-dev
         if: matrix.os == 'ubuntu-latest'
 
       - name: Build native library
