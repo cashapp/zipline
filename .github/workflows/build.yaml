@@ -38,12 +38,19 @@ jobs:
           distribution: 'zulu'
           java-version: 11
 
-      # Clang is seemingly already installed on Ubuntu but fails to build the project with errors
-      # like "file not found" for `#include <string>`. Explicitly (re?)installing fixes things.
-      - run: sudo apt-get install libsqlite3-dev
+      - name: Build native library (Linux)
         if: matrix.os == 'ubuntu-latest'
+        run: |
+          cp -a . ../zipline-dockerbuild
+          docker run \
+            --volume `pwd`/../zipline-dockerbuild:/zipline \
+            amd64/centos:7 \
+            /zipline/.github/workflows/build-linux-amd64.sh
+          mkdir -p zipline/src/jvmMain/resources/jni/amd64
+          cp -v ../zipline-dockerbuild/build/jni/amd64/libquickjs.* zipline/src/jvmMain/resources/jni/amd64/
 
-      - name: Build native library
+      - name: Build native library (macOS)
+        if: matrix.os == 'macOS-latest'
         run: |
           mkdir -p build/jni/${{ matrix.arch }}/
           mkdir -p zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
