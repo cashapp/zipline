@@ -17,18 +17,17 @@ kotlin {
   android {
     publishAllLibraryVariants()
   }
-  // TODO: figure out how to get sqlite working on native platforms, then restore this.
   if (false) {
     linuxX64()
-    macosX64()
-    macosArm64()
-    iosArm64()
-    iosX64()
-    iosSimulatorArm64()
-    tvosArm64()
-    tvosSimulatorArm64()
-    tvosX64()
   }
+  macosX64()
+  macosArm64()
+  iosArm64()
+  iosX64()
+  iosSimulatorArm64()
+  tvosArm64()
+  tvosSimulatorArm64()
+  tvosX64()
 
   sourceSets {
     val commonMain by getting {
