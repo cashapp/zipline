@@ -17,15 +17,13 @@ package app.cash.zipline.loader
 
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver.Companion.IN_MEMORY
-import java.time.Clock
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.runTest
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -36,7 +34,6 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ZiplineCacheTest {
-  private val dispatcher = TestCoroutineDispatcher()
   private val driver = JdbcSqliteDriver(IN_MEMORY)
   private lateinit var database: Database
   private lateinit var fileSystem: FileSystem
@@ -56,7 +53,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `read opens file that has been downloaded or null if not ready`(): Unit = runBlocking(dispatcher) {
+  fun `read opens file that has been downloaded or null if not ready`() = runTest {
     withCache { ziplineCache ->
       val fileSha = "abc123".encodeUtf8().sha256()
       val fileShaContents = "abc123".encodeUtf8().sha256()
@@ -75,7 +72,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `read triggers download for file that is not on filesystem yet`(): Unit = runBlocking(dispatcher) {
+  fun `read triggers download for file that is not on filesystem yet`() = runTest {
     withCache { ziplineCache ->
       val fileSha = "abc123".encodeUtf8().sha256()
       val fileShaContents = "abc123".encodeUtf8().sha256()
@@ -93,7 +90,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `cache prunes when capacity exceeded`(): Unit = runBlocking(dispatcher) {
+  fun `cache prunes when capacity exceeded`() = runTest {
     withCache { ziplineCache ->
       val a32 = "a".repeat(cacheSize / 2).encodeUtf8()
       val b32 = "b".repeat(cacheSize / 2).encodeUtf8()
@@ -120,7 +117,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `cache prunes by least recently accessed`(): Unit = runBlocking(dispatcher) {
+  fun `cache prunes by least recently accessed`() = runTest {
     withCache { ziplineCache ->
       val a32 = "a".repeat(cacheSize / 2).encodeUtf8()
       val b32 = "b".repeat(cacheSize / 2).encodeUtf8()
@@ -144,7 +141,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `cache element exceeds cache max size`(): Unit = runBlocking(dispatcher) {
+  fun `cache element exceeds cache max size`() = runTest {
     withCache { ziplineCache ->
       val a65 = "a".repeat(cacheSize + 1).encodeUtf8()
       val a65Hash = a65.sha256()
@@ -155,7 +152,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `cache on open prunes any files in excess of limit`(): Unit = runBlocking(dispatcher) {
+  fun `cache on open prunes any files in excess of limit`() = runTest {
     val a32 = "a".repeat(cacheSize / 2).encodeUtf8()
     val a32Hash = a32.sha256()
 

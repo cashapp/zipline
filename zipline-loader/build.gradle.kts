@@ -62,6 +62,9 @@ kotlin {
     }
     val nativeMain by creating {
       dependsOn(engineMain)
+      dependencies {
+        implementation(Dependencies.sqldelightDriverNative)
+      }
     }
     targets.withType<KotlinNativeTarget> {
       val main by compilations.getting {
@@ -83,6 +86,8 @@ kotlin {
         implementation(Dependencies.junit)
         implementation(Dependencies.kotlinxCoroutinesTest)
         implementation(Dependencies.okioFakeFileSystem)
+        implementation(Dependencies.sqldelightDriverJvm)
+        implementation(Dependencies.sqldelightJdbc)
       }
     }
     val jvmTest by getting {

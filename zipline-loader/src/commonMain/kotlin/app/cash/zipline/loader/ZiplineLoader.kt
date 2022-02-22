@@ -69,6 +69,7 @@ class ZiplineLoader(
     // Use the url SHA to write manifest to disk
     val urlSha = url.encodeUtf8().sha256()
 
+    // Assumes that manifests are immutable by url
     val manifestByteString = cache.getOrPut(urlSha) {
       concurrentDownloadsSemaphore.withPermit {
         httpClient.download(url)

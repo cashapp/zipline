@@ -15,7 +15,27 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.Zipline
+import com.squareup.sqldelight.EnumColumnAdapter
+import com.squareup.sqldelight.db.SqlDriver
 
-actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
+expect class DriverFactory {
+  fun createDriver(): SqlDriver
+}
+
+expect fun isSqlException(e: Exception): Boolean
+
+fun createDatabase(driverFactory: DriverFactory): Database {
+  val driver = driverFactory.createDriver()
+  return createDatabase(driver)
+}
+
+fun createDatabase(driver: SqlDriver): Database {
+  val database = Database(
+    driver,
+    filesAdapter = Files.Adapter(
+      file_stateAdapter = EnumColumnAdapter()
+    )
+  )
+  Database.Schema.create(driver)
+  return database
+}
