@@ -22,8 +22,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.coroutines.test.runBlockingTest
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.Buffer
@@ -36,8 +36,8 @@ import okio.fakefilesystem.FakeFileSystem
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class ZiplineLoaderTest {
+  private val dispatcher = UnconfinedTestDispatcher()
   private val httpClient = FakeZiplineHttpClient()
-  private val dispatcher = TestCoroutineDispatcher()
   private val loader = ZiplineLoader(
     httpClient = httpClient,
     dispatcher = dispatcher,
@@ -57,15 +57,13 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun happyPath() {
+  fun happyPath() = runTest {
     httpClient.filePathToByteString = mapOf(
       alphaFilePath to alphaBytecode(quickJs),
       bravoFilePath to bravoBytecode(quickJs)
     )
     val zipline = Zipline.create(dispatcher)
-    dispatcher.runBlockingTest {
-      loader.load(zipline, manifest(quickJs))
-    }
+    loader.load(zipline, manifest(quickJs))
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -76,16 +74,14 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loadManifestFromUrl() {
+  fun loadManifestFromUrl() = runTest {
     httpClient.filePathToByteString = mapOf(
       manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
       alphaFilePath to alphaBytecode(quickJs),
       bravoFilePath to bravoBytecode(quickJs)
     )
     val zipline = Zipline.create(dispatcher)
-    dispatcher.runBlockingTest {
-      loader.load(zipline, manifestPath)
-    }
+    loader.load(zipline, manifestPath)
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
       """

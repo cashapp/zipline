@@ -17,26 +17,26 @@ package app.cash.zipline
 
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SetTimeoutTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  private val dispatcher = UnconfinedTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runTest {
     zipline.loadTestingJs()
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runTest {
     zipline.close()
   }
 
-  @Test fun happyPath(): Unit = runBlocking(dispatcher) {
+  @Test fun happyPath() = runTest {
     zipline.quickJs.evaluate(
       """
       var greeting = 'hello';
@@ -50,11 +50,11 @@ class SetTimeoutTest {
     )
 
     assertEquals("hello", zipline.quickJs.evaluate("greeting"))
-    dispatcher.advanceTimeBy(200L)
+    dispatcher.scheduler.advanceTimeBy(200L)
     assertEquals("goodbye", zipline.quickJs.evaluate("greeting"))
   }
 
-  @Test fun ziplineCloseSilentlyCancelsQueuedTasks(): Unit = runBlocking(dispatcher) {
+  @Test fun ziplineCloseSilentlyCancelsQueuedTasks() = runTest {
     zipline.quickJs.evaluate(
       """
       var doNothing = function() {
@@ -65,6 +65,8 @@ class SetTimeoutTest {
     )
 
     zipline.close()
-    dispatcher.advanceTimeBy(200L)
+    dispatcher.scheduler.advanceTimeBy(200L)
   }
 }
+
+//this.testScheduler.apply { advanceTimeBy(delayTimeMillis); runCurrent() }

@@ -21,26 +21,26 @@ import app.cash.zipline.testing.EchoService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ExceptionsTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  private val dispatcher = UnconfinedTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runTest {
     zipline.loadTestingJs()
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runTest {
     zipline.close()
   }
 
-  @Test fun jvmCallJsServiceThatThrows(): Unit = runBlocking(dispatcher) {
+  @Test fun jvmCallJsServiceThatThrows() = runTest {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareThrowingJsBridges()")
 
     val service = zipline.take<EchoService>("throwingService")
@@ -58,7 +58,7 @@ class ExceptionsTest {
     }
   }
 
-  @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
+  @Test fun jsCallJvmServiceThatThrows() = runTest {
     zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
 
     assertThat(assertFailsWith<QuickJsException> {
@@ -75,7 +75,7 @@ class ExceptionsTest {
     }
   }
 
-  @Test fun jvmCallJsCallsJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
+  @Test fun jvmCallJsCallsJvmServiceThatThrows() = runTest {
     zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareDelegatingService()")
 

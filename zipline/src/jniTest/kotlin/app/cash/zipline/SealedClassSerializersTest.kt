@@ -22,26 +22,26 @@ import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SealedClassSerializersTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  private val dispatcher = UnconfinedTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runTest {
     zipline.loadTestingJs()
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runTest {
     zipline.close()
   }
 
-  @Test fun sealedClassesEncodeAndDecode(): Unit = runBlocking(dispatcher) {
+  @Test fun sealedClassesEncodeAndDecode() = runTest {
     val service = zipline.take<SealedClassMessageService>("sealedClassMessageService")
     zipline.quickJs.evaluate(
       "testing.app.cash.zipline.testing.prepareSealedClassMessageService()"
@@ -55,7 +55,7 @@ class SealedClassSerializersTest {
    * We recently had a bug where JSON use inside of flows didn't use `useArrayPolymorphism = true`,
    * which prevented us from decoding what was encoded.
    */
-  @Test fun sealedClassesFlow(): Unit = runBlocking(dispatcher) {
+  @Test fun sealedClassesFlow() = runTest {
     val service = zipline.take<SealedClassMessageService>("sealedClassMessageService")
     zipline.quickJs.evaluate(
       "testing.app.cash.zipline.testing.prepareSealedClassMessageService()"

@@ -73,6 +73,7 @@ kotlin {
     val commonTest by getting {
       dependencies {
         implementation(kotlin("test"))
+        implementation(Dependencies.kotlinxCoroutinesTest)
       }
     }
 
@@ -95,6 +96,9 @@ kotlin {
       dependencies {
         api(Dependencies.androidxAnnotation)
       }
+    }
+    val jniTest by creating {
+      dependsOn(engineTest)
     }
     val androidMain by getting {
       dependsOn(jniMain)

@@ -17,8 +17,8 @@ package app.cash.zipline
 
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -29,17 +29,17 @@ import org.junit.Test
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoadJsModuleTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  private val dispatcher = UnconfinedTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runTest {
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runTest {
     zipline.close()
   }
 
-  @Test fun factoryPopulatesExports(): Unit = runBlocking(dispatcher) {
+  @Test fun factoryPopulatesExports() = runTest {
     val moduleJs = """
       (function (root, factory) {
         if (typeof define === 'function' && define.amd)
@@ -57,7 +57,7 @@ class LoadJsModuleTest {
       .isEqualTo("""{"someValue":4321}""")
   }
 
-  @Test fun factoryReturnsExports(): Unit = runBlocking(dispatcher) {
+  @Test fun factoryReturnsExports() = runTest {
     val moduleJs = """
       (function webpackUniversalModuleDefinition(root, factory) {
         if(typeof exports === 'object' && typeof module === 'object')
@@ -79,7 +79,7 @@ class LoadJsModuleTest {
       .isEqualTo("""{"someValue":1234}""")
   }
 
-  @Test fun loadModuleBytecode(): Unit = runBlocking(dispatcher) {
+  @Test fun loadModuleBytecode() = runTest {
     val moduleJs = """
       define(function () {
         return {
