@@ -15,10 +15,17 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.PassByReference
+import app.cash.zipline.internal.bridge.ReceiveByReference
+import app.cash.zipline.internal.bridge.SendByReference
+import app.cash.zipline.internal.bridge.ziplineServiceAdapter
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -26,89 +33,88 @@ import kotlinx.serialization.json.Json
 
 /** A flow reference is a [Flow] that can be transmitted over a Zipline call. */
 class FlowReference<T> @PublishedApi internal constructor(
-  internal val referenceFlowReference: ZiplineReference<ReferenceFlow>,
+  internal val flowZiplineService: FlowZiplineService,
   internal val itemSerializer: KSerializer<T>,
 ) {
   @OptIn(ExperimentalCoroutinesApi::class)
-  private fun getDecodingFlow(referenceFlow: ReferenceFlow): Flow<T> {
+  private fun getDecodingFlow(flowZiplineService: FlowZiplineService): Flow<T> {
     return channelFlow {
       try {
-        val collector: ZiplineFlowCollector = object : ZiplineFlowCollector {
+        val collector = object : ZiplineFlowCollector {
           override suspend fun emit(value: String) {
             val item = json.decodeFromString(itemSerializer, value)
             this@channelFlow.send(item)
           }
         }
-        val collectorReference = ZiplineReference(collector)
-        referenceFlow.collectJson(collectorReference)
+        flowZiplineService.collectJson(collector)
         this@channelFlow.close()
       } finally {
-        referenceFlowReference.close()
+        flowZiplineService.close()
       }
     }
   }
 
   fun take(): Flow<T> {
-    return when (val referenceFlow = referenceFlowReference.take()) {
-      is RealReferenceFlow<*> -> {
+    return when (flowZiplineService) {
+      is RealFlowZiplineService<*> -> {
         // If it's a RealReferenceFlow, then the instance didn't pass through Zipline. Don't attempt
         // serialization both because it's unnecessary, and because the serializer isn't connected.
-        referenceFlow.flow as Flow<T>
+        flowZiplineService.flow as Flow<T>
       }
-      else -> getDecodingFlow(referenceFlow)
+      else -> getDecodingFlow(flowZiplineService)
     }
   }
 }
 
 fun <T> Flow<T>.asFlowReference(): FlowReference<T> {
   val serializer = DeferredSerializer<T>()
-  val referenceFlow = RealReferenceFlow(this, serializer)
-  val ziplineReference = ZiplineReference<ReferenceFlow>(referenceFlow)
-  return FlowReference(ziplineReference, serializer)
+  val referenceFlow = RealFlowZiplineService(this, serializer)
+  return FlowReference(referenceFlow, serializer)
 }
 
 // Zipline can only bridge interfaces, not implementations, so split this in two.
-internal interface ReferenceFlow : ZiplineService {
-  suspend fun collectJson(collectorReference: ZiplineReference<ZiplineFlowCollector>)
+internal interface FlowZiplineService : ZiplineService {
+  suspend fun collectJson(collector: ZiplineFlowCollector)
 }
 
-private class RealReferenceFlow<T>(
+private class RealFlowZiplineService<T>(
   val flow: Flow<T>,
   private val serializer: KSerializer<T>,
-) : ReferenceFlow {
-  override suspend fun collectJson(
-    collectorReference: ZiplineReference<ZiplineFlowCollector>
-  ) {
+) : FlowZiplineService {
+  override suspend fun collectJson(collector: ZiplineFlowCollector) {
     try {
-      val collector = collectorReference.take()
       flow.collect {
         val value = json.encodeToString(serializer, it)
         collector.emit(value)
       }
     } finally {
-      collectorReference.close()
+      collector.close()
     }
   }
 }
 
 internal class FlowReferenceSerializer<T>(
-  private val ziplineReferenceSerializer: KSerializer<ZiplineReference<ReferenceFlow>>,
   private val itemSerializer: KSerializer<T>,
 ) : KSerializer<FlowReference<T>> {
-  override val descriptor get() = ziplineReferenceSerializer.descriptor
-
-  override fun deserialize(decoder: Decoder): FlowReference<T> {
-    @Suppress("UNCHECKED_CAST")
-    val ziplineReference = ziplineReferenceSerializer.deserialize(decoder)
-    return FlowReference(ziplineReference, itemSerializer)
-  }
+  override val descriptor = PrimitiveSerialDescriptor("FlowReference", PrimitiveKind.STRING)
 
   override fun serialize(encoder: Encoder, value: FlowReference<T>) {
     val itemSerializer = value.itemSerializer
     if (itemSerializer is DeferredSerializer<T>) {
       itemSerializer.delegate = this.itemSerializer
     }
-    ziplineReferenceSerializer.serialize(encoder, value.referenceFlowReference)
+    encoder.encodeSerializableValue(
+      ContextualSerializer(PassByReference::class),
+      SendByReference(value.flowZiplineService, ziplineServiceAdapter()),
+    )
+  }
+
+  override fun deserialize(decoder: Decoder): FlowReference<T> {
+    val reference = decoder.decodeSerializableValue(
+      ContextualSerializer(PassByReference::class),
+    ) as ReceiveByReference
+    val service = reference.take<FlowZiplineService>(ziplineServiceAdapter())
+    return FlowReference(service, itemSerializer)
   }
 }
 

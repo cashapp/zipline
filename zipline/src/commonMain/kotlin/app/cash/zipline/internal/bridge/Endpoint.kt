@@ -17,13 +17,11 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.FlowReference
 import app.cash.zipline.FlowReferenceSerializer
-import app.cash.zipline.ZiplineReference
 import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
@@ -58,10 +56,10 @@ class Endpoint internal constructor(
 
   private fun computeSerializersModule(): SerializersModule {
     return SerializersModule {
-      contextual(SerializableEndpoint::class, SerializableEndpointSerializer(this@Endpoint))
+      contextual(PassByReference::class, PassByReferenceSerializer(this@Endpoint))
       contextual(Throwable::class, ThrowableSerializer)
       contextual(FlowReference::class) {
-        FlowReferenceSerializer(ziplineReferenceSerializer(ziplineServiceAdapter()), it[0])
+        FlowReferenceSerializer(it[0])
       }
 
       include(userSerializersModule ?: EmptySerializersModule)
@@ -123,11 +121,6 @@ class Endpoint internal constructor(
       return inboundHandlers.remove(instanceName) != null
     }
   }
-
-  @PublishedApi
-  internal fun <T : ZiplineService> ziplineReferenceSerializer(
-    adapter: ZiplineServiceAdapter<T>
-  ): KSerializer<ZiplineReference<T>> = ZiplineReferenceSerializer(this, adapter)
 
   fun <T : ZiplineService> bind(name: String, instance: T) {
     error("unexpected call to Endpoint.bind: is the Zipline plugin configured?")

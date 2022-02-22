@@ -22,7 +22,9 @@ import app.cash.zipline.testing.EchoZiplineService
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 
 internal class ZiplineServiceTest {
@@ -76,6 +78,26 @@ internal class ZiplineServiceTest {
     assertEquals(EchoResponse("sup Kevin"), supService.echo(EchoRequest("Kevin")))
     assertEquals(EchoResponse("hello Jake"), helloService.echo(EchoRequest("Jake")))
     assertEquals(EchoResponse("sup Stephen"), supService.echo(EchoRequest("Stephen")))
+  }
+
+  @Test
+  fun closingAnOutboundServiceRemovesItAndPreventsFurtherCalls() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    endpointA.bind<EchoServiceFactory>("factory", FactoryService())
+    val factoryClient = endpointB.take<EchoServiceFactory>("factory")
+    assertEquals(setOf("factory"), endpointA.serviceNames)
+
+    val helloService = factoryClient.create("hello")
+    assertEquals(setOf("factory", "zipline/1"), endpointA.serviceNames)
+
+    assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
+    helloService.close()
+    val failure = assertFailsWith<IllegalStateException> {
+      helloService.echo(EchoRequest("Jake"))
+    }
+    assertTrue("no handler" in (failure.message ?: ""), failure.message)
+    assertEquals(setOf("factory"), endpointA.serviceNames)
   }
 
   interface EchoServiceFactory : ZiplineService {
