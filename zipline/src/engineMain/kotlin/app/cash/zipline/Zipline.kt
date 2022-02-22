@@ -39,6 +39,7 @@ import kotlinx.serialization.modules.SerializersModule
 
 actual class Zipline private constructor(
   val quickJs: QuickJs,
+  dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
 ) {
   private val endpoint = Endpoint(
@@ -100,7 +101,7 @@ actual class Zipline private constructor(
     val jsPlatform = endpoint.take<JsPlatform>(
       name = jsPlatformName,
     )
-    val eventLoop = CoroutineEventLoop(scope, jsPlatform)
+    val eventLoop = CoroutineEventLoop(dispatcher, scope, jsPlatform)
     endpoint.bind<EventLoop>(
       name = eventLoopName,
       instance = eventLoop,
@@ -174,7 +175,7 @@ actual class Zipline private constructor(
       quickJs.evaluate(DEFINE_JS, "define.js")
 
       val scope = CoroutineScope(dispatcher)
-      return Zipline(quickJs, scope)
+      return Zipline(quickJs, dispatcher, scope)
         .apply {
           endpoint.userSerializersModule = serializersModule
         }
