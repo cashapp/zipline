@@ -6,9 +6,8 @@ $dokka.location:app.cash.zipline.internal.bridge/Endpoint/bind/#kotlin.String#Ty
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/clientNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/client-names.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/service-names.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/take/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/take.html
-$dokka.location:app.cash.zipline.internal.bridge/SerializableEndpoint///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-serializable-endpoint/index.html
+$dokka.location:app.cash.zipline.internal.bridge/PassByReference///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-pass-by-reference/index.html
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
-$dokka.location:app.cash.zipline//ZiplineReference/#TypeParam(bounds=[app.cash.zipline.ZiplineService])/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference.html
 $dokka.location:app.cash.zipline//asFlowReference/kotlinx.coroutines.flow.Flow[TypeParam(bounds=[kotlin.Any?])]#/PointingToDeclaration/zipline/app.cash.zipline/as-flow-reference.html
 $dokka.location:app.cash.zipline/FlowReference///PointingToDeclaration/zipline/app.cash.zipline/-flow-reference/index.html
 $dokka.location:app.cash.zipline/FlowReference/take/#/PointingToDeclaration/zipline/app.cash.zipline/-flow-reference/take.html
@@ -75,9 +74,6 @@ $dokka.location:app.cash.zipline/Zipline/take/#kotlin.String/PointingToDeclarati
 $dokka.location:app.cash.zipline/ZiplineApiMismatchException///PointingToDeclaration/zipline/app.cash.zipline/-zipline-api-mismatch-exception/index.html
 $dokka.location:app.cash.zipline/ZiplineApiMismatchException/ZiplineApiMismatchException/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-zipline-api-mismatch-exception/-zipline-api-mismatch-exception.html
 $dokka.location:app.cash.zipline/ZiplineApiMismatchException/message/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-api-mismatch-exception/message.html
-$dokka.location:app.cash.zipline/ZiplineReference///PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/index.html
-$dokka.location:app.cash.zipline/ZiplineReference/close/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/close.html
-$dokka.location:app.cash.zipline/ZiplineReference/take/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-reference/take.html
 $dokka.location:app.cash.zipline/ZiplineService///PointingToDeclaration/zipline/app.cash.zipline/-zipline-service/index.html
 $dokka.location:app.cash.zipline/ZiplineService/close/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-service/close.html
 app.cash.zipline
