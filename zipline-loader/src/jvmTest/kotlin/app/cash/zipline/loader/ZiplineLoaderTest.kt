@@ -23,8 +23,8 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.Buffer
@@ -39,9 +39,9 @@ import okio.fakefilesystem.FakeFileSystem
 @ExperimentalCoroutinesApi
 class ZiplineLoaderTest {
   private val httpClient = FakeZiplineHttpClient()
-  private val dispatcher = UnconfinedTestDispatcher()
+  private val dispatcher = TestCoroutineDispatcher()
   private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private val cacheSize = 64
+  private val cacheSize = 1024 * 1024
   private var nowMillis = 1_000L
 
   private lateinit var loader: ZiplineLoader
@@ -71,7 +71,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun happyPath() = runTest {
+  fun happyPath(): Unit = runBlocking(dispatcher) {
     httpClient.filePathToByteString = mapOf(
       alphaFilePath to alphaBytecode(quickJs),
       bravoFilePath to bravoBytecode(quickJs)
@@ -88,7 +88,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loadManifestFromUrl() = runTest {
+  fun loadManifestFromUrl(): Unit = runBlocking(dispatcher) {
     httpClient.filePathToByteString = mapOf(
       manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
       alphaFilePath to alphaBytecode(quickJs),
@@ -98,6 +98,40 @@ class ZiplineLoaderTest {
     loader.load(zipline, manifestPath)
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
+      """
+      |alpha loaded
+      |bravo loaded
+      |""".trimMargin()
+    )
+  }
+
+  @Test
+  fun loaderUsesCache(): Unit = runBlocking(dispatcher) {
+    // load, no cache hit, download
+    httpClient.filePathToByteString = mapOf(
+      manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
+      alphaFilePath to alphaBytecode(quickJs),
+      bravoFilePath to bravoBytecode(quickJs)
+    )
+    val ziplineColdCache = Zipline.create(dispatcher)
+    loader.load(ziplineColdCache, manifestPath)
+    assertEquals(
+      ziplineColdCache.quickJs.evaluate("globalThis.log", "assert.js"),
+      """
+      |alpha loaded
+      |bravo loaded
+      |""".trimMargin()
+    )
+
+    // load, cache hit, no download
+    httpClient.filePathToByteString = mapOf(
+      manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
+      // Note no actual alpha/bravo files are available on the network
+    )
+    val ziplineWarmedCache = Zipline.create(dispatcher)
+    loader.load(ziplineWarmedCache, manifestPath)
+    assertEquals(
+      ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
       |alpha loaded
       |bravo loaded

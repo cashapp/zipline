@@ -109,7 +109,7 @@ class ZiplineCache internal constructor(
   }
 
   /**
-   * Returns true if the file was absent and is now `DIRTY`. The caller is now the exclusive owner of this file
+   * Returns file metadata if the file was absent and is now `DIRTY`. The caller is now the exclusive owner of this file
    * and should proceed to write the file to the file system.
    */
   private fun openForWrite(

@@ -50,6 +50,7 @@ class EmojiSearchZipline(
     httpClient = OkHttpZiplineHttpClient(baseUrl, client),
     fileSystem = FileSystem.SYSTEM,
     cacheDirectory = cacheDirectory,
+
   )
 
   fun produceModelsIn(

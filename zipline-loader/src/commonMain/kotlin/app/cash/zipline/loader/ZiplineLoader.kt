@@ -29,7 +29,6 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.Buffer
 import okio.ByteString
-import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path
 
@@ -42,10 +41,10 @@ import okio.Path
 class ZiplineLoader(
   val dispatcher: CoroutineDispatcher,
   val httpClient: ZiplineHttpClient,
-  fileSystem: FileSystem,
+  val fileSystem: FileSystem,
   cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
   cacheDirectory: Path,
-  cacheMaxSizeInBytes: Int = 100 * 1024 * 1024, // 100mb
+  cacheMaxSizeInBytes: Int = 100 * 1024 * 1024, // 100 MiB
   nowMs: () -> Long,
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
@@ -66,14 +65,8 @@ class ZiplineLoader(
   )
 
   suspend fun load(zipline: Zipline, url: String) {
-    // Use the url SHA to write manifest to disk
-    val urlSha = url.encodeUtf8().sha256()
-
-    // Assumes that manifests are immutable by url
-    val manifestByteString = cache.getOrPut(urlSha) {
-      concurrentDownloadsSemaphore.withPermit {
-        httpClient.download(url)
-      }
+    val manifestByteString = concurrentDownloadsSemaphore.withPermit {
+      httpClient.download(url)
     }
 
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestByteString.utf8())
