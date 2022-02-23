@@ -54,13 +54,13 @@ class ZiplineLoaderTest {
     quickJs = QuickJs.create()
     fileSystem = FakeFileSystem()
     loader = ZiplineLoader(
-      httpClient = httpClient,
       dispatcher = dispatcher,
+      httpClient = httpClient,
       fileSystem = fileSystem,
-      cacheDirectory = "/zipline/cache".toPath(),
       cacheDbDriver = driver,
-      cacheMaxSizeInBytes = cacheSize,
-      nowMs = { nowMillis }
+      cacheDirectory = "/zipline/cache".toPath(),
+      nowMs = { nowMillis },
+      cacheMaxSizeInBytes = cacheSize
     )
   }
 

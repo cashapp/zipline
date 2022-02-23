@@ -17,8 +17,10 @@ package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.asFlowReference
+import app.cash.zipline.loader.DriverFactory
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
+import java.time.Clock
 import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
@@ -45,12 +47,14 @@ class EmojiSearchZipline(
   private val manifestPath = "/manifest.zipline.json"
   private val moduleName = "./zipline-root-presenters.js"
 
+  private val driver = DriverFactory().createDriver()
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = OkHttpZiplineHttpClient(baseUrl, client),
     fileSystem = FileSystem.SYSTEM,
     cacheDirectory = cacheDirectory,
-
+    cacheDbDriver = driver,
+    nowMs = { Clock.systemDefaultZone().instant().toEpochMilli() },
   )
 
   fun produceModelsIn(

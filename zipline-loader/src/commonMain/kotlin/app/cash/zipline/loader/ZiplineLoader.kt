@@ -44,8 +44,8 @@ class ZiplineLoader(
   val fileSystem: FileSystem,
   cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
   cacheDirectory: Path,
-  cacheMaxSizeInBytes: Int = 100 * 1024 * 1024, // 100 MiB
-  nowMs: () -> Long,
+  nowMs: () -> Long, // 100 MiB
+  cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3
