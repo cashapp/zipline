@@ -42,6 +42,8 @@ class ZiplineLoader(
   val dispatcher: CoroutineDispatcher,
   val httpClient: ZiplineHttpClient,
   val fileSystem: FileSystem,
+  val resourceFileSystem: FileSystem,
+  val resourceDirectory: Path,
   cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
   cacheDirectory: Path,
   nowMs: () -> Long, // 100 MiB
@@ -65,6 +67,7 @@ class ZiplineLoader(
   )
 
   suspend fun load(zipline: Zipline, url: String) {
+    // TODO fallback to manifest shipped in resources for offline support
     val manifestByteString = concurrentDownloadsSemaphore.withPermit {
       httpClient.download(url)
     }
@@ -100,12 +103,21 @@ class ZiplineLoader(
   ) {
     val upstreams = mutableListOf<Deferred<*>>()
 
+    /** Attempt to load from, in prioritized order: resources, cache, network */
     suspend fun load() {
-      val ziplineFileBytes = cache.getOrPut(module.sha256) {
-        concurrentDownloadsSemaphore.withPermit {
-          httpClient.download(module.url)
+      val resourcePath = resourceDirectory / module.sha256
+      val ziplineFileBytes = if (resourceFileSystem.exists(resourcePath)) {
+        resourceFileSystem.read(resourcePath) {
+          readByteString()
+        }
+      } else {
+        cache.getOrPut(module.sha256) {
+          concurrentDownloadsSemaphore.withPermit {
+            httpClient.download(module.url)
+          }
         }
       }
+
       val ziplineFile = ZiplineFile.read(Buffer().write(ziplineFileBytes))
       upstreams.awaitAll()
       withContext(dispatcher) {

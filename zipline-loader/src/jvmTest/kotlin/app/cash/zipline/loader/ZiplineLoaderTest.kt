@@ -47,16 +47,21 @@ class ZiplineLoaderTest {
   private lateinit var loader: ZiplineLoader
 
   private lateinit var fileSystem: FileSystem
+  private lateinit var resourceFileSystem: FileSystem
+  private val resourceDirectory = "/zipline".toPath()
   private lateinit var quickJs: QuickJs
 
   @BeforeTest
   fun setUp() {
     quickJs = QuickJs.create()
     fileSystem = FakeFileSystem()
+    resourceFileSystem = FakeFileSystem()
     loader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
       fileSystem = fileSystem,
+      resourceFileSystem = resourceFileSystem,
+      resourceDirectory = resourceDirectory,
       cacheDbDriver = driver,
       cacheDirectory = "/zipline/cache".toPath(),
       nowMs = { nowMillis },
@@ -127,6 +132,34 @@ class ZiplineLoaderTest {
     httpClient.filePathToByteString = mapOf(
       manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
       // Note no actual alpha/bravo files are available on the network
+    )
+    val ziplineWarmedCache = Zipline.create(dispatcher)
+    loader.load(ziplineWarmedCache, manifestPath)
+    assertEquals(
+      ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
+      """
+      |alpha loaded
+      |bravo loaded
+      |""".trimMargin()
+    )
+  }
+
+  // TODO check resources for manifest too, not only network
+  @Test
+  fun loaderUsesResourcesBeforeCache(): Unit = runBlocking(dispatcher) {
+    // seed the resources FS with zipline files
+    resourceFileSystem.createDirectories(resourceDirectory)
+    resourceFileSystem.write(resourceDirectory / alphaBytecode(quickJs).sha256()) {
+      write(alphaBytecode(quickJs))
+    }
+    resourceFileSystem.write(resourceDirectory / bravoBytecode(quickJs).sha256()) {
+      write(bravoBytecode(quickJs))
+    }
+
+    // load, resources hit, no download via cache
+    httpClient.filePathToByteString = mapOf(
+      manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
+      // Note no actual alpha/bravo files are available on the cache / network
     )
     val ziplineWarmedCache = Zipline.create(dispatcher)
     loader.load(ziplineWarmedCache, manifestPath)
