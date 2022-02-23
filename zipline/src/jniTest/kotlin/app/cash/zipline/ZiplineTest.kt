@@ -31,31 +31,35 @@ import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
-import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class ZiplineTest {
-  private val dispatcher = UnconfinedTestDispatcher()
+  private val dispatcher = TestCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher)
   private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
-  @Before fun setUp() = runTest {
+  @Before
+  fun setUp(): Unit = runBlocking(dispatcher) {
     zipline.loadTestingJs()
     uncaughtExceptionHandler.setUp()
   }
 
-  @After fun tearDown() = runTest {
+  @After
+  fun tearDown(): Unit = runBlocking(dispatcher) {
     zipline.close()
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun cannotTakeOrBindServiceAfterClose() = runTest {
+  @Test
+  fun cannotTakeOrBindServiceAfterClose(): Unit = runBlocking(dispatcher) {
     zipline.close()
     assertThat(assertFailsWith<IllegalStateException> {
       zipline.take<EchoService>("helloService")
@@ -65,7 +69,8 @@ class ZiplineTest {
     })
   }
 
-  @Test fun callServiceAfterCloseFailsGracefully() = runTest {
+  @Test
+  fun callServiceAfterCloseFailsGracefully(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
     val service = zipline.helloService
 
@@ -75,7 +80,8 @@ class ZiplineTest {
     }).hasMessageThat().isEqualTo("Zipline closed")
   }
 
-  @Test fun jvmCallJsService() = runTest {
+  @Test
+  fun jvmCallJsService(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
     assertThat(zipline.helloService.echo(EchoRequest("Jake")))
@@ -84,14 +90,16 @@ class ZiplineTest {
       .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
   }
 
-  @Test fun jsCallJvmService() = runTest {
+  @Test
+  fun jsCallJvmService(): Unit = runBlocking(dispatcher) {
     zipline.bind<EchoService>("supService", JvmEchoService("sup"))
 
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')"))
       .isEqualTo("JavaScript received 'sup from the JVM, homie' from the JVM")
   }
 
-  @Test fun suspendingJvmCallJsService() = runTest {
+  @Test
+  fun suspendingJvmCallJsService(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
 
     val jsSuspendingEchoService = zipline.take<SuspendingEchoService>("jsSuspendingEchoService")
@@ -107,7 +115,8 @@ class ZiplineTest {
       .isEqualTo(EchoResponse("hello from suspending JavaScript, Jake"))
   }
 
-  @Test fun suspendingJsCallJvmService() = runTest {
+  @Test
+  fun suspendingJsCallJvmService(): Unit = runBlocking(dispatcher) {
     val jvmSuspendingEchoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
         return EchoResponse("hello from the suspending JVM, ${request.message}")
@@ -128,7 +137,8 @@ class ZiplineTest {
    * Don't crash and don't log exceptions if a suspending call completes after the QuickJS instance
    * is closed. Just ignore the response.
    */
-  @Test fun suspendingJvmCallCompletesAfterClose() = runTest {
+  @Test
+  fun suspendingJvmCallCompletesAfterClose(): Unit = runBlocking(dispatcher) {
     val lock = Semaphore(1)
     val jvmSuspendingEchoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
@@ -153,7 +163,8 @@ class ZiplineTest {
     assertThat(e).hasMessageThat().isEqualTo("QuickJs instance was closed")
   }
 
-  @Test fun suspendingJsCallCompletesAfterClose() = runTest {
+  @Test
+  fun suspendingJsCallCompletesAfterClose(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
 
     val jsSuspendingEchoService =
@@ -170,7 +181,8 @@ class ZiplineTest {
     }
   }
 
-  @Test fun serviceNamesAndClientNames() = runTest {
+  @Test
+  fun serviceNamesAndClientNames(): Unit = runBlocking(dispatcher) {
     assertThat(zipline.serviceNames).containsExactly(
       eventLoopName,
       consoleName,
@@ -203,12 +215,14 @@ class ZiplineTest {
     )
   }
 
-  @Test fun jvmCallIncompatibleJsService() = runTest {
+  @Test
+  fun jvmCallIncompatibleJsService(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
     assertThat(assertFailsWith<Exception> {
       zipline.take<PotatoService>("helloService").echo()
-    }).hasMessageThat().startsWith("""
+    }).hasMessageThat().startsWith(
+      """
       ZiplineApiMismatchException: no such method (incompatible API versions?)
       	called:
       		fun echo(): app.cash.zipline.testing.EchoResponse
@@ -220,12 +234,14 @@ class ZiplineTest {
     )
   }
 
-  @Test fun suspendingJvmCallIncompatibleJsService() = runTest {
+  @Test
+  fun suspendingJvmCallIncompatibleJsService(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
     assertThat(assertFailsWith<Exception> {
       zipline.take<SuspendingPotatoService>("helloService").echo()
-    }).hasMessageThat().startsWith("""
+    }).hasMessageThat().startsWith(
+      """
       ZiplineApiMismatchException: no such method (incompatible API versions?)
       	called:
       		suspend fun echo(): app.cash.zipline.testing.EchoResponse
@@ -237,12 +253,14 @@ class ZiplineTest {
     )
   }
 
-  @Test fun jsCallIncompatibleJvmService() = runTest {
+  @Test
+  fun jsCallIncompatibleJvmService(): Unit = runBlocking(dispatcher) {
     zipline.bind<PotatoService>("supService", JvmPotatoService("sup"))
 
     assertThat(assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
-    }).hasMessageThat().startsWith("""
+    }).hasMessageThat().startsWith(
+      """
       app.cash.zipline.ZiplineApiMismatchException: no such method (incompatible API versions?)
       	called:
       		fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
@@ -254,7 +272,8 @@ class ZiplineTest {
     )
   }
 
-  @Test fun suspendingJsCallIncompatibleJvmService() = runTest {
+  @Test
+  fun suspendingJsCallIncompatibleJvmService(): Unit = runBlocking(dispatcher) {
     zipline.bind<PotatoService>("jvmSuspendingPotatoService", JvmPotatoService("Veyndan"))
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingPotatoService('Veyndan')")
@@ -262,7 +281,8 @@ class ZiplineTest {
       .isNull()
 
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingPotatoException") as String?)
-      .startsWith("""
+      .startsWith(
+        """
         Exception: app.cash.zipline.ZiplineApiMismatchException: no such method (incompatible API versions?)
         	called:
         		suspend fun echo(): app.cash.zipline.testing.EchoResponse
