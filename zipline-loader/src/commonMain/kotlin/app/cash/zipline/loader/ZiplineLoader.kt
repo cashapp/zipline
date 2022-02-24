@@ -30,6 +30,7 @@ import kotlinx.serialization.json.Json
 import okio.Buffer
 import okio.ByteString
 import okio.FileSystem
+import okio.IOException
 import okio.Path
 
 /**
@@ -68,8 +69,16 @@ class ZiplineLoader(
 
   suspend fun load(zipline: Zipline, url: String) {
     // TODO fallback to manifest shipped in resources for offline support
-    val manifestByteString = concurrentDownloadsSemaphore.withPermit {
-      httpClient.download(url)
+    val manifestByteString = try {
+      concurrentDownloadsSemaphore.withPermit {
+        httpClient.download(url)
+      }
+    } catch (e: IOException) {
+      // If manifest fails to load over network, fallback to prebuilt in resources
+      val prebuiltManifestPath = resourceDirectory / PREBUILT_MANIFEST_FILE_NAME
+      resourceFileSystem.read(prebuiltManifestPath) {
+        readByteString()
+      }
     }
 
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestByteString.utf8())
@@ -129,6 +138,10 @@ class ZiplineLoader(
   /** For downloading patches instead of full-sized files. */
   suspend fun localFileHashes(): List<ByteString> {
     TODO()
+  }
+
+  companion object {
+    internal const val PREBUILT_MANIFEST_FILE_NAME = "manifest.zipline.json"
   }
 }
 

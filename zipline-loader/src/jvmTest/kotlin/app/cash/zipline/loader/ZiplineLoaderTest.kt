@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -144,9 +145,8 @@ class ZiplineLoaderTest {
     )
   }
 
-  // TODO check resources for manifest too, not only network
   @Test
-  fun loaderUsesResourcesBeforeCache(): Unit = runBlocking(dispatcher) {
+  fun loaderUsesResourcesBeforeCacheButManifestOverNetwork(): Unit = runBlocking(dispatcher) {
     // seed the resources FS with zipline files
     resourceFileSystem.createDirectories(resourceDirectory)
     resourceFileSystem.write(resourceDirectory / alphaBytecode(quickJs).sha256()) {
@@ -160,6 +160,35 @@ class ZiplineLoaderTest {
     httpClient.filePathToByteString = mapOf(
       manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
       // Note no actual alpha/bravo files are available on the cache / network
+    )
+    val ziplineWarmedCache = Zipline.create(dispatcher)
+    loader.load(ziplineWarmedCache, manifestPath)
+    assertEquals(
+      ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
+      """
+      |alpha loaded
+      |bravo loaded
+      |""".trimMargin()
+    )
+  }
+
+  @Test
+  fun loaderUsesResourcesForPrebuiltManifestWhenNetworkOffline(): Unit = runBlocking(dispatcher) {
+    // seed the resources FS with zipline manifest and files
+    resourceFileSystem.createDirectories(resourceDirectory)
+    resourceFileSystem.write(resourceDirectory / PREBUILT_MANIFEST_FILE_NAME) {
+      write(Json.encodeToString(manifest(quickJs)).encodeUtf8())
+    }
+    resourceFileSystem.write(resourceDirectory / alphaBytecode(quickJs).sha256()) {
+      write(alphaBytecode(quickJs))
+    }
+    resourceFileSystem.write(resourceDirectory / bravoBytecode(quickJs).sha256()) {
+      write(bravoBytecode(quickJs))
+    }
+
+    // load, resources hit, no download via cache
+    httpClient.filePathToByteString = mapOf(
+      // Note no actual manifest/alpha/bravo files are available on the cache / network
     )
     val ziplineWarmedCache = Zipline.create(dispatcher)
     loader.load(ziplineWarmedCache, manifestPath)
