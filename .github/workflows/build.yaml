@@ -31,7 +31,7 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
       - uses: actions/setup-java@v2
         with:
@@ -75,7 +75,7 @@ jobs:
     runs-on: macos-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: gradle/wrapper-validation-action@v1
       - uses: actions/setup-java@v2
         with:
@@ -96,7 +96,7 @@ jobs:
       - android-emulator
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-java@v2
         with:
           distribution: 'zulu'
