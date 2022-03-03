@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.ziplineServiceAdapter
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -26,6 +27,10 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.serializer
 
 internal class ZiplineServiceTest {
   @Test
@@ -81,6 +86,30 @@ internal class ZiplineServiceTest {
   }
 
   @Test
+  fun registerSerializerToSerializeServicesAsMembers() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val serializersModule = SerializersModule {
+      contextual(EchoService::class, ziplineServiceAdapter())
+    }
+    endpointA.userSerializersModule = serializersModule
+    endpointB.userSerializersModule = serializersModule
+
+    val serializer = serializersModule.serializer<EchoService>()
+    println(serializer)
+
+    endpointA.bind<ServiceAndHashFactory>("factory", RealServiceAndHashFactory())
+    val factoryClient = endpointB.take<ServiceAndHashFactory>("factory")
+
+    val (helloService, helloHash) = factoryClient.create("hello")
+    val (supService, supHash) = factoryClient.create("sup")
+
+    assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
+    assertEquals(EchoResponse("sup Kevin"), supService.echo(EchoRequest("Kevin")))
+    assertEquals(EchoResponse("hello Jake"), helloService.echo(EchoRequest("Jake")))
+    assertEquals(EchoResponse("sup Stephen"), supService.echo(EchoRequest("Stephen")))
+  }
+
+  @Test
   fun closingAnOutboundServiceRemovesItAndPreventsFurtherCalls() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
@@ -113,6 +142,23 @@ internal class ZiplineServiceTest {
   class FactoryService : EchoServiceFactory {
     override fun create(greeting: String): EchoService {
       return GreetingService(greeting)
+    }
+  }
+
+  @Serializable
+  data class ServiceAndHash(
+    @Contextual
+    val service: EchoService,
+    val hash: String,
+  )
+
+  interface ServiceAndHashFactory : ZiplineService {
+    fun create(greeting: String): ServiceAndHash
+  }
+
+  class RealServiceAndHashFactory : ServiceAndHashFactory {
+    override fun create(greeting: String): ServiceAndHash {
+      return ServiceAndHash(service = GreetingService(greeting), hash = "1234")
     }
   }
 }
