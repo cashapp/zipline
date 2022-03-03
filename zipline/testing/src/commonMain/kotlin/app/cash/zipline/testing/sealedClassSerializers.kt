@@ -15,10 +15,9 @@
  */
 package app.cash.zipline.testing
 
-import app.cash.zipline.FlowReference
 import app.cash.zipline.ZiplineService
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.modules.SerializersModule
 
 @Serializable
 sealed class SealedMessage {
@@ -31,5 +30,5 @@ sealed class SealedMessage {
 
 interface SealedClassMessageService : ZiplineService {
   fun colorSwap(request: SealedMessage): SealedMessage
-  fun colorSwapFlow(request: FlowReference<SealedMessage>): FlowReference<SealedMessage>
+  fun colorSwapFlow(request: Flow<SealedMessage>): Flow<SealedMessage>
 }

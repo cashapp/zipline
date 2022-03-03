@@ -20,6 +20,7 @@ import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
+import org.jetbrains.kotlin.ir.builders.IrBlockBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irExprBody
@@ -28,6 +29,7 @@ import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
+import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
@@ -126,6 +128,7 @@ internal class BridgedInterface(
     type: IrType,
     name: Name
   ): IrProperty {
+    // val serializer_0: KSerializer<EchoRequest> = ...
     val kSerializerOfT = ziplineApis.kSerializer.typeWith(type)
     return irVal(
       pluginContext = pluginContext,
@@ -133,39 +136,62 @@ internal class BridgedInterface(
       declaringClass = declaringClass,
       propertyName = name,
     ) {
-      if (type.isSubtypeOfClass(ziplineApis.ziplineService)) {
+      irExprBody(
+        serializerExpression(type, contextParameter)
+      )
+    }
+  }
+
+  private fun IrBlockBuilder.serializerExpression(
+    type: IrType,
+    contextParameter: IrValueParameter,
+  ): IrExpression {
+    val kSerializerOfT = ziplineApis.kSerializer.typeWith(type)
+    when {
+      type.isSubtypeOfClass(ziplineApis.ziplineService) -> {
+        // EchoService.Companion.Adapter
         // TODO(jwilson): this could be recursive (and fail with a stackoverflow) if a service
         //     has functions that take its own type. Fix by recursively applying the adapter
         //     transform?
-        irExprBody(
-          AdapterGenerator(
-            pluginContext,
-            messageCollector,
-            ziplineApis,
-            this@BridgedInterface.scope,
-            type.getClass()!!,
-          ).adapterExpression()
-        )
-      } else {
-        // val serializer_0: KSerializer<EchoRequest> = context.serializersModule.serializer<EchoRequest>()
+        return AdapterGenerator(
+          pluginContext,
+          messageCollector,
+          ziplineApis,
+          this@BridgedInterface.scope,
+          type.getClass()!!,
+        ).adapterExpression()
+      }
+
+      type.classFqName == ziplineApis.flowFqName -> {
+        // flowSerializer<Message>(context.serializersModule.serializer<Message>())
+        val flowType = (type as IrSimpleType).arguments[0] as IrType
+        return irCall(
+          callee = ziplineApis.flowSerializerFunction,
+          type = kSerializerOfT,
+        ).apply {
+          putTypeArgument(0, flowType)
+          putValueArgument(0, serializerExpression(flowType, contextParameter))
+        }
+      }
+
+      else -> {
+        // context.serializersModule.serializer<EchoRequest>()
         val serializersModuleProperty = when (contextParameter.type.classFqName) {
           ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextSerializersModule
           ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextSerializersModule
           else -> error("unexpected Context type")
         }
-        irExprBody(
-          irCall(
-            callee = ziplineApis.serializerFunction,
-            type = kSerializerOfT,
+        return irCall(
+          callee = ziplineApis.serializerFunction,
+          type = kSerializerOfT,
+        ).apply {
+          putTypeArgument(0, type)
+          extensionReceiver = irCall(
+            callee = serializersModuleProperty.owner.getter!!,
           ).apply {
-            putTypeArgument(0, type)
-            extensionReceiver = irCall(
-              callee = serializersModuleProperty.owner.getter!!,
-            ).apply {
-              dispatchReceiver = irGet(contextParameter)
-            }
+            dispatchReceiver = irGet(contextParameter)
           }
-        )
+        }
       }
     }
   }

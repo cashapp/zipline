@@ -15,8 +15,6 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.FlowReference
-import app.cash.zipline.FlowReferenceSerializer
 import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
@@ -58,9 +56,6 @@ class Endpoint internal constructor(
     return SerializersModule {
       contextual(PassByReference::class, PassByReferenceSerializer(this@Endpoint))
       contextual(Throwable::class, ThrowableSerializer)
-      contextual(FlowReference::class) {
-        FlowReferenceSerializer(it[0])
-      }
 
       include(userSerializersModule ?: EmptySerializersModule)
     }

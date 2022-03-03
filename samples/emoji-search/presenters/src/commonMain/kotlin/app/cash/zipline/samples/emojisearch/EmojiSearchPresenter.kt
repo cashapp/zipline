@@ -15,11 +15,11 @@
  */
 package app.cash.zipline.samples.emojisearch
 
-import app.cash.zipline.FlowReference
 import app.cash.zipline.ZiplineService
+import kotlinx.coroutines.flow.Flow
 
 interface EmojiSearchPresenter : ZiplineService {
   suspend fun produceModels(
-    eventsReference: FlowReference<EmojiSearchEvent>
-  ): FlowReference<EmojiSearchViewModel>
+    events: Flow<EmojiSearchEvent>
+  ): Flow<EmojiSearchViewModel>
 }

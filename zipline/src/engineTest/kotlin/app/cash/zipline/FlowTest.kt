@@ -20,6 +20,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
@@ -27,23 +28,21 @@ import kotlinx.coroutines.runBlocking
 
 internal class FlowTest {
   interface FlowEchoService : ZiplineService {
-    fun createFlow(message: String, count: Int): FlowReference<String>
-    suspend fun flowParameter(flowReference: FlowReference<String>): Int
+    fun createFlow(message: String, count: Int): Flow<String>
+    suspend fun flowParameter(flow: Flow<String>): Int
   }
 
   class RealFlowEchoService : FlowEchoService {
-    override fun createFlow(message: String, count: Int): FlowReference<String> {
-      val flow = flow {
+    override fun createFlow(message: String, count: Int): Flow<String> {
+      return flow {
         for (i in 0 until count) {
           delay(10) // Ensure we can send async through the reference.
           emit("$i $message")
         }
       }
-      return flow.asFlowReference()
     }
 
-    override suspend fun flowParameter(flowReference: FlowReference<String>): Int {
-      val flow = flowReference.take()
+    override suspend fun flowParameter(flow: Flow<String>): Int {
       return flow.count()
     }
   }
@@ -58,8 +57,7 @@ internal class FlowTest {
     val initialServiceNames = endpointA.serviceNames
     val initialClientNames = endpointA.clientNames
 
-    val flowReference = client.createFlow("hello", 3)
-    val flow = flowReference.take()
+    val flow = client.createFlow("hello", 3)
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
 
     // Confirm that no services or clients were leaked.
@@ -85,7 +83,7 @@ internal class FlowTest {
     }
 
     val deferredCount = async {
-      client.flowParameter(flow.asFlowReference())
+      client.flowParameter(flow)
     }
 
     assertEquals(3, deferredCount.await())
@@ -98,8 +96,7 @@ internal class FlowTest {
   @Test
   fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking {
     val service = RealFlowEchoService()
-    val flowReference = service.createFlow("hello", 3)
-    val flow = flowReference.take()
+    val flow = service.createFlow("hello", 3)
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
   }
 }

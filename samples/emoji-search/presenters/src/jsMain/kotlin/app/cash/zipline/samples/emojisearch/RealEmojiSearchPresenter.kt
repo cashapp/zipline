@@ -1,7 +1,5 @@
 package app.cash.zipline.samples.emojisearch
 
-import app.cash.zipline.FlowReference
-import app.cash.zipline.asFlowReference
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
@@ -23,16 +21,15 @@ class RealEmojiSearchPresenter(
   )
 
   override suspend fun produceModels(
-    eventsReference: FlowReference<EmojiSearchEvent>
-  ): FlowReference<EmojiSearchViewModel> {
+    events: Flow<EmojiSearchEvent>
+  ): Flow<EmojiSearchViewModel> {
     return coroutineScope {
-      val flow: Flow<EmojiSearchViewModel> = channelFlow {
+      channelFlow {
         send(EmojiSearchViewModel("", listOf(loadingImage)))
 
         loadImageIndex()
         send(produceModel())
 
-        val events = eventsReference.take()
         events.collectLatest { event ->
           when (event) {
             is EmojiSearchEvent.SearchTermEvent -> {
@@ -42,7 +39,6 @@ class RealEmojiSearchPresenter(
           }
         }
       }
-      flow.asFlowReference()
     }
   }
 
