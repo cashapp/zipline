@@ -16,7 +16,6 @@
 package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.Zipline
-import app.cash.zipline.asFlowReference
 import app.cash.zipline.loader.DriverFactory
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
@@ -73,10 +72,8 @@ class EmojiSearchZipline(
       )
       val presenter = zipline.take<EmojiSearchPresenter>("emojiSearchPresenter")
 
-      val eventsFlowReference = eventFlow.asFlowReference()
-      val modelsFlowReference = presenter.produceModels(eventsFlowReference)
+      val modelsFlow = presenter.produceModels(eventFlow)
 
-      val modelsFlow = modelsFlowReference.take()
       modelsStateFlow.emitAll(modelsFlow)
     }
 

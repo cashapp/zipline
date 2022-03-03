@@ -66,8 +66,7 @@ class SealedClassSerializersTest {
       emit(BlueMessage("b"))
       emit(RedMessage("c"))
     }
-    val swappedFlowReference = service.colorSwapFlow(sealedMessageFlow.asFlowReference())
-    val swappedFlow = swappedFlowReference.take()
+    val swappedFlow = service.colorSwapFlow(sealedMessageFlow)
 
     assertThat(swappedFlow.toList()).containsExactly(
       BlueMessage("a"),
