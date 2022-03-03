@@ -8,9 +8,6 @@ $dokka.location:app.cash.zipline.internal.bridge/Endpoint/serviceNames/#/Pointin
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/take/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/take.html
 $dokka.location:app.cash.zipline.internal.bridge/PassByReference///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-pass-by-reference/index.html
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
-$dokka.location:app.cash.zipline//asFlowReference/kotlinx.coroutines.flow.Flow[TypeParam(bounds=[kotlin.Any?])]#/PointingToDeclaration/zipline/app.cash.zipline/as-flow-reference.html
-$dokka.location:app.cash.zipline/FlowReference///PointingToDeclaration/zipline/app.cash.zipline/-flow-reference/index.html
-$dokka.location:app.cash.zipline/FlowReference/take/#/PointingToDeclaration/zipline/app.cash.zipline/-flow-reference/take.html
 $dokka.location:app.cash.zipline/InterruptHandler///PointingToDeclaration/zipline/app.cash.zipline/-interrupt-handler/index.html
 $dokka.location:app.cash.zipline/InterruptHandler/poll/#/PointingToDeclaration/zipline/app.cash.zipline/-interrupt-handler/poll.html
 $dokka.location:app.cash.zipline/MemoryUsage///PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/index.html
