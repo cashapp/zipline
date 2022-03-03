@@ -18,9 +18,13 @@ package app.cash.zipline.testing
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.serialization.modules.SerializersModule
 
 /** Returns a pair of endpoints connected to each other for testing. */
-internal fun newEndpointPair(scope: CoroutineScope): Pair<Endpoint, Endpoint> {
+internal fun newEndpointPair(
+  scope: CoroutineScope,
+  serializersModule: SerializersModule? = null,
+): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
     val a: Endpoint = Endpoint(scope, object : CallChannel {
       override fun serviceNamesArray(): Array<String> {
@@ -54,5 +58,7 @@ internal fun newEndpointPair(scope: CoroutineScope): Pair<Endpoint, Endpoint> {
     val b: Endpoint = Endpoint(scope, a.inboundChannel)
   }
 
+  pair.a.userSerializersModule = serializersModule
+  pair.b.userSerializersModule = serializersModule
   return pair.a to pair.b
 }
