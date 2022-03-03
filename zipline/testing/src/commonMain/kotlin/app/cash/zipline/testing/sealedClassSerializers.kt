@@ -30,5 +30,5 @@ sealed class SealedMessage {
 
 interface SealedClassMessageService : ZiplineService {
   fun colorSwap(request: SealedMessage): SealedMessage
-  fun colorSwapFlow(request: Flow<SealedMessage>): Flow<SealedMessage>
+  fun colorSwapFlow(flow: Flow<SealedMessage>): Flow<SealedMessage>
 }

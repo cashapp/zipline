@@ -19,7 +19,7 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.testing.SealedMessage.BlueMessage
 import app.cash.zipline.testing.SealedMessage.RedMessage
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 
 class JsSealedClassMessageService : SealedClassMessageService {
   override fun colorSwap(request: SealedMessage): SealedMessage {
@@ -29,13 +29,7 @@ class JsSealedClassMessageService : SealedClassMessageService {
     }
   }
 
-  override fun colorSwapFlow(flow: Flow<SealedMessage>): Flow<SealedMessage> {
-    return flow {
-      flow.collect { message ->
-        emit(colorSwap(message))
-      }
-    }
-  }
+  override fun colorSwapFlow(flow: Flow<SealedMessage>) = flow.map(::colorSwap)
 }
 
 private val zipline by lazy { Zipline.get() }
