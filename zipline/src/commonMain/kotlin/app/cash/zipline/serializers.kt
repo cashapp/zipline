@@ -41,7 +41,7 @@ import kotlinx.serialization.KSerializer
  * Finally, annotate the service property with `@Contextual`. This instructs Kotlin serialization to
  * use the registered serializer.
  *
- * ```
+ * ```kotlin
  * @Serializable
  * data class ServiceCreatedResult(
  *   val greeting: String,
