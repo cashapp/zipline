@@ -96,9 +96,6 @@ internal class ZiplineServiceTest {
     }
     val (endpointA, endpointB) = newEndpointPair(this, serializersModule)
 
-    val serializer = serializersModule.serializer<EchoService>()
-    println(serializer)
-
     endpointA.bind<ServiceAndHashFactory>("factory", RealServiceAndHashFactory())
     val factoryClient = endpointB.take<ServiceAndHashFactory>("factory")
 
