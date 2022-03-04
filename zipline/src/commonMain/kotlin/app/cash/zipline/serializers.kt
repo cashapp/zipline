@@ -34,7 +34,7 @@ import kotlinx.serialization.KSerializer
  * Next, use that `SerializersModule` when you create your Zipline instance, in both the host
  * application and the Kotlin/JS code:
  *
- * ```
+ * ```kotlin
  * val zipline = Zipline.create(dispatcher, mySerializersModule)
  * ```
  *
