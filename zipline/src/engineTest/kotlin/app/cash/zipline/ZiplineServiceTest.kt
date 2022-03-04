@@ -29,7 +29,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
-import kotlinx.serialization.serializer
 
 internal class ZiplineServiceTest {
   @Test
@@ -96,8 +95,8 @@ internal class ZiplineServiceTest {
     }
     val (endpointA, endpointB) = newEndpointPair(this, serializersModule)
 
-    endpointA.bind<ServiceAndHashFactory>("factory", RealServiceAndHashFactory())
-    val factoryClient = endpointB.take<ServiceAndHashFactory>("factory")
+    endpointA.bind<GreetingAndEchoServiceFactory>("factory", RealGreetingAndEchoServiceFactory())
+    val factoryClient = endpointB.take<GreetingAndEchoServiceFactory>("factory")
 
     val (helloGreeting, helloService) = factoryClient.create("hello")
     val (supGreeting, supService) = factoryClient.create("sup")
@@ -152,11 +151,11 @@ internal class ZiplineServiceTest {
     @Contextual val service: EchoService,
   )
 
-  interface ServiceAndHashFactory : ZiplineService {
+  interface GreetingAndEchoServiceFactory : ZiplineService {
     fun create(greeting: String): GreetingAndEchoService
   }
 
-  class RealServiceAndHashFactory : ServiceAndHashFactory {
+  class RealGreetingAndEchoServiceFactory : GreetingAndEchoServiceFactory {
     override fun create(greeting: String): GreetingAndEchoService {
       return GreetingAndEchoService(greeting, GreetingService(greeting))
     }
