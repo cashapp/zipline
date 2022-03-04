@@ -26,6 +26,9 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Contextual
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.modules.SerializersModule
 
 internal class ZiplineServiceTest {
   @Test
@@ -80,6 +83,32 @@ internal class ZiplineServiceTest {
     assertEquals(EchoResponse("sup Stephen"), supService.echo(EchoRequest("Stephen")))
   }
 
+  /**
+   * This test demonstrates the setup necessary to serialize a service as a member of another
+   * serializable type. In particular, you need to create a [SerializersModule] that registers a
+   * contextual adapter that uses [ziplineServiceSerializer].
+   */
+  @Test
+  fun registerSerializerToSerializeServicesAsMembers() = runBlocking {
+    val serializersModule = SerializersModule {
+      contextual(EchoService::class, ziplineServiceSerializer())
+    }
+    val (endpointA, endpointB) = newEndpointPair(this, serializersModule)
+
+    endpointA.bind<GreetingAndEchoServiceFactory>("factory", RealGreetingAndEchoServiceFactory())
+    val factoryClient = endpointB.take<GreetingAndEchoServiceFactory>("factory")
+
+    val (helloGreeting, helloService) = factoryClient.create("hello")
+    val (supGreeting, supService) = factoryClient.create("sup")
+
+    assertEquals("hello", helloGreeting)
+    assertEquals("sup", supGreeting)
+    assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
+    assertEquals(EchoResponse("sup Kevin"), supService.echo(EchoRequest("Kevin")))
+    assertEquals(EchoResponse("hello Jake"), helloService.echo(EchoRequest("Jake")))
+    assertEquals(EchoResponse("sup Stephen"), supService.echo(EchoRequest("Stephen")))
+  }
+
   @Test
   fun closingAnOutboundServiceRemovesItAndPreventsFurtherCalls() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
@@ -113,6 +142,22 @@ internal class ZiplineServiceTest {
   class FactoryService : EchoServiceFactory {
     override fun create(greeting: String): EchoService {
       return GreetingService(greeting)
+    }
+  }
+
+  @Serializable
+  data class GreetingAndEchoService(
+    val greeting: String,
+    @Contextual val service: EchoService,
+  )
+
+  interface GreetingAndEchoServiceFactory : ZiplineService {
+    fun create(greeting: String): GreetingAndEchoService
+  }
+
+  class RealGreetingAndEchoServiceFactory : GreetingAndEchoServiceFactory {
+    override fun create(greeting: String): GreetingAndEchoService {
+      return GreetingAndEchoService(greeting, GreetingService(greeting))
     }
   }
 }

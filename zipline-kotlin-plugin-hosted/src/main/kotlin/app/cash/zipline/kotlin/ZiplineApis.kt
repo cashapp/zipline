@@ -38,6 +38,8 @@ internal class ZiplineApis(
   private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
   private val ziplineFqName = packageFqName.child("Zipline")
   val ziplineServiceFqName = packageFqName.child("ZiplineService")
+  private val ziplineServiceSerializerFunctionFqName =
+    packageFqName.child("ziplineServiceSerializer")
   private val ziplineServiceAdapterFunctionFqName = bridgeFqName.child("ziplineServiceAdapter")
   private val ziplineServiceAdapterFqName = bridgeFqName.child("ZiplineServiceAdapter")
   private val endpointFqName = bridgeFqName.child("Endpoint")
@@ -174,6 +176,7 @@ internal class ZiplineApis(
     rewritePair(ziplineFqName.child("bind")),
     rewritePair(endpointFqName.child("bind")),
     rewritePair(ziplineServiceAdapterFunctionFqName),
+    rewritePair(ziplineServiceSerializerFunctionFqName),
   ).toMap()
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
