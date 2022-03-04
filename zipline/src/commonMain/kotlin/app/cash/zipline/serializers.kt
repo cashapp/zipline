@@ -38,7 +38,7 @@ import kotlinx.serialization.KSerializer
  * val zipline = Zipline.create(dispatcher, mySerializersModule)
  * ```
  *
- * Finally, annotate the service property with `@Contextual`. This instructs Kotlin serialization to
+ * Finally, annotate the service property with [kotlinx.serialization.Contextual]. This instructs Kotlin serialization to
  * use the registered serializer.
  *
  * ```kotlin
