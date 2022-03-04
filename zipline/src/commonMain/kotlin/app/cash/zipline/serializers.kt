@@ -23,7 +23,7 @@ import kotlinx.serialization.KSerializer
  * only necessary when a service is passed as a member of another serializable type; Zipline
  * automatically does pass-by-reference for service parameters and return values.
  *
- * To use this, first register the serializer for your service in a `SerializersModule`.
+ * To use this, first register the serializer for your service in a [kotlinx.serialization.modules.SerializersModule].
  *
  * ```kotlin
  * val mySerializersModule = SerializersModule {
