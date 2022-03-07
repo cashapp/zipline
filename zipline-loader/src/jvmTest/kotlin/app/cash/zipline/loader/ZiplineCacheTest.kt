@@ -44,6 +44,7 @@ class ZiplineCacheTest {
   @Before
   fun setUp() {
     fileSystem = FakeFileSystem()
+    Database.Schema.create(driver)
     database = createDatabase(driver)
   }
 

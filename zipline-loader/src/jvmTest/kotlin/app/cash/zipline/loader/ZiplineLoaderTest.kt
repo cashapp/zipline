@@ -57,6 +57,7 @@ class ZiplineLoaderTest {
     quickJs = QuickJs.create()
     fileSystem = FakeFileSystem()
     resourceFileSystem = FakeFileSystem()
+    Database.Schema.create(driver)
     loader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
