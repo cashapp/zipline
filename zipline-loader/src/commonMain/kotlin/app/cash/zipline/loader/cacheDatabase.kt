@@ -30,12 +30,10 @@ fun createDatabase(driverFactory: DriverFactory): Database {
 }
 
 fun createDatabase(driver: SqlDriver): Database {
-  val database = Database(
+  return Database(
     driver,
     filesAdapter = Files.Adapter(
       file_stateAdapter = EnumColumnAdapter()
     )
   )
-  Database.Schema.create(driver)
-  return database
 }
