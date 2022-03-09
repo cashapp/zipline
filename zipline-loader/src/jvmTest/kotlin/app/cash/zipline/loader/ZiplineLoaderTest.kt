@@ -23,15 +23,14 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import okio.Buffer
-import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
-import okio.ByteString.Companion.toByteString
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 
@@ -198,48 +197,28 @@ class ZiplineLoaderTest {
     )
   }
 
-  companion object {
-    private val alphaJs = """
-      |globalThis.log = globalThis.log || "";
-      |globalThis.log += "alpha loaded\n"
-      |""".trimMargin()
+  @Test
+  fun downloadToDirectoryThenLoadFromAsResources(): Unit = runBlocking(dispatcher) {
+    val downloadDir = "/downloads/latest".toPath()
+    val fileSystem = cacheFileSystem
 
-    private fun alphaBytecode(quickJs: QuickJs) = ziplineFile(quickJs, alphaJs, "alpha.js")
-    private const val alphaFilePath = "/alpha.zipline"
+    assertFalse(fileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))
+    assertFalse(fileSystem.exists(downloadDir / alphaBytecode(quickJs).sha256().hex()))
+    assertFalse(fileSystem.exists(downloadDir / bravoBytecode(quickJs).sha256().hex()))
 
-    private val bravoJs = """
-      |globalThis.log = globalThis.log || "";
-      |globalThis.log += "bravo loaded\n"
-      |""".trimMargin()
-
-    private fun bravoBytecode(quickJs: QuickJs) = ziplineFile(quickJs, bravoJs, "bravo.js")
-    private const val bravoFilePath = "/bravo.zipline"
-
-    private const val manifestPath = "/manifest.zipline.json"
-    private fun manifest(quickJs: QuickJs) = ZiplineManifest.create(
-      modules = mapOf(
-        "bravo" to ZiplineModule(
-          url = bravoFilePath,
-          sha256 = bravoBytecode(quickJs).sha256(),
-          dependsOnIds = listOf("alpha"),
-        ),
-        "alpha" to ZiplineModule(
-          url = alphaFilePath,
-          sha256 = alphaBytecode(quickJs).sha256(),
-          dependsOnIds = listOf(),
-        ),
-      )
+    httpClient.filePathToByteString = mapOf(
+      manifestPath to Json.encodeToString(manifest(quickJs)).encodeUtf8(),
+      alphaFilePath to alphaBytecode(quickJs),
+      bravoFilePath to bravoBytecode(quickJs)
     )
+    loader.download(manifestPath, downloadDir)
 
-    private fun ziplineFile(quickJs: QuickJs, javaScript: String, fileName: String): ByteString {
-      val ziplineFile = ZiplineFile(
-        CURRENT_ZIPLINE_VERSION,
-        quickJs.compile(javaScript, fileName).toByteString()
-      )
-
-      val buffer = Buffer()
-      ziplineFile.writeTo(buffer)
-      return buffer.readByteString()
-    }
+    // check that files have been downloaded to downloadDir as expected
+    assertTrue(fileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))
+    assertEquals(Json.encodeToString(manifest(quickJs)).encodeUtf8(), fileSystem.read(downloadDir / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+    assertTrue(fileSystem.exists(downloadDir / alphaBytecode(quickJs).sha256().hex()))
+    assertEquals(alphaBytecode(quickJs), fileSystem.read(downloadDir / alphaBytecode(quickJs).sha256().hex()) { readByteString() })
+    assertTrue(fileSystem.exists(downloadDir / bravoBytecode(quickJs).sha256().hex()))
+    assertEquals(bravoBytecode(quickJs), fileSystem.read(downloadDir / bravoBytecode(quickJs).sha256().hex()) { readByteString() })
   }
 }

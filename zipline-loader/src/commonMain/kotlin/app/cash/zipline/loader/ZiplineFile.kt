@@ -16,6 +16,7 @@
 
 package app.cash.zipline.loader
 
+import okio.Buffer
 import okio.BufferedSink
 import okio.BufferedSource
 import okio.ByteString
@@ -34,6 +35,21 @@ class ZiplineFile(
     sink.write(quickjsBytecode)
   }
 
+  fun toByteString(): ByteString {
+    val buffer = Buffer()
+    writeTo(buffer)
+    return buffer.readByteString()
+  }
+
+  override fun equals(other: Any?): Boolean = when (other) {
+    null -> false
+    !is ZiplineFile -> false
+    else -> this.ziplineVersion == other.ziplineVersion
+      && this.quickjsBytecode == other.quickjsBytecode
+  }
+
+  override fun hashCode(): Int = quickjsBytecode.hashCode() + ziplineVersion
+
   companion object {
     /**
      * Reads from a bufferedSource to return a ZiplineFile.
@@ -46,7 +62,9 @@ class ZiplineFile(
       }
       val ziplineVersion = source.readInt()
       if (ziplineVersion != CURRENT_ZIPLINE_VERSION) {
-        throw IOException("unsupported version [version=$ziplineVersion][currentVersion=$CURRENT_ZIPLINE_VERSION]")
+        throw IOException(
+          "unsupported version [version=$ziplineVersion][currentVersion=$CURRENT_ZIPLINE_VERSION]"
+        )
       }
       while (!source.exhausted()) {
         val sectionHeader = source.readInt()
@@ -75,6 +93,8 @@ class ZiplineFile(
         quickjsBytecode
       }
     }
+
+    fun ByteString.toZiplineFile() = read(Buffer().write(this))
   }
 }
 
