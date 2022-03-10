@@ -18,8 +18,6 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.ZiplineService
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 
@@ -29,10 +27,10 @@ import kotlinx.serialization.encoding.Encoder
  */
 @PublishedApi
 internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
+  private val contextualSerializer = ContextualSerializer(PassByReference::class)
   abstract val serialName: String
 
-  override val descriptor
-    get() = PrimitiveSerialDescriptor(serialName, PrimitiveKind.STRING)
+  override val descriptor  = contextualSerializer.descriptor
 
   abstract fun inboundCallHandler(
     service: T,
@@ -44,16 +42,11 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
   ): T
 
   override fun serialize(encoder: Encoder, value: T) {
-    encoder.encodeSerializableValue(
-      ContextualSerializer(PassByReference::class),
-      SendByReference(value, this),
-    )
+    contextualSerializer.serialize(encoder, SendByReference(value, this))
   }
 
   override fun deserialize(decoder: Decoder): T {
-    val reference = decoder.decodeSerializableValue(
-      ContextualSerializer(PassByReference::class),
-    ) as ReceiveByReference
+    val reference = contextualSerializer.deserialize(decoder) as ReceiveByReference
     return reference.take(this)
   }
 }
