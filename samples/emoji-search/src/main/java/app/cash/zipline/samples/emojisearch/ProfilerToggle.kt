@@ -27,7 +27,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import app.cash.zipline.QuickJs
-import app.cash.zipline.tools.startCpuSampling
+import app.cash.zipline.profiler.startCpuSampling
 import java.io.File
 import java.time.Instant
 import java.time.format.DateTimeFormatter

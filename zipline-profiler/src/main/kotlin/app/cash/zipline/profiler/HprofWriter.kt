@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.tools
+package app.cash.zipline.profiler
 
 import java.io.Closeable
 import java.util.concurrent.TimeUnit
@@ -25,7 +25,7 @@ import okio.utf8Size
 
 /**
  * Creates binary HPROF files which is a widely-supported way to represent CPU samples in the JVM
- * ecosystem. Documentation for this format is limited, particularly since it it was dropped as a
+ * ecosystem. Documentation for this format is limited, particularly since it was dropped as a
  * built-in format in the JVM.
  *
  * - https://java.net/downloads/heap-snapshot/hprof-binary-format.html
