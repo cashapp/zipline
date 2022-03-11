@@ -18,10 +18,10 @@ package app.cash.zipline.loader
 import app.cash.zipline.Zipline
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -92,14 +92,11 @@ class ZiplineLoader(
         ModuleLoad(zipline, it.key, it.value)
       }
       for (load in loads) {
-        val deferred: Deferred<*> = async {
-          load.load()
-        }
+        val loadJob = launch { load.load() }
 
         val downstreams = loads.filter { load.id in it.module.dependsOnIds }
-
         for (downstream in downstreams) {
-          downstream.upstreams += deferred
+          downstream.upstreams += loadJob
         }
       }
     }
@@ -110,7 +107,7 @@ class ZiplineLoader(
     val id: String,
     val module: ZiplineModule,
   ) {
-    val upstreams = mutableListOf<Deferred<*>>()
+    val upstreams = mutableListOf<Job>()
 
     /** Attempt to load from, in prioritized order: resources, cache, network */
     suspend fun load() {
@@ -128,7 +125,7 @@ class ZiplineLoader(
       }
 
       val ziplineFile = ZiplineFile.read(Buffer().write(ziplineFileBytes))
-      upstreams.awaitAll()
+      upstreams.joinAll()
       withContext(dispatcher) {
         zipline.multiplatformLoadJsModule(ziplineFile.quickjsBytecode.toByteArray(), id)
       }
