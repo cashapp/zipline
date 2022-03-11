@@ -32,7 +32,6 @@ import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
-import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 
@@ -47,27 +46,24 @@ class ZiplineLoaderTest {
 
   private lateinit var loader: ZiplineLoader
 
-  private lateinit var fileSystem: FileSystem
-  private lateinit var resourceFileSystem: FileSystem
-  private val resourceDirectory = "/zipline".toPath()
-  private lateinit var quickJs: QuickJs
+  private val cacheFileSystem = FakeFileSystem()
+  private val embeddedDirectory = "/zipline".toPath()
+  private val embeddedFileSystem = FakeFileSystem()
+  private val quickJs = QuickJs.create()
 
   @BeforeTest
   fun setUp() {
-    quickJs = QuickJs.create()
-    fileSystem = FakeFileSystem()
-    resourceFileSystem = FakeFileSystem()
     Database.Schema.create(driver)
     loader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
-      fileSystem = fileSystem,
-      resourceFileSystem = resourceFileSystem,
-      resourceDirectory = resourceDirectory,
-      cacheDbDriver = driver,
+      embeddedDirectory = embeddedDirectory,
+      embeddedFileSystem = embeddedFileSystem,
       cacheDirectory = "/zipline/cache".toPath(),
+      cacheFileSystem = cacheFileSystem,
+      cacheDbDriver = driver,
+      cacheMaxSizeInBytes = cacheSize,
       nowMs = { nowMillis },
-      cacheMaxSizeInBytes = cacheSize
     )
   }
 
@@ -149,11 +145,11 @@ class ZiplineLoaderTest {
   @Test
   fun loaderUsesResourcesBeforeCacheButManifestOverNetwork(): Unit = runBlocking(dispatcher) {
     // seed the resources FS with zipline files
-    resourceFileSystem.createDirectories(resourceDirectory)
-    resourceFileSystem.write(resourceDirectory / alphaBytecode(quickJs).sha256()) {
+    embeddedFileSystem.createDirectories(embeddedDirectory)
+    embeddedFileSystem.write(embeddedDirectory / alphaBytecode(quickJs).sha256()) {
       write(alphaBytecode(quickJs))
     }
-    resourceFileSystem.write(resourceDirectory / bravoBytecode(quickJs).sha256()) {
+    embeddedFileSystem.write(embeddedDirectory / bravoBytecode(quickJs).sha256()) {
       write(bravoBytecode(quickJs))
     }
 
@@ -175,15 +171,15 @@ class ZiplineLoaderTest {
 
   @Test
   fun loaderUsesResourcesForPrebuiltManifestWhenNetworkOffline(): Unit = runBlocking(dispatcher) {
-    // seed the resources FS with zipline manifest and files
-    resourceFileSystem.createDirectories(resourceDirectory)
-    resourceFileSystem.write(resourceDirectory / PREBUILT_MANIFEST_FILE_NAME) {
+    // seed the embedded FS with zipline manifest and files
+    embeddedFileSystem.createDirectories(embeddedDirectory)
+    embeddedFileSystem.write(embeddedDirectory / PREBUILT_MANIFEST_FILE_NAME) {
       write(Json.encodeToString(manifest(quickJs)).encodeUtf8())
     }
-    resourceFileSystem.write(resourceDirectory / alphaBytecode(quickJs).sha256()) {
+    embeddedFileSystem.write(embeddedDirectory / alphaBytecode(quickJs).sha256()) {
       write(alphaBytecode(quickJs))
     }
-    resourceFileSystem.write(resourceDirectory / bravoBytecode(quickJs).sha256()) {
+    embeddedFileSystem.write(embeddedDirectory / bravoBytecode(quickJs).sha256()) {
       write(bravoBytecode(quickJs))
     }
 
