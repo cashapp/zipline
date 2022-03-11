@@ -1,10 +1,5 @@
-Zipline Tools
-=============
-
-This optional module contains development tools for building Zipline applications.
-
-Sampling Profiler
------------------
+Zipline Profiler
+================
 
 To better understand how CPU is used in a Zipline program, use the sampling profiler. It writes data
 in [HPROF format] that is readable by [YourKit].

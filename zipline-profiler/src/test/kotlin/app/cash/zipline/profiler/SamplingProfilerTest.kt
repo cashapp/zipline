@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.tools
+package app.cash.zipline.profiler
 
 import app.cash.zipline.QuickJs
 import java.io.File
