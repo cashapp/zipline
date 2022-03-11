@@ -87,7 +87,7 @@ jobs:
           script: ./gradlew connectedCheck
 
   publish:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs:
       - build
       - android-emulator
