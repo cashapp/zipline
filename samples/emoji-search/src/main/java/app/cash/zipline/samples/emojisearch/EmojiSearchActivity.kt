@@ -58,9 +58,9 @@ class EmojiSearchActivity : ComponentActivity() {
     val models = MutableStateFlow(initialViewModel)
 
     val cacheDirectory = getCacheDir().toOkioPath() / "zipline"
-    // TODO set to path where Zipline files are seeded in resources for published APKs
-    val resourcesDirectory = "zipline".toPath()
-    val emojiSearchZipline = EmojiSearchZipline(cacheDirectory, resourcesDirectory)
+    // TODO set to path where Zipline files are seeded for published APKs
+    val embeddedDirectory = "zipline".toPath()
+    val emojiSearchZipline = EmojiSearchZipline(cacheDirectory, embeddedDirectory)
     emojiSearchZipline.produceModelsIn(scope, events, models)
 
     val profilerToggle = ProfilerToggle(

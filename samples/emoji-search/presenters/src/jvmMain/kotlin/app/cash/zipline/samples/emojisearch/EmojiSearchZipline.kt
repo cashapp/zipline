@@ -35,7 +35,7 @@ import okio.Path
 
 class EmojiSearchZipline(
   cacheDirectory: Path,
-  resourceDirectory: Path,
+  embeddedDirectory: Path,
 ) {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
@@ -51,11 +51,11 @@ class EmojiSearchZipline(
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = OkHttpZiplineHttpClient(baseUrl, client),
-    fileSystem = FileSystem.SYSTEM,
-    resourceFileSystem = FileSystem.RESOURCES,
-    resourceDirectory = resourceDirectory,
-    cacheDirectory = cacheDirectory,
+    embeddedDirectory = embeddedDirectory,
+    embeddedFileSystem = FileSystem.RESOURCES, // TODO use assets
     cacheDbDriver = driver,
+    cacheDirectory = cacheDirectory,
+    cacheFileSystem = FileSystem.SYSTEM,
     nowMs = { Clock.systemDefaultZone().instant().toEpochMilli() },
   )
 
