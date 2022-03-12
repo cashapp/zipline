@@ -64,7 +64,7 @@ public final class ZiplineTestInternals {
 
   public static Pair<Endpoint, Endpoint> newEndpointPair() {
     CoroutineScope scope = CoroutineScopeKt.CoroutineScope(EmptyCoroutineContext.INSTANCE);
-    return app.cash.zipline.testing.EndpointsKt.newEndpointPair(scope, null);
+    return app.cash.zipline.testing.EndpointsKt.newEndpointPair(scope);
   }
 
   /** Simulate generated code for outbound calls. */
