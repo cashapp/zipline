@@ -34,16 +34,19 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual class Zipline private constructor(
   val quickJs: QuickJs,
+  userSerializersModule: SerializersModule,
   dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
 ) {
   private val endpoint = Endpoint(
     scope = scope,
+    userSerializersModule = userSerializersModule,
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call into JS. */
       private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -79,8 +82,8 @@ actual class Zipline private constructor(
     }
   )
 
-  actual val serializersModule: SerializersModule
-    get() = endpoint.userSerializersModule!!
+  actual val json: Json
+    get() = endpoint.json
 
   actual val serviceNames: Set<String>
     get() = endpoint.serviceNames
@@ -175,10 +178,7 @@ actual class Zipline private constructor(
       quickJs.evaluate(DEFINE_JS, "define.js")
 
       val scope = CoroutineScope(dispatcher)
-      return Zipline(quickJs, dispatcher, scope)
-        .apply {
-          endpoint.userSerializersModule = serializersModule
-        }
+      return Zipline(quickJs, serializersModule, dispatcher, scope)
     }
   }
 }

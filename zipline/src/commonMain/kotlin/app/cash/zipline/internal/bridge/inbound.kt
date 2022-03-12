@@ -18,7 +18,6 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.ZiplineApiMismatchException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
 
 /**
  * Generated code extends this base class to receive calls into an application-layer interface from
@@ -27,13 +26,10 @@ import kotlinx.serialization.modules.SerializersModule
 @PublishedApi
 internal interface InboundBridge {
   class Context(
-    val serializersModule: SerializersModule,
+    val json: Json,
     @PublishedApi internal val endpoint: Endpoint,
   ) {
-    val json = Json {
-      useArrayPolymorphism = true
-      serializersModule = this@Context.serializersModule
-    }
+    val serializersModule = json.serializersModule
   }
 }
 

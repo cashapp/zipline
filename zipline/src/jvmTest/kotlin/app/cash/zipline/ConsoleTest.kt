@@ -57,6 +57,7 @@ class ConsoleTest {
       level = Level.FINEST
       addHandler(logHandler)
     }
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
   }
 
   @After fun tearDown(): Unit = runBlocking(dispatcher) {

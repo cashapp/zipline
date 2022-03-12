@@ -27,6 +27,15 @@ class JsEchoService(
 
 private val zipline by lazy { Zipline.get() }
 
+/**
+ * Force the lazy zipline to be initialized. This is necessary for tests that connect to the host
+ * platform without binding or taking any services.
+ */
+@JsExport
+fun initZipline() {
+  zipline.toString()
+}
+
 @JsExport
 fun prepareJsBridges() {
   zipline.bind<EchoService>("helloService", JsEchoService("hello"))

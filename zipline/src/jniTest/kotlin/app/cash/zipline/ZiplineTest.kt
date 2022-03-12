@@ -171,6 +171,7 @@ class ZiplineTest {
   }
 
   @Test fun serviceNamesAndClientNames(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
     assertThat(zipline.serviceNames).containsExactly(
       eventLoopName,
       consoleName,

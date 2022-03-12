@@ -20,7 +20,6 @@ import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.launch
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.SerializersModule
 
 /**
  * Generated code extends this base class to make calls into an application-layer interface that is
@@ -30,13 +29,10 @@ import kotlinx.serialization.modules.SerializersModule
 internal interface OutboundBridge {
   class Context(
     private val instanceName: String,
-    val serializersModule: SerializersModule,
+    val json: Json,
     @PublishedApi internal val endpoint: Endpoint,
   ) {
-    val json = Json {
-      useArrayPolymorphism = true
-      serializersModule = this@Context.serializersModule
-    }
+    val serializersModule = json.serializersModule
 
     fun newCall(funName: String, parameterCount: Int): OutboundCall {
       return OutboundCall(
