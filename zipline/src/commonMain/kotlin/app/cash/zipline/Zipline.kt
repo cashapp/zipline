@@ -15,16 +15,22 @@
  */
 package app.cash.zipline
 
-import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.json.Json
 
 expect class Zipline {
-  val serializersModule: SerializersModule
-
   /** Name of services that have been published with [bind]. */
   val serviceNames: Set<String>
 
   /** Names of services that can be consumed with [take]. */
   val clientNames: Set<String>
+
+  /**
+   * The JSON codec for exchanging messages with the other endpoint.
+   *
+   * This instance supports encoding [ZiplineService] implementations can be passed by reference
+   * when partnered with [ziplineServiceSerializer].
+   */
+  val json: Json
 
   fun <T : ZiplineService> bind(name: String, instance: T)
 

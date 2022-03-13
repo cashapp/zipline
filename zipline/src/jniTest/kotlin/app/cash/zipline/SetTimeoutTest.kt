@@ -30,6 +30,7 @@ class SetTimeoutTest {
 
   @Before fun setUp(): Unit = runBlocking(dispatcher) {
     zipline.loadTestingJs()
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
   }
 
   @After fun tearDown(): Unit = runBlocking(dispatcher) {

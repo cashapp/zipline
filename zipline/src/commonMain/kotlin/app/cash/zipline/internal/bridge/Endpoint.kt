@@ -20,7 +20,7 @@ import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 
 /**
@@ -29,6 +29,7 @@ import kotlinx.serialization.modules.SerializersModule
  */
 class Endpoint internal constructor(
   internal val scope: CoroutineScope,
+  internal val userSerializersModule: SerializersModule,
   internal val outboundChannel: CallChannel,
 ) {
   internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
@@ -42,22 +43,13 @@ class Endpoint internal constructor(
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
 
-  /** If null, the user must still call Zipline.get() on Kotlin/JS. */
-  internal var userSerializersModule: SerializersModule? = null
-    set(value) {
-      field = value
-      serializersModule = computeSerializersModule()
-    }
-
-  /** Unions Zipline-provided serializers with user-provided serializers. */
-  private var serializersModule: SerializersModule = computeSerializersModule()
-
-  private fun computeSerializersModule(): SerializersModule {
-    return SerializersModule {
+  /** This uses both Zipline-provided serializers and user-provided serializers. */
+  internal val json: Json = Json {
+    useArrayPolymorphism = true
+    serializersModule = SerializersModule {
       contextual(PassByReference::class, PassByReferenceSerializer(this@Endpoint))
       contextual(Throwable::class, ThrowableSerializer)
-
-      include(userSerializersModule ?: EmptySerializersModule)
+      include(userSerializersModule)
     }
   }
 
@@ -149,9 +141,8 @@ class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal fun newInboundContext() = InboundBridge.Context(serializersModule, this)
+  internal fun newInboundContext() = InboundBridge.Context(json, this)
 
   @PublishedApi
-  internal fun newOutboundContext(name: String) =
-    OutboundBridge.Context(name, serializersModule, this)
+  internal fun newOutboundContext(name: String) = OutboundBridge.Context(name, json, this)
 }
