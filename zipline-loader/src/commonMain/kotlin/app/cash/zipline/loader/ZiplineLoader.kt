@@ -18,16 +18,17 @@ package app.cash.zipline.loader
 import app.cash.zipline.Zipline
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Deferred
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.Buffer
+import okio.BufferedSource
 import okio.ByteString
 import okio.FileSystem
 import okio.IOException
@@ -40,15 +41,15 @@ import okio.Path
  * concurrently download and load code.
  */
 class ZiplineLoader(
-  val dispatcher: CoroutineDispatcher,
-  val httpClient: ZiplineHttpClient,
-  val fileSystem: FileSystem,
-  val resourceFileSystem: FileSystem,
-  val resourceDirectory: Path,
+  private val dispatcher: CoroutineDispatcher,
+  private val httpClient: ZiplineHttpClient,
+  private val embeddedDirectory: Path,
+  private val embeddedFileSystem: FileSystem,
   cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
   cacheDirectory: Path,
-  nowMs: () -> Long, // 100 MiB
+  cacheFileSystem: FileSystem,
   cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
+  nowMs: () -> Long, // 100 MiB
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3
@@ -61,7 +62,7 @@ class ZiplineLoader(
   // TODO add schema version checker and automigration
   private val cache = createZiplineCache(
     driver = cacheDbDriver,
-    fileSystem = fileSystem,
+    fileSystem = cacheFileSystem,
     directory = cacheDirectory,
     maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
     nowMs = nowMs
@@ -75,8 +76,8 @@ class ZiplineLoader(
       }
     } catch (e: IOException) {
       // If manifest fails to load over network, fallback to prebuilt in resources
-      val prebuiltManifestPath = resourceDirectory / PREBUILT_MANIFEST_FILE_NAME
-      resourceFileSystem.read(prebuiltManifestPath) {
+      val prebuiltManifestPath = embeddedDirectory / PREBUILT_MANIFEST_FILE_NAME
+      embeddedFileSystem.read(prebuiltManifestPath) {
         readByteString()
       }
     }
@@ -92,14 +93,11 @@ class ZiplineLoader(
         ModuleLoad(zipline, it.key, it.value)
       }
       for (load in loads) {
-        val deferred: Deferred<*> = async {
-          load.load()
-        }
+        val loadJob = launch { load.load() }
 
         val downstreams = loads.filter { load.id in it.module.dependsOnIds }
-
         for (downstream in downstreams) {
-          downstream.upstreams += deferred
+          downstream.upstreams += loadJob
         }
       }
     }
@@ -110,15 +108,13 @@ class ZiplineLoader(
     val id: String,
     val module: ZiplineModule,
   ) {
-    val upstreams = mutableListOf<Deferred<*>>()
+    val upstreams = mutableListOf<Job>()
 
-    /** Attempt to load from, in prioritized order: resources, cache, network */
+    /** Attempt to load from, in prioritized order: embedded, cache, network */
     suspend fun load() {
-      val resourcePath = resourceDirectory / module.sha256
-      val ziplineFileBytes = if (resourceFileSystem.exists(resourcePath)) {
-        resourceFileSystem.read(resourcePath) {
-          readByteString()
-        }
+      val embeddedPath = embeddedDirectory / module.sha256
+      val ziplineFileBytes = if (embeddedFileSystem.exists(embeddedPath)) {
+        embeddedFileSystem.read(embeddedPath, BufferedSource::readByteString)
       } else {
         cache.getOrPut(module.sha256) {
           concurrentDownloadsSemaphore.withPermit {
@@ -128,7 +124,7 @@ class ZiplineLoader(
       }
 
       val ziplineFile = ZiplineFile.read(Buffer().write(ziplineFileBytes))
-      upstreams.awaitAll()
+      upstreams.joinAll()
       withContext(dispatcher) {
         zipline.multiplatformLoadJsModule(ziplineFile.quickjsBytecode.toByteArray(), id)
       }
