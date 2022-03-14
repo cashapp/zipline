@@ -28,11 +28,16 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.buffer
 import okio.source
+import org.junit.After
 import org.junit.Test
 
 class ZiplineCompilerTest {
-  private val compiler = ZiplineCompiler()
-  lateinit var quickJs: QuickJs
+  private val quickJs = QuickJs.create()
+
+  @After
+  fun after() {
+    quickJs.close()
+  }
 
   @Test
   fun `write to and read from zipline`() {
@@ -41,7 +46,6 @@ class ZiplineCompilerTest {
         ZiplineFile.read(source)
       }
       assertEquals(CURRENT_ZIPLINE_VERSION, readZiplineFile.ziplineVersion)
-      quickJs = QuickJs.create()
       quickJs.execute(readZiplineFile.quickjsBytecode.toByteArray())
       val exception = assertFailsWith<Exception> {
         quickJs.evaluate("demo.sayHello()", "test.js")
@@ -67,7 +71,6 @@ class ZiplineCompilerTest {
         ZiplineFile.read(source)
       }
       assertEquals(CURRENT_ZIPLINE_VERSION, readZiplineFile.ziplineVersion)
-      quickJs = QuickJs.create()
       quickJs.execute(readZiplineFile.quickjsBytecode.toByteArray())
       assertEquals("Hello, guy!", quickJs.evaluate("greet('guy')", "test.js"))
     }
@@ -75,7 +78,6 @@ class ZiplineCompilerTest {
 
   @Test
   fun `js with imports and exports`() {
-    quickJs = QuickJs.create()
     assertZiplineCompile("src/test/resources/jsWithImportsExports/", false) {
       quickJs.execute(it.source().buffer().use { source ->
         ZiplineFile.read(source)
@@ -92,7 +94,7 @@ class ZiplineCompilerTest {
     val outputDir = File("$rootProject/build/zipline")
     outputDir.mkdirs()
 
-    compiler.compile(inputDir, outputDir)
+    ZiplineCompiler.compile(inputDir, outputDir)
 
     val expectedNumberFiles = if (dirHasSourceMaps) inputDir.listFiles()!!.size / 2 else inputDir.listFiles()!!.size
     // Don't include Zipline manifest

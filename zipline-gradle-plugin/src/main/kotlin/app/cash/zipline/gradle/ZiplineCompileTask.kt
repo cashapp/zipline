@@ -16,37 +16,25 @@
 
 package app.cash.zipline.gradle
 
-import java.io.File
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
-open class ZiplineCompileTask : DefaultTask() {
+abstract class ZiplineCompileTask : DefaultTask() {
   // TODO handle incremental and skip the quickjs compile when incremental
   // https://docs.gradle.org/current/userguide/custom_tasks.html#incremental_tasks
   // https://docs.gradle.org/current/userguide/lazy_configuration.html#working_with_files_in_lazy_properties
   // @get:Incremental
-  @InputDirectory
-  var inputDir: File? = null
+  @get:InputDirectory
+  abstract val inputDir: DirectoryProperty
 
-  @OutputDirectory
-  var outputDir: File? = null
-
-  private val ziplineCompiler = ZiplineCompiler()
+  @get:OutputDirectory
+  abstract val outputDir: DirectoryProperty
 
   @TaskAction
   fun task() {
-    if (inputDir == null) {
-      logger.info("inputDirectory file null")
-      return
-    }
-
-    if (outputDir == null) {
-      logger.info("outputDirectory file null")
-      return
-    }
-
-    ziplineCompiler.compile(inputDir!!, outputDir!!)
+    ZiplineCompiler.compile(inputDir.get().asFile, outputDir.get().asFile)
   }
 }
