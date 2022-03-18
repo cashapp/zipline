@@ -112,7 +112,7 @@ class ZiplineLoader(
 
     /** Attempt to load from, in prioritized order: embedded, cache, network */
     suspend fun load() {
-      val embeddedPath = embeddedDirectory / module.sha256
+      val embeddedPath = embeddedDirectory / module.sha256.hex()
       val ziplineFileBytes = if (embeddedFileSystem.exists(embeddedPath)) {
         embeddedFileSystem.read(embeddedPath, BufferedSource::readByteString)
       } else {
