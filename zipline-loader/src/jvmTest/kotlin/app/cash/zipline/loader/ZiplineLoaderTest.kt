@@ -146,10 +146,10 @@ class ZiplineLoaderTest {
   fun loaderUsesResourcesBeforeCacheButManifestOverNetwork(): Unit = runBlocking(dispatcher) {
     // seed the resources FS with zipline files
     embeddedFileSystem.createDirectories(embeddedDirectory)
-    embeddedFileSystem.write(embeddedDirectory / alphaBytecode(quickJs).sha256()) {
+    embeddedFileSystem.write(embeddedDirectory / alphaBytecode(quickJs).sha256().hex()) {
       write(alphaBytecode(quickJs))
     }
-    embeddedFileSystem.write(embeddedDirectory / bravoBytecode(quickJs).sha256()) {
+    embeddedFileSystem.write(embeddedDirectory / bravoBytecode(quickJs).sha256().hex()) {
       write(bravoBytecode(quickJs))
     }
 
@@ -176,10 +176,10 @@ class ZiplineLoaderTest {
     embeddedFileSystem.write(embeddedDirectory / PREBUILT_MANIFEST_FILE_NAME) {
       write(Json.encodeToString(manifest(quickJs)).encodeUtf8())
     }
-    embeddedFileSystem.write(embeddedDirectory / alphaBytecode(quickJs).sha256()) {
+    embeddedFileSystem.write(embeddedDirectory / alphaBytecode(quickJs).sha256().hex()) {
       write(alphaBytecode(quickJs))
     }
-    embeddedFileSystem.write(embeddedDirectory / bravoBytecode(quickJs).sha256()) {
+    embeddedFileSystem.write(embeddedDirectory / bravoBytecode(quickJs).sha256().hex()) {
       write(bravoBytecode(quickJs))
     }
 
