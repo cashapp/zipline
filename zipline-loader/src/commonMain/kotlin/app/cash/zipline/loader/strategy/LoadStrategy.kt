@@ -19,7 +19,7 @@ import app.cash.zipline.loader.ZiplineFile
 import okio.ByteString
 
 /**
- * The ZiplineLoader will use a given [LoadStrategy] to process the dependency sorted modules
+ * The ZiplineLoader will use a given [LoadStrategy] to process the dependency sorted modules.
  */
 interface LoadStrategy {
   /**
