@@ -17,17 +17,20 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
 import java.io.File
-import java.util.concurrent.TimeUnit
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
-import org.gradle.internal.impldep.org.testng.annotations.AfterTest
-import org.gradle.internal.impldep.org.testng.annotations.BeforeTest
+import okio.ByteString.Companion.encodeUtf8
+import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -88,5 +91,13 @@ class ZiplineDownloaderTest {
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
 
     ziplineDownloader.download(manifestUrl, downloadDir)
+
+    // Confirm files successfully downloaded
+    val fileSystem = FileSystem.SYSTEM
+    val downloadDirPath = downloadDir.toOkioPath()
+    assertTrue(fileSystem.exists(downloadDirPath / ZiplineLoader.PREBUILT_MANIFEST_FILE_NAME))
+    assertEquals(manifestJsonString.encodeUtf8(), fileSystem.read(downloadDirPath / ZiplineLoader.PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+    assertTrue(fileSystem.exists(downloadDirPath / alphaBytecode(quickJs).sha256().hex()))
+    assertEquals(alphaBytecode(quickJs), fileSystem.read(downloadDirPath / alphaBytecode(quickJs).sha256().hex()) { readByteString() })
   }
 }

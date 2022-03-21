@@ -178,6 +178,6 @@ class ZiplineLoader(
   }
 
   companion object {
-    internal const val PREBUILT_MANIFEST_FILE_NAME = "manifest.zipline.json"
+    const val PREBUILT_MANIFEST_FILE_NAME = "manifest.zipline.json"
   }
 }
