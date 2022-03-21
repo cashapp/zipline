@@ -35,7 +35,7 @@ interface LoadStrategy {
 
   /**
    * Called once the [ZiplineFile] is retrieved to save to disk, seed cache, or load into a
-   * Zipline instance
+   * Zipline instance.
    */
   suspend fun processFile(
     ziplineFile: ZiplineFile,
