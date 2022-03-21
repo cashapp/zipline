@@ -23,9 +23,9 @@ import okio.ByteString
  */
 interface LoadStrategy {
   /**
-   * Get the module's [ZiplineFile]
+   * Get the module's [ZiplineFile].
    *
-   * Implementations could get from network, resources, or cache as desired
+   * Implementations could get from network, resources, or cache as desired.
    */
   suspend fun getZiplineFile(
     id: String,
