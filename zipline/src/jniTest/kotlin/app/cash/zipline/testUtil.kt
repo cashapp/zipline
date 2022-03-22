@@ -39,6 +39,17 @@ private fun Zipline.loadJsModuleFromResource(fileName: String) {
   loadJsModule(fileJs, fileName)
 }
 
+/**
+ * See FinalizationTester for discussion on how to best trigger GC in tests.
+ * https://android.googlesource.com/platform/libcore/+/master/support/src/test/java/libcore/
+ * java/lang/ref/FinalizationTester.java
+ */
+fun awaitGarbageCollection() {
+  Runtime.getRuntime().gc()
+  Thread.sleep(100)
+  System.runFinalization()
+}
+
 operator fun <T : Any> QuickJs.set(name: String, type: KClass<T>, instance: T) {
   error("no longer supported")
 }

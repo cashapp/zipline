@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
@@ -30,6 +31,7 @@ import kotlinx.serialization.modules.SerializersModule
 class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val userSerializersModule: SerializersModule,
+  private val eventListener: EventListener,
   internal val outboundChannel: CallChannel,
 ) {
   internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
@@ -128,7 +130,13 @@ class Endpoint internal constructor(
 
   @PublishedApi
   internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
-    return adapter.outboundService(newOutboundContext(name))
+    // Detect leaked old services when creating new services.
+    detectLeaks()
+
+    val outboundContext: OutboundBridge.Context = newOutboundContext(name)
+    val result = adapter.outboundService(outboundContext)
+    trackLeaks(eventListener, name, outboundContext, result)
+    return result
   }
 
   @PublishedApi

@@ -33,6 +33,7 @@ internal interface OutboundBridge {
     @PublishedApi internal val endpoint: Endpoint,
   ) {
     val serializersModule = json.serializersModule
+    var closed = false
 
     fun newCall(funName: String, parameterCount: Int): OutboundCall {
       return OutboundCall(

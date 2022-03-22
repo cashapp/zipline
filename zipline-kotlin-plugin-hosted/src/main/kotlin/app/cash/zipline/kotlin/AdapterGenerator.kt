@@ -40,8 +40,10 @@ import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irReturn
+import org.jetbrains.kotlin.ir.builders.irSet
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
+import org.jetbrains.kotlin.ir.builders.irTrue
 import org.jetbrains.kotlin.ir.builders.irWhen
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
@@ -763,14 +765,31 @@ internal class AdapterGenerator(
       context = pluginContext,
       scopeOwnerSymbol = result.symbol
     ) {
-      val newCall = irCall(ziplineApis.outboundBridgeContextNewCall).apply {
-        dispatchReceiver = irCall(
+      val contextLocal = irTemporary(
+        value = irCall(
           callee = outboundContextProperty.getter!!
         ).apply {
           dispatchReceiver = irGet(result.dispatchReceiverParameter!!)
-        }
+        },
+        nameHint = "context",
+        isMutable = false
+      ).apply {
+        origin = IrDeclarationOrigin.DEFINED
+      }
+
+      val newCall = irCall(ziplineApis.outboundBridgeContextNewCall).apply {
+        dispatchReceiver = irGet(contextLocal)
         putValueArgument(0, irString(bridgedFunction.signature))
         putValueArgument(1, irInt(bridgedFunction.valueParameters.size))
+      }
+
+      // If this is the close() function, tell the OutboundContext that this instance is closed.
+      //   context.close = true
+      if (bridgedFunction.isZiplineClose()) {
+        +irCall(ziplineApis.outboundBridgeContextClosed.owner.setter!!).apply {
+          dispatchReceiver = irGet(contextLocal)
+          putValueArgument(0, irTrue())
+        }
       }
 
       val outboundCallLocal = irTemporary(
@@ -833,4 +852,7 @@ internal class AdapterGenerator(
 
     return result
   }
+
+  private fun IrSimpleFunction.isZiplineClose() =
+    name.asString() == "close" && valueParameters.isEmpty()
 }
