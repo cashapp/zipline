@@ -9,6 +9,11 @@ $dokka.location:app.cash.zipline.internal.bridge/Endpoint/take/#kotlin.String/Po
 $dokka.location:app.cash.zipline.internal.bridge/PassByReference///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-pass-by-reference/index.html
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
 $dokka.location:app.cash.zipline//ziplineServiceSerializer/#/PointingToDeclaration/zipline/app.cash.zipline/zipline-service-serializer.html
+$dokka.location:app.cash.zipline/EventListener.Companion///PointingToDeclaration/zipline/app.cash.zipline/-event-listener/-companion/index.html
+$dokka.location:app.cash.zipline/EventListener.Companion/NONE/#/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/-companion/-n-o-n-e.html
+$dokka.location:app.cash.zipline/EventListener///PointingToDeclaration/zipline/app.cash.zipline/-event-listener/index.html
+$dokka.location:app.cash.zipline/EventListener/EventListener/#/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/-event-listener.html
+$dokka.location:app.cash.zipline/EventListener/instanceLeaked/#kotlin.String#kotlin.Exception?/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/instance-leaked.html
 $dokka.location:app.cash.zipline/InterruptHandler///PointingToDeclaration/zipline/app.cash.zipline/-interrupt-handler/index.html
 $dokka.location:app.cash.zipline/InterruptHandler/poll/#/PointingToDeclaration/zipline/app.cash.zipline/-interrupt-handler/poll.html
 $dokka.location:app.cash.zipline/MemoryUsage///PointingToDeclaration/zipline/app.cash.zipline/-memory-usage/index.html
@@ -57,7 +62,7 @@ $dokka.location:app.cash.zipline/QuickJsException///PointingToDeclaration/zipli
 $dokka.location:app.cash.zipline/QuickJsException/QuickJsException/#kotlin.String#kotlin.String?/PointingToDeclaration/zipline/app.cash.zipline/-quick-js-exception/-quick-js-exception.html
 $dokka.location:app.cash.zipline/QuickJsException/QuickJsException/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-quick-js-exception/-quick-js-exception.html
 $dokka.location:app.cash.zipline/Zipline.Companion///PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/index.html
-$dokka.location:app.cash.zipline/Zipline.Companion/create/#kotlinx.coroutines.CoroutineDispatcher#kotlinx.serialization.modules.SerializersModule/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[engine]-companion/create.html
+$dokka.location:app.cash.zipline/Zipline.Companion/create/#kotlinx.coroutines.CoroutineDispatcher#kotlinx.serialization.modules.SerializersModule#app.cash.zipline.EventListener/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[engine]-companion/create.html
 $dokka.location:app.cash.zipline/Zipline.Companion/get/#kotlinx.serialization.modules.SerializersModule/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/get.html
 $dokka.location:app.cash.zipline/Zipline///PointingToDeclaration/zipline/app.cash.zipline/-zipline/index.html
 $dokka.location:app.cash.zipline/Zipline/bind/#kotlin.String#TypeParam(bounds=[app.cash.zipline.ZiplineService])/PointingToDeclaration/zipline/app.cash.zipline/-zipline/bind.html
