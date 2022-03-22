@@ -1,46 +1,50 @@
-package app.cash.zipline.loader.strategy
+package app.cash.zipline.loader.interceptors
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.FakeZiplineHttpClient
 import app.cash.zipline.loader.ZiplineFile.Companion.toZiplineFile
+import app.cash.zipline.loader.ZiplineModuleLoader
 import app.cash.zipline.loader.alphaBytecode
 import app.cash.zipline.loader.alphaFilePath
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
-import kotlin.test.AfterTest
-import kotlin.test.BeforeTest
-import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.test.TestCoroutineDispatcher
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
+import org.junit.After
+import org.junit.Before
+import org.junit.Test
 
-class DownloadOnlyStrategyTest {
+class DownloadOnlyInterceptorTest {
   private val httpClient = FakeZiplineHttpClient()
+  private val dispatcher = TestCoroutineDispatcher()
   private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
 
   private var concurrentDownloadsSemaphore = Semaphore(3)
 
   private lateinit var fileSystem: FileSystem
-  private val downloadDirectory = "/zipline/downloads".toPath()
+  private val downloadDir = "/zipline/downloads".toPath()
   private lateinit var quickJs: QuickJs
 
-  private lateinit var strategy: LoadStrategy
+  private lateinit var moduleLoader: ZiplineModuleLoader
 
-  @BeforeTest
+  @Before
   fun setUp() {
     quickJs = QuickJs.create()
     fileSystem = FakeFileSystem()
-    strategy = DownloadOnlyStrategy(
+    moduleLoader = ZiplineModuleLoader.createDownloadOnly(
+      dispatcher = dispatcher,
       httpClient = httpClient,
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-      fileSystem = fileSystem,
-      downloadDirectory = downloadDirectory,
+      downloadDir = downloadDir,
+      downloadFileSystem = fileSystem
     )
   }
 
-  @AfterTest
+  @After
   fun tearDown() {
     quickJs.close()
     cacheDbDriver.close()
@@ -52,7 +56,11 @@ class DownloadOnlyStrategyTest {
       alphaFilePath to alphaBytecode(quickJs),
     )
 
-    val ziplineFile = strategy.getZiplineFile(
+    val ziplineFile = moduleLoader.load(
+
+    )
+
+      strategy.getZiplineFile(
       id = "alpha",
       sha256 = alphaBytecode(quickJs).sha256(),
       url = alphaFilePath

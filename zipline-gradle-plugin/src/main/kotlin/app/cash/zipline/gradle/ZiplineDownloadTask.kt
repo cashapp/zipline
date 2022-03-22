@@ -30,7 +30,7 @@ abstract class ZiplineDownloadTask : DefaultTask() {
   @get:OutputDirectory
   abstract val downloadDir: DirectoryProperty
 
-  private val ziplineDownloader = ZiplineDownloader()
+  private val ziplineDownloader = ZiplineGradleDownloader()
 
   @TaskAction
   fun task() {

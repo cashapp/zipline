@@ -16,20 +16,22 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.interceptors.getter.FsCacheGetterInterceptor
+import app.cash.zipline.loader.interceptors.getter.FsEmbeddedGetterInterceptor
 import app.cash.zipline.loader.interceptors.getter.GetterInterceptor
+import app.cash.zipline.loader.interceptors.getter.HttpGetterInterceptor
+import app.cash.zipline.loader.interceptors.getter.HttpPutInFsCacheGetterInterceptor
+import app.cash.zipline.loader.interceptors.handler.FsSaveHandlerInterceptor
 import app.cash.zipline.loader.interceptors.handler.HandlerInterceptor
+import app.cash.zipline.loader.interceptors.handler.ZiplineLoadHandlerInterceptor
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okio.FileSystem
-import okio.IOException
 import okio.Path
 
 /**
@@ -38,58 +40,12 @@ import okio.Path
  * to load code as quickly as possible, and will
  * concurrently download and load code.
  */
-class ZiplineLoaderRunner(
+internal class ZiplineModuleLoader private constructor(
   private val dispatcher: CoroutineDispatcher,
   private val getterInterceptors: List<GetterInterceptor>,
   private val handlerInterceptors: List<HandlerInterceptor>,
-  // todo maybe not need
-  private val cacheFileSystem: FileSystem,
 ) {
-  suspend fun download(
-    manifestUrl: String,
-    downloadDirectory: Path,
-  ) {
-    cacheFileSystem.createDirectories(downloadDirectory)
-
-    val manifest = downloadZiplineManifest(manifestUrl)
-
-    val manifestPath = downloadDirectory / PREBUILT_MANIFEST_FILE_NAME
-    cacheFileSystem.write(manifestPath) {
-      writeUtf8(Json.encodeToString(manifest))
-    }
-
-    loadImpl(manifest)
-  }
-
-  suspend fun load(manifestUrl: String) {
-    val manifest = downloadZiplineManifest(manifestUrl)
-
-    loadImpl(manifest)
-  }
-
-  private suspend fun downloadZiplineManifest(manifestUrl: String): ZiplineManifest {
-    val manifestByteString = try {
-      concurrentDownloadsSemaphore.withPermit {
-        httpClient.download(manifestUrl)
-      }
-    } catch (e: IOException) {
-      // If manifest fails to load over network, fallback to prebuilt in resources
-      val prebuiltManifestPath = embeddedDirectory / PREBUILT_MANIFEST_FILE_NAME
-      embeddedFileSystem.read(prebuiltManifestPath) {
-        readByteString()
-      }
-    }
-
-    return Json.decodeFromString(manifestByteString.utf8())
-  }
-
   suspend fun load(
-    manifest: ZiplineManifest,
-  ) {
-    loadImpl(manifest)
-  }
-
-  private suspend fun loadImpl(
     manifest: ZiplineManifest
   ) {
     coroutineScope {
@@ -134,6 +90,57 @@ class ZiplineLoaderRunner(
   }
 
   companion object {
-    const val PREBUILT_MANIFEST_FILE_NAME = "manifest.zipline.json"
+    fun createDownloadOnly(
+      dispatcher: CoroutineDispatcher,
+      httpClient: ZiplineHttpClient,
+      concurrentDownloadsSemaphore: Semaphore,
+      downloadDir: Path,
+      downloadFileSystem: FileSystem,
+    ) = ZiplineModuleLoader(
+      dispatcher = dispatcher,
+      getterInterceptors = listOf(
+        HttpGetterInterceptor(
+          httpClient = httpClient,
+          concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+        )
+      ),
+      handlerInterceptors = listOf(
+        FsSaveHandlerInterceptor(
+          downloadFileSystem = downloadFileSystem,
+          downloadDir = downloadDir
+        )
+      )
+    )
+
+    fun createProduction(
+      dispatcher: CoroutineDispatcher,
+      httpClient: ZiplineHttpClient,
+      concurrentDownloadsSemaphore: Semaphore,
+      embeddedDir: Path,
+      embeddedFileSystem: FileSystem,
+      cache: ZiplineCache,
+      zipline: Zipline,
+    ) = ZiplineModuleLoader(
+      dispatcher = dispatcher,
+      getterInterceptors = listOf(
+        FsEmbeddedGetterInterceptor(
+          embeddedDirectory = embeddedDir,
+          embeddedFileSystem = embeddedFileSystem
+        ),
+        FsCacheGetterInterceptor(
+          cache = cache,
+        ),
+        HttpPutInFsCacheGetterInterceptor(
+          httpClient = httpClient,
+          concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+          cache = cache,
+        )
+      ),
+      handlerInterceptors = listOf(
+        ZiplineLoadHandlerInterceptor(
+          zipline = zipline
+        )
+      ),
+    )
   }
 }

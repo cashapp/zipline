@@ -1,4 +1,4 @@
-package app.cash.zipline.loader.strategy
+package app.cash.zipline.loader.interceptors
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
@@ -7,11 +7,9 @@ import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.ZiplineFile.Companion.toZiplineFile
 import app.cash.zipline.loader.alphaBytecode
 import app.cash.zipline.loader.alphaFilePath
-import app.cash.zipline.loader.bravoBytecode
-import app.cash.zipline.loader.bravoFilePath
 import app.cash.zipline.loader.createZiplineCache
-import app.cash.zipline.loader.manifest
-import app.cash.zipline.loader.manifestPath
+import app.cash.zipline.loader.strategy.EmbeddedCacheThenNetworkStrategy
+import app.cash.zipline.loader.strategy.LoadStrategy
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -20,14 +18,12 @@ import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 
-class EmbeddedCacheThenNetworkStrategyTest {
+class ProductionInterceptorTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)

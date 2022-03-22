@@ -10,11 +10,11 @@ import okio.Path
  * Get [ZiplineFile] from embedded fileSystem that ships with the app.
  */
 class FsEmbeddedGetterInterceptor(
+  private val embeddedDir: Path,
   private val embeddedFileSystem: FileSystem,
-  private val embeddedDirectory: Path,
 ) : GetterInterceptor {
   override suspend fun get(id: String, sha256: ByteString, url: String): ZiplineFile? {
-    val resourcePath = embeddedDirectory / sha256.hex()
+    val resourcePath = embeddedDir / sha256.hex()
 
     return when {
       embeddedFileSystem.exists(resourcePath) -> {

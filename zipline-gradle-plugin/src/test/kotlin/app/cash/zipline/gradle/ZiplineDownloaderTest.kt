@@ -38,7 +38,7 @@ import org.junit.Test
 class ZiplineDownloaderTest {
   private lateinit var quickJs: QuickJs
   private val webServer = MockWebServer()
-  private val ziplineDownloader = ZiplineDownloader()
+  private val ziplineDownloader = ZiplineGradleDownloader()
 
   private val rootProject = File("src/test/resources/downloaderTest")
   private val downloadDir = File("$rootProject/resources/downloaderTest")
