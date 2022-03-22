@@ -1,26 +1,25 @@
-package app.cash.zipline.loader.interceptors.getter
+package app.cash.zipline.loader.fetcher
 
 import app.cash.zipline.loader.ZiplineFile
-import app.cash.zipline.loader.ZiplineFile.Companion.toZiplineFile
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
 
 /**
- * Get [ZiplineFile] from embedded fileSystem that ships with the app.
+ * Fetch from embedded fileSystem that ships with the app.
  */
-class FsEmbeddedGetterInterceptor(
+class FsEmbeddedFetcher(
   private val embeddedDir: Path,
   private val embeddedFileSystem: FileSystem,
-) : GetterInterceptor {
-  override suspend fun get(id: String, sha256: ByteString, url: String): ZiplineFile? {
+) : Fetcher {
+  override suspend fun fetch(id: String, sha256: ByteString, url: String): ByteString? {
     val resourcePath = embeddedDir / sha256.hex()
 
     return when {
       embeddedFileSystem.exists(resourcePath) -> {
         embeddedFileSystem.read(resourcePath) {
           readByteString()
-        }.toZiplineFile()
+        }
       }
       else -> {
         null

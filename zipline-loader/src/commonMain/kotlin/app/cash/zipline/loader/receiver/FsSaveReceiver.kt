@@ -1,4 +1,4 @@
-package app.cash.zipline.loader.interceptors.handler
+package app.cash.zipline.loader.receiver
 
 import app.cash.zipline.loader.ZiplineFile
 import okio.ByteString
@@ -8,18 +8,14 @@ import okio.Path
 /**
  * Save [ZiplineFile] to fileSystem.
  */
-class FsSaveHandlerInterceptor(
+class FsSaveReceiver(
   val downloadFileSystem: FileSystem,
   val downloadDir: Path,
-): HandlerInterceptor {
-  override suspend fun handle(
-    ziplineFile: ZiplineFile,
-    id: String,
-    sha256: ByteString
-  ) {
+): Receiver {
+  override suspend fun receive(byteString: ByteString, id: String, sha256: ByteString) {
     downloadFileSystem.createDirectories(downloadDir)
     downloadFileSystem.write(downloadDir / sha256.hex()) {
-      write(ziplineFile.toByteString())
+      write(byteString)
     }
   }
 }

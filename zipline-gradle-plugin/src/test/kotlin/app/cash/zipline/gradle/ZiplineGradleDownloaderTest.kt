@@ -17,7 +17,7 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.ZiplineLoader
+import app.cash.zipline.loader.ZiplineDownloader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
 import java.io.File
@@ -35,7 +35,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class ZiplineDownloaderTest {
+class ZiplineGradleDownloaderTest {
   private lateinit var quickJs: QuickJs
   private val webServer = MockWebServer()
   private val ziplineDownloader = ZiplineGradleDownloader()
@@ -95,8 +95,8 @@ class ZiplineDownloaderTest {
     // Confirm files successfully downloaded
     val fileSystem = FileSystem.SYSTEM
     val downloadDirPath = downloadDir.toOkioPath()
-    assertTrue(fileSystem.exists(downloadDirPath / ZiplineLoader.PREBUILT_MANIFEST_FILE_NAME))
-    assertEquals(manifestJsonString.encodeUtf8(), fileSystem.read(downloadDirPath / ZiplineLoader.PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+    assertTrue(fileSystem.exists(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME))
+    assertEquals(manifestJsonString.encodeUtf8(), fileSystem.read(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
     assertTrue(fileSystem.exists(downloadDirPath / alphaBytecode(quickJs).sha256().hex()))
     assertEquals(alphaBytecode(quickJs), fileSystem.read(downloadDirPath / alphaBytecode(quickJs).sha256().hex()) { readByteString() })
   }

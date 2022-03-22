@@ -16,14 +16,13 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.interceptors.getter.FsCacheGetterInterceptor
-import app.cash.zipline.loader.interceptors.getter.FsEmbeddedGetterInterceptor
-import app.cash.zipline.loader.interceptors.getter.GetterInterceptor
-import app.cash.zipline.loader.interceptors.getter.HttpGetterInterceptor
-import app.cash.zipline.loader.interceptors.getter.HttpPutInFsCacheGetterInterceptor
-import app.cash.zipline.loader.interceptors.handler.FsSaveHandlerInterceptor
-import app.cash.zipline.loader.interceptors.handler.HandlerInterceptor
-import app.cash.zipline.loader.interceptors.handler.ZiplineLoadHandlerInterceptor
+import app.cash.zipline.loader.fetcher.Fetcher
+import app.cash.zipline.loader.fetcher.FsCachingFetcher
+import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
+import app.cash.zipline.loader.fetcher.HttpFetcher
+import app.cash.zipline.loader.receiver.FsSaveReceiver
+import app.cash.zipline.loader.receiver.Receiver
+import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -31,6 +30,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
+import okio.ByteString
 import okio.FileSystem
 import okio.Path
 
@@ -40,10 +40,10 @@ import okio.Path
  * to load code as quickly as possible, and will
  * concurrently download and load code.
  */
-internal class ZiplineModuleLoader private constructor(
+internal class ZiplineModuleLoader(
   private val dispatcher: CoroutineDispatcher,
-  private val getterInterceptors: List<GetterInterceptor>,
-  private val handlerInterceptors: List<HandlerInterceptor>,
+  private val fetchers: List<Fetcher>,
+  private val receiver: Receiver,
 ) {
   suspend fun load(
     manifest: ZiplineManifest
@@ -73,18 +73,18 @@ internal class ZiplineModuleLoader private constructor(
      * Follow given strategy to get ZiplineFile and then process
      */
     suspend fun load() {
-      var ziplineFile: ZiplineFile? = null
-      for (interceptor in getterInterceptors) {
-        ziplineFile = interceptor.get(id, module.sha256, module.url)
-        if (ziplineFile != null) break
+      var byteString: ByteString? = null
+      for (fetcher in fetchers) {
+        byteString = fetcher.fetch(id, module.sha256, module.url)
+        if (byteString != null) break
       }
-      if (ziplineFile == null) throw IllegalStateException("Unable to get ZiplineFile for [module=$module]")
+      if (byteString == null) throw IllegalStateException(
+        "Unable to get ByteString for [module=$module]"
+      )
 
       upstreams.joinAll()
       withContext(dispatcher) {
-        for (interceptor in handlerInterceptors) {
-          interceptor.handle(ziplineFile, id, module.sha256)
-        }
+        receiver.receive(byteString, id, module.sha256)
       }
     }
   }
@@ -98,17 +98,15 @@ internal class ZiplineModuleLoader private constructor(
       downloadFileSystem: FileSystem,
     ) = ZiplineModuleLoader(
       dispatcher = dispatcher,
-      getterInterceptors = listOf(
-        HttpGetterInterceptor(
+      fetchers = listOf(
+        HttpFetcher(
           httpClient = httpClient,
           concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-        )
+        ),
       ),
-      handlerInterceptors = listOf(
-        FsSaveHandlerInterceptor(
-          downloadFileSystem = downloadFileSystem,
-          downloadDir = downloadDir
-        )
+      receiver = FsSaveReceiver(
+        downloadFileSystem = downloadFileSystem,
+        downloadDir = downloadDir
       )
     )
 
@@ -122,24 +120,21 @@ internal class ZiplineModuleLoader private constructor(
       zipline: Zipline,
     ) = ZiplineModuleLoader(
       dispatcher = dispatcher,
-      getterInterceptors = listOf(
-        FsEmbeddedGetterInterceptor(
-          embeddedDirectory = embeddedDir,
+      fetchers = listOf(
+        FsEmbeddedFetcher(
+          embeddedDir = embeddedDir,
           embeddedFileSystem = embeddedFileSystem
         ),
-        FsCacheGetterInterceptor(
+        FsCachingFetcher(
           cache = cache,
+          delegate = HttpFetcher(
+            httpClient = httpClient,
+            concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+          ),
         ),
-        HttpPutInFsCacheGetterInterceptor(
-          httpClient = httpClient,
-          concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-          cache = cache,
-        )
       ),
-      handlerInterceptors = listOf(
-        ZiplineLoadHandlerInterceptor(
-          zipline = zipline
-        )
+      receiver = ZiplineLoadReceiver(
+        zipline = zipline
       ),
     )
   }
