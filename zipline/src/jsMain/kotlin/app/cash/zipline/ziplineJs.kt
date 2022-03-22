@@ -33,6 +33,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
   internal val endpoint = Endpoint(
     scope = GlobalScope,
     userSerializersModule = userSerializersModule,
+    eventListener = EventListener.NONE,
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call out. */
       @Suppress("UnsafeCastFromDynamic")

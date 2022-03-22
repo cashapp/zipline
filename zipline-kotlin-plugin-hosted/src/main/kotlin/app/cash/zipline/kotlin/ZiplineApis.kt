@@ -133,6 +133,11 @@ internal class ZiplineApis(
   val outboundBridgeContext: IrClassSymbol
     get() = pluginContext.referenceClass(outboundBridgeContextFqName)!!
 
+  val outboundBridgeContextClosed: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      outboundBridgeContextFqName.child("closed")
+    ).single()
+
   val outboundBridgeContextNewCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
       outboundBridgeContextFqName.child("newCall")

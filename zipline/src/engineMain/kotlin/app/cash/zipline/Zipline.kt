@@ -43,10 +43,12 @@ actual class Zipline private constructor(
   userSerializersModule: SerializersModule,
   dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
+  eventListener: EventListener,
 ) {
   private val endpoint = Endpoint(
     scope = scope,
     userSerializersModule = userSerializersModule,
+    eventListener = eventListener,
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call into JS. */
       private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -170,7 +172,8 @@ actual class Zipline private constructor(
   companion object {
     fun create(
       dispatcher: CoroutineDispatcher,
-      serializersModule: SerializersModule = EmptySerializersModule
+      serializersModule: SerializersModule = EmptySerializersModule,
+      eventListener: EventListener = EventListener.NONE,
     ): Zipline {
       val quickJs = QuickJs.create()
       // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
@@ -178,7 +181,7 @@ actual class Zipline private constructor(
       quickJs.evaluate(DEFINE_JS, "define.js")
 
       val scope = CoroutineScope(dispatcher)
-      return Zipline(quickJs, serializersModule, dispatcher, scope)
+      return Zipline(quickJs, serializersModule, dispatcher, scope, eventListener)
     }
   }
 }

@@ -117,6 +117,7 @@ interface SampleService : ZiplineService {
         }
 
         override fun close() {
+          this.context.closed = true
           val call = context.newCall("fun close(): kotlin.Unit", 0)
           return call.invoke(Unit.serializer())
         }

@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.testing
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import kotlin.jvm.JvmOverloads
@@ -29,7 +30,7 @@ internal fun newEndpointPair(
   serializersModule: SerializersModule = EmptySerializersModule,
 ): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
-    val a: Endpoint = Endpoint(scope, serializersModule, object : CallChannel {
+    val a: Endpoint = Endpoint(scope, serializersModule, EventListener.NONE, object : CallChannel {
       override fun serviceNamesArray(): Array<String> {
         return b.inboundChannel.serviceNamesArray()
       }
@@ -58,7 +59,7 @@ internal fun newEndpointPair(
       }
     })
 
-    val b: Endpoint = Endpoint(scope, serializersModule, a.inboundChannel)
+    val b: Endpoint = Endpoint(scope, serializersModule, EventListener.NONE, a.inboundChannel)
   }
 
   return pair.a to pair.b
