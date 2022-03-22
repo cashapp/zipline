@@ -1,6 +1,5 @@
 package app.cash.zipline.loader.fetcher
 
-import app.cash.zipline.loader.ZiplineFile
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
