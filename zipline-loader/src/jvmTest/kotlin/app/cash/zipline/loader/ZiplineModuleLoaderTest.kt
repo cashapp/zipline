@@ -31,7 +31,7 @@ import org.junit.Test
 class ZiplineModuleLoaderTest {
   private val dispatcher = TestCoroutineDispatcher()
   private lateinit var quickJs: QuickJs
-  private lateinit var testFixturesJvm: blajhTestFixturesJvm
+  private lateinit var testFixturesJvm: TestFixturesJvm
 
   private var alphaFetcherIds: MutableList<String> = mutableListOf()
   private var bravoFetcherIds: MutableList<String> = mutableListOf()
@@ -72,7 +72,7 @@ class ZiplineModuleLoaderTest {
     bravoFetcherIds.clear()
     alphaReceiverIds.clear()
     quickJs = QuickJs.create()
-    testFixturesJvm = blajhTestFixturesJvm(quickJs)
+    testFixturesJvm = TestFixturesJvm(quickJs)
     bravoByteString = "test".encodeUtf8()
   }
 

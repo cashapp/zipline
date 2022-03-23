@@ -24,7 +24,7 @@ import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
 
-class blajhTestFixturesJvm(quickJs: QuickJs) {
+class TestFixturesJvm(quickJs: QuickJs) {
   val alphaJs = """
       |globalThis.log = globalThis.log || "";
       |globalThis.log += "alpha loaded\n"

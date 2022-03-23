@@ -17,9 +17,9 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.blajhTestFixturesJvm.Companion.alphaFilePath
-import app.cash.zipline.loader.blajhTestFixturesJvm.Companion.bravoFilePath
-import app.cash.zipline.loader.blajhTestFixturesJvm.Companion.manifestPath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaFilePath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoFilePath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.manifestPath
 import app.cash.zipline.loader.ZiplineDownloader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
@@ -50,14 +50,14 @@ class ZiplineLoaderTest {
   private val embeddedDir = "/zipline".toPath()
   private val embeddedFileSystem = FakeFileSystem()
   private lateinit var quickJs: QuickJs
-  private lateinit var testFixturesJvm: blajhTestFixturesJvm
+  private lateinit var testFixturesJvm: TestFixturesJvm
   private lateinit var loader: ZiplineLoader
 
   @Before
   fun setUp() {
     Database.Schema.create(driver)
     quickJs = QuickJs.create()
-    testFixturesJvm = blajhTestFixturesJvm(quickJs)
+    testFixturesJvm = TestFixturesJvm(quickJs)
     loader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,

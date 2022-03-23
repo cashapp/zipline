@@ -16,9 +16,9 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.blajhTestFixturesJvm.Companion.alphaFilePath
-import app.cash.zipline.loader.blajhTestFixturesJvm.Companion.bravoFilePath
-import app.cash.zipline.loader.blajhTestFixturesJvm.Companion.manifestPath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaFilePath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoFilePath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.manifestPath
 import app.cash.zipline.loader.ZiplineDownloader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -40,7 +40,7 @@ class ZiplineDownloaderTest {
   private val fileSystem = FakeFileSystem()
   private val downloadDir = "/zipline/download".toPath()
   private lateinit var quickJs: QuickJs
-  private lateinit var testFixturesJvm: blajhTestFixturesJvm
+  private lateinit var testFixturesJvm: TestFixturesJvm
   private lateinit var downloader: ZiplineDownloader
 
   private fun alphaBytecode(quickJs: QuickJs) = testFixturesJvm.alphaByteString
@@ -50,7 +50,7 @@ class ZiplineDownloaderTest {
   @Before
   fun setUp() {
     quickJs = QuickJs.create()
-    testFixturesJvm = blajhTestFixturesJvm(quickJs)
+    testFixturesJvm = TestFixturesJvm(quickJs)
     downloader = ZiplineDownloader(
       dispatcher = dispatcher,
       httpClient = httpClient,
