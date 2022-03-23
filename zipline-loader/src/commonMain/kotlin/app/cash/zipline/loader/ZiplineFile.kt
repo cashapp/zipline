@@ -23,7 +23,7 @@ import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.IOException
 
-class ZiplineFile(
+data class ZiplineFile(
   val ziplineVersion: Int,
   val quickjsBytecode: ByteString,
 ) {
@@ -40,15 +40,6 @@ class ZiplineFile(
     writeTo(buffer)
     return buffer.readByteString()
   }
-
-  override fun equals(other: Any?): Boolean = when (other) {
-    null -> false
-    !is ZiplineFile -> false
-    else -> this.ziplineVersion == other.ziplineVersion
-      && this.quickjsBytecode == other.quickjsBytecode
-  }
-
-  override fun hashCode(): Int = quickjsBytecode.hashCode() + ziplineVersion
 
   companion object {
     /**

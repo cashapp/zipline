@@ -39,7 +39,7 @@ class ZiplineLoader(
   private val embeddedDir: Path,
   private val embeddedFileSystem: FileSystem,
   cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
-  cacheDirectory: Path,
+  cacheDir: Path,
   val cacheFileSystem: FileSystem,
   cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
   nowMs: () -> Long, // 100 MiB
@@ -56,7 +56,7 @@ class ZiplineLoader(
   private val cache = createZiplineCache(
     driver = cacheDbDriver,
     fileSystem = cacheFileSystem,
-    directory = cacheDirectory,
+    directory = cacheDir,
     maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
     nowMs = nowMs
   )
