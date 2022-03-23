@@ -16,6 +16,7 @@
 
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.ZiplineFile.Companion.toZiplineFile
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -103,5 +104,26 @@ class ZiplineFileTest {
       ZiplineFile.read(buffer)
     }
     assertEquals("QuickJS bytecode section missing", e.message)
+  }
+
+  @Test
+  fun writeToByteString() {
+    val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode)
+    val buffer = Buffer()
+    ziplineFile.writeTo(buffer)
+    val byteString = buffer.readByteString()
+    assertEquals(byteString, ziplineFile.toByteString())
+  }
+
+  @Test
+  fun readFromByteString() {
+    val original = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode)
+    val buffer = Buffer()
+    original.writeTo(buffer)
+    val ziplineFileBytes = buffer.readByteString()
+
+    val expected = ZiplineFile.read(Buffer().write(ziplineFileBytes))
+    val parsed = ziplineFileBytes.toZiplineFile()
+    assertEquals(expected, parsed)
   }
 }

@@ -17,9 +17,11 @@ dependencies {
   implementation(project(":zipline-loader"))
   implementation(Dependencies.kotlinGradlePlugin)
   implementation(Dependencies.kotlinxSerializationJson)
+  implementation(Dependencies.okHttp)
   implementation(Dependencies.okio)
   testImplementation(Dependencies.junit)
   testImplementation(Dependencies.kotlinTest)
+  testImplementation(Dependencies.okHttpMockWebServer)
   testImplementation(Dependencies.truth)
 }
 

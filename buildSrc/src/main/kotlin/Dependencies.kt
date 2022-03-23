@@ -28,6 +28,7 @@ object Dependencies {
   val kotlinxSerializationJson = "org.jetbrains.kotlinx:kotlinx-serialization-json:1.3.2"
   val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
   val okHttp = "com.squareup.okhttp3:okhttp:4.9.1"
+  val okHttpMockWebServer = "com.squareup.okhttp3:mockwebserver:4.9.1"
   val okio = "com.squareup.okio:okio:3.0.0"
   val okioFakeFileSystem = "com.squareup.okio:okio-fakefilesystem:3.0.0"
   val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"

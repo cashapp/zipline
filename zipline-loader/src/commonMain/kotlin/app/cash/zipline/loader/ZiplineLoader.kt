@@ -16,20 +16,13 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.ZiplineDownloader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import okio.Buffer
-import okio.BufferedSource
-import okio.ByteString
 import okio.FileSystem
 import okio.IOException
 import okio.Path
@@ -43,11 +36,11 @@ import okio.Path
 class ZiplineLoader(
   private val dispatcher: CoroutineDispatcher,
   private val httpClient: ZiplineHttpClient,
-  private val embeddedDirectory: Path,
+  private val embeddedDir: Path,
   private val embeddedFileSystem: FileSystem,
   cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
-  cacheDirectory: Path,
-  cacheFileSystem: FileSystem,
+  cacheDir: Path,
+  val cacheFileSystem: FileSystem,
   cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
   nowMs: () -> Long, // 100 MiB
 ) {
@@ -59,85 +52,47 @@ class ZiplineLoader(
       concurrentDownloadsSemaphore = Semaphore(value)
     }
 
-  // TODO add schema version checker and automigration
+  // TODO add schema version checker and automigration for non-Android platforms
   private val cache = createZiplineCache(
     driver = cacheDbDriver,
     fileSystem = cacheFileSystem,
-    directory = cacheDirectory,
+    directory = cacheDir,
     maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
     nowMs = nowMs
   )
 
-  suspend fun load(zipline: Zipline, url: String) {
-    // TODO fallback to manifest shipped in resources for offline support
+  suspend fun load(zipline: Zipline, manifestUrl: String) {
+    load(zipline, downloadZiplineManifest(manifestUrl))
+  }
+
+  suspend fun load(
+    zipline: Zipline,
+    manifest: ZiplineManifest,
+  ) {
+    ZiplineModuleLoader.createProduction(
+      dispatcher = dispatcher,
+      httpClient = httpClient,
+      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+      embeddedDir = embeddedDir,
+      embeddedFileSystem = embeddedFileSystem,
+      cache = cache,
+      zipline = zipline,
+    ).load(manifest)
+  }
+
+  private suspend fun downloadZiplineManifest(manifestUrl: String): ZiplineManifest {
     val manifestByteString = try {
       concurrentDownloadsSemaphore.withPermit {
-        httpClient.download(url)
+        httpClient.download(manifestUrl)
       }
     } catch (e: IOException) {
       // If manifest fails to load over network, fallback to prebuilt in resources
-      val prebuiltManifestPath = embeddedDirectory / PREBUILT_MANIFEST_FILE_NAME
+      val prebuiltManifestPath = embeddedDir / PREBUILT_MANIFEST_FILE_NAME
       embeddedFileSystem.read(prebuiltManifestPath) {
         readByteString()
       }
     }
 
-    val manifest = Json.decodeFromString<ZiplineManifest>(manifestByteString.utf8())
-
-    load(zipline, manifest)
-  }
-
-  suspend fun load(zipline: Zipline, manifest: ZiplineManifest) {
-    coroutineScope {
-      val loads = manifest.modules.map {
-        ModuleLoad(zipline, it.key, it.value)
-      }
-      for (load in loads) {
-        val loadJob = launch { load.load() }
-
-        val downstreams = loads.filter { load.id in it.module.dependsOnIds }
-        for (downstream in downstreams) {
-          downstream.upstreams += loadJob
-        }
-      }
-    }
-  }
-
-  private inner class ModuleLoad(
-    val zipline: Zipline,
-    val id: String,
-    val module: ZiplineModule,
-  ) {
-    val upstreams = mutableListOf<Job>()
-
-    /** Attempt to load from, in prioritized order: embedded, cache, network */
-    suspend fun load() {
-      val embeddedPath = embeddedDirectory / module.sha256.hex()
-      val ziplineFileBytes = if (embeddedFileSystem.exists(embeddedPath)) {
-        embeddedFileSystem.read(embeddedPath, BufferedSource::readByteString)
-      } else {
-        cache.getOrPut(module.sha256) {
-          concurrentDownloadsSemaphore.withPermit {
-            httpClient.download(module.url)
-          }
-        }
-      }
-
-      val ziplineFile = ZiplineFile.read(Buffer().write(ziplineFileBytes))
-      upstreams.joinAll()
-      withContext(dispatcher) {
-        zipline.multiplatformLoadJsModule(ziplineFile.quickjsBytecode.toByteArray(), id)
-      }
-    }
-  }
-
-  /** For downloading patches instead of full-sized files. */
-  suspend fun localFileHashes(): List<ByteString> {
-    TODO()
-  }
-
-  companion object {
-    internal const val PREBUILT_MANIFEST_FILE_NAME = "manifest.zipline.json"
+    return Json.decodeFromString(manifestByteString.utf8())
   }
 }
-
