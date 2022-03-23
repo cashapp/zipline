@@ -37,15 +37,16 @@ import org.junit.Test
 
 class ZiplineGradleDownloaderTest {
   private lateinit var quickJs: QuickJs
+  private lateinit var pluginTestFixturesJvm: PluginTestFixturesJvm
   private val webServer = MockWebServer()
   private val ziplineDownloader = ZiplineGradleDownloader()
-
   private val rootProject = File("src/test/resources/downloaderTest")
   private val downloadDir = File("$rootProject/resources/downloaderTest")
 
   @Before
   fun setUp() {
     quickJs = QuickJs.create()
+    pluginTestFixturesJvm = PluginTestFixturesJvm(quickJs)
     rootProject.deleteRecursively()
   }
 
@@ -58,12 +59,11 @@ class ZiplineGradleDownloaderTest {
   @Test
   fun `integration test to load from mock url`() {
     // Zipline files
-    val alphaByteString = alphaBytecode(quickJs)
     val manifest = ZiplineManifest.create(
       modules = mapOf(
         "id" to ZiplineModule(
           url = webServer.url("/latest/app/alpha.zipline").toString(),
-          sha256 = alphaByteString.sha256(),
+          sha256 = pluginTestFixturesJvm.alphaSha256,
           dependsOnIds = listOf(),
           patchFrom = null,
           patchUrl = null,
@@ -77,15 +77,13 @@ class ZiplineGradleDownloaderTest {
       MockResponse()
         .setResponseCode(200)
         .setBody(manifestJsonString)
-        .addHeader("Server", "treehouse-server")
     )
 
     // Enqueue the zipline file
     webServer.enqueue(
       MockResponse()
         .setResponseCode(200)
-        .setBody(Buffer().write(alphaByteString))
-        .addHeader("Server", "treehouse-server")
+        .setBody(Buffer().write(pluginTestFixturesJvm.alphaByteString))
     )
 
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
@@ -97,7 +95,7 @@ class ZiplineGradleDownloaderTest {
     val downloadDirPath = downloadDir.toOkioPath()
     assertTrue(fileSystem.exists(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME))
     assertEquals(manifestJsonString.encodeUtf8(), fileSystem.read(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
-    assertTrue(fileSystem.exists(downloadDirPath / alphaBytecode(quickJs).sha256().hex()))
-    assertEquals(alphaBytecode(quickJs), fileSystem.read(downloadDirPath / alphaBytecode(quickJs).sha256().hex()) { readByteString() })
+    assertTrue(fileSystem.exists(downloadDirPath / pluginTestFixturesJvm.alphaSha256Hex))
+    assertEquals(pluginTestFixturesJvm.alphaByteString, fileSystem.read(downloadDirPath / pluginTestFixturesJvm.alphaSha256Hex) { readByteString() })
   }
 }
