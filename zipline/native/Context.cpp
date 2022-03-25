@@ -177,6 +177,7 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   if (JS_IsException(compiled)) {
     // TODO: figure out how to get the failing line number into the exception.
     throwJsException(env, compiled);
+    JS_FreeValue(jsContext, compiled);
     return nullptr;
   }
 
