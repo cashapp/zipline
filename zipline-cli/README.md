@@ -1,7 +1,6 @@
-OkCurl
-======
+zipline-cli
+===========
 
-_A curl for the next-generation web._
+The `zipline-cli` executable is a cross-platform, GraalVM-powered CLI that exposes some Zipline functionality to non-Gradle projects.
 
-OkCurl is an OkHttp-backed curl clone which allows you to test OkHttp's HTTP engine (including
-HTTP/2) against web servers.
+For example, an iOS-Swift app could use the CLI to download Zipline code to include in the app release.

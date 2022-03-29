@@ -27,14 +27,14 @@ sourceSets {
 }
 
 dependencies {
-  api(Dependencies.okHttp)
-  api(Dependencies.okHttpLoggingInterceptor)
+  api(project(":zipline-loader"))
+  implementation(Dependencies.okHttp)
   implementation(Dependencies.picocli)
 
   kapt(Dependencies.picocliCompiler)
 
-  testImplementation(Dependencies.assertj)
   testImplementation(Dependencies.junit)
+  testImplementation(Dependencies.kotlinTest)
 }
 
 tasks.shadowJar {

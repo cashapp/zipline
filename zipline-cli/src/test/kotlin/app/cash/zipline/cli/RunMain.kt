@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Square, Inc.
+ * Copyright (C) 2022 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,6 @@
  */
 package app.cash.zipline.cli
 
-import app.cash.zipline.cli.Main
-
 fun main() {
-  Main.main(arrayOf("https://www.google.com/robots.txt"))
+  Main.main(arrayOf())
 }
