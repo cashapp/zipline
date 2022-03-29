@@ -44,7 +44,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
     nowMs = System::currentTimeMillis,
   )
   loader.load(zipline, baseUrl.resolve("/manifest.zipline.json").toString())
-  val moduleName = "./zipline-root-trivia-zipline.js"
+  val moduleName = "./zipline-root-trivia-js.js"
   zipline.quickJs.evaluate(
     "require('$moduleName').app.cash.zipline.samples.trivia.launchZipline()",
     "launchZiplineJvm.kt"

@@ -11,5 +11,5 @@ if (config.devServer) {
   delete config.devServer.open;
 
   // Serve .zipline files.
-  config.devServer.static.push('../../../../samples/trivia/trivia-zipline/build/zipline');
+  config.devServer.static.push('../../../../samples/trivia/trivia-js/build/zipline');
 }

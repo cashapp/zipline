@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
 import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
@@ -9,10 +8,6 @@ plugins {
 }
 
 kotlin {
-  jvm {
-    withJava()
-  }
-
   js {
     browser()
     binaries.executable()
@@ -22,13 +17,7 @@ kotlin {
     val commonMain by getting {
       dependencies {
         implementation(project(":zipline"))
-      }
-    }
-    val jvmMain by getting {
-      dependencies {
-        implementation(Dependencies.okHttp)
-        implementation(Dependencies.sqldelightDriverAndroid)
-        implementation(project(":zipline-loader"))
+        implementation(project(":samples:trivia:trivia-shared"))
       }
     }
   }
@@ -67,12 +56,4 @@ val compileZipline by tasks.creating(JavaExec::class) {
 
 val jsBrowserProductionRun by tasks.getting {
   dependsOn(compileZipline)
-}
-
-val triviaAppJar by tasks.creating(ShadowJar::class) {
-  manifest {
-    attributes("Main-Class" to "app.cash.zipline.samples.trivia.TriviaJvmKt")
-  }
-  // Use the test classpath as a lazy way to get the trivia project's compiled output.
-  configurations = listOf(project.configurations.getByName("jvmTestRuntimeClasspath"))
 }
