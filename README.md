@@ -1,213 +1,158 @@
 # Zipline
 
 This library streamlines using Kotlin/JS libraries from Kotlin/JVM and Kotlin/Native programs. It
-makes it possible to do continuous deployment of mobile apps, just like we do for servers and web
+makes it possible to do continuous deployment of mobile code, just like we do for servers and web
 applications.
 
 It'd be simpler to do continuous deploys via the App Store & Play Store! But that process is too
 slow. Even if we could release via these channels every day, we can’t guarantee that user’s devices
-will take the updates immediately. For Cash App we support apps that haven’t been updated for a full
-year.
+will take the updates immediately.
+
+Zipline works by embedding the [QuickJS JavaScript engine][qjs] in your Kotlin/JVM or Kotlin/Native
+program. It's a small and fast JavaScript engine that's well-suited to embedding in mobile
+applications.
 
 _(Looking for [Duktape Android](#Duktape)?)_
 
-## QuickJS
 
-This library uses the [QuickJS embeddable JavaScript engine][qjs] to execute Kotlin/JS. It's
-included in this library and supports both Android and the JVM.
+### Code Example
 
-### QuickJS Usage
+Let's make a trivia game that has fresh questions every day, even if our users don't update their
+apps. We define our interface in `commonMain` so that we can call it from Kotlin/JVM and implement
+it in Kotlin/JS.
 
-```java
-try (QuickJs engine = QuickJs.create()) {
-  Log.d("Greeting", engine.evaluate("'hello world'.toUpperCase();").toString());
+```
+interface TriviaService : ZiplineService {
+  fun games(): List<TriviaGame>
+  fun answer(questionId: String, answer: String): AnswerResult
 }
 ```
 
-For long-lived usage feel free to call `QuickJs.create()` and retain the returned instance for as
-long as you need. Be sure to call `.close()` when you are done to avoid leaking native components.
+Next we implement it in `jsMain`:
 
-### Supported Java Types
-
-Currently, the following Java types are supported when interfacing with JavaScript:
-
- * `boolean` and `Boolean`
- * `int` and `Integer` - as an argument only (not a return value) when calling JavaScript from Java.
- * `double` and `Double`
- * `String`
- * `void` - as a return value.
-
-`Object` is also supported in declarations, but the type of the actual value passed must be
-one of the above or `null`.
-
-### Calling Java from JavaScript
-
-You can provide a Java object for use as a JavaScript global, and call Java functions from
-JavaScript!
-
-#### Example
-
-Suppose we wanted to expose the functionality of [Okio's `ByteString`][okio] in JavaScript to
-convert hex-encoded strings back into UTF-8. First, define a Java interface that declares
-the methods you would like to call from JavaScript:
-
-```java
-interface Utf8 {
-  String fromHex(String hex);
+```
+class RealTriviaService : TriviaService {
+  ...
 }
 ```
 
-Next, implement the interface in Java code (we leave the heavy lifting to Okio):
+Let's connect the implementation running in Kotlin/JS to the interface running in Kotlin/JVM. In
+`jsMain` we define an exported function to bind the implementation:
 
-```java
-Utf8 utf8 = new Utf8() {
-  @Override public String fromHex(String hex) {
-    return okio.ByteString.decodeHex(hex).utf8();
-  }
-};
 ```
-
-Now you can set the object to a JavaScript global, making it available in JavaScript code:
-
-```java
-// Attach our interface to a JavaScript object called Utf8.
-engine.set("Utf8", Utf8.class, utf8);
-
-String greeting = (String) engine.evaluate(""
-    // Here we have a hex encoded string.
-    + "var hexEnc = 'EC9588EB8595ED9598EC84B8EC9A9421';\n"
-    // Call out to Java to decode it!
-    + "var message = Utf8.fromHex(hexEnc);\n"
-    + "message;");
-
-Log.d("Greeting", greeting);
-```
-
-### Calling JavaScript from Java
-
-You can attach a Java interface to a JavaScript global object, and call JavaScript functions
-directly from Java!  The same Java types are supported for function arguments and return
-values as the opposite case above.
-
-#### Example
-
-TODO fix this example, as it no longer works with QuickJS!
-You should still be able to understand what is going on, though.
-
-Imagine a world where we don't have [Okio's `ByteString`][okio]. Fortunately, there's a [Duktape
-builtin][dukdec] that allows us to convert hex-encoded strings back into UTF-8! We can easily set up a
-proxy that allows us to use it directly from our Java code. First, define a Java interface
-that declares the JavaScript methods you would like to call:
-
-```java
-interface Utf8 {
-  String fromHex(String hex);
+@JsExport
+fun launchZipline() {
+  val zipline = Zipline.get()
+  zipline.bind<TriviaService>("triviaService", RealTriviaService())
 }
 ```
 
-Next, we define a global JavaScript object in Duktape to connect to:
+Now we can start a development server to serve our JavaScript to any running applications that
+request it.
 
-```java
-// Note that Duktape.dec returns a Buffer, we must convert it to a String return value.
-engine.evaluate(""
-    + "var Utf8 = {\n"
-    + "  fromHex: function(v) { return String(Duktape.dec('hex', v)); }\n"
-    + "};");
+```
+./gradlew samples:trivia:trivia-zipline:jsBrowserProductionRun --info --continuous
 ```
 
-Now you can connect our interface to the JavaScript global, making it available in Java code:
+Note that this Gradle won't ever reach 100%. That's expected; we want the development server to stay
+on. Also note that the `--continuous` flag will trigger a re-compile whenever the code changes.
 
-```java
-// Connect our interface to a JavaScript object called Utf8.
-Utf8 utf8 = engine.get("Utf8", Utf8.class);
+You can see the served application manifest at
+[localhost:8080/manifest.zipline.json](http://localhost:8080/manifest.zipline.json). It references
+all the code modules for the application.
 
-// Call into the JavaScript object to decode a string.
-String greeting = utf8.fromHex("EC9588EB8595ED9598EC84B8EC9A9421");
-Log.d("Greeting", greeting);
+In `jvmMain` we need write a program that downloads our Kotlin/JS code and calls it. We use
+`ZiplineLoader` which handles code downloading, caching, loading, and caching. We create a
+`Dispatcher` to run Kotlin/JS on. This must be a single-threaded dispatcher as each Zipline instance
+must be confined to a single thread.
+
 ```
-
-## Download
-
-This project supports both Android and Java. On Java only Linux and macOS are currently supported.
-
-```groovy
-repositories {
-  mavenCentral()
-}
-dependencies {
-  implementation 'app.cash.zipline:zipline:0.1.0'
-}
-```
-
-This library is provided as a "fat" `.aar` with native binaries for all available architectures.
-To reduce your binary size, use
-[ABI filtering/splitting](https://developer.android.com/studio/build/configure-apk-splits.html)
-when building an APK and/or enable
-[Android App Bundles](https://developer.android.com/guide/app-bundle).
-
-<details>
-<summary>Snapshots of the development version are available in Sonatype's snapshots repository.</summary>
-<p>
-
-```groovy
-repository {
-  mavenCentral()
-  maven {
-    url 'https://oss.sonatype.org/content/repositories/snapshots/'
-  }
-}
-dependencies {
-  implementation 'app.cash.zipline:zipline:1.0.0-SNAPSHOT'
+suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
+  val zipline = Zipline.create(dispatcher)
+  val baseUrl = "http://localhost:8080/".toHttpUrl()
+  val loader = ZiplineLoader(
+    dispatcher = dispatcher,
+    httpClient = OkHttpZiplineHttpClient(baseUrl, OkHttpClient()),
+    embeddedDir = "/".toPath(),
+    embeddedFileSystem = FileSystem.RESOURCES,
+    cacheDbDriver = DriverFactory().createDriver(),
+    cacheDir = "zipline-cache".toPath(),
+    cacheFileSystem = FileSystem.SYSTEM,
+    cacheMaxSizeInBytes = 10 * 1024 * 1024,
+    nowMs = System::currentTimeMillis,
+  )
+  loader.load(zipline, baseUrl.resolve("/manifest.zipline.json").toString())
+  val moduleName = "./zipline-root-trivia-zipline.js"
+  zipline.quickJs.evaluate(
+    "require('$moduleName').app.cash.zipline.samples.trivia.launchZipline()",
+    "launchZiplineJvm.kt"
+  )
+  return zipline
 }
 ```
 
-</p>
-</details>
-
-
-## Building
-
-### For Android
+Now we build and run the JVM program to put it all together. Do this in a separate terminal from the
+development server!
 
 ```
-$ ./gradlew :quickjs:android:build
+./gradlew samples:trivia:trivia-zipline:triviaAppJar
+java -jar samples/trivia/trivia-zipline/build/libs/trivia-zipline-1.0.0-SNAPSHOT.jar
 ```
 
-The build system will automatically cross-compile the native library to all applicable ABIs and
-create the fat `.aar` in `quickjs/android/build/outputs/aar/`.
+### Interface bridging
 
-This will not run the tests. You must have a working device or emulator connected at which point
-you can explicitly run them.
+Zipline makes it easy to share interfaces with Kotlin/JS. Define an interface in `commonMain`,
+implement it in Kotlin/JS, and call it from the host platform. Or do the opposite: implement it on
+the host platform and call it from Kotlin/JS.
 
-```
-$ ./gradlew :quickjs:android:connectedCheck
-```
+Bridged interfaces must extend `ZiplineService`, which defines a single `close()` method to release
+held resources.
 
-### For the JVM
+By default, arguments and return values are pass-by-value. Zipline uses kotlinx.serialization to
+encode and decode values passed across the boundary.
 
-First, build the native library for your host OS:
-```
-$ cmake -S zipline/src/jvmMain/ -B build/jni/ -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)"
-$ cmake --build build/jni/ --verbose
-```
+Interface types that extend from `ZiplineService` are pass-by-reference: the receiver may call
+methods on a live instance.
 
-Next, copy the resulting binary into the resources of the JVM project:
-```
-$ mkdir -p zipline/src/jvmMain/resources/
-$ cp -v build/jni/libquickjs.* zipline/src/jvmMain/resources/
-```
+Interface functions may be suspending. Internally Zipline implements `setTimeout()` to make
+asynchronous code work as it's supposed to in Kotlin/JS.
 
-Finally, build the platform-specific `.jar` and run the tests:
-```
-$ ./gradlew :quickjs:jvm:build
-```
-
-The `.jar` will be available in `quickjs/jvm/build/libs/`.
+Zipline also supports `Flow<T>` as a parameter or return type. This makes it easy to build reactive
+systems.
 
 
-## License
+### Fast
 
-    Copyright 2015 Square, Inc.
+One potential bottleneck of embedding JavaScript is waiting for the engine to compile the input
+source code. Zipline precompiles JavaScript into efficient QuickJS bytecode to eliminate this
+performance penalty.
+
+Another bottleneck is waiting for code to download. Zipline addresses this with support for modular
+applications. Each input module (Like Kotlin's standard, serialization, and coroutines libraries)
+is downloaded concurrently. Each downloaded module is cached. Modules can also be embedded with the
+host application to avoid any downloads if the network is unreachable. If your application module
+changes more frequently than your libraries, users only download what's changed.
+
+If you run into performance problems in the QuickJS runtime, Zipline includes a sampling profiler.
+You can use this to get a breakdown of how your application spends its CPU time.
+
+
+### Developer-Friendly
+
+Zipline implements `console.log` by forwarding messages to the host platform. It uses
+`android.util.Log` on Android, `java.util.logging` on JVM, and `stdout` on Kotlin/Native.
+
+Zipline integrates Kotlin source maps into QuickJS bytecode. If your process crashes, the stacktrace
+will print `.kt` files and line numbers. Even though there's JavaScript underneath, developers don't
+need to interface with `.js` files.
+
+After using a bridged interface it must be closed so the peer object can be garbage collected. This
+is difficult to get right, so Zipline borrows ideas from [LeakCanary] and aggressively detects
+when a `close()` call is missed.
+
+### License
+
+    Copyright 2022 Block, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -221,19 +166,12 @@ The `.jar` will be available in `quickjs/jvm/build/libs/`.
     See the License for the specific language governing permissions and
     limitations under the License.
 
+# Duktape-Android
 
-Note: The included C code from QuickJS is licensed under MIT.
-
-
-## Duktape
-
-This repository used to host an Android-specific packaging of the [Duktape](https://duktape.org/)
-engine. We have changed to using QuickJS with exactly the same features and API. The Duktape
-history is still present in this repo as are the release tags. Available versions are listed on
+This project was previously known as Duktape-Android and packaged the
+[Duktape](https://duktape.org/) JavaScript engine for Android. The Duktape history is still present
+in this repo as are the release tags. Available versions are listed on
 [Maven central](https://search.maven.org/artifact/com.squareup.duktape/duktape-android).
 
-
-
-
- [qjs]: https://bellard.org/quickjs/
- [okio]: https://github.com/square/okio/blob/master/okio/src/main/java/okio/ByteString.java
+[qjs]: https://bellard.org/quickjs/
+[LeakCanary]: https://square.github.io/leakcanary/
