@@ -1,16 +1,17 @@
 # Zipline
 
 This library streamlines using Kotlin/JS libraries from Kotlin/JVM and Kotlin/Native programs. It
-makes it possible to do continuous deployment of mobile code, just like we do for servers and web
-applications.
+makes it fetching code as easy as fetching data:
 
-It'd be simpler to do continuous deploys via the App Store & Play Store! But that process is too
-slow. Even if we could release via these channels every day, we can’t guarantee that user’s devices
-will take the updates immediately.
+ * For continuous deployment within mobile apps, just like we do for servers and web apps. It'd be
+   simpler to do continuous deploys via the app stores! But that process is too slow and we can't
+   guarantee that user’s devices will update immediately.
+ * For user-customizable behavior and plugin systems
+ * For updating business rules, like pricing or payments
+ * For fresh content like games
 
 Zipline works by embedding the [QuickJS JavaScript engine][qjs] in your Kotlin/JVM or Kotlin/Native
-program. It's a small and fast JavaScript engine that's well-suited to embedding in mobile
-applications.
+program. It's a small and fast JavaScript engine that's well-suited to embedding in applications.
 
 _(Looking for [Duktape Android](#Duktape)?)_
 
@@ -18,8 +19,8 @@ _(Looking for [Duktape Android](#Duktape)?)_
 ### Code Example
 
 Let's make a trivia game that has fresh questions every day, even if our users don't update their
-apps. We define our interface in `commonMain` so that we can call it from Kotlin/JVM and implement
-it in Kotlin/JS.
+apps. We define [our interface][trivia.kt] in `commonMain` so that we can call it from Kotlin/JVM
+and implement it in Kotlin/JS.
 
 ```
 interface TriviaService : ZiplineService {
@@ -28,7 +29,7 @@ interface TriviaService : ZiplineService {
 }
 ```
 
-Next we implement it in `jsMain`:
+Next we [implement it][triviaJs.kt] in `jsMain`:
 
 ```
 class RealTriviaService : TriviaService {
@@ -37,7 +38,7 @@ class RealTriviaService : TriviaService {
 ```
 
 Let's connect the implementation running in Kotlin/JS to the interface running in Kotlin/JVM. In
-`jsMain` we define an exported function to bind the implementation:
+`jsMain` we define an [exported function][launchZiplineJs.kt] to bind the implementation:
 
 ```
 @JsExport
@@ -61,8 +62,8 @@ You can see the served application manifest at
 [localhost:8080/manifest.zipline.json](http://localhost:8080/manifest.zipline.json). It references
 all the code modules for the application.
 
-In `jvmMain` we need write a program that downloads our Kotlin/JS code and calls it. We use
-`ZiplineLoader` which handles code downloading, caching, loading, and caching. We create a
+In `jvmMain` we need write [a program][launchZiplineJvm.kt] that downloads our Kotlin/JS code and
+calls it. We use `ZiplineLoader` which handles code downloading, caching, and loading. We create a
 `Dispatcher` to run Kotlin/JS on. This must be a single-threaded dispatcher as each Zipline instance
 must be confined to a single thread.
 
@@ -152,7 +153,7 @@ when a `close()` call is missed.
 
 ### License
 
-    Copyright 2022 Block, Inc.
+    Copyright 2015 Square, Inc.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -175,3 +176,7 @@ in this repo as are the release tags. Available versions are listed on
 
 [qjs]: https://bellard.org/quickjs/
 [LeakCanary]: https://square.github.io/leakcanary/
+[trivia.kt]: https://github.com/cashapp/zipline/blob/trunk/samples/trivia/trivia-shared/src/commonMain/kotlin/app/cash/zipline/samples/trivia/trivia.kt
+[triviaJs.kt]: https://github.com/cashapp/zipline/blob/trunk/samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/triviaJs.kt
+[launchZiplineJs.kt]: https://github.com/cashapp/zipline/blob/trunk/samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/launchZiplineJs.kt
+[launchZiplineJvm.kt]: https://github.com/cashapp/zipline/blob/trunk/samples/trivia/trivia-host/src/main/kotlin/app/cash/zipline/samples/trivia/launchZiplineJvm.kt

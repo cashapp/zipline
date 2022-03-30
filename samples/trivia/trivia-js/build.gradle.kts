@@ -14,7 +14,7 @@ kotlin {
   }
 
   sourceSets {
-    val commonMain by getting {
+    commonMain {
       dependencies {
         implementation(project(":zipline"))
         implementation(project(":samples:trivia:trivia-shared"))
