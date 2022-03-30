@@ -1,0 +1,63 @@
+[
+  {
+    "name": "app.cash.zipline.cli.Main",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "fields": [
+      {
+        "name": "completionScript"
+      }
+    ]
+  },
+  {
+    "name": "app.cash.zipline.cli.Main$VersionProvider",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "app.cash.zipline.cli.Download",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "fields": [
+      {
+        "name": "downloadDir"
+      },
+      {
+        "name": "manifestUrl"
+      }
+    ]
+  },
+  {
+    "name": "app.cash.zipline.loader.ZiplineManifest",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "fields": [
+      {
+        "name": "modules"
+      }
+    ]
+  },
+  {
+    "name": "picocli.CommandLine$AutoHelpMixin",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true,
+    "fields": [
+      {
+        "name": "helpRequested"
+      },
+      {
+        "name": "versionRequested"
+      }
+    ]
+  }
+]

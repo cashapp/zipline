@@ -16,6 +16,7 @@ buildscript {
     classpath(Dependencies.mavenPublishGradlePlugin)
     classpath(Dependencies.kotlinGradlePlugin)
     classpath(Dependencies.kotlinSerialization)
+    classpath(Dependencies.graalGradlePlugin)
     classpath(Dependencies.dokkaGradlePlugin)
     classpath(Dependencies.shadowJarPlugin)
     classpath(Dependencies.cklibGradlePlugin)
