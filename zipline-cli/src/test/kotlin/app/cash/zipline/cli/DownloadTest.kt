@@ -15,15 +15,42 @@
  */
 package app.cash.zipline.cli
 
+import app.cash.zipline.QuickJs
+import app.cash.zipline.loader.ZiplineManifest
+import app.cash.zipline.loader.ZiplineModule
+import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okio.Buffer
 import okio.FileSystem
+import org.junit.After
+import org.junit.Before
 import org.junit.Test
 import picocli.CommandLine
 import picocli.CommandLine.MissingParameterException
 
 class DownloadTest {
   private val TMP_DIR_PATH = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "zipline-download"
+
+  private val webServer = MockWebServer()
+  private val fileSystem = FileSystem.SYSTEM
+  private lateinit var quickJs: QuickJs
+  private lateinit var testFixtures: LoaderTestFixtures
+
+  @Before
+  fun setUp() {
+    quickJs = QuickJs.create()
+    testFixtures = LoaderTestFixtures(quickJs)
+  }
+
+  @After
+  fun tearDown() {
+    quickJs.close()
+  }
 
   @Test fun downloadWithParameters() {
     fromArgs("-M", "test.cash.app", "-D", TMP_DIR_PATH.toString())
@@ -41,6 +68,46 @@ class DownloadTest {
       fromArgs("-M", "test.cash.app")
     }
     assertEquals("Missing required option: '--download-dir=<downloadDir>'", exception.message)
+  }
+
+  @Test fun downloadFromMockWebServer() {
+    // Wipe and re-create local test download directory
+    fileSystem.deleteRecursively(TMP_DIR_PATH)
+    fileSystem.createDirectories(TMP_DIR_PATH)
+    assertEquals(0, fileSystem.list(TMP_DIR_PATH).size)
+
+    // Seed mock web server with zipline manifest and files
+    // Zipline files
+    val manifest = ZiplineManifest.create(
+      modules = mapOf(
+        "id" to ZiplineModule(
+          url = webServer.url("/latest/app/alpha.zipline").toString(),
+          sha256 = testFixtures.alphaSha256,
+          dependsOnIds = listOf(),
+          patchFrom = null,
+          patchUrl = null,
+        )
+      )
+    )
+    val manifestJsonString = Json.encodeToString(manifest)
+
+    // Enqueue the manifest
+    webServer.enqueue(
+      MockResponse()
+        .setResponseCode(200)
+        .setBody(manifestJsonString)
+    )
+
+    // Enqueue the zipline file
+    webServer.enqueue(
+      MockResponse()
+        .setResponseCode(200)
+        .setBody(Buffer().write(testFixtures.alphaByteString))
+    )
+
+    val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
+
+    CommandLine(Download()).execute("-D", "/tmp/zipline/download", "-M", manifestUrl)
   }
 
   companion object {
