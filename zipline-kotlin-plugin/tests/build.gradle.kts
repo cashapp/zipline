@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies {
-  testImplementation(project(":zipline-kotlin-plugin"))
-  testImplementation(project(":zipline"))
-  testImplementation(project(":zipline:testing"))
+  testImplementation(projects.ziplineKotlinPlugin)
+  testImplementation(projects.zipline)
+  testImplementation(projects.zipline.testing)
   testImplementation(kotlin("test-junit"))
   testImplementation(Dependencies.kotlinReflect)
   testImplementation(Dependencies.kotlinxCoroutinesTest)

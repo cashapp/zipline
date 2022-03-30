@@ -10,7 +10,7 @@ plugins {
 }
 
 dependencies {
-  compileOnly(project(":zipline-kotlin-plugin-hosted"))
+  compileOnly(projects.ziplineKotlinPluginHosted)
 }
 
 val shadowJar = tasks.register("embeddedPlugin", ShadowJar::class.java) {

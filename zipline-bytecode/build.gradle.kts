@@ -9,7 +9,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":zipline"))
+  api(projects.zipline)
   api(Dependencies.okio)
   api(Dependencies.kotlinxSerialization)
   implementation(Dependencies.kotlinxSerializationJson)

@@ -16,7 +16,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation(project(":zipline"))
+        implementation(projects.zipline)
         implementation(project(":samples:trivia:trivia-shared"))
       }
     }
@@ -39,8 +39,8 @@ val compilerConfiguration by configurations.creating {
 }
 
 dependencies {
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
-  compilerConfiguration(project(":zipline-gradle-plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, projects.ziplineKotlinPlugin)
+  compilerConfiguration(projects.ziplineGradlePlugin)
 }
 
 // We can't use the Zipline Gradle plugin because it shares our parent project.

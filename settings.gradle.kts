@@ -17,3 +17,5 @@ include(":samples:octane")
 include(":samples:trivia:trivia-host")
 include(":samples:trivia:trivia-js")
 include(":samples:trivia:trivia-shared")
+
+enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")

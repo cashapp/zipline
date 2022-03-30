@@ -33,7 +33,7 @@ kotlin {
     val commonMain by getting {
       dependencies {
         api(Dependencies.kotlinxCoroutines)
-        api(project(":zipline"))
+        api(projects.zipline)
         api(Dependencies.okio)
         implementation(Dependencies.kotlinxSerializationJson)
       }

@@ -8,14 +8,14 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":zipline"))
-  implementation(project(":zipline-loader"))
+  implementation(projects.zipline)
+  implementation(projects.ziplineLoader)
   implementation(project(":samples:trivia:trivia-shared"))
   implementation(Dependencies.okHttp)
 }
 
 dependencies {
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, projects.ziplineKotlinPlugin)
 }
 
 val shadowJar by tasks.getting(ShadowJar::class) {

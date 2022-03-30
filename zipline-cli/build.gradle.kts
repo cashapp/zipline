@@ -27,7 +27,7 @@ sourceSets {
 }
 
 dependencies {
-  api(project(":zipline-loader"))
+  api(projects.ziplineLoader)
   implementation(Dependencies.okHttp)
   implementation(Dependencies.picocli)
 
