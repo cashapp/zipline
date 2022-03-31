@@ -19,6 +19,7 @@ dependencies {
   implementation(Dependencies.kotlinxSerializationJson)
   implementation(Dependencies.okHttp)
   implementation(Dependencies.okio)
+  testImplementation(projects.ziplineLoaderTesting)
   testImplementation(Dependencies.junit)
   testImplementation(Dependencies.kotlinTest)
   testImplementation(Dependencies.okHttpMockWebServer)

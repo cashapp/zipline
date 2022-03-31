@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package app.cash.zipline.loader
+package app.cash.zipline.loader.testing
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.fetcher.FsCachingFetcher
@@ -22,6 +22,14 @@ import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
+import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
+import app.cash.zipline.loader.ZiplineCache
+import app.cash.zipline.loader.ZiplineFile
+import app.cash.zipline.loader.ZiplineHttpClient
+import app.cash.zipline.loader.ZiplineLoader
+import app.cash.zipline.loader.ZiplineManifest
+import app.cash.zipline.loader.ZiplineModule
+import app.cash.zipline.loader.createZiplineCache
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.Buffer
@@ -31,7 +39,7 @@ import okio.ByteString.Companion.toByteString
 import okio.FileSystem
 import okio.Path
 
-class TestFixturesJvm(quickJs: QuickJs) {
+class LoaderTestFixtures(quickJs: QuickJs) {
   val alphaJs = """
       |globalThis.log = globalThis.log || "";
       |globalThis.log += "alpha loaded\n"
@@ -63,8 +71,8 @@ class TestFixturesJvm(quickJs: QuickJs) {
     )
   )
 
-  val manifestWithRelativeUrlsByteString =
-    Json.encodeToString(manifestWithRelativeUrls).encodeUtf8()
+  val manifestWithRelativeUrlsJsonString = Json.encodeToString(manifestWithRelativeUrls)
+  val manifestWithRelativeUrlsByteString = manifestWithRelativeUrlsJsonString.encodeUtf8()
 
   val manifest = manifestWithRelativeUrls.copy(
     modules = manifestWithRelativeUrls.modules.mapValues { (_, module) ->
@@ -78,7 +86,8 @@ class TestFixturesJvm(quickJs: QuickJs) {
     }
   )
 
-  val manifestByteString = Json.encodeToString(manifest).encodeUtf8()
+  val manifestJsonString = Json.encodeToString(manifest)
+  val manifestByteString = manifestJsonString.encodeUtf8()
 
   private fun ziplineFile(quickJs: QuickJs, javaScript: String, fileName: String): ByteString {
     val ziplineFile = ZiplineFile(

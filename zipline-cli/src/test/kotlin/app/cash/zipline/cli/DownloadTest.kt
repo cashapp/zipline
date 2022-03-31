@@ -17,18 +17,21 @@ package app.cash.zipline.cli
 
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import okio.FileSystem
 import org.junit.Test
 import picocli.CommandLine
 import picocli.CommandLine.MissingParameterException
 
 class DownloadTest {
+  private val TMP_DIR_PATH = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "zipline-download"
+
   @Test fun downloadWithParameters() {
-    fromArgs("-M", "test.cash.app", "-D", "/tmp/zipline/download")
+    fromArgs("-M", "test.cash.app", "-D", TMP_DIR_PATH.toString())
   }
 
   @Test fun downloadMissingManifestUrl() {
     val exception = assertFailsWith<MissingParameterException> {
-      fromArgs("-D", "/tmp/zipline/download")
+      fromArgs("-D", TMP_DIR_PATH.toString())
     }
     assertEquals("Missing required option: '--manifest-url=<manifestUrl>'", exception.message)
   }

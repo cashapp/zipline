@@ -20,6 +20,7 @@ import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
+import app.cash.zipline.loader.testing.LoaderTestFixtures
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -37,7 +38,7 @@ import org.junit.Test
 
 class ZiplineGradleDownloaderTest {
   private lateinit var quickJs: QuickJs
-  private lateinit var pluginTestFixturesJvm: PluginTestFixturesJvm
+  private lateinit var testFixtures: LoaderTestFixtures
   private val webServer = MockWebServer()
   private val ziplineDownloader = ZiplineGradleDownloader()
   private val rootProject = File("src/test/resources/downloaderTest")
@@ -46,7 +47,7 @@ class ZiplineGradleDownloaderTest {
   @Before
   fun setUp() {
     quickJs = QuickJs.create()
-    pluginTestFixturesJvm = PluginTestFixturesJvm(quickJs)
+    testFixtures = LoaderTestFixtures(quickJs)
     rootProject.deleteRecursively()
   }
 
@@ -63,7 +64,7 @@ class ZiplineGradleDownloaderTest {
       modules = mapOf(
         "id" to ZiplineModule(
           url = webServer.url("/latest/app/alpha.zipline").toString(),
-          sha256 = pluginTestFixturesJvm.alphaSha256,
+          sha256 = testFixtures.alphaSha256,
           dependsOnIds = listOf(),
           patchFrom = null,
           patchUrl = null,
@@ -83,7 +84,7 @@ class ZiplineGradleDownloaderTest {
     webServer.enqueue(
       MockResponse()
         .setResponseCode(200)
-        .setBody(Buffer().write(pluginTestFixturesJvm.alphaByteString))
+        .setBody(Buffer().write(testFixtures.alphaByteString))
     )
 
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
@@ -94,8 +95,12 @@ class ZiplineGradleDownloaderTest {
     val fileSystem = FileSystem.SYSTEM
     val downloadDirPath = downloadDir.toOkioPath()
     assertTrue(fileSystem.exists(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME))
-    assertEquals(manifestJsonString.encodeUtf8(), fileSystem.read(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
-    assertTrue(fileSystem.exists(downloadDirPath / pluginTestFixturesJvm.alphaSha256Hex))
-    assertEquals(pluginTestFixturesJvm.alphaByteString, fileSystem.read(downloadDirPath / pluginTestFixturesJvm.alphaSha256Hex) { readByteString() })
+    assertEquals(
+      manifestJsonString.encodeUtf8(),
+      fileSystem.read(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+    assertTrue(fileSystem.exists(downloadDirPath / testFixtures.alphaSha256Hex))
+    assertEquals(
+      testFixtures.alphaByteString,
+      fileSystem.read(downloadDirPath / testFixtures.alphaSha256Hex) { readByteString() })
   }
 }
