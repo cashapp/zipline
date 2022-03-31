@@ -53,9 +53,9 @@ android {
 }
 
 dependencies {
-  implementation(project(":zipline"))
-  implementation(project(":zipline-profiler"))
-  implementation(project(":samples:emoji-search:presenters"))
+  implementation(projects.zipline)
+  implementation(projects.ziplineProfiler)
+  implementation(projects.samples.emojiSearch.presenters)
   implementation(Dependencies.androidMaterial)
   implementation(Dependencies.androidxActivityCompose)
   implementation(Dependencies.androidxAppCompat)
@@ -66,6 +66,6 @@ dependencies {
   implementation(Dependencies.composeUi)
   implementation(Dependencies.composeUiToolingPreview)
   debugImplementation(Dependencies.composeUiTooling)
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, projects.ziplineKotlinPlugin)
   coreLibraryDesugaring(Dependencies.desugarJdkLibs)
 }

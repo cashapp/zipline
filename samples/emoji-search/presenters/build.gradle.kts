@@ -18,14 +18,14 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        implementation(project(":zipline"))
+        implementation(projects.zipline)
       }
     }
     val jvmMain by getting {
       dependencies {
         implementation(Dependencies.okHttp)
         implementation(Dependencies.sqldelightDriverAndroid)
-        implementation(project(":zipline-loader"))
+        implementation(projects.ziplineLoader)
       }
     }
   }
@@ -47,8 +47,8 @@ val compilerConfiguration by configurations.creating {
 }
 
 dependencies {
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
-  compilerConfiguration(project(":zipline-gradle-plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, projects.ziplineKotlinPlugin)
+  compilerConfiguration(projects.ziplineGradlePlugin)
 }
 
 

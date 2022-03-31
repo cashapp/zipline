@@ -17,12 +17,12 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation(project(":zipline"))
+        implementation(projects.zipline)
       }
     }
   }
 }
 
 dependencies {
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, project(":zipline-kotlin-plugin"))
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, projects.ziplineKotlinPlugin)
 }

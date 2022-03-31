@@ -12,9 +12,9 @@ plugins {
 
 dependencies {
   implementation(kotlin("gradle-plugin-api"))
-  implementation(project(":zipline"))
-  implementation(project(":zipline-bytecode"))
-  implementation(project(":zipline-loader"))
+  implementation(projects.zipline)
+  implementation(projects.ziplineBytecode)
+  implementation(projects.ziplineLoader)
   implementation(Dependencies.kotlinGradlePlugin)
   implementation(Dependencies.kotlinxSerializationJson)
   implementation(Dependencies.okHttp)
@@ -26,8 +26,8 @@ dependencies {
 }
 
 buildConfig {
-  val compilerPlugin = project(":zipline-kotlin-plugin")
-  val compilerPluginHosted = project(":zipline-kotlin-plugin-hosted")
+  val compilerPlugin = projects.ziplineKotlinPlugin
+  val compilerPluginHosted = projects.ziplineKotlinPluginHosted
   packageName("app.cash.zipline.gradle")
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${Ext.kotlinPluginId}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_GROUP", "\"${compilerPlugin.group}\"")

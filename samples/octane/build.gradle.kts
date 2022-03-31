@@ -30,7 +30,7 @@ android {
 }
 
 dependencies {
-  implementation(project(":zipline"))
+  implementation(projects.zipline)
   implementation(Dependencies.duktape)
   implementation(Dependencies.okio)
 }
