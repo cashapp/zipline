@@ -16,11 +16,13 @@
 package app.cash.zipline.cli
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okhttp3.mockwebserver.MockResponse
@@ -107,7 +109,13 @@ class DownloadTest {
 
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
 
-    CommandLine(Download()).execute("-D", "/tmp/zipline/download", "-M", manifestUrl)
+    // Download using the CLI
+    CommandLine(Download()).execute("-D", TMP_DIR_PATH.toString(), "-M", manifestUrl)
+
+    // Check that files were downloaded
+    assertTrue(fileSystem.exists(TMP_DIR_PATH))
+    assertTrue(fileSystem.exists(TMP_DIR_PATH / PREBUILT_MANIFEST_FILE_NAME))
+    assertTrue(fileSystem.exists(TMP_DIR_PATH / testFixtures.alphaSha256Hex))
   }
 
   companion object {
