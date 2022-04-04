@@ -17,7 +17,6 @@ package app.cash.zipline
 
 import app.cash.zipline.testing.EchoService
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -28,8 +27,8 @@ import org.junit.Test
 class LeakedServicesTest {
   private val events = Channel<String>(capacity = Int.MAX_VALUE)
   private val eventListener = object : EventListener() {
-    override fun instanceLeaked(name: String, stacktrace: Exception?) {
-      val sent = events.trySend("instanceLeaked($name, $stacktrace)")
+    override fun serviceLeaked(name: String) {
+      val sent = events.trySend("serviceLeaked($name)")
       check(sent.isSuccess)
     }
   }
@@ -52,7 +51,7 @@ class LeakedServicesTest {
     allocateAndLeakService()
     awaitGarbageCollection()
     triggerLeakDetection()
-    assertThat(events.receive()).isEqualTo("instanceLeaked(helloService, null)")
+    assertThat(events.receive()).isEqualTo("serviceLeaked(helloService)")
   }
 
   /** Just attempting to take a service causes Zipline to process leaked services. */
