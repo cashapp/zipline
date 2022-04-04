@@ -52,7 +52,7 @@ private class ZiplineServiceReference(
   fun afterGc() {
     allReferencesSet.remove(this)
     if (!context.closed) {
-      eventListener.instanceLeaked(name, null)
+      eventListener.serviceLeaked(name)
     }
   }
 }

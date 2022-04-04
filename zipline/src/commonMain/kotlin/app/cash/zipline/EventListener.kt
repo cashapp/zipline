@@ -15,8 +15,72 @@
  */
 package app.cash.zipline
 
+/**
+ * Listener for metrics and debugging.
+ *
+ * All event methods must execute fast, without external locking, cannot throw exceptions, attempt
+ * to mutate the event parameters, or be re-entrant back into the client. Any IO - writing to files
+ * or network should be done asynchronously.
+ */
 abstract class EventListener {
-  open fun instanceLeaked(name: String, stacktrace: Exception?) {
+  /** Invoked when something calls [Zipline.bind], or a service is sent via an API. */
+  open fun bindService(name: String, service: ZiplineService) {
+  }
+
+  /** Invoked when something calls [Zipline.take], or a service is received via an API. */
+  open fun takeService(name: String, service: ZiplineService) {
+  }
+
+  /**
+   * Invoked when a service function is called. This may be invoked for either suspending or
+   * non-suspending functions.
+   *
+   * @return any object. This value will be passed back to [callEnd] or [callFailed] when the call
+   *     is completed. The base function always returns null.
+   */
+  open fun callStart(
+    name: String,
+    service: ZiplineService,
+    functionName: String,
+    args: List<Any?>,
+  ): Any? {
+    return null
+  }
+
+  /**
+   * Invoked when a service function call completes successfully.
+   *
+   * @param callStartResult the value returned by [callStart] for the start of this call. This is
+   *     null unless [callStart] is overridden to return something else.
+   */
+  open fun callEnd(
+    name: String,
+    functionName: String,
+    service: ZiplineService,
+    args: List<Any?>,
+    result: Any?,
+    callStartResult: Any?
+  ) {
+  }
+
+  /**
+   * Invoked when a service function call fails with an exception.
+   *
+   * @param callStartResult the value returned by [callStart] for the start of this call. This is
+   *     null unless [callStart] is overridden to return something else.
+   */
+  open fun callFailed(
+    name: String,
+    functionName: String,
+    service: ZiplineService,
+    args: List<Any?>,
+    exception: Throwable?,
+    callStartResult: Any?
+  ) {
+  }
+
+  /** Invoked when a service is garbage collected without being closed. */
+  open fun serviceLeaked(name: String) {
   }
 
   companion object {
