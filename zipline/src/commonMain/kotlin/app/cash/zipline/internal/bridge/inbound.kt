@@ -16,6 +16,8 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineApiMismatchException
+import app.cash.zipline.internal.decodeFromStringFast
+import app.cash.zipline.internal.encodeToStringFast
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 
@@ -63,7 +65,7 @@ internal class InboundCall(
     while (i < arguments.size) {
       when (arguments[i]) {
         LABEL_VALUE -> {
-          val result = context.json.decodeFromString(serializer, arguments[i + 1])
+          val result = context.json.decodeFromStringFast(serializer, arguments[i + 1])
           i += 2
           return result
         }
@@ -81,7 +83,7 @@ internal class InboundCall(
 
   fun <R> result(serializer: KSerializer<R>, value: R): Array<String> {
     return when {
-      value != null -> arrayOf(LABEL_VALUE, context.json.encodeToString(serializer, value))
+      value != null -> arrayOf(LABEL_VALUE, context.json.encodeToStringFast(serializer, value))
       else -> arrayOf(LABEL_NULL, "")
     }
   }
@@ -98,6 +100,6 @@ internal class InboundCall(
   )
 
   fun resultException(e: Throwable): Array<String> {
-    return arrayOf(LABEL_EXCEPTION, context.json.encodeToString(ThrowableSerializer, e))
+    return arrayOf(LABEL_EXCEPTION, context.json.encodeToStringFast(ThrowableSerializer, e))
   }
 }
