@@ -16,6 +16,8 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineService
+import app.cash.zipline.internal.decodeFromStringFast
+import app.cash.zipline.internal.encodeToStringFast
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.ContextualSerializer
@@ -62,7 +64,7 @@ internal class FlowSerializer<T>(
       override suspend fun collectJson(collector: FlowZiplineCollector) {
         try {
           this@toZiplineService.collect {
-            val value = json.encodeToString(itemSerializer, it)
+            val value = json.encodeToStringFast(itemSerializer, it)
             collector.emit(value)
           }
         } finally {
@@ -85,7 +87,7 @@ internal class FlowSerializer<T>(
       try {
         val collector = object : FlowZiplineCollector {
           override suspend fun emit(value: String) {
-            val item = json.decodeFromString(itemSerializer, value)
+            val item = json.decodeFromStringFast(itemSerializer, value)
             this@channelFlow.send(item)
           }
         }

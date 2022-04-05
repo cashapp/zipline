@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.internal.decodeFromStringFast
+import app.cash.zipline.internal.encodeToStringFast
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.launch
@@ -73,7 +75,7 @@ internal class OutboundCall(
       arguments += ""
     } else {
       arguments += LABEL_VALUE
-      arguments += context.json.encodeToString(serializer, value)
+      arguments += context.json.encodeToStringFast(serializer, value)
     }
   }
 
@@ -129,10 +131,10 @@ internal class OutboundCall(
           return Result.success(null as R)
         }
         LABEL_VALUE -> {
-          return Result.success(context.json.decodeFromString(serializer, this[1]))
+          return Result.success(context.json.decodeFromStringFast(serializer, this[1]))
         }
         LABEL_EXCEPTION -> {
-          return Result.failure(context.json.decodeFromString(ThrowableSerializer, this[1]))
+          return Result.failure(context.json.decodeFromStringFast(ThrowableSerializer, this[1]))
         }
         else -> i += 2
       }
