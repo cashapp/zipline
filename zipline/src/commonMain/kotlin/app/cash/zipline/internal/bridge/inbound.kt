@@ -57,15 +57,15 @@ internal interface InboundCallHandler {
 internal class InboundCall(
   private val context: InboundBridge.Context,
   val funName: String,
-  val arguments: Array<String>,
+  val encodedArguments: Array<String>,
 ) {
   private var i = 0
 
   fun <T> parameter(serializer: KSerializer<T>): T {
-    while (i < arguments.size) {
-      when (arguments[i]) {
+    while (i < encodedArguments.size) {
+      when (encodedArguments[i]) {
         LABEL_VALUE -> {
-          val result = context.json.decodeFromStringFast(serializer, arguments[i + 1])
+          val result = context.json.decodeFromStringFast(serializer, encodedArguments[i + 1])
           i += 2
           return result
         }

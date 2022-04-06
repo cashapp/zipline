@@ -65,17 +65,17 @@ internal class OutboundCall(
   private val funName: String,
   private val parameterCount: Int,
 ) {
-  private val arguments = ArrayList<String>(parameterCount * 2)
+  private val encodedArguments = ArrayList<String>(parameterCount * 2)
   private var callCount = 0
 
   fun <T> parameter(serializer: KSerializer<T>, value: T) {
     require(callCount++ < parameterCount)
     if (value == null) {
-      arguments += LABEL_NULL
-      arguments += ""
+      encodedArguments += LABEL_NULL
+      encodedArguments += ""
     } else {
-      arguments += LABEL_VALUE
-      arguments += context.json.encodeToStringFast(serializer, value)
+      encodedArguments += LABEL_VALUE
+      encodedArguments += context.json.encodeToStringFast(serializer, value)
     }
   }
 
@@ -84,7 +84,7 @@ internal class OutboundCall(
     val encodedResult = endpoint.outboundChannel.invoke(
       instanceName,
       funName,
-      arguments.toTypedArray()
+      encodedArguments.toTypedArray()
     )
 
     return encodedResult.decodeResult(serializer).getOrThrow()
@@ -102,7 +102,7 @@ internal class OutboundCall(
         endpoint.outboundChannel.invokeSuspending(
           instanceName,
           funName,
-          arguments.toTypedArray(),
+          encodedArguments.toTypedArray(),
           callbackName
         )
       }
