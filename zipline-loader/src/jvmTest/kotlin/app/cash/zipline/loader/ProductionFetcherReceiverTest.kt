@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package app.cash.zipline.loader.interceptors
+package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
@@ -22,7 +22,6 @@ import app.cash.zipline.loader.Database
 import app.cash.zipline.loader.FakeZiplineHttpClient
 import app.cash.zipline.loader.TestFixturesJvm
 import app.cash.zipline.loader.ZiplineCache
-import app.cash.zipline.loader.ZiplineModuleLoader
 import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
 import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
 import app.cash.zipline.loader.createZiplineCache
@@ -30,7 +29,6 @@ import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
@@ -40,7 +38,7 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class ProductionInterceptorTest {
+class ProductionFetcherReceiverTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
@@ -48,7 +46,6 @@ class ProductionInterceptorTest {
   private val cacheDirectory = "/zipline/cache".toPath()
   private var nowMillis = 1_000L
 
-  private var concurrentDownloadsSemaphore = Semaphore(3)
   private lateinit var zipline: Zipline
   private lateinit var cache: ZiplineCache
 
@@ -57,7 +54,7 @@ class ProductionInterceptorTest {
   private val embeddedDir = "/zipline".toPath()
   private lateinit var quickJs: QuickJs
   private lateinit var testFixturesJvm: TestFixturesJvm
-  private lateinit var moduleLoader: ZiplineModuleLoader
+  private lateinit var loader: ZiplineLoader
 
   @Before
   fun setUp() {
@@ -74,14 +71,12 @@ class ProductionInterceptorTest {
       nowMs = { nowMillis }
     )
     zipline = Zipline.create(dispatcher)
-    moduleLoader = ZiplineModuleLoader.createProduction(
+    loader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
-      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
       cache = cache,
-      zipline = zipline,
     )
   }
 
@@ -103,7 +98,7 @@ class ProductionInterceptorTest {
 
     httpClient.filePathToByteString = mapOf()
 
-    moduleLoader.load(testFixturesJvm.manifest)
+    loader.load(zipline, testFixturesJvm.manifest)
 
     assertEquals(
       """
@@ -127,7 +122,7 @@ class ProductionInterceptorTest {
 
     httpClient.filePathToByteString = mapOf()
 
-    moduleLoader.load(testFixturesJvm.manifest)
+    loader.load(zipline, testFixturesJvm.manifest)
 
     assertEquals(
       """
@@ -148,7 +143,7 @@ class ProductionInterceptorTest {
       bravoUrl to testFixturesJvm.bravoByteString,
     )
 
-    moduleLoader.load(testFixturesJvm.manifest)
+    loader.load(zipline, testFixturesJvm.manifest)
 
     assertEquals(
       """

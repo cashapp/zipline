@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package app.cash.zipline.loader.interceptors
+package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.FakeZiplineHttpClient
 import app.cash.zipline.loader.TestFixturesJvm
 import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
 import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
-import app.cash.zipline.loader.ZiplineModuleLoader
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -35,29 +33,25 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class DownloadOnlyInterceptorTest {
+class DownloadOnlyFetcherReceiverTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private var concurrentDownloadsSemaphore = Semaphore(3)
   private lateinit var fileSystem: FileSystem
   private val downloadDir = "/zipline/downloads".toPath()
   private lateinit var quickJs: QuickJs
   private lateinit var testFixturesJvm: TestFixturesJvm
 
-  private lateinit var moduleLoader: ZiplineModuleLoader
+  private lateinit var loader: ZiplineLoader
 
   @Before
   fun setUp() {
     quickJs = QuickJs.create()
     testFixturesJvm = TestFixturesJvm(quickJs)
     fileSystem = FakeFileSystem()
-    moduleLoader = ZiplineModuleLoader.createDownloadOnly(
+    loader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
-      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-      downloadDir = downloadDir,
-      downloadFileSystem = fileSystem
     )
   }
 
@@ -74,7 +68,7 @@ class DownloadOnlyInterceptorTest {
       bravoUrl to testFixturesJvm.bravoByteString,
     )
 
-    moduleLoader.load(testFixturesJvm.manifest)
+    loader.download(downloadDir, fileSystem, testFixturesJvm.manifest)
 
     assertTrue(fileSystem.exists(downloadDir / testFixturesJvm.alphaSha256Hex))
     assertEquals(testFixturesJvm.alphaByteString, fileSystem.read(downloadDir / testFixturesJvm.alphaSha256Hex) { readByteString() })

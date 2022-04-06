@@ -206,6 +206,7 @@ class ZiplineCache internal constructor(
   }
 }
 
+// TODO add schema version checker and automigration for non-Android platforms
 fun createZiplineCache(
   driver: SqlDriver,
   fileSystem: FileSystem,

@@ -11,12 +11,16 @@ class FsEmbeddedFetcher(
   private val embeddedDir: Path,
   private val embeddedFileSystem: FileSystem,
 ) : Fetcher {
-  override suspend fun fetch(id: String, sha256: ByteString, url: String): ByteString? {
-    val resourcePath = embeddedDir / sha256.hex()
-
+  override suspend fun fetch(
+    id: String,
+    sha256: ByteString,
+    url: String,
+    fileNameOverride: String?
+  ): ByteString? {
+    val filePath = embeddedDir / (fileNameOverride ?: sha256.hex())
     return when {
-      embeddedFileSystem.exists(resourcePath) -> {
-        embeddedFileSystem.read(resourcePath) {
+      embeddedFileSystem.exists(filePath) -> {
+        embeddedFileSystem.read(filePath) {
           readByteString()
         }
       }

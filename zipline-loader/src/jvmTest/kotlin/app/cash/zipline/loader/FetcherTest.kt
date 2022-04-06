@@ -18,18 +18,19 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.fetcher.Fetcher
-import app.cash.zipline.loader.receiver.Receiver
+import app.cash.zipline.loader.fetcher.fetch
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.sync.Semaphore
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class ZiplineModuleLoaderTest {
-  private val dispatcher = TestCoroutineDispatcher()
+class FetcherTest {
+  private var concurrentDownloadsSemaphore = Semaphore(3)
+
   private lateinit var quickJs: QuickJs
   private lateinit var testFixturesJvm: TestFixturesJvm
 
@@ -38,33 +39,29 @@ class ZiplineModuleLoaderTest {
   private lateinit var bravoByteString: ByteString
 
   private val fetcherAlpha = object : Fetcher {
-    override suspend fun fetch(id: String, sha256: ByteString, url: String): ByteString? {
+    override suspend fun fetch(
+      id: String,
+      sha256: ByteString,
+      url: String,
+      fileNameOverride: String?
+    ): ByteString? {
       alphaFetcherIds.add(id)
       return null
     }
   }
   private val fetcherBravo = object : Fetcher {
-    override suspend fun fetch(id: String, sha256: ByteString, url: String): ByteString? {
+    override suspend fun fetch(
+      id: String,
+      sha256: ByteString,
+      url: String,
+      fileNameOverride: String?
+    ): ByteString? {
       bravoFetcherIds.add(id)
       return bravoByteString
     }
   }
 
   private var alphaReceiverIds: MutableList<String> = mutableListOf()
-  private val receiverAlpha = object: Receiver {
-    override suspend fun receive(byteString: ByteString, id: String, sha256: ByteString) {
-      alphaReceiverIds.add(id)
-    }
-  }
-
-  private val moduleLoader = ZiplineModuleLoader(
-    dispatcher = dispatcher,
-    fetchers = listOf(
-      fetcherAlpha,
-      fetcherBravo,
-    ),
-    receiver = receiverAlpha,
-  )
 
   @Before
   fun setUp() {
@@ -82,18 +79,30 @@ class ZiplineModuleLoaderTest {
   }
 
   @Test
-  fun moduleLoaderRunsInterceptorsInOrder(): Unit = runBlocking {
-    moduleLoader.load(testFixturesJvm.manifest)
+  fun fetcherRunsInOrder(): Unit = runBlocking {
+    val fetchers = listOf(fetcherAlpha, fetcherBravo)
+    val actualByteString = fetchers.fetch(
+      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+      id = "alpha",
+      sha256 = "alpha".encodeUtf8().sha256(),
+      url = "alpha",
+      fileNameOverride = null,
+    )
+    fetchers.fetch(
+      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+      id = "bravo",
+      sha256 = "bravo".encodeUtf8().sha256(),
+      url = "bravo",
+      fileNameOverride = null,
+    )
+    assertEquals(bravoByteString, actualByteString)
 
-    // Both fetcher interceptors have been called, which means that alpha ran first and returned null
+    // Both fetchers have been called, which means that alpha ran first and returned null
     // Receiver ran and alpha ran before bravo
     assertEquals("alpha", alphaFetcherIds.first())
     assertEquals("bravo", alphaFetcherIds.last())
 
     assertEquals("alpha", bravoFetcherIds.first())
     assertEquals("bravo", bravoFetcherIds.last())
-
-    assertEquals("alpha", alphaReceiverIds.first())
-    assertEquals("bravo", alphaReceiverIds.last())
   }
 }
