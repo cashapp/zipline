@@ -23,7 +23,6 @@ import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
@@ -43,14 +42,11 @@ class Download : Runnable {
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
 
-  // Dummy base url
-  private val baseUrl = "http://10.0.2.2:8080/".toHttpUrl()
-
   private fun download(manifestUrl: String, downloadDir: File) {
     println("Zipline Download [manifestUrl=$manifestUrl][downloadDir=$downloadDir]...")
     val ziplineDownloader = ZiplineDownloader(
       dispatcher = dispatcher,
-      httpClient = OkHttpZiplineHttpClient(baseUrl, client),
+      httpClient = OkHttpZiplineHttpClient(client),
       downloadDir = downloadDir.toOkioPath(),
       downloadFileSystem = FileSystem.SYSTEM,
     )

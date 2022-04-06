@@ -29,15 +29,13 @@ import okhttp3.Response
 import okio.ByteString
 
 class OkHttpZiplineHttpClient(
-  private val baseUrl: HttpUrl,
   private val okHttpClient: OkHttpClient
 ) : ZiplineHttpClient {
   override suspend fun download(url: String): ByteString {
     return suspendCancellableCoroutine { continuation ->
-      val fullUrl = baseUrl.resolve(url)!!
       val call = okHttpClient.newCall(
         Request.Builder()
-          .url(fullUrl)
+          .url(url)
           .build()
       )
 
