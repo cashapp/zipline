@@ -22,6 +22,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -70,4 +71,7 @@ class OkHttpZiplineHttpClient(
       })
     }
   }
+
+  override fun resolve(baseUrl: String, link: String) =
+    baseUrl.toHttpUrl().resolve(link)!!.toString()
 }

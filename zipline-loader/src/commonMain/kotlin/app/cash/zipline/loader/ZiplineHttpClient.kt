@@ -19,4 +19,23 @@ import okio.ByteString
 
 interface ZiplineHttpClient {
   suspend fun download(url: String): ByteString
+
+  /** Returns the URL of [link] relative to [baseUrl]. */
+  fun resolve(baseUrl: String, link: String): String
+}
+
+/**
+ * Returns a manifest equivalent to [manifest], but with module URLs resolved against [baseUrl].
+ * This way consumers of the manifest don't need to know the URL that the manifest was downloaded
+ * from.
+ */
+internal fun ZiplineHttpClient.resolveUrls(
+  manifest: ZiplineManifest,
+  baseUrl: String
+): ZiplineManifest {
+  return manifest.copy(
+    modules = manifest.modules.mapValues { (_, module) ->
+      module.copy(url = resolve(baseUrl, module.url))
+    }
+  )
 }

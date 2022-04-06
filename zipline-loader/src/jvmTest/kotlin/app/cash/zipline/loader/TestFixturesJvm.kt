@@ -41,20 +41,35 @@ class TestFixturesJvm(quickJs: QuickJs) {
   val bravoSha256 = bravoByteString.sha256()
   val bravoSha256Hex = bravoSha256.hex()
 
-  val manifest = ZiplineManifest.create(
+  val manifestWithRelativeUrls = ZiplineManifest.create(
     modules = mapOf(
       "bravo" to ZiplineModule(
-        url = bravoFilePath,
+        url = bravoRelativeUrl,
         sha256 = bravoByteString.sha256(),
         dependsOnIds = listOf("alpha"),
       ),
       "alpha" to ZiplineModule(
-        url = alphaFilePath,
+        url = alphaRelativeUrl,
         sha256 = alphaByteString.sha256(),
         dependsOnIds = listOf(),
       ),
     )
   )
+
+  val manifestWithRelativeUrlsByteString = Json.encodeToString(manifestWithRelativeUrls).encodeUtf8()
+
+  val manifest = manifestWithRelativeUrls.copy(
+    modules = manifestWithRelativeUrls.modules.mapValues { (_, module) ->
+      module.copy(
+        url = when (module.url) {
+          bravoRelativeUrl -> bravoUrl
+          alphaRelativeUrl -> alphaUrl
+          else -> error("unexpected URL: ${module.url}")
+        }
+      )
+    }
+  )
+
   val manifestByteString = Json.encodeToString(manifest).encodeUtf8()
 
   private fun ziplineFile(quickJs: QuickJs, javaScript: String, fileName: String): ByteString {
@@ -69,8 +84,10 @@ class TestFixturesJvm(quickJs: QuickJs) {
   }
 
   companion object {
-    const val alphaFilePath = "/alpha.zipline"
-    const val bravoFilePath = "/bravo.zipline"
-    const val manifestPath = "/manifest.zipline.json"
+    const val alphaRelativeUrl = "alpha.zipline"
+    const val bravoRelativeUrl = "bravo.zipline"
+    const val alphaUrl = "https://example.com/files/alpha.zipline"
+    const val bravoUrl = "https://example.com/files/bravo.zipline"
+    const val manifestUrl = "https://example.com/files/manifest.zipline.json"
   }
 }

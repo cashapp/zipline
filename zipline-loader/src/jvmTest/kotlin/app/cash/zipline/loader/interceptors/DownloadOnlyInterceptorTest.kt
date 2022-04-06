@@ -19,8 +19,8 @@ package app.cash.zipline.loader.interceptors
 import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.FakeZiplineHttpClient
 import app.cash.zipline.loader.TestFixturesJvm
-import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaFilePath
-import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoFilePath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
+import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
 import app.cash.zipline.loader.ZiplineModuleLoader
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
@@ -70,8 +70,8 @@ class DownloadOnlyInterceptorTest {
   @Test
   fun getFileFromNetworkSaveToFs(): Unit = runBlocking {
     httpClient.filePathToByteString = mapOf(
-      alphaFilePath to testFixturesJvm.alphaByteString,
-      bravoFilePath to testFixturesJvm.bravoByteString,
+      alphaUrl to testFixturesJvm.alphaByteString,
+      bravoUrl to testFixturesJvm.bravoByteString,
     )
 
     moduleLoader.load(testFixturesJvm.manifest)
