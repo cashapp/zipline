@@ -93,7 +93,7 @@ class ZiplineLoader(
       }
     }
 
-    val manifest = Json.decodeFromString<ZiplineManifest>(manifestByteString.utf8())
+    val manifest = Json.decodeFromString(ZiplineManifest.serializer(), manifestByteString.utf8())
     return httpClient.resolveUrls(manifest, manifestUrl)
   }
 }
