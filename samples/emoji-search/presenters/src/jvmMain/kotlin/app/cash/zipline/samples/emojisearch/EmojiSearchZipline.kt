@@ -28,7 +28,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path
@@ -43,14 +42,13 @@ class EmojiSearchZipline(
   private val client = OkHttpClient()
   private val hostApi = RealHostApi(client)
 
-  private val baseUrl = "http://10.0.2.2:8080/".toHttpUrl()
-  private val manifestPath = "/manifest.zipline.json"
+  private val manifestUrl = "http://10.0.2.2:8080/manifest.zipline.json"
   private val moduleName = "./zipline-root-presenters.js"
 
   private val driver = DriverFactory().createDriver()
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
-    httpClient = OkHttpZiplineHttpClient(baseUrl, client),
+    httpClient = OkHttpZiplineHttpClient(client),
     embeddedDir = embeddedDir,
     embeddedFileSystem = FileSystem.RESOURCES, // TODO use assets
     cacheDbDriver = driver,
@@ -65,7 +63,7 @@ class EmojiSearchZipline(
     modelsStateFlow: MutableStateFlow<EmojiSearchViewModel>
   ) {
     val job = coroutineScope.launch(dispatcher) {
-      ziplineLoader.load(zipline, manifestPath)
+      ziplineLoader.load(zipline, manifestUrl)
       zipline.bind<HostApi>("hostApi", hostApi)
       zipline.quickJs.evaluate(
         "require('$moduleName').app.cash.zipline.samples.emojisearch.preparePresenters()"

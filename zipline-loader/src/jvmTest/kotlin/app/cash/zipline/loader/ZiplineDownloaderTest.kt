@@ -16,9 +16,9 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaFilePath
-import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoFilePath
-import app.cash.zipline.loader.TestFixturesJvm.Companion.manifestPath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
+import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
+import app.cash.zipline.loader.TestFixturesJvm.Companion.manifestUrl
 import app.cash.zipline.loader.ZiplineDownloader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -42,10 +42,6 @@ class ZiplineDownloaderTest {
   private lateinit var quickJs: QuickJs
   private lateinit var testFixturesJvm: TestFixturesJvm
   private lateinit var downloader: ZiplineDownloader
-
-  private fun alphaBytecode(quickJs: QuickJs) = testFixturesJvm.alphaByteString
-  private fun bravoBytecode(quickJs: QuickJs) = testFixturesJvm.bravoByteString
-  private fun manifest(quickJs: QuickJs) = testFixturesJvm.manifest
 
   @Before
   fun setUp() {
@@ -71,11 +67,11 @@ class ZiplineDownloaderTest {
     assertFalse(fileSystem.exists(downloadDir / testFixturesJvm.bravoSha256Hex))
 
     httpClient.filePathToByteString = mapOf(
-      manifestPath to testFixturesJvm.manifestByteString,
-      alphaFilePath to testFixturesJvm.alphaByteString,
-      bravoFilePath to testFixturesJvm.bravoByteString
+      manifestUrl to testFixturesJvm.manifestWithRelativeUrlsByteString,
+      alphaUrl to testFixturesJvm.alphaByteString,
+      bravoUrl to testFixturesJvm.bravoByteString
     )
-    downloader.download(manifestPath)
+    downloader.download(manifestUrl)
 
     // check that files have been downloaded to downloadDir as expected
     assertTrue(fileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))

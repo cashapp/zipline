@@ -66,7 +66,8 @@ class ZiplineDownloader(
     val manifestByteString = concurrentDownloadsSemaphore.withPermit {
       httpClient.download(manifestUrl)
     }
-    return Json.decodeFromString(manifestByteString.utf8())
+    val manifest = Json.decodeFromString(ZiplineManifest.serializer(), manifestByteString.utf8())
+    return httpClient.resolveUrls(manifest, manifestUrl)
   }
 
   companion object {

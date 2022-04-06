@@ -20,7 +20,6 @@ import app.cash.zipline.loader.DriverFactory
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import kotlinx.coroutines.CoroutineDispatcher
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -31,10 +30,10 @@ fun getTriviaService(zipline: Zipline): TriviaService {
 
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val zipline = Zipline.create(dispatcher)
-  val baseUrl = "http://localhost:8080/".toHttpUrl()
+  val manifestUrl = "http://localhost:8080/manifest.zipline.json"
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
-    httpClient = OkHttpZiplineHttpClient(baseUrl, OkHttpClient()),
+    httpClient = OkHttpZiplineHttpClient(OkHttpClient()),
     embeddedDir = "/".toPath(),
     embeddedFileSystem = FileSystem.RESOURCES,
     cacheDbDriver = DriverFactory().createDriver(),
@@ -43,7 +42,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
     cacheMaxSizeInBytes = 10 * 1024 * 1024,
     nowMs = System::currentTimeMillis,
   )
-  loader.load(zipline, baseUrl.resolve("/manifest.zipline.json").toString())
+  loader.load(zipline, manifestUrl)
   val moduleName = "./zipline-root-trivia-js.js"
   zipline.quickJs.evaluate(
     "require('$moduleName').app.cash.zipline.samples.trivia.launchZipline()",

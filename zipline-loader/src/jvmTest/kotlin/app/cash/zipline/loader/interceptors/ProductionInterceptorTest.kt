@@ -23,8 +23,8 @@ import app.cash.zipline.loader.FakeZiplineHttpClient
 import app.cash.zipline.loader.TestFixturesJvm
 import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.ZiplineModuleLoader
-import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaFilePath
-import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoFilePath
+import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
+import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
 import app.cash.zipline.loader.createZiplineCache
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
@@ -144,8 +144,8 @@ class ProductionInterceptorTest {
     assertNull(cache.read(testFixturesJvm.bravoSha256))
 
     httpClient.filePathToByteString = mapOf(
-      alphaFilePath to testFixturesJvm.alphaByteString,
-      bravoFilePath to testFixturesJvm.bravoByteString,
+      alphaUrl to testFixturesJvm.alphaByteString,
+      bravoUrl to testFixturesJvm.bravoByteString,
     )
 
     moduleLoader.load(testFixturesJvm.manifest)
