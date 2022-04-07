@@ -17,41 +17,38 @@ package app.cash.zipline
 
 import app.cash.zipline.testing.EchoService
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 class LeakedServicesTest {
-  private val events = Channel<String>(capacity = Int.MAX_VALUE)
+  private val events = ArrayDeque<String>()
   private val eventListener = object : EventListener() {
     override fun serviceLeaked(name: String) {
-      val sent = events.trySend("serviceLeaked($name)")
-      check(sent.isSuccess)
+      events += "serviceLeaked($name)"
     }
   }
   private val dispatcher = TestCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)
   private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() {
     zipline.loadTestingJs()
     uncaughtExceptionHandler.setUp()
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() {
     zipline.close()
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun jvmLeaksService(): Unit = runBlocking(dispatcher) {
+  @Test fun jvmLeaksService() {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
     allocateAndLeakService()
     awaitGarbageCollection()
     triggerLeakDetection()
-    assertThat(events.receive()).isEqualTo("serviceLeaked(helloService)")
+    assertThat(events.removeFirst()).isEqualTo("serviceLeaked(helloService)")
   }
 
   /** Just attempting to take a service causes Zipline to process leaked services. */
