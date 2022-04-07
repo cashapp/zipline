@@ -160,7 +160,7 @@ public final class ZiplineTestInternals {
       @Override public EchoResponse echo(EchoRequest request) {
         OutboundCall outboundCall = context.newCall("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse", 1);
         outboundCall.parameter(requestSerializer, request);
-        return outboundCall.invoke(responseSerializer);
+        return outboundCall.invoke(this, responseSerializer);
       }
 
       @Override public void close() {
@@ -243,7 +243,7 @@ public final class ZiplineTestInternals {
       @Override public List<String> genericEcho(String request) {
         OutboundCall outboundCall = context.newCall("fun genericEcho(T): kotlin.collections.List<T>", 1);
         outboundCall.parameter(requestSerializer, request);
-        return outboundCall.invoke(responseSerializer);
+        return outboundCall.invoke(this, responseSerializer);
       }
 
       @Override public void close() {
@@ -329,7 +329,7 @@ public final class ZiplineTestInternals {
       @Override public EchoResponse echo(EchoRequest request) {
         OutboundCall outboundCall = context.newCall("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse", 1);
         outboundCall.parameter(requestSerializer, request);
-        return outboundCall.invoke(responseSerializer);
+        return outboundCall.invoke(this, responseSerializer);
       }
 
       @Override public void close() {

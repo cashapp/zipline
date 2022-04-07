@@ -838,6 +838,10 @@ internal class AdapterGenerator(
           putTypeArgument(0, result.returnType)
           putValueArgument(
             0,
+            irGet(result.dispatchReceiverParameter!!)
+          )
+          putValueArgument(
+            1,
             bridgedInterface.serializerExpression(
               this@irFunctionBody,
               functionReturnType,

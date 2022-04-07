@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
 import app.cash.zipline.internal.encodeToStringFast
 import kotlin.coroutines.Continuation
@@ -65,11 +66,13 @@ internal class OutboundCall(
   private val funName: String,
   private val parameterCount: Int,
 ) {
+  private val arguments = ArrayList<Any?>(parameterCount)
   private val encodedArguments = ArrayList<String>(parameterCount * 2)
   private var callCount = 0
 
   fun <T> parameter(serializer: KSerializer<T>, value: T) {
     require(callCount++ < parameterCount)
+    arguments += value
     if (value == null) {
       encodedArguments += LABEL_NULL
       encodedArguments += ""
@@ -79,19 +82,22 @@ internal class OutboundCall(
     }
   }
 
-  fun <R> invoke(serializer: KSerializer<R>): R {
+  fun <R> invoke(service: ZiplineService, serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
+    val callStartResult = endpoint.eventListener.callStart(instanceName, service, funName, arguments)
     val encodedResult = endpoint.outboundChannel.invoke(
       instanceName,
       funName,
       encodedArguments.toTypedArray()
     )
 
-    return encodedResult.decodeResult(serializer).getOrThrow()
+    val result = encodedResult.decodeResult(serializer)
+    endpoint.eventListener.callEnd(instanceName, service, funName, arguments, result, callStartResult)
+    return result.getOrThrow()
   }
 
   @PublishedApi
-  internal suspend fun <R> invokeSuspending(serializer: KSerializer<R>): R {
+  internal suspend fun <R> invokeSuspending(service: ZiplineService, serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     return suspendCoroutine { continuation ->
       context.endpoint.incompleteContinuations += continuation

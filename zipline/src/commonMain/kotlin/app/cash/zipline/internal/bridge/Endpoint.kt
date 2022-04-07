@@ -31,7 +31,7 @@ import kotlinx.serialization.modules.SerializersModule
 class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val userSerializersModule: SerializersModule,
-  private val eventListener: EventListener,
+  internal val eventListener: EventListener,
   internal val outboundChannel: CallChannel,
 ) {
   internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()

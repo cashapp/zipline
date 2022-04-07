@@ -15,47 +15,44 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.EchoRequest
+import app.cash.zipline.testing.EchoResponse
+import app.cash.zipline.testing.helloService
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class LeakedServicesTest {
-  private val eventListener = LoggingEventListener()
+@OptIn(ExperimentalCoroutinesApi::class)
+class EventListenerTest {
   private val dispatcher = TestCoroutineDispatcher()
+  private val eventListener = LoggingEventListener()
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)
   private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
-  @Before fun setUp() {
+  @Before fun setUp(): Unit = runBlocking(dispatcher) {
     zipline.loadTestingJs()
     uncaughtExceptionHandler.setUp()
   }
 
-  @After fun tearDown() {
+  @After fun tearDown(): Unit = runBlocking(dispatcher) {
     zipline.close()
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun jvmLeaksService() {
+  @Test fun jvmCallJsService(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
-    allocateAndLeakService()
-    awaitGarbageCollection()
-    triggerLeakDetection()
-    assertThat(eventListener.take()).isEqualTo("serviceLeaked(helloService)")
-  }
 
-  /** Just attempting to take a service causes Zipline to process leaked services. */
-  private fun triggerLeakDetection() {
-    try {
-      zipline.take<EchoService>("noSuchService")
-    } catch (ignored: Exception) {
-    }
-  }
+    assertThat(zipline.helloService.echo(EchoRequest("Jake")))
+      .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
 
-  /** Use a separate method so there's no hidden reference remaining on the stack. */
-  private fun allocateAndLeakService() {
-    zipline.take<EchoService>("helloService")
+    val name = "helloService"
+    val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
+    val request = "[EchoRequest(message=Jake)]"
+    assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
+    assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from JavaScript, Jake))")
   }
 }
