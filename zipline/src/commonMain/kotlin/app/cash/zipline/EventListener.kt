@@ -48,33 +48,17 @@ abstract class EventListener {
   }
 
   /**
-   * Invoked when a service function call completes successfully.
+   * Invoked when a service function call completes.
    *
    * @param callStartResult the value returned by [callStart] for the start of this call. This is
    *     null unless [callStart] is overridden to return something else.
    */
   open fun callEnd(
     name: String,
-    functionName: String,
     service: ZiplineService,
-    args: List<Any?>,
-    result: Any?,
-    callStartResult: Any?
-  ) {
-  }
-
-  /**
-   * Invoked when a service function call fails with an exception.
-   *
-   * @param callStartResult the value returned by [callStart] for the start of this call. This is
-   *     null unless [callStart] is overridden to return something else.
-   */
-  open fun callFailed(
-    name: String,
     functionName: String,
-    service: ZiplineService,
     args: List<Any?>,
-    exception: Throwable?,
+    result: Result<Any?>,
     callStartResult: Any?
   ) {
   }
