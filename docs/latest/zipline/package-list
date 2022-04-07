@@ -14,8 +14,7 @@ $dokka.location:app.cash.zipline/EventListener.Companion/NONE/#/PointingToDeclar
 $dokka.location:app.cash.zipline/EventListener///PointingToDeclaration/zipline/app.cash.zipline/-event-listener/index.html
 $dokka.location:app.cash.zipline/EventListener/EventListener/#/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/-event-listener.html
 $dokka.location:app.cash.zipline/EventListener/bindService/#kotlin.String#app.cash.zipline.ZiplineService/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/bind-service.html
-$dokka.location:app.cash.zipline/EventListener/callEnd/#kotlin.String#kotlin.String#app.cash.zipline.ZiplineService#kotlin.collections.List[kotlin.Any?]#kotlin.Any?#kotlin.Any?/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/call-end.html
-$dokka.location:app.cash.zipline/EventListener/callFailed/#kotlin.String#kotlin.String#app.cash.zipline.ZiplineService#kotlin.collections.List[kotlin.Any?]#kotlin.Throwable?#kotlin.Any?/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/call-failed.html
+$dokka.location:app.cash.zipline/EventListener/callEnd/#kotlin.String#app.cash.zipline.ZiplineService#kotlin.String#kotlin.collections.List[kotlin.Any?]#kotlin.Result[kotlin.Any?]#kotlin.Any?/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/call-end.html
 $dokka.location:app.cash.zipline/EventListener/callStart/#kotlin.String#app.cash.zipline.ZiplineService#kotlin.String#kotlin.collections.List[kotlin.Any?]/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/call-start.html
 $dokka.location:app.cash.zipline/EventListener/serviceLeaked/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/service-leaked.html
 $dokka.location:app.cash.zipline/EventListener/takeService/#kotlin.String#app.cash.zipline.ZiplineService/PointingToDeclaration/zipline/app.cash.zipline/-event-listener/take-service.html
