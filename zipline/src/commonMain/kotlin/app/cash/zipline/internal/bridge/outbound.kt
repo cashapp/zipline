@@ -99,11 +99,12 @@ internal class OutboundCall(
   @PublishedApi
   internal suspend fun <R> invokeSuspending(service: ZiplineService, serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
+    val callStartResult = endpoint.eventListener.callStart(instanceName, service, funName, arguments)
     return suspendCoroutine { continuation ->
       context.endpoint.incompleteContinuations += continuation
       context.endpoint.scope.launch {
         val callbackName = endpoint.generateName()
-        val callback = RealSuspendCallback(callbackName, continuation, serializer)
+        val callback = RealSuspendCallback(service, callbackName, continuation, serializer, callStartResult)
         endpoint.bind<SuspendCallback>(callbackName, callback)
         endpoint.outboundChannel.invokeSuspending(
           instanceName,
@@ -116,15 +117,18 @@ internal class OutboundCall(
   }
 
   private inner class RealSuspendCallback<R>(
+    val service: ZiplineService,
     val callbackName: String,
     val continuation: Continuation<R>,
-    val serializer: KSerializer<R>
+    val serializer: KSerializer<R>,
+    val callStartResult: Any?,
   ) : SuspendCallback {
     override fun call(response: Array<String>) {
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
       endpoint.remove(callbackName)
       val result = response.decodeResult(serializer)
       context.endpoint.incompleteContinuations -= continuation
+      context.endpoint.eventListener.callEnd(instanceName, service, funName, arguments, result, callStartResult)
       continuation.resumeWith(result)
     }
   }
