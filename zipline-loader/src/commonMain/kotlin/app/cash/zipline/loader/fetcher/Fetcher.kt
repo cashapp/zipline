@@ -37,8 +37,9 @@ suspend fun List<Fetcher>.fetch(
       byteString = fetcher.fetch(id, sha256, url, fileNameOverride)
       if (byteString != null) break
     }
-    if (byteString == null) throw IllegalStateException(
+
+    checkNotNull(byteString) {
       "Unable to get ByteString for [id=$id][sha256=$sha256][url=$url]"
-    )
+    }
     return byteString
   }

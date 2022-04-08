@@ -24,6 +24,7 @@ import app.cash.zipline.loader.TestFixturesJvm
 import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
 import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
+import app.cash.zipline.loader.TestFixturesJvm.Companion.createProductionZiplineLoader
 import app.cash.zipline.loader.createZiplineCache
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
@@ -67,11 +68,11 @@ class ProductionFetcherReceiverTest {
       driver = cacheDbDriver,
       fileSystem = fileSystem,
       directory = cacheDirectory,
-      maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
+      maxSizeInBytes = cacheMaxSizeInBytes,
       nowMs = { nowMillis }
     )
     zipline = Zipline.create(dispatcher)
-    loader = ZiplineLoader(
+    loader = createProductionZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
       embeddedDir = embeddedDir,

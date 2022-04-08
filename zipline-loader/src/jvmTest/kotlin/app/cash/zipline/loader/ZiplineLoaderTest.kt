@@ -19,6 +19,8 @@ import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
 import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
+import app.cash.zipline.loader.TestFixturesJvm.Companion.createDownloadZiplineLoader
+import app.cash.zipline.loader.TestFixturesJvm.Companion.createProductionZiplineLoader
 import app.cash.zipline.loader.TestFixturesJvm.Companion.manifestUrl
 import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
@@ -55,7 +57,7 @@ class ZiplineLoaderTest {
     Database.Schema.create(driver)
     quickJs = QuickJs.create()
     testFixturesJvm = TestFixturesJvm(quickJs)
-    loader = ZiplineLoader(
+    loader = createProductionZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
       embeddedDir = embeddedDir,
@@ -203,7 +205,7 @@ class ZiplineLoaderTest {
   fun downloadToDirectoryThenLoadFromAsEmbedded(): Unit = runBlocking(dispatcher) {
     val downloadDir = "/downloads/latest".toPath()
     val downloadFileSystem = cacheFileSystem
-    loader = ZiplineLoader(
+    loader = createDownloadZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
     )
@@ -236,7 +238,7 @@ class ZiplineLoaderTest {
 
     // Load into Zipline
     val zipline = Zipline.create(dispatcher)
-    loader = ZiplineLoader(
+    loader = createProductionZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
       embeddedDir = downloadDir,
@@ -271,7 +273,7 @@ class ZiplineLoaderTest {
       alphaUrl to testFixturesJvm.alphaByteString,
       bravoUrl to testFixturesJvm.bravoByteString
     )
-    loader = ZiplineLoader(dispatcher, httpClient)
+    loader = createDownloadZiplineLoader(dispatcher, httpClient)
     loader.download(downloadDir, fileSystem, testFixturesJvm.manifest)
 
     // check that files have been downloaded to downloadDir as expected

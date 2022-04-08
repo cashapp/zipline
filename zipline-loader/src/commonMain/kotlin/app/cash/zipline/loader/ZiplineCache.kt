@@ -211,7 +211,7 @@ fun createZiplineCache(
   driver: SqlDriver,
   fileSystem: FileSystem,
   directory: Path,
-  maxSizeInBytes: Long,
+  maxSizeInBytes: Int = 100 * 1024 * 1024,
   nowMs: () -> Long,
 ): ZiplineCache {
   val database = createDatabase(driver)
@@ -219,7 +219,7 @@ fun createZiplineCache(
     database = database,
     fileSystem = fileSystem,
     directory = directory,
-    maxSizeInBytes = maxSizeInBytes,
+    maxSizeInBytes = maxSizeInBytes.toLong(),
     nowMs = nowMs,
   )
   ziplineCache.prune()

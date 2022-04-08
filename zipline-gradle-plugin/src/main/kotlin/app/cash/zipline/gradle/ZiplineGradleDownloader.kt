@@ -18,6 +18,7 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
+import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -32,9 +33,15 @@ class ZiplineGradleDownloader {
   private val client = OkHttpClient()
 
   fun download(manifestUrl: String, downloadDir: File) {
+    val httpClient = OkHttpZiplineHttpClient(client)
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
-      httpClient = OkHttpZiplineHttpClient(client),
+      httpClient = httpClient,
+      fetchers = listOf(
+        HttpFetcher(
+          httpClient = httpClient
+        )
+      )
     )
     runBlocking {
       ziplineLoader.download(

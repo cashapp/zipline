@@ -21,6 +21,7 @@ import app.cash.zipline.loader.FakeZiplineHttpClient
 import app.cash.zipline.loader.TestFixturesJvm
 import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
 import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
+import app.cash.zipline.loader.TestFixturesJvm.Companion.createDownloadZiplineLoader
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -49,7 +50,7 @@ class DownloadOnlyFetcherReceiverTest {
     quickJs = QuickJs.create()
     testFixturesJvm = TestFixturesJvm(quickJs)
     fileSystem = FakeFileSystem()
-    loader = ZiplineLoader(
+    loader = createDownloadZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
     )

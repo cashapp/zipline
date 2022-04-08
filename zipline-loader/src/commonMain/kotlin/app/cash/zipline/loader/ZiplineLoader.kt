@@ -17,14 +17,10 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.fetcher.Fetcher
-import app.cash.zipline.loader.fetcher.FsCachingFetcher
-import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
-import app.cash.zipline.loader.fetcher.HttpFetcher
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
-import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -49,74 +45,8 @@ import okio.Path
 class ZiplineLoader(
   private val dispatcher: CoroutineDispatcher,
   private val httpClient: ZiplineHttpClient,
-  private val fetchers: List<Fetcher> = listOf(),
+  private val fetchers: List<Fetcher>,
 ) {
-  /** Default production constructor */
-  constructor(
-    dispatcher: CoroutineDispatcher,
-    httpClient: ZiplineHttpClient,
-    embeddedDir: Path,
-    embeddedFileSystem: FileSystem,
-    cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
-    cacheDir: Path,
-    cacheFileSystem: FileSystem,
-    cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
-    nowMs: () -> Long, // 100 MiB
-  ) : this(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    fetchers = listOf(
-      FsEmbeddedFetcher(
-        embeddedDir = embeddedDir,
-        embeddedFileSystem = embeddedFileSystem
-      ),
-      FsCachingFetcher(
-        cacheDbDriver = cacheDbDriver,
-        cacheDir = cacheDir,
-        cacheFileSystem = cacheFileSystem,
-        cacheMaxSizeInBytes = cacheMaxSizeInBytes,
-        nowMs = nowMs,
-        httpClient = httpClient
-      ),
-    )
-  )
-
-  /** Default production constructor */
-  constructor(
-    dispatcher: CoroutineDispatcher,
-    httpClient: ZiplineHttpClient,
-    embeddedDir: Path,
-    embeddedFileSystem: FileSystem,
-    cache: ZiplineCache,
-  ) : this(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    fetchers = listOf(
-      FsEmbeddedFetcher(
-        embeddedDir = embeddedDir,
-        embeddedFileSystem = embeddedFileSystem
-      ),
-      FsCachingFetcher(
-        cache = cache,
-        httpClient = httpClient
-      ),
-    )
-  )
-
-  /** Default download to fs constructor */
-  constructor(
-    dispatcher: CoroutineDispatcher,
-    httpClient: ZiplineHttpClient,
-  ) : this(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    fetchers = listOf(
-      HttpFetcher(
-        httpClient = httpClient,
-      ),
-    )
-  )
-
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3
     set(value) {
@@ -124,47 +54,6 @@ class ZiplineLoader(
       field = value
       concurrentDownloadsSemaphore = Semaphore(value)
     }
-
-  fun withNetwork(): ZiplineLoader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    fetchers = fetchers + listOf(
-      HttpFetcher(httpClient = httpClient)
-    )
-  )
-
-  fun withCachedNetwork(
-    cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
-    cacheDir: Path,
-    cacheFileSystem: FileSystem,
-    cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
-    nowMs: () -> Long, // 100 MiB
-  ): ZiplineLoader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    fetchers = fetchers + listOf(
-      FsCachingFetcher(
-        cacheDbDriver = cacheDbDriver,
-        cacheDir = cacheDir,
-        cacheFileSystem = cacheFileSystem,
-        cacheMaxSizeInBytes = cacheMaxSizeInBytes,
-        nowMs = nowMs,
-        httpClient = httpClient
-      ),
-    )
-  )
-
-  fun withEmbedded(
-    embeddedDir: Path,
-    embeddedFileSystem: FileSystem,
-  ): ZiplineLoader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    fetchers = fetchers + FsEmbeddedFetcher(
-      embeddedDir = embeddedDir,
-      embeddedFileSystem = embeddedFileSystem
-    )
-  )
 
   suspend fun load(zipline: Zipline, manifestUrl: String) =
     load(zipline, downloadZiplineManifest(manifestUrl))
