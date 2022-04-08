@@ -18,7 +18,12 @@ package app.cash.zipline.samples.emojisearch
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.DriverFactory
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
+import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
+import app.cash.zipline.loader.createZiplineCache
+import app.cash.zipline.loader.fetcher.FsCachingFetcher
+import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
+import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.time.Clock
 import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
@@ -49,12 +54,21 @@ class EmojiSearchZipline(
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = OkHttpZiplineHttpClient(client),
-    embeddedDir = embeddedDir,
-    embeddedFileSystem = FileSystem.RESOURCES, // TODO use assets
-    cacheDbDriver = driver,
-    cacheDir = cacheDir,
-    cacheFileSystem = FileSystem.SYSTEM,
-    nowMs = { Clock.systemDefaultZone().instant().toEpochMilli() },
+    fetchers = listOf(
+      FsEmbeddedFetcher(
+        embeddedDir = embeddedDir,
+        embeddedFileSystem = FileSystem.RESOURCES,
+      ),
+      FsCachingFetcher(
+        cache = createZiplineCache(
+          driver = driver,
+          fileSystem = FileSystem.SYSTEM,
+          directory = cacheDir,
+          nowMs = { Clock.systemDefaultZone().instant().toEpochMilli() },
+        ),
+        delegate = HttpFetcher(httpClient = OkHttpZiplineHttpClient(client)),
+      ),
+    ),
   )
 
   fun produceModelsIn(

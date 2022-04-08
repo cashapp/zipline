@@ -17,12 +17,19 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.loader.fetcher.FsCachingFetcher
+import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
+import app.cash.zipline.loader.fetcher.HttpFetcher
+import com.squareup.sqldelight.db.SqlDriver
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
+import okio.FileSystem
+import okio.Path
 
 class TestFixturesJvm(quickJs: QuickJs) {
   val alphaJs = """
@@ -56,7 +63,8 @@ class TestFixturesJvm(quickJs: QuickJs) {
     )
   )
 
-  val manifestWithRelativeUrlsByteString = Json.encodeToString(manifestWithRelativeUrls).encodeUtf8()
+  val manifestWithRelativeUrlsByteString =
+    Json.encodeToString(manifestWithRelativeUrls).encodeUtf8()
 
   val manifest = manifestWithRelativeUrls.copy(
     modules = manifestWithRelativeUrls.modules.mapValues { (_, module) ->
@@ -89,5 +97,71 @@ class TestFixturesJvm(quickJs: QuickJs) {
     const val alphaUrl = "https://example.com/files/alpha.zipline"
     const val bravoUrl = "https://example.com/files/bravo.zipline"
     const val manifestUrl = "https://example.com/files/manifest.zipline.json"
+
+    fun createProductionZiplineLoader(
+      dispatcher: CoroutineDispatcher,
+      httpClient: ZiplineHttpClient,
+      embeddedDir: Path,
+      embeddedFileSystem: FileSystem,
+      cache: ZiplineCache,
+    ) = ZiplineLoader(
+      dispatcher = dispatcher,
+      httpClient = httpClient,
+      fetchers = listOf(
+        FsEmbeddedFetcher(
+          embeddedDir = embeddedDir,
+          embeddedFileSystem = embeddedFileSystem
+        ),
+        FsCachingFetcher(
+          cache = cache,
+          delegate = HttpFetcher(httpClient = httpClient),
+        ),
+      )
+    )
+
+    fun createProductionZiplineLoader(
+      dispatcher: CoroutineDispatcher,
+      httpClient: ZiplineHttpClient,
+      embeddedDir: Path,
+      embeddedFileSystem: FileSystem,
+      cacheDbDriver: SqlDriver, // SqlDriver is already initialized to the platform and SQLite DB on disk
+      cacheDir: Path,
+      cacheFileSystem: FileSystem,
+      cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
+      nowMs: () -> Long, // 100 MiB
+    ) = ZiplineLoader(
+      dispatcher = dispatcher,
+      httpClient = httpClient,
+      fetchers = listOf(
+        FsEmbeddedFetcher(
+          embeddedDir = embeddedDir,
+          embeddedFileSystem = embeddedFileSystem
+        ),
+        FsCachingFetcher(
+          cache = createZiplineCache(
+            driver = cacheDbDriver,
+            fileSystem = cacheFileSystem,
+            directory = cacheDir,
+            maxSizeInBytes = cacheMaxSizeInBytes,
+            nowMs = nowMs,
+          ),
+          delegate = HttpFetcher(httpClient = httpClient),
+        ),
+      ),
+    )
+
+    fun createDownloadZiplineLoader(
+      dispatcher: CoroutineDispatcher,
+      httpClient: ZiplineHttpClient,
+    ) = ZiplineLoader(
+      dispatcher = dispatcher,
+      httpClient = httpClient,
+      fetchers = listOf(
+        HttpFetcher(
+          httpClient = httpClient,
+        ),
+      )
+    )
+
   }
 }

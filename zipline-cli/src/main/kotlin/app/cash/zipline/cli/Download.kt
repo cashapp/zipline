@@ -18,7 +18,9 @@ package app.cash.zipline.cli
 
 import app.cash.zipline.cli.Download.Companion.NAME
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
-import app.cash.zipline.loader.ZiplineDownloader
+import app.cash.zipline.loader.ZiplineHttpClient
+import app.cash.zipline.loader.ZiplineLoader
+import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -29,13 +31,21 @@ import okio.Path.Companion.toOkioPath
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
-@Command(name = NAME, description = ["Recursively download Zipline code to a directory from a URL."],
-  mixinStandardHelpOptions = true, versionProvider = Main.VersionProvider::class)
+@Command(
+  name = NAME, description = ["Recursively download Zipline code to a directory from a URL."],
+  mixinStandardHelpOptions = true, versionProvider = Main.VersionProvider::class
+)
 class Download : Runnable {
-  @Option(names = ["-M", "--manifest-url"], description = ["URL to the Zipline Manifest for the code to download."], required = true)
+  @Option(
+    names = ["-M", "--manifest-url"],
+    description = ["URL to the Zipline Manifest for the code to download."], required = true
+  )
   lateinit var manifestUrl: String
 
-  @Option(names = ["-D", "--download-dir"], description = ["Directory where code will be downloaded to."], required = true)
+  @Option(
+    names = ["-D", "--download-dir"], description = ["Directory where code will be downloaded to."],
+    required = true
+  )
   lateinit var downloadDir: File
 
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
@@ -44,14 +54,21 @@ class Download : Runnable {
 
   private fun download(manifestUrl: String, downloadDir: File) {
     println("Zipline Download [manifestUrl=$manifestUrl][downloadDir=$downloadDir]...")
-    val ziplineDownloader = ZiplineDownloader(
+    val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = OkHttpZiplineHttpClient(client),
-      downloadDir = downloadDir.toOkioPath(),
-      downloadFileSystem = FileSystem.SYSTEM,
+      fetchers = listOf(
+        HttpFetcher(
+          httpClient = OkHttpZiplineHttpClient(client),
+        )
+      )
     )
     runBlocking {
-      ziplineDownloader.download(manifestUrl)
+      ziplineLoader.download(
+        downloadDir = downloadDir.toOkioPath(),
+        downloadFileSystem = FileSystem.SYSTEM,
+        manifestUrl = manifestUrl,
+      )
     }
   }
 

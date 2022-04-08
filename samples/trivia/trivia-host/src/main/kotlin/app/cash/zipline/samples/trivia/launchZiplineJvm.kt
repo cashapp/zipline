@@ -19,6 +19,11 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.loader.DriverFactory
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
+import app.cash.zipline.loader.createZiplineCache
+import app.cash.zipline.loader.fetcher.FsCachingFetcher
+import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
+import app.cash.zipline.loader.fetcher.HttpFetcher
+import java.time.Clock
 import kotlinx.coroutines.CoroutineDispatcher
 import okhttp3.OkHttpClient
 import okio.FileSystem
@@ -31,16 +36,28 @@ fun getTriviaService(zipline: Zipline): TriviaService {
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val zipline = Zipline.create(dispatcher)
   val manifestUrl = "http://localhost:8080/manifest.zipline.json"
+  val cacheDir = "zipline-cache".toPath()
+  val driver = DriverFactory().createDriver()
+  val embeddedDir = "/".toPath()
+  val httpClient = OkHttpZiplineHttpClient(OkHttpClient())
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
-    httpClient = OkHttpZiplineHttpClient(OkHttpClient()),
-    embeddedDir = "/".toPath(),
-    embeddedFileSystem = FileSystem.RESOURCES,
-    cacheDbDriver = DriverFactory().createDriver(),
-    cacheDir = "zipline-cache".toPath(),
-    cacheFileSystem = FileSystem.SYSTEM,
-    cacheMaxSizeInBytes = 10 * 1024 * 1024,
-    nowMs = System::currentTimeMillis,
+    httpClient = httpClient,
+    fetchers = listOf(
+      FsEmbeddedFetcher(
+        embeddedDir = embeddedDir,
+        embeddedFileSystem = FileSystem.RESOURCES,
+      ),
+      FsCachingFetcher(
+        cache = createZiplineCache(
+          driver = driver,
+          fileSystem = FileSystem.SYSTEM,
+          directory = cacheDir,
+          nowMs = System::currentTimeMillis,
+        ),
+        delegate = HttpFetcher(httpClient = httpClient),
+      ),
+    ),
   )
   loader.load(zipline, manifestUrl)
   val moduleName = "./zipline-root-trivia-js.js"

@@ -1,5 +1,7 @@
 package app.cash.zipline.loader.fetcher
 
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import okio.ByteString
 
 /**
@@ -14,6 +16,30 @@ interface Fetcher {
   suspend fun fetch(
     id: String,
     sha256: ByteString,
-    url: String
+    url: String,
+    fileNameOverride: String? = null
   ): ByteString?
 }
+
+/**
+ * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
+ */
+suspend fun List<Fetcher>.fetch(
+  concurrentDownloadsSemaphore: Semaphore,
+  id: String,
+  sha256: ByteString,
+  url: String,
+  fileNameOverride: String? = null,
+): ByteString = concurrentDownloadsSemaphore
+  .withPermit {
+    var byteString: ByteString? = null
+    for (fetcher in this) {
+      byteString = fetcher.fetch(id, sha256, url, fileNameOverride)
+      if (byteString != null) break
+    }
+
+    checkNotNull(byteString) {
+      "Unable to get ByteString for [id=$id][sha256=$sha256][url=$url]"
+    }
+    return byteString
+  }

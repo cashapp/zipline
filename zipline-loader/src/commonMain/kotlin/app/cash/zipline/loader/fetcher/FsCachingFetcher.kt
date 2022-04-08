@@ -10,8 +10,13 @@ class FsCachingFetcher(
   private val cache: ZiplineCache,
   private val delegate: Fetcher,
 ) : Fetcher {
-  override suspend fun fetch(id: String, sha256: ByteString, url: String): ByteString? =
+  override suspend fun fetch(
+    id: String,
+    sha256: ByteString,
+    url: String,
+    fileNameOverride: String?
+  ): ByteString? =
     cache.getOrPut(sha256) {
-      delegate.fetch(id, sha256, url)!!
+      delegate.fetch(id, sha256, url, fileNameOverride)!!
     }
 }
