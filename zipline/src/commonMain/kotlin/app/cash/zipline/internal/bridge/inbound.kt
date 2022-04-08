@@ -16,6 +16,7 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineApiMismatchException
+import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
 import app.cash.zipline.internal.encodeToStringFast
 import kotlinx.serialization.KSerializer
@@ -28,6 +29,8 @@ import kotlinx.serialization.json.Json
 @PublishedApi
 internal interface InboundBridge {
   class Context(
+    val name: String,
+    val service: ZiplineService,
     val json: Json,
     @PublishedApi internal val endpoint: Endpoint,
   ) {
@@ -59,29 +62,33 @@ internal class InboundCall(
   val funName: String,
   val encodedArguments: Array<String>,
 ) {
+  private val arguments = ArrayList<Any?>(encodedArguments.size / 2)
+  private var callStartResult: Any? = null
   private var i = 0
 
   fun <T> parameter(serializer: KSerializer<T>): T {
     while (i < encodedArguments.size) {
-      when (encodedArguments[i]) {
-        LABEL_VALUE -> {
-          val result = context.json.decodeFromStringFast(serializer, encodedArguments[i + 1])
-          i += 2
-          return result
-        }
-        LABEL_NULL -> {
-          i += 2
-          return null as T
-        }
+      val result = when (encodedArguments[i]) {
+        LABEL_VALUE -> context.json.decodeFromStringFast(serializer, encodedArguments[i + 1])
+        LABEL_NULL -> null as T
         else -> {
-          i += 2 // Ignore unknown argument.
+          // Ignore unknown argument.
+          i += 2
+          continue
         }
       }
+      arguments += result
+      i += 2
+      if (i == encodedArguments.size) {
+        callStartResult = context.endpoint.eventListener.callStart(context.name, context.service, funName, arguments)
+      }
+      return result
     }
     throw IllegalStateException("no such parameter")
   }
 
   fun <R> result(serializer: KSerializer<R>, value: R): Array<String> {
+    context.endpoint.eventListener.callEnd(context.name, context.service, funName, arguments, Result.success(value), callStartResult)
     return when {
       value != null -> arrayOf(LABEL_VALUE, context.json.encodeToStringFast(serializer, value))
       else -> arrayOf(LABEL_NULL, "")
@@ -100,6 +107,7 @@ internal class InboundCall(
   )
 
   fun resultException(e: Throwable): Array<String> {
+    context.endpoint.eventListener.callEnd(context.name, context.service, funName, arguments, Result.failure(e), callStartResult)
     return arrayOf(LABEL_EXCEPTION, context.json.encodeToStringFast(ThrowableSerializer, e))
   }
 }
