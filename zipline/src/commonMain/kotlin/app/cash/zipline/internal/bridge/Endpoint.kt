@@ -17,6 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
+import app.cash.zipline.internal.ziplineInternalPrefix
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
@@ -145,7 +146,7 @@ class Endpoint internal constructor(
   }
 
   internal fun generateName(): String {
-    return "zipline/${nextId++}"
+    return "$ziplineInternalPrefix${nextId++}"
   }
 
   @PublishedApi
