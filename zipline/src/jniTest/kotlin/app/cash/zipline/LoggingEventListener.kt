@@ -40,10 +40,10 @@ class LoggingEventListener : EventListener() {
     log += LogEntry(name, "serviceLeaked($name)")
   }
 
-  fun take(includeZiplineInternal: Boolean = false): String {
+  fun take(): String {
     while (true) {
       val (serviceName, log) = log.removeFirst()
-      if (!includeZiplineInternal && serviceName.startsWith(ziplineInternalPrefix)) continue
+      if (serviceName.startsWith(ziplineInternalPrefix)) continue
       return log
     }
   }
