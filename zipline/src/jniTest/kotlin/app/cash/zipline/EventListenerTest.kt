@@ -17,6 +17,7 @@ package app.cash.zipline
 
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
+import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.helloService
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,5 +55,20 @@ class EventListenerTest {
     val request = "[EchoRequest(message=Jake)]"
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from JavaScript, Jake))")
+  }
+
+  @Test fun suspendingJvmCallJsService(): Unit = runBlocking(dispatcher) {
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.unblockSuspendingJs()")
+
+    val jsSuspendingEchoService = zipline.take<SuspendingEchoService>("jsSuspendingEchoService")
+
+    jsSuspendingEchoService.suspendingEcho(EchoRequest("Jake"))
+
+    val name = "jsSuspendingEchoService"
+    val funName = "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
+    val request = "[EchoRequest(message=Jake)]"
+    assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
+    assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from suspending JavaScript, Jake))")
   }
 }

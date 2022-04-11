@@ -15,23 +15,36 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.ziplineInternalPrefix
+
 class LoggingEventListener : EventListener() {
   private var nextCallId = 1
-  private val log = ArrayDeque<String>()
+  private val log = ArrayDeque<LogEntry>()
+
+  private data class LogEntry(
+    val serviceName: String,
+    val log: String
+  )
 
   override fun callStart(name: String, service: ZiplineService, functionName: String, args: List<Any?>): Any? {
     val callId = nextCallId++
-    log += "callStart $callId $name $functionName $args"
+    log += LogEntry(name, "callStart $callId $name $functionName $args")
     return callId
   }
 
   override fun callEnd(name: String, service: ZiplineService, functionName: String, args: List<Any?>, result: Result<Any?>, callStartResult: Any?) {
-    log += "callEnd $callStartResult $name $functionName $args $result"
+    log += LogEntry(name, "callEnd $callStartResult $name $functionName $args $result")
   }
 
   override fun serviceLeaked(name: String) {
-    log += "serviceLeaked($name)"
+    log += LogEntry(name, "serviceLeaked($name)")
   }
 
-  fun take() = log.removeFirst()
+  fun take(): String {
+    while (true) {
+      val (serviceName, log) = log.removeFirst()
+      if (serviceName.startsWith(ziplineInternalPrefix)) continue
+      return log
+    }
+  }
 }
