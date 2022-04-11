@@ -17,9 +17,10 @@ package app.cash.zipline.internal
 
 import app.cash.zipline.ZiplineService
 
-internal const val eventLoopName = "zipline/event_loop"
-internal const val consoleName = "zipline/console"
-internal const val jsPlatformName = "zipline/js"
+internal const val ziplineInternalPrefix = "zipline/"
+internal const val eventLoopName = "${ziplineInternalPrefix}event_loop"
+internal const val consoleName = "${ziplineInternalPrefix}console"
+internal const val jsPlatformName = "${ziplineInternalPrefix}js"
 
 internal interface EventLoop : ZiplineService {
   fun setTimeout(timeoutId: Int, delayMillis: Int)
