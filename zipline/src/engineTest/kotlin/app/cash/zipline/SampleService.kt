@@ -113,13 +113,13 @@ interface SampleService : ZiplineService {
         override fun ping(request: SampleRequest): SampleResponse {
           val call = context.newCall("fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse", 1)
           call.parameter(requestSerializer, request)
-          return call.invoke(responseSerializer)
+          return call.invoke(this, responseSerializer)
         }
 
         override fun close() {
           this.context.closed = true
           val call = context.newCall("fun close(): kotlin.Unit", 0)
-          return call.invoke(Unit.serializer())
+          return call.invoke(this, Unit.serializer())
         }
       }
     }
