@@ -18,6 +18,7 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
 import app.cash.zipline.internal.encodeToStringFast
+import app.cash.zipline.internal.ziplineInternalPrefix
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.launch
@@ -103,7 +104,7 @@ internal class OutboundCall(
     return suspendCoroutine { continuation ->
       context.endpoint.incompleteContinuations += continuation
       context.endpoint.scope.launch {
-        val callbackName = endpoint.generateName()
+        val callbackName = endpoint.generateName(prefix = ziplineInternalPrefix)
         val callback = RealSuspendCallback(service, callbackName, continuation, serializer, callStartResult)
         endpoint.bind<SuspendCallback>(callbackName, callback)
         endpoint.outboundChannel.invokeSuspending(

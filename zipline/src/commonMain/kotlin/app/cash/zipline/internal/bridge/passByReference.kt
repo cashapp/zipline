@@ -16,6 +16,7 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineService
+import app.cash.zipline.internal.passByReferencePrefix
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
@@ -53,7 +54,7 @@ internal class PassByReferenceSerializer(
 
   override fun serialize(encoder: Encoder, value: PassByReference) {
     require(value is SendByReference<*>)
-    val name = endpoint.generateName()
+    val name = endpoint.generateName(prefix = passByReferencePrefix)
     value.bind(endpoint, name)
     encoder.encodeString(name)
   }
