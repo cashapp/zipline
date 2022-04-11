@@ -26,6 +26,14 @@ class LoggingEventListener : EventListener() {
     val log: String
   )
 
+  override fun bindService(name: String, service: ZiplineService) {
+    log += LogEntry(name, "bindService $name")
+  }
+
+  override fun takeService(name: String, service: ZiplineService) {
+    log += LogEntry(name, "takeService $name")
+  }
+
   override fun callStart(name: String, service: ZiplineService, functionName: String, args: List<Any?>): Any? {
     val callId = nextCallId++
     log += LogEntry(name, "callStart $callId $name $functionName $args")

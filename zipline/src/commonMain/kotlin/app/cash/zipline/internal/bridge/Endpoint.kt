@@ -122,6 +122,7 @@ class Endpoint internal constructor(
     service: T,
     adapter: ZiplineServiceAdapter<T>
   ) {
+    eventListener.bindService(name, service)
     inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext(name, service))
   }
 
@@ -136,6 +137,7 @@ class Endpoint internal constructor(
 
     val outboundContext: OutboundBridge.Context = newOutboundContext(name)
     val result = adapter.outboundService(outboundContext)
+    eventListener.takeService(name, result)
     trackLeaks(eventListener, name, outboundContext, result)
     return result
   }

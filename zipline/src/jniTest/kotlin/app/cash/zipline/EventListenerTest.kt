@@ -56,6 +56,7 @@ class EventListenerTest {
     val name = "helloService"
     val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
     val request = "[EchoRequest(message=Jake)]"
+    assertThat(eventListener.take()).isEqualTo("takeService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from JavaScript, Jake))")
   }
@@ -74,6 +75,7 @@ class EventListenerTest {
     val name = "supService"
     val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
     val request = "[EchoRequest(message=homie)]"
+    assertThat(eventListener.take()).isEqualTo("bindService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=sup from the JVM, homie))")
   }
@@ -89,6 +91,7 @@ class EventListenerTest {
     val name = "jsSuspendingEchoService"
     val funName = "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
     val request = "[EchoRequest(message=Jake)]"
+    assertThat(eventListener.take()).isEqualTo("takeService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from suspending JavaScript, Jake))")
   }
@@ -112,6 +115,7 @@ class EventListenerTest {
     val name = "jvmSuspendingEchoService"
     val funName = "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
     val request = "[EchoRequest(message=Eric)]"
+    assertThat(eventListener.take()).isEqualTo("bindService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 3 $name $funName $request")
     assertThat(eventListener.take()).isEqualTo("callEnd 3 $name $funName $request Success(EchoResponse(message=hello from the suspending JVM, Eric))")
   }
@@ -134,6 +138,7 @@ class EventListenerTest {
     val name = "helloService"
     val funName = "fun echo(): app.cash.zipline.testing.EchoResponse"
     val request = "[]"
+    assertThat(eventListener.take()).isEqualTo("takeService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
     assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(java.lang.Exception: ZiplineApiMismatchException: no such method")
   }
