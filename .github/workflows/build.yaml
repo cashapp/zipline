@@ -64,7 +64,7 @@ jobs:
       - run: ./gradlew build --stacktrace
         if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: jvm-native-libraries
           path: zipline/src/jvmMain/resources/*
@@ -109,13 +109,13 @@ jobs:
 
       - run: ./gradlew assemble dokkaHtml
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: zipline-jvm.jar
           path: zipline/build/libs/zipline-jvm-*.jar
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: zipline-android.aar
           path: zipline/build/outputs/aar/*-release.aar
