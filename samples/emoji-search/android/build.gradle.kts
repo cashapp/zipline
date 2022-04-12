@@ -35,7 +35,7 @@ android {
   }
 
   val samples by signingConfigs.creating {
-    storeFile(file("../samples.keystore"))
+    storeFile(file("../../samples.keystore"))
     storePassword("javascript")
     keyAlias("javascript")
     keyPassword("javascript")
