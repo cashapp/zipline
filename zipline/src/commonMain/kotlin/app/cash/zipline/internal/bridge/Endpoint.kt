@@ -122,7 +122,7 @@ class Endpoint internal constructor(
     service: T,
     adapter: ZiplineServiceAdapter<T>
   ) {
-    inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext())
+    inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext(name, service))
   }
 
   fun <T : ZiplineService> take(name: String): T {
@@ -150,7 +150,7 @@ class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal fun newInboundContext() = InboundBridge.Context(json, this)
+  internal fun newInboundContext(name: String, service: ZiplineService) = InboundBridge.Context(name, service, json, this)
 
   @PublishedApi
   internal fun newOutboundContext(name: String) = OutboundBridge.Context(name, json, this)
