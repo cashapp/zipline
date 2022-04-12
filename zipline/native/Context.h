@@ -40,6 +40,7 @@ public:
   jobject memoryUsage(JNIEnv*);
   void setMemoryLimit(JNIEnv* env, jlong limit);
   void setGcThreshold(JNIEnv* env, jlong gcThreshold);
+  void gc(JNIEnv* env);
   void setMaxStackSize(JNIEnv* env, jlong stackSize);
 
   jobject toJavaObject(JNIEnv*, const JSValue& value, bool throwOnUnsupportedType = true);
@@ -59,7 +60,8 @@ public:
   const jint jniVersion;
   JSRuntime *jsRuntime;
   JSContext *jsContext;
-  JSClassID jsClassId;
+  JSClassID outboundCallChannelClassId;
+  JSClassID finalizerClassId;
   JSAtom lengthAtom;
   JSAtom serviceNamesArrayAtom;
   JSAtom invokeAtom;

@@ -20,6 +20,7 @@
 #include "OutboundCallChannel.h"
 #include "InboundCallChannel.h"
 #include "ExceptionThrowers.h"
+#include "FinalizationRegistry.h"
 #include "quickjs/quickjs.h"
 
 std::string getName(JNIEnv* env, jobject javaClass) {
@@ -54,10 +55,11 @@ int jsInterruptHandlerPoll(JSRuntime* jsRuntime, void *opaque) {
 
 namespace {
 
-void jsFinalize(JSRuntime* jsRuntime, JSValue val) {
+void jsFinalizeOutboundCallChannel(JSRuntime* jsRuntime, JSValue val) {
   auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(jsRuntime));
   if (context) {
-    delete reinterpret_cast<OutboundCallChannel*>(JS_GetOpaque(val, context->jsClassId));
+    delete reinterpret_cast<OutboundCallChannel*>(
+        JS_GetOpaque(val, context->outboundCallChannelClassId));
   }
 }
 
@@ -78,7 +80,8 @@ Context::Context(JNIEnv* env)
     : jniVersion(env->GetVersion()),
       jsRuntime(JS_NewRuntime()),
       jsContext(JS_NewContext(jsRuntime)),
-      jsClassId(0),
+      outboundCallChannelClassId(0),
+      finalizerClassId(0),
       lengthAtom(JS_NewAtom(jsContext, "length")),
       serviceNamesArrayAtom(JS_NewAtom(jsContext, "serviceNamesArray")),
       invokeAtom(JS_NewAtom(jsContext, "invoke")),
@@ -105,6 +108,7 @@ Context::Context(JNIEnv* env)
   env->GetJavaVM(&javaVm);
   JS_SetRuntimeOpaque(jsRuntime, this);
   JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
+  installFinalizationRegistry(env, this);
 }
 
 Context::~Context() {
@@ -265,6 +269,10 @@ void Context::setMaxStackSize(JNIEnv* env, jlong stackSize) {
   JS_SetMaxStackSize(jsRuntime, stackSize);
 }
 
+void Context::gc(JNIEnv* env) {
+  JS_RunGC(jsRuntime);
+}
+
 InboundCallChannel* Context::getInboundCallChannel(JNIEnv* env, jstring name) {
   JSValue global = JS_GetGlobalObject(jsContext);
 
@@ -305,20 +313,20 @@ void Context::setOutboundCallChannel(JNIEnv* env, jstring name, jobject callChan
 
   const auto objName = JS_NewAtom(jsContext, nameStr);
   if (!JS_HasProperty(jsContext, global, objName)) {
-    if (jsClassId == 0) {
-      JS_NewClassID(&jsClassId);
+    if (outboundCallChannelClassId == 0) {
+      JS_NewClassID(&outboundCallChannelClassId);
       JSClassDef classDef;
       memset(&classDef, 0, sizeof(JSClassDef));
       classDef.class_name = "OutboundCallChannel";
-      classDef.finalizer = jsFinalize;
-      if (JS_NewClass(jsRuntime, jsClassId, &classDef)) {
-        jsClassId = 0;
+      classDef.finalizer = jsFinalizeOutboundCallChannel;
+      if (JS_NewClass(jsRuntime, outboundCallChannelClassId, &classDef)) {
+        outboundCallChannelClassId = 0;
         throwJavaException(env, "java/lang/NullPointerException",
                            "Failed to allocate JavaScript OutboundCallChannel class");
       }
     }
-    if (jsClassId != 0) {
-      auto jsOutboundCallChannel = JS_NewObjectClass(jsContext, jsClassId);
+    if (outboundCallChannelClassId != 0) {
+      auto jsOutboundCallChannel = JS_NewObjectClass(jsContext, outboundCallChannelClassId);
       if (JS_IsException(jsOutboundCallChannel) || JS_SetProperty(jsContext, global, objName, jsOutboundCallChannel) <= 0) {
         throwJsException(env, jsOutboundCallChannel);
       } else {
