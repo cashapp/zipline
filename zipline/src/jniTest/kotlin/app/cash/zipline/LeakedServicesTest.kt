@@ -43,7 +43,9 @@ class LeakedServicesTest {
     allocateAndLeakService()
     awaitGarbageCollection()
     triggerLeakDetection()
-    assertThat(eventListener.take()).isEqualTo("serviceLeaked(helloService)")
+    val name = "helloService"
+    assertThat(eventListener.take()).isEqualTo("takeService $name")
+    assertThat(eventListener.take()).isEqualTo("serviceLeaked($name)")
   }
 
   /** Just attempting to take a service causes Zipline to process leaked services. */
