@@ -145,8 +145,8 @@ class Endpoint internal constructor(
     return inboundHandlers.remove(name)
   }
 
-  internal fun generateName(): String {
-    return "$ziplineInternalPrefix${nextId++}"
+  internal fun generateName(prefix: String): String {
+    return "$prefix${nextId++}"
   }
 
   @PublishedApi
