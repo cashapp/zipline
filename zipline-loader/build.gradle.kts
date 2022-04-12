@@ -79,6 +79,9 @@ kotlin {
     }
     val engineTest by creating {
       dependsOn(commonTest)
+      dependencies {
+        implementation(projects.ziplineLoaderTesting)
+      }
     }
     val jniTest by creating {
       dependsOn(engineTest)

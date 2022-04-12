@@ -17,11 +17,10 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.FakeZiplineHttpClient
-import app.cash.zipline.loader.TestFixturesJvm
-import app.cash.zipline.loader.TestFixturesJvm.Companion.alphaUrl
-import app.cash.zipline.loader.TestFixturesJvm.Companion.bravoUrl
-import app.cash.zipline.loader.TestFixturesJvm.Companion.createDownloadZiplineLoader
+import app.cash.zipline.loader.testing.LoaderTestFixtures
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createDownloadZiplineLoader
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -41,14 +40,14 @@ class DownloadOnlyFetcherReceiverTest {
   private lateinit var fileSystem: FileSystem
   private val downloadDir = "/zipline/downloads".toPath()
   private lateinit var quickJs: QuickJs
-  private lateinit var testFixturesJvm: TestFixturesJvm
+  private lateinit var testFixtures: LoaderTestFixtures
 
   private lateinit var loader: ZiplineLoader
 
   @Before
   fun setUp() {
     quickJs = QuickJs.create()
-    testFixturesJvm = TestFixturesJvm(quickJs)
+    testFixtures = LoaderTestFixtures(quickJs)
     fileSystem = FakeFileSystem()
     loader = createDownloadZiplineLoader(
       dispatcher = dispatcher,
@@ -65,15 +64,19 @@ class DownloadOnlyFetcherReceiverTest {
   @Test
   fun getFileFromNetworkSaveToFs(): Unit = runBlocking {
     httpClient.filePathToByteString = mapOf(
-      alphaUrl to testFixturesJvm.alphaByteString,
-      bravoUrl to testFixturesJvm.bravoByteString,
+      alphaUrl to testFixtures.alphaByteString,
+      bravoUrl to testFixtures.bravoByteString,
     )
 
-    loader.download(downloadDir, fileSystem, testFixturesJvm.manifest)
+    loader.download(downloadDir, fileSystem, testFixtures.manifest)
 
-    assertTrue(fileSystem.exists(downloadDir / testFixturesJvm.alphaSha256Hex))
-    assertEquals(testFixturesJvm.alphaByteString, fileSystem.read(downloadDir / testFixturesJvm.alphaSha256Hex) { readByteString() })
-    assertTrue(fileSystem.exists(downloadDir / testFixturesJvm.bravoSha256Hex))
-    assertEquals(testFixturesJvm.bravoByteString, fileSystem.read(downloadDir / testFixturesJvm.bravoSha256Hex) { readByteString() })
+    assertTrue(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
+    assertEquals(
+      testFixtures.alphaByteString,
+      fileSystem.read(downloadDir / testFixtures.alphaSha256Hex) { readByteString() })
+    assertTrue(fileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
+    assertEquals(
+      testFixtures.bravoByteString,
+      fileSystem.read(downloadDir / testFixtures.bravoSha256Hex) { readByteString() })
   }
 }
