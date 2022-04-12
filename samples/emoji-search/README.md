@@ -1,10 +1,10 @@
 Emoji Search
 ============
 
-This is an Android demo of Zipline. It has two modules:
+This is a mobile app demo of Zipline. It has two modules:
 
  * **presenters** is a Kotlin/Multiplatform library that searches a set of emoji images.
- * **emoji-search** is an Android application that downloads the presenters JavaScript and displays
+ * **android** is an Android application that downloads the presenters JavaScript and displays
    it.
 
 
@@ -27,7 +27,7 @@ Running Emoji-Search
 Run this:
 
 ```
-./gradlew :samples:emoji-search:installDebug
+./gradlew :samples:emoji-search:android:installDebug
 ```
 
 This Android app assumes it's running in an emulator and will attempt to fetch JavaScript from the
