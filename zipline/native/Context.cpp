@@ -20,7 +20,7 @@
 #include "OutboundCallChannel.h"
 #include "InboundCallChannel.h"
 #include "ExceptionThrowers.h"
-#include "FinalizationRegistry.h"
+#include "common/FinalizationRegistry.h"
 #include "quickjs/quickjs.h"
 
 std::string getName(JNIEnv* env, jobject javaClass) {
@@ -107,7 +107,11 @@ Context::Context(JNIEnv* env)
   env->GetJavaVM(&javaVm);
   JS_SetRuntimeOpaque(jsRuntime, this);
   JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
-  installFinalizationRegistry(env, this);
+
+  if (installFinalizationRegistry(jsContext) < 0) {
+    throwJavaException(env, "java/lang/IllegalStateException",
+                       "Failed to install FinalizationRegistry");
+  }
 }
 
 Context::~Context() {
@@ -318,7 +322,7 @@ void Context::setOutboundCallChannel(JNIEnv* env, jstring name, jobject callChan
       memset(&classDef, 0, sizeof(JSClassDef));
       classDef.class_name = "OutboundCallChannel";
       classDef.finalizer = jsFinalizeOutboundCallChannel;
-      if (JS_NewClass(jsRuntime, outboundCallChannelClassId, &classDef)) {
+      if (JS_NewClass(jsRuntime, outboundCallChannelClassId, &classDef) < 0) {
         outboundCallChannelClassId = 0;
         throwJavaException(env, "java/lang/NullPointerException",
                            "Failed to allocate JavaScript OutboundCallChannel class");

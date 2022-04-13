@@ -13,13 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <jni.h>
-#include "Context.h"
-#include "ExceptionThrowers.h"
 #include <cstring>
 #include <memory>
 #include <assert.h>
-#include "quickjs/quickjs.h"
+#include "../quickjs/quickjs.h"
 
 // This file implements a subset of the FinalizationRegistry API on QuickJS.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
@@ -140,11 +137,11 @@ JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int argc, JS
  *
  *   globalThis.app_cash_zipline_newFinalizer = jsNewFinalizer;
  *
+ * Returns < 0 on failure, 1 on success.
  */
-void installFinalizationRegistry(JNIEnv* env, Context* context) {
-  JSContext* jsContext = context->jsContext;
-  JSRuntime* jsRuntime = context->jsRuntime;
-  JSValue global = JS_GetGlobalObject(jsContext);
+int installFinalizationRegistry(JSContext* jsContext) {
+  int result = 0;
+  JSRuntime* jsRuntime = JS_GetRuntime(jsContext);
 
   // Define the runtime API in regular JavaScript.
   auto bootstrapJs = R"(
@@ -168,32 +165,32 @@ void installFinalizationRegistry(JNIEnv* env, Context* context) {
       f();
     }
   )";
-
   auto bootstrapResult = JS_Eval(jsContext, bootstrapJs, sizeof(bootstrapJs),
                                  "FinalizationRegistry.cpp", JS_EVAL_TYPE_GLOBAL);
-  assert(!JS_IsException(bootstrapResult));
+  if (JS_IsException(bootstrapResult)) {
+    result = -1;
+  }
 
   // Declare the Finalizer class.
   JSClassDef classDef;
   memset(&classDef, 0, sizeof(JSClassDef));
   classDef.class_name = "Finalizer";
   classDef.finalizer = jsFinalizerCollected;
-
-  if (JS_NewClass(jsRuntime, finalizerClassId, &classDef)) {
-    throwJavaException(env, "java/lang/NullPointerException",
-                       "Failed to allocate JavaScript Finalizer class");
-  } else {
-    // Declare globalThis.newFinalizer().
-    const auto newFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_newFinalizer");
-    JSValue newFinalizerFunction = JS_NewCFunction(jsContext, jsNewFinalizer,
-                                                   "app_cash_zipline_newFinalizer", 1);
-    if (JS_HasProperty(jsContext, global, newFinalizerName)
-        || JS_SetProperty(jsContext, global, newFinalizerName, newFinalizerFunction) < 0) {
-      throwJavaException(env, "java/lang/IllegalArgumentException",
-                              "A newFinalizer function already exists");
-    }
-    JS_FreeAtom(jsContext, newFinalizerName);
+  if (JS_NewClass(jsRuntime, finalizerClassId, &classDef) < 0) {
+    result = -1;
   }
 
+  // Declare globalThis.newFinalizer().
+  JSValue global = JS_GetGlobalObject(jsContext);
+  const auto newFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_newFinalizer");
+  JSValue newFinalizerFunction = JS_NewCFunction(jsContext, jsNewFinalizer,
+                                                 "app_cash_zipline_newFinalizer", 1);
+  if (JS_HasProperty(jsContext, global, newFinalizerName)
+      || JS_SetProperty(jsContext, global, newFinalizerName, newFinalizerFunction) < 0) {
+    result = -1;
+  }
+  JS_FreeAtom(jsContext, newFinalizerName);
   JS_FreeValue(jsContext, global);
+
+  return result;
 }

@@ -16,9 +16,8 @@
 #ifndef QUICKJS_ANDROID_FINALIZATIONREGISTRY_H
 #define QUICKJS_ANDROID_FINALIZATIONREGISTRY_H
 
-#include <jni.h>
-#include "Context.h"
+#include "../quickjs/quickjs.h"
 
-void installFinalizationRegistry(JNIEnv* env, Context* context);
+int installFinalizationRegistry(JSContext* jsContext);
 
 #endif //QUICKJS_ANDROID_FINALIZATIONREGISTRY_H
