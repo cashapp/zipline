@@ -81,7 +81,6 @@ Context::Context(JNIEnv* env)
       jsRuntime(JS_NewRuntime()),
       jsContext(JS_NewContext(jsRuntime)),
       outboundCallChannelClassId(0),
-      finalizerClassId(0),
       lengthAtom(JS_NewAtom(jsContext, "length")),
       serviceNamesArrayAtom(JS_NewAtom(jsContext, "serviceNamesArray")),
       invokeAtom(JS_NewAtom(jsContext, "invoke")),

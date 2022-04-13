@@ -61,7 +61,6 @@ public:
   JSRuntime *jsRuntime;
   JSContext *jsContext;
   JSClassID outboundCallChannelClassId;
-  JSClassID finalizerClassId;
   JSAtom lengthAtom;
   JSAtom serviceNamesArrayAtom;
   JSAtom invokeAtom;

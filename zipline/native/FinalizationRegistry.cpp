@@ -38,35 +38,44 @@
 
 namespace {
 
+JSClassID finalizerClassId = JS_NewClassID(&finalizerClassId);
+
+typedef struct FinalizerOpaque {
+  JSContext* jsContext;
+  int id;
+
+  FinalizerOpaque(JSContext* jsContext, int id)
+      : jsContext(jsContext),
+        id(id) {
+  }
+} FinalizerOpaque;
+
 /*
  * This is invoked by QuickJS when an instance of our special Finalizer class is garbage collected.
  * It is equivalent to the following pseudocode.
  *
  * function jsFinalizerCollected(value) {
- *   const id = value.magicOpaqueValue;
- *   globalThis.app_cash_zipline_enqueueFinalizer(id);
+ *   val finalizerOpaque = value.magicOpaqueValue;
+ *   globalThis.app_cash_zipline_enqueueFinalizer(finalizerOpaque.id);
  * }
  *
  * Note that `magicOpaqueValue` is not a regular property; it uses JS_GetOpaque to stash a value
  * on the object.
  */
 void jsFinalizerCollected(JSRuntime* jsRuntime, JSValue val) {
-  auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(jsRuntime));
-  auto jsContext = context->jsContext;
-
-  auto idPtr = JS_GetOpaque(val, context->finalizerClassId);
-  auto id = static_cast<int>(reinterpret_cast<intptr_t>(idPtr));
+  const FinalizerOpaque* finalizerOpaque = reinterpret_cast<const FinalizerOpaque*>(JS_GetOpaque(val, finalizerClassId));
+  auto jsContext = finalizerOpaque->jsContext;
 
   JSValue global = JS_GetGlobalObject(jsContext);
   const auto enqueueFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_enqueueFinalizer");
 
   JSValueConst arguments[1];
-  arguments[0] = JS_NewInt32(jsContext, id);
+  arguments[0] = JS_NewInt32(jsContext, finalizerOpaque->id);
 
   JSValue result = JS_Invoke(jsContext, global, enqueueFinalizerName, 1, arguments);
 
-  JS_FreeAtom(jsContext, enqueueFinalizerName);
   JS_FreeValue(jsContext, arguments[0]);
+  JS_FreeAtom(jsContext, enqueueFinalizerName);
   JS_FreeValue(jsContext, global);
 }
 
@@ -76,7 +85,7 @@ void jsFinalizerCollected(JSRuntime* jsRuntime, JSValue val) {
  *
  * function app_cash_zipline_newFinalizer(id) {
  *   const result = new Finalizer();
- *   result.magicOpaqueValue = id;
+ *   result.magicOpaqueValue = FinalizerOpaque(id);
  *   return result;
  * }
  */
@@ -91,18 +100,13 @@ JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int argc, JS
     return JS_ThrowSyntaxError(jsContext, "id is not an number");
   }
 
-  auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(JS_GetRuntime(jsContext)));
-  if (context->finalizerClassId == 0) {
-    return JS_ThrowSyntaxError(jsContext, "Cannot construct Finalizer");
-  }
-
-  JSValue result = JS_NewObjectClass(jsContext, context->finalizerClassId);
+  JSValue result = JS_NewObjectClass(jsContext, finalizerClassId);
   if (JS_IsException(result)) {
     return result;
   }
 
-  auto idPtr = reinterpret_cast<void *>(static_cast<intptr_t>(id));
-  JS_SetOpaque(result, idPtr);
+  FinalizerOpaque* finalizerOpaque = new FinalizerOpaque(jsContext, id);
+  JS_SetOpaque(result, finalizerOpaque);
 
   return result;
 }
@@ -170,16 +174,14 @@ void installFinalizationRegistry(JNIEnv* env, Context* context) {
   assert(!JS_IsException(bootstrapResult));
 
   // Declare the Finalizer class.
-  JS_NewClassID(&(context->finalizerClassId));
   JSClassDef classDef;
   memset(&classDef, 0, sizeof(JSClassDef));
   classDef.class_name = "Finalizer";
   classDef.finalizer = jsFinalizerCollected;
 
-  if (JS_NewClass(jsRuntime, context->finalizerClassId, &classDef)) {
-    context->finalizerClassId = 0;
+  if (JS_NewClass(jsRuntime, finalizerClassId, &classDef)) {
     throwJavaException(env, "java/lang/NullPointerException",
-                            "Failed to allocate JavaScript Finalizer class");
+                       "Failed to allocate JavaScript Finalizer class");
   } else {
     // Declare globalThis.newFinalizer().
     const auto newFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_newFinalizer");
