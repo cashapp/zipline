@@ -33,8 +33,12 @@ dependencies {
 
   kapt(Dependencies.picocliCompiler)
 
+  testImplementation(projects.ziplineLoaderTesting)
   testImplementation(Dependencies.junit)
+  testImplementation(Dependencies.kotlinxSerializationJson)
   testImplementation(Dependencies.kotlinTest)
+  testImplementation(Dependencies.okio)
+  testImplementation(Dependencies.okHttpMockWebServer)
 }
 
 tasks.shadowJar {

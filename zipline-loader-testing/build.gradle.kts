@@ -24,15 +24,16 @@ kotlin {
 
   sourceSets {
     val commonMain by getting {
+
+    }
+
+    val engineMain by creating {
+      dependsOn(commonMain)
       dependencies {
         implementation(projects.zipline)
         implementation(projects.ziplineLoader)
         implementation(Dependencies.kotlinxSerializationJson)
       }
-    }
-
-    val engineMain by creating {
-      dependsOn(commonMain)
     }
 
     val jvmMain by getting {
