@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include <cstring>
-#include <memory>
-#include <assert.h>
 #include "../quickjs/quickjs.h"
+#include "finalization-registry.h"
+#include <stdlib.h>
+#include <string.h>
 
 // This file implements a subset of the FinalizationRegistry API on QuickJS.
 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/FinalizationRegistry
@@ -33,18 +33,11 @@
 // function either gets collected before we can execute it (if it's a regular member of the
 // finalizer), or is considered a leak itself (if it's an opaque member).
 
-namespace {
-
-JSClassID finalizerClassId = JS_NewClassID(&finalizerClassId);
+JSClassID finalizerClassId = 0;
 
 typedef struct FinalizerOpaque {
   JSContext* jsContext;
   int id;
-
-  FinalizerOpaque(JSContext* jsContext, int id)
-      : jsContext(jsContext),
-        id(id) {
-  }
 } FinalizerOpaque;
 
 /*
@@ -59,18 +52,20 @@ typedef struct FinalizerOpaque {
  * Note that `magicOpaqueValue` is not a regular property; it uses JS_GetOpaque to stash a value
  * on the object.
  */
-void jsFinalizerCollected(JSRuntime* jsRuntime, JSValue val) {
-  const FinalizerOpaque* finalizerOpaque = reinterpret_cast<const FinalizerOpaque*>(JS_GetOpaque(val, finalizerClassId));
-  auto jsContext = finalizerOpaque->jsContext;
+static void jsFinalizerCollected(JSRuntime* jsRuntime, JSValue val) {
+  FinalizerOpaque* finalizerOpaque = (FinalizerOpaque*)JS_GetOpaque(val, finalizerClassId);
+  JSContext* jsContext = finalizerOpaque->jsContext;
 
   JSValue global = JS_GetGlobalObject(jsContext);
-  const auto enqueueFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_enqueueFinalizer");
+  const JSAtom enqueueFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_enqueueFinalizer");
 
   JSValueConst arguments[1];
   arguments[0] = JS_NewInt32(jsContext, finalizerOpaque->id);
 
-  JSValue result = JS_Invoke(jsContext, global, enqueueFinalizerName, 1, arguments);
+  JS_Invoke(jsContext, global, enqueueFinalizerName, 1, arguments);
 
+  free(finalizerOpaque);
+  JS_SetOpaque(val, NULL);
   JS_FreeValue(jsContext, arguments[0]);
   JS_FreeAtom(jsContext, enqueueFinalizerName);
   JS_FreeValue(jsContext, global);
@@ -86,12 +81,12 @@ void jsFinalizerCollected(JSRuntime* jsRuntime, JSValue val) {
  *   return result;
  * }
  */
-JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int argc, JSValueConst* argv) {
+static JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int argc, JSValueConst* argv) {
   if (argc != 1) {
     return JS_ThrowSyntaxError(jsContext, "Unexpected argument count");
   }
 
-  auto idValue = argv[0];
+  JSValueConst idValue = argv[0];
   int32_t id;
   if (!JS_IsNumber(idValue) || JS_ToInt32(jsContext, &id, idValue)) {
     return JS_ThrowSyntaxError(jsContext, "id is not an number");
@@ -102,13 +97,13 @@ JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int argc, JS
     return result;
   }
 
-  FinalizerOpaque* finalizerOpaque = new FinalizerOpaque(jsContext, id);
+  FinalizerOpaque* finalizerOpaque = malloc(sizeof(FinalizerOpaque));
+  finalizerOpaque->jsContext = jsContext;
+  finalizerOpaque->id = id;
   JS_SetOpaque(result, finalizerOpaque);
 
   return result;
 }
-
-} // anonymous namespace
 
 /*
  * This sets up the native primitives to support finalization. It's equivalent to the following
@@ -139,34 +134,37 @@ JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int argc, JS
  *
  * Returns < 0 on failure, 1 on success.
  */
-int installFinalizationRegistry(JSContext* jsContext) {
-  int result = 0;
+int installFinalizationRegistry(JSContext *jsContext) {
+  int result = 1;
   JSRuntime* jsRuntime = JS_GetRuntime(jsContext);
 
+  if (finalizerClassId == 0) {
+    JS_NewClassID(&finalizerClassId);
+  }
+
   // Define the runtime API in regular JavaScript.
-  auto bootstrapJs = R"(
-    class FinalizationRegistry {
-      static nextId = 1;
-      static idToFunction = {};
-
-      constructor(callback) {
-        this.callback = callback;
-      }
-
-      register(target, heldValue) {
-        const id = FinalizationRegistry.nextId++;
-        FinalizationRegistry.idToFunction[id] = () => { this.callback(heldValue) };
-        target.__app_cash_zipline_finalizer = app_cash_zipline_newFinalizer(id);
-      }
-    }
-
-    function app_cash_zipline_enqueueFinalizer(id) {
-      const f = FinalizationRegistry.idToFunction[id];
-      f();
-    }
-  )";
-  auto bootstrapResult = JS_Eval(jsContext, bootstrapJs, sizeof(bootstrapJs),
-                                 "FinalizationRegistry.cpp", JS_EVAL_TYPE_GLOBAL);
+  char* bootstrapJs =
+    "class FinalizationRegistry {\n"
+    "  static nextId = 1;\n"
+    "  static idToFunction = {};\n"
+    "\n"
+    "  constructor(callback) {\n"
+    "    this.callback = callback;\n"
+    "  }\n"
+    "\n"
+    "  register(target, heldValue) {\n"
+    "    const id = FinalizationRegistry.nextId++;\n"
+    "    FinalizationRegistry.idToFunction[id] = () => { this.callback(heldValue) };\n"
+    "    target.__app_cash_zipline_finalizer = app_cash_zipline_newFinalizer(id);\n"
+    "  }\n"
+    "}\n"
+    "\n"
+    "function app_cash_zipline_enqueueFinalizer(id) {\n"
+    "  const f = FinalizationRegistry.idToFunction[id];\n"
+    "  f();\n"
+    "}\n";
+  JSValue bootstrapResult = JS_Eval(jsContext, bootstrapJs, strlen(bootstrapJs),
+                                    "FinalizationRegistry.cpp", JS_EVAL_TYPE_GLOBAL);
   if (JS_IsException(bootstrapResult)) {
     result = -1;
   }
@@ -180,9 +178,9 @@ int installFinalizationRegistry(JSContext* jsContext) {
     result = -1;
   }
 
-  // Declare globalThis.newFinalizer().
+  // Declare globalThis.app_cash_zipline_newFinalizer().
   JSValue global = JS_GetGlobalObject(jsContext);
-  const auto newFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_newFinalizer");
+  const JSAtom newFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_newFinalizer");
   JSValue newFinalizerFunction = JS_NewCFunction(jsContext, jsNewFinalizer,
                                                  "app_cash_zipline_newFinalizer", 1);
   if (JS_HasProperty(jsContext, global, newFinalizerName)

@@ -20,7 +20,7 @@
 #include "OutboundCallChannel.h"
 #include "InboundCallChannel.h"
 #include "ExceptionThrowers.h"
-#include "common/FinalizationRegistry.h"
+#include "common/finalization-registry.h"
 #include "quickjs/quickjs.h"
 
 std::string getName(JNIEnv* env, jobject javaClass) {

@@ -18,6 +18,14 @@
 
 #include "../quickjs/quickjs.h"
 
-int installFinalizationRegistry(JSContext* jsContext);
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+int installFinalizationRegistry(JSContext *jsContext);
+
+#ifdef __cplusplus
+} /* extern "C" { */
+#endif
 
 #endif //QUICKJS_ANDROID_FINALIZATIONREGISTRY_H
