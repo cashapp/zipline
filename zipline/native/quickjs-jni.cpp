@@ -131,6 +131,16 @@ Java_app_cash_zipline_QuickJs_setGcThreshold(JNIEnv* env, jobject type, jlong co
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_app_cash_zipline_QuickJs_gc(JNIEnv* env, jobject type, jlong context_) {
+  Context* context = reinterpret_cast<Context*>(context_);
+  if (!context) {
+    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
+    return;
+  }
+  context->gc(env);
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_app_cash_zipline_QuickJs_setMaxStackSize(JNIEnv* env, jobject type, jlong context_, jlong stackSize) {
   Context* context = reinterpret_cast<Context*>(context_);
   if (!context) {

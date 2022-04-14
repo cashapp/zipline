@@ -48,7 +48,7 @@ OutboundCallChannel::serviceNamesArray(JSContext* ctx, JSValueConst this_val, in
   if (!context) {
     return JS_ThrowReferenceError(ctx, "QuickJs closed");
   }
-  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
+  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->outboundCallChannelClassId));
   if (!channel) {
     return JS_ThrowReferenceError(ctx, "Not an OutboundCallChannel");
   }
@@ -74,7 +74,7 @@ OutboundCallChannel::invoke(JSContext* ctx, JSValueConst this_val, int argc, JSV
   if (!context) {
     return JS_ThrowReferenceError(ctx, "QuickJs closed");
   }
-  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
+  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->outboundCallChannelClassId));
   if (!channel) {
     return JS_ThrowReferenceError(ctx, "Not an OutboundCallChannel");
   }
@@ -106,7 +106,7 @@ OutboundCallChannel::invokeSuspending(JSContext* ctx, JSValueConst this_val, int
   if (!context) {
     return JS_ThrowReferenceError(ctx, "QuickJs closed");
   }
-  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
+  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->outboundCallChannelClassId));
   if (!channel) {
     return JS_ThrowReferenceError(ctx, "Not an OutboundCallChannel");
   }
@@ -138,7 +138,7 @@ OutboundCallChannel::disconnect(JSContext* ctx, JSValueConst this_val, int argc,
   if (!context) {
     return JS_ThrowReferenceError(ctx, "QuickJs closed");
   }
-  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->jsClassId));
+  auto channel = reinterpret_cast<const OutboundCallChannel*>(JS_GetOpaque(this_val, context->outboundCallChannelClassId));
   if (!channel) {
     return JS_ThrowReferenceError(ctx, "Not an OutboundCallChannel");
   }

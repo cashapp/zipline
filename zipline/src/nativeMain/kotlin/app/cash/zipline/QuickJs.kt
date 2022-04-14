@@ -54,6 +54,7 @@ import app.cash.zipline.quickjs.JS_READ_OBJ_BYTECODE
 import app.cash.zipline.quickjs.JS_READ_OBJ_REFERENCE
 import app.cash.zipline.quickjs.JS_ReadObject
 import app.cash.zipline.quickjs.JS_ResolveModule
+import app.cash.zipline.quickjs.JS_RunGC
 import app.cash.zipline.quickjs.JS_SetGCThreshold
 import app.cash.zipline.quickjs.JS_SetInterruptHandler
 import app.cash.zipline.quickjs.JS_SetMaxStackSize
@@ -86,6 +87,7 @@ import app.cash.zipline.quickjs.JsValueGetBool
 import app.cash.zipline.quickjs.JsValueGetFloat64
 import app.cash.zipline.quickjs.JsValueGetInt
 import app.cash.zipline.quickjs.JsValueGetNormTag
+import app.cash.zipline.quickjs.installFinalizationRegistry
 import app.cash.zipline.quickjs.js_free
 import kotlinx.cinterop.CArrayPointer
 import kotlinx.cinterop.COpaquePointer
@@ -128,6 +130,7 @@ actual class QuickJs private constructor(
           memoryLimit = -1L
           gcThreshold = 256L * 1024L
           maxStackSize = 512L * 1024L // Override the QuickJS default which is 256 KiB
+          installFinalizationRegistry(context)
         }
     }
 
@@ -383,6 +386,10 @@ actual class QuickJs private constructor(
     check(hasProperty) { "A global JavaScript object called $inboundChannelName was not found" }
 
     return InboundCallChannel(this)
+  }
+
+  internal actual fun gc() {
+    JS_RunGC(runtime)
   }
 
   actual fun close() {

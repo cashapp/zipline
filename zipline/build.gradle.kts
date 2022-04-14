@@ -4,6 +4,7 @@ import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
   kotlin("multiplatform")
@@ -119,13 +120,14 @@ kotlin {
       dependsOn(engineTest)
     }
 
-    targets.withType<org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget> {
+    targets.withType<KotlinNativeTarget> {
       val main by compilations.getting
       main.defaultSourceSet.dependsOn(nativeMain)
 
       main.cinterops {
         create("quickjs") {
           header(file("native/quickjs/quickjs.h"))
+          header(file("native/common/finalization-registry.h"))
           packageName("app.cash.zipline.quickjs")
         }
       }
@@ -155,7 +157,7 @@ cklib {
   config.kotlinVersion = Dependencies.baseKotlin
   create("quickjs") {
     language = C
-    srcDirs = project.files(file("native/quickjs"))
+    srcDirs = project.files(file("native/quickjs"), file("native/common"))
     compilerArgs.addAll(
       listOf(
         //"-DDUMP_LEAKS=1", // For local testing ONLY!

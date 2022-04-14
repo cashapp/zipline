@@ -123,6 +123,10 @@ actual class QuickJs private constructor(
     return JniCallChannel(this, instance)
   }
 
+  internal actual fun gc() {
+    gc(context)
+  }
+
   /**
    * Compile [sourceCode] and return the bytecode. [fileName] will be used in error
    * reporting.
@@ -166,5 +170,6 @@ actual class QuickJs private constructor(
   private external fun memoryUsage(context: Long): MemoryUsage?
   private external fun setMemoryLimit(context: Long, limit: Long)
   private external fun setGcThreshold(context: Long, gcThreshold: Long)
+  private external fun gc(context: Long)
   private external fun setMaxStackSize(context: Long, stackSize: Long)
 }
