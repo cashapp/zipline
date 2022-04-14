@@ -15,8 +15,11 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.testing.EchoRequest
+import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import com.google.common.truth.Truth.assertThat
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
@@ -38,26 +41,39 @@ class LeakedServicesTest {
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun jvmLeaksService() {
+  @Test fun jvmLeaksService(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
     allocateAndLeakService()
     awaitGarbageCollection()
-    triggerLeakDetection()
+    triggerJvmLeakDetection()
     val name = "helloService"
     assertThat(eventListener.take()).isEqualTo("takeService $name")
     assertThat(eventListener.take()).isEqualTo("serviceLeaked($name)")
   }
 
-  /** Just attempting to take a service causes Zipline to process leaked services. */
-  private fun triggerLeakDetection() {
-    try {
-      zipline.take<EchoService>("noSuchService")
-    } catch (ignored: Exception) {
+  @Test fun jsLeaksService(): Unit = runBlocking(dispatcher) {
+    val supService = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse = error("unexpected call")
     }
+
+    val name = "supService"
+    zipline.bind<EchoService>(name, supService)
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.allocateAndLeakService()")
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.triggerLeakDetection()")
+    assertThat(eventListener.take()).isEqualTo("bindService $name")
+    assertThat(eventListener.take()).isEqualTo("serviceLeaked($name)")
   }
 
   /** Use a separate method so there's no hidden reference remaining on the stack. */
   private fun allocateAndLeakService() {
-    zipline.take<EchoService>("helloService")
+    zipline.take<EchoService>("helloService") // Deliberately not closed for testing.
+  }
+
+  /** Just attempting to take a service causes Zipline to process leaked services. */
+  private fun triggerJvmLeakDetection() {
+    try {
+      zipline.take<EchoService>("noSuchService")
+    } catch (ignored: Exception) {
+    }
   }
 }
