@@ -45,7 +45,7 @@ typedef struct FinalizerOpaque {
  * It is equivalent to the following pseudocode.
  *
  * function jsFinalizerCollected(value) {
- *   val finalizerOpaque = value.magicOpaqueValue;
+ *   const finalizerOpaque = value.magicOpaqueValue;
  *   globalThis.app_cash_zipline_enqueueFinalizer(finalizerOpaque.id);
  * }
  *
@@ -57,6 +57,13 @@ static void jsFinalizerCollected(JSRuntime* jsRuntime, JSValue val) {
   JSContext* jsContext = finalizerOpaque->jsContext;
 
   JSValue global = JS_GetGlobalObject(jsContext);
+
+  // Don't dereference the global object if QuickJS is shutting down.
+  if (!JS_IsLiveObject(jsRuntime, global)) {
+    JS_FreeValue(jsContext, global);
+    return;
+  }
+
   const JSAtom enqueueFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_enqueueFinalizer");
 
   JSValueConst arguments[1];
