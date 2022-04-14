@@ -55,26 +55,23 @@ typedef struct FinalizerOpaque {
 static void jsFinalizerCollected(JSRuntime* jsRuntime, JSValue val) {
   FinalizerOpaque* finalizerOpaque = (FinalizerOpaque*)JS_GetOpaque(val, finalizerClassId);
   JSContext* jsContext = finalizerOpaque->jsContext;
-
   JSValue global = JS_GetGlobalObject(jsContext);
 
   // Don't dereference the global object if QuickJS is shutting down.
-  if (!JS_IsLiveObject(jsRuntime, global)) {
-    JS_FreeValue(jsContext, global);
-    return;
+  if (JS_IsLiveObject(jsRuntime, global)) {
+    const JSAtom enqueueFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_enqueueFinalizer");
+
+    JSValueConst arguments[1];
+    arguments[0] = JS_NewInt32(jsContext, finalizerOpaque->id);
+
+    JS_Invoke(jsContext, global, enqueueFinalizerName, 1, arguments);
+
+    JS_SetOpaque(val, NULL);
+    JS_FreeValue(jsContext, arguments[0]);
+    JS_FreeAtom(jsContext, enqueueFinalizerName);
   }
 
-  const JSAtom enqueueFinalizerName = JS_NewAtom(jsContext, "app_cash_zipline_enqueueFinalizer");
-
-  JSValueConst arguments[1];
-  arguments[0] = JS_NewInt32(jsContext, finalizerOpaque->id);
-
-  JS_Invoke(jsContext, global, enqueueFinalizerName, 1, arguments);
-
   free(finalizerOpaque);
-  JS_SetOpaque(val, NULL);
-  JS_FreeValue(jsContext, arguments[0]);
-  JS_FreeAtom(jsContext, enqueueFinalizerName);
   JS_FreeValue(jsContext, global);
 }
 
