@@ -19,6 +19,7 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import com.google.common.truth.Truth.assertThat
+import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
@@ -71,9 +72,8 @@ class LeakedServicesTest {
 
   /** Just attempting to take a service causes Zipline to process leaked services. */
   private fun triggerJvmLeakDetection() {
-    try {
+    assertFailsWith<Exception> {
       zipline.take<EchoService>("noSuchService")
-    } catch (ignored: Exception) {
     }
   }
 }

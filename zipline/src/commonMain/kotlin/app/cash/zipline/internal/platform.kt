@@ -21,7 +21,7 @@ internal const val ziplineInternalPrefix = "zipline/"
 internal const val passByReferencePrefix = "service/"
 internal const val eventLoopName = "${ziplineInternalPrefix}event_loop"
 internal const val consoleName = "${ziplineInternalPrefix}console"
-internal const val eventListenerName = "${ziplineInternalPrefix}/event_listener"
+internal const val eventListenerName = "${ziplineInternalPrefix}event_listener"
 internal const val jsPlatformName = "${ziplineInternalPrefix}js"
 
 internal interface EventLoop : ZiplineService {
