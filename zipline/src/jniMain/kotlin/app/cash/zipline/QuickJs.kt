@@ -53,7 +53,6 @@ actual class QuickJs private constructor(
           memoryLimit = -1L
           gcThreshold = 256L * 1024L
           maxStackSize = 512L * 1024L // Override the QuickJS default which is 256 KiB
-
         }
     }
 

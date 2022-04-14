@@ -25,7 +25,7 @@
 // property exists solely to get garbage collected when its referencing object is garbage collected.
 // It is an error to access this property directly.
 //
-// This mechanism uses a C++ function to create the finalizer and another to get called back during
+// This mechanism uses a C function to create the finalizer and another to get called back during
 // garbage collection. The rest is implemented in regular JavaScript.
 //
 // The Finalizer object uses an integer ID to track which JavaScript function gets called back.
@@ -120,7 +120,7 @@ static JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int a
  *     ...
  *   }
  *
- * Declare the finalizer class and configure the C++ function that's called when instances are
+ * Declare the finalizer class and configure the C function that's called when instances are
  * collected.
  *
  *   class Finalizer {
@@ -128,7 +128,7 @@ static JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int a
  *
  *   Finalizer::class.setInstanceFinalizer(jsFinalizerCollected)
  *
- * Declare newFinalizer() to call the C++ factory method.
+ * Declare newFinalizer() to call the C factory method.
  *
  *   globalThis.app_cash_zipline_newFinalizer = jsNewFinalizer;
  *
@@ -164,7 +164,7 @@ int installFinalizationRegistry(JSContext *jsContext) {
     "  f();\n"
     "}\n";
   JSValue bootstrapResult = JS_Eval(jsContext, bootstrapJs, strlen(bootstrapJs),
-                                    "FinalizationRegistry.cpp", JS_EVAL_TYPE_GLOBAL);
+                                    "finalization-registry.c", JS_EVAL_TYPE_GLOBAL);
   if (JS_IsException(bootstrapResult)) {
     result = -1;
   }
