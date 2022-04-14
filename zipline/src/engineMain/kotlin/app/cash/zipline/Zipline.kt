@@ -114,10 +114,10 @@ actual class Zipline private constructor(
       name = eventLoopName,
       instance = eventLoop,
     )
-    val eventListenerBridge = HostEventListenerService(eventListener)
+    val eventListenerService = HostEventListenerService(eventListener)
     endpoint.bind<EventListenerService>(
       name = eventListenerName,
-      instance = eventListenerBridge,
+      instance = eventListenerService,
     )
   }
 

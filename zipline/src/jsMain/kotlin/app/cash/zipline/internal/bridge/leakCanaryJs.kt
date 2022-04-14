@@ -25,10 +25,10 @@ val registry = run {
   val referenceQueue = referenceQueue
   js(
     """
-      new FinalizationRegistry(function(heldValue) {
-        referenceQueue.push(heldValue);
-      })
-      """
+    new FinalizationRegistry(function(heldValue) {
+      referenceQueue.push(heldValue);
+    })
+    """
   )
 }
 
