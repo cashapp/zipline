@@ -45,7 +45,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import okio.Path.Companion.toOkioPath
-import okio.Path.Companion.toPath
 
 @NoLiveLiterals
 class EmojiSearchActivity : ComponentActivity() {
@@ -57,10 +56,8 @@ class EmojiSearchActivity : ComponentActivity() {
     val events = MutableSharedFlow<EmojiSearchEvent>(extraBufferCapacity = Int.MAX_VALUE)
     val models = MutableStateFlow(initialViewModel)
 
-    val cacheDirectory = getCacheDir().toOkioPath() / "zipline"
-    // TODO set to path where Zipline files are seeded for published APKs
-    val embeddedDirectory = "zipline".toPath()
-    val emojiSearchZipline = EmojiSearchZipline(cacheDirectory, embeddedDirectory)
+    val cacheDirectory = cacheDir.toOkioPath() / "zipline"
+    val emojiSearchZipline = EmojiSearchZipline(cacheDirectory)
     emojiSearchZipline.produceModelsIn(scope, events, models)
 
     val profilerToggle = ProfilerToggle(

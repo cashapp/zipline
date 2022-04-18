@@ -18,11 +18,9 @@ package app.cash.zipline.samples.emojisearch
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.DriverFactory
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
-import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.createZiplineCache
 import app.cash.zipline.loader.fetcher.FsCachingFetcher
-import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.time.Clock
 import java.util.concurrent.Executors
@@ -39,7 +37,6 @@ import okio.Path
 
 class EmojiSearchZipline(
   cacheDir: Path,
-  embeddedDir: Path,
 ) {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
@@ -55,10 +52,6 @@ class EmojiSearchZipline(
     dispatcher = dispatcher,
     httpClient = OkHttpZiplineHttpClient(client),
     fetchers = listOf(
-      FsEmbeddedFetcher(
-        embeddedDir = embeddedDir,
-        embeddedFileSystem = FileSystem.RESOURCES,
-      ),
       FsCachingFetcher(
         cache = createZiplineCache(
           driver = driver,
