@@ -18,15 +18,44 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 
+private val referenceQueue: dynamic = js("""[]""")
+
+val registry = run {
+  // Declare a local so `referenceQueue` is accessible to the js() block below.
+  val referenceQueue = referenceQueue
+  js(
+    """
+    new FinalizationRegistry(function(heldValue) {
+      referenceQueue.push(heldValue);
+    })
+    """
+  )
+}
+
 internal actual fun trackLeaks(
   eventListener: EventListener,
   name: String,
   context: OutboundBridge.Context,
   service: ZiplineService
 ) {
-  // We do not yet detect leaks from within JS.
+  registry.register(service, ZiplineServiceReference(eventListener, name, context))
 }
 
 internal actual fun detectLeaks() {
-  // We do not yet detect leaks from within JS.
+  while (true) {
+    val reference = referenceQueue.shift() ?: break
+    (reference as ZiplineServiceReference).afterGc()
+  }
+}
+
+private class ZiplineServiceReference(
+  private val eventListener: EventListener,
+  private val name: String,
+  private val context: OutboundBridge.Context,
+) {
+  fun afterGc() {
+    if (!context.closed) {
+      eventListener.serviceLeaked(name)
+    }
+  }
 }

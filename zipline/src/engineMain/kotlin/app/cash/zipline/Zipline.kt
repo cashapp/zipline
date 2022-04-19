@@ -19,13 +19,16 @@ import app.cash.zipline.internal.CURRENT_MODULE_ID
 import app.cash.zipline.internal.Console
 import app.cash.zipline.internal.CoroutineEventLoop
 import app.cash.zipline.internal.DEFINE_JS
+import app.cash.zipline.internal.EventListenerService
 import app.cash.zipline.internal.EventLoop
 import app.cash.zipline.internal.HostConsole
 import app.cash.zipline.internal.JsPlatform
+import app.cash.zipline.internal.HostEventListenerService
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.consoleName
+import app.cash.zipline.internal.eventListenerName
 import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
 import kotlin.coroutines.resumeWithException
@@ -110,6 +113,11 @@ actual class Zipline private constructor(
     endpoint.bind<EventLoop>(
       name = eventLoopName,
       instance = eventLoop,
+    )
+    val eventListenerService = HostEventListenerService(eventListener)
+    endpoint.bind<EventListenerService>(
+      name = eventListenerName,
+      instance = eventListenerService,
     )
   }
 

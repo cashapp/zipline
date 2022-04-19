@@ -21,6 +21,7 @@ internal const val ziplineInternalPrefix = "zipline/"
 internal const val passByReferencePrefix = "service/"
 internal const val eventLoopName = "${ziplineInternalPrefix}event_loop"
 internal const val consoleName = "${ziplineInternalPrefix}console"
+internal const val eventListenerName = "${ziplineInternalPrefix}event_listener"
 internal const val jsPlatformName = "${ziplineInternalPrefix}js"
 
 internal interface EventLoop : ZiplineService {
@@ -35,4 +36,12 @@ internal interface Console : ZiplineService {
 
 internal interface JsPlatform : ZiplineService {
   fun runJob(timeoutId: Int)
+}
+
+/**
+ * Forward select events to the host event listener. We don't need to bridge all functions because
+ * the peer already sees its side of those calls.
+ */
+internal interface EventListenerService : ZiplineService {
+  fun serviceLeaked(name: String)
 }
