@@ -39,8 +39,8 @@ class ZiplineCompileTaskTest {
   }
 
   @Test
-  fun `write to and read from zipline`() {
-    val rootProject = File("src/test/projects/happyPath")
+  fun standaloneCompileTask() {
+    val rootProject = File("src/test/projects/standaloneCompileTask")
     assertZiplineCompileTask(rootProject) {
       val readZiplineFile = it.source().buffer().use { source ->
         ZiplineFile.read(source)

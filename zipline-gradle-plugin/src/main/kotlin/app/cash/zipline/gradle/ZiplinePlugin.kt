@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.gradle
 
+import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -39,14 +40,39 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     version = BuildConfig.KOTLIN_PLUGIN_VERSION,
   )
 
+  override fun apply(target: Project) {
+    super.apply(target)
+
+    // If the build has compileDevelopmentExecutableKotlinJs, create developmentExecutableZipline.
+    // Symmetrically for production.
+    target.tasks.whenTaskAdded { task ->
+      if (task !is KotlinJsCompile) {
+        return@whenTaskAdded
+      }
+      val compileType = when (task.name) {
+        "compileDevelopmentExecutableKotlinJs" -> "developmentExecutable"
+        "compileProductionExecutableKotlinJs" -> "productionExecutable"
+        else -> return@whenTaskAdded
+      }
+      target.tasks.create("${compileType}Zipline", ZiplineCompileTask::class.java) { createdTask ->
+        createdTask.inputDir.set(
+          target.file("${target.buildDir}/compileSync/main/$compileType/kotlin")
+        )
+        createdTask.outputDir.set(
+          target.file("${target.buildDir}/compileSync/main/$compileType/zipline")
+        )
+      }
+    }
+  }
+
   override fun applyToCompilation(
     kotlinCompilation: KotlinCompilation<*>
   ): Provider<List<SubpluginOption>> {
     val project = kotlinCompilation.target.project
 
     // Configure Kotlin JS to generate modular JS files
-    project.tasks.withType(KotlinJsCompile::class.java).configureEach {
-      it.kotlinOptions {
+    project.tasks.withType(KotlinJsCompile::class.java).configureEach { task ->
+      task.kotlinOptions {
         freeCompilerArgs += listOf("-Xir-per-module")
       }
     }

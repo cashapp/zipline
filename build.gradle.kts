@@ -85,6 +85,14 @@ allprojects {
   }
 
   plugins.withId("com.vanniktech.maven.publish.base") {
+    configure<PublishingExtension> {
+      repositories {
+        maven {
+          name = "testMaven"
+          url = file("${rootProject.buildDir}/testMaven").toURI()
+        }
+      }
+    }
     configure<MavenPublishBaseExtension> {
       publishToMavenCentral(SonatypeHost.DEFAULT)
       signAllPublications()
