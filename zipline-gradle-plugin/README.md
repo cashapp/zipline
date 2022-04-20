@@ -1,33 +1,19 @@
-Zipline Files
--------------
+Zipline Gradle Plugin
+---------------------
 
-Compile Task
-============
+Zipline Compilation
+===================
 
-The Gradle plugin has a Compile task that packages compiled JavaScript into a `.zipline` file.
+The plugin compiles JavaScript files into `.zipline` files. These binary files are faster to launch.
 
-```kotlin
-plugins {
-  id("app.cash.zipline")
-}
 
-kotlin {
-  js {
-    browser()
-    binaries.library()
-  }
-}
+Webpack Config
+==============
 
-val compileZipline by tasks.creating(ZiplineCompileTask::class) {
-  dependsOn(":samples:emoji-search:presenters:compileDevelopmentLibraryKotlinJs")
-  inputDir = file("$buildDir/compileSync/main/developmentLibrary/kotlin")
-  outputDir = file("$buildDir/zipline")
-}
+The plugin serves compiled `.zipline` files on the Webpack server. This is useful for local
+development! You can run the webpack compiler continuously and `.zipline` files will be served to
+a `ZiplineLoader`.
 
-val publish by tasks.getting {
-  dependsOn(ziplineFile)
-}
-```
 
 Download Task
 =============
