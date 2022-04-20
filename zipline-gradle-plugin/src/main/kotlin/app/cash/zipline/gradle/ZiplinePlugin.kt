@@ -18,10 +18,14 @@ package app.cash.zipline.gradle
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
+import org.jetbrains.kotlin.gradle.plugin.KotlinPlatformType
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 
 class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
@@ -40,28 +44,49 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     version = BuildConfig.KOTLIN_PLUGIN_VERSION,
   )
 
-  override fun apply(target: Project) {
-    super.apply(target)
+  override fun apply(project: Project) {
+    super.apply(project)
 
-    // If the build has compileDevelopmentExecutableKotlinJs, create developmentExecutableZipline.
-    // Symmetrically for production.
-    target.tasks.whenTaskAdded { task ->
-      if (task !is KotlinJsCompile) {
-        return@whenTaskAdded
+    val extension = project.extensions.getByType(KotlinMultiplatformExtension::class.java)
+    extension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
+      kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
+        registerCompileZiplineTask(project, kotlinBinary)
       }
-      val compileType = when (task.name) {
-        "compileDevelopmentExecutableKotlinJs" -> "developmentExecutable"
-        "compileProductionExecutableKotlinJs" -> "productionExecutable"
-        else -> return@whenTaskAdded
-      }
-      target.tasks.create("${compileType}Zipline", ZiplineCompileTask::class.java) { createdTask ->
-        createdTask.inputDir.set(
-          target.file("${target.buildDir}/compileSync/main/$compileType/kotlin")
-        )
-        createdTask.outputDir.set(
-          target.file("${target.buildDir}/compileSync/main/$compileType/zipline")
-        )
-      }
+    }
+  }
+
+  private fun registerCompileZiplineTask(project: Project, kotlinBinary: JsIrBinary) {
+    // Like 'production' or 'development'.
+    val modeLowercase = kotlinBinary.mode.toString().lowercase()
+
+    // Like 'main'.
+    val compilationName = kotlinBinary.compilation.name
+
+    // Like 'compileProductionMainZipline'.
+    val compileZiplineTaskName = lowerCamelCaseName(
+      "compile",
+      modeLowercase,
+      compilationName,
+      "zipline"
+    )
+
+    // Like 'productionExecutable'.
+    val modeExecutable = lowerCamelCaseName(
+      modeLowercase,
+      "executable"
+    )
+
+    // For every JS executable, create a task that compiles its .js to .zipline.
+    //    input: build/compileSync/main/productionExecutable/kotlin
+    //   output: build/compileSync/main/productionExecutable/zipline
+    project.tasks.register(compileZiplineTaskName, ZiplineCompileTask::class.java) { createdTask ->
+      createdTask.dependsOn(kotlinBinary.linkTaskName)
+      createdTask.inputDir.set(
+        project.file("${project.buildDir}/compileSync/$compilationName/$modeExecutable/kotlin")
+      )
+      createdTask.outputDir.set(
+        project.file("${project.buildDir}/compileSync/$compilationName/$modeExecutable/zipline")
+      )
     }
   }
 

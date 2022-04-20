@@ -36,7 +36,7 @@ class ZiplinePluginTest {
   fun `zipline compile task automatically added`() {
     val projectDir = File("src/test/projects/basic")
 
-    val taskName = "productionExecutableZipline"
+    val taskName = "compileProductionMainZipline"
     val gradleRunner = createRunner(projectDir, taskName)
 
     val result = gradleRunner.build()
@@ -54,7 +54,7 @@ class ZiplinePluginTest {
     return GradleRunner.create()
       .withProjectDir(projectDir)
       .withDebug(true) // Run in-process.
-      .withArguments("--info", "--stacktrace", "--continue", taskName, versionProperty)
+      .withArguments("--info", "--stacktrace", "--continue", "clean", taskName, versionProperty)
       .forwardOutput()
   }
 

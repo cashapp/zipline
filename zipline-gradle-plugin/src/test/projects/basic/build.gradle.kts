@@ -7,7 +7,6 @@ buildscript {
     google()
   }
   dependencies {
-    println("ZIPLINE VERSION = " + project.property("ziplineVersion"))
     classpath("app.cash.zipline:zipline-gradle-plugin:${project.property("ziplineVersion")}")
     classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:1.6.10")
   }
