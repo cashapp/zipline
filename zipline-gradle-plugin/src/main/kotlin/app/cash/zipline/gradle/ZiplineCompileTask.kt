@@ -34,7 +34,7 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
  * https://kotlinlang.org/docs/js-project-setup.html#webpack-configuration-file
  * https://webpack.js.org/concepts/configuration/
  */
-abstract class ZiplineCompileTask : DefaultTask() {
+internal abstract class ZiplineCompileTask : DefaultTask() {
   @get:Input
   lateinit var compilationName: String
 
