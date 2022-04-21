@@ -18,12 +18,10 @@ package app.cash.zipline.gradle
 
 import java.io.File
 import org.gradle.api.DefaultTask
-import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
-import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
 
 /**
  * Compiles `.js` files to `.zipline` files.
@@ -35,30 +33,15 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
  * https://webpack.js.org/concepts/configuration/
  */
 internal abstract class ZiplineCompileTask : DefaultTask() {
-  @get:Input
-  lateinit var compilationName: String
-
-  @get:Input
-  lateinit var mode: KotlinJsBinaryMode
-
-  // Like 'productionExecutable'.
-  private val modeExecutable: String by lazy {
-    lowerCamelCaseName(mode.toString().lowercase(), "executable")
-  }
-
   // TODO handle incremental and skip the quickjs compile when incremental
   // https://docs.gradle.org/current/userguide/custom_tasks.html#incremental_tasks
   // https://docs.gradle.org/current/userguide/lazy_configuration.html#working_with_files_in_lazy_properties
   // @get:Incremental
   @get:InputDirectory
-  val inputDir: File by lazy {
-    project.file("${project.buildDir}/compileSync/$compilationName/$modeExecutable/kotlin")
-  }
+  lateinit var inputDir: File
 
   @get:OutputDirectory
-  val outputDir: File by lazy {
-    project.file("${project.buildDir}/compileSync/$compilationName/$modeExecutable/zipline")
-  }
+  lateinit var outputDir: File
 
   @get:OutputFile
   val webpackConfigFile: File by lazy {

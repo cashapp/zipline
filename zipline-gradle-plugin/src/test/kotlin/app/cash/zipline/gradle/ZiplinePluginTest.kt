@@ -27,19 +27,21 @@ class ZiplinePluginTest {
   fun `production builds`() {
     val projectDir = File("src/test/projects/basic")
 
-    val taskName = ":lib:compileProductionMainZipline"
-    val result = createRunner(projectDir, taskName).build()
+    val taskName = ":lib:compileProductionExecutableKotlinJsZipline"
+    val result = createRunner(projectDir, "clean", taskName).build()
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
-    val ziplineOut = File(projectDir, "lib/build/compileSync/main/productionExecutable/zipline")
-    assertThat(File(ziplineOut, "manifest.zipline.json").exists()).isTrue()
-    assertThat(File(ziplineOut, "basic-lib.zipline").exists()).isTrue()
+    val ziplineOut = projectDir.resolve(
+      "lib/build/compileSync/main/productionExecutable/kotlinZipline"
+    )
+    assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
+    assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
 
     val webpackConfig = File(projectDir, "lib/webpack.config.d/generated-zipline-webpack-config.js")
     assertThat(webpackConfig.readText()).contains(
       "config.devServer.static.push(" +
-        "'../../../../lib/build/compileSync/main/productionExecutable/zipline');"
+        "'../../../../lib/build/compileSync/main/productionExecutable/kotlinZipline');"
     )
   }
 
@@ -51,29 +53,33 @@ class ZiplinePluginTest {
   fun `development builds`() {
     val projectDir = File("src/test/projects/basic")
 
-    val taskName = ":lib:compileDevelopmentMainZipline"
-    val result = createRunner(projectDir, taskName).build()
+    val taskName = ":lib:compileDevelopmentExecutableKotlinJsZipline"
+    val result = createRunner(projectDir, "clean", taskName).build()
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
-    val ziplineOut = File(projectDir, "lib/build/compileSync/main/developmentExecutable/zipline")
-    assertThat(File(ziplineOut, "manifest.zipline.json").exists()).isTrue()
-    assertThat(File(ziplineOut, "basic-lib.zipline").exists()).isTrue()
+    val ziplineOut = projectDir.resolve(
+      "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
+    )
+    assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
+    assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
 
     val webpackConfig = File(projectDir, "lib/webpack.config.d/generated-zipline-webpack-config.js")
     assertThat(webpackConfig.readText()).contains(
       "config.devServer.static.push(" +
-        "'../../../../lib/build/compileSync/main/developmentExecutable/zipline');"
+        "'../../../../lib/build/compileSync/main/developmentExecutable/kotlinZipline');"
     )
   }
 
   @Test
   fun `webpack config file is cleaned`() {
     val projectDir = File("src/test/projects/basic")
-    val webpackConfig = File(projectDir, "lib/webpack.config.d/generated-zipline-webpack-config.js")
+    val webpackConfig = projectDir.resolve(
+      "lib/webpack.config.d/generated-zipline-webpack-config.js"
+    )
     webpackConfig.writeText("Hello, I'm about to be deleted")
 
-    val result = createRunner(projectDir, ":lib:clean").build()
+    val result = createRunner(projectDir, "clean").build()
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(":lib:clean")!!.outcome)
 
@@ -91,7 +97,7 @@ class ZiplinePluginTest {
     val projectDir = File("src/test/projects/basic")
 
     val taskName = ":lib:launchGreetService"
-    val result = createRunner(projectDir, taskName).build()
+    val result = createRunner(projectDir, "clean", taskName).build()
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
     assertThat(result.output).contains("end-to-end call result: 'Hello, Jesse'")
@@ -102,19 +108,43 @@ class ZiplinePluginTest {
     val projectDir = File("src/test/projects/jvmOnly")
 
     val taskName = ":lib:bindAndTakeJvm"
-    val result = createRunner(projectDir, taskName).build()
+    val result = createRunner(projectDir, "clean", taskName).build()
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
     assertThat(result.output).contains("Zipline Kotlin plugin did its job properly")
   }
 
-  private fun createRunner(projectDir: File, taskName: String): GradleRunner {
-    val gradleRoot = File(projectDir, "gradle").also { it.mkdir() }
-    File("../gradle/wrapper").copyRecursively(File(gradleRoot, "wrapper"), true)
+  /**
+   * Although Kotlin/JS looks like it supports multiple JS targets in a single project, the link
+   * task doesn't include the target name in the output directory path. Linked targets are instead
+   * disambiguated by their `.js` file name only.
+   *
+   * This test confirms that linking a single target works, though the whole thing is pretty
+   * fragile.
+   */
+  @Test
+  fun `multiple js targets`() {
+    val projectDir = File("src/test/projects/multipleJsTargets")
+
+    val taskName = ":lib:compileDevelopmentExecutableKotlinBlueZipline"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(taskName)!!.outcome)
+
+    val ziplineOut = projectDir.resolve(
+      "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
+    )
+    assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
+    assertThat(ziplineOut.resolve("multipleJsTargets-lib-blue.zipline").exists()).isTrue()
+  }
+
+  private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {
+    val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
+    File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)
     return GradleRunner.create()
       .withProjectDir(projectDir)
       .withDebug(true) // Run in-process.
-      .withArguments("--info", "--stacktrace", "--continue", "clean", taskName, versionProperty)
+      .withArguments("--info", "--stacktrace", "--continue", *taskNames, versionProperty)
       .forwardOutput()
   }
 

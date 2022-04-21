@@ -63,21 +63,20 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   }
 
   private fun registerCompileZiplineTask(project: Project, kotlinBinary: JsIrBinary) {
-    // Like 'compileProductionMainZipline'.
-    val compileZiplineTaskName = lowerCamelCaseName(
-      "compile",
-      kotlinBinary.mode.toString().lowercase(),
-      kotlinBinary.compilation.name,
-      "zipline"
-    )
+    // Like 'compileDevelopmentExecutableKotlinJsZipline'.
+    val linkTaskName = kotlinBinary.linkTaskName
+    val compileZiplineTaskName = "${linkTaskName}Zipline"
 
     // For every JS executable, create a task that compiles its .js to .zipline.
     //    input: build/compileSync/main/productionExecutable/kotlin
-    //   output: build/compileSync/main/productionExecutable/zipline
+    //   output: build/compileSync/main/productionExecutable/kotlinZipline
     project.tasks.register(compileZiplineTaskName, ZiplineCompileTask::class.java) { createdTask ->
+      createdTask.description = "Compile .js to .zipline"
       createdTask.dependsOn(kotlinBinary.linkTaskName)
-      createdTask.mode = kotlinBinary.mode
-      createdTask.compilationName = kotlinBinary.compilation.name
+      val linkTask = kotlinBinary.linkTask.get()
+      val linkOutputDir = project.file(linkTask.kotlinOptions.outputFile!!).parentFile
+      createdTask.inputDir = linkOutputDir
+      createdTask.outputDir = linkOutputDir.parentFile.resolve("${linkOutputDir.name}Zipline")
     }
 
     project.tasks.withType(KotlinWebpack::class.java).all { kotlinWebpack ->
