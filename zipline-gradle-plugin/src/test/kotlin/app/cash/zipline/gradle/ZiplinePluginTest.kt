@@ -29,7 +29,7 @@ class ZiplinePluginTest {
 
     val taskName = ":lib:compileProductionMainZipline"
     val result = createRunner(projectDir, taskName).build()
-    assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+    assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = File(projectDir, "lib/build/compileSync/main/productionExecutable/zipline")
@@ -53,7 +53,7 @@ class ZiplinePluginTest {
 
     val taskName = ":lib:compileDevelopmentMainZipline"
     val result = createRunner(projectDir, taskName).build()
-    assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+    assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = File(projectDir, "lib/build/compileSync/main/developmentExecutable/zipline")
@@ -74,7 +74,7 @@ class ZiplinePluginTest {
     webpackConfig.writeText("Hello, I'm about to be deleted")
 
     val result = createRunner(projectDir, ":lib:clean").build()
-    assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+    assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(":lib:clean")!!.outcome)
 
     assertThat(webpackConfig.exists()).isFalse()
@@ -92,9 +92,20 @@ class ZiplinePluginTest {
 
     val taskName = ":lib:launchGreetService"
     val result = createRunner(projectDir, taskName).build()
-    assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+    assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
     assertThat(result.output).contains("end-to-end call result: 'Hello, Jesse'")
+  }
+
+  @Test
+  fun `jvm only project`() {
+    val projectDir = File("src/test/projects/jvmOnly")
+
+    val taskName = ":lib:bindAndTakeJvm"
+    val result = createRunner(projectDir, taskName).build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(taskName)!!.outcome)
+    assertThat(result.output).contains("Zipline Kotlin plugin did its job properly")
   }
 
   private fun createRunner(projectDir: File, taskName: String): GradleRunner {
@@ -107,5 +118,8 @@ class ZiplinePluginTest {
       .forwardOutput()
   }
 
-  private val versionProperty = "-PziplineVersion=${System.getProperty("ziplineVersion")}"
+  companion object {
+    val SUCCESS_OUTCOMES = listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE)
+    val versionProperty = "-PziplineVersion=${System.getProperty("ziplineVersion")}"
+  }
 }
