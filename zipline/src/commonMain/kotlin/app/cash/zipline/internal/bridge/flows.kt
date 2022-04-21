@@ -18,12 +18,10 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
 import app.cash.zipline.internal.encodeToStringFast
+import app.cash.zipline.ziplineServiceSerializer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
@@ -46,17 +44,20 @@ private val json = Json {
   useArrayPolymorphism = true
 }
 
+/**
+ * This serializes [Flow] instances (not directly serializable) by converting them to
+ * [FlowZiplineService] instances which can be serialized by [ziplineServiceSerializer] to
+ * pass-by-reference.
+ */
 internal class FlowSerializer<T>(
   private val itemSerializer: KSerializer<T>,
 ) : KSerializer<Flow<T>> {
-  override val descriptor = PrimitiveSerialDescriptor("Flow", PrimitiveKind.STRING)
+  private val delegateSerializer = ziplineServiceSerializer<FlowZiplineService>()
+  override val descriptor = delegateSerializer.descriptor
 
   override fun serialize(encoder: Encoder, value: Flow<T>) {
     val service = value.toZiplineService()
-    encoder.encodeSerializableValue(
-      ContextualSerializer(PassByReference::class),
-      SendByReference(service, ziplineServiceAdapter()),
-    )
+    return encoder.encodeSerializableValue(delegateSerializer, service)
   }
 
   private fun Flow<T>.toZiplineService(): FlowZiplineService {
@@ -75,10 +76,7 @@ internal class FlowSerializer<T>(
   }
 
   override fun deserialize(decoder: Decoder): Flow<T> {
-    val reference = decoder.decodeSerializableValue(
-      ContextualSerializer(PassByReference::class),
-    ) as ReceiveByReference
-    val service = reference.take<FlowZiplineService>(ziplineServiceAdapter())
+    val service = decoder.decodeSerializableValue(delegateSerializer)
     return service.toFlow()
   }
 
