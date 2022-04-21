@@ -16,7 +16,7 @@
 package app.cash.zipline.tests
 
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.OkHttpZiplineHttpClient
+import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.util.concurrent.Executors
@@ -24,23 +24,36 @@ import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
-import okhttp3.OkHttpClient
+import okio.ByteString
+import okio.FileSystem
+import okio.Path.Companion.toPath
 
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
-  val zipline = Zipline.create(dispatcher)
-  val manifestUrl = "http://localhost:8080/manifest.zipline.json"
-  val httpClient = OkHttpZiplineHttpClient(OkHttpClient())
+  // A fake HTTP client that returns files as the Webpack dev server would return them.
+  val localDirectoryHttpClient = object : ZiplineHttpClient {
+    val base = "build/compileSync/main/productionExecutable/zipline".toPath()
+    override suspend fun download(url: String): ByteString {
+      val file = url.substringAfterLast("/")
+      return FileSystem.SYSTEM.read(base / file) { readByteString() }
+    }
+
+    override fun resolve(baseUrl: String, link: String) = "http://localhost:99999/$link"
+  }
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
-    httpClient = httpClient,
-    fetchers = listOf(HttpFetcher(httpClient = httpClient)),
+    httpClient = localDirectoryHttpClient,
+    fetchers = listOf(HttpFetcher(localDirectoryHttpClient)),
   )
-  loader.load(zipline, manifestUrl)
-  val moduleName = "./zipline-root-trivia-js.js"
+
+  val zipline = Zipline.create(dispatcher)
+  loader.load(zipline, "http://localhost:99999/manifest.zipline.json")
+
+  val moduleName = "./basic-lib.js"
   zipline.quickJs.evaluate(
     "require('$moduleName').app.cash.zipline.tests.launchGreetService()",
     "launchGreetServiceJvm.kt"
   )
+
   return zipline
 }
 
@@ -52,7 +65,8 @@ fun main() {
   runBlocking(dispatcher) {
     val zipline = launchZipline(dispatcher)
     val greetService = zipline.take<GreetService>("greetService")
-    println(greetService.greet("Jesse"))
+    val greeting = greetService.greet("Jesse")
+    println("end-to-end call result: '$greeting'")
   }
   exitProcess(0)
 }

@@ -27,12 +27,10 @@ class ZiplinePluginTest {
   fun `production builds`() {
     val projectDir = File("src/test/projects/basic")
 
-    val taskName = "compileProductionMainZipline"
-    val gradleRunner = createRunner(projectDir, taskName)
-
-    val result = gradleRunner.build()
+    val taskName = ":lib:compileProductionMainZipline"
+    val result = createRunner(projectDir, taskName).build()
     assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
-      .contains(result.task(":lib:$taskName")!!.outcome)
+      .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = File(projectDir, "lib/build/compileSync/main/productionExecutable/zipline")
     assertThat(File(ziplineOut, "manifest.zipline.json").exists()).isTrue()
@@ -53,12 +51,10 @@ class ZiplinePluginTest {
   fun `development builds`() {
     val projectDir = File("src/test/projects/basic")
 
-    val taskName = "compileDevelopmentMainZipline"
-    val gradleRunner = createRunner(projectDir, taskName)
-
-    val result = gradleRunner.build()
+    val taskName = ":lib:compileDevelopmentMainZipline"
+    val result = createRunner(projectDir, taskName).build()
     assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
-      .contains(result.task(":lib:$taskName")!!.outcome)
+      .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = File(projectDir, "lib/build/compileSync/main/developmentExecutable/zipline")
     assertThat(File(ziplineOut, "manifest.zipline.json").exists()).isTrue()
@@ -77,12 +73,28 @@ class ZiplinePluginTest {
     val webpackConfig = File(projectDir, "lib/webpack.config.d/generated-zipline-webpack-config.js")
     webpackConfig.writeText("Hello, I'm about to be deleted")
 
-    val gradleRunner = createRunner(projectDir, ":lib:clean")
-    val result = gradleRunner.build()
+    val result = createRunner(projectDir, ":lib:clean").build()
     assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
       .contains(result.task(":lib:clean")!!.outcome)
 
     assertThat(webpackConfig.exists()).isFalse()
+  }
+
+  /**
+   * This confirms these plugin features are working:
+   *
+   *  - IR rewriting in JS and JVM
+   *  - Compiling to .zipline files and producing a manifest
+   */
+  @Test
+  fun `end to end`() {
+    val projectDir = File("src/test/projects/basic")
+
+    val taskName = ":lib:launchGreetService"
+    val result = createRunner(projectDir, taskName).build()
+    assertThat(listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE))
+      .contains(result.task(taskName)!!.outcome)
+    assertThat(result.output).contains("end-to-end call result: 'Hello, Jesse'")
   }
 
   private fun createRunner(projectDir: File, taskName: String): GradleRunner {
