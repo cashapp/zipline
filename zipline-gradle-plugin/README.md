@@ -37,3 +37,30 @@ val downloadZipline by tasks.creating(ZiplineDownloadTask::class) {
   outputDir = file("$buildDir/resources/zipline/alpha-app/latest")
 }
 ```
+
+Testing
+=======
+
+This plugin has Gradle integration tests in `ZiplinePluginTest`. The test projects can be loaded
+into IntelliJ and executed standalone with Gradle with this setup:
+
+1. Initialize the local test repo. This builds the Zipline plugin and libraries that the test
+   projects run against.
+
+    ```
+    ./gradlew zipline-gradle-plugin:test
+    ```
+
+2. Paste this into the sample project's `gradle.properties`, substituting in the version from
+   `build.gradle.kts`:
+
+    ```
+    ziplineVersion=1.0.0-SNAPSHOT
+    ```
+
+3. Run Gradle.
+
+    ```
+    $ cd zipline-gradle-plugin/src/test/projects/basic
+    $ ../../../../../gradlew tasks
+    ```
