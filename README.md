@@ -13,7 +13,7 @@ makes it fetching code as easy as fetching data:
 Zipline works by embedding the [QuickJS JavaScript engine][qjs] in your Kotlin/JVM or Kotlin/Native
 program. It's a small and fast JavaScript engine that's well-suited to embedding in applications.
 
-_(Looking for [Duktape Android](#Duktape)?)_
+_(Looking for [Duktape Android](#duktape-android)?)_
 
 
 ### Code Example
