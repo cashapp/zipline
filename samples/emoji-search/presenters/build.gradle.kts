@@ -31,6 +31,7 @@ kotlin {
   }
 }
 
+// TODO: Delete this block once we've upgraded to Kotlin 1.6.20+.
 rootProject.plugins.withType<NodeJsRootPlugin> {
   val nodeJsRootExtension = rootProject.the<NodeJsRootExtension>()
 

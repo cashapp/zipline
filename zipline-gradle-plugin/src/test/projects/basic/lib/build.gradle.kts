@@ -41,6 +41,7 @@ val launchGreetService by tasks.creating(JavaExec::class) {
   mainClass.set("app.cash.zipline.tests.LaunchGreetServiceJvmKt")
 }
 
+// TODO: Delete this block once we've upgraded to Kotlin 1.6.20+.
 rootProject.plugins.withType<NodeJsRootPlugin> {
   val nodeJsRootExtension = rootProject.the<NodeJsRootExtension>()
 
@@ -51,8 +52,4 @@ rootProject.plugins.withType<NodeJsRootPlugin> {
   // TODO(jwilson): remove this once Kotlin's built-in Node.js supports Apple Silicon.
   //  https://youtrack.jetbrains.com/issue/KT-49109
   nodeJsRootExtension.nodeVersion = "16.0.0"
-}
-
-val jsBrowserProductionRun by tasks.getting {
-  dependsOn(":compileProductionExecutableKotlinJsZipline")
 }
