@@ -24,7 +24,7 @@ kotlin {
     val jvmMain by getting {
       dependencies {
         implementation(Dependencies.okHttp)
-        implementation(Dependencies.sqldelightDriverAndroid)
+        implementation(libs.sqldelight.driver.android)
         implementation(projects.ziplineLoader)
       }
     }
