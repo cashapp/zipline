@@ -22,7 +22,7 @@ Let's make a trivia game that has fresh questions every day, even if our users d
 apps. We define [our interface][trivia.kt] in `commonMain` so that we can call it from Kotlin/JVM
 and implement it in Kotlin/JS.
 
-```
+```kotlin
 interface TriviaService : ZiplineService {
   fun games(): List<TriviaGame>
   fun answer(questionId: String, answer: String): AnswerResult
@@ -31,16 +31,16 @@ interface TriviaService : ZiplineService {
 
 Next we [implement it][triviaJs.kt] in `jsMain`:
 
-```
+```kotlin
 class RealTriviaService : TriviaService {
-  ...
+  // ...
 }
 ```
 
 Let's connect the implementation running in Kotlin/JS to the interface running in Kotlin/JVM. In
 `jsMain` we define an [exported function][launchZiplineJs.kt] to bind the implementation:
 
-```
+```kotlin
 @JsExport
 fun launchZipline() {
   val zipline = Zipline.get()
@@ -51,8 +51,8 @@ fun launchZipline() {
 Now we can start a development server to serve our JavaScript to any running applications that
 request it.
 
-```
-./gradlew samples:trivia:trivia-js:jsBrowserProductionRun --info --continuous
+```console
+$ ./gradlew samples:trivia:trivia-js:jsBrowserProductionRun --info --continuous
 ```
 
 Note that this Gradle won't ever reach 100%. That's expected; we want the development server to stay
@@ -67,7 +67,7 @@ calls it. We use `ZiplineLoader` which handles code downloading, caching, and lo
 `Dispatcher` to run Kotlin/JS on. This must be a single-threaded dispatcher as each Zipline instance
 must be confined to a single thread.
 
-```
+```kotlin
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val zipline = Zipline.create(dispatcher)
   val baseUrl = "http://localhost:8080/".toHttpUrl()
@@ -95,8 +95,8 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
 Now we build and run the JVM program to put it all together. Do this in a separate terminal from the
 development server!
 
-```
-./gradlew samples:trivia:trivia-host:shadowJar
+```console
+$ ./gradlew samples:trivia:trivia-host:shadowJar
 java -jar samples/trivia/trivia-host/build/libs/trivia-host-1.0.0-SNAPSHOT-all.jar
 ```
 
