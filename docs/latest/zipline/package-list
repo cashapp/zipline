@@ -1,6 +1,7 @@
 $dokka.format:html-v1
 $dokka.linkExtension:html
 $dokka.location:app.cash.zipline.internal.bridge////PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/index.html
+$dokka.location:app.cash.zipline.internal.bridge//registry/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/registry.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/index.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/bind/#kotlin.String#TypeParam(bounds=[app.cash.zipline.ZiplineService])/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/bind.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/clientNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/client-names.html
