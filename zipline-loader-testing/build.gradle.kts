@@ -32,7 +32,7 @@ kotlin {
       dependencies {
         implementation(projects.zipline)
         implementation(projects.ziplineLoader)
-        implementation(Dependencies.kotlinxSerializationJson)
+        implementation(libs.kotlinx.serialization.json)
       }
     }
 

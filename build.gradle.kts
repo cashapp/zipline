@@ -14,8 +14,8 @@ buildscript {
   dependencies {
     classpath(Dependencies.androidGradlePlugin)
     classpath(Dependencies.mavenPublishGradlePlugin)
-    classpath(Dependencies.kotlinGradlePlugin)
-    classpath(Dependencies.kotlinSerialization)
+    classpath(libs.kotlin.gradle.plugin)
+    classpath(libs.kotlin.serialization)
     classpath(Dependencies.graalGradlePlugin)
     classpath(Dependencies.dokkaGradlePlugin)
     classpath(Dependencies.shadowJarPlugin)
