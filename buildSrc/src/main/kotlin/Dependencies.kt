@@ -36,10 +36,6 @@ object Dependencies {
   val picocli = "info.picocli:picocli:4.6.3"
   val picocliCompiler = "info.picocli:picocli-codegen:4.6.3"
   val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
-  val sqldelightGradle = "com.squareup.sqldelight:gradle-plugin:1.5.3"
-  val sqldelightDriverAndroid = "com.squareup.sqldelight:android-driver:1.5.3"
   val sqldelightJdbc = "org.xerial:sqlite-jdbc:3.34.0"
-  val sqldelightDriverJvm = "com.squareup.sqldelight:sqlite-driver:1.5.3"
-  val sqldelightDriverNative = "com.squareup.sqldelight:native-driver:1.5.3"
   val truth = "com.google.truth:truth:1.0"
 }

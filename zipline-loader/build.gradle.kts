@@ -50,20 +50,20 @@ kotlin {
     val jvmMain by getting {
       dependsOn(jniMain)
       dependencies {
-        implementation(Dependencies.sqldelightDriverJvm)
+        implementation(libs.sqldelight.driver.sqlite)
         implementation(Dependencies.sqldelightJdbc)
       }
     }
     val androidMain by getting {
       dependsOn(jniMain)
       dependencies {
-        implementation(Dependencies.sqldelightDriverAndroid)
+        implementation(libs.sqldelight.driver.android)
       }
     }
     val nativeMain by creating {
       dependsOn(engineMain)
       dependencies {
-        implementation(Dependencies.sqldelightDriverNative)
+        implementation(libs.sqldelight.driver.native)
       }
     }
     targets.withType<KotlinNativeTarget> {
@@ -89,7 +89,7 @@ kotlin {
         implementation(Dependencies.junit)
         implementation(Dependencies.kotlinxCoroutinesTest)
         implementation(Dependencies.okioFakeFileSystem)
-        implementation(Dependencies.sqldelightDriverJvm)
+        implementation(libs.sqldelight.driver.sqlite)
         implementation(Dependencies.sqldelightJdbc)
       }
     }
