@@ -32,10 +32,10 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        api(Dependencies.kotlinxCoroutines)
+        api(libs.kotlinx.coroutines.core)
         api(projects.zipline)
         api(Dependencies.okio)
-        implementation(Dependencies.kotlinxSerializationJson)
+        implementation(libs.kotlinx.serialization.json)
       }
     }
     val engineMain by creating {
@@ -87,7 +87,7 @@ kotlin {
       dependsOn(engineTest)
       dependencies {
         implementation(Dependencies.junit)
-        implementation(Dependencies.kotlinxCoroutinesTest)
+        implementation(libs.kotlinx.coroutines.test)
         implementation(Dependencies.okioFakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(Dependencies.sqldelightJdbc)
@@ -127,7 +127,7 @@ android {
 dependencies {
   androidTestImplementation(Dependencies.androidxTestRunner)
   androidTestImplementation(Dependencies.junit)
-  androidTestImplementation(Dependencies.kotlinxCoroutinesTest)
+  androidTestImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(Dependencies.okioFakeFileSystem)
 }
 

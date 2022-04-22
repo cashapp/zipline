@@ -66,9 +66,9 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        api(Dependencies.kotlinxCoroutines)
-        api(Dependencies.kotlinxSerialization)
-        implementation(Dependencies.kotlinxSerializationJson)
+        api(libs.kotlinx.coroutines.core)
+        api(libs.kotlinx.serialization.core)
+        implementation(libs.kotlinx.serialization.json)
       }
     }
     val commonTest by getting {
@@ -109,7 +109,7 @@ kotlin {
       resources.srcDir(copyTestingJs)
       dependencies {
         implementation(Dependencies.truth)
-        implementation(Dependencies.kotlinxCoroutinesTest)
+        implementation(libs.kotlinx.coroutines.test)
       }
     }
 
@@ -154,7 +154,7 @@ kotlin {
 }
 
 cklib {
-  config.kotlinVersion = Dependencies.baseKotlin
+  config.kotlinVersion = libs.versions.kotlin.get()
   create("quickjs") {
     language = C
     srcDirs = project.files(file("native/quickjs"), file("native/common"))
@@ -260,7 +260,7 @@ dependencies {
   androidTestImplementation(Dependencies.junit)
   androidTestImplementation(Dependencies.androidxTestRunner)
   androidTestImplementation(Dependencies.truth)
-  androidTestImplementation(Dependencies.kotlinxCoroutinesTest)
+  androidTestImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(projects.zipline.testing)
 }
 

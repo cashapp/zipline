@@ -11,11 +11,11 @@ plugins {
 dependencies {
   api(projects.zipline)
   api(Dependencies.okio)
-  api(Dependencies.kotlinxSerialization)
-  implementation(Dependencies.kotlinxSerializationJson)
+  api(libs.kotlinx.serialization.core)
+  implementation(libs.kotlinx.serialization.json)
 
   testImplementation(Dependencies.junit)
-  testImplementation(Dependencies.kotlinTest)
+  testImplementation(libs.kotlin.test)
   testImplementation(Dependencies.truth)
 }
 
