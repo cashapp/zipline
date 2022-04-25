@@ -29,5 +29,4 @@ object Dependencies {
   val picocliCompiler = "info.picocli:picocli-codegen:4.6.3"
   val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
   val sqldelightJdbc = "org.xerial:sqlite-jdbc:3.34.0"
-  val truth = "com.google.truth:truth:1.0"
 }

@@ -12,7 +12,7 @@ dependencies {
   api(projects.zipline)
   api(Dependencies.okio)
 
-  testImplementation(Dependencies.truth)
+  testImplementation(libs.truth)
   testImplementation(Dependencies.junit)
 }
 
