@@ -10,7 +10,7 @@ plugins {
 
 dependencies {
   api(projects.zipline)
-  api(Dependencies.okio)
+  api(libs.okio.core)
   api(libs.kotlinx.serialization.core)
   implementation(libs.kotlinx.serialization.json)
 

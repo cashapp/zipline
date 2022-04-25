@@ -22,8 +22,6 @@ object Dependencies {
   val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
   val okHttp = "com.squareup.okhttp3:okhttp:4.9.1"
   val okHttpMockWebServer = "com.squareup.okhttp3:mockwebserver:4.9.1"
-  val okio = "com.squareup.okio:okio:3.0.0"
-  val okioFakeFileSystem = "com.squareup.okio:okio-fakefilesystem:3.0.0"
   val picocli = "info.picocli:picocli:4.6.3"
   val picocliCompiler = "info.picocli:picocli-codegen:4.6.3"
   val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"

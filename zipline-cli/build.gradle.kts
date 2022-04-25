@@ -37,7 +37,7 @@ dependencies {
   testImplementation(Dependencies.junit)
   testImplementation(libs.kotlinx.serialization.json)
   testImplementation(libs.kotlin.test)
-  testImplementation(Dependencies.okio)
+  testImplementation(libs.okio.core)
   testImplementation(Dependencies.okHttpMockWebServer)
 }
 

@@ -34,7 +34,7 @@ kotlin {
       dependencies {
         api(libs.kotlinx.coroutines.core)
         api(projects.zipline)
-        api(Dependencies.okio)
+        api(libs.okio.core)
         implementation(libs.kotlinx.serialization.json)
       }
     }
@@ -88,7 +88,7 @@ kotlin {
       dependencies {
         implementation(Dependencies.junit)
         implementation(libs.kotlinx.coroutines.test)
-        implementation(Dependencies.okioFakeFileSystem)
+        implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(Dependencies.sqldelightJdbc)
       }
@@ -128,7 +128,7 @@ dependencies {
   androidTestImplementation(Dependencies.androidxTestRunner)
   androidTestImplementation(Dependencies.junit)
   androidTestImplementation(libs.kotlinx.coroutines.test)
-  androidTestImplementation(Dependencies.okioFakeFileSystem)
+  androidTestImplementation(libs.okio.fakeFileSystem)
 }
 
 sqldelight {

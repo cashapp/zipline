@@ -32,5 +32,5 @@ android {
 dependencies {
   implementation(projects.zipline)
   implementation(Dependencies.duktape)
-  implementation(Dependencies.okio)
+  implementation(libs.okio.core)
 }
