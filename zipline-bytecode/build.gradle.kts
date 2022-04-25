@@ -16,7 +16,7 @@ dependencies {
 
   testImplementation(Dependencies.junit)
   testImplementation(libs.kotlin.test)
-  testImplementation(Dependencies.truth)
+  testImplementation(libs.truth)
 }
 
 configure<MavenPublishBaseExtension> {

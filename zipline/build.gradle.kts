@@ -108,7 +108,7 @@ kotlin {
       kotlin.srcDir("src/jniTest/kotlin/")
       resources.srcDir(copyTestingJs)
       dependencies {
-        implementation(Dependencies.truth)
+        implementation(libs.truth)
         implementation(libs.kotlinx.coroutines.test)
       }
     }
@@ -259,7 +259,7 @@ android {
 dependencies {
   androidTestImplementation(Dependencies.junit)
   androidTestImplementation(Dependencies.androidxTestRunner)
-  androidTestImplementation(Dependencies.truth)
+  androidTestImplementation(libs.truth)
   androidTestImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(projects.zipline.testing)
 }
