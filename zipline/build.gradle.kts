@@ -80,7 +80,7 @@ kotlin {
     val engineMain by creating {
       dependsOn(commonMain)
       dependencies {
-        api(Dependencies.okio)
+        api(libs.okio.core)
       }
       kotlin.srcDir(versionWriterTaskProvider)
     }

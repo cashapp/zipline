@@ -18,7 +18,7 @@ dependencies {
   implementation(libs.kotlin.gradle.plugin)
   implementation(libs.kotlinx.serialization.json)
   implementation(Dependencies.okHttp)
-  implementation(Dependencies.okio)
+  implementation(libs.okio.core)
   testImplementation(projects.ziplineLoaderTesting)
   testImplementation(Dependencies.junit)
   testImplementation(libs.kotlin.test)

@@ -10,7 +10,7 @@ plugins {
 
 dependencies {
   api(projects.zipline)
-  api(Dependencies.okio)
+  api(libs.okio.core)
 
   testImplementation(libs.truth)
   testImplementation(Dependencies.junit)
