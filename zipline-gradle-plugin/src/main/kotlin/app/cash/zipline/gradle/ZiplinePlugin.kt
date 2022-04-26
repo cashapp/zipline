@@ -57,7 +57,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       }
     }
 
-    project.tasks.withType(Delete::class.java).getByName("clean") { clean ->
+    project.tasks.named("clean", Delete::class.java).configure { clean ->
       clean.delete.add(project.projectDir.resolve(ZiplineCompileTask.configFilePath))
     }
   }
