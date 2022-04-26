@@ -32,7 +32,7 @@ import org.gradle.api.tasks.TaskAction
  * https://kotlinlang.org/docs/js-project-setup.html#webpack-configuration-file
  * https://webpack.js.org/concepts/configuration/
  */
-internal abstract class ZiplineCompileTask : DefaultTask() {
+abstract class ZiplineCompileTask : DefaultTask() {
   // TODO handle incremental and skip the quickjs compile when incremental
   // https://docs.gradle.org/current/userguide/custom_tasks.html#incremental_tasks
   // https://docs.gradle.org/current/userguide/lazy_configuration.html#working_with_files_in_lazy_properties
@@ -52,7 +52,7 @@ internal abstract class ZiplineCompileTask : DefaultTask() {
   fun task() {
     ZiplineCompiler.compile(inputDir, outputDir)
 
-    val webpackHome = project.rootDir.resolve("build/js/packages/placeholder-name")
+    val webpackHome = project.rootProject.buildDir.resolve("js/packages/placeholder-name")
     val directory = outputDir.relativeTo(webpackHome)
     webpackConfigFile.parentFile.mkdirs()
     webpackConfigFile.writeText(
