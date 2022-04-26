@@ -44,7 +44,7 @@ kotlin {
     val jniMain by creating {
       dependsOn(engineMain)
       dependencies {
-        implementation(Dependencies.okHttp)
+        implementation(libs.okHttp.core)
       }
     }
     val jvmMain by getting {

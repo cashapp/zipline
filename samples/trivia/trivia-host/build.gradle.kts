@@ -11,7 +11,7 @@ dependencies {
   implementation(projects.zipline)
   implementation(projects.ziplineLoader)
   implementation(project(":samples:trivia:trivia-shared"))
-  implementation(Dependencies.okHttp)
+  implementation(libs.okHttp.core)
 }
 
 dependencies {

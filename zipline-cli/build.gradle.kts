@@ -28,7 +28,7 @@ sourceSets {
 
 dependencies {
   api(projects.ziplineLoader)
-  implementation(Dependencies.okHttp)
+  implementation(libs.okHttp.core)
   implementation(Dependencies.picocli)
 
   kapt(Dependencies.picocliCompiler)
@@ -38,7 +38,7 @@ dependencies {
   testImplementation(libs.kotlinx.serialization.json)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.okio.core)
-  testImplementation(Dependencies.okHttpMockWebServer)
+  testImplementation(libs.okHttp.mockWebServer)
 }
 
 tasks.shadowJar {

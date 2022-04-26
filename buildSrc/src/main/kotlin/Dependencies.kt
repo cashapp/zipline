@@ -20,8 +20,6 @@ object Dependencies {
   val graalGradlePlugin = "gradle.plugin.com.palantir.graal:gradle-graal:0.10.0"
   val junit = "junit:junit:4.13.2"
   val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
-  val okHttp = "com.squareup.okhttp3:okhttp:4.9.1"
-  val okHttpMockWebServer = "com.squareup.okhttp3:mockwebserver:4.9.1"
   val picocli = "info.picocli:picocli:4.6.3"
   val picocliCompiler = "info.picocli:picocli-codegen:4.6.3"
   val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"

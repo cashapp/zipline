@@ -17,12 +17,12 @@ dependencies {
   implementation(projects.ziplineLoader)
   implementation(libs.kotlin.gradle.plugin)
   implementation(libs.kotlinx.serialization.json)
-  implementation(Dependencies.okHttp)
+  implementation(libs.okHttp.core)
   implementation(libs.okio.core)
   testImplementation(projects.ziplineLoaderTesting)
   testImplementation(Dependencies.junit)
   testImplementation(libs.kotlin.test)
-  testImplementation(Dependencies.okHttpMockWebServer)
+  testImplementation(libs.okHttp.mockWebServer)
   testImplementation(libs.truth)
 }
 
