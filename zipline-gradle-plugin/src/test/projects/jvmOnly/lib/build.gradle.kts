@@ -4,9 +4,7 @@ plugins {
 }
 
 kotlin {
-  jvm {
-    withJava()
-  }
+  jvm()
 
   sourceSets {
     val jvmMain by getting {
