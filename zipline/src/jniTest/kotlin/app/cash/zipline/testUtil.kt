@@ -20,8 +20,7 @@ import kotlin.reflect.KClass
 
 /** Load our testing libraries into QuickJS. */
 fun Zipline.loadTestingJs() {
-  // TODO: currently our module loader requires modules to be topologically-sorted and loaded leaves
-  //     first. We could use some easier-to-use abstractions here.
+  // Load modules in topologically-sorted order. In production the zipline-manifest does this.
   loadJsModuleFromResource("./kotlin-kotlin-stdlib-js-ir.js")
   loadJsModuleFromResource("./88b0986a7186d029-atomicfu-js-ir.js")
   loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-core-js-ir.js")

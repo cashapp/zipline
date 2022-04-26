@@ -13,3 +13,8 @@ jacoco.exec
 
 # Release
 docs/0.x
+
+# Testing
+zipline-gradle-plugin/src/test/projects/**/gradle/wrapper
+
+generated-zipline-webpack-config.js

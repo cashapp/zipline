@@ -1,33 +1,19 @@
-Zipline Files
--------------
+Zipline Gradle Plugin
+---------------------
 
-Compile Task
-============
+Zipline Compilation
+===================
 
-The Gradle plugin has a Compile task that packages compiled JavaScript into a `.zipline` file.
+The plugin compiles JavaScript files into `.zipline` files. These binary files are faster to launch.
 
-```kotlin
-plugins {
-  id("app.cash.zipline")
-}
 
-kotlin {
-  js {
-    browser()
-    binaries.library()
-  }
-}
+Webpack Config
+==============
 
-val compileZipline by tasks.creating(ZiplineCompileTask::class) {
-  dependsOn(":samples:emoji-search:presenters:compileDevelopmentLibraryKotlinJs")
-  inputDir = file("$buildDir/compileSync/main/developmentLibrary/kotlin")
-  outputDir = file("$buildDir/zipline")
-}
+The plugin serves compiled `.zipline` files on the Webpack server. This is useful for local
+development! You can run the webpack compiler continuously and `.zipline` files will be served to
+a `ZiplineLoader`.
 
-val publish by tasks.getting {
-  dependsOn(ziplineFile)
-}
-```
 
 Download Task
 =============
@@ -51,3 +37,30 @@ val downloadZipline by tasks.creating(ZiplineDownloadTask::class) {
   outputDir = file("$buildDir/resources/zipline/alpha-app/latest")
 }
 ```
+
+Testing
+=======
+
+This plugin has Gradle integration tests in `ZiplinePluginTest`. The test projects can be loaded
+into IntelliJ and executed standalone with Gradle with this setup:
+
+1. Initialize the local test repo. This builds the Zipline plugin and libraries that the test
+   projects run against.
+
+    ```
+    ./gradlew zipline-gradle-plugin:test
+    ```
+
+2. Paste this into the sample project's `gradle.properties`, substituting in the version from
+   `build.gradle.kts`:
+
+    ```
+    ziplineVersion=1.0.0-SNAPSHOT
+    ```
+
+3. Run Gradle.
+
+    ```
+    $ cd zipline-gradle-plugin/src/test/projects/basic
+    $ ../../../../../gradlew tasks
+    ```

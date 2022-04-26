@@ -48,6 +48,20 @@ gradlePlugin {
   }
 }
 
+tasks {
+  test {
+    systemProperty("ziplineVersion", project.version)
+    dependsOn(":zipline-bytecode:publishAllPublicationsToTestMavenRepository")
+    dependsOn(":zipline-gradle-plugin:publishAllPublicationsToTestMavenRepository")
+    dependsOn(":zipline-kotlin-plugin:publishAllPublicationsToTestMavenRepository")
+    dependsOn(":zipline-loader:publishJvmPublicationToTestMavenRepository")
+    dependsOn(":zipline-loader:publishKotlinMultiplatformPublicationToTestMavenRepository")
+    dependsOn(":zipline:publishJsPublicationToTestMavenRepository")
+    dependsOn(":zipline:publishJvmPublicationToTestMavenRepository")
+    dependsOn(":zipline:publishKotlinMultiplatformPublicationToTestMavenRepository")
+  }
+}
+
 configure<MavenPublishBaseExtension> {
   configure(
     GradlePlugin(

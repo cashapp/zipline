@@ -15,12 +15,18 @@
  */
 package app.cash.zipline.gradle
 
+import org.gradle.api.Project
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.Delete
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
 import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
+import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
+import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 
 class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
@@ -39,14 +45,53 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     version = BuildConfig.KOTLIN_PLUGIN_VERSION,
   )
 
+  override fun apply(project: Project) {
+    super.apply(project)
+
+    val extension = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+      ?: return
+
+    extension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
+      kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
+        registerCompileZiplineTask(project, kotlinBinary)
+      }
+    }
+
+    project.tasks.named("clean", Delete::class.java).configure { clean ->
+      clean.delete.add(project.projectDir.resolve(ZiplineCompileTask.configFilePath))
+    }
+  }
+
+  private fun registerCompileZiplineTask(project: Project, kotlinBinary: JsIrBinary) {
+    // Like 'compileDevelopmentExecutableKotlinJsZipline'.
+    val linkTaskName = kotlinBinary.linkTaskName
+    val compileZiplineTaskName = "${linkTaskName}Zipline"
+
+    // For every JS executable, create a task that compiles its .js to .zipline.
+    //    input: build/compileSync/main/productionExecutable/kotlin
+    //   output: build/compileSync/main/productionExecutable/kotlinZipline
+    project.tasks.register(compileZiplineTaskName, ZiplineCompileTask::class.java) { createdTask ->
+      createdTask.description = "Compile .js to .zipline"
+      createdTask.dependsOn(kotlinBinary.linkTaskName)
+      val linkTask = kotlinBinary.linkTask.get()
+      val linkOutputDir = project.file(linkTask.kotlinOptions.outputFile!!).parentFile
+      createdTask.inputDir = linkOutputDir
+      createdTask.outputDir = linkOutputDir.parentFile.resolve("${linkOutputDir.name}Zipline")
+    }
+
+    project.tasks.withType(KotlinWebpack::class.java).configureEach { kotlinWebpack ->
+      kotlinWebpack.dependsOn(compileZiplineTaskName)
+    }
+  }
+
   override fun applyToCompilation(
     kotlinCompilation: KotlinCompilation<*>
   ): Provider<List<SubpluginOption>> {
     val project = kotlinCompilation.target.project
 
     // Configure Kotlin JS to generate modular JS files
-    project.tasks.withType(KotlinJsCompile::class.java).configureEach {
-      it.kotlinOptions {
+    project.tasks.withType(KotlinJsCompile::class.java).configureEach { task ->
+      task.kotlinOptions {
         freeCompilerArgs += listOf("-Xir-per-module")
       }
     }
