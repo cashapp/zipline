@@ -75,8 +75,8 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       createdTask.dependsOn(kotlinBinary.linkTaskName)
       val linkTask = kotlinBinary.linkTask.get()
       val linkOutputDir = project.file(linkTask.kotlinOptions.outputFile!!).parentFile
-      createdTask.inputDir = linkOutputDir
-      createdTask.outputDir = linkOutputDir.parentFile.resolve("${linkOutputDir.name}Zipline")
+      createdTask.inputDir.set(linkOutputDir)
+      createdTask.outputDir.set(linkOutputDir.parentFile.resolve("${linkOutputDir.name}Zipline"))
     }
 
     project.tasks.withType(KotlinWebpack::class.java).configureEach { kotlinWebpack ->

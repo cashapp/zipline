@@ -17,7 +17,10 @@
 package app.cash.zipline.gradle
 
 import java.io.File
+import javax.inject.Inject
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.model.ObjectFactory
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -32,16 +35,18 @@ import org.gradle.api.tasks.TaskAction
  * https://kotlinlang.org/docs/js-project-setup.html#webpack-configuration-file
  * https://webpack.js.org/concepts/configuration/
  */
-abstract class ZiplineCompileTask : DefaultTask() {
+abstract class ZiplineCompileTask @Inject constructor(
+  objectFactory: ObjectFactory
+) : DefaultTask() {
   // TODO handle incremental and skip the quickjs compile when incremental
   // https://docs.gradle.org/current/userguide/custom_tasks.html#incremental_tasks
   // https://docs.gradle.org/current/userguide/lazy_configuration.html#working_with_files_in_lazy_properties
   // @get:Incremental
   @get:InputDirectory
-  lateinit var inputDir: File
+  val inputDir: DirectoryProperty = objectFactory.directoryProperty()
 
   @get:OutputDirectory
-  lateinit var outputDir: File
+  val outputDir: DirectoryProperty = objectFactory.directoryProperty()
 
   @get:OutputFile
   val webpackConfigFile: File by lazy {
@@ -50,10 +55,12 @@ abstract class ZiplineCompileTask : DefaultTask() {
 
   @TaskAction
   fun task() {
-    ZiplineCompiler.compile(inputDir, outputDir)
+    val inputDirFile = inputDir.get().asFile
+    val outputDirFile = outputDir.get().asFile
+    ZiplineCompiler.compile(inputDirFile, outputDirFile)
 
     val webpackHome = project.rootProject.buildDir.resolve("js/packages/placeholder-name")
-    val directory = outputDir.relativeTo(webpackHome)
+    val directory = outputDirFile.relativeTo(webpackHome)
     webpackConfigFile.parentFile.mkdirs()
     webpackConfigFile.writeText(
       """
