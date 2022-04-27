@@ -17,9 +17,9 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.ziplineInternalPrefix
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -79,19 +79,29 @@ class Endpoint internal constructor(
       instanceName: String,
       funName: String,
       encodedArguments: Array<String>,
-      callbackName: String
+      suspendCallbackName: String
     ) {
       val handler = takeHandler(instanceName, funName)
+      val cancelCallbackName = cancelCallbackName(suspendCallbackName)
       scope.launch {
-        val callback = take<SuspendCallback>(callbackName)
-        val inboundCall = InboundCall(handler.context, funName, encodedArguments)
-        val result = try {
-          handler.callSuspending(inboundCall)
-        } catch (e: Exception) {
-          inboundCall.resultException(e)
+        bind<CancelCallback>(cancelCallbackName, object : CancelCallback {
+          override fun cancel() {
+            this@launch.cancel()
+          }
+        })
+        try {
+          val suspendCallback = take<SuspendCallback>(suspendCallbackName)
+          val inboundCall = InboundCall(handler.context, funName, encodedArguments)
+          val result = try {
+            handler.callSuspending(inboundCall)
+          } catch (e: Exception) {
+            inboundCall.resultException(e)
+          }
+          scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
+          suspendCallback.call(result)
+        } finally {
+          remove(cancelCallbackName)
         }
-        scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
-        callback.call(result)
       }
     }
 
@@ -151,8 +161,14 @@ class Endpoint internal constructor(
     return "$prefix${nextId++}"
   }
 
+  /** Derives the name of a [CancelCallback] from the name of a [SuspendCallback]. */
+  internal fun cancelCallbackName(name: String): String {
+    return "$name/cancel"
+  }
+
   @PublishedApi
-  internal fun newInboundContext(name: String, service: ZiplineService) = InboundBridge.Context(name, service, json, this)
+  internal fun newInboundContext(name: String, service: ZiplineService) =
+    InboundBridge.Context(name, service, json, this)
 
   @PublishedApi
   internal fun newOutboundContext(name: String) = OutboundBridge.Context(name, json, this)

@@ -25,9 +25,11 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal class EndpointTest {
   @Test
@@ -95,7 +97,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingRequestAndResponse(): Unit = runBlocking() {
+  fun suspendingRequestAndResponse(): Unit = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)
@@ -165,8 +167,8 @@ internal class EndpointTest {
     val echoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
         // In the middle of a suspending call there's a temporary reference to the callback.
-        assertEquals(setOf("echoService"), endpointA.serviceNames)
-        assertEquals(setOf("echoService"), endpointB.clientNames)
+        assertEquals(setOf("echoService", "zipline/1/cancel"), endpointA.serviceNames)
+        assertEquals(setOf("echoService", "zipline/1/cancel"), endpointB.clientNames)
         assertEquals(setOf("zipline/1"), endpointA.clientNames)
         assertEquals(setOf("zipline/1"), endpointB.serviceNames)
         return EchoResponse("hello, ${request.message}")
@@ -184,5 +186,94 @@ internal class EndpointTest {
     assertEquals(setOf("echoService"), endpointB.clientNames)
     assertEquals(setOf(), endpointA.clientNames)
     assertEquals(setOf(), endpointB.serviceNames)
+  }
+
+  @Test
+  fun suspendingCallCanceled(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val requests = Channel<String>(1)
+    val cancels = Channel<Throwable?>(1)
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        return suspendCancellableCoroutine { continuation ->
+          continuation.invokeOnCancellation { throwable ->
+            cancels.trySend(throwable)
+          }
+          requests.trySend(request.message)
+          // This continuation never resumes normally!
+        }
+      }
+    }
+
+    endpointA.bind<SuspendingEchoService>("helloService", service)
+    val client = endpointB.take<SuspendingEchoService>("helloService")
+
+    val deferredResponse = async {
+      client.suspendingEcho(EchoRequest("this request won't get a response"))
+    }
+
+    assertEquals("this request won't get a response", requests.receive())
+    deferredResponse.cancel()
+    assertTrue(cancels.receive() is CancellationException)
+  }
+
+  @Test
+  fun multipleCancelsAreIdempotent(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val requests = Channel<String>(1)
+    val cancels = Channel<Throwable?>(1)
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        return suspendCancellableCoroutine { continuation ->
+          continuation.invokeOnCancellation { throwable ->
+            cancels.trySend(throwable)
+          }
+          requests.trySend(request.message)
+          // This continuation never resumes normally!
+        }
+      }
+    }
+
+    endpointA.bind<SuspendingEchoService>("helloService", service)
+    val client = endpointB.take<SuspendingEchoService>("helloService")
+
+    val deferredResponse = async {
+      client.suspendingEcho(EchoRequest("this request won't get a response"))
+    }
+
+    assertEquals("this request won't get a response", requests.receive())
+    deferredResponse.cancel()
+    deferredResponse.cancel()
+    deferredResponse.cancel()
+    assertTrue(cancels.receive() is CancellationException)
+  }
+
+  @Test
+  fun cancelAfterResult(): Unit = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val requests = Channel<String>(1)
+    val responses = Channel<String>(1)
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        requests.send(request.message)
+        return EchoResponse(responses.receive())
+      }
+    }
+
+    endpointA.bind<SuspendingEchoService>("helloService", service)
+    val client = endpointB.take<SuspendingEchoService>("helloService")
+
+    val deferredResponse = async {
+      client.suspendingEcho(EchoRequest("this is a happy request"))
+    }
+
+    assertEquals("this is a happy request", requests.receive())
+    responses.send("this is a response")
+
+    assertEquals("this is a response", deferredResponse.await().message)
+    deferredResponse.cancel()
   }
 }
