@@ -47,10 +47,10 @@ internal fun newEndpointPair(
         instanceName: String,
         funName: String,
         encodedArguments: Array<String>,
-        callbackName: String
+        suspendCallbackName: String
       ) {
         return b.inboundChannel.invokeSuspending(
-          instanceName, funName, encodedArguments, callbackName
+          instanceName, funName, encodedArguments, suspendCallbackName
         )
       }
 

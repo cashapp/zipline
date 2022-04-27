@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2022 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.ZiplineService
 
 /**
- * A bridged interface to return results from suspending calls.  This is used internally by Zipline
- * to complete suspending calls from the receiving endpoint to the calling endpoint.
+ * A bridged interface to cancel suspending calls. This is used internally by Zipline to send
+ * a cancellation signal from the calling endpoint to the receiving endpoint.
  *
- * It is not necessary for the receiving endpoint to [ZiplineService.close] this; that's handled
- * automatically by the calling service.
+ * It is not necessary for the calling endpoint to [ZiplineService.close] this; that's handled
+ * automatically by the receiving service.
  */
 @PublishedApi
-internal interface SuspendCallback : ZiplineService {
-  fun call(response: Array<String>)
+internal interface CancelCallback : ZiplineService {
+  fun cancel()
 }

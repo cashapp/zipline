@@ -42,10 +42,10 @@ class LoggingCallChannel : CallChannel {
     instanceName: String,
     funName: String,
     encodedArguments: Array<String>,
-    callbackName: String
+    suspendCallbackName: String
   ) {
     log += "invokeSuspending($instanceName, $funName, " +
-      "[${encodedArguments.joinToString(", ")}], $callbackName)"
+      "[${encodedArguments.joinToString(", ")}], $suspendCallbackName)"
   }
 
   override fun disconnect(instanceName: String): Boolean {

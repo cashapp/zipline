@@ -52,13 +52,18 @@ internal interface CallChannel {
     encodedArguments: Array<String>,
   ): Array<String>
 
-  /** Like [invoke], but the response is delivered to the [SuspendCallback] named [callbackName]. */
+  /**
+   * Like [invoke], but the response is delivered to the [SuspendCallback] named
+   * [suspendCallbackName].
+   *
+   * This call is cancelable until it returns. Use a [CancelCallback] to cancel this call.
+   */
   @JsName("invokeSuspending")
   fun invokeSuspending(
     instanceName: String,
     funName: String,
     encodedArguments: Array<String>,
-    callbackName: String,
+    suspendCallbackName: String,
   )
 
   /**

@@ -46,9 +46,9 @@ internal class JniCallChannel(
     instanceName: String,
     funName: String,
     encodedArguments: Array<String>,
-    callbackName: String
+    suspendCallbackName: String
   ) = invokeSuspending(
-    quickJs.context, instance, instanceName, funName, encodedArguments, callbackName
+    quickJs.context, instance, instanceName, funName, encodedArguments, suspendCallbackName
   )
 
   private external fun invokeSuspending(

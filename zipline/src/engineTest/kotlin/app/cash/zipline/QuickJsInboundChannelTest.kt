@@ -115,7 +115,7 @@ class QuickJsInboundChannelTest {
       instanceName = "theInstanceName",
       funName = "theFunName",
       encodedArguments = arrayOf("firstArg", "secondArg"),
-      callbackName = "theCallbackName",
+      suspendCallbackName = "theCallbackName",
     )
     val result = inboundChannel.invoke("", "", arrayOf())
     assertContentEquals(
