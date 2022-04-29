@@ -20,7 +20,7 @@ dependencies {
   implementation(libs.okHttp.core)
   implementation(libs.okio.core)
   testImplementation(projects.ziplineLoaderTesting)
-  testImplementation(Dependencies.junit)
+  testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.okHttp.mockWebServer)
   testImplementation(libs.truth)

@@ -257,7 +257,7 @@ android {
 }
 
 dependencies {
-  androidTestImplementation(Dependencies.junit)
+  androidTestImplementation(libs.junit)
   androidTestImplementation(libs.androidx.test.runner)
   androidTestImplementation(libs.truth)
   androidTestImplementation(libs.kotlinx.coroutines.test)

@@ -1,17 +1,8 @@
 object Dependencies {
   val androidGradlePlugin = "com.android.tools.build:gradle:7.0.2"
   val androidMaterial = "com.google.android.material:material:1.4.0"
-  val coilCompose = "io.coil-kt:coil-compose:1.3.2"
-  val dokkaGradlePlugin = "org.jetbrains.dokka:dokka-gradle-plugin:1.6.10"
   val desugarJdkLibs = "com.android.tools:desugar_jdk_libs:1.1.5"
-  val cklibGradlePlugin = "co.touchlab:cklib-gradle-plugin:0.2.4"
-  val duktape = "com.squareup.duktape:duktape-android:1.4.0"
-  val graalvm = "22.0.0.2"
-  val graalGradlePlugin = "gradle.plugin.com.palantir.graal:gradle-graal:0.10.0"
-  val junit = "junit:junit:4.13.2"
   val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
-  val picocli = "info.picocli:picocli:4.6.3"
-  val picocliCompiler = "info.picocli:picocli-codegen:4.6.3"
   val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
   val sqldelightJdbc = "org.xerial:sqlite-jdbc:3.34.0"
 }
