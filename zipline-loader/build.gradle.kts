@@ -51,7 +51,7 @@ kotlin {
       dependsOn(jniMain)
       dependencies {
         implementation(libs.sqldelight.driver.sqlite)
-        implementation(Dependencies.sqldelightJdbc)
+        implementation(libs.sqlite.jdbc)
       }
     }
     val androidMain by getting {
@@ -90,7 +90,7 @@ kotlin {
         implementation(libs.kotlinx.coroutines.test)
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
-        implementation(Dependencies.sqldelightJdbc)
+        implementation(libs.sqlite.jdbc)
       }
     }
     val jvmTest by getting {
