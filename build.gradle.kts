@@ -19,7 +19,7 @@ buildscript {
     classpath(Dependencies.graalGradlePlugin)
     classpath(Dependencies.dokkaGradlePlugin)
     classpath(Dependencies.shadowJarPlugin)
-    classpath(Dependencies.cklibGradlePlugin)
+    classpath(libs.cklib.gradle.plugin)
     classpath(libs.sqldelight.gradle.plugin)
   }
 }
