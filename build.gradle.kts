@@ -13,7 +13,7 @@ buildscript {
   }
   dependencies {
     classpath(Dependencies.androidGradlePlugin)
-    classpath(Dependencies.mavenPublishGradlePlugin)
+    classpath(libs.mavenPublish.gradle.plugin)
     classpath(libs.kotlin.gradle.plugin)
     classpath(libs.kotlin.serialization)
     classpath(libs.graal.gradle.plugin)
