@@ -86,7 +86,7 @@ kotlin {
     val jniTest by creating {
       dependsOn(engineTest)
       dependencies {
-        implementation(Dependencies.junit)
+        implementation(libs.junit)
         implementation(libs.kotlinx.coroutines.test)
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
@@ -126,7 +126,7 @@ android {
 
 dependencies {
   androidTestImplementation(Dependencies.androidxTestRunner)
-  androidTestImplementation(Dependencies.junit)
+  androidTestImplementation(libs.junit)
   androidTestImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(libs.okio.fakeFileSystem)
 }
