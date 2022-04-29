@@ -1,4 +1,5 @@
 [versions]
+graalvm = "22.0.0.2"
 kotlin = "1.6.10"
 kotlinx-coroutines = "1.6.0-native-mt"
 kotlinx-serialization = "1.3.2"
@@ -7,6 +8,7 @@ okio = "3.0.0"
 sqldelight = "1.5.3"
 
 [libraries]
+graal-gradle-plugin = { module = "gradle.plugin.com.palantir.graal:gradle-graal", version = "0.10.0" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }

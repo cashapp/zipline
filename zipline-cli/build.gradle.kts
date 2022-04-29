@@ -48,7 +48,7 @@ tasks.shadowJar {
 graal {
   mainClass("app.cash.zipline.cli.Main")
   outputName("zipline-cli")
-  graalVersion(Dependencies.graalvm)
+  graalVersion(libs.versions.graalvm.get())
   javaVersion("11")
 
   option("--no-fallback")
