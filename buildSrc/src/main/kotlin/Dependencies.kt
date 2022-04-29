@@ -12,7 +12,6 @@ object Dependencies {
   val composeUiTooling = "androidx.compose.ui:ui-tooling:1.1.0-rc01"
   val composeUiToolingPreview = "androidx.compose.ui:ui-tooling-preview:1.1.0-rc01"
   val desugarJdkLibs = "com.android.tools:desugar_jdk_libs:1.1.5"
-  val cklibGradlePlugin = "co.touchlab:cklib-gradle-plugin:0.2.4"
   val graalvm = "22.0.0.2"
   val graalGradlePlugin = "gradle.plugin.com.palantir.graal:gradle-graal:0.10.0"
   val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
