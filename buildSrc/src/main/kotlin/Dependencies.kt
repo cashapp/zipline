@@ -7,7 +7,6 @@ object Dependencies {
   val androidxCoreKtx = "androidx.core:core-ktx:1.6.0"
   val androidxLifecycle = "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
   val androidxTestRunner = "androidx.test:runner:1.2.0"
-  val coilCompose = "io.coil-kt:coil-compose:1.3.2"
   val composeMaterial = "androidx.compose.material:material:1.1.0-rc01"
   val composeUi = "androidx.compose.ui:ui:1.1.0-rc01"
   val composeUiTooling = "androidx.compose.ui:ui-tooling:1.1.0-rc01"
