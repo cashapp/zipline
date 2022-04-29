@@ -115,6 +115,7 @@ internal class OutboundCall(
         endpoint.bind<SuspendCallback>(suspendCallbackName, suspendCallback)
 
         continuation.invokeOnCancellation {
+          if (suspendCallback.completed) return@invokeOnCancellation
           val cancelCallbackName = endpoint.cancelCallbackName(suspendCallbackName)
           val cancelCallback = endpoint.take<CancelCallback>(cancelCallbackName)
           cancelCallback.cancel()
@@ -137,7 +138,11 @@ internal class OutboundCall(
     val serializer: KSerializer<R>,
     val callStartResult: Any?,
   ) : SuspendCallback {
+    /** True once this has been called. Used to prevent cancel-after-complete. */
+    var completed = false
+
     override fun call(response: Array<String>) {
+      completed = true
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
       endpoint.remove(suspendCallbackName)
       val result = response.decodeResult(serializer)
