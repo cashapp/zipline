@@ -16,7 +16,6 @@ object Dependencies {
   val cklibGradlePlugin = "co.touchlab:cklib-gradle-plugin:0.2.4"
   val graalvm = "22.0.0.2"
   val graalGradlePlugin = "gradle.plugin.com.palantir.graal:gradle-graal:0.10.0"
-  val junit = "junit:junit:4.13.2"
   val mavenPublishGradlePlugin = "com.vanniktech:gradle-maven-publish-plugin:0.18.0"
   val shadowJarPlugin = "gradle.plugin.com.github.johnrengelman:shadow:7.1.2"
   val sqldelightJdbc = "org.xerial:sqlite-jdbc:3.34.0"
