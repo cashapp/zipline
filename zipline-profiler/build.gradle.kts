@@ -13,7 +13,7 @@ dependencies {
   api(libs.okio.core)
 
   testImplementation(libs.truth)
-  testImplementation(Dependencies.junit)
+  testImplementation(libs.junit)
 }
 
 configure<MavenPublishBaseExtension> {

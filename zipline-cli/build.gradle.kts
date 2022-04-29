@@ -34,7 +34,7 @@ dependencies {
   kapt(Dependencies.picocliCompiler)
 
   testImplementation(projects.ziplineLoaderTesting)
-  testImplementation(Dependencies.junit)
+  testImplementation(libs.junit)
   testImplementation(libs.kotlinx.serialization.json)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.okio.core)
