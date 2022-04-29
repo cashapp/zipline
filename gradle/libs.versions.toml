@@ -7,6 +7,7 @@ okio = "3.0.0"
 sqldelight = "1.5.3"
 
 [libraries]
+duktape = { module = "com.squareup.duktape:duktape-android", version = "1.4.0" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }
