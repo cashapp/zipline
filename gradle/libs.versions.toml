@@ -8,6 +8,7 @@ picocli = "4.6.3"
 sqldelight = "1.5.3"
 
 [libraries]
+dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "1.6.10" }
 duktape = { module = "com.squareup.duktape:duktape-android", version = "1.4.0" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
