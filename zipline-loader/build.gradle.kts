@@ -125,7 +125,7 @@ android {
 }
 
 dependencies {
-  androidTestImplementation(Dependencies.androidxTestRunner)
+  androidTestImplementation(libs.androidx.test.runner)
   androidTestImplementation(Dependencies.junit)
   androidTestImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(libs.okio.fakeFileSystem)

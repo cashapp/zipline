@@ -94,7 +94,7 @@ kotlin {
     val jniMain by creating {
       dependsOn(engineMain)
       dependencies {
-        api(Dependencies.androidxAnnotation)
+        api(libs.androidx.annotation)
       }
     }
     val androidMain by getting {
@@ -258,7 +258,7 @@ android {
 
 dependencies {
   androidTestImplementation(Dependencies.junit)
-  androidTestImplementation(Dependencies.androidxTestRunner)
+  androidTestImplementation(libs.androidx.test.runner)
   androidTestImplementation(libs.truth)
   androidTestImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(projects.zipline.testing)
