@@ -32,6 +32,8 @@ import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -277,6 +279,36 @@ class ZiplineTest {
         	at
         """.trimIndent()
       )
+  }
+
+  @Test fun cancelContextJobDoesntDestroyZipline(): Unit = runBlocking(dispatcher) {
+    val jvmSuspendingEchoService = object : SuspendingEchoService {
+      var callCount = 0
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        callCount++
+        if (callCount == 2) {
+          currentCoroutineContext().cancel()
+        }
+        return EchoResponse("response $callCount")
+      }
+    }
+
+    zipline.bind<SuspendingEchoService>(
+      "jvmSuspendingEchoService",
+      jvmSuspendingEchoService
+    )
+
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('')")
+    assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult"))
+      .isEqualTo("response 1")
+
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('')")
+    assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult"))
+      .isEqualTo("response 2")
+
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('')")
+    assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult"))
+      .isEqualTo("response 3")
   }
 
   private class JvmEchoService(private val greeting: String) : EchoService {
