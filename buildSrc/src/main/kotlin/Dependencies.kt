@@ -12,7 +12,6 @@ object Dependencies {
   val composeUi = "androidx.compose.ui:ui:1.1.0-rc01"
   val composeUiTooling = "androidx.compose.ui:ui-tooling:1.1.0-rc01"
   val composeUiToolingPreview = "androidx.compose.ui:ui-tooling-preview:1.1.0-rc01"
-  val dokkaGradlePlugin = "org.jetbrains.dokka:dokka-gradle-plugin:1.6.10"
   val desugarJdkLibs = "com.android.tools:desugar_jdk_libs:1.1.5"
   val cklibGradlePlugin = "co.touchlab:cklib-gradle-plugin:0.2.4"
   val duktape = "com.squareup.duktape:duktape-android:1.4.0"
