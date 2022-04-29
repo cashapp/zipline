@@ -19,9 +19,7 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -83,14 +81,7 @@ class Endpoint internal constructor(
       suspendCallbackName: String
     ) {
       val handler = takeHandler(instanceName, funName)
-      val cancelCallbackName = cancelCallbackName(suspendCallbackName)
-      val cancelCallback = RealCancelCallback()
-      bind<CancelCallback>(cancelCallbackName, cancelCallback)
-      scope.launch {
-        cancelCallback.initScope(this@launch)
-        coroutineContext.job.invokeOnCompletion {
-          remove(cancelCallbackName)
-        }
+      val job = scope.launch {
         val inboundCall = InboundCall(handler.context, funName, encodedArguments)
         val result = try {
           handler.callSuspending(inboundCall)
@@ -100,6 +91,16 @@ class Endpoint internal constructor(
         scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
         val suspendCallback = take<SuspendCallback>(suspendCallbackName)
         suspendCallback.call(result)
+      }
+
+      val cancelCallbackName = cancelCallbackName(suspendCallbackName)
+      bind<CancelCallback>(cancelCallbackName, object : CancelCallback {
+        override fun cancel() {
+          job.cancel()
+        }
+      })
+      job.invokeOnCompletion {
+        remove(cancelCallbackName)
       }
     }
 
@@ -122,22 +123,6 @@ class Endpoint internal constructor(
 
   fun <T : ZiplineService> bind(name: String, instance: T) {
     error("unexpected call to Endpoint.bind: is the Zipline plugin configured?")
-  }
-
-  /** Handle calls to [cancel] that might precede [initScope]. */
-  private class RealCancelCallback : CancelCallback {
-    private var canceled = false
-    private var coroutineScope: CoroutineScope? = null
-
-    override fun cancel() {
-      canceled = true
-      coroutineScope?.cancel()
-    }
-
-    fun initScope(coroutineScope: CoroutineScope) {
-      this.coroutineScope = coroutineScope
-      if (canceled) coroutineScope.cancel()
-    }
   }
 
   @PublishedApi
