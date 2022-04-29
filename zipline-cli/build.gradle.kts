@@ -29,12 +29,12 @@ sourceSets {
 dependencies {
   api(projects.ziplineLoader)
   implementation(libs.okHttp.core)
-  implementation(Dependencies.picocli)
+  implementation(libs.picocli)
 
-  kapt(Dependencies.picocliCompiler)
+  kapt(libs.picocli.compiler)
 
   testImplementation(projects.ziplineLoaderTesting)
-  testImplementation(Dependencies.junit)
+  testImplementation(libs.junit)
   testImplementation(libs.kotlinx.serialization.json)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.okio.core)

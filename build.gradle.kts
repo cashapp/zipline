@@ -17,9 +17,9 @@ buildscript {
     classpath(libs.kotlin.gradle.plugin)
     classpath(libs.kotlin.serialization)
     classpath(libs.graal.gradle.plugin)
-    classpath(Dependencies.dokkaGradlePlugin)
+    classpath(libs.dokka.gradle.plugin)
     classpath(Dependencies.shadowJarPlugin)
-    classpath(Dependencies.cklibGradlePlugin)
+    classpath(libs.cklib.gradle.plugin)
     classpath(libs.sqldelight.gradle.plugin)
   }
 }
