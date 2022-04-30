@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.fetcher.Fetcher
+import app.cash.zipline.loader.fetcher.HttpFetcher
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
@@ -45,7 +46,7 @@ import okio.Path
 class ZiplineLoader(
   private val dispatcher: CoroutineDispatcher,
   private val httpClient: ZiplineHttpClient,
-  private val fetchers: List<Fetcher>,
+  private val fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient)),
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3

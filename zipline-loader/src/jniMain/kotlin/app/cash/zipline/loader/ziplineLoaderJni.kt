@@ -13,22 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader.fetcher
+package app.cash.zipline.loader
 
-import app.cash.zipline.loader.ZiplineHttpClient
-import okio.ByteString
+import app.cash.zipline.loader.fetcher.Fetcher
+import app.cash.zipline.loader.fetcher.HttpFetcher
+import kotlinx.coroutines.CoroutineDispatcher
+import okhttp3.OkHttpClient
 
-/**
- * Fetch from the network.
- */
-class HttpFetcher(
-  private val httpClient: ZiplineHttpClient,
-) : Fetcher {
-  override suspend fun fetch(
-    id: String,
-    sha256: ByteString,
-    url: String,
-    fileNameOverride: String?
-  ): ByteString? =
-    httpClient.download(url)
-}
+fun ZiplineLoader(
+  dispatcher: CoroutineDispatcher,
+  httpClient: OkHttpClient,
+  fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient)),
+): ZiplineLoader = ZiplineLoader(
+  dispatcher, OkHttpZiplineHttpClient(httpClient), fetchers
+)
