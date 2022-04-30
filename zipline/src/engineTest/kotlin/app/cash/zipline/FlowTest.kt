@@ -17,14 +17,22 @@ package app.cash.zipline
 
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 
 internal class FlowTest {
   interface FlowEchoService : ZiplineService {
@@ -98,5 +106,86 @@ internal class FlowTest {
     val service = RealFlowEchoService()
     val flow = service.createFlow("hello", 3)
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
+  }
+
+  @Test
+  fun receivingEndpointCancelsFlow() = runBlocking {
+    val channel = Channel<String>(Int.MAX_VALUE)
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = object : FlowEchoService {
+      override fun createFlow(message: String, count: Int): Flow<String> {
+        return channel.consumeAsFlow()
+      }
+
+      override suspend fun flowParameter(flow: Flow<String>): Int = error("unexpected call")
+    }
+
+    endpointA.bind<FlowEchoService>("service", service)
+    val client = endpointB.take<FlowEchoService>("service")
+    val initialServiceNames = endpointA.serviceNames
+    val initialClientNames = endpointA.clientNames
+
+    val flow = client.createFlow("", 0)
+    channel.send("A")
+    channel.send("B")
+    channel.send("C")
+
+    val received = mutableListOf<String>()
+    val e = assertFailsWith<Exception> {
+      flow.collect {
+        received += it
+        if (received.size == 2) channel.cancel()
+      }
+    }
+    assertContains(e.toString(), "CancellationException")
+    assertEquals(listOf("A", "B"), received)
+
+    // Confirm that no services or clients were leaked.
+    assertEquals(initialServiceNames, endpointA.serviceNames)
+    assertEquals(initialClientNames, endpointA.clientNames)
+  }
+
+  @Test
+  fun callingEndpointCancelsFlow() = runBlocking {
+    val channel = Channel<String>(Int.MAX_VALUE)
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = object : FlowEchoService {
+      override fun createFlow(message: String, count: Int): Flow<String> {
+        return channel.consumeAsFlow()
+      }
+
+      override suspend fun flowParameter(flow: Flow<String>): Int = error("unexpected call")
+    }
+
+    endpointA.bind<FlowEchoService>("service", service)
+    val client = endpointB.take<FlowEchoService>("service")
+    val initialServiceNames = endpointA.serviceNames
+    val initialClientNames = endpointA.clientNames
+
+    val flow = client.createFlow("", 0)
+    channel.send("A")
+    channel.send("B")
+    channel.send("C")
+
+    val received = mutableListOf<String>()
+    supervisorScope {
+      assertFailsWith<CancellationException> {
+        coroutineScope {
+          flow.collect {
+            received += it
+            if (received.size == 2) {
+              this@coroutineScope.cancel()
+            }
+          }
+        }
+      }
+    }
+    assertEquals(listOf("A", "B"), received)
+
+    // Confirm that no services or clients were leaked.
+    awaitCondition { initialServiceNames == endpointA.serviceNames }
+    awaitCondition { initialClientNames == endpointA.clientNames }
   }
 }

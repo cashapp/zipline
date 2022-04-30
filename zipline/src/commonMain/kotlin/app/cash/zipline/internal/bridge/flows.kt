@@ -82,18 +82,15 @@ internal class FlowSerializer<T>(
 
   private fun FlowZiplineService.toFlow(): Flow<T> {
     return channelFlow {
-      try {
-        val collector = object : FlowZiplineCollector {
-          override suspend fun emit(value: String) {
-            val item = json.decodeFromStringFast(itemSerializer, value)
-            this@channelFlow.send(item)
-          }
-        }
-        this@toFlow.collectJson(collector)
-        this@channelFlow.close()
-      } finally {
+      invokeOnClose {
         this@toFlow.close()
       }
+      this@toFlow.collectJson(object : FlowZiplineCollector {
+        override suspend fun emit(value: String) {
+          val item = json.decodeFromStringFast(itemSerializer, value)
+          this@channelFlow.send(item)
+        }
+      })
     }
   }
 }

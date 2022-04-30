@@ -19,7 +19,6 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
@@ -82,26 +81,26 @@ class Endpoint internal constructor(
       suspendCallbackName: String
     ) {
       val handler = takeHandler(instanceName, funName)
-      val cancelCallbackName = cancelCallbackName(suspendCallbackName)
-      scope.launch {
-        bind<CancelCallback>(cancelCallbackName, object : CancelCallback {
-          override fun cancel() {
-            this@launch.cancel()
-          }
-        })
-        try {
-          val suspendCallback = take<SuspendCallback>(suspendCallbackName)
-          val inboundCall = InboundCall(handler.context, funName, encodedArguments)
-          val result = try {
-            handler.callSuspending(inboundCall)
-          } catch (e: Exception) {
-            inboundCall.resultException(e)
-          }
-          scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
-          suspendCallback.call(result)
-        } finally {
-          remove(cancelCallbackName)
+      val job = scope.launch {
+        val inboundCall = InboundCall(handler.context, funName, encodedArguments)
+        val result = try {
+          handler.callSuspending(inboundCall)
+        } catch (e: Exception) {
+          inboundCall.resultException(e)
         }
+        scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
+        val suspendCallback = take<SuspendCallback>(suspendCallbackName)
+        suspendCallback.call(result)
+      }
+
+      val cancelCallbackName = cancelCallbackName(suspendCallbackName)
+      bind<CancelCallback>(cancelCallbackName, object : CancelCallback {
+        override fun cancel() {
+          job.cancel()
+        }
+      })
+      job.invokeOnCompletion {
+        remove(cancelCallbackName)
       }
     }
 
