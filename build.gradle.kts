@@ -12,7 +12,7 @@ buildscript {
     gradlePluginPortal()
   }
   dependencies {
-    classpath(Dependencies.androidGradlePlugin)
+    classpath(libs.android.gradle.plugin)
     classpath(libs.mavenPublish.gradle.plugin)
     classpath(libs.kotlin.gradle.plugin)
     classpath(libs.kotlin.serialization)
