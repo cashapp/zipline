@@ -3,12 +3,12 @@ plugins {
 }
 
 android {
-  compileSdk = Ext.compileSdk
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
     applicationId = "com.example.zipline.octane"
     minSdk = 18
-    targetSdk = Ext.targetSdk
+    targetSdk = libs.versions.targetSdk.get().toInt()
   }
 
   val samples by signingConfigs.creating {

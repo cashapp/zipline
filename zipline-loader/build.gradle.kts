@@ -106,7 +106,7 @@ kotlin {
 
 
 android {
-  compileSdkVersion(Ext.compileSdk)
+  compileSdkVersion(libs.versions.compileSdk.get().toInt())
 
   defaultConfig {
     minSdkVersion(18)

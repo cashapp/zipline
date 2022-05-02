@@ -1,5 +1,6 @@
 [versions]
 androidx-compose = "1.1.0-rc01"
+compileSdk = "31"
 graalvm = "22.0.0.2"
 kotlin = "1.6.10"
 kotlinx-coroutines = "1.6.0-native-mt"
@@ -8,6 +9,7 @@ okHttp = "4.9.1"
 okio = "3.0.0"
 picocli = "4.6.3"
 sqldelight = "1.5.3"
+targetSdk = "31"
 
 [libraries]
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "1.1.5" }

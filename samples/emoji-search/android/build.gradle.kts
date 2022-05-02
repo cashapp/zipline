@@ -6,12 +6,12 @@ plugins {
 }
 
 android {
-  compileSdk = Ext.compileSdk
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
     applicationId = "com.example.zipline.emojisearch"
     minSdk = 21
-    targetSdk = Ext.targetSdk
+    targetSdk = libs.versions.targetSdk.get().toInt()
   }
 
   compileOptions {
