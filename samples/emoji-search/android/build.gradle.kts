@@ -56,7 +56,7 @@ dependencies {
   implementation(projects.zipline)
   implementation(projects.ziplineProfiler)
   implementation(projects.samples.emojiSearch.presenters)
-  implementation(Dependencies.androidMaterial)
+  implementation(libs.android.material)
   implementation(libs.androidx.activity.compose)
   implementation(libs.androidx.appCompat)
   implementation(libs.androidx.core.ktx)
