@@ -70,20 +70,10 @@ must be confined to a single thread.
 ```kotlin
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val zipline = Zipline.create(dispatcher)
-  val baseUrl = "http://localhost:8080/".toHttpUrl()
-  val loader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = OkHttpZiplineHttpClient(baseUrl, OkHttpClient()),
-    embeddedDir = "/".toPath(),
-    embeddedFileSystem = FileSystem.RESOURCES,
-    cacheDbDriver = DriverFactory().createDriver(),
-    cacheDir = "zipline-cache".toPath(),
-    cacheFileSystem = FileSystem.SYSTEM,
-    cacheMaxSizeInBytes = 10 * 1024 * 1024,
-    nowMs = System::currentTimeMillis,
-  )
-  loader.load(zipline, baseUrl.resolve("/manifest.zipline.json").toString())
-  val moduleName = "./zipline-root-trivia-zipline.js"
+  val manifestUrl = "http://localhost:8080/manifest.zipline.json"
+  val loader = ZiplineLoader(dispatcher, OkHttpClient())
+  loader.load(zipline, manifestUrl)
+  val moduleName = "./zipline-root-trivia-js.js"
   zipline.quickJs.evaluate(
     "require('$moduleName').app.cash.zipline.samples.trivia.launchZipline()",
     "launchZiplineJvm.kt"

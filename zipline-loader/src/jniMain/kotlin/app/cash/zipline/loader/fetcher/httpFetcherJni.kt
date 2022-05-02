@@ -15,20 +15,7 @@
  */
 package app.cash.zipline.loader.fetcher
 
-import app.cash.zipline.loader.ZiplineHttpClient
-import okio.ByteString
+import app.cash.zipline.loader.OkHttpZiplineHttpClient
+import okhttp3.OkHttpClient
 
-/**
- * Fetch from the network.
- */
-class HttpFetcher(
-  private val httpClient: ZiplineHttpClient,
-) : Fetcher {
-  override suspend fun fetch(
-    id: String,
-    sha256: ByteString,
-    url: String,
-    fileNameOverride: String?
-  ): ByteString? =
-    httpClient.download(url)
-}
+fun HttpFetcher(httpClient: OkHttpClient) = HttpFetcher(OkHttpZiplineHttpClient(httpClient))
