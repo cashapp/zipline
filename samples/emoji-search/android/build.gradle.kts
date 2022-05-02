@@ -25,7 +25,7 @@ android {
   }
 
   composeOptions {
-    kotlinCompilerExtensionVersion = Ext.composeVersion
+    kotlinCompilerExtensionVersion = libs.versions.androidx.compose.get()
   }
 
   packagingOptions {
