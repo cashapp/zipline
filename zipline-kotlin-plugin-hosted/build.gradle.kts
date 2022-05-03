@@ -19,7 +19,7 @@ dependencies {
 
 buildConfig {
   packageName("app.cash.zipline.kotlin")
-  buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${Ext.kotlinPluginId}\"")
+  buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${libs.plugins.zipline.kotlin.get()}\"")
 }
 
 configure<MavenPublishBaseExtension> {
