@@ -61,9 +61,9 @@ internal class InboundCall(
   val encodedArguments: Array<String>,
 ) {
   internal lateinit var context: InboundBridge.Context
-  internal val serviceName: String
-  internal val funName: String
-  internal val callbackName: String
+  val serviceName: String
+  val funName: String
+  val callbackName: String
 
   private val arguments = ArrayList<Any?>(encodedArguments.size / 2)
   private var callStartResult: Any? = null
