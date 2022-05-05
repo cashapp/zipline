@@ -60,33 +60,32 @@ class Endpoint internal constructor(
       return serviceNames.toTypedArray()
     }
 
-    override fun invoke(
-      instanceName: String,
-      funName: String,
-      encodedArguments: Array<String>
-    ): Array<String> {
-      val handler = takeHandler(instanceName, funName)
-      val inboundCall = InboundCall(handler.context, funName, encodedArguments)
-      return try {
-        handler.call(inboundCall)
-      } catch (e: Throwable) {
-        inboundCall.resultException(e)
+    override fun call(encodedArguments: Array<String>): Array<String> {
+      val inboundCall = InboundCall(encodedArguments)
+      val handler = takeHandler(inboundCall.serviceName, inboundCall.funName)
+      inboundCall.context = handler.context
+
+      return when {
+        inboundCall.callbackName.isNotEmpty() -> callSuspending(inboundCall, handler)
+        else -> call(inboundCall, handler)
       }
     }
 
-    override fun invokeSuspending(
-      instanceName: String,
-      funName: String,
-      encodedArguments: Array<String>,
-      suspendCallbackName: String
-    ) {
-      val handler = takeHandler(instanceName, funName)
+    private fun call(call: InboundCall, handler: InboundCallHandler): Array<String> {
+      return try {
+        handler.call(call)
+      } catch (e: Throwable) {
+        call.resultException(e)
+      }
+    }
+
+    private fun callSuspending(call: InboundCall, handler: InboundCallHandler): Array<String> {
+      val suspendCallbackName = call.callbackName
       val job = scope.launch {
-        val inboundCall = InboundCall(handler.context, funName, encodedArguments)
         val result = try {
-          handler.callSuspending(inboundCall)
+          handler.callSuspending(call)
         } catch (e: Exception) {
-          inboundCall.resultException(e)
+          call.resultException(e)
         }
         scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
         val suspendCallback = take<SuspendCallback>(suspendCallbackName)
@@ -102,6 +101,8 @@ class Endpoint internal constructor(
       job.invokeOnCompletion {
         remove(cancelCallbackName)
       }
+
+      return arrayOf()
     }
 
     /**

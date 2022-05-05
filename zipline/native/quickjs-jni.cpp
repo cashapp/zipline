@@ -169,9 +169,8 @@ Java_app_cash_zipline_JniCallChannel_serviceNamesArray(JNIEnv* env, jobject thiz
 }
 
 extern "C" JNIEXPORT jobjectArray JNICALL
-Java_app_cash_zipline_JniCallChannel_invoke(JNIEnv* env, jobject thiz, jlong _context,
-                                            jlong instance, jstring instanceName, jstring funName,
-                                            jobjectArray encodedArguments) {
+Java_app_cash_zipline_JniCallChannel_call(JNIEnv* env, jobject thiz, jlong _context,
+                                          jlong instance, jobjectArray encodedArguments) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
@@ -184,27 +183,7 @@ Java_app_cash_zipline_JniCallChannel_invoke(JNIEnv* env, jobject thiz, jlong _co
     return nullptr;
   }
 
-  return channel->invoke(context, env, instanceName, funName, encodedArguments);
-}
-
-extern "C" JNIEXPORT void JNICALL
-Java_app_cash_zipline_JniCallChannel_invokeSuspending(JNIEnv* env, jobject thiz, jlong _context,
-                                                      jlong instance, jstring instanceName,
-                                                      jstring funName, jobjectArray encodedArguments,
-                                                      jstring callbackName) {
-  Context* context = reinterpret_cast<Context*>(_context);
-  if (!context) {
-    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
-    return;
-  }
-
-  const InboundCallChannel* channel = reinterpret_cast<const InboundCallChannel*>(instance);
-  if (!channel) {
-    throwJavaException(env, "java/lang/IllegalStateException", "Invalid JavaScript object");
-    return;
-  }
-
-  channel->invokeSuspending(context, env, instanceName, funName, encodedArguments, callbackName);
+  return channel->call(context, env, encodedArguments);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL

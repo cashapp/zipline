@@ -63,8 +63,7 @@ public:
   JSClassID outboundCallChannelClassId;
   JSAtom lengthAtom;
   JSAtom serviceNamesArrayAtom;
-  JSAtom invokeAtom;
-  JSAtom invokeSuspendingAtom;
+  JSAtom callAtom;
   JSAtom disconnectAtom;
   jclass booleanClass;
   jclass integerClass;

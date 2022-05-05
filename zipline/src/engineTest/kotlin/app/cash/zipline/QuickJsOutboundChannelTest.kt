@@ -42,12 +42,12 @@ class QuickJsOutboundChannelTest {
   }
 
   @Test
-  fun invokeHappyPath() {
-    callChannel.invokeResult += "result one"
-    callChannel.invokeResult += "result two"
-    val invokeResult = quickJs.evaluate("""
-      globalThis.${outboundChannelName}.invoke(
-        'theInstanceName', 'theFunName', ['firstArg', 'secondArg']
+  fun callHappyPath() {
+    callChannel.callResult += "result one"
+    callChannel.callResult += "result two"
+    val callResult = quickJs.evaluate("""
+      globalThis.${outboundChannelName}.call(
+        ['firstArg', 'secondArg']
       );
     """.trimIndent()) as Array<Any>
     assertContentEquals(
@@ -55,26 +55,11 @@ class QuickJsOutboundChannelTest {
         "result one",
         "result two",
       ),
-      invokeResult,
+      callResult,
     )
     assertEquals(
       listOf(
-        "invoke(theInstanceName, theFunName, [firstArg, secondArg])",
-      ),
-      callChannel.log,
-    )
-  }
-
-  @Test
-  fun invokeSuspendingHappyPath() {
-    quickJs.evaluate("""
-      globalThis.${outboundChannelName}.invokeSuspending(
-        'theInstanceName', 'theFunName', ['firstArg', 'secondArg'], 'theCallbackName'
-      );
-    """.trimIndent())
-    assertEquals(
-      listOf(
-        "invokeSuspending(theInstanceName, theFunName, [firstArg, secondArg], theCallbackName)",
+        "call(firstArg, secondArg)",
       ),
       callChannel.log,
     )

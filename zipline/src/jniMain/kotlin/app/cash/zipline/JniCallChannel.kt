@@ -28,37 +28,14 @@ internal class JniCallChannel(
     instance: Long
   ): Array<String>
 
-  override fun invoke(
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>
-  ) = invoke(quickJs.context, instance, instanceName, funName, encodedArguments)
+  override fun call(encodedArguments: Array<String>) =
+    call(quickJs.context, instance, encodedArguments)
 
-  private external fun invoke(
+  private external fun call(
     context: Long,
     instance: Long,
-    instanceName: String,
-    funName: String,
     encodedArguments: Array<String>,
   ): Array<String>
-
-  override fun invokeSuspending(
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>,
-    suspendCallbackName: String
-  ) = invokeSuspending(
-    quickJs.context, instance, instanceName, funName, encodedArguments, suspendCallbackName
-  )
-
-  private external fun invokeSuspending(
-    context: Long,
-    instance: Long,
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>,
-    callbackName: String,
-  )
 
   override fun disconnect(instanceName: String): Boolean =
     disconnect(quickJs.context, instance, instanceName)
