@@ -43,9 +43,7 @@ class QuickJsInboundChannelTest {
       globalThis.$inboundChannelName = {};
       globalThis.$inboundChannelName.serviceNamesArray = function() {
       };
-      globalThis.$inboundChannelName.invoke = function(encodedArguments) {
-      };
-      globalThis.$inboundChannelName.invokeSuspending = function(encodedArguments, callbackName) {
+      globalThis.$inboundChannelName.call = function(encodedArguments) {
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
       };
@@ -53,11 +51,11 @@ class QuickJsInboundChannelTest {
   }
 
   @Test
-  fun invokeHappyPath() {
+  fun callHappyPath() {
     quickJs.evaluate("""
-      globalThis.$inboundChannelName.invoke = function(encodedArguments) {
+      globalThis.$inboundChannelName.call = function(encodedArguments) {
         var result = [
-          'received call to invoke()'
+          'received call()'
         ];
         result.push(...encodedArguments);
         result.push('and the call was successful!');
@@ -66,12 +64,12 @@ class QuickJsInboundChannelTest {
     """.trimIndent())
 
     val inboundChannel = quickJs.getInboundChannel()
-    val result = inboundChannel.invoke(
+    val result = inboundChannel.call(
       encodedArguments = arrayOf("firstArg", "secondArg"),
     )
     assertContentEquals(
       arrayOf(
-        "received call to invoke()",
+        "received call()",
         "firstArg",
         "secondArg",
         "and the call was successful!",
@@ -104,7 +102,7 @@ class QuickJsInboundChannelTest {
   fun disconnectHappyPath() {
     quickJs.evaluate("""
       var callLog = [];
-      globalThis.$inboundChannelName.invoke = function(instanceName, funName, encodedArguments) {
+      globalThis.$inboundChannelName.call = function(instanceName, funName, encodedArguments) {
         return callLog.pop();
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
@@ -115,7 +113,7 @@ class QuickJsInboundChannelTest {
 
     val inboundChannel = quickJs.getInboundChannel()
     assertTrue(inboundChannel.disconnect("service one"))
-    val result = inboundChannel.invoke(arrayOf())
+    val result = inboundChannel.call(arrayOf())
     assertContentEquals(
       arrayOf(
         "disconnect",

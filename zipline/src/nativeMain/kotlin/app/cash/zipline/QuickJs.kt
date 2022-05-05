@@ -77,7 +77,7 @@ import app.cash.zipline.quickjs.JS_WRITE_OBJ_REFERENCE
 import app.cash.zipline.quickjs.JS_WriteObject
 import app.cash.zipline.quickjs.JsDisconnectFunction
 import app.cash.zipline.quickjs.JsFalse
-import app.cash.zipline.quickjs.JsInvokeFunction
+import app.cash.zipline.quickjs.JsCallFunction
 import app.cash.zipline.quickjs.JsServiceNamesFunction
 import app.cash.zipline.quickjs.JsTrue
 import app.cash.zipline.quickjs.JsValueArrayToInstanceRef
@@ -328,7 +328,7 @@ actual class QuickJs private constructor(
 
       val functionList = nativeHeap.allocArrayOf(
         JsServiceNamesFunction(staticCFunction(::outboundServiceNames)),
-        JsInvokeFunction(staticCFunction(::outboundInvoke)),
+        JsCallFunction(staticCFunction(::outboundCall)),
         JsDisconnectFunction(staticCFunction(::outboundDisconnect)),
       )
       JS_SetPropertyFunctionList(context, jsOutboundCallChannel, functionList, 3)
@@ -346,10 +346,10 @@ actual class QuickJs private constructor(
     return result.toJsValue()
   }
 
-  internal fun jsOutboundInvoke(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
+  internal fun jsOutboundCall(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
     assert(argc == 1)
     val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as Array<String>
-    val result = outboundChannel!!.invoke(arg0)
+    val result = outboundChannel!!.call(arg0)
     return result.toJsValue()
   }
 
@@ -473,7 +473,7 @@ internal fun outboundServiceNames(
 }
 
 @Suppress("UNUSED_PARAMETER") // API shape mandated by QuickJs.
-internal fun outboundInvoke(
+internal fun outboundCall(
   context: CPointer<JSContext>,
   thisVal: CValue<JSValue>,
   argc: Int,
@@ -481,7 +481,7 @@ internal fun outboundInvoke(
 ): CValue<JSValue> {
   val quickJs = JS_GetRuntimeOpaque(JS_GetRuntime(context))!!.asStableRef<QuickJs>().get()
   return try {
-    quickJs.jsOutboundInvoke(argc, argv)
+    quickJs.jsOutboundCall(argc, argv)
   } catch (t: Throwable) {
     t.printStackTrace() // TODO throw to JS return null
     throw t

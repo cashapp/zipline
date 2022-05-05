@@ -27,18 +27,19 @@ internal const val outboundChannelName = "app_cash_zipline_outboundChannel"
 
 @PublishedApi
 internal interface CallChannel {
-  /** Returns names of services that can receive calls to [invoke]. */
+  /** Returns names of services that can receive calls to [call]. */
   @JsName("serviceNamesArray")
   fun serviceNamesArray(): Array<String>
 
   /**
-   * Internal function used to bridge method calls from Java or Android to JavaScript.
+   * Internal function used to bridge method calls from either Kotlin/JVM or Kotlin/Native to
+   * Kotlin/JS.
    *
    * The structure of [encodedArguments] is a series of alternating label/value pairs.
    *
    *  * Label `s`: the following value is the service name
    *  * Label `f`: the following value is the function name
-   *  * Label `c`: the following value is the callback name
+   *  * Label `c`: the following value is the callback name, or an empty string.
    *  * Label `v`: the following value is a non-null parameter value.
    *  * Label `n`: the following value is an empty string and the parameter value is null.
    *
@@ -52,8 +53,8 @@ internal interface CallChannel {
    * array and the response is delivered to the [SuspendCallback]. Suspending calls may be canceled
    * before it returns by using the [CancelCallback].
    */
-  @JsName("invoke")
-  fun invoke(encodedArguments: Array<String>): Array<String>
+  @JsName("call")
+  fun call(encodedArguments: Array<String>): Array<String>
 
   /**
    * Remove [instanceName] from the receiver. After making this call it is an error to make calls

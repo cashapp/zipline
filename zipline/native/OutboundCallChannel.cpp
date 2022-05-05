@@ -25,10 +25,10 @@ OutboundCallChannel::OutboundCallChannel(Context* c, JNIEnv* env, const char* na
       javaThis(env->NewGlobalRef(object)),
       callChannelClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("app/cash/zipline/internal/bridge/CallChannel")))),
       serviceNamesArrayMethod(env->GetMethodID(callChannelClass, "serviceNamesArray", "()[Ljava/lang/String;")),
-      invokeMethod(env->GetMethodID(callChannelClass, "invoke", "([Ljava/lang/String;)[Ljava/lang/String;")),
+      callMethod(env->GetMethodID(callChannelClass, "call", "([Ljava/lang/String;)[Ljava/lang/String;")),
       disconnectMethod(env->GetMethodID(callChannelClass, "disconnect", "(Ljava/lang/String;)Z")) {
   functions.push_back(JS_CFUNC_DEF("serviceNamesArray", 0, OutboundCallChannel::serviceNamesArray));
-  functions.push_back(JS_CFUNC_DEF("invoke", 1, OutboundCallChannel::invoke));
+  functions.push_back(JS_CFUNC_DEF("call", 1, OutboundCallChannel::call));
   functions.push_back(JS_CFUNC_DEF("disconnect", 1, OutboundCallChannel::disconnect));
   if (!env->ExceptionCheck()) {
     JS_SetPropertyFunctionList(context->jsContext, jsOutboundCallChannel, functions.data(), functions.size());
@@ -67,7 +67,7 @@ OutboundCallChannel::serviceNamesArray(JSContext* ctx, JSValueConst this_val, in
 }
 
 JSValue
-OutboundCallChannel::invoke(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
+OutboundCallChannel::call(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv) {
   auto context = reinterpret_cast<const Context*>(JS_GetRuntimeOpaque(JS_GetRuntime(ctx)));
   if (!context) {
     return JS_ThrowReferenceError(ctx, "QuickJs closed");
@@ -85,7 +85,7 @@ OutboundCallChannel::invoke(JSContext* ctx, JSValueConst this_val, int argc, JSV
   args[0].l = context->toJavaStringArray(env, argv[0]);
 
   jobjectArray javaResult = static_cast<jobjectArray>(env->CallObjectMethodA(
-      channel->javaThis, channel->invokeMethod, args));
+      channel->javaThis, channel->callMethod, args));
   JSValue jsResult;
   if (!env->ExceptionCheck()) {
     jsResult = context->toJsStringArray(env, javaResult);

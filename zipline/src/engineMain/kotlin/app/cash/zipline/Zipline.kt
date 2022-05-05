@@ -62,9 +62,9 @@ actual class Zipline private constructor(
         return jsInboundBridge.serviceNamesArray()
       }
 
-      override fun invoke(encodedArguments: Array<String>): Array<String> {
+      override fun call(encodedArguments: Array<String>): Array<String> {
         check(scope.isActive) { "Zipline closed" }
-        return jsInboundBridge.invoke(encodedArguments)
+        return jsInboundBridge.call(encodedArguments)
       }
 
       override fun disconnect(instanceName: String): Boolean {

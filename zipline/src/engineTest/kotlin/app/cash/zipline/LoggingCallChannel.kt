@@ -20,7 +20,7 @@ import app.cash.zipline.internal.bridge.CallChannel
 class LoggingCallChannel : CallChannel {
   val log = mutableListOf<String>()
   val serviceNamesResult = mutableListOf<String>()
-  val invokeResult = mutableListOf<String>()
+  val callResult = mutableListOf<String>()
   var disconnectThrow = false
   var disconnectResult = true
 
@@ -29,11 +29,9 @@ class LoggingCallChannel : CallChannel {
     return serviceNamesResult.toTypedArray()
   }
 
-  override fun invoke(
-    encodedArguments: Array<String>
-  ): Array<String> {
-    log += "invoke(${encodedArguments.joinToString(", ")})"
-    return invokeResult.toTypedArray()
+  override fun call(encodedArguments: Array<String>): Array<String> {
+    log += "call(${encodedArguments.joinToString(", ")})"
+    return callResult.toTypedArray()
   }
 
   override fun disconnect(instanceName: String): Boolean {

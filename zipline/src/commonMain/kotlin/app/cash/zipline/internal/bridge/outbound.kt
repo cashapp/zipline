@@ -95,7 +95,7 @@ internal class OutboundCall(
   fun <R> invoke(service: ZiplineService, serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     val callStartResult = endpoint.eventListener.callStart(instanceName, service, funName, arguments)
-    val encodedResult = endpoint.outboundChannel.invoke(encodedArguments.toTypedArray())
+    val encodedResult = endpoint.outboundChannel.call(encodedArguments.toTypedArray())
 
     val result = encodedResult.decodeResult(serializer)
     endpoint.eventListener.callEnd(instanceName, service, funName, arguments, result, callStartResult)
@@ -131,7 +131,7 @@ internal class OutboundCall(
           cancelCallback.cancel()
         }
 
-        endpoint.outboundChannel.invoke(encodedArguments.toTypedArray())
+        endpoint.outboundChannel.call(encodedArguments.toTypedArray())
       }
     }
   }

@@ -28,11 +28,10 @@ internal class JniCallChannel(
     instance: Long
   ): Array<String>
 
-  override fun invoke(
-    encodedArguments: Array<String>
-  ) = invoke(quickJs.context, instance, encodedArguments)
+  override fun call(encodedArguments: Array<String>) =
+    call(quickJs.context, instance, encodedArguments)
 
-  private external fun invoke(
+  private external fun call(
     context: Long,
     instance: Long,
     encodedArguments: Array<String>,

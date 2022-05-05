@@ -61,8 +61,8 @@ internal object GlobalBridge : JsPlatform, CallChannel {
 
   override fun serviceNamesArray() = inboundChannel.serviceNamesArray()
 
-  override fun invoke(encodedArguments: Array<String>) =
-    inboundChannel.invoke(encodedArguments)
+  override fun call(encodedArguments: Array<String>) =
+    inboundChannel.call(encodedArguments)
 
   override fun disconnect(instanceName: String) =
     inboundChannel.disconnect(instanceName)

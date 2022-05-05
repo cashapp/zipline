@@ -41,11 +41,7 @@ class QuickJsInboundChannelJvmTest {
       globalThis.$inboundChannelName = {};
       globalThis.$inboundChannelName.serviceNamesArray = function() {
       };
-      globalThis.$inboundChannelName.invoke = function(instanceName, funName, encodedArguments) {
-      };
-      globalThis.$inboundChannelName.invokeSuspending = function(
-        instanceName, funName, encodedArguments, callbackName
-      ) {
+      globalThis.$inboundChannelName.call = function(instanceName, funName, encodedArguments) {
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
       };

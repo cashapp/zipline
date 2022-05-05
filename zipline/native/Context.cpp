@@ -83,7 +83,7 @@ Context::Context(JNIEnv* env)
       outboundCallChannelClassId(0),
       lengthAtom(JS_NewAtom(jsContext, "length")),
       serviceNamesArrayAtom(JS_NewAtom(jsContext, "serviceNamesArray")),
-      invokeAtom(JS_NewAtom(jsContext, "invoke")),
+      callAtom(JS_NewAtom(jsContext, "call")),
       disconnectAtom(JS_NewAtom(jsContext, "disconnect")),
       booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
       integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
@@ -134,7 +134,7 @@ Context::~Context() {
   env->DeleteGlobalRef(booleanClass);
   JS_FreeAtom(jsContext, lengthAtom);
   JS_FreeAtom(jsContext, serviceNamesArrayAtom);
-  JS_FreeAtom(jsContext, invokeAtom);
+  JS_FreeAtom(jsContext, callAtom);
   JS_FreeAtom(jsContext, disconnectAtom);
   JS_FreeContext(jsContext);
   JS_FreeRuntime(jsRuntime);

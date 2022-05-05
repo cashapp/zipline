@@ -60,18 +60,18 @@ class Endpoint internal constructor(
       return serviceNames.toTypedArray()
     }
 
-    override fun invoke(encodedArguments: Array<String>): Array<String> {
+    override fun call(encodedArguments: Array<String>): Array<String> {
       val inboundCall = InboundCall(encodedArguments)
       val handler = takeHandler(inboundCall.serviceName, inboundCall.funName)
       inboundCall.context = handler.context
 
       return when {
-        inboundCall.callbackName.isNotEmpty() -> invokeSuspending(inboundCall, handler)
-        else -> invoke(inboundCall, handler)
+        inboundCall.callbackName.isNotEmpty() -> callSuspending(inboundCall, handler)
+        else -> call(inboundCall, handler)
       }
     }
 
-    private fun invoke(call: InboundCall, handler: InboundCallHandler): Array<String> {
+    private fun call(call: InboundCall, handler: InboundCallHandler): Array<String> {
       return try {
         handler.call(call)
       } catch (e: Throwable) {
@@ -79,7 +79,7 @@ class Endpoint internal constructor(
       }
     }
 
-    private fun invokeSuspending(call: InboundCall, handler: InboundCallHandler): Array<String> {
+    private fun callSuspending(call: InboundCall, handler: InboundCallHandler): Array<String> {
       val suspendCallbackName = call.callbackName
       val job = scope.launch {
         val result = try {

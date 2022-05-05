@@ -52,15 +52,15 @@ jobjectArray InboundCallChannel::serviceNamesArray(Context *context, JNIEnv* env
   return javaResult;
 }
 
-jobjectArray InboundCallChannel::invoke(Context *context, JNIEnv* env,
-                                        jobjectArray encodedArguments) const {
+jobjectArray InboundCallChannel::call(Context *context, JNIEnv* env,
+                                      jobjectArray encodedArguments) const {
   JSContext *jsContext = context->jsContext;
   JSValue global = JS_GetGlobalObject(jsContext);
   JSValue thisPointer = JS_GetProperty(jsContext, global, nameAtom);
   JSValueConst arguments[1];
   arguments[0] = context->toJsStringArray(env, encodedArguments);
 
-  JSValue jsResult = JS_Invoke(jsContext, thisPointer, context->invokeAtom, 1, arguments);
+  JSValue jsResult = JS_Invoke(jsContext, thisPointer, context->callAtom, 1, arguments);
   jobjectArray javaResult;
   auto tag = JS_VALUE_GET_NORM_TAG(jsResult);
   if (tag == JS_TAG_EXCEPTION) {

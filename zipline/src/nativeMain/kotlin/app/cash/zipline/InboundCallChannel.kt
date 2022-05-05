@@ -49,14 +49,12 @@ internal class InboundCallChannel(
     return kotlinResult
   }
 
-  override fun invoke(
-    encodedArguments: Array<String>,
-  ): Array<String> {
+  override fun call(encodedArguments: Array<String>): Array<String> {
     quickJs.checkNotClosed()
 
     val globalThis = JS_GetGlobalObject(context)
     val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
-    val property = JS_NewAtom(context, "invoke")
+    val property = JS_NewAtom(context, "call")
     val arg0 = with(quickJs) { encodedArguments.toJsValue() }
 
     val jsResult = memScoped {

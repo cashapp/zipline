@@ -42,11 +42,11 @@ class QuickJsOutboundChannelTest {
   }
 
   @Test
-  fun invokeHappyPath() {
-    callChannel.invokeResult += "result one"
-    callChannel.invokeResult += "result two"
-    val invokeResult = quickJs.evaluate("""
-      globalThis.${outboundChannelName}.invoke(
+  fun callHappyPath() {
+    callChannel.callResult += "result one"
+    callChannel.callResult += "result two"
+    val callResult = quickJs.evaluate("""
+      globalThis.${outboundChannelName}.call(
         ['firstArg', 'secondArg']
       );
     """.trimIndent()) as Array<Any>
@@ -55,11 +55,11 @@ class QuickJsOutboundChannelTest {
         "result one",
         "result two",
       ),
-      invokeResult,
+      callResult,
     )
     assertEquals(
       listOf(
-        "invoke(firstArg, secondArg)",
+        "call(firstArg, secondArg)",
       ),
       callChannel.log,
     )

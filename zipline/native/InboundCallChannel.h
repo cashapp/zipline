@@ -29,7 +29,7 @@ public:
   ~InboundCallChannel();
 
   jobjectArray serviceNamesArray(Context* context, JNIEnv*) const;
-  jobjectArray invoke(Context *context, JNIEnv* env, jobjectArray encodedArguments) const;
+  jobjectArray call(Context *context, JNIEnv* env, jobjectArray encodedArguments) const;
   jboolean disconnect(Context *context, JNIEnv* env, jstring instanceName) const;
 
   JSContext *jsContext;
