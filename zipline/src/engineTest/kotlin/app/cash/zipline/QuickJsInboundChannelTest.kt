@@ -81,42 +81,6 @@ class QuickJsInboundChannelTest {
   }
 
   @Test
-  fun invokeSuspendingHappyPath() {
-    quickJs.evaluate("""
-      var callLog = [];
-      globalThis.$inboundChannelName.invoke = function(encodedArguments) {
-        return callLog.pop();
-      };
-      globalThis.$inboundChannelName.invokeSuspending = function(encodedArguments, callbackName) {
-        var call = [
-          'received call to invokeSuspending()',
-          callbackName
-        ];
-        call.push(...encodedArguments);
-        call.push('and the call was successful!');
-        callLog.push(call);
-      };
-    """.trimIndent())
-
-    val inboundChannel = quickJs.getInboundChannel()
-    inboundChannel.invokeSuspending(
-      encodedArguments = arrayOf("firstArg", "secondArg"),
-      suspendCallbackName = "theCallbackName",
-    )
-    val result = inboundChannel.invoke(arrayOf())
-    assertContentEquals(
-      arrayOf(
-        "received call to invokeSuspending()",
-        "theCallbackName",
-        "firstArg",
-        "secondArg",
-        "and the call was successful!",
-      ),
-      result,
-    )
-  }
-
-  @Test
   fun serviceNamesArrayHappyPath() {
     quickJs.evaluate("""
       var callLog = [];

@@ -62,24 +62,30 @@ class Endpoint internal constructor(
 
     override fun invoke(encodedArguments: Array<String>): Array<String> {
       val inboundCall = InboundCall(encodedArguments)
-      val handler = takeHandler(inboundCall.instanceName, inboundCall.funName)
+      val handler = takeHandler(inboundCall.serviceName, inboundCall.funName)
       inboundCall.context = handler.context
-      return try {
-        handler.call(inboundCall)
-      } catch (e: Throwable) {
-        inboundCall.resultException(e)
+
+      return when {
+        inboundCall.callbackName.isNotEmpty() -> invokeSuspending(inboundCall, handler)
+        else -> invoke(inboundCall, handler)
       }
     }
 
-    override fun invokeSuspending(encodedArguments: Array<String>, suspendCallbackName: String) {
-      val inboundCall = InboundCall(encodedArguments)
-      val handler = takeHandler(inboundCall.instanceName, inboundCall.funName)
-      inboundCall.context = handler.context
+    private fun invoke(call: InboundCall, handler: InboundCallHandler): Array<String> {
+      return try {
+        handler.call(call)
+      } catch (e: Throwable) {
+        call.resultException(e)
+      }
+    }
+
+    private fun invokeSuspending(call: InboundCall, handler: InboundCallHandler): Array<String> {
+      val suspendCallbackName = call.callbackName
       val job = scope.launch {
         val result = try {
-          handler.callSuspending(inboundCall)
+          handler.callSuspending(call)
         } catch (e: Exception) {
-          inboundCall.resultException(e)
+          call.resultException(e)
         }
         scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
         val suspendCallback = take<SuspendCallback>(suspendCallbackName)
@@ -95,6 +101,8 @@ class Endpoint internal constructor(
       job.invokeOnCompletion {
         remove(cancelCallbackName)
       }
+
+      return arrayOf()
     }
 
     /**

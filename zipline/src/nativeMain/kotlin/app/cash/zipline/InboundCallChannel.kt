@@ -74,31 +74,6 @@ internal class InboundCallChannel(
     return kotlinResult
   }
 
-  override fun invokeSuspending(
-    encodedArguments: Array<String>,
-    callbackName: String,
-  ) {
-    quickJs.checkNotClosed()
-
-    val globalThis = JS_GetGlobalObject(context)
-    val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
-    val property = JS_NewAtom(context, "invokeSuspending")
-    val arg0 = with(quickJs) { encodedArguments.toJsValue() }
-    val arg1 = JS_NewString(context, callbackName)
-
-    val jsResult = memScoped {
-      val args = allocArrayOf(arg0, arg1)
-      JS_Invoke(context, inboundChannel, property, 2, args)
-    }
-
-    JS_FreeValue(context, jsResult)
-    JS_FreeValue(context, arg1)
-    JS_FreeValue(context, arg0)
-    JS_FreeAtom(context, property)
-    JS_FreeValue(context, inboundChannel)
-    JS_FreeValue(context, globalThis)
-  }
-
   override fun disconnect(instanceName: String): Boolean {
     quickJs.checkNotClosed()
 

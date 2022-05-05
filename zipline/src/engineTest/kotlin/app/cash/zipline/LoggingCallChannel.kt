@@ -36,13 +36,6 @@ class LoggingCallChannel : CallChannel {
     return invokeResult.toTypedArray()
   }
 
-  override fun invokeSuspending(
-    encodedArguments: Array<String>,
-    suspendCallbackName: String
-  ) {
-    log += "invokeSuspending(${encodedArguments.joinToString(", ")}, $suspendCallbackName)"
-  }
-
   override fun disconnect(instanceName: String): Boolean {
     log += "disconnect($instanceName)"
     if (disconnectThrow) throw UnsupportedOperationException("boom!")

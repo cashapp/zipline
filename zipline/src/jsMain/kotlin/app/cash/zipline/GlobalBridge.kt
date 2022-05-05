@@ -64,11 +64,6 @@ internal object GlobalBridge : JsPlatform, CallChannel {
   override fun invoke(encodedArguments: Array<String>) =
     inboundChannel.invoke(encodedArguments)
 
-  override fun invokeSuspending(
-    encodedArguments: Array<String>,
-    callbackName: String
-  ) = inboundChannel.invokeSuspending(encodedArguments, callbackName)
-
   override fun disconnect(instanceName: String) =
     inboundChannel.disconnect(instanceName)
 

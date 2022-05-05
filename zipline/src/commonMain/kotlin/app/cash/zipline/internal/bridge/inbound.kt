@@ -61,29 +61,33 @@ internal class InboundCall(
   val encodedArguments: Array<String>,
 ) {
   internal lateinit var context: InboundBridge.Context
-  internal val instanceName: String
+  internal val serviceName: String
   internal val funName: String
+  internal val callbackName: String
 
   private val arguments = ArrayList<Any?>(encodedArguments.size / 2)
   private var callStartResult: Any? = null
   private var i = 0
 
   init {
-    var skippedArguments = false
-    var instanceName: String? = null
+    var serviceName: String? = null
     var funName: String? = null
+    var callbackName: String? = null
+    var skippedArguments = false
     while (i < encodedArguments.size) {
       when (encodedArguments[i]) {
-        LABEL_SERVICE_NAME -> instanceName = encodedArguments[i + 1]
+        LABEL_SERVICE_NAME -> serviceName = encodedArguments[i + 1]
         LABEL_FUN_NAME -> funName = encodedArguments[i + 1]
+        LABEL_CALLBACK_NAME -> callbackName = encodedArguments[i + 1]
         else -> skippedArguments = true
       }
       i += 2
-      if (instanceName != null && funName != null) break
+      if (serviceName != null && funName != null && callbackName != null) break
     }
 
-    this.instanceName = instanceName!!
+    this.serviceName = serviceName!!
     this.funName = funName!!
+    this.callbackName = callbackName!!
     if (skippedArguments) i = 0
   }
 

@@ -84,7 +84,6 @@ Context::Context(JNIEnv* env)
       lengthAtom(JS_NewAtom(jsContext, "length")),
       serviceNamesArrayAtom(JS_NewAtom(jsContext, "serviceNamesArray")),
       invokeAtom(JS_NewAtom(jsContext, "invoke")),
-      invokeSuspendingAtom(JS_NewAtom(jsContext, "invokeSuspending")),
       disconnectAtom(JS_NewAtom(jsContext, "disconnect")),
       booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
       integerClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Integer")))),
@@ -136,7 +135,6 @@ Context::~Context() {
   JS_FreeAtom(jsContext, lengthAtom);
   JS_FreeAtom(jsContext, serviceNamesArrayAtom);
   JS_FreeAtom(jsContext, invokeAtom);
-  JS_FreeAtom(jsContext, invokeSuspendingAtom);
   JS_FreeAtom(jsContext, disconnectAtom);
   JS_FreeContext(jsContext);
   JS_FreeRuntime(jsRuntime);

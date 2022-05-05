@@ -27,7 +27,7 @@ internal const val outboundChannelName = "app_cash_zipline_outboundChannel"
 
 @PublishedApi
 internal interface CallChannel {
-  /** Returns names can receive calls to [invoke] and [invokeSuspending]. */
+  /** Returns names of services that can receive calls to [invoke]. */
   @JsName("serviceNamesArray")
   fun serviceNamesArray(): Array<String>
 
@@ -38,6 +38,7 @@ internal interface CallChannel {
    *
    *  * Label `s`: the following value is the service name
    *  * Label `f`: the following value is the function name
+   *  * Label `c`: the following value is the callback name
    *  * Label `v`: the following value is a non-null parameter value.
    *  * Label `n`: the following value is an empty string and the parameter value is null.
    *
@@ -46,18 +47,13 @@ internal interface CallChannel {
    *  * Label `v`: the following value is a non-null normal result value.
    *  * Label `n`: the following value is an empty string and the result value is null.
    *  * Label `t`: the following value is a non-null thrown exception value.
+   *
+   * If this function is suspending, the callback name is not empty. This function returns an empty
+   * array and the response is delivered to the [SuspendCallback]. Suspending calls may be canceled
+   * before it returns by using the [CancelCallback].
    */
   @JsName("invoke")
   fun invoke(encodedArguments: Array<String>): Array<String>
-
-  /**
-   * Like [invoke], but the response is delivered to the [SuspendCallback] named
-   * [suspendCallbackName].
-   *
-   * This call is cancelable until it returns. Use a [CancelCallback] to cancel this call.
-   */
-  @JsName("invokeSuspending")
-  fun invokeSuspending(encodedArguments: Array<String>, suspendCallbackName: String)
 
   /**
    * Remove [instanceName] from the receiver. After making this call it is an error to make calls
@@ -74,6 +70,7 @@ internal const val LABEL_NULL = "n"
 internal const val LABEL_EXCEPTION = "t"
 internal const val LABEL_SERVICE_NAME = "s"
 internal const val LABEL_FUN_NAME = "f"
+internal const val LABEL_CALLBACK_NAME = "c"
 
 internal object ThrowableSerializer : KSerializer<Throwable> {
   override val descriptor = PrimitiveSerialDescriptor("ZiplineThrowable", PrimitiveKind.STRING)

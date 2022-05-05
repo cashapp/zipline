@@ -31,7 +31,6 @@ public:
 
   static JSValue serviceNamesArray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
   static JSValue invoke(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
-  static JSValue invokeSuspending(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
   static JSValue disconnect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
 
 private:
@@ -41,7 +40,6 @@ private:
   jclass callChannelClass;
   jmethodID serviceNamesArrayMethod;
   jmethodID invokeMethod;
-  jmethodID invokeSuspendingMethod;
   jmethodID disconnectMethod;
   std::vector<JSCFunctionListEntry> functions;
 };

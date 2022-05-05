@@ -78,10 +78,8 @@ import app.cash.zipline.quickjs.JS_WriteObject
 import app.cash.zipline.quickjs.JsDisconnectFunction
 import app.cash.zipline.quickjs.JsFalse
 import app.cash.zipline.quickjs.JsInvokeFunction
-import app.cash.zipline.quickjs.JsInvokeSuspendingFunction
 import app.cash.zipline.quickjs.JsServiceNamesFunction
 import app.cash.zipline.quickjs.JsTrue
-import app.cash.zipline.quickjs.JsUndefined
 import app.cash.zipline.quickjs.JsValueArrayToInstanceRef
 import app.cash.zipline.quickjs.JsValueGetBool
 import app.cash.zipline.quickjs.JsValueGetFloat64
@@ -331,10 +329,9 @@ actual class QuickJs private constructor(
       val functionList = nativeHeap.allocArrayOf(
         JsServiceNamesFunction(staticCFunction(::outboundServiceNames)),
         JsInvokeFunction(staticCFunction(::outboundInvoke)),
-        JsInvokeSuspendingFunction(staticCFunction(::outboundInvokeSuspending)),
         JsDisconnectFunction(staticCFunction(::outboundDisconnect)),
       )
-      JS_SetPropertyFunctionList(context, jsOutboundCallChannel, functionList, 4)
+      JS_SetPropertyFunctionList(context, jsOutboundCallChannel, functionList, 3)
     } finally {
       JS_FreeAtom(context, propertyName)
       JS_FreeValue(context, globalThis)
@@ -354,14 +351,6 @@ actual class QuickJs private constructor(
     val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as Array<String>
     val result = outboundChannel!!.invoke(arg0)
     return result.toJsValue()
-  }
-
-  internal fun jsOutboundInvokeSuspending(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
-    assert(argc == 2)
-    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as Array<String>
-    val arg1 = JsValueArrayToInstanceRef(argv, 1).toKotlinInstanceOrNull() as String
-    outboundChannel!!.invokeSuspending(arg0, arg1)
-    return JsUndefined()
   }
 
   internal fun jsOutboundDisconnect(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
@@ -493,22 +482,6 @@ internal fun outboundInvoke(
   val quickJs = JS_GetRuntimeOpaque(JS_GetRuntime(context))!!.asStableRef<QuickJs>().get()
   return try {
     quickJs.jsOutboundInvoke(argc, argv)
-  } catch (t: Throwable) {
-    t.printStackTrace() // TODO throw to JS return null
-    throw t
-  }
-}
-
-@Suppress("UNUSED_PARAMETER") // API shape mandated by QuickJs.
-internal fun outboundInvokeSuspending(
-  context: CPointer<JSContext>,
-  thisVal: CValue<JSValue>,
-  argc: Int,
-  argv: CArrayPointer<JSValue>,
-): CValue<JSValue> {
-  val quickJs = JS_GetRuntimeOpaque(JS_GetRuntime(context))!!.asStableRef<QuickJs>().get()
-  return try {
-    quickJs.jsOutboundInvokeSuspending(argc, argv)
   } catch (t: Throwable) {
     t.printStackTrace() // TODO throw to JS return null
     throw t

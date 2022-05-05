@@ -68,7 +68,7 @@ internal class OutboundCall(
   private val parameterCount: Int,
 ) {
   private val arguments = ArrayList<Any?>(parameterCount)
-  private val encodedArguments = ArrayList<String>(4 + (parameterCount * 2))
+  private val encodedArguments = ArrayList<String>(6 + (parameterCount * 2))
   private var callCount = 0
 
   init {
@@ -76,6 +76,8 @@ internal class OutboundCall(
     encodedArguments += instanceName
     encodedArguments += LABEL_FUN_NAME
     encodedArguments += funName
+    encodedArguments += LABEL_CALLBACK_NAME
+    encodedArguments += ""
   }
 
   fun <T> parameter(serializer: KSerializer<T>, value: T) {
@@ -101,33 +103,35 @@ internal class OutboundCall(
   }
 
   @PublishedApi
-  internal suspend fun <R> invokeSuspending(service: ZiplineService, serializer: KSerializer<R>): R {
+  internal suspend fun <R> invokeSuspending(
+    service: ZiplineService,
+    serializer: KSerializer<R>,
+  ): R {
     require(callCount++ == parameterCount)
     val callStartResult = endpoint.eventListener.callStart(instanceName, service, funName, arguments)
     return suspendCancellableCoroutine { continuation ->
       context.endpoint.incompleteContinuations += continuation
       context.endpoint.scope.launch {
-        val suspendCallbackName = endpoint.generateName(prefix = ziplineInternalPrefix)
+        val callbackName = endpoint.generateName(prefix = ziplineInternalPrefix)
+        encodedArguments[encodedArguments.indexOf(LABEL_CALLBACK_NAME) + 1] = callbackName
+
         val suspendCallback = RealSuspendCallback(
           service = service,
-          suspendCallbackName = suspendCallbackName,
+          suspendCallbackName = callbackName,
           continuation = continuation,
           serializer = serializer,
           callStartResult = callStartResult,
         )
-        endpoint.bind<SuspendCallback>(suspendCallbackName, suspendCallback)
+        endpoint.bind<SuspendCallback>(callbackName, suspendCallback)
 
         continuation.invokeOnCancellation {
           if (suspendCallback.completed) return@invokeOnCancellation
-          val cancelCallbackName = endpoint.cancelCallbackName(suspendCallbackName)
+          val cancelCallbackName = endpoint.cancelCallbackName(callbackName)
           val cancelCallback = endpoint.take<CancelCallback>(cancelCallbackName)
           cancelCallback.cancel()
         }
 
-        endpoint.outboundChannel.invokeSuspending(
-          encodedArguments.toTypedArray(),
-          suspendCallbackName
-        )
+        endpoint.outboundChannel.invoke(encodedArguments.toTypedArray())
       }
     }
   }

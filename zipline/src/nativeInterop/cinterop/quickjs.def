@@ -43,12 +43,7 @@ static inline JSCFunctionListEntry JsServiceNamesFunction(void *func) {
 }
 
 static inline JSCFunctionListEntry JsInvokeFunction(void *func) {
-  JSCFunctionListEntry entry = JS_CFUNC_DEF("invoke", 3, func);
-  return entry;
-}
-
-static inline JSCFunctionListEntry JsInvokeSuspendingFunction(void *func) {
-  JSCFunctionListEntry entry = JS_CFUNC_DEF("invokeSuspending", 4, func);
+  JSCFunctionListEntry entry = JS_CFUNC_DEF("invoke", 1, func);
   return entry;
 }
 

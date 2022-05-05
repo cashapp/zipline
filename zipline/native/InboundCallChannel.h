@@ -30,7 +30,6 @@ public:
 
   jobjectArray serviceNamesArray(Context* context, JNIEnv*) const;
   jobjectArray invoke(Context *context, JNIEnv* env, jobjectArray encodedArguments) const;
-  void invokeSuspending(Context *context, JNIEnv* env, jobjectArray encodedArguments, jstring callbackName) const;
   jboolean disconnect(Context *context, JNIEnv* env, jstring instanceName) const;
 
   JSContext *jsContext;

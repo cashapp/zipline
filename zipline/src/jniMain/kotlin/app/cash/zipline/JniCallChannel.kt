@@ -38,18 +38,6 @@ internal class JniCallChannel(
     encodedArguments: Array<String>,
   ): Array<String>
 
-  override fun invokeSuspending(
-    encodedArguments: Array<String>,
-    suspendCallbackName: String
-  ) = invokeSuspending(quickJs.context, instance, encodedArguments, suspendCallbackName)
-
-  private external fun invokeSuspending(
-    context: Long,
-    instance: Long,
-    encodedArguments: Array<String>,
-    callbackName: String,
-  )
-
   override fun disconnect(instanceName: String): Boolean =
     disconnect(quickJs.context, instance, instanceName)
 

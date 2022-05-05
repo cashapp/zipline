@@ -80,32 +80,6 @@ jobjectArray InboundCallChannel::invoke(Context *context, JNIEnv* env,
   return javaResult;
 }
 
-void InboundCallChannel::invokeSuspending(Context *context, JNIEnv* env,
-                                          jobjectArray encodedArguments,
-                                          jstring callbackName) const {
-  JSContext *jsContext = context->jsContext;
-  JSValue global = JS_GetGlobalObject(jsContext);
-  JSValue thisPointer = JS_GetProperty(jsContext, global, nameAtom);
-  JSValueConst arguments[2];
-  arguments[0] = context->toJsStringArray(env, encodedArguments);
-  arguments[1] = context->toJsString(env, callbackName);
-
-  JSValue jsResult = JS_Invoke(jsContext, thisPointer, context->invokeSuspendingAtom, 2, arguments);
-  auto tag = JS_VALUE_GET_NORM_TAG(jsResult);
-  if (tag == JS_TAG_EXCEPTION) {
-    context->throwJsException(env, jsResult);
-  } else if (tag == JS_TAG_UNDEFINED) {
-    // Expected. Do nothing.
-  } else {
-    assert(false); // Unexpected tag.
-  }
-
-  JS_FreeValue(jsContext, arguments[0]);
-  JS_FreeValue(jsContext, arguments[1]);
-  JS_FreeValue(jsContext, thisPointer);
-  JS_FreeValue(jsContext, global);
-}
-
 jboolean InboundCallChannel::disconnect(Context *context, JNIEnv* env, jstring instanceName) const {
   JSContext *jsContext = context->jsContext;
   JSValue global = JS_GetGlobalObject(jsContext);

@@ -64,7 +64,6 @@ public:
   JSAtom lengthAtom;
   JSAtom serviceNamesArrayAtom;
   JSAtom invokeAtom;
-  JSAtom invokeSuspendingAtom;
   JSAtom disconnectAtom;
   jclass booleanClass;
   jclass integerClass;

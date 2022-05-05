@@ -66,21 +66,6 @@ class QuickJsOutboundChannelTest {
   }
 
   @Test
-  fun invokeSuspendingHappyPath() {
-    quickJs.evaluate("""
-      globalThis.${outboundChannelName}.invokeSuspending(
-        ['firstArg', 'secondArg'], 'theCallbackName'
-      );
-    """.trimIndent())
-    assertEquals(
-      listOf(
-        "invokeSuspending(firstArg, secondArg, theCallbackName)",
-      ),
-      callChannel.log,
-    )
-  }
-
-  @Test
   fun serviceNamesArrayHappyPath() {
     callChannel.serviceNamesResult += "service one"
     callChannel.serviceNamesResult += "service two"
