@@ -53,29 +53,16 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
       }
 
       override fun invoke(
-        instanceName: String,
-        funName: String,
         encodedArguments: Array<String>
       ): Array<String> {
-        return jsOutboundChannel.invoke(
-          instanceName,
-          funName,
-          encodedArguments
-        )
+        return jsOutboundChannel.invoke(encodedArguments)
       }
 
       override fun invokeSuspending(
-        instanceName: String,
-        funName: String,
         encodedArguments: Array<String>,
         callbackName: String
       ) {
-        return jsOutboundChannel.invokeSuspending(
-          instanceName,
-          funName,
-          encodedArguments,
-          callbackName
-        )
+        return jsOutboundChannel.invokeSuspending(encodedArguments, callbackName)
       }
 
       override fun disconnect(instanceName: String): Boolean {

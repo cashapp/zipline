@@ -36,6 +36,8 @@ internal interface CallChannel {
    *
    * The structure of [encodedArguments] is a series of alternating label/value pairs.
    *
+   *  * Label `s`: the following value is the service name
+   *  * Label `f`: the following value is the function name
    *  * Label `v`: the following value is a non-null parameter value.
    *  * Label `n`: the following value is an empty string and the parameter value is null.
    *
@@ -46,11 +48,7 @@ internal interface CallChannel {
    *  * Label `t`: the following value is a non-null thrown exception value.
    */
   @JsName("invoke")
-  fun invoke(
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>,
-  ): Array<String>
+  fun invoke(encodedArguments: Array<String>): Array<String>
 
   /**
    * Like [invoke], but the response is delivered to the [SuspendCallback] named
@@ -59,12 +57,7 @@ internal interface CallChannel {
    * This call is cancelable until it returns. Use a [CancelCallback] to cancel this call.
    */
   @JsName("invokeSuspending")
-  fun invokeSuspending(
-    instanceName: String,
-    funName: String,
-    encodedArguments: Array<String>,
-    suspendCallbackName: String,
-  )
+  fun invokeSuspending(encodedArguments: Array<String>, suspendCallbackName: String)
 
   /**
    * Remove [instanceName] from the receiver. After making this call it is an error to make calls
@@ -79,6 +72,8 @@ internal interface CallChannel {
 internal const val LABEL_VALUE = "v"
 internal const val LABEL_NULL = "n"
 internal const val LABEL_EXCEPTION = "t"
+internal const val LABEL_SERVICE_NAME = "s"
+internal const val LABEL_FUN_NAME = "f"
 
 internal object ThrowableSerializer : KSerializer<Throwable> {
   override val descriptor = PrimitiveSerialDescriptor("ZiplineThrowable", PrimitiveKind.STRING)

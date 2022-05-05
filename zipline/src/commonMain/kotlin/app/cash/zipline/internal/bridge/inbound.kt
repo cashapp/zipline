@@ -58,13 +58,34 @@ internal interface InboundCallHandler {
  */
 @PublishedApi
 internal class InboundCall(
-  private val context: InboundBridge.Context,
-  val funName: String,
   val encodedArguments: Array<String>,
 ) {
+  internal lateinit var context: InboundBridge.Context
+  internal val instanceName: String
+  internal val funName: String
+
   private val arguments = ArrayList<Any?>(encodedArguments.size / 2)
   private var callStartResult: Any? = null
   private var i = 0
+
+  init {
+    var skippedArguments = false
+    var instanceName: String? = null
+    var funName: String? = null
+    while (i < encodedArguments.size) {
+      when (encodedArguments[i]) {
+        LABEL_SERVICE_NAME -> instanceName = encodedArguments[i + 1]
+        LABEL_FUN_NAME -> funName = encodedArguments[i + 1]
+        else -> skippedArguments = true
+      }
+      i += 2
+      if (instanceName != null && funName != null) break
+    }
+
+    this.instanceName = instanceName!!
+    this.funName = funName!!
+    if (skippedArguments) i = 0
+  }
 
   fun <T> parameter(serializer: KSerializer<T>): T {
     while (i < encodedArguments.size) {

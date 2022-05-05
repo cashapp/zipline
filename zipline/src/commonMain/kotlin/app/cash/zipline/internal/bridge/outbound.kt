@@ -68,8 +68,15 @@ internal class OutboundCall(
   private val parameterCount: Int,
 ) {
   private val arguments = ArrayList<Any?>(parameterCount)
-  private val encodedArguments = ArrayList<String>(parameterCount * 2)
+  private val encodedArguments = ArrayList<String>(4 + (parameterCount * 2))
   private var callCount = 0
+
+  init {
+    encodedArguments += LABEL_SERVICE_NAME
+    encodedArguments += instanceName
+    encodedArguments += LABEL_FUN_NAME
+    encodedArguments += funName
+  }
 
   fun <T> parameter(serializer: KSerializer<T>, value: T) {
     require(callCount++ < parameterCount)
@@ -86,11 +93,7 @@ internal class OutboundCall(
   fun <R> invoke(service: ZiplineService, serializer: KSerializer<R>): R {
     require(callCount++ == parameterCount)
     val callStartResult = endpoint.eventListener.callStart(instanceName, service, funName, arguments)
-    val encodedResult = endpoint.outboundChannel.invoke(
-      instanceName,
-      funName,
-      encodedArguments.toTypedArray()
-    )
+    val encodedResult = endpoint.outboundChannel.invoke(encodedArguments.toTypedArray())
 
     val result = encodedResult.decodeResult(serializer)
     endpoint.eventListener.callEnd(instanceName, service, funName, arguments, result, callStartResult)
@@ -122,8 +125,6 @@ internal class OutboundCall(
         }
 
         endpoint.outboundChannel.invokeSuspending(
-          instanceName,
-          funName,
           encodedArguments.toTypedArray(),
           suspendCallbackName
         )

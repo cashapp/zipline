@@ -350,21 +350,17 @@ actual class QuickJs private constructor(
   }
 
   internal fun jsOutboundInvoke(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
-    assert(argc == 3)
-    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as String
-    val arg1 = JsValueArrayToInstanceRef(argv, 1).toKotlinInstanceOrNull() as String
-    val arg2 = JsValueArrayToInstanceRef(argv, 2).toKotlinInstanceOrNull() as Array<String>
-    val result = outboundChannel!!.invoke(arg0, arg1, arg2)
+    assert(argc == 1)
+    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as Array<String>
+    val result = outboundChannel!!.invoke(arg0)
     return result.toJsValue()
   }
 
   internal fun jsOutboundInvokeSuspending(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
-    assert(argc == 4)
-    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as String
+    assert(argc == 2)
+    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as Array<String>
     val arg1 = JsValueArrayToInstanceRef(argv, 1).toKotlinInstanceOrNull() as String
-    val arg2 = JsValueArrayToInstanceRef(argv, 2).toKotlinInstanceOrNull() as Array<String>
-    val arg3 = JsValueArrayToInstanceRef(argv, 3).toKotlinInstanceOrNull() as String
-    outboundChannel!!.invokeSuspending(arg0, arg1, arg2, arg3)
+    outboundChannel!!.invokeSuspending(arg0, arg1)
     return JsUndefined()
   }
 

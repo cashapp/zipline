@@ -36,22 +36,16 @@ internal fun newEndpointPair(
       }
 
       override fun invoke(
-        instanceName: String,
-        funName: String,
         encodedArguments: Array<String>
       ): Array<String> {
-        return b.inboundChannel.invoke(instanceName, funName, encodedArguments)
+        return b.inboundChannel.invoke(encodedArguments)
       }
 
       override fun invokeSuspending(
-        instanceName: String,
-        funName: String,
         encodedArguments: Array<String>,
         suspendCallbackName: String
       ) {
-        return b.inboundChannel.invokeSuspending(
-          instanceName, funName, encodedArguments, suspendCallbackName
-        )
+        return b.inboundChannel.invokeSuspending(encodedArguments, suspendCallbackName)
       }
 
       override fun disconnect(instanceName: String): Boolean {

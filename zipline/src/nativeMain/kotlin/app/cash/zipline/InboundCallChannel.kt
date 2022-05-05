@@ -50,8 +50,6 @@ internal class InboundCallChannel(
   }
 
   override fun invoke(
-    instanceName: String,
-    funName: String,
     encodedArguments: Array<String>,
   ): Array<String> {
     quickJs.checkNotClosed()
@@ -59,19 +57,15 @@ internal class InboundCallChannel(
     val globalThis = JS_GetGlobalObject(context)
     val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
     val property = JS_NewAtom(context, "invoke")
-    val arg0 = JS_NewString(context, instanceName)
-    val arg1 = JS_NewString(context, funName)
-    val arg2 = with(quickJs) { encodedArguments.toJsValue() }
+    val arg0 = with(quickJs) { encodedArguments.toJsValue() }
 
     val jsResult = memScoped {
-      val args = allocArrayOf(arg0, arg1, arg2)
-      JS_Invoke(context, inboundChannel, property, 3, args)
+      val args = allocArrayOf(arg0)
+      JS_Invoke(context, inboundChannel, property, 1, args)
     }
     val kotlinResult = with(quickJs) { jsResult.toKotlinInstanceOrNull() } as Array<String>
 
     JS_FreeValue(context, jsResult)
-    JS_FreeValue(context, arg2)
-    JS_FreeValue(context, arg1)
     JS_FreeValue(context, arg0)
     JS_FreeAtom(context, property)
     JS_FreeValue(context, inboundChannel)
@@ -81,8 +75,6 @@ internal class InboundCallChannel(
   }
 
   override fun invokeSuspending(
-    instanceName: String,
-    funName: String,
     encodedArguments: Array<String>,
     callbackName: String,
   ) {
@@ -91,19 +83,15 @@ internal class InboundCallChannel(
     val globalThis = JS_GetGlobalObject(context)
     val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
     val property = JS_NewAtom(context, "invokeSuspending")
-    val arg0 = JS_NewString(context, instanceName)
-    val arg1 = JS_NewString(context, funName)
-    val arg2 = with(quickJs) { encodedArguments.toJsValue() }
-    val arg3 = JS_NewString(context, callbackName)
+    val arg0 = with(quickJs) { encodedArguments.toJsValue() }
+    val arg1 = JS_NewString(context, callbackName)
 
     val jsResult = memScoped {
-      val args = allocArrayOf(arg0, arg1, arg2, arg3)
-      JS_Invoke(context, inboundChannel, property, 4, args)
+      val args = allocArrayOf(arg0, arg1)
+      JS_Invoke(context, inboundChannel, property, 2, args)
     }
 
     JS_FreeValue(context, jsResult)
-    JS_FreeValue(context, arg3)
-    JS_FreeValue(context, arg2)
     JS_FreeValue(context, arg1)
     JS_FreeValue(context, arg0)
     JS_FreeAtom(context, property)

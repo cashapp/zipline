@@ -170,8 +170,7 @@ Java_app_cash_zipline_JniCallChannel_serviceNamesArray(JNIEnv* env, jobject thiz
 
 extern "C" JNIEXPORT jobjectArray JNICALL
 Java_app_cash_zipline_JniCallChannel_invoke(JNIEnv* env, jobject thiz, jlong _context,
-                                            jlong instance, jstring instanceName, jstring funName,
-                                            jobjectArray encodedArguments) {
+                                            jlong instance, jobjectArray encodedArguments) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
@@ -184,13 +183,12 @@ Java_app_cash_zipline_JniCallChannel_invoke(JNIEnv* env, jobject thiz, jlong _co
     return nullptr;
   }
 
-  return channel->invoke(context, env, instanceName, funName, encodedArguments);
+  return channel->invoke(context, env, encodedArguments);
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_app_cash_zipline_JniCallChannel_invokeSuspending(JNIEnv* env, jobject thiz, jlong _context,
-                                                      jlong instance, jstring instanceName,
-                                                      jstring funName, jobjectArray encodedArguments,
+                                                      jlong instance, jobjectArray encodedArguments,
                                                       jstring callbackName) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
@@ -204,7 +202,7 @@ Java_app_cash_zipline_JniCallChannel_invokeSuspending(JNIEnv* env, jobject thiz,
     return;
   }
 
-  channel->invokeSuspending(context, env, instanceName, funName, encodedArguments, callbackName);
+  channel->invokeSuspending(context, env, encodedArguments, callbackName);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL

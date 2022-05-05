@@ -60,13 +60,10 @@ class Endpoint internal constructor(
       return serviceNames.toTypedArray()
     }
 
-    override fun invoke(
-      instanceName: String,
-      funName: String,
-      encodedArguments: Array<String>
-    ): Array<String> {
-      val handler = takeHandler(instanceName, funName)
-      val inboundCall = InboundCall(handler.context, funName, encodedArguments)
+    override fun invoke(encodedArguments: Array<String>): Array<String> {
+      val inboundCall = InboundCall(encodedArguments)
+      val handler = takeHandler(inboundCall.instanceName, inboundCall.funName)
+      inboundCall.context = handler.context
       return try {
         handler.call(inboundCall)
       } catch (e: Throwable) {
@@ -74,15 +71,11 @@ class Endpoint internal constructor(
       }
     }
 
-    override fun invokeSuspending(
-      instanceName: String,
-      funName: String,
-      encodedArguments: Array<String>,
-      suspendCallbackName: String
-    ) {
-      val handler = takeHandler(instanceName, funName)
+    override fun invokeSuspending(encodedArguments: Array<String>, suspendCallbackName: String) {
+      val inboundCall = InboundCall(encodedArguments)
+      val handler = takeHandler(inboundCall.instanceName, inboundCall.funName)
+      inboundCall.context = handler.context
       val job = scope.launch {
-        val inboundCall = InboundCall(handler.context, funName, encodedArguments)
         val result = try {
           handler.callSuspending(inboundCall)
         } catch (e: Exception) {

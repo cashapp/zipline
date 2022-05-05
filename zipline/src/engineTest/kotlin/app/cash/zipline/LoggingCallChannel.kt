@@ -30,22 +30,17 @@ class LoggingCallChannel : CallChannel {
   }
 
   override fun invoke(
-    instanceName: String,
-    funName: String,
     encodedArguments: Array<String>
   ): Array<String> {
-    log += "invoke($instanceName, $funName, [${encodedArguments.joinToString(", ")}])"
+    log += "invoke(${encodedArguments.joinToString(", ")})"
     return invokeResult.toTypedArray()
   }
 
   override fun invokeSuspending(
-    instanceName: String,
-    funName: String,
     encodedArguments: Array<String>,
     suspendCallbackName: String
   ) {
-    log += "invokeSuspending($instanceName, $funName, " +
-      "[${encodedArguments.joinToString(", ")}], $suspendCallbackName)"
+    log += "invokeSuspending(${encodedArguments.joinToString(", ")}, $suspendCallbackName)"
   }
 
   override fun disconnect(instanceName: String): Boolean {

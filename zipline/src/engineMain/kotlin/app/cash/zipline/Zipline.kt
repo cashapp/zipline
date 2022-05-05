@@ -22,8 +22,8 @@ import app.cash.zipline.internal.DEFINE_JS
 import app.cash.zipline.internal.EventListenerService
 import app.cash.zipline.internal.EventLoop
 import app.cash.zipline.internal.HostConsole
-import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.HostEventListenerService
+import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
@@ -62,28 +62,17 @@ actual class Zipline private constructor(
         return jsInboundBridge.serviceNamesArray()
       }
 
-      override fun invoke(
-        instanceName: String,
-        funName: String,
-        encodedArguments: Array<String>
-      ): Array<String> {
+      override fun invoke(encodedArguments: Array<String>): Array<String> {
         check(scope.isActive) { "Zipline closed" }
-        return jsInboundBridge.invoke(instanceName, funName, encodedArguments)
+        return jsInboundBridge.invoke(encodedArguments)
       }
 
       override fun invokeSuspending(
-        instanceName: String,
-        funName: String,
         encodedArguments: Array<String>,
         suspendCallbackName: String
       ) {
         check(scope.isActive) { "Zipline closed" }
-        return jsInboundBridge.invokeSuspending(
-          instanceName,
-          funName,
-          encodedArguments,
-          suspendCallbackName
-        )
+        return jsInboundBridge.invokeSuspending(encodedArguments, suspendCallbackName)
       }
 
       override fun disconnect(instanceName: String): Boolean {
