@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.loader.fetcher
 
+import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
+import app.cash.zipline.loader.ZiplineManifest
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
@@ -27,12 +29,13 @@ class FsEmbeddedFetcher(
   private val embeddedFileSystem: FileSystem,
 ) : Fetcher {
   override suspend fun fetch(
-    id: String,
+    applicationId: String,
     sha256: ByteString,
     url: String,
-    fileNameOverride: String?
+    manifestForApplicationId: String?
   ): ByteString? {
-    val filePath = embeddedDir / (fileNameOverride ?: sha256.hex())
+    val applicationManifestFileName: String? = getApplicationManifestFileName(manifestForApplicationId)
+    val filePath = embeddedDir / (applicationManifestFileName ?: sha256.hex())
     return when {
       embeddedFileSystem.exists(filePath) -> {
         embeddedFileSystem.read(filePath) {
@@ -44,4 +47,10 @@ class FsEmbeddedFetcher(
       }
     }
   }
+
+  override suspend fun pin(
+    applicationId: String,
+    manifest: ZiplineManifest,
+    manifestByteString: ByteString
+  ): Boolean = false
 }

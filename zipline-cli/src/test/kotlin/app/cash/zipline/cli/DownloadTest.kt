@@ -16,7 +16,7 @@
 package app.cash.zipline.cli
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
+import app.cash.zipline.loader.ZiplineLoader.Companion.APPLICATION_MANIFEST_FILE_NAME_SUFFIX
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -114,7 +114,7 @@ class DownloadTest {
 
     // Check that files were downloaded
     assertTrue(fileSystem.exists(TMP_DIR_PATH))
-    assertTrue(fileSystem.exists(TMP_DIR_PATH / PREBUILT_MANIFEST_FILE_NAME))
+    assertTrue(fileSystem.exists(TMP_DIR_PATH / APPLICATION_MANIFEST_FILE_NAME_SUFFIX))
     assertTrue(fileSystem.exists(TMP_DIR_PATH / testFixtures.alphaSha256Hex))
   }
 

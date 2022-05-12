@@ -62,13 +62,33 @@ class ZiplineCache internal constructor(
   private val maxSizeInBytes: Long,
   private val nowMs: () -> Long,
 ) {
+  fun writeManifest(applicationId: String, sha256: ByteString, content: ByteString) {
+    val metadata = openForWrite(sha256, applicationId) ?: return
+    write(metadata, content)
+  }
+
   fun write(sha256: ByteString, content: ByteString) {
-    val metadata = openForWrite(sha256) ?: return
+    val metadata = openForWrite(sha256, null) ?: return
+    write(metadata, content)
+  }
+
+  private fun write(metadata: Files, content: ByteString) {
     fileSystem.createDirectories(directory)
     fileSystem.write(path(metadata)) {
       write(content)
     }
     setReady(metadata, content.size.toLong())
+  }
+
+  suspend fun getPinnedManifestByteString(applicationId: String): ByteString {
+    val manifestFile = database.filesQueries.selectPinnedManifest(applicationId).executeAsOneOrNull()
+      ?: throw IllegalArgumentException("No pinned manifest for [applicationId=$applicationId]")
+    return read(manifestFile.sha256_hex)
+      ?: throw FileNotFoundException("No manifest file on disk with [fileName=${manifestFile.sha256_hex}]")
+  }
+
+  fun pinManifest(applicationId: String, manifest: ZiplineManifest, manifestByteString: ByteString): Boolean {
+    TODO("iterate over modules and pin all module shas and the manifest in a single db transaction")
   }
 
   /**
@@ -89,11 +109,15 @@ class ZiplineCache internal constructor(
 
   fun read(
     sha256: ByteString
+  ) = read(sha256.hex())
+
+  fun read(
+    sha256hex: String
   ): ByteString? {
-    val metadata = database.cacheQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
+    val metadata = database.filesQueries.get(sha256hex).executeAsOneOrNull() ?: return null
     if (metadata.file_state != FileState.READY) return null
     // Update the used at timestamp
-    database.cacheQueries.update(
+    database.filesQueries.update(
       id = metadata.id,
       file_state = metadata.file_state,
       size_bytes = metadata.size_bytes,
@@ -108,16 +132,22 @@ class ZiplineCache internal constructor(
     }
   }
 
+
+
   /**
    * Returns file metadata if the file was absent and is now `DIRTY`. The caller is now the exclusive owner of this file
    * and should proceed to write the file to the file system.
+   *
+   * @param manifestForApplicationName set to the application id for only manifest files
    */
   private fun openForWrite(
     sha256: ByteString,
+    manifestForApplicationName: String?,
   ): Files? = try {
     // Go from absent to DIRTY.
-    database.cacheQueries.insert(
+    database.filesQueries.insert(
       sha256_hex = sha256.hex(),
+      manifest_for_application_name = manifestForApplicationName,
       file_state = FileState.DIRTY,
       size_bytes = 0L,
       last_used_at_epoch_ms = nowMs()
@@ -146,7 +176,7 @@ class ZiplineCache internal constructor(
         "file ${metadata.sha256_hex} was not DIRTY ... multiple processes sharing a cache?"
       }
 
-      database.cacheQueries.update(
+      database.filesQueries.update(
         id = metadata.id,
         file_state = FileState.READY,
         size_bytes = fileSizeBytes,
@@ -167,17 +197,17 @@ class ZiplineCache internal constructor(
       require(getOrNull(metadata.id)?.file_state == FileState.DIRTY) {
         "file ${metadata.id} was not DIRTY ... multiple processes sharing a cache?"
       }
-      database.cacheQueries.delete(metadata.id)
+      database.filesQueries.delete(metadata.id)
     }
   }
 
   private fun getOrNull(
     sha256: ByteString
-  ): Files? = database.cacheQueries.get(sha256.hex()).executeAsOneOrNull()
+  ): Files? = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()
 
   private fun getOrNull(
     id: Long
-  ): Files? = database.cacheQueries.getById(id).executeAsOneOrNull()
+  ): Files? = database.filesQueries.getById(id).executeAsOneOrNull()
 
   /**
    * Prune should be called on app boot to take into account any in-flight failed downloads or limit changes.
@@ -191,13 +221,13 @@ class ZiplineCache internal constructor(
    */
   internal fun prune() {
     while (true) {
-      val currentSize = database.cacheQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
+      val currentSize = database.filesQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
       if (currentSize <= maxSizeInBytes) return
 
-      val toDelete = database.cacheQueries.selectOldestReady().executeAsOneOrNull() ?: return
+      val toDelete = database.filesQueries.selectOldestReady().executeAsOneOrNull() ?: return
 
       fileSystem.delete(path(toDelete))
-      database.cacheQueries.delete(toDelete.id)
+      database.filesQueries.delete(toDelete.id)
     }
   }
 

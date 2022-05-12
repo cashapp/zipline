@@ -40,10 +40,10 @@ class FetcherTest {
 
   private val fetcherAlpha = object : Fetcher {
     override suspend fun fetch(
-      id: String,
+      applicationId: String,
       sha256: ByteString,
       url: String,
-      fileNameOverride: String?
+      id: String?
     ): ByteString? {
       alphaFetcherIds.add(id)
       return null
@@ -51,10 +51,10 @@ class FetcherTest {
   }
   private val fetcherBravo = object : Fetcher {
     override suspend fun fetch(
-      id: String,
+      applicationId: String,
       sha256: ByteString,
       url: String,
-      fileNameOverride: String?
+      id: String?
     ): ByteString? {
       bravoFetcherIds.add(id)
       return bravoByteString
@@ -82,18 +82,16 @@ class FetcherTest {
   fun fetcherRunsInOrder(): Unit = runBlocking {
     val fetchers = listOf(fetcherAlpha, fetcherBravo)
     val actualByteString = fetchers.fetch(
-      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-      id = "alpha",
+      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,,
       sha256 = "alpha".encodeUtf8().sha256(),
-      url = "alpha",
-      fileNameOverride = null,
+      url = "alpha",,
+      manifestForApplicationId = "alpha"
     )
     fetchers.fetch(
-      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-      id = "bravo",
+      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,,
       sha256 = "bravo".encodeUtf8().sha256(),
-      url = "bravo",
-      fileNameOverride = null,
+      url = "bravo",,
+      manifestForApplicationId = "bravo"
     )
     assertEquals(bravoByteString, actualByteString)
 

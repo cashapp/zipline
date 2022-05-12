@@ -17,7 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
+import app.cash.zipline.loader.ZiplineLoader.Companion.APPLICATION_MANIFEST_FILE_NAME_SUFFIX
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
@@ -177,7 +177,7 @@ class ZiplineLoaderTest {
   fun loaderUsesResourcesForPrebuiltManifestWhenNetworkOffline(): Unit = runBlocking(dispatcher) {
     // seed the embedded FS with zipline manifest and files
     embeddedFileSystem.createDirectories(embeddedDir)
-    embeddedFileSystem.write(embeddedDir / PREBUILT_MANIFEST_FILE_NAME) {
+    embeddedFileSystem.write(embeddedDir / APPLICATION_MANIFEST_FILE_NAME_SUFFIX) {
       write(testFixtures.manifestByteString)
     }
     embeddedFileSystem.write(embeddedDir / testFixtures.alphaSha256Hex) {
@@ -211,7 +211,7 @@ class ZiplineLoaderTest {
       httpClient = httpClient,
     )
 
-    assertFalse(downloadFileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))
+    assertFalse(downloadFileSystem.exists(downloadDir / APPLICATION_MANIFEST_FILE_NAME_SUFFIX))
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
 
@@ -224,7 +224,7 @@ class ZiplineLoaderTest {
 
     assertEquals(
       testFixtures.manifestByteString,
-      downloadFileSystem.read(downloadDir / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+      downloadFileSystem.read(downloadDir / APPLICATION_MANIFEST_FILE_NAME_SUFFIX) { readByteString() })
     assertTrue(downloadFileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertEquals(
       testFixtures.alphaByteString,
@@ -262,7 +262,7 @@ class ZiplineLoaderTest {
     val fileSystem = FakeFileSystem()
     val downloadDir = "/zipline/download".toPath()
 
-    assertFalse(fileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))
+    assertFalse(fileSystem.exists(downloadDir / APPLICATION_MANIFEST_FILE_NAME_SUFFIX))
     assertFalse(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertFalse(fileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
 
@@ -275,10 +275,10 @@ class ZiplineLoaderTest {
     loader.download(downloadDir, fileSystem, testFixtures.manifest)
 
     // check that files have been downloaded to downloadDir as expected
-    assertTrue(fileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))
+    assertTrue(fileSystem.exists(downloadDir / APPLICATION_MANIFEST_FILE_NAME_SUFFIX))
     assertEquals(
       testFixtures.manifestByteString,
-      fileSystem.read(downloadDir / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+      fileSystem.read(downloadDir / APPLICATION_MANIFEST_FILE_NAME_SUFFIX) { readByteString() })
     assertTrue(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertEquals(
       testFixtures.alphaByteString,
