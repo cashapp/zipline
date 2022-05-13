@@ -37,6 +37,6 @@ class FsCachingFetcher(
     delegate.fetch(applicationId, sha256, url, manifestForApplicationId)!!
   }
 
-  override suspend fun pin(applicationId: String, manifest: ZiplineManifest, manifestByteString: ByteString): Boolean =
-    cache.pinManifest(applicationId, manifest, manifestByteString)
+  override suspend fun pin(applicationId: String, manifest: ZiplineManifest): Boolean =
+    cache.pinManifest(applicationId, manifest)
 }

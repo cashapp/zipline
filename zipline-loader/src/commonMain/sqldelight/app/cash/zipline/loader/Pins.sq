@@ -1,17 +1,17 @@
 CREATE TABLE pins (
   file_id INTEGER NOT NULL,
-  application_name TEXT NOT NULL
+  application_id TEXT NOT NULL
 );
 
-CREATE UNIQUE INDEX pins_file_id_application_name ON pins(file_id, application_name);
-CREATE INDEX pins_application_name ON pins(application_name);
+CREATE UNIQUE INDEX pins_file_id_application_name ON pins(file_id, application_id);
+CREATE INDEX pins_application_name ON pins(application_id);
 
-delete_application:
-DELETE FROM pins WHERE application_name = ?;
+delete_pin:
+DELETE FROM pins WHERE application_id = ? AND file_id IN ?;
 
 create_pin:
-INSERT INTO pins(file_id, application_name)
+INSERT INTO pins(file_id, application_id)
 VALUES (?, ?);
 
 get_pin:
-SELECT * FROM pins WHERE application_name = ?;
+SELECT * FROM pins WHERE application_id = ?;

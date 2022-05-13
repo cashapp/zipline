@@ -55,7 +55,6 @@ interface Fetcher {
   suspend fun pin(
     applicationId: String,
     manifest: ZiplineManifest,
-    manifestByteString: ByteString,
   ): Boolean
 }
 
@@ -86,11 +85,10 @@ suspend fun List<Fetcher>.fetch(
 suspend fun List<Fetcher>.pin(
   applicationId: String,
   manifest: ZiplineManifest,
-  manifestByteString: ByteString,
 ): Boolean {
   var pinned = false
   for (fetcher in this) {
-    pinned = fetcher.pin(applicationId, manifest, manifestByteString)
+    pinned = fetcher.pin(applicationId, manifest)
     if (pinned) break
   }
 

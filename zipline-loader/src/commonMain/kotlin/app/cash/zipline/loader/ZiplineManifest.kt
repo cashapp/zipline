@@ -37,11 +37,13 @@ data class ZiplineManifest private constructor(
     fun create(modules: Map<String, ZiplineModule>): ZiplineManifest =
       ZiplineManifest(modules.keys
         .toList()
-        .topologicalSort { id -> modules[id]?.dependsOnIds
-          ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
+        .topologicalSort { id ->
+          modules[id]?.dependsOnIds
+            ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
         }
-        .associateWith { id -> modules[id]
-          ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
+        .associateWith { id ->
+          modules[id]
+            ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
         }
       )
   }

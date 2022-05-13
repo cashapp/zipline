@@ -50,7 +50,6 @@ class FsEmbeddedFetcher(
 
   override suspend fun pin(
     applicationId: String,
-    manifest: ZiplineManifest,
-    manifestByteString: ByteString
+    manifest: ZiplineManifest
   ): Boolean = false
 }

@@ -16,7 +16,9 @@
 package app.cash.zipline.loader
 
 import com.squareup.sqldelight.db.SqlDriver
+import kotlinx.serialization.json.Json
 import okio.ByteString
+import okio.ByteString.Companion.encodeUtf8
 import okio.FileNotFoundException
 import okio.FileSystem
 import okio.Path
@@ -62,11 +64,6 @@ class ZiplineCache internal constructor(
   private val maxSizeInBytes: Long,
   private val nowMs: () -> Long,
 ) {
-  fun writeManifest(applicationId: String, sha256: ByteString, content: ByteString) {
-    val metadata = openForWrite(sha256, applicationId) ?: return
-    write(metadata, content)
-  }
-
   fun write(sha256: ByteString, content: ByteString) {
     val metadata = openForWrite(sha256, null) ?: return
     write(metadata, content)
@@ -80,15 +77,41 @@ class ZiplineCache internal constructor(
     setReady(metadata, content.size.toLong())
   }
 
-  suspend fun getPinnedManifestByteString(applicationId: String): ByteString {
+  fun getPinnedManifestByteString(applicationId: String): ByteString {
     val manifestFile = database.filesQueries.selectPinnedManifest(applicationId).executeAsOneOrNull()
       ?: throw IllegalArgumentException("No pinned manifest for [applicationId=$applicationId]")
     return read(manifestFile.sha256_hex)
       ?: throw FileNotFoundException("No manifest file on disk with [fileName=${manifestFile.sha256_hex}]")
   }
 
-  fun pinManifest(applicationId: String, manifest: ZiplineManifest, manifestByteString: ByteString): Boolean {
-    TODO("iterate over modules and pin all module shas and the manifest in a single db transaction")
+  fun pinManifest(applicationId: String, manifest: ZiplineManifest): Boolean {
+    val manifestByteString = Json.encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
+    val manifestMetadata = writeManifest(applicationId, manifestByteString.sha256(), manifestByteString)
+      ?: return false
+
+    val existingPins = database.pinsQueries.get_pin(applicationId).executeAsList()
+
+    // Pin all modules in this manifest
+    val moduleMetadata = manifest.modules.map { (_, module) ->
+      database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull() ?: return false
+    }
+    moduleMetadata.map { metadata ->
+      database.pinsQueries.create_pin(metadata.id, applicationId)
+    }
+
+    // Pin the manifest
+    database.pinsQueries.create_pin(manifestMetadata.id, applicationId)
+
+    // Remove pins for last stable application pin
+    database.pinsQueries.delete_pin(applicationId, existingPins.map { it.file_id })
+
+    return true
+  }
+
+  private fun writeManifest(applicationId: String, sha256: ByteString, content: ByteString): Files? {
+    val metadata = openForWrite(sha256, applicationId) ?: return null
+    write(metadata, content)
+    return database.filesQueries.get(metadata.sha256_hex).executeAsOne()
   }
 
   /**
@@ -138,16 +161,16 @@ class ZiplineCache internal constructor(
    * Returns file metadata if the file was absent and is now `DIRTY`. The caller is now the exclusive owner of this file
    * and should proceed to write the file to the file system.
    *
-   * @param manifestForApplicationName set to the application id for only manifest files
+   * @param manifestForApplicationId set to the application id for only manifest files
    */
   private fun openForWrite(
     sha256: ByteString,
-    manifestForApplicationName: String?,
+    manifestForApplicationId: String?,
   ): Files? = try {
     // Go from absent to DIRTY.
     database.filesQueries.insert(
       sha256_hex = sha256.hex(),
-      manifest_for_application_name = manifestForApplicationName,
+      manifest_for_application_name = manifestForApplicationId,
       file_state = FileState.DIRTY,
       size_bytes = 0L,
       last_used_at_epoch_ms = nowMs()

@@ -20,6 +20,7 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.loader.fetcher.Fetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import app.cash.zipline.loader.fetcher.fetch
+import app.cash.zipline.loader.fetcher.pin
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
@@ -187,6 +188,12 @@ class ZiplineLoader(
           downstream.upstreams += loadJob
         }
       }
+
+      // Pin stable application manifest after a successful load
+      fetchers.pin(
+        applicationId = applicationId,
+        manifest = manifest
+      )
     }
   }
 
