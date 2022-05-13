@@ -72,7 +72,7 @@ abstract class EventListener {
   }
 
   /** Invoked when an application load succeeds */
-  open fun applicationLoadSucceeds(app: String, manifestUrl: String) {
+  open fun applicationLoadEnd(app: String, manifestUrl: String) {
   }
 
   /** Invoked when an application load fails */
@@ -84,7 +84,7 @@ abstract class EventListener {
   }
 
   /** Invoked when a network download succeeds */
-  open fun downloadSucceeds(app: String, url: String) {
+  open fun downloadEnd(app: String, url: String) {
   }
 
 
@@ -92,7 +92,10 @@ abstract class EventListener {
   open fun downloadFailed(app: String, url: String, exception: Exception) {
   }
 
-  /** Invoked when a network download fails */
+  /**
+   * Invoked when the manifest couldn't be decoded as JSON. For example, this might occur if there's
+   * a captive portal on the network.
+   */
   open fun manifestParseFailed(app: String, url: String, exception: Exception) {
   }
   companion object {

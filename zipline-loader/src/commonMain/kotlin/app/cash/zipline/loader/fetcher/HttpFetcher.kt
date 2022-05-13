@@ -40,7 +40,7 @@ class HttpFetcher(
       eventListener.downloadFailed(applicationId, url, e)
       throw e
     }
-    eventListener.downloadSucceeds(applicationId, url)
+    eventListener.downloadEnd(applicationId, url)
     return byteString
   }
 

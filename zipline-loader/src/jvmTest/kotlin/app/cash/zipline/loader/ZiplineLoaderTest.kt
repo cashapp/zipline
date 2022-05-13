@@ -59,16 +59,15 @@ class ZiplineLoaderTest {
     quickJs = QuickJs.create()
     testFixtures = LoaderTestFixtures(quickJs)
     loader = createProductionZiplineLoader(
-      dispatcher = dispatcher,
+      dispatcher = dispatcher,,,
       httpClient = httpClient,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
+      cacheDbDriver = driver,
       cacheDir = "/zipline/cache".toPath(),
       cacheFileSystem = cacheFileSystem,
-      cacheDbDriver = driver,
-      cacheMaxSizeInBytes = cacheSize,
-      nowMs = { nowMillis }
-    )
+      cacheMaxSizeInBytes = cacheSize
+    ) { nowMillis }
   }
 
   @After
@@ -207,7 +206,7 @@ class ZiplineLoaderTest {
     val downloadDir = "/downloads/latest".toPath()
     val downloadFileSystem = cacheFileSystem
     loader = createDownloadZiplineLoader(
-      dispatcher = dispatcher,
+      dispatcher = dispatcher,,,
       httpClient = httpClient,
     )
 
@@ -237,16 +236,15 @@ class ZiplineLoaderTest {
     // Load into Zipline
     val zipline = Zipline.create(dispatcher)
     loader = createProductionZiplineLoader(
-      dispatcher = dispatcher,
+      dispatcher = dispatcher,,,
       httpClient = httpClient,
       embeddedDir = downloadDir,
       embeddedFileSystem = downloadFileSystem,
+      cacheDbDriver = driver,
       cacheDir = "/zipline/cache".toPath(),
       cacheFileSystem = cacheFileSystem,
-      cacheDbDriver = driver,
-      cacheMaxSizeInBytes = cacheSize,
-      nowMs = { nowMillis }
-    )
+      cacheMaxSizeInBytes = cacheSize
+    ) { nowMillis }
     loader.load(zipline, testFixtures.manifest)
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
@@ -271,7 +269,7 @@ class ZiplineLoaderTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    loader = createDownloadZiplineLoader(dispatcher, httpClient)
+    loader = createDownloadZiplineLoader(dispatcher,,, httpClient)
     loader.download(downloadDir, fileSystem, testFixtures.manifest)
 
     // check that files have been downloaded to downloadDir as expected

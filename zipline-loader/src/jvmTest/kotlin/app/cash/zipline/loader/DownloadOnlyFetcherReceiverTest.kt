@@ -49,7 +49,7 @@ class DownloadOnlyFetcherReceiverTest {
     testFixtures = LoaderTestFixtures(quickJs)
     fileSystem = FakeFileSystem()
     loader = createDownloadZiplineLoader(
-      dispatcher = dispatcher,
+      dispatcher = dispatcher,,,
       httpClient = httpClient,
     )
   }

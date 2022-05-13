@@ -93,6 +93,13 @@ class LoadOrFallbackTest {
     assertEquals(1, tester.pruneEverythingWeCanPrune())
   }
 
+  @Test
+  fun successAfterFailureMakesFailurePrunable() {
+    assertEquals("apple", tester.success("red", "apple"))
+    assertEquals("apple", tester.failureCodeRunFails("red"))
+    assertEquals(1, tester.pruneEverythingWeCanPrune())
+  }
+
   class LoadOrFallbackTester {
     fun seedEmbedded(applicationId: String, result: String) {
 

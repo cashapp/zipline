@@ -69,7 +69,7 @@ class ProductionFetcherReceiverTest {
     zipline = Zipline.create(dispatcher)
     loader = createProductionZiplineLoader(
       dispatcher = dispatcher,
-      httpClient = httpClient,
+      httpClient = httpClient,,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
       cache = cache,

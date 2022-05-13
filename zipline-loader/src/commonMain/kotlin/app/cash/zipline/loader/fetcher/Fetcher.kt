@@ -22,40 +22,42 @@ import okio.ByteString
 
 /**
  * A list of [Fetcher] delegate in order responsibility of getting the desired [ByteString].
- *
- * If an interceptor does not get a file, it returns null and the next [Fetcher] is called.
  */
 interface Fetcher {
   /**
    * Get the desired [ByteString] or null if not found.
    *
-   * @param manifestForApplicationId when fetching a manifest, if fallback on failure functionality
-   *   is desired, set to the application id, and the last working pinned manifest will be returned
-   *   from the cache.
+   * If this fetcher supports pinning, the returned value will be pinned for [applicationId] until
+   *   [pin] is called.
+   * If a fetcher does not get a file, it returns null and the next [Fetcher] is called.
    */
   suspend fun fetch(
     applicationId: String,
     sha256: ByteString,
     url: String,
-    /**
-     * When fetching a manifest, use the following to identify which application it is for.
-     * For fallback purposes, this parameter informs the on disk name and treatment by
-     *   caching and embedded fetchers which can be very different from the treatment of
-     *   hoh-manifest Zipline Javascript module fetching.
-     */
-    manifestForApplicationId: String? = null
   ): ByteString?
 
   /**
-   * After a successful application load, if fallback on failure functionality is enabled, pin the
-   *   manifest and relevant Zipline files as a stable fallback for future failed load attempts.
-   * A fetcher will return true if it has pinned successfully and remaining fetchers
-   *   will not have their pin function called.
+   * Get the manifest for [applicationId] or null if not found.
+   * If a fetcher does not get a file, it returns null and the next [Fetcher] is called.
+   */
+  suspend fun fetchManifest(
+    applicationId: String,
+    url: String,
+  ): ByteString?
+
+  /**
+   * Permits all downloads for [applicationId] not in [manifest] to be pruned.
+   *
+   * This assumes all artifacts in [manifest] are currently pinned, but it does not enforce this
+   * assumption.
+   *
+   * Pin is called on all fetchers when a load succeeds.
    */
   suspend fun pin(
     applicationId: String,
     manifest: ZiplineManifest,
-  ): Boolean
+  )
 }
 
 /**
@@ -85,15 +87,6 @@ suspend fun List<Fetcher>.fetch(
 suspend fun List<Fetcher>.pin(
   applicationId: String,
   manifest: ZiplineManifest,
-): Boolean {
-  var pinned = false
-  for (fetcher in this) {
-    pinned = fetcher.pin(applicationId, manifest)
-    if (pinned) break
+)= this.forEach { fetcher ->
+    fetcher.pin(applicationId, manifest)
   }
-
-  check(pinned) {
-    "Unable to pin stable application load for [applicationId=$applicationId]"
-  }
-  return pinned
-}
