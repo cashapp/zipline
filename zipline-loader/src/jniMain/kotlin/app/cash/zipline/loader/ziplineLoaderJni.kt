@@ -15,15 +15,26 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.fetcher.Fetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 
+@OptIn(ExperimentalSerializationApi::class)
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
+  serializersModule: SerializersModule = EmptySerializersModule,
+  eventListener: EventListener = EventListener.NONE,
   httpClient: OkHttpClient,
-  fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient)),
+  fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient, eventListener)),
 ): ZiplineLoader = ZiplineLoader(
-  dispatcher, OkHttpZiplineHttpClient(httpClient), fetchers
+  dispatcher = dispatcher,
+  serializersModule = serializersModule,
+  eventListener = eventListener,
+  httpClient = OkHttpZiplineHttpClient(okHttpClient = httpClient),
+  fetchers = fetchers
 )

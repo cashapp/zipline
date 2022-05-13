@@ -18,7 +18,6 @@ package app.cash.zipline.cli
 
 import app.cash.zipline.cli.Download.Companion.NAME
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
-import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.io.File

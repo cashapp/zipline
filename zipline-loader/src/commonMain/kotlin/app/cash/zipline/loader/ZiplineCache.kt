@@ -170,7 +170,7 @@ class ZiplineCache internal constructor(
     // Go from absent to DIRTY.
     database.filesQueries.insert(
       sha256_hex = sha256.hex(),
-      manifest_for_application_name = manifestForApplicationId,
+      manifest_for_application_id = manifestForApplicationId,
       file_state = FileState.DIRTY,
       size_bytes = 0L,
       last_used_at_epoch_ms = nowMs()

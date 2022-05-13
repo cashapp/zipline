@@ -76,13 +76,13 @@ class ZiplineLoader(
       val zipline = Zipline.create(
         dispatcher, serializersModule
       )
-      load(applicationId, zipline, manifestUrl)
+      load(zipline, manifestUrl, applicationId)
       zipline
     } catch (e: Exception) {
       val zipline = Zipline.create(
         dispatcher, serializersModule
       )
-      loadByApplicationId(applicationId, zipline)
+      load(zipline, fetchZiplineManifest("", true, applicationId), applicationId)
       zipline
     }
   }
@@ -94,60 +94,51 @@ class ZiplineLoader(
   ): Flow<Zipline> = manifestFlow(applicationId, manifestUrlFlow, pollingInterval)
     .mapNotNull { manifest ->
       val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
-      load(applicationId, zipline, manifest)
+      load(zipline, manifest, applicationId)
       zipline
     }
 
   /** Load application into Zipline without fallback on failure functionality */
-  suspend fun load(applicationId: String, zipline: Zipline, manifestUrl: String) =
-    load(applicationId, zipline, fetchZiplineManifest(applicationId, manifestUrl, false))
+  suspend fun load(
+    zipline: Zipline,
+    manifestUrl: String,
+    applicationId: String = DEFAULT_APPLICATION_ID,
+  ) = load(zipline, fetchZiplineManifest(manifestUrl, false, applicationId), applicationId)
 
   suspend fun load(
-    applicationId: String,
     zipline: Zipline,
     manifest: ZiplineManifest,
-  ) = receive(applicationId, ZiplineLoadReceiver(zipline), manifest)
+    applicationId: String = DEFAULT_APPLICATION_ID,
+  ) = receive(ZiplineLoadReceiver(zipline), manifest, applicationId)
 
   suspend fun download(
-    applicationId: String,
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifestUrl: String,
+    applicationId: String = DEFAULT_APPLICATION_ID,
   ) {
     download(
-      applicationId, downloadDir, downloadFileSystem,
-      fetchZiplineManifest(applicationId, manifestUrl, false)
+      downloadDir = downloadDir,
+      downloadFileSystem = downloadFileSystem,
+      manifest = fetchZiplineManifest(manifestUrl, false, applicationId),
+      applicationId = applicationId
     )
   }
 
   suspend fun download(
-    applicationId: String,
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifest: ZiplineManifest,
+    applicationId: String = DEFAULT_APPLICATION_ID,
   ) {
-    writeManifestToDisk(applicationId, downloadFileSystem, downloadDir, manifest)
+    downloadFileSystem.createDirectories(downloadDir)
+    downloadFileSystem.write(downloadDir / getApplicationManifestFileName(applicationId)!!) {
+      write(Json.encodeToString(manifest).encodeUtf8())
+    }
     receive(
-      applicationId = applicationId,
       receiver = FsSaveReceiver(downloadFileSystem, downloadDir),
-      manifest = manifest
-    )
-  }
-
-  suspend fun loadByApplicationId(
-    applicationId: String,
-    zipline: Zipline,
-  ) = load(applicationId, zipline, fetchZiplineManifest(applicationId, "", true))
-
-  /**
-   * Returns a manifest equivalent to [this], but with module URLs resolved against [baseUrl]. This
-   * way consumers of the manifest don't need to know the URL that the manifest was downloaded from.
-   */
-  private fun ZiplineManifest.resolveUrls(baseUrl: String): ZiplineManifest {
-    return copy(
-      modules = modules.mapValues { (_, module) ->
-        module.copy(url = httpClient.resolve(baseUrl, module.url))
-      }
+      manifest = manifest,
+      applicationId = applicationId
     )
   }
 
@@ -167,14 +158,14 @@ class ZiplineLoader(
     }
 
     return rebounced.mapNotNull { url ->
-      fetchZiplineManifest(applicationId, url, false)
+      fetchZiplineManifest(url, false, applicationId)
     }.distinctUntilChanged()
   }
 
   private suspend fun receive(
-    applicationId: String,
     receiver: Receiver,
     manifest: ZiplineManifest,
+    applicationId: String,
   ) {
     coroutineScope {
       val loads = manifest.modules.map {
@@ -226,9 +217,9 @@ class ZiplineLoader(
   }
 
   private suspend fun fetchZiplineManifest(
-    applicationId: String,
     manifestUrl: String,
     fallbackOnFailure: Boolean,
+    applicationId: String,
   ): ZiplineManifest {
     val manifestForApplicationId = if (fallbackOnFailure) {
       applicationId
@@ -240,8 +231,8 @@ class ZiplineLoader(
       applicationId = applicationId,
       id = getApplicationManifestFileName(applicationId)!!,
       // sha256 is set to random for the manifest since we don't know what the real sha256 is when
-      //   we download from the network, a random sha256 won't have a false positive cache or
-      //   embedded fetch hit.
+      //   we download from the network. Thus, a random sha256 won't have a false positive cache or
+      //   embedded fetch hit and will correctly only rely on network.
       sha256 = Random.Default.nextBytes(64).toByteString(),
       url = manifestUrl,
       manifestForApplicationId = manifestForApplicationId
@@ -257,19 +248,8 @@ class ZiplineLoader(
     return httpClient.resolveUrls(manifest, manifestUrl)
   }
 
-  private fun writeManifestToDisk(
-    applicationId: String,
-    fileSystem: FileSystem,
-    dir: Path,
-    manifest: ZiplineManifest,
-  ) {
-    fileSystem.createDirectories(dir)
-    fileSystem.write(dir / getApplicationManifestFileName(applicationId)!!) {
-      write(Json.encodeToString(manifest).encodeUtf8())
-    }
-  }
-
   companion object {
+    const val DEFAULT_APPLICATION_ID = "default"
     const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
     internal fun getApplicationManifestFileName(manifestForApplicationId: String?) =
       manifestForApplicationId?.let { "$it.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX" }
