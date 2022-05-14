@@ -1,7 +1,7 @@
 ### ZIPLINE
 
 -keep,allowoptimization class app.cash.zipline.QuickJsException { * ; }
--keepclassmembers interface app.cash.zipline.InterruptHandler { * ; }
+-keep,allowoptimization interface app.cash.zipline.InterruptHandler { * ; }
 -keep,allowoptimization interface app.cash.zipline.internal.bridge.CallChannel { * ; }
 
 
