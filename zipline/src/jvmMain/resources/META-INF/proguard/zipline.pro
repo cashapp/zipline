@@ -2,7 +2,7 @@
 
 -keep,allowoptimization class app.cash.zipline.QuickJsException { * ; }
 -keepclassmembers interface app.cash.zipline.InterruptHandler { * ; }
--keepclassmembers interface app.cash.zipline.internal.bridge.CallChannel { * ; }
+-keep,allowoptimization interface app.cash.zipline.internal.bridge.CallChannel { * ; }
 
 
 ### KOTLINX.SERIALIZATION
