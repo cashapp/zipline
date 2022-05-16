@@ -20,11 +20,11 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.loader.fetcher.Fetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import app.cash.zipline.loader.fetcher.fetch
+import app.cash.zipline.loader.fetcher.fetchManifest
 import app.cash.zipline.loader.fetcher.pin
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
-import kotlin.random.Random
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -40,7 +40,6 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import okio.ByteString.Companion.encodeUtf8
-import okio.ByteString.Companion.toByteString
 import okio.FileSystem
 import okio.Path
 
@@ -82,7 +81,8 @@ class ZiplineLoader(
       val zipline = Zipline.create(
         dispatcher, serializersModule
       )
-      load(zipline, fetchZiplineManifest("", true, applicationId), applicationId)
+      // Load from either pinned in cache or embedded by forcing network failure
+      load(zipline, fetchZiplineManifest(applicationId, ""), applicationId)
       zipline
     }
   }
@@ -103,7 +103,7 @@ class ZiplineLoader(
     zipline: Zipline,
     manifestUrl: String,
     applicationId: String = DEFAULT_APPLICATION_ID,
-  ) = load(zipline, fetchZiplineManifest(manifestUrl, false, applicationId), applicationId)
+  ) = load(zipline, fetchZiplineManifest(applicationId, manifestUrl), applicationId)
 
   suspend fun load(
     zipline: Zipline,
@@ -120,7 +120,7 @@ class ZiplineLoader(
     download(
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
-      manifest = fetchZiplineManifest(manifestUrl, false, applicationId),
+      manifest = fetchZiplineManifest(applicationId, manifestUrl),
       applicationId = applicationId
     )
   }
@@ -158,7 +158,7 @@ class ZiplineLoader(
     }
 
     return rebounced.mapNotNull { url ->
-      fetchZiplineManifest(url, false, applicationId)
+      fetchZiplineManifest(applicationId, url)
     }.distinctUntilChanged()
   }
 
@@ -180,7 +180,7 @@ class ZiplineLoader(
         }
       }
 
-      // Pin stable application manifest after a successful load
+      // Pin stable application manifest after a successful load, and unpin all others
       fetchers.pin(
         applicationId = applicationId,
         manifest = manifest
@@ -217,41 +217,22 @@ class ZiplineLoader(
   }
 
   private suspend fun fetchZiplineManifest(
-    manifestUrl: String,
-    fallbackOnFailure: Boolean,
     applicationId: String,
+    manifestUrl: String,
   ): ZiplineManifest {
-    val manifestForApplicationId = if (fallbackOnFailure) {
-      applicationId
-    } else {
-      null
-    }
-    val manifestByteString = fetchers.fetch(
+    val manifest = fetchers.fetchManifest(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       applicationId = applicationId,
-      id = getApplicationManifestFileName(applicationId)!!,
-      // sha256 is set to random for the manifest since we don't know what the real sha256 is when
-      //   we download from the network. Thus, a random sha256 won't have a false positive cache or
-      //   embedded fetch hit and will correctly only rely on network.
-      sha256 = Random.Default.nextBytes(64).toByteString(),
+      id = getApplicationManifestFileName(applicationId),
       url = manifestUrl,
-      manifestForApplicationId = manifestForApplicationId
     )
-
-    val manifest = try {
-      Json.decodeFromString(ZiplineManifest.serializer(), manifestByteString.utf8())
-    } catch (e: Exception) {
-      eventListener.manifestParseFailed(applicationId, manifestUrl, e)
-      throw e
-    }
-
     return httpClient.resolveUrls(manifest, manifestUrl)
   }
 
   companion object {
     const val DEFAULT_APPLICATION_ID = "default"
-    const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
-    internal fun getApplicationManifestFileName(manifestForApplicationId: String?) =
-      manifestForApplicationId?.let { "$it.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX" }
+    private const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
+    internal fun getApplicationManifestFileName(applicationId: String = DEFAULT_APPLICATION_ID) =
+      "$applicationId.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX"
   }
 }

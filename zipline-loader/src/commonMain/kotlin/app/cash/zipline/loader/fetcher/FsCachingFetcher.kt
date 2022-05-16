@@ -28,15 +28,23 @@ class FsCachingFetcher(
 ) : Fetcher {
   override suspend fun fetch(
     applicationId: String,
+    id: String,
     sha256: ByteString,
-    url: String,
-    manifestForApplicationId: String?
-  ): ByteString = manifestForApplicationId?.let {
-    cache.getPinnedManifestByteString(manifestForApplicationId)
-  } ?: cache.getOrPut(sha256) {
-    delegate.fetch(applicationId, sha256, url, manifestForApplicationId)!!
+    url: String
+  ): ByteString = cache.getOrPut(applicationId, sha256) {
+    delegate.fetch(applicationId, id, sha256, url)!!
   }
 
-  override suspend fun pin(applicationId: String, manifest: ZiplineManifest): Boolean =
+  override suspend fun fetchManifest(
+    applicationId: String,
+    id: String,
+    url: String
+  ): ZiplineManifest? = try {
+    delegate.fetchManifest(applicationId, id, url)
+  } catch (e: Exception) {
+    cache.getPinnedManifest(applicationId)
+  } ?: cache.getPinnedManifest(applicationId)
+
+  override suspend fun pin(applicationId: String, manifest: ZiplineManifest) =
     cache.pinManifest(applicationId, manifest)
 }

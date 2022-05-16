@@ -15,7 +15,11 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import okio.ByteString
 
 /**
  * Preferred construction is via [ZiplineManifest.create]
@@ -46,5 +50,12 @@ data class ZiplineManifest private constructor(
             ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
         }
       )
+
+    fun ByteString.decodeToZiplineManifest(eventListener: EventListener, applicationId: String, url: String) = try {
+      Json.decodeFromString<ZiplineManifest>(this.utf8())
+    } catch (e: Exception) {
+      eventListener.manifestParseFailed(applicationId, url, e)
+      throw e
+    }
   }
 }

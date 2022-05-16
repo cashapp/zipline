@@ -69,7 +69,7 @@ class ProductionFetcherReceiverTest {
     zipline = Zipline.create(dispatcher)
     loader = createProductionZiplineLoader(
       dispatcher = dispatcher,
-      httpClient = httpClient,,
+      httpClient = httpClient,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
       cache = cache,
@@ -107,11 +107,11 @@ class ProductionFetcherReceiverTest {
 
   @Test
   fun getFromWarmCacheNoNetworkCall(): Unit = runBlocking {
-    cache.getOrPut(testFixtures.alphaSha256) {
+    cache.getOrPut("app1", testFixtures.alphaSha256) {
       testFixtures.alphaByteString
     }
     assertEquals(testFixtures.alphaByteString, cache.read(testFixtures.alphaSha256))
-    cache.getOrPut(testFixtures.bravoSha256) {
+    cache.getOrPut("app1", testFixtures.bravoSha256) {
       testFixtures.bravoByteString
     }
     assertEquals(testFixtures.bravoByteString, cache.read(testFixtures.bravoSha256))
@@ -149,7 +149,7 @@ class ProductionFetcherReceiverTest {
       zipline.quickJs.evaluate("globalThis.log", "assert.js")
     )
 
-    val ziplineFileFromCache = cache.getOrPut(testFixtures.alphaSha256) {
+    val ziplineFileFromCache = cache.getOrPut("app1", testFixtures.alphaSha256) {
       "fake".encodeUtf8()
     }
     assertEquals(testFixtures.alphaByteString, ziplineFileFromCache)

@@ -16,6 +16,7 @@
 
 package app.cash.zipline.gradle
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.fetcher.HttpFetcher
@@ -23,12 +24,14 @@ import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 
 class ZiplineGradleDownloader {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
+  private val eventListener: EventListener = EventListener.NONE
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
 
@@ -36,10 +39,13 @@ class ZiplineGradleDownloader {
     val httpClient = OkHttpZiplineHttpClient(client)
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
+      serializersModule = SerializersModule {  },
+      eventListener = eventListener,
       httpClient = httpClient,
       fetchers = listOf(
         HttpFetcher(
-          httpClient = httpClient
+          httpClient = httpClient,
+          eventListener = eventListener,
         )
       )
     )

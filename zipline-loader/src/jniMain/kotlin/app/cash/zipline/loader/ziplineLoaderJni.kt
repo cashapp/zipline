@@ -27,8 +27,8 @@ import okhttp3.OkHttpClient
 @OptIn(ExperimentalSerializationApi::class)
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
-  serializersModule: SerializersModule = EmptySerializersModule,
-  eventListener: EventListener = EventListener.NONE,
+  serializersModule: SerializersModule,
+  eventListener: EventListener,
   httpClient: OkHttpClient,
   fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient, eventListener)),
 ): ZiplineLoader = ZiplineLoader(

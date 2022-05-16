@@ -31,8 +31,10 @@ import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
 import app.cash.zipline.loader.createZiplineCache
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okio.Buffer
 import okio.ByteString
@@ -41,6 +43,7 @@ import okio.ByteString.Companion.toByteString
 import okio.FileSystem
 import okio.Path
 
+@OptIn(ExperimentalSerializationApi::class)
 class LoaderTestFixtures(quickJs: QuickJs) {
   val alphaJs = """
       |globalThis.log = globalThis.log || "";
@@ -111,12 +114,12 @@ class LoaderTestFixtures(quickJs: QuickJs) {
 
     fun createProductionZiplineLoader(
       dispatcher: CoroutineDispatcher,
-      serializersModule: SerializersModule,
       httpClient: ZiplineHttpClient,
-      eventListener: EventListener,
       embeddedDir: Path,
       embeddedFileSystem: FileSystem,
       cache: ZiplineCache,
+      serializersModule: SerializersModule = SerializersModule {  },
+      eventListener: EventListener = EventListener.NONE,
     ) = ZiplineLoader(
       dispatcher = dispatcher,
       serializersModule = serializersModule,
@@ -125,7 +128,8 @@ class LoaderTestFixtures(quickJs: QuickJs) {
       fetchers = listOf(
         FsEmbeddedFetcher(
           embeddedDir = embeddedDir,
-          embeddedFileSystem = embeddedFileSystem
+          embeddedFileSystem = embeddedFileSystem,
+          eventListener = eventListener,
         ),
         FsCachingFetcher(
           cache = cache,
@@ -136,8 +140,6 @@ class LoaderTestFixtures(quickJs: QuickJs) {
 
     fun createProductionZiplineLoader(
       dispatcher: CoroutineDispatcher,
-      serializersModule: SerializersModule,
-      eventListener: EventListener,
       httpClient: ZiplineHttpClient,
       embeddedDir: Path, // SqlDriver is already initialized to the platform and SQLite DB on disk
       embeddedFileSystem: FileSystem,
@@ -145,6 +147,8 @@ class LoaderTestFixtures(quickJs: QuickJs) {
       cacheDir: Path,
       cacheFileSystem: FileSystem,
       cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
+      serializersModule: SerializersModule = EmptySerializersModule,
+      eventListener: EventListener = EventListener.NONE,
       nowMs: () -> Long, // 100 MiB
     ) = ZiplineLoader(
       dispatcher = dispatcher,
@@ -154,7 +158,8 @@ class LoaderTestFixtures(quickJs: QuickJs) {
       fetchers = listOf(
         FsEmbeddedFetcher(
           embeddedDir = embeddedDir,
-          embeddedFileSystem = embeddedFileSystem
+          embeddedFileSystem = embeddedFileSystem,
+          eventListener = eventListener,
         ),
         FsCachingFetcher(
           cache = createZiplineCache(
@@ -171,9 +176,9 @@ class LoaderTestFixtures(quickJs: QuickJs) {
 
     fun createDownloadZiplineLoader(
       dispatcher: CoroutineDispatcher,
-      serializersModule: SerializersModule,
-      eventListener: EventListener,
       httpClient: ZiplineHttpClient,
+      serializersModule: SerializersModule = EmptySerializersModule,
+      eventListener: EventListener = EventListener.NONE,
     ) = ZiplineLoader(
       dispatcher = dispatcher,
       serializersModule = serializersModule,

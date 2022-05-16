@@ -64,7 +64,7 @@ class ZiplineCacheTest {
       assertFalse(fileSystem.exists(directory / fileSha.hex()))
 
       // File downloaded
-      ziplineCache.write(fileSha, fileShaContents)
+      ziplineCache.write("red", fileSha, fileShaContents)
       assertTrue(fileSystem.exists(directory / "entry-1.bin"))
 
       // File can be read
@@ -82,7 +82,7 @@ class ZiplineCacheTest {
       assertNull(ziplineCache.read(fileSha))
       assertFalse(fileSystem.exists(directory / fileSha.hex()))
 
-      val result = ziplineCache.getOrPut(fileSha) {
+      val result = ziplineCache.getOrPut("app1", fileSha) {
         fileShaContents
       }
       assertEquals(fileShaContents, result)
@@ -100,17 +100,17 @@ class ZiplineCacheTest {
       val b32Hash = b32.sha256()
       val c32Hash = c32.sha256()
 
-      assertEquals(a32, ziplineCache.getOrPut(a32Hash) { a32 })
+      assertEquals(a32, ziplineCache.getOrPut("app1", a32Hash) { a32 })
       assertNotNull(ziplineCache.read(a32Hash))
       assertNull(ziplineCache.read(b32Hash))
       assertNull(ziplineCache.read(c32Hash))
 
-      assertEquals(b32, ziplineCache.getOrPut(b32Hash) { b32 })
+      assertEquals(b32, ziplineCache.getOrPut("app1", b32Hash) { b32 })
       assertNotNull(ziplineCache.read(a32Hash))
       assertNotNull(ziplineCache.read(b32Hash))
       assertNull(ziplineCache.read(c32Hash))
 
-      assertEquals(c32, ziplineCache.getOrPut(c32Hash) { c32 })
+      assertEquals(c32, ziplineCache.getOrPut("app1", c32Hash) { c32 })
       assertNull(ziplineCache.read(a32Hash))
       assertNotNull(ziplineCache.read(b32Hash))
       assertNotNull(ziplineCache.read(c32Hash))
@@ -127,13 +127,13 @@ class ZiplineCacheTest {
       val b32Hash = b32.sha256()
       val c32Hash = c32.sha256()
 
-      assertEquals(a32, ziplineCache.getOrPut(a32Hash) { a32 })
+      assertEquals(a32, ziplineCache.getOrPut("app1", a32Hash) { a32 })
       tick()
-      assertEquals(b32, ziplineCache.getOrPut(b32Hash) { b32 })
+      assertEquals(b32, ziplineCache.getOrPut("app1", b32Hash) { b32 })
       tick()
-      assertEquals(a32, ziplineCache.getOrPut(a32Hash) { error("expected to be cached") })
+      assertEquals(a32, ziplineCache.getOrPut("app1", a32Hash) { error("expected to be cached") })
       tick()
-      assertEquals(c32, ziplineCache.getOrPut(c32Hash) { c32 })
+      assertEquals(c32, ziplineCache.getOrPut("app1", c32Hash) { c32 })
       tick()
       assertNotNull(ziplineCache.read(a32Hash))
       assertNull(ziplineCache.read(b32Hash)) // Least recently accessed.
@@ -147,7 +147,7 @@ class ZiplineCacheTest {
       val a65 = "a".repeat(cacheSize + 1).encodeUtf8()
       val a65Hash = a65.sha256()
 
-      assertEquals(a65, ziplineCache.getOrPut(a65Hash) { a65 })
+      assertEquals(a65, ziplineCache.getOrPut("app1", a65Hash) { a65 })
       assertNull(ziplineCache.read(a65Hash)) // Immediately evicted
     }
   }
@@ -158,7 +158,7 @@ class ZiplineCacheTest {
     val a32Hash = a32.sha256()
 
     withCache {
-      it.write(a32Hash, a32)
+      it.write("app1", a32Hash, a32)
       assertNotNull(it.read(a32Hash))
     }
 

@@ -15,41 +15,49 @@
  */
 package app.cash.zipline.loader.fetcher
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.ZiplineManifest
+import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
-
 /**
  * Fetch from embedded fileSystem that ships with the app.
  */
 class FsEmbeddedFetcher(
   private val embeddedDir: Path,
   private val embeddedFileSystem: FileSystem,
+  private val eventListener: EventListener,
 ) : Fetcher {
   override suspend fun fetch(
     applicationId: String,
+    id: String,
     sha256: ByteString,
-    url: String,
-    manifestForApplicationId: String?
-  ): ByteString? {
-    val applicationManifestFileName: String? = getApplicationManifestFileName(manifestForApplicationId)
-    val filePath = embeddedDir / (applicationManifestFileName ?: sha256.hex())
-    return when {
-      embeddedFileSystem.exists(filePath) -> {
-        embeddedFileSystem.read(filePath) {
-          readByteString()
-        }
-      }
-      else -> {
-        null
-      }
-    }
+    url: String
+  ): ByteString? = fetchByteString(embeddedDir / sha256.hex())
+
+  override suspend fun fetchManifest(
+    applicationId: String,
+    id: String,
+    url: String
+  ): ZiplineManifest? {
+    val byteString = fetchByteString(embeddedDir / getApplicationManifestFileName(applicationId))
+    return byteString?.decodeToZiplineManifest(eventListener, applicationId, url)
   }
 
   override suspend fun pin(
     applicationId: String,
     manifest: ZiplineManifest
-  ): Boolean = false
+  ) {}
+
+  private fun fetchByteString(filePath: Path) = when {
+    embeddedFileSystem.exists(filePath) -> {
+      embeddedFileSystem.read(filePath) {
+        readByteString()
+      }
+    }
+    else -> null
+  }
 }
+

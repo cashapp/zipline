@@ -33,6 +33,7 @@ interface Fetcher {
    */
   suspend fun fetch(
     applicationId: String,
+    id: String,
     sha256: ByteString,
     url: String,
   ): ByteString?
@@ -43,8 +44,9 @@ interface Fetcher {
    */
   suspend fun fetchManifest(
     applicationId: String,
+    id: String,
     url: String,
-  ): ByteString?
+  ): ZiplineManifest?
 
   /**
    * Permits all downloads for [applicationId] not in [manifest] to be pruned.
@@ -69,19 +71,40 @@ suspend fun List<Fetcher>.fetch(
   id: String,
   sha256: ByteString,
   url: String,
-  manifestForApplicationId: String? = null,
 ): ByteString = concurrentDownloadsSemaphore
   .withPermit {
     var byteString: ByteString? = null
     for (fetcher in this) {
-      byteString = fetcher.fetch(applicationId, sha256, url, manifestForApplicationId)
+      byteString = fetcher.fetch(applicationId, id, sha256, url)
       if (byteString != null) break
     }
 
     checkNotNull(byteString) {
-      "Unable to get ByteString for [applicationId=$applicationId][id=$id][sha256=$sha256][url=$url]"
+      "Unable to fetch ByteString for [applicationId=$applicationId][id=$id][sha256=$sha256][url=$url]"
     }
     return byteString
+  }
+
+/**
+ * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
+ */
+suspend fun List<Fetcher>.fetchManifest(
+  concurrentDownloadsSemaphore: Semaphore,
+  applicationId: String,
+  id: String,
+  url: String,
+): ZiplineManifest = concurrentDownloadsSemaphore
+  .withPermit {
+    var manifest: ZiplineManifest? = null
+    for (fetcher in this) {
+      manifest = fetcher.fetchManifest(applicationId, id, url)
+      if (manifest != null) break
+    }
+
+    checkNotNull(manifest) {
+      "Unable to fetch Manifest for [applicationId=$applicationId][id=$id][url=$url]"
+    }
+    return manifest
   }
 
 suspend fun List<Fetcher>.pin(

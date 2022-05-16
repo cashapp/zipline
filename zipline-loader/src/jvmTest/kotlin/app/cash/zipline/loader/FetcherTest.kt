@@ -41,23 +41,47 @@ class FetcherTest {
   private val fetcherAlpha = object : Fetcher {
     override suspend fun fetch(
       applicationId: String,
+      id: String,
       sha256: ByteString,
       url: String,
-      id: String?
     ): ByteString? {
       alphaFetcherIds.add(id)
       return null
+    }
+
+    override suspend fun fetchManifest(
+      applicationId: String,
+      id: String,
+      url: String
+    ): ZiplineManifest? {
+      TODO("Not yet implemented")
+    }
+
+    override suspend fun pin(applicationId: String, manifest: ZiplineManifest) {
+      TODO("Not yet implemented")
     }
   }
   private val fetcherBravo = object : Fetcher {
     override suspend fun fetch(
       applicationId: String,
+      id: String,
       sha256: ByteString,
       url: String,
-      id: String?
     ): ByteString? {
       bravoFetcherIds.add(id)
       return bravoByteString
+    }
+
+    override suspend fun fetchManifest(
+      applicationId: String,
+      id: String,
+      url: String
+    ): ZiplineManifest? {
+      TODO("Not yet implemented")
+    }
+
+    override suspend fun pin(applicationId: String, manifest: ZiplineManifest) {
+      TODO("Not yet implemented")
     }
   }
 
@@ -82,16 +106,18 @@ class FetcherTest {
   fun fetcherRunsInOrder(): Unit = runBlocking {
     val fetchers = listOf(fetcherAlpha, fetcherBravo)
     val actualByteString = fetchers.fetch(
-      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,,
+      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+      applicationId = "foxtrot",
+      id = "alpha",
       sha256 = "alpha".encodeUtf8().sha256(),
-      url = "alpha",,
-      manifestForApplicationId = "alpha"
+      url = "alpha",
     )
     fetchers.fetch(
-      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,,
+      concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+      applicationId = "foxtrot",
+      id = "bravo",
       sha256 = "bravo".encodeUtf8().sha256(),
-      url = "bravo",,
-      manifestForApplicationId = "bravo"
+      url = "bravo",
     )
     assertEquals(bravoByteString, actualByteString)
 

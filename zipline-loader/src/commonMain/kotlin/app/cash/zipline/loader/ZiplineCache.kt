@@ -64,8 +64,8 @@ class ZiplineCache internal constructor(
   private val maxSizeInBytes: Long,
   private val nowMs: () -> Long,
 ) {
-  fun write(sha256: ByteString, content: ByteString) {
-    val metadata = openForWrite(sha256, null) ?: return
+  fun write(applicationId: String, sha256: ByteString, content: ByteString) {
+    val metadata = openForWrite(applicationId, sha256, false) ?: return
     write(metadata, content)
   }
 
@@ -77,39 +77,43 @@ class ZiplineCache internal constructor(
     setReady(metadata, content.size.toLong())
   }
 
-  fun getPinnedManifestByteString(applicationId: String): ByteString {
-    val manifestFile = database.filesQueries.selectPinnedManifest(applicationId).executeAsOneOrNull()
-      ?: throw IllegalArgumentException("No pinned manifest for [applicationId=$applicationId]")
-    return read(manifestFile.sha256_hex)
-      ?: throw FileNotFoundException("No manifest file on disk with [fileName=${manifestFile.sha256_hex}]")
+  /** @return null if there is no pinned manifest */
+  fun getPinnedManifest(applicationId: String): ZiplineManifest? {
+    val manifestFile = database.filesQueries
+      .selectPinnedManifest(applicationId)
+      .executeAsOneOrNull() ?: return null
+    val manifestByteString = read(manifestFile.sha256_hex)
+      ?: throw FileNotFoundException(
+        "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
+      )
+    return Json.decodeFromString(ZiplineManifest.serializer(), manifestByteString.utf8())
   }
 
-  fun pinManifest(applicationId: String, manifest: ZiplineManifest): Boolean {
+  /** Pins manifest and unpins all other files and manifests */
+  fun pinManifest(applicationId: String, manifest: ZiplineManifest) {
     val manifestByteString = Json.encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
     val manifestMetadata = writeManifest(applicationId, manifestByteString.sha256(), manifestByteString)
-      ?: return false
+      ?: return
 
-    val existingPins = database.pinsQueries.get_pin(applicationId).executeAsList()
+    val existingPins = database.pinsQueries.get_pins(applicationId).executeAsList()
 
     // Pin all modules in this manifest
     val moduleMetadata = manifest.modules.map { (_, module) ->
-      database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull() ?: return false
+      database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull() ?: return
     }
     moduleMetadata.map { metadata ->
-      database.pinsQueries.create_pin(metadata.id, applicationId)
+      createPinIfNotExists(metadata.id, applicationId)
     }
 
     // Pin the manifest
-    database.pinsQueries.create_pin(manifestMetadata.id, applicationId)
+    createPinIfNotExists(manifestMetadata.id, applicationId)
 
     // Remove pins for last stable application pin
     database.pinsQueries.delete_pin(applicationId, existingPins.map { it.file_id })
-
-    return true
   }
 
   private fun writeManifest(applicationId: String, sha256: ByteString, content: ByteString): Files? {
-    val metadata = openForWrite(sha256, applicationId) ?: return null
+    val metadata = openForWrite(applicationId, sha256, true) ?: return null
     write(metadata, content)
     return database.filesQueries.get(metadata.sha256_hex).executeAsOne()
   }
@@ -121,12 +125,12 @@ class ZiplineCache internal constructor(
    *
    * Concurrent downloads on the same [sha256] are not ever done. One thread loses and suspends.
    */
-  suspend fun getOrPut(sha256: ByteString, download: suspend () -> ByteString): ByteString {
+  suspend fun getOrPut(applicationId: String, sha256: ByteString, download: suspend () -> ByteString): ByteString {
     val read = read(sha256)
     if (read != null) return read
 
     val contents = download()
-    write(sha256, contents)
+    write(applicationId, sha256, contents)
     return contents
   }
 
@@ -161,12 +165,19 @@ class ZiplineCache internal constructor(
    * Returns file metadata if the file was absent and is now `DIRTY`. The caller is now the exclusive owner of this file
    * and should proceed to write the file to the file system.
    *
-   * @param manifestForApplicationId set to the application id for only manifest files
+   * @param isManifest set to the application id for only manifest files
    */
   private fun openForWrite(
+    applicationId: String,
     sha256: ByteString,
-    manifestForApplicationId: String?,
+    isManifest: Boolean,
   ): Files? = try {
+    val manifestForApplicationId = if (isManifest) {
+      applicationId
+    } else {
+      null
+    }
+
     // Go from absent to DIRTY.
     database.filesQueries.insert(
       sha256_hex = sha256.hex(),
@@ -175,10 +186,24 @@ class ZiplineCache internal constructor(
       size_bytes = 0L,
       last_used_at_epoch_ms = nowMs()
     )
-    getOrNull(sha256)!!
+    val metadata = getOrNull(sha256)!!
+
+    // Optimistically pin file, if the load fails it will be unpinned
+    createPinIfNotExists(metadata.id, applicationId)
+
+    metadata
   } catch (e: Exception) {
     if (!isSqlException(e)) throw e
     null // Presumably the file is already dirty.
+  }
+
+  private fun createPinIfNotExists(
+    file_id: Long,
+    application_id: String
+  ) {
+    if (database.pinsQueries.get_pin(file_id, application_id).executeAsOneOrNull() == null) {
+      database.pinsQueries.create_pin(file_id, application_id)
+    }
   }
 
   /**
