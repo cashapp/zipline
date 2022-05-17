@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package app.cash.zipline
 
 import app.cash.zipline.internal.CURRENT_MODULE_ID
@@ -37,10 +38,12 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
+@OptIn(ExperimentalSerializationApi::class)
 actual class Zipline private constructor(
   val quickJs: QuickJs,
   userSerializersModule: SerializersModule,

@@ -45,19 +45,13 @@ import okio.Path
 
 @OptIn(ExperimentalSerializationApi::class)
 class LoaderTestFixtures(quickJs: QuickJs) {
-  val alphaJs = """
-      |globalThis.log = globalThis.log || "";
-      |globalThis.log += "alpha loaded\n"
-      |""".trimMargin()
-  val alphaByteString = ziplineFile(quickJs, alphaJs, "alpha.js")
+  val alphaJs = createJs("alpha")
+  val alphaByteString = createZiplineFile(quickJs, alphaJs, "alpha.js")
   val alphaSha256 = alphaByteString.sha256()
   val alphaSha256Hex = alphaSha256.hex()
 
-  val bravoJs = """
-      |globalThis.log = globalThis.log || "";
-      |globalThis.log += "bravo loaded\n"
-      |""".trimMargin()
-  val bravoByteString = ziplineFile(quickJs, bravoJs, "bravo.js")
+  val bravoJs = createJs("bravo")
+  val bravoByteString = createZiplineFile(quickJs, bravoJs, "bravo.js")
   val bravoSha256 = bravoByteString.sha256()
   val bravoSha256Hex = bravoSha256.hex()
 
@@ -94,16 +88,7 @@ class LoaderTestFixtures(quickJs: QuickJs) {
   val manifestJsonString = Json.encodeToString(manifest)
   val manifestByteString = manifestJsonString.encodeUtf8()
 
-  private fun ziplineFile(quickJs: QuickJs, javaScript: String, fileName: String): ByteString {
-    val ziplineFile = ZiplineFile(
-      CURRENT_ZIPLINE_VERSION,
-      quickJs.compile(javaScript, fileName).toByteString()
-    )
 
-    val buffer = Buffer()
-    ziplineFile.writeTo(buffer)
-    return buffer.readByteString()
-  }
 
   companion object {
     const val alphaRelativeUrl = "alpha.zipline"
@@ -111,6 +96,25 @@ class LoaderTestFixtures(quickJs: QuickJs) {
     const val alphaUrl = "https://example.com/files/alpha.zipline"
     const val bravoUrl = "https://example.com/files/bravo.zipline"
     const val manifestUrl = "https://example.com/files/manifest.zipline.json"
+    fun createJs(seed: String) = """
+      |globalThis.log = globalThis.log || "";
+      |globalThis.log += "$seed loaded\n"
+      |""".trimMargin()
+
+    fun createFailureJs(seed: String) = """
+      |throw Error('$seed');
+      |""".trimMargin()
+
+    fun createZiplineFile(quickJs: QuickJs, javaScript: String, fileName: String): ByteString {
+      val ziplineFile = ZiplineFile(
+        CURRENT_ZIPLINE_VERSION,
+        quickJs.compile(javaScript, fileName).toByteString()
+      )
+
+      val buffer = Buffer()
+      ziplineFile.writeTo(buffer)
+      return buffer.readByteString()
+    }
 
     fun createProductionZiplineLoader(
       dispatcher: CoroutineDispatcher,
