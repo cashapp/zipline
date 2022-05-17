@@ -49,6 +49,8 @@ class HttpFetcher(
     manifest: ZiplineManifest
   ) {}
 
+  override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {}
+
   private suspend fun fetchByteString(
     applicationName: String,
     url: String,

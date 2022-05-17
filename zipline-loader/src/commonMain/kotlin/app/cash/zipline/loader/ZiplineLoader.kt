@@ -22,6 +22,7 @@ import app.cash.zipline.loader.fetcher.HttpFetcher
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.fetcher.fetchManifest
 import app.cash.zipline.loader.fetcher.pin
+import app.cash.zipline.loader.fetcher.unpin
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
@@ -171,13 +172,18 @@ class ZiplineLoader(
       val loads = manifest.modules.map {
         ModuleJob(applicationName, it.key, it.value, receiver)
       }
-      for (load in loads) {
-        val loadJob = launch { load.run() }
-
-        val downstreams = loads.filter { load.id in it.module.dependsOnIds }
-        for (downstream in downstreams) {
-          downstream.upstreams += loadJob
+      try {
+        for (load in loads) {
+          val loadJob = launch { load.run() }
+          val downstreams = loads.filter { load.id in it.module.dependsOnIds }
+          for (downstream in downstreams) {
+            downstream.upstreams += loadJob
+          }
         }
+      } catch (e: Exception) {
+        // On exception, unpin this manifest; and rethrow so that the load attempt fails
+        fetchers.unpin(applicationName, manifest)
+        throw e
       }
 
       // Pin stable application manifest after a successful load, and unpin all others

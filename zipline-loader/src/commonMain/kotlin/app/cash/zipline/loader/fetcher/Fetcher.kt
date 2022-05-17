@@ -60,6 +60,16 @@ interface Fetcher {
     applicationName: String,
     manifest: ZiplineManifest,
   )
+
+  /**
+   * Removes all optimistic pins for [applicationName] in [manifest] to permit them to be pruned.
+   *
+   * Unpin is called on all fetchers when a load succeeds.
+   */
+  suspend fun unpin(
+    applicationName: String,
+    manifest: ZiplineManifest,
+  )
 }
 
 /**
@@ -110,6 +120,13 @@ suspend fun List<Fetcher>.fetchManifest(
 suspend fun List<Fetcher>.pin(
   applicationName: String,
   manifest: ZiplineManifest,
-)= this.forEach { fetcher ->
-    fetcher.pin(applicationName, manifest)
-  }
+) = this.forEach { fetcher ->
+  fetcher.pin(applicationName, manifest)
+}
+
+suspend fun List<Fetcher>.unpin(
+  applicationName: String,
+  manifest: ZiplineManifest,
+) = this.forEach { fetcher ->
+  fetcher.unpin(applicationName, manifest)
+}

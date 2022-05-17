@@ -51,6 +51,8 @@ class FsEmbeddedFetcher(
     manifest: ZiplineManifest
   ) {}
 
+  override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {}
+
   private fun fetchByteString(filePath: Path) = when {
     embeddedFileSystem.exists(filePath) -> {
       embeddedFileSystem.read(filePath) {

@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
+import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.serialization.json.Json
 import okio.ByteString
@@ -110,6 +112,37 @@ class ZiplineCache internal constructor(
 
     // Remove pins for last stable application pin
     database.pinsQueries.delete_pin(applicationName, existingPins.map { it.file_id })
+  }
+
+  /** Unpin manifest and make all files open to pruning */
+  fun unpinManifest(eventListener: EventListener, applicationName: String, manifest: ZiplineManifest) {
+    val unpinManifestByteString = Json.encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
+    val unpinManifestMetadata = database.filesQueries.get(unpinManifestByteString.sha256().hex()).executeAsOneOrNull()
+      ?: return
+
+    // Delete manifest to be unpinned
+    database.pinsQueries.delete_pin(applicationName, listOf(unpinManifestMetadata.id))
+
+    // Get fallback manifest metadata
+    val fallbackManifestPinMetadatas = database.filesQueries
+      .selectPinnedManifest(applicationName)
+      .executeAsList()
+      .filter { it.file_id != unpinManifestMetadata.id }
+    val fallbackManifestModuleIds = fallbackManifestPinMetadatas.flatMap { fallbackManifestMetadata ->
+      val manifestByteString = checkNotNull(read(fallbackManifestMetadata.sha256_hex)) {
+        "Manifest file not found [applicationName=${fallbackManifestMetadata.application_name}][sha256hex=${fallbackManifestMetadata.sha256_hex}]"
+      }
+      val fallbackManifest = manifestByteString.decodeToZiplineManifest(eventListener, applicationName, "")
+      fallbackManifest.modules.mapNotNull { fallbackModule ->
+        database.filesQueries.get(fallbackModule.value.sha256.hex()).executeAsOneOrNull()?.id
+      }
+    }.toSet()
+
+    // Unpin all files from unpinManifest that aren't present in the fallbackManifestModules
+    val unpinModuleIds = manifest.modules.values.mapNotNull { module ->
+      database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.id
+    }.toSet().filter { it !in fallbackManifestModuleIds }
+    database.pinsQueries.delete_pin(applicationName, unpinModuleIds)
   }
 
   private fun writeManifest(applicationName: String, sha256: ByteString, content: ByteString): Files? {

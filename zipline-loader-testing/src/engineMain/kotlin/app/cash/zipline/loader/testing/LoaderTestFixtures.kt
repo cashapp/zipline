@@ -18,11 +18,6 @@ package app.cash.zipline.loader.testing
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.fetcher.FsCachingFetcher
-import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
-import app.cash.zipline.loader.fetcher.HttpFetcher
-import com.squareup.sqldelight.db.SqlDriver
-import kotlinx.coroutines.CoroutineDispatcher
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.ZiplineFile
@@ -31,6 +26,11 @@ import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
 import app.cash.zipline.loader.createZiplineCache
+import app.cash.zipline.loader.fetcher.FsCachingFetcher
+import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
+import app.cash.zipline.loader.fetcher.HttpFetcher
+import com.squareup.sqldelight.db.SqlDriver
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
