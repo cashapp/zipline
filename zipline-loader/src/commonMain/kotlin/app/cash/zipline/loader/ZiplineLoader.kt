@@ -67,7 +67,7 @@ class ZiplineLoader(
     }
 
   suspend fun loadOrFallBack(
-    applicationId: String,
+    applicationName: String,
     serializersModule: SerializersModule,
     manifestUrl: String,
   ): Zipline {
@@ -75,26 +75,26 @@ class ZiplineLoader(
       val zipline = Zipline.create(
         dispatcher, serializersModule
       )
-      load(zipline, manifestUrl, applicationId)
+      load(zipline, manifestUrl, applicationName)
       zipline
     } catch (e: Exception) {
       val zipline = Zipline.create(
         dispatcher, serializersModule
       )
       // Load from either pinned in cache or embedded by forcing network failure
-      load(zipline, fetchZiplineManifest(applicationId, ""), applicationId)
+      load(zipline, fetchZiplineManifest(applicationName, ""), applicationName)
       zipline
     }
   }
 
   suspend fun loadContinuously(
-    applicationId: String,
+    applicationName: String,
     manifestUrlFlow: Flow<String>,
     pollingInterval: Duration,
-  ): Flow<Zipline> = manifestFlow(applicationId, manifestUrlFlow, pollingInterval)
+  ): Flow<Zipline> = manifestFlow(applicationName, manifestUrlFlow, pollingInterval)
     .mapNotNull { manifest ->
       val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
-      load(zipline, manifest, applicationId)
+      load(zipline, manifest, applicationName)
       zipline
     }
 
@@ -102,26 +102,26 @@ class ZiplineLoader(
   suspend fun load(
     zipline: Zipline,
     manifestUrl: String,
-    applicationId: String = DEFAULT_APPLICATION_ID,
-  ) = load(zipline, fetchZiplineManifest(applicationId, manifestUrl), applicationId)
+    applicationName: String = DEFAULT_application_name,
+  ) = load(zipline, fetchZiplineManifest(applicationName, manifestUrl), applicationName)
 
   suspend fun load(
     zipline: Zipline,
     manifest: ZiplineManifest,
-    applicationId: String = DEFAULT_APPLICATION_ID,
-  ) = receive(ZiplineLoadReceiver(zipline), manifest, applicationId)
+    applicationName: String = DEFAULT_application_name,
+  ) = receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
 
   suspend fun download(
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifestUrl: String,
-    applicationId: String = DEFAULT_APPLICATION_ID,
+    applicationName: String = DEFAULT_application_name,
   ) {
     download(
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
-      manifest = fetchZiplineManifest(applicationId, manifestUrl),
-      applicationId = applicationId
+      manifest = fetchZiplineManifest(applicationName, manifestUrl),
+      applicationName = applicationName
     )
   }
 
@@ -129,16 +129,16 @@ class ZiplineLoader(
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifest: ZiplineManifest,
-    applicationId: String = DEFAULT_APPLICATION_ID,
+    applicationName: String = DEFAULT_application_name,
   ) {
     downloadFileSystem.createDirectories(downloadDir)
-    downloadFileSystem.write(downloadDir / getApplicationManifestFileName(applicationId)!!) {
+    downloadFileSystem.write(downloadDir / getApplicationManifestFileName(applicationName)!!) {
       write(Json.encodeToString(manifest).encodeUtf8())
     }
     receive(
       receiver = FsSaveReceiver(downloadFileSystem, downloadDir),
       manifest = manifest,
-      applicationId = applicationId
+      applicationName = applicationName
     )
   }
 
@@ -148,7 +148,7 @@ class ZiplineLoader(
    * TODO(jwilson): use a web socket instead of polling every 500ms.
    */
   private suspend fun manifestFlow(
-    applicationId: String,
+    applicationName: String,
     urlFlow: Flow<String>,
     pollingInterval: Duration?,
   ): Flow<ZiplineManifest> {
@@ -158,18 +158,18 @@ class ZiplineLoader(
     }
 
     return rebounced.mapNotNull { url ->
-      fetchZiplineManifest(applicationId, url)
+      fetchZiplineManifest(applicationName, url)
     }.distinctUntilChanged()
   }
 
   private suspend fun receive(
     receiver: Receiver,
     manifest: ZiplineManifest,
-    applicationId: String,
+    applicationName: String,
   ) {
     coroutineScope {
       val loads = manifest.modules.map {
-        ModuleJob(applicationId, it.key, it.value, receiver)
+        ModuleJob(applicationName, it.key, it.value, receiver)
       }
       for (load in loads) {
         val loadJob = launch { load.run() }
@@ -182,14 +182,14 @@ class ZiplineLoader(
 
       // Pin stable application manifest after a successful load, and unpin all others
       fetchers.pin(
-        applicationId = applicationId,
+        applicationName = applicationName,
         manifest = manifest
       )
     }
   }
 
   private inner class ModuleJob(
-    val applicationId: String,
+    val applicationName: String,
     val id: String,
     val module: ZiplineModule,
     val receiver: Receiver,
@@ -203,7 +203,7 @@ class ZiplineLoader(
       val byteString = fetchers
         .fetch(
           concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-          applicationId = applicationId,
+          applicationName = applicationName,
           id = id,
           sha256 = module.sha256,
           url = module.url,
@@ -217,22 +217,22 @@ class ZiplineLoader(
   }
 
   private suspend fun fetchZiplineManifest(
-    applicationId: String,
+    applicationName: String,
     manifestUrl: String,
   ): ZiplineManifest {
     val manifest = fetchers.fetchManifest(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-      applicationId = applicationId,
-      id = getApplicationManifestFileName(applicationId),
+      applicationName = applicationName,
+      id = getApplicationManifestFileName(applicationName),
       url = manifestUrl,
     )
     return httpClient.resolveUrls(manifest, manifestUrl)
   }
 
   companion object {
-    const val DEFAULT_APPLICATION_ID = "default"
+    const val DEFAULT_application_name = "default"
     private const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
-    internal fun getApplicationManifestFileName(applicationId: String = DEFAULT_APPLICATION_ID) =
-      "$applicationId.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX"
+    internal fun getApplicationManifestFileName(applicationName: String = DEFAULT_application_name) =
+      "$applicationName.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX"
   }
 }

@@ -40,7 +40,7 @@ class FetcherTest {
 
   private val fetcherAlpha = object : Fetcher {
     override suspend fun fetch(
-      applicationId: String,
+      applicationName: String,
       id: String,
       sha256: ByteString,
       url: String,
@@ -50,20 +50,20 @@ class FetcherTest {
     }
 
     override suspend fun fetchManifest(
-      applicationId: String,
+      applicationName: String,
       id: String,
       url: String
     ): ZiplineManifest? {
       TODO("Not yet implemented")
     }
 
-    override suspend fun pin(applicationId: String, manifest: ZiplineManifest) {
+    override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
       TODO("Not yet implemented")
     }
   }
   private val fetcherBravo = object : Fetcher {
     override suspend fun fetch(
-      applicationId: String,
+      applicationName: String,
       id: String,
       sha256: ByteString,
       url: String,
@@ -73,14 +73,14 @@ class FetcherTest {
     }
 
     override suspend fun fetchManifest(
-      applicationId: String,
+      applicationName: String,
       id: String,
       url: String
     ): ZiplineManifest? {
       TODO("Not yet implemented")
     }
 
-    override suspend fun pin(applicationId: String, manifest: ZiplineManifest) {
+    override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
       TODO("Not yet implemented")
     }
   }
@@ -107,14 +107,14 @@ class FetcherTest {
     val fetchers = listOf(fetcherAlpha, fetcherBravo)
     val actualByteString = fetchers.fetch(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-      applicationId = "foxtrot",
+      applicationName = "foxtrot",
       id = "alpha",
       sha256 = "alpha".encodeUtf8().sha256(),
       url = "alpha",
     )
     fetchers.fetch(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-      applicationId = "foxtrot",
+      applicationName = "foxtrot",
       id = "bravo",
       sha256 = "bravo".encodeUtf8().sha256(),
       url = "bravo",

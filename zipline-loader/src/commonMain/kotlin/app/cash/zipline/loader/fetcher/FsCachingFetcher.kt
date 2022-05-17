@@ -27,24 +27,24 @@ class FsCachingFetcher(
   private val delegate: Fetcher,
 ) : Fetcher {
   override suspend fun fetch(
-    applicationId: String,
+    applicationName: String,
     id: String,
     sha256: ByteString,
     url: String
-  ): ByteString = cache.getOrPut(applicationId, sha256) {
-    delegate.fetch(applicationId, id, sha256, url)!!
+  ): ByteString = cache.getOrPut(applicationName, sha256) {
+    delegate.fetch(applicationName, id, sha256, url)!!
   }
 
   override suspend fun fetchManifest(
-    applicationId: String,
+    applicationName: String,
     id: String,
     url: String
   ): ZiplineManifest? = try {
-    delegate.fetchManifest(applicationId, id, url)
+    delegate.fetchManifest(applicationName, id, url)
   } catch (e: Exception) {
-    cache.getPinnedManifest(applicationId)
-  } ?: cache.getPinnedManifest(applicationId)
+    cache.getPinnedManifest(applicationName)
+  } ?: cache.getPinnedManifest(applicationName)
 
-  override suspend fun pin(applicationId: String, manifest: ZiplineManifest) =
-    cache.pinManifest(applicationId, manifest)
+  override suspend fun pin(applicationName: String, manifest: ZiplineManifest) =
+    cache.pinManifest(applicationName, manifest)
 }

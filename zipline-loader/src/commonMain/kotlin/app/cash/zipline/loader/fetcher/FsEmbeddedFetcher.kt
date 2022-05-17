@@ -31,23 +31,23 @@ class FsEmbeddedFetcher(
   private val eventListener: EventListener,
 ) : Fetcher {
   override suspend fun fetch(
-    applicationId: String,
+    applicationName: String,
     id: String,
     sha256: ByteString,
     url: String
   ): ByteString? = fetchByteString(embeddedDir / sha256.hex())
 
   override suspend fun fetchManifest(
-    applicationId: String,
+    applicationName: String,
     id: String,
     url: String
   ): ZiplineManifest? {
-    val byteString = fetchByteString(embeddedDir / getApplicationManifestFileName(applicationId))
-    return byteString?.decodeToZiplineManifest(eventListener, applicationId, url)
+    val byteString = fetchByteString(embeddedDir / getApplicationManifestFileName(applicationName))
+    return byteString?.decodeToZiplineManifest(eventListener, applicationName, url)
   }
 
   override suspend fun pin(
-    applicationId: String,
+    applicationName: String,
     manifest: ZiplineManifest
   ) {}
 

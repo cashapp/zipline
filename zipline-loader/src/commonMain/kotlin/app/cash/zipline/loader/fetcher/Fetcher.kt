@@ -27,29 +27,29 @@ interface Fetcher {
   /**
    * Get the desired [ByteString] or null if not found.
    *
-   * If this fetcher supports pinning, the returned value will be pinned for [applicationId] until
+   * If this fetcher supports pinning, the returned value will be pinned for [applicationName] until
    *   [pin] is called.
    * If a fetcher does not get a file, it returns null and the next [Fetcher] is called.
    */
   suspend fun fetch(
-    applicationId: String,
+    applicationName: String,
     id: String,
     sha256: ByteString,
     url: String,
   ): ByteString?
 
   /**
-   * Get the manifest for [applicationId] or null if not found.
+   * Get the manifest for [applicationName] or null if not found.
    * If a fetcher does not get a file, it returns null and the next [Fetcher] is called.
    */
   suspend fun fetchManifest(
-    applicationId: String,
+    applicationName: String,
     id: String,
     url: String,
   ): ZiplineManifest?
 
   /**
-   * Permits all downloads for [applicationId] not in [manifest] to be pruned.
+   * Permits all downloads for [applicationName] not in [manifest] to be pruned.
    *
    * This assumes all artifacts in [manifest] are currently pinned, but it does not enforce this
    * assumption.
@@ -57,7 +57,7 @@ interface Fetcher {
    * Pin is called on all fetchers when a load succeeds.
    */
   suspend fun pin(
-    applicationId: String,
+    applicationName: String,
     manifest: ZiplineManifest,
   )
 }
@@ -67,7 +67,7 @@ interface Fetcher {
  */
 suspend fun List<Fetcher>.fetch(
   concurrentDownloadsSemaphore: Semaphore,
-  applicationId: String,
+  applicationName: String,
   id: String,
   sha256: ByteString,
   url: String,
@@ -75,12 +75,12 @@ suspend fun List<Fetcher>.fetch(
   .withPermit {
     var byteString: ByteString? = null
     for (fetcher in this) {
-      byteString = fetcher.fetch(applicationId, id, sha256, url)
+      byteString = fetcher.fetch(applicationName, id, sha256, url)
       if (byteString != null) break
     }
 
     checkNotNull(byteString) {
-      "Unable to fetch ByteString for [applicationId=$applicationId][id=$id][sha256=$sha256][url=$url]"
+      "Unable to fetch ByteString for [applicationName=$applicationName][id=$id][sha256=$sha256][url=$url]"
     }
     return byteString
   }
@@ -90,26 +90,26 @@ suspend fun List<Fetcher>.fetch(
  */
 suspend fun List<Fetcher>.fetchManifest(
   concurrentDownloadsSemaphore: Semaphore,
-  applicationId: String,
+  applicationName: String,
   id: String,
   url: String,
 ): ZiplineManifest = concurrentDownloadsSemaphore
   .withPermit {
     var manifest: ZiplineManifest? = null
     for (fetcher in this) {
-      manifest = fetcher.fetchManifest(applicationId, id, url)
+      manifest = fetcher.fetchManifest(applicationName, id, url)
       if (manifest != null) break
     }
 
     checkNotNull(manifest) {
-      "Unable to fetch Manifest for [applicationId=$applicationId][id=$id][url=$url]"
+      "Unable to fetch Manifest for [applicationName=$applicationName][id=$id][url=$url]"
     }
     return manifest
   }
 
 suspend fun List<Fetcher>.pin(
-  applicationId: String,
+  applicationName: String,
   manifest: ZiplineManifest,
 )= this.forEach { fetcher ->
-    fetcher.pin(applicationId, manifest)
+    fetcher.pin(applicationName, manifest)
   }

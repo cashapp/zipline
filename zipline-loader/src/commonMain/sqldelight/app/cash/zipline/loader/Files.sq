@@ -3,14 +3,14 @@ import app.cash.zipline.loader.FileState;
 CREATE TABLE files (
   id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
   sha256_hex TEXT NOT NULL,
-  manifest_for_application_id TEXT, -- LIKE 'red' or maybe 'red.manifest.json', null for all files except manifest
+  manifest_for_application_name TEXT, -- LIKE 'red' or maybe 'red.manifest.json', null for all files except manifest
   file_state TEXT AS FileState NOT NULL,
   size_bytes INTEGER NOT NULL,
   last_used_at_epoch_ms INTEGER NOT NULL
 );
 
 CREATE UNIQUE INDEX files_sha256_hex ON files(sha256_hex);
-CREATE UNIQUE INDEX files_manifest_for_application_name ON files(manifest_for_application_id);
+CREATE UNIQUE INDEX files_manifest_for_application_name ON files(manifest_for_application_name);
 
 selectCacheSumBytes:
 SELECT SUM(size_bytes)
@@ -29,7 +29,7 @@ WHERE id = :id
 LIMIT 1;
 
 insert:
-INSERT INTO files(sha256_hex, manifest_for_application_id, file_state, size_bytes, last_used_at_epoch_ms)
+INSERT INTO files(sha256_hex, manifest_for_application_name, file_state, size_bytes, last_used_at_epoch_ms)
 VALUES (?, ?, ?, ?, ?);
 
 update:
@@ -38,7 +38,7 @@ SET file_state = :file_state, size_bytes = :size_bytes, last_used_at_epoch_ms = 
 WHERE id = :id;
 
 selectOldestReady:
-SELECT id, sha256_hex, manifest_for_application_id, file_state, size_bytes, last_used_at_epoch_ms
+SELECT id, sha256_hex, manifest_for_application_name, file_state, size_bytes, last_used_at_epoch_ms
 FROM files f
 LEFT JOIN pins p ON (f.id = p.file_id)
 WHERE
@@ -52,9 +52,9 @@ SELECT *
 FROM files f
 LEFT JOIN pins p ON (
   f.id = p.file_id AND
-  f.manifest_for_application_id = p.application_id
+  f.manifest_for_application_name = p.application_name
 )
-WHERE f.manifest_for_application_id = ?;
+WHERE f.manifest_for_application_name = ?;
 
 delete:
 DELETE FROM files

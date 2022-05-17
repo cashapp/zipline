@@ -29,43 +29,43 @@ class HttpFetcher(
   private val eventListener: EventListener,
 ) : Fetcher {
   override suspend fun fetch(
-    applicationId: String,
+    applicationName: String,
     id: String,
     sha256: ByteString,
     url: String
-  ): ByteString = fetchByteString(applicationId, url, true)!!
+  ): ByteString = fetchByteString(applicationName, url, true)!!
 
   override suspend fun fetchManifest(
-    applicationId: String,
+    applicationName: String,
     id: String,
     url: String
   ): ZiplineManifest? {
-    val byteString = fetchByteString(applicationId, url, false)
-    return byteString?.decodeToZiplineManifest(eventListener, applicationId, url)
+    val byteString = fetchByteString(applicationName, url, false)
+    return byteString?.decodeToZiplineManifest(eventListener, applicationName, url)
   }
 
   override suspend fun pin(
-    applicationId: String,
+    applicationName: String,
     manifest: ZiplineManifest
   ) {}
 
   private suspend fun fetchByteString(
-    applicationId: String,
+    applicationName: String,
     url: String,
     throwException: Boolean
   ): ByteString? {
-    eventListener.downloadStart(applicationId, url)
+    eventListener.downloadStart(applicationName, url)
     val byteString = try {
       httpClient.download(url)
     } catch (e: Exception) {
-      eventListener.downloadFailed(applicationId, url, e)
+      eventListener.downloadFailed(applicationName, url, e)
       if (throwException) {
         throw e
       } else {
         return null
       }
     }
-    eventListener.downloadEnd(applicationId, url)
+    eventListener.downloadEnd(applicationName, url)
     return byteString
   }
 }

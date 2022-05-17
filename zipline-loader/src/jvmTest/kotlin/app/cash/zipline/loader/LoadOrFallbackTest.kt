@@ -177,25 +177,25 @@ class LoadOrFallbackTest {
       )
     )
 
-    fun seedEmbedded(applicationId: String, seed: String) {
-      embeddedFileSystem.createDirectories(embeddedDir / applicationId)
-      embeddedFileSystem.write(embeddedDir / applicationId / seed) {
+    fun seedEmbedded(applicationName: String, seed: String) {
+      embeddedFileSystem.createDirectories(embeddedDir / applicationName)
+      embeddedFileSystem.write(embeddedDir / applicationName / seed) {
         write(createZiplineFile(quickJs, createJs(seed), "$seed.js"))
       }
     }
 
-    suspend fun success(applicationId: String, seed: String): String {
+    suspend fun success(applicationName: String, seed: String): String {
       val manifest = createRelativeManifest(seed)
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
-      val manifestUrl = "$baseUrl/$applicationId/${getApplicationManifestFileName(applicationId)}"
+      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
       httpClient.filePathToByteString = mapOf(
         manifestUrl to manifestJsonString.encodeUtf8(),
-        "$baseUrl/$applicationId/$seed.zipline" to createZiplineFile(
+        "$baseUrl/$applicationName/$seed.zipline" to createZiplineFile(
           quickJs, createJs(seed), "$seed.js"
         )
       )
-      zipline = loader.loadOrFallBack(applicationId, EmptySerializersModule, manifestUrl)
+      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl)
       return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
         " loaded\n"
       )
@@ -206,50 +206,50 @@ class LoadOrFallbackTest {
       return 1
     }
 
-    suspend fun failureManifestFetchFails(applicationId: String): String {
+    suspend fun failureManifestFetchFails(applicationName: String): String {
       val seed = "fail"
-      val manifestUrl = "$baseUrl/$applicationId/${getApplicationManifestFileName(applicationId)}"
+      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
       httpClient.filePathToByteString = mapOf(
-        "$baseUrl/$applicationId/$seed.zipline" to createZiplineFile(
+        "$baseUrl/$applicationName/$seed.zipline" to createZiplineFile(
           quickJs, createJs(seed), "$seed.js"
         )
       )
-      zipline = loader.loadOrFallBack(applicationId, EmptySerializersModule, manifestUrl)
+      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl)
       return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
         " loaded\n"
       )
     }
 
-    suspend fun failureCodeFetchFails(applicationId: String): String {
+    suspend fun failureCodeFetchFails(applicationName: String): String {
       val seed = "fail"
       val manifest = createRelativeManifest(seed)
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
-      val manifestUrl = "$baseUrl/$applicationId/${getApplicationManifestFileName(applicationId)}"
+      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
 
       httpClient.filePathToByteString = mapOf(
         manifestUrl to manifestJsonString.encodeUtf8(),
       )
-      zipline = loader.loadOrFallBack(applicationId, EmptySerializersModule, manifestUrl)
+      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl)
       return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
         " loaded\n"
       )
     }
 
-    suspend fun failureCodeRunFails(applicationId: String): String {
+    suspend fun failureCodeRunFails(applicationName: String): String {
       val seed = "fail"
       val manifest = createRelativeManifest(seed)
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
-      val manifestUrl = "$baseUrl/$applicationId/${getApplicationManifestFileName(applicationId)}"
+      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
 
       httpClient.filePathToByteString = mapOf(
         manifestUrl to manifestJsonString.encodeUtf8(),
-        "$baseUrl/$applicationId/$seed.zipline" to createZiplineFile(
+        "$baseUrl/$applicationName/$seed.zipline" to createZiplineFile(
           quickJs, createFailureJs(seed), "$seed.js"
         )
       )
-      zipline = loader.loadOrFallBack(applicationId, EmptySerializersModule, manifestUrl)
+      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl)
       return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
         " loaded\n"
       )
