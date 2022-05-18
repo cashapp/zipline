@@ -97,7 +97,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingRequestAndResponse(): Unit = runBlocking {
+  fun suspendingRequestAndResponse() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)
@@ -142,7 +142,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingCallThrowsException(): Unit = runBlocking {
+  fun suspendingCallThrowsException() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : SuspendingEchoService {
@@ -161,7 +161,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingCallbacksCreateTemporaryReferences(): Unit = runBlocking {
+  fun suspendingCallbacksCreateTemporaryReferences() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val echoService = object : SuspendingEchoService {
@@ -189,7 +189,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingCallCanceled(): Unit = runBlocking {
+  fun suspendingCallCanceled() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)
@@ -219,7 +219,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun multipleCancelsAreIdempotent(): Unit = runBlocking {
+  fun multipleCancelsAreIdempotent() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)
@@ -251,7 +251,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun cancelAfterResult(): Unit = runBlocking {
+  fun cancelAfterResult() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)

@@ -60,6 +60,7 @@ import okio.Path
  * the cache and behavior is undefined.
  */
 class ZiplineCache internal constructor(
+  private val eventListener: EventListener,
   private val database: Database,
   private val fileSystem: FileSystem,
   private val directory: Path,
@@ -79,77 +80,7 @@ class ZiplineCache internal constructor(
     setReady(metadata, content.size.toLong())
   }
 
-  /** @return null if there is no pinned manifest */
-  fun getPinnedManifest(applicationName: String): ZiplineManifest? {
-    val manifestFile = database.filesQueries
-      .selectPinnedManifest(applicationName)
-      .executeAsOneOrNull() ?: return null
-    val manifestByteString = read(manifestFile.sha256_hex)
-      ?: throw FileNotFoundException(
-        "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
-      )
-    return Json.decodeFromString(ZiplineManifest.serializer(), manifestByteString.utf8())
-  }
 
-  /** Pins manifest and unpins all other files and manifests */
-  fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
-    val manifestByteString = Json.encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
-    val manifestMetadata = writeManifest(applicationName, manifestByteString.sha256(), manifestByteString)
-      ?: return
-
-    val existingPins = database.pinsQueries.get_pins(applicationName).executeAsList()
-
-    // Pin all modules in this manifest
-    val moduleMetadata = manifest.modules.map { (_, module) ->
-      database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull() ?: return
-    }
-    moduleMetadata.map { metadata ->
-      createPinIfNotExists(metadata.id, applicationName)
-    }
-
-    // Pin the manifest
-    createPinIfNotExists(manifestMetadata.id, applicationName)
-
-    // Remove pins for last stable application pin
-    database.pinsQueries.delete_pin(applicationName, existingPins.map { it.file_id })
-  }
-
-  /** Unpin manifest and make all files open to pruning */
-  fun unpinManifest(eventListener: EventListener, applicationName: String, manifest: ZiplineManifest) {
-    val unpinManifestByteString = Json.encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
-    val unpinManifestMetadata = database.filesQueries.get(unpinManifestByteString.sha256().hex()).executeAsOneOrNull()
-      ?: return
-
-    // Delete manifest to be unpinned
-    database.pinsQueries.delete_pin(applicationName, listOf(unpinManifestMetadata.id))
-
-    // Get fallback manifest metadata
-    val fallbackManifestPinMetadatas = database.filesQueries
-      .selectPinnedManifest(applicationName)
-      .executeAsList()
-      .filter { it.file_id != unpinManifestMetadata.id }
-    val fallbackManifestModuleIds = fallbackManifestPinMetadatas.flatMap { fallbackManifestMetadata ->
-      val manifestByteString = checkNotNull(read(fallbackManifestMetadata.sha256_hex)) {
-        "Manifest file not found [applicationName=${fallbackManifestMetadata.application_name}][sha256hex=${fallbackManifestMetadata.sha256_hex}]"
-      }
-      val fallbackManifest = manifestByteString.decodeToZiplineManifest(eventListener, applicationName, "")
-      fallbackManifest.modules.mapNotNull { fallbackModule ->
-        database.filesQueries.get(fallbackModule.value.sha256.hex()).executeAsOneOrNull()?.id
-      }
-    }.toSet()
-
-    // Unpin all files from unpinManifest that aren't present in the fallbackManifestModules
-    val unpinModuleIds = manifest.modules.values.mapNotNull { module ->
-      database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.id
-    }.toSet().filter { it !in fallbackManifestModuleIds }
-    database.pinsQueries.delete_pin(applicationName, unpinModuleIds)
-  }
-
-  private fun writeManifest(applicationName: String, sha256: ByteString, content: ByteString): Files? {
-    val metadata = openForWrite(applicationName, sha256, true) ?: return null
-    write(metadata, content)
-    return database.filesQueries.get(metadata.sha256_hex).executeAsOne()
-  }
 
   /**
    * Handle competing read and download.
@@ -192,7 +123,92 @@ class ZiplineCache internal constructor(
     }
   }
 
+  fun pin(applicationName: String, sha256: ByteString) {
+    val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
+    createPinIfNotExists(applicationName, fileId)
+  }
 
+  fun unpin(applicationName: String, sha256: ByteString) {
+    val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
+    database.pinsQueries.delete_pin(applicationName, listOf(fileId))
+  }
+
+  /** @return null if there is no pinned manifest */
+  fun getPinnedManifest(applicationName: String): ZiplineManifest? {
+    val manifestFile = database.filesQueries
+      .selectPinnedManifest(applicationName)
+      .executeAsOneOrNull() ?: return null
+    val manifestByteString = read(manifestFile.sha256_hex)
+      ?: throw FileNotFoundException(
+        "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
+      )
+    return Json.decodeFromString(ZiplineManifest.serializer(), manifestByteString.utf8())
+  }
+
+  /** Pins manifest and unpins all other files and manifests */
+  fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
+    val manifestByteString = Json.encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
+    val manifestMetadata = writeManifest(applicationName, manifestByteString.sha256(), manifestByteString)
+      ?: return
+
+    val existingPinIds = database.pinsQueries.get_pins(applicationName).executeAsList().map { it.file_id }
+    // TODO add a batch lookup SQL query
+    val existingPinIdsToKeep = existingPinIds.mapNotNull { id -> database.filesQueries.getById(id).executeAsOneOrNull() }
+      .filter { metadata -> metadata.sha256_hex in manifest.modules.map { module -> module.value.sha256.hex() } }
+      .map { it.id }
+    val existingPinIdsToRemove = existingPinIds.filter { id -> id !in existingPinIdsToKeep }
+
+    // Pin all modules in this manifest
+    val moduleMetadata = manifest.modules.map { (_, module) ->
+      database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull() ?: return
+    }
+    moduleMetadata.map { metadata ->
+      createPinIfNotExists(applicationName, metadata.id)
+    }
+
+    // Pin the manifest
+    createPinIfNotExists(applicationName, manifestMetadata.id)
+
+    // Remove pins for last stable application pin
+    database.pinsQueries.delete_pin(applicationName, existingPinIdsToRemove)
+  }
+
+  /** Unpin manifest and make all files open to pruning */
+  fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
+    val unpinManifestByteString = Json.encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
+    val unpinManifestMetadata = database.filesQueries.get(unpinManifestByteString.sha256().hex()).executeAsOneOrNull()
+      ?: return
+
+    // Delete manifest to be unpinned
+    database.pinsQueries.delete_pin(applicationName, listOf(unpinManifestMetadata.id))
+
+    // Get fallback manifest metadata
+    val fallbackManifestPinMetadatas = database.filesQueries
+      .selectPinnedManifest(applicationName)
+      .executeAsList()
+      .filter { it.file_id != unpinManifestMetadata.id }
+    val fallbackManifestModuleIds = fallbackManifestPinMetadatas.flatMap { fallbackManifestMetadata ->
+      val manifestByteString = checkNotNull(read(fallbackManifestMetadata.sha256_hex)) {
+        "Manifest file not found [applicationName=${fallbackManifestMetadata.application_name}][sha256hex=${fallbackManifestMetadata.sha256_hex}]"
+      }
+      val fallbackManifest = manifestByteString.decodeToZiplineManifest(eventListener, applicationName, "")
+      fallbackManifest.modules.mapNotNull { fallbackModule ->
+        database.filesQueries.get(fallbackModule.value.sha256.hex()).executeAsOneOrNull()?.id
+      }
+    }.toSet()
+
+    // Unpin all files from unpinManifest that aren't present in the fallbackManifestModules
+    val unpinModuleIds = manifest.modules.values.mapNotNull { module ->
+      database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.id
+    }.toSet().filter { it !in fallbackManifestModuleIds }
+    database.pinsQueries.delete_pin(applicationName, unpinModuleIds)
+  }
+
+  private fun writeManifest(applicationName: String, sha256: ByteString, content: ByteString): Files? {
+    val metadata = openForWrite(applicationName, sha256, true) ?: return null
+    write(metadata, content)
+    return database.filesQueries.get(metadata.sha256_hex).executeAsOne()
+  }
 
   /**
    * Returns file metadata if the file was absent and is now `DIRTY`. The caller is now the exclusive owner of this file
@@ -222,7 +238,7 @@ class ZiplineCache internal constructor(
     val metadata = getOrNull(sha256)!!
 
     // Optimistically pin file, if the load fails it will be unpinned
-    createPinIfNotExists(metadata.id, applicationName)
+    createPinIfNotExists(applicationName, metadata.id)
 
     metadata
   } catch (e: Exception) {
@@ -231,8 +247,8 @@ class ZiplineCache internal constructor(
   }
 
   private fun createPinIfNotExists(
-    file_id: Long,
-    application_name: String
+    application_name: String,
+    file_id: Long
   ) {
     if (database.pinsQueries.get_pin(file_id, application_name).executeAsOneOrNull() == null) {
       database.pinsQueries.create_pin(file_id, application_name)
@@ -319,6 +335,7 @@ class ZiplineCache internal constructor(
 
 // TODO add schema version checker and automigration for non-Android platforms
 fun createZiplineCache(
+  eventListener: EventListener,
   driver: SqlDriver,
   fileSystem: FileSystem,
   directory: Path,
@@ -327,6 +344,7 @@ fun createZiplineCache(
 ): ZiplineCache {
   val database = createDatabase(driver)
   val ziplineCache = ZiplineCache(
+    eventListener = eventListener,
     database = database,
     fileSystem = fileSystem,
     directory = directory,

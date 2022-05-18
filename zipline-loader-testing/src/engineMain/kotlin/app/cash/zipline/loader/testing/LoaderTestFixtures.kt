@@ -95,7 +95,7 @@ class LoaderTestFixtures(quickJs: QuickJs) {
     const val bravoRelativeUrl = "bravo.zipline"
     const val alphaUrl = "https://example.com/files/alpha.zipline"
     const val bravoUrl = "https://example.com/files/bravo.zipline"
-    const val manifestUrl = "https://example.com/files/manifest.zipline.json"
+    const val manifestUrl = "https://example.com/files/default.manifest.zipline.json"
     fun createJs(seed: String) = """
       |globalThis.log = globalThis.log || "";
       |globalThis.log += "$seed loaded\n"
@@ -122,7 +122,7 @@ class LoaderTestFixtures(quickJs: QuickJs) {
       embeddedDir: Path,
       embeddedFileSystem: FileSystem,
       cache: ZiplineCache,
-      serializersModule: SerializersModule = SerializersModule {  },
+      serializersModule: SerializersModule = EmptySerializersModule,
       eventListener: EventListener = EventListener.NONE,
     ) = ZiplineLoader(
       dispatcher = dispatcher,
@@ -137,7 +137,7 @@ class LoaderTestFixtures(quickJs: QuickJs) {
         ),
         FsCachingFetcher(
           cache = cache,
-          delegate = HttpFetcher(httpClient = httpClient, eventListener = eventListener),
+          delegate = HttpFetcher(eventListener = eventListener, httpClient = httpClient),
         ),
       )
     )
@@ -167,13 +167,14 @@ class LoaderTestFixtures(quickJs: QuickJs) {
         ),
         FsCachingFetcher(
           cache = createZiplineCache(
+            eventListener = eventListener,
             driver = cacheDbDriver,
             fileSystem = cacheFileSystem,
             directory = cacheDir,
             maxSizeInBytes = cacheMaxSizeInBytes,
             nowMs = nowMs,
           ),
-          delegate = HttpFetcher(httpClient = httpClient, eventListener = eventListener),
+          delegate = HttpFetcher(eventListener = eventListener, httpClient = httpClient),
         ),
       ),
     )
@@ -190,8 +191,8 @@ class LoaderTestFixtures(quickJs: QuickJs) {
       httpClient = httpClient,
       fetchers = listOf(
         HttpFetcher(
-          httpClient = httpClient,
           eventListener = eventListener,
+          httpClient = httpClient,
         ),
       )
     )

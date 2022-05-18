@@ -57,7 +57,7 @@ class ZiplineLoader(
   private val serializersModule: SerializersModule,
   private val eventListener: EventListener,
   private val httpClient: ZiplineHttpClient,
-  private val fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient, eventListener)),
+  private val fetchers: List<Fetcher> = listOf(HttpFetcher(eventListener, httpClient)),
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3
@@ -83,7 +83,7 @@ class ZiplineLoader(
         dispatcher, serializersModule
       )
       // Load from either pinned in cache or embedded by forcing network failure
-      load(zipline, fetchZiplineManifest(applicationName, ""), applicationName)
+      load(zipline, fetchZiplineManifest(applicationName, "$FALLBACK_BASE_URL${getApplicationManifestFileName(applicationName)}"), applicationName)
       zipline
     }
   }
@@ -103,20 +103,20 @@ class ZiplineLoader(
   suspend fun load(
     zipline: Zipline,
     manifestUrl: String,
-    applicationName: String = DEFAULT_application_name,
+    applicationName: String = DEFAULT_APPLICATION_NAME,
   ) = load(zipline, fetchZiplineManifest(applicationName, manifestUrl), applicationName)
 
   suspend fun load(
     zipline: Zipline,
     manifest: ZiplineManifest,
-    applicationName: String = DEFAULT_application_name,
+    applicationName: String = DEFAULT_APPLICATION_NAME,
   ) = receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
 
   suspend fun download(
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifestUrl: String,
-    applicationName: String = DEFAULT_application_name,
+    applicationName: String = DEFAULT_APPLICATION_NAME,
   ) {
     download(
       downloadDir = downloadDir,
@@ -130,10 +130,10 @@ class ZiplineLoader(
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifest: ZiplineManifest,
-    applicationName: String = DEFAULT_application_name,
+    applicationName: String = DEFAULT_APPLICATION_NAME,
   ) {
     downloadFileSystem.createDirectories(downloadDir)
-    downloadFileSystem.write(downloadDir / getApplicationManifestFileName(applicationName)!!) {
+    downloadFileSystem.write(downloadDir / getApplicationManifestFileName(applicationName)) {
       write(Json.encodeToString(manifest).encodeUtf8())
     }
     receive(
@@ -236,9 +236,10 @@ class ZiplineLoader(
   }
 
   companion object {
-    const val DEFAULT_application_name = "default"
+    const val FALLBACK_BASE_URL = "fallback://"
+    const val DEFAULT_APPLICATION_NAME = "default"
     private const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
-    internal fun getApplicationManifestFileName(applicationName: String = DEFAULT_application_name) =
+    internal fun getApplicationManifestFileName(applicationName: String = DEFAULT_APPLICATION_NAME) =
       "$applicationName.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX"
   }
 }

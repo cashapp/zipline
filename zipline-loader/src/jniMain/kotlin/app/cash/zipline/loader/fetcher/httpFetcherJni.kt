@@ -19,4 +19,6 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import okhttp3.OkHttpClient
 
-fun HttpFetcher(httpClient: OkHttpClient, eventListener: EventListener) = HttpFetcher(httpClient = OkHttpZiplineHttpClient(httpClient), eventListener = eventListener)
+fun HttpFetcher(httpClient: OkHttpClient, eventListener: EventListener) = HttpFetcher(
+  eventListener = eventListener, httpClient = OkHttpZiplineHttpClient(httpClient)
+)

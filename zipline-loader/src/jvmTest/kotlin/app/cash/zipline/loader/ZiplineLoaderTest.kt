@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.ZiplineLoader.Companion.DEFAULT_APPLICATION_NAME
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
@@ -77,7 +78,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun happyPath(): Unit = runBlocking(dispatcher) {
+  fun happyPath() = runBlocking {
     httpClient.filePathToByteString = mapOf(
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
@@ -94,7 +95,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loadManifestFromUrl(): Unit = runBlocking(dispatcher) {
+  fun loadManifestFromUrl() = runBlocking {
     httpClient.filePathToByteString = mapOf(
       manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
       alphaUrl to testFixtures.alphaByteString,
@@ -112,7 +113,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loaderUsesCache(): Unit = runBlocking(dispatcher) {
+  fun loaderUsesCache() = runBlocking {
     // load, no cache hit, download
     httpClient.filePathToByteString = mapOf(
       manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
@@ -146,7 +147,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loaderUsesResourcesBeforeCacheButManifestOverNetwork(): Unit = runBlocking(dispatcher) {
+  fun loaderUsesResourcesBeforeCacheButManifestOverNetwork() = runBlocking {
     // seed the resources FS with zipline files
     embeddedFileSystem.createDirectories(embeddedDir)
     embeddedFileSystem.write(embeddedDir / testFixtures.alphaSha256Hex) {
@@ -173,7 +174,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loaderUsesResourcesForPrebuiltManifestWhenNetworkOffline(): Unit = runBlocking(dispatcher) {
+  fun loaderUsesResourcesForPrebuiltManifestWhenNetworkOffline() = runBlocking {
     // seed the embedded FS with zipline manifest and files
     embeddedFileSystem.createDirectories(embeddedDir)
     embeddedFileSystem.write(embeddedDir / getApplicationManifestFileName()) {
@@ -202,7 +203,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun downloadToDirectoryThenLoadFromAsEmbedded(): Unit = runBlocking(dispatcher) {
+  fun downloadToDirectoryThenLoadFromAsEmbedded() = runBlocking {
     val downloadDir = "/downloads/latest".toPath()
     val downloadFileSystem = cacheFileSystem
     loader = createDownloadZiplineLoader(
@@ -256,7 +257,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun downloadToDirectory(): Unit = runBlocking(dispatcher) {
+  fun downloadToDirectory() = runBlocking {
     val fileSystem = FakeFileSystem()
     val downloadDir = "/zipline/download".toPath()
 

@@ -42,7 +42,6 @@ import org.junit.Test
 @ExperimentalCoroutinesApi
 class LoadOrFallbackTest {
   private lateinit var tester: LoadOrFallbackTester
-  private val dispatcher = TestCoroutineDispatcher()
 
   @Before
   fun setUp() {
@@ -50,36 +49,36 @@ class LoadOrFallbackTest {
   }
 
   @Test
-  fun preferNetworkWhenThatWorks(): Unit = runBlocking(dispatcher) {
+  fun preferNetworkWhenThatWorks() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
   }
 
   @Test
-  fun fallBackToPreviousNetworkWhenSomethingFails(): Unit = runBlocking(dispatcher) {
+  fun fallBackToPreviousNetworkWhenSomethingFails() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
     assertEquals("apple", tester.failureManifestFetchFails("red"))
   }
 
   @Test
-  fun fallBackBecauseManifestFetchFails(): Unit = runBlocking(dispatcher) {
+  fun fallBackBecauseManifestFetchFails() = runBlocking {
     tester.seedEmbedded("red", "firetruck")
     assertEquals("firetruck", tester.failureManifestFetchFails("red"))
   }
 
   @Test
-  fun fallBackBecauseCodeFetchFails(): Unit = runBlocking(dispatcher) {
+  fun fallBackBecauseCodeFetchFails() = runBlocking {
     tester.seedEmbedded("red", "firetruck")
     assertEquals("firetruck", tester.failureCodeFetchFails("red"))
   }
 
   @Test
-  fun fallBackBecauseCodeRunFails(): Unit = runBlocking(dispatcher) {
+  fun fallBackBecauseCodeRunFails() = runBlocking {
     tester.seedEmbedded("red", "firetruck")
     assertEquals("firetruck", tester.failureCodeRunFails("red"))
   }
 
   @Test
-  fun successfulNetworkUpdatesFallback(): Unit = runBlocking(dispatcher) {
+  fun successfulNetworkUpdatesFallback() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
     assertEquals("apple", tester.failureManifestFetchFails("red"))
     assertEquals("firetruck", tester.success("red", "firetruck"))
@@ -87,7 +86,7 @@ class LoadOrFallbackTest {
   }
 
   @Test
-  fun eachApplicationHasItsOwnLastWorkingNetwork(): Unit = runBlocking(dispatcher) {
+  fun eachApplicationHasItsOwnLastWorkingNetwork() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
     assertEquals("sky", tester.success("blue", "sky"))
     assertEquals("apple", tester.failureManifestFetchFails("red"))
@@ -95,7 +94,7 @@ class LoadOrFallbackTest {
   }
 
   @Test
-  fun eachApplicationHasItsOwnEmbedded(): Unit = runBlocking(dispatcher) {
+  fun eachApplicationHasItsOwnEmbedded() = runBlocking {
     tester.seedEmbedded("red", "apple")
     tester.seedEmbedded("blue", "sky")
     assertEquals("apple", tester.failureManifestFetchFails("red"))
@@ -103,7 +102,7 @@ class LoadOrFallbackTest {
   }
 
   @Test
-  fun anyLastWorkingNetworkNotPruned(): Unit = runBlocking(dispatcher) {
+  fun anyLastWorkingNetworkNotPruned() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
     assertEquals("sky", tester.success("blue", "sky"))
     assertEquals(0, tester.pruneEverythingWeCanPrune())
@@ -112,14 +111,14 @@ class LoadOrFallbackTest {
   }
 
   @Test
-  fun successfulNetworkMakesPreviousNetworkPrunable(): Unit = runBlocking(dispatcher) {
+  fun successfulNetworkMakesPreviousNetworkPrunable() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
     assertEquals("firetruck", tester.success("red", "firetruck"))
     assertEquals(1, tester.pruneEverythingWeCanPrune())
   }
 
   @Test
-  fun successAfterFailureMakesFailurePrunable(): Unit = runBlocking(dispatcher) {
+  fun successAfterFailureMakesFailurePrunable() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
     assertEquals("apple", tester.failureCodeRunFails("red"))
     assertEquals(1, tester.pruneEverythingWeCanPrune())
@@ -178,9 +177,15 @@ class LoadOrFallbackTest {
     )
 
     fun seedEmbedded(applicationName: String, seed: String) {
-      embeddedFileSystem.createDirectories(embeddedDir / applicationName)
-      embeddedFileSystem.write(embeddedDir / applicationName / seed) {
-        write(createZiplineFile(quickJs, createJs(seed), "$seed.js"))
+      val manifest = createRelativeManifest(seed)
+      val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
+      embeddedFileSystem.createDirectories(embeddedDir)
+      val ziplineFileByteString = createZiplineFile(quickJs, createJs(seed), "$seed.js")
+      embeddedFileSystem.write(embeddedDir / ziplineFileByteString.sha256().hex()) {
+        write(ziplineFileByteString)
+      }
+      embeddedFileSystem.write(embeddedDir / getApplicationManifestFileName(applicationName)) {
+        write(manifestJsonString.encodeUtf8())
       }
     }
 
@@ -188,7 +193,8 @@ class LoadOrFallbackTest {
       val manifest = createRelativeManifest(seed)
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
-      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+      val manifestUrl =
+        "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
       httpClient.filePathToByteString = mapOf(
         manifestUrl to manifestJsonString.encodeUtf8(),
         "$baseUrl/$applicationName/$seed.zipline" to createZiplineFile(
@@ -208,7 +214,8 @@ class LoadOrFallbackTest {
 
     suspend fun failureManifestFetchFails(applicationName: String): String {
       val seed = "fail"
-      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+      val manifestUrl =
+        "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
       httpClient.filePathToByteString = mapOf(
         "$baseUrl/$applicationName/$seed.zipline" to createZiplineFile(
           quickJs, createJs(seed), "$seed.js"
@@ -225,7 +232,8 @@ class LoadOrFallbackTest {
       val manifest = createRelativeManifest(seed)
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
-      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+      val manifestUrl =
+        "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
 
       httpClient.filePathToByteString = mapOf(
         manifestUrl to manifestJsonString.encodeUtf8(),
@@ -241,7 +249,8 @@ class LoadOrFallbackTest {
       val manifest = createRelativeManifest(seed)
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
-      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+      val manifestUrl =
+        "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
 
       httpClient.filePathToByteString = mapOf(
         manifestUrl to manifestJsonString.encodeUtf8(),

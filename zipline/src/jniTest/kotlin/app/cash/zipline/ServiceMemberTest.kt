@@ -39,17 +39,17 @@ class ServiceMemberTest {
   private val zipline = Zipline.create(dispatcher, ServiceMemberSerializersModule)
   private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runBlocking {
     zipline.loadTestingJs()
     uncaughtExceptionHandler.setUp()
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runBlocking {
     zipline.close()
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun serviceMember(): Unit = runBlocking(dispatcher) {
+  @Test fun serviceMember() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareServiceMemberJsBridges()")
 
     val echoService = JvmEchoService()

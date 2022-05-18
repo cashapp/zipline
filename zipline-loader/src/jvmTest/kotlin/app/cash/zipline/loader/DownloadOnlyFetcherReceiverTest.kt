@@ -61,7 +61,7 @@ class DownloadOnlyFetcherReceiverTest {
   }
 
   @Test
-  fun getFileFromNetworkSaveToFs(): Unit = runBlocking {
+  fun getFileFromNetworkSaveToFs() = runBlocking {
     httpClient.filePathToByteString = mapOf(
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,

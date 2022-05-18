@@ -35,20 +35,20 @@ class Utf8Test {
   private val zipline = Zipline.create(dispatcher)
   private val quickjs = zipline.quickJs
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runBlocking {
     zipline.loadTestingJs()
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runBlocking {
     zipline.close()
   }
 
-  @Test fun nonAsciiInInputAndOutput(): Unit = runBlocking(dispatcher) {
+  @Test fun nonAsciiInInputAndOutput() = runBlocking {
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)",
         quickjs.evaluate("var s = \"a\uD83D\uDC1Dcdefg\"; '(' + s + ', ' + s + ')';"))
   }
 
-  @Test fun nonAsciiInFileName(): Unit = runBlocking(dispatcher) {
+  @Test fun nonAsciiInFileName() = runBlocking {
     val t = assertFailsWith<QuickJsException> {
       quickjs.evaluate("""
         |f1();
@@ -62,13 +62,13 @@ class Utf8Test {
     assertEquals("JavaScript.f1(a\uD83D\uDC1Dcdefg.js:4)", t.stackTrace[0].toString())
   }
 
-  @Test fun nonAsciiInboundCalls(): Unit = runBlocking(dispatcher) {
+  @Test fun nonAsciiInboundCalls() = runBlocking {
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiInputAndOutput()")
     val formatter = zipline.take<Formatter>("formatter")
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)", formatter.format("a\uD83D\uDC1Dcdefg"))
   }
 
-  @Test fun nonAsciiOutboundCalls(): Unit = runBlocking(dispatcher) {
+  @Test fun nonAsciiOutboundCalls() = runBlocking {
     zipline.bind<Formatter>("formatter", object : Formatter {
       override fun format(message: String): String {
         return "($message, $message)"
@@ -78,7 +78,7 @@ class Utf8Test {
         quickjs.evaluate("testing.app.cash.zipline.testing.callFormatter('a\uD83D\uDC1Dcdefg');"))
   }
 
-  @Test fun nonAsciiInExceptionThrownInJs(): Unit = runBlocking(dispatcher) {
+  @Test fun nonAsciiInExceptionThrownInJs() = runBlocking {
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiThrower()")
     val formatter = zipline.take<Formatter>("formatter")
     val t = assertFailsWith<Exception> {
@@ -87,7 +87,7 @@ class Utf8Test {
     assertThat(t).hasMessageThat().contains("a\uD83D\uDC1Dcdefg")
   }
 
-  @Test fun nonAsciiInExceptionThrownInJava(): Unit = runBlocking(dispatcher) {
+  @Test fun nonAsciiInExceptionThrownInJava() = runBlocking {
     zipline.bind<Formatter>("formatter", object : Formatter {
       override fun format(message: String): String {
         throw RuntimeException("a\uD83D\uDC1Dcdefg")

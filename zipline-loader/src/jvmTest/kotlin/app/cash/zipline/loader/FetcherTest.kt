@@ -60,7 +60,12 @@ class FetcherTest {
     override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
       TODO("Not yet implemented")
     }
+
+    override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
+      TODO("Not yet implemented")
+    }
   }
+
   private val fetcherBravo = object : Fetcher {
     override suspend fun fetch(
       applicationName: String,
@@ -83,6 +88,10 @@ class FetcherTest {
     override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
       TODO("Not yet implemented")
     }
+
+    override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
+      TODO("Not yet implemented")
+    }
   }
 
   private var alphaReceiverIds: MutableList<String> = mutableListOf()
@@ -103,7 +112,7 @@ class FetcherTest {
   }
 
   @Test
-  fun fetcherRunsInOrder(): Unit = runBlocking {
+  fun fetcherRunsInOrder() = runBlocking {
     val fetchers = listOf(fetcherAlpha, fetcherBravo)
     val actualByteString = fetchers.fetch(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,

@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -60,6 +61,7 @@ class ProductionFetcherReceiverTest {
     fileSystem = FakeFileSystem()
     embeddedFileSystem = FakeFileSystem()
     cache = createZiplineCache(
+      eventListener = EventListener.NONE,
       driver = cacheDbDriver,
       fileSystem = fileSystem,
       directory = cacheDirectory,
@@ -83,7 +85,7 @@ class ProductionFetcherReceiverTest {
   }
 
   @Test
-  fun getFromEmbeddedFileSystemNoNetworkCall(): Unit = runBlocking {
+  fun getFromEmbeddedFileSystemNoNetworkCall() = runBlocking {
     embeddedFileSystem.createDirectories(embeddedDir)
     embeddedFileSystem.write(embeddedDir / testFixtures.alphaSha256Hex) {
       write(testFixtures.alphaByteString)
@@ -106,7 +108,7 @@ class ProductionFetcherReceiverTest {
   }
 
   @Test
-  fun getFromWarmCacheNoNetworkCall(): Unit = runBlocking {
+  fun getFromWarmCacheNoNetworkCall() = runBlocking {
     cache.getOrPut("app1", testFixtures.alphaSha256) {
       testFixtures.alphaByteString
     }
@@ -130,7 +132,7 @@ class ProductionFetcherReceiverTest {
   }
 
   @Test
-  fun getFromNetworkPutInCache(): Unit = runBlocking {
+  fun getFromNetworkPutInCache() = runBlocking {
     assertNull(cache.read(testFixtures.alphaSha256))
     assertNull(cache.read(testFixtures.bravoSha256))
 

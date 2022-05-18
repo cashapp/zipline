@@ -24,11 +24,14 @@ import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 
+@OptIn(ExperimentalSerializationApi::class)
 class ZiplineGradleDownloader {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val eventListener: EventListener = EventListener.NONE
@@ -39,13 +42,13 @@ class ZiplineGradleDownloader {
     val httpClient = OkHttpZiplineHttpClient(client)
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
-      serializersModule = SerializersModule {  },
+      serializersModule = EmptySerializersModule,
       eventListener = eventListener,
       httpClient = httpClient,
       fetchers = listOf(
         HttpFetcher(
-          httpClient = httpClient,
           eventListener = eventListener,
+          httpClient = httpClient,
         )
       )
     )

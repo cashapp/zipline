@@ -101,16 +101,19 @@ class ZiplineCacheTest {
       val c32Hash = c32.sha256()
 
       assertEquals(a32, ziplineCache.getOrPut("app1", a32Hash) { a32 })
+      ziplineCache.unpin("app1", a32Hash)
       assertNotNull(ziplineCache.read(a32Hash))
       assertNull(ziplineCache.read(b32Hash))
       assertNull(ziplineCache.read(c32Hash))
 
       assertEquals(b32, ziplineCache.getOrPut("app1", b32Hash) { b32 })
+      ziplineCache.unpin("app1", b32Hash)
       assertNotNull(ziplineCache.read(a32Hash))
       assertNotNull(ziplineCache.read(b32Hash))
       assertNull(ziplineCache.read(c32Hash))
 
       assertEquals(c32, ziplineCache.getOrPut("app1", c32Hash) { c32 })
+      ziplineCache.unpin("app1", c32Hash)
       assertNull(ziplineCache.read(a32Hash))
       assertNotNull(ziplineCache.read(b32Hash))
       assertNotNull(ziplineCache.read(c32Hash))
@@ -128,12 +131,16 @@ class ZiplineCacheTest {
       val c32Hash = c32.sha256()
 
       assertEquals(a32, ziplineCache.getOrPut("app1", a32Hash) { a32 })
+      ziplineCache.unpin("app1", a32Hash)
       tick()
       assertEquals(b32, ziplineCache.getOrPut("app1", b32Hash) { b32 })
+      ziplineCache.unpin("app1", b32Hash)
       tick()
       assertEquals(a32, ziplineCache.getOrPut("app1", a32Hash) { error("expected to be cached") })
+      ziplineCache.unpin("app1", a32Hash)
       tick()
       assertEquals(c32, ziplineCache.getOrPut("app1", c32Hash) { c32 })
+      ziplineCache.unpin("app1", c32Hash)
       tick()
       assertNotNull(ziplineCache.read(a32Hash))
       assertNull(ziplineCache.read(b32Hash)) // Least recently accessed.
@@ -148,6 +155,8 @@ class ZiplineCacheTest {
       val a65Hash = a65.sha256()
 
       assertEquals(a65, ziplineCache.getOrPut("app1", a65Hash) { a65 })
+      ziplineCache.unpin("app1", a65Hash)
+      ziplineCache.prune()
       assertNull(ziplineCache.read(a65Hash)) // Immediately evicted
     }
   }
@@ -159,6 +168,7 @@ class ZiplineCacheTest {
 
     withCache {
       it.write("app1", a32Hash, a32)
+      it.unpin("app1", a32Hash)
       assertNotNull(it.read(a32Hash))
     }
 
@@ -179,7 +189,7 @@ class ZiplineCacheTest {
     cacheSize: Int = this.cacheSize,
     block: suspend (ZiplineCache) -> T,
   ): T {
-    val cache = openZiplineCacheForTesting(database, fileSystem, directory, cacheSize.toLong(), { nowMillis })
+    val cache = openZiplineCacheForTesting(database = database, fileSystem = fileSystem, directory = directory, maxSizeInBytes = cacheSize.toLong()) { nowMillis }
     return block(cache)
   }
 }

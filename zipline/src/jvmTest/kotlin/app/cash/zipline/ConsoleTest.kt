@@ -51,7 +51,7 @@ class ConsoleTest {
   }
 
   @Before
-  fun setUp(): Unit = runBlocking(dispatcher) {
+  fun setUp() = runBlocking {
     zipline.loadTestingJs()
     Logger.getLogger(Zipline::class.qualifiedName).apply {
       level = Level.FINEST
@@ -60,12 +60,12 @@ class ConsoleTest {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runBlocking {
     Logger.getLogger(Zipline::class.qualifiedName).removeHandler(logHandler)
     zipline.close()
   }
 
-  @Test fun logAllLevels(): Unit = runBlocking(dispatcher) {
+  @Test fun logAllLevels() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogAllLevels()")
     assertEquals("INFO: 1. this is message 1 of 5. Its level is 'info'.", takeLogMessage())
     assertEquals("INFO: 2. this message has level 'log'.", takeLogMessage())
@@ -75,7 +75,7 @@ class ConsoleTest {
     assertNull(takeLogMessage())
   }
 
-  @Test fun logWithThrowable(): Unit = runBlocking(dispatcher) {
+  @Test fun logWithThrowable() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogWithThrowable()")
 
     val record1 = logRecords.take()
@@ -118,7 +118,7 @@ class ConsoleTest {
    * Note that this test is checking our expected behavior, but our behavior falls short of what
    * browsers implement. In particular, we don't do string replacement for `%s`, `%d`, etc.
    */
-  @Test fun logWithArguments(): Unit = runBlocking(dispatcher) {
+  @Test fun logWithArguments() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogWithArguments()")
     assertEquals("INFO: this message for %s is a %d out of %d Jesse 8 10", takeLogMessage())
     assertNull(takeLogMessage())

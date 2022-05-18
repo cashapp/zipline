@@ -28,16 +28,16 @@ class SetTimeoutTest {
   private val dispatcher = TestCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runBlocking {
     zipline.loadTestingJs()
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runBlocking {
     zipline.close()
   }
 
-  @Test fun happyPath(): Unit = runBlocking(dispatcher) {
+  @Test fun happyPath() = runBlocking {
     zipline.quickJs.evaluate(
       """
       var greeting = 'hello';
@@ -55,7 +55,7 @@ class SetTimeoutTest {
     assertEquals("goodbye", zipline.quickJs.evaluate("greeting"))
   }
 
-  @Test fun ziplineCloseSilentlyCancelsQueuedTasks(): Unit = runBlocking(dispatcher) {
+  @Test fun ziplineCloseSilentlyCancelsQueuedTasks() = runBlocking {
     zipline.quickJs.evaluate(
       """
       var doNothing = function() {

@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.samples.emojisearch
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.DriverFactory
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
@@ -31,10 +32,13 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.launch
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.modules.EmptySerializersModule
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path
 
+@OptIn(ExperimentalSerializationApi::class)
 class EmojiSearchZipline(
   cacheDir: Path,
 ) {
@@ -48,18 +52,24 @@ class EmojiSearchZipline(
   private val moduleName = "./zipline-root-presenters.js"
 
   private val driver = DriverFactory().createDriver()
+  private val eventListener = EventListener.NONE
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
+    eventListener = eventListener,
+    serializersModule = EmptySerializersModule,
     httpClient = OkHttpZiplineHttpClient(client),
     fetchers = listOf(
       FsCachingFetcher(
         cache = createZiplineCache(
+          eventListener = eventListener,
           driver = driver,
           fileSystem = FileSystem.SYSTEM,
           directory = cacheDir,
           nowMs = { Clock.systemDefaultZone().instant().toEpochMilli() },
         ),
-        delegate = HttpFetcher(httpClient = OkHttpZiplineHttpClient(client)),
+        delegate = HttpFetcher(
+          eventListener = eventListener, httpClient = OkHttpZiplineHttpClient(client)
+        ),
       ),
     ),
   )
