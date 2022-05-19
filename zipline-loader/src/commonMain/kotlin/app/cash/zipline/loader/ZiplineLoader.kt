@@ -76,14 +76,21 @@ class ZiplineLoader(
       val zipline = Zipline.create(
         dispatcher, serializersModule
       )
-      load(zipline, manifestUrl, applicationName)
+      load(zipline = zipline, manifestUrl = manifestUrl, applicationName = applicationName)
       zipline
     } catch (e: Exception) {
       val zipline = Zipline.create(
         dispatcher, serializersModule
       )
       // Load from either pinned in cache or embedded by forcing network failure
-      load(zipline, fetchZiplineManifest(applicationName, "$FALLBACK_BASE_URL${getApplicationManifestFileName(applicationName)}"), applicationName)
+      load(
+        zipline = zipline,
+        manifest = fetchZiplineManifest(
+          applicationName = applicationName,
+          manifestUrl = "$FALLBACK_BASE_URL${getApplicationManifestFileName(applicationName)}"
+        ),
+        applicationName = applicationName
+      )
       zipline
     }
   }
@@ -206,14 +213,13 @@ class ZiplineLoader(
      * Fetch and receive ZiplineFile module
      */
     suspend fun run() {
-      val byteString = fetchers
-        .fetch(
-          concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
-          applicationName = applicationName,
-          id = id,
-          sha256 = module.sha256,
-          url = module.url,
-        )
+      val byteString = fetchers.fetch(
+        concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+        applicationName = applicationName,
+        id = id,
+        sha256 = module.sha256,
+        url = module.url,
+      )
 
       upstreams.joinAll()
       withContext(dispatcher) {

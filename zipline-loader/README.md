@@ -26,3 +26,13 @@ Files shipped with the app package should adhere to the following flat file stru
       - 34897kj98987oik
       - 890wer234sdsdfl
 ```
+
+## Pinning
+
+When a manifest successfully loads, it is pinned as stable.
+
+The manifest file and any constituent ZiplineFiles are pinned which prevents the files from being pruned.
+
+The pinned manifest is not unpinned until a later successful load of a different manifest.
+
+There is only ever 1 manifest pinned at a time. New manifest pins atomically remove the prior pinned manifest.
