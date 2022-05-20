@@ -51,7 +51,7 @@ class ConsoleTest {
   }
 
   @Before
-  fun setUp() = runBlocking {
+  fun setUp(): Unit = runBlocking {
     zipline.loadTestingJs()
     Logger.getLogger(Zipline::class.qualifiedName).apply {
       level = Level.FINEST

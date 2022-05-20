@@ -32,7 +32,7 @@ class ExceptionsTest {
   private val dispatcher = TestCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp() = runBlocking {
+  @Before fun setUp(): Unit = runBlocking {
     zipline.loadTestingJs()
   }
 
@@ -40,7 +40,7 @@ class ExceptionsTest {
     zipline.close()
   }
 
-  @Test fun jvmCallJsServiceThatThrows() = runBlocking {
+  @Test fun jvmCallJsServiceThatThrows(): Unit = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareThrowingJsBridges()")
 
     val service = zipline.take<EchoService>("throwingService")
@@ -58,7 +58,7 @@ class ExceptionsTest {
     }
   }
 
-  @Test fun jsCallJvmServiceThatThrows() = runBlocking {
+  @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking {
     zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
 
     assertThat(assertFailsWith<QuickJsException> {
@@ -75,7 +75,7 @@ class ExceptionsTest {
     }
   }
 
-  @Test fun jvmCallJsCallsJvmServiceThatThrows() = runBlocking {
+  @Test fun jvmCallJsCallsJvmServiceThatThrows(): Unit = runBlocking {
     zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareDelegatingService()")
 

@@ -58,7 +58,7 @@ class ZiplineTest {
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun cannotTakeOrBindServiceAfterClose() = runBlocking {
+  @Test fun cannotTakeOrBindServiceAfterClose(): Unit = runBlocking {
     zipline.close()
     assertThat(assertFailsWith<IllegalStateException> {
       zipline.take<EchoService>("helloService")
@@ -156,7 +156,7 @@ class ZiplineTest {
     assertThat(e).hasMessageThat().isEqualTo("QuickJs instance was closed")
   }
 
-  @Test fun suspendingJsCallCompletesAfterClose() = runBlocking {
+  @Test fun suspendingJsCallCompletesAfterClose(): Unit = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
 
     val jsSuspendingEchoService =
@@ -173,7 +173,7 @@ class ZiplineTest {
     }
   }
 
-  @Test fun serviceNamesAndClientNames() = runBlocking {
+  @Test fun serviceNamesAndClientNames(): Unit = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
     assertThat(zipline.serviceNames).containsExactly(
       consoleName,
