@@ -175,15 +175,20 @@ class ZiplineCache internal constructor(
    *  in another pinned manifest
    */
   fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
-    val unpinManifestByteString =
-      Json.encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
-    val unpinManifestFile =
-      database.filesQueries.get(unpinManifestByteString.sha256().hex()).executeAsOneOrNull()
-        ?: return
+    val unpinManifestByteString = Json
+      .encodeToString(ZiplineManifest.serializer(), manifest)
+      .encodeUtf8()
+    val unpinManifestFile = database.filesQueries
+      .get(unpinManifestByteString.sha256().hex())
+      .executeAsOneOrNull()
 
     // Get fallback manifest metadata
-    val fallbackManifestFile = database.filesQueries
-      .selectPinnedManifestNotFileId(applicationName, unpinManifestFile.id)
+    val fallbackManifestFile: Files? = unpinManifestFile?.let {
+      database.filesQueries
+        .selectPinnedManifestNotFileId(applicationName, it.id)
+        .executeAsOneOrNull()
+    } ?: database.filesQueries
+      .selectPinnedManifest(applicationName)
       .executeAsOneOrNull()
 
     if (fallbackManifestFile == null) {
@@ -200,7 +205,7 @@ class ZiplineCache internal constructor(
     }
   }
 
-  private fun writeManifest(
+  internal fun writeManifest(
     applicationName: String,
     sha256: ByteString,
     content: ByteString

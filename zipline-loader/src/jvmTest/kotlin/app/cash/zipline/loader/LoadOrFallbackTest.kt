@@ -22,7 +22,7 @@ import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createFailureJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createProductionZiplineLoader
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createZiplineFile
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -31,7 +31,6 @@ import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
-import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -168,21 +167,9 @@ class LoadOrFallbackTest {
       )
     }
 
-    private fun createRelativeManifest(
-      seed: String,
-      seedFileSha256: ByteString
-    ) = ZiplineManifest.create(
-      modules = mapOf(
-        seed to ZiplineModule(
-          url = "$seed.zipline",
-          sha256 = seedFileSha256,
-        )
-      )
-    )
-
     fun seedEmbedded(applicationName: String, seed: String) {
       embeddedFileSystem.createDirectories(embeddedDir)
-      val ziplineFileByteString = createZiplineFile(quickJs, createJs(seed), "$seed.js")
+      val ziplineFileByteString = testFixtures.createZiplineFile(createJs(seed), "$seed.js")
       val sha256 = ziplineFileByteString.sha256()
       val manifest = createRelativeManifest(seed, sha256)
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
@@ -195,10 +182,9 @@ class LoadOrFallbackTest {
     }
 
     suspend fun success(applicationName: String, seed: String): String {
-      val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
-      val ziplineFileByteString = createZiplineFile(
-        quickJs, createJs(seed), "$seed.js"
-      )
+      val manifestUrl =
+        "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+      val ziplineFileByteString = testFixtures.createZiplineFile(createJs(seed), "$seed.js")
       val manifest = createRelativeManifest(seed, ziplineFileByteString.sha256())
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
       httpClient.filePathToByteString = mapOf(
@@ -224,8 +210,8 @@ class LoadOrFallbackTest {
       val seed = "fail"
       val manifestUrl =
         "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
-      val ziplineFileByteString = createZiplineFile(
-        quickJs, createJs(seed), "$seed.js"
+      val ziplineFileByteString = testFixtures.createZiplineFile(
+        createJs(seed), "$seed.js"
       )
       httpClient.filePathToByteString = mapOf(
         "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
@@ -238,9 +224,7 @@ class LoadOrFallbackTest {
 
     suspend fun failureCodeFetchFails(applicationName: String): String {
       val seed = "fail"
-      val ziplineFileByteString = createZiplineFile(
-        quickJs, createJs(seed), "$seed.js"
-      )
+      val ziplineFileByteString = testFixtures.createZiplineFile(createJs(seed), "$seed.js")
       val manifest = createRelativeManifest(seed, ziplineFileByteString.sha256())
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
@@ -258,9 +242,7 @@ class LoadOrFallbackTest {
 
     suspend fun failureCodeRunFails(applicationName: String): String {
       val seed = "fail"
-      val ziplineFileByteString = createZiplineFile(
-        quickJs, createFailureJs(seed), "$seed.js"
-      )
+      val ziplineFileByteString = testFixtures.createZiplineFile(createFailureJs(seed), "$seed.js")
       val manifest = createRelativeManifest(seed, ziplineFileByteString.sha256())
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 

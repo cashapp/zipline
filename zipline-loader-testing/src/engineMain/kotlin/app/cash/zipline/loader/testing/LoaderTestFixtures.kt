@@ -44,14 +44,16 @@ import okio.FileSystem
 import okio.Path
 
 @OptIn(ExperimentalSerializationApi::class)
-class LoaderTestFixtures(quickJs: QuickJs) {
+class LoaderTestFixtures(
+  val quickJs: QuickJs
+) {
   val alphaJs = createJs("alpha")
-  val alphaByteString = createZiplineFile(quickJs, alphaJs, "alpha.js")
+  val alphaByteString = createZiplineFile(alphaJs, "alpha.js")
   val alphaSha256 = alphaByteString.sha256()
   val alphaSha256Hex = alphaSha256.hex()
 
   val bravoJs = createJs("bravo")
-  val bravoByteString = createZiplineFile(quickJs, bravoJs, "bravo.js")
+  val bravoByteString = createZiplineFile(bravoJs, "bravo.js")
   val bravoSha256 = bravoByteString.sha256()
   val bravoSha256Hex = bravoSha256.hex()
 
@@ -88,7 +90,15 @@ class LoaderTestFixtures(quickJs: QuickJs) {
   val manifestJsonString = Json.encodeToString(manifest)
   val manifestByteString = manifestJsonString.encodeUtf8()
 
-
+  fun createZiplineFile(javaScript: String, fileName: String): ByteString {
+    val ziplineFile = ZiplineFile(
+      CURRENT_ZIPLINE_VERSION,
+      quickJs.compile(javaScript, fileName).toByteString()
+    )
+    val buffer = Buffer()
+    ziplineFile.writeTo(buffer)
+    return buffer.readByteString()
+  }
 
   companion object {
     const val alphaRelativeUrl = "alpha.zipline"
@@ -96,6 +106,19 @@ class LoaderTestFixtures(quickJs: QuickJs) {
     const val alphaUrl = "https://example.com/files/alpha.zipline"
     const val bravoUrl = "https://example.com/files/bravo.zipline"
     const val manifestUrl = "https://example.com/files/default.manifest.zipline.json"
+
+    fun createRelativeManifest(
+      seed: String,
+      seedFileSha256: ByteString
+    ) = ZiplineManifest.create(
+      modules = mapOf(
+        seed to ZiplineModule(
+          url = "$seed.zipline",
+          sha256 = seedFileSha256,
+        )
+      )
+    )
+
     fun createJs(seed: String) = """
       |globalThis.log = globalThis.log || "";
       |globalThis.log += "$seed loaded\n"
@@ -104,17 +127,6 @@ class LoaderTestFixtures(quickJs: QuickJs) {
     fun createFailureJs(seed: String) = """
       |throw Error('$seed');
       |""".trimMargin()
-
-    fun createZiplineFile(quickJs: QuickJs, javaScript: String, fileName: String): ByteString {
-      val ziplineFile = ZiplineFile(
-        CURRENT_ZIPLINE_VERSION,
-        quickJs.compile(javaScript, fileName).toByteString()
-      )
-
-      val buffer = Buffer()
-      ziplineFile.writeTo(buffer)
-      return buffer.readByteString()
-    }
 
     fun createProductionZiplineLoader(
       dispatcher: CoroutineDispatcher,
@@ -196,6 +208,5 @@ class LoaderTestFixtures(quickJs: QuickJs) {
         ),
       )
     )
-
   }
 }
