@@ -83,7 +83,7 @@ class ZiplineLoader(
     eventListener.applicationLoadEnd(applicationName, manifestUrl)
     zipline
   } catch (e: Exception) {
-    eventListener.applicationLoadEnd(applicationName, manifestUrl)
+    eventListener.applicationLoadFailed(applicationName, manifestUrl, e)
     createZiplineAndLoad(
       applicationName = applicationName,
       serializersModule = serializersModule,
@@ -141,7 +141,7 @@ class ZiplineLoader(
         load(zipline, manifest, applicationName)
         eventListener.applicationLoadEnd(applicationName, url)
       } catch (e: Exception) {
-        eventListener.applicationLoadFailed(applicationName, url)
+        eventListener.applicationLoadFailed(applicationName, url, e)
         throw e
       }
       zipline
