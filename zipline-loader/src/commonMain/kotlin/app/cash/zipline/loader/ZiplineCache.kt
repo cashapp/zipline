@@ -328,6 +328,20 @@ class ZiplineCache internal constructor(
     }
   }
 
+  /** Count of number of files in the cache DB */
+  internal fun countFiles() = database.filesQueries.count().executeAsOne().toInt()
+
+  /** Count of number of pins in the cache DB */
+  internal fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
+
+  /** Count of number of files  */
+  internal fun countPrunedFiles(): Int {
+    val before = countFiles()
+    prune()
+    val after = countFiles()
+    return after - before
+  }
+
   private fun path(metadata: Files): Path {
     return directory / "entry-${metadata.id}.bin"
   }

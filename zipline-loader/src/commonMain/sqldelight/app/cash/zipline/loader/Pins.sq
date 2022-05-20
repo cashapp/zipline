@@ -6,6 +6,9 @@ CREATE TABLE pins (
 CREATE UNIQUE INDEX pins_file_id_application_name ON pins(file_id, application_name);
 CREATE INDEX pins_application_name ON pins(application_name);
 
+count:
+SELECT COUNT(*) FROM pins;
+
 delete_pin:
 DELETE FROM pins WHERE application_name = ? AND file_id = ?;
 

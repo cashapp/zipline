@@ -44,13 +44,13 @@ class HttpFetcher(
     return byteString?.decodeToZiplineManifest(eventListener, applicationName, url)
   }
 
-  override suspend fun pin(
+  override suspend fun pinManifest(
     applicationName: String,
     manifest: ZiplineManifest
   ) {
   }
 
-  override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {}
+  override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {}
 
   private suspend fun fetchByteString(
     applicationName: String,

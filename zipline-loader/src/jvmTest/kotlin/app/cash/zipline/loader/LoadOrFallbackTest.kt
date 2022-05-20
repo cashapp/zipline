@@ -106,7 +106,7 @@ class LoadOrFallbackTest {
   fun anyLastWorkingNetworkNotPruned() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
     assertEquals("sky", tester.success("blue", "sky"))
-    assertEquals(0, tester.pruneEverythingWeCanPrune())
+    assertEquals(0, tester.countPrunedFiles())
     assertEquals("apple", tester.failureManifestFetchFails("red"))
     assertEquals("sky", tester.failureManifestFetchFails("blue"))
   }
@@ -114,15 +114,17 @@ class LoadOrFallbackTest {
   @Test
   fun successfulNetworkMakesPreviousNetworkPrunable() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
-    assertEquals("firetruck", tester.success("red", "firetruck"))
-    assertEquals(1, tester.pruneEverythingWeCanPrune())
+    assertEquals(2, tester.countPrunedFiles {
+      assertEquals("firetruck", tester.success("red", "firetruck"))
+    })
   }
 
   @Test
   fun successAfterFailureMakesFailurePrunable() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
-    assertEquals("apple", tester.failureCodeRunFails("red"))
-    assertEquals(1, tester.pruneEverythingWeCanPrune())
+    assertEquals(2, tester.countPrunedFiles {
+      assertEquals("apple", tester.failureCodeRunFails("red"))
+    })
   }
 
   @OptIn(ExperimentalSerializationApi::class)
@@ -209,9 +211,13 @@ class LoadOrFallbackTest {
       )
     }
 
-    fun pruneEverythingWeCanPrune(): Int {
-      // TODO()
-      return 1
+    fun countPrunedFiles(): Int = cache.countPrunedFiles()
+
+    suspend fun countPrunedFiles(block: suspend () -> Unit): Int {
+      val before = cache.countFiles()
+      block()
+      val after = cache.countFiles()
+      return after - before
     }
 
     suspend fun failureManifestFetchFails(applicationName: String): String {
@@ -253,7 +259,7 @@ class LoadOrFallbackTest {
     suspend fun failureCodeRunFails(applicationName: String): String {
       val seed = "fail"
       val ziplineFileByteString = createZiplineFile(
-        quickJs, createJs(seed), "$seed.js"
+        quickJs, createFailureJs(seed), "$seed.js"
       )
       val manifest = createRelativeManifest(seed, ziplineFileByteString.sha256())
       val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)

@@ -18,6 +18,9 @@ selectCacheSumBytes:
 SELECT SUM(size_bytes)
 FROM files;
 
+count:
+SELECT COUNT(*) FROM files;
+
 get:
 SELECT *
 FROM files

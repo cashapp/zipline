@@ -45,9 +45,9 @@ class FsCachingFetcher(
     cache.getPinnedManifest(applicationName)
   } ?: cache.getPinnedManifest(applicationName)
 
-  override suspend fun pin(applicationName: String, manifest: ZiplineManifest) =
+  override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) =
     cache.pinManifest(applicationName, manifest)
 
-  override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) =
+  override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) =
     cache.unpinManifest(applicationName, manifest)
 }

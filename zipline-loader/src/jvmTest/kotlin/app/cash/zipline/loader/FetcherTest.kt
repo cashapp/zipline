@@ -57,11 +57,11 @@ class FetcherTest {
       TODO("Not yet implemented")
     }
 
-    override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
       TODO("Not yet implemented")
     }
 
-    override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
       TODO("Not yet implemented")
     }
   }
@@ -85,11 +85,11 @@ class FetcherTest {
       TODO("Not yet implemented")
     }
 
-    override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
       TODO("Not yet implemented")
     }
 
-    override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
       TODO("Not yet implemented")
     }
   }

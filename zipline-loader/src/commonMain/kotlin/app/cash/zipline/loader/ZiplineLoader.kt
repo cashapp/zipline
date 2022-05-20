@@ -21,8 +21,8 @@ import app.cash.zipline.loader.fetcher.Fetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.fetcher.fetchManifest
-import app.cash.zipline.loader.fetcher.pin
-import app.cash.zipline.loader.fetcher.unpin
+import app.cash.zipline.loader.fetcher.pinManifest
+import app.cash.zipline.loader.fetcher.unpinManifest
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
@@ -71,28 +71,53 @@ class ZiplineLoader(
     applicationName: String,
     serializersModule: SerializersModule,
     manifestUrl: String,
+    initializer: (Zipline) -> Unit = {}
+  ): Zipline = try {
+    createZiplineAndLoad(
+      applicationName = applicationName,
+      serializersModule = serializersModule,
+      manifestUrl = manifestUrl,
+      initializer = initializer
+    )
+  } catch (e: Exception) {
+    createZiplineAndLoad(
+      applicationName = applicationName,
+      serializersModule = serializersModule,
+      manifestUrl = "$FALLBACK_BASE_URL${getApplicationManifestFileName(applicationName)}",
+      initializer = initializer
+    )
+  }
+
+  private suspend fun createZiplineAndLoad(
+    applicationName: String,
+    serializersModule: SerializersModule,
+    manifestUrl: String,
+    initializer: (Zipline) -> Unit,
   ): Zipline {
-    return try {
-      val zipline = Zipline.create(
-        dispatcher, serializersModule
-      )
-      load(zipline = zipline, manifestUrl = manifestUrl, applicationName = applicationName)
-      zipline
-    } catch (e: Exception) {
-      val zipline = Zipline.create(
-        dispatcher, serializersModule
-      )
-      // Load from either pinned in cache or embedded by forcing network failure
-      load(
-        zipline = zipline,
-        manifest = fetchZiplineManifest(
-          applicationName = applicationName,
-          manifestUrl = "$FALLBACK_BASE_URL${getApplicationManifestFileName(applicationName)}"
-        ),
-        applicationName = applicationName
-      )
-      zipline
-    }
+    val zipline = Zipline.create(
+      dispatcher, serializersModule
+    )
+
+    // Load from either pinned in cache or embedded by forcing network failure
+    val manifest = fetchZiplineManifest(
+      applicationName = applicationName,
+      manifestUrl = manifestUrl,
+    )
+    load(
+      zipline = zipline,
+      manifest = manifest,
+      applicationName = applicationName
+    )
+
+    // Run caller lambda to validate and run some of the loaded code to confirm it works
+    initializer(zipline)
+
+    // Pin stable application manifest after a successful load, and unpin all others
+    fetchers.pinManifest(
+      applicationName = applicationName,
+      manifest = manifest
+    )
+    return zipline
   }
 
   suspend fun loadContinuously(
@@ -189,15 +214,9 @@ class ZiplineLoader(
         }
       } catch (e: Exception) {
         // On exception, unpin this manifest; and rethrow so that the load attempt fails
-        fetchers.unpin(applicationName, manifest)
+        fetchers.unpinManifest(applicationName, manifest)
         throw e
       }
-
-      // Pin stable application manifest after a successful load, and unpin all others
-      fetchers.pin(
-        applicationName = applicationName,
-        manifest = manifest
-      )
     }
   }
 
@@ -220,7 +239,6 @@ class ZiplineLoader(
         sha256 = module.sha256,
         url = module.url,
       )
-
       upstreams.joinAll()
       withContext(dispatcher) {
         receiver.receive(byteString, id, module.sha256)

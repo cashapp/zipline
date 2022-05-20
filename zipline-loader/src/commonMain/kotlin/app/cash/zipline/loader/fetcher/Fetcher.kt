@@ -28,7 +28,7 @@ interface Fetcher {
    * Get the desired [ByteString] or null if not found.
    *
    * If this fetcher supports pinning, the returned value will be pinned for [applicationName] until
-   *   [pin] is called.
+   *   [pinManifest] is called.
    * If a fetcher does not get a file, it returns null and the next [Fetcher] is called.
    */
   suspend fun fetch(
@@ -56,7 +56,7 @@ interface Fetcher {
    *
    * Pin is called on all fetchers when a load succeeds.
    */
-  suspend fun pin(
+  suspend fun pinManifest(
     applicationName: String,
     manifest: ZiplineManifest,
   )
@@ -66,7 +66,7 @@ interface Fetcher {
    *
    * Unpin is called on all fetchers when a load succeeds.
    */
-  suspend fun unpin(
+  suspend fun unpinManifest(
     applicationName: String,
     manifest: ZiplineManifest,
   )
@@ -117,16 +117,16 @@ suspend fun List<Fetcher>.fetchManifest(
     return manifest
   }
 
-suspend fun List<Fetcher>.pin(
+suspend fun List<Fetcher>.pinManifest(
   applicationName: String,
   manifest: ZiplineManifest,
 ) = this.forEach { fetcher ->
-  fetcher.pin(applicationName, manifest)
+  fetcher.pinManifest(applicationName, manifest)
 }
 
-suspend fun List<Fetcher>.unpin(
+suspend fun List<Fetcher>.unpinManifest(
   applicationName: String,
   manifest: ZiplineManifest,
 ) = this.forEach { fetcher ->
-  fetcher.unpin(applicationName, manifest)
+  fetcher.unpinManifest(applicationName, manifest)
 }
