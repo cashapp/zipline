@@ -26,7 +26,7 @@ class MainTest {
     val exception = assertFailsWith<MissingParameterException> {
       fromArgs("download")
     }
-    assertEquals("Missing required options: '--manifest-url=<manifestUrl>', '--download-dir=<downloadDir>'", exception.message)
+    assertEquals("Missing required options: '--application-name=<applicationName>', '--manifest-url=<manifestUrl>', '--download-dir=<downloadDir>'", exception.message)
   }
 
   companion object {

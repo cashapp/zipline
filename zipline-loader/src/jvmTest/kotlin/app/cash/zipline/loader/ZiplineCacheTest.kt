@@ -290,7 +290,9 @@ class ZiplineCacheTest {
     block: suspend (ZiplineCache) -> T,
   ): T {
     val cache = openZiplineCacheForTesting(
-      database = database, fileSystem = fileSystem, directory = directory,
+      database = database,
+      fileSystem = fileSystem,
+      directory = directory,
       maxSizeInBytes = cacheSize.toLong()
     ) { nowMillis }
     return block(cache)
