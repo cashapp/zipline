@@ -25,6 +25,9 @@ import org.gradle.api.tasks.TaskAction
 
 abstract class ZiplineDownloadTask : DefaultTask() {
   @get:Input
+  abstract val applicationName: Property<String>
+
+  @get:Input
   abstract val manifestUrl: Property<String>
 
   @get:OutputDirectory
@@ -34,6 +37,6 @@ abstract class ZiplineDownloadTask : DefaultTask() {
 
   @TaskAction
   fun task() {
-    ziplineDownloader.download(manifestUrl.get(), downloadDir.get().asFile)
+    ziplineDownloader.download(applicationName.get(), manifestUrl.get(), downloadDir.get().asFile)
   }
 }

@@ -38,7 +38,7 @@ class ZiplineGradleDownloader {
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
 
-  fun download(manifestUrl: String, downloadDir: File) {
+  fun download(applicationName: String, manifestUrl: String, downloadDir: File) {
     val httpClient = OkHttpZiplineHttpClient(client)
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
@@ -54,6 +54,7 @@ class ZiplineGradleDownloader {
     )
     runBlocking {
       ziplineLoader.download(
+        applicationName = applicationName,
         downloadDir = downloadDir.toOkioPath(),
         downloadFileSystem = FileSystem.SYSTEM,
         manifestUrl = manifestUrl
