@@ -37,6 +37,6 @@ abstract class ZiplineDownloadTask : DefaultTask() {
 
   @TaskAction
   fun task() {
-    ziplineDownloader.download(applicationName.get(), manifestUrl.get(), downloadDir.get().asFile)
+    ziplineDownloader.download(downloadDir.get().asFile, applicationName.get(), manifestUrl.get())
   }
 }

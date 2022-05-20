@@ -73,13 +73,17 @@ class ZiplineLoader(
     manifestUrl: String,
     initializer: (Zipline) -> Unit = {}
   ): Zipline = try {
-    createZiplineAndLoad(
+    eventListener.applicationLoadStart(applicationName, manifestUrl)
+    val zipline = createZiplineAndLoad(
       applicationName = applicationName,
       serializersModule = serializersModule,
       manifestUrl = manifestUrl,
       initializer = initializer
     )
+    eventListener.applicationLoadEnd(applicationName, manifestUrl)
+    zipline
   } catch (e: Exception) {
+    eventListener.applicationLoadEnd(applicationName, manifestUrl)
     createZiplineAndLoad(
       applicationName = applicationName,
       serializersModule = serializersModule,
@@ -95,7 +99,7 @@ class ZiplineLoader(
     initializer: (Zipline) -> Unit,
   ): Zipline {
     val zipline = Zipline.create(
-      dispatcher, serializersModule
+      dispatcher, serializersModule, eventListener
     )
 
     // Load from either pinned in cache or embedded by forcing network failure
@@ -124,10 +128,22 @@ class ZiplineLoader(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
     pollingInterval: Duration,
-  ): Flow<Zipline> = manifestFlow(applicationName, manifestUrlFlow, pollingInterval)
-    .mapNotNull { manifest ->
+  ): Flow<Zipline> = manifestUrlFlow
+    .rebounce(pollingInterval)
+    .mapNotNull { url ->
+      eventListener.applicationLoadStart(applicationName, url)
+      url to fetchZiplineManifest(applicationName, url)
+    }
+    .distinctUntilChanged()
+    .mapNotNull { (url, manifest) ->
       val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
-      load(zipline, manifest, applicationName)
+      try {
+        load(zipline, manifest, applicationName)
+        eventListener.applicationLoadEnd(applicationName, url)
+      } catch (e: Exception) {
+        eventListener.applicationLoadFailed(applicationName, url)
+        throw e
+      }
       zipline
     }
 
@@ -173,26 +189,6 @@ class ZiplineLoader(
       manifest = manifest,
       applicationName = applicationName
     )
-  }
-
-  /**
-   * Continuously downloads [urlFlow] and emits when it changes.
-   *
-   * TODO(jwilson): use a web socket instead of polling every 500ms.
-   */
-  private suspend fun manifestFlow(
-    applicationName: String,
-    urlFlow: Flow<String>,
-    pollingInterval: Duration?,
-  ): Flow<ZiplineManifest> {
-    val rebounced = when {
-      pollingInterval != null -> urlFlow.rebounce(pollingInterval)
-      else -> urlFlow
-    }
-
-    return rebounced.mapNotNull { url ->
-      fetchZiplineManifest(applicationName, url)
-    }.distinctUntilChanged()
   }
 
   private suspend fun receive(
@@ -263,7 +259,7 @@ class ZiplineLoader(
     const val FALLBACK_BASE_URL = "fallback://"
     const val DEFAULT_APPLICATION_NAME = "default"
     private const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
-    internal fun getApplicationManifestFileName(applicationName: String = DEFAULT_APPLICATION_NAME) =
+    fun getApplicationManifestFileName(applicationName: String = DEFAULT_APPLICATION_NAME) =
       "$applicationName.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX"
   }
 }

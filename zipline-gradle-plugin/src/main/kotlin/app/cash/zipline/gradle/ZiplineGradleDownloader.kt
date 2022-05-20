@@ -26,7 +26,6 @@ import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
@@ -38,7 +37,7 @@ class ZiplineGradleDownloader {
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
 
-  fun download(applicationName: String, manifestUrl: String, downloadDir: File) {
+  fun download(downloadDir: File, applicationName: String, manifestUrl: String) {
     val httpClient = OkHttpZiplineHttpClient(client)
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
