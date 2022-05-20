@@ -41,8 +41,8 @@ class ZiplineGradleDownloader {
     val httpClient = OkHttpZiplineHttpClient(client)
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
-      serializersModule = EmptySerializersModule,
       eventListener = eventListener,
+      serializersModule = EmptySerializersModule,
       httpClient = httpClient,
       fetchers = listOf(
         HttpFetcher(

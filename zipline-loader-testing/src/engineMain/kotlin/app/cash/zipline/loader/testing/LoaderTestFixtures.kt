@@ -138,9 +138,9 @@ class LoaderTestFixtures(
       eventListener: EventListener = EventListener.NONE,
     ) = ZiplineLoader(
       dispatcher = dispatcher,
+      eventListener = eventListener,
       serializersModule = serializersModule,
       httpClient = httpClient,
-      eventListener = eventListener,
       fetchers = listOf(
         FsEmbeddedFetcher(
           embeddedDir = embeddedDir,
@@ -168,8 +168,8 @@ class LoaderTestFixtures(
       nowMs: () -> Long, // 100 MiB
     ) = ZiplineLoader(
       dispatcher = dispatcher,
-      serializersModule = serializersModule,
       eventListener = eventListener,
+      serializersModule = serializersModule,
       httpClient = httpClient,
       fetchers = listOf(
         FsEmbeddedFetcher(
@@ -198,8 +198,8 @@ class LoaderTestFixtures(
       eventListener: EventListener = EventListener.NONE,
     ) = ZiplineLoader(
       dispatcher = dispatcher,
-      serializersModule = serializersModule,
       eventListener = eventListener,
+      serializersModule = serializersModule,
       httpClient = httpClient,
       fetchers = listOf(
         HttpFetcher(

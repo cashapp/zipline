@@ -30,7 +30,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.EmptySerializersModule
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path.Companion.toPath
@@ -132,7 +131,6 @@ class LoadOrFallbackTest {
     })
   }
 
-  @OptIn(ExperimentalSerializationApi::class)
   class LoadOrFallbackTester {
     private val httpClient = FakeZiplineHttpClient()
     private val dispatcher = TestCoroutineDispatcher()
@@ -197,7 +195,7 @@ class LoadOrFallbackTest {
         manifestUrl to manifestJsonString.encodeUtf8(),
         "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
       )
-      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl)
+      zipline = loader.loadOrFallBack(applicationName, manifestUrl)
       return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
         " loaded\n"
       )
@@ -222,7 +220,7 @@ class LoadOrFallbackTest {
       httpClient.filePathToByteString = mapOf(
         "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
       )
-      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl)
+      zipline = loader.loadOrFallBack(applicationName, manifestUrl)
       return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
         " loaded\n"
       )
@@ -240,7 +238,7 @@ class LoadOrFallbackTest {
       httpClient.filePathToByteString = mapOf(
         manifestUrl to manifestJsonString.encodeUtf8(),
       )
-      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl)
+      zipline = loader.loadOrFallBack(applicationName, manifestUrl)
       return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
         " loaded\n"
       )
@@ -259,7 +257,7 @@ class LoadOrFallbackTest {
         manifestUrl to manifestJsonString.encodeUtf8(),
         "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
       )
-      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl)
+      zipline = loader.loadOrFallBack(applicationName, manifestUrl)
       return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
         " loaded\n"
       )
@@ -278,7 +276,7 @@ class LoadOrFallbackTest {
         manifestUrl to manifestJsonString.encodeUtf8(),
         "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
       )
-      zipline = loader.loadOrFallBack(applicationName, EmptySerializersModule, manifestUrl) {
+      zipline = loader.loadOrFallBack(applicationName, manifestUrl) {
         val loadedSeed =
           (it.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
             " loaded\n"

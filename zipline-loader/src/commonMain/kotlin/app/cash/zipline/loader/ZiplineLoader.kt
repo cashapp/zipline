@@ -54,8 +54,8 @@ import okio.Path
  */
 class ZiplineLoader(
   private val dispatcher: CoroutineDispatcher,
-  private val serializersModule: SerializersModule,
   private val eventListener: EventListener,
+  private val serializersModule: SerializersModule,
   private val httpClient: ZiplineHttpClient,
   private val fetchers: List<Fetcher> = listOf(HttpFetcher(eventListener, httpClient)),
 ) {
@@ -69,32 +69,30 @@ class ZiplineLoader(
 
   suspend fun loadOrFallBack(
     applicationName: String,
-    serializersModule: SerializersModule,
     manifestUrl: String,
     initializer: (Zipline) -> Unit = {}
-  ): Zipline = try {
-    eventListener.applicationLoadStart(applicationName, manifestUrl)
-    val zipline = createZiplineAndLoad(
-      applicationName = applicationName,
-      serializersModule = serializersModule,
-      manifestUrl = manifestUrl,
-      initializer = initializer
-    )
-    eventListener.applicationLoadEnd(applicationName, manifestUrl)
-    zipline
-  } catch (e: Exception) {
-    eventListener.applicationLoadFailed(applicationName, manifestUrl, e)
-    createZiplineAndLoad(
-      applicationName = applicationName,
-      serializersModule = serializersModule,
-      manifestUrl = "$FALLBACK_BASE_URL${getApplicationManifestFileName(applicationName)}",
-      initializer = initializer
-    )
-  }
+  ): Zipline = withApplicationLoadMetrics(
+    applicationName = applicationName,
+    manifestUrl = manifestUrl,
+    tryBlock = {
+      createZiplineAndLoad(
+        applicationName = applicationName,
+        manifestUrl = manifestUrl,
+        initializer = initializer
+      )
+    },
+    catchBlock = {
+      createZiplineAndLoad(
+        applicationName = applicationName,
+        manifestUrl = "$FALLBACK_BASE_URL${getApplicationManifestFileName(applicationName)}",
+        initializer = initializer
+      )
+    },
+    rethrow = false,
+  )!!
 
   private suspend fun createZiplineAndLoad(
     applicationName: String,
-    serializersModule: SerializersModule,
     manifestUrl: String,
     initializer: (Zipline) -> Unit,
   ): Zipline {
@@ -107,11 +105,7 @@ class ZiplineLoader(
       applicationName = applicationName,
       manifestUrl = manifestUrl,
     )
-    load(
-      zipline = zipline,
-      manifest = manifest,
-      applicationName = applicationName
-    )
+    receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
 
     // Run caller lambda to validate and run some of the loaded code to confirm it works
     initializer(zipline)
@@ -135,16 +129,15 @@ class ZiplineLoader(
       url to fetchZiplineManifest(applicationName, url)
     }
     .distinctUntilChanged()
-    .mapNotNull { (url, manifest) ->
-      val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
-      try {
-        load(zipline, manifest, applicationName)
-        eventListener.applicationLoadEnd(applicationName, url)
-      } catch (e: Exception) {
-        eventListener.applicationLoadFailed(applicationName, url, e)
-        throw e
-      }
-      zipline
+    .mapNotNull { (manifestUrl, manifest) ->
+      withApplicationLoadMetrics(
+        applicationName = applicationName,
+        manifestUrl = manifestUrl,
+        tryBlock = {
+          val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
+          receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
+          zipline
+        })
     }
 
   /** Load application into Zipline without fallback on failure functionality */
@@ -152,29 +145,47 @@ class ZiplineLoader(
     zipline: Zipline,
     manifestUrl: String,
     applicationName: String = DEFAULT_APPLICATION_NAME,
-  ) = load(zipline, fetchZiplineManifest(applicationName, manifestUrl), applicationName)
+  ) = withApplicationLoadMetrics(
+    applicationName = applicationName,
+    manifestUrl = manifestUrl,
+    tryBlock = {
+      receive(
+        receiver = ZiplineLoadReceiver(zipline),
+        manifest = fetchZiplineManifest(applicationName, manifestUrl),
+        applicationName = applicationName,
+      )
+    })
 
-  suspend fun load(
+  internal suspend fun load(
     zipline: Zipline,
     manifest: ZiplineManifest,
     applicationName: String = DEFAULT_APPLICATION_NAME,
-  ) = receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
+  ) = withApplicationLoadMetrics(
+    applicationName = applicationName,
+    manifestUrl = "no-manifest-url",
+    tryBlock = {
+      receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
+    })
 
   suspend fun download(
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifestUrl: String,
     applicationName: String = DEFAULT_APPLICATION_NAME,
-  ) {
-    download(
-      downloadDir = downloadDir,
-      downloadFileSystem = downloadFileSystem,
-      manifest = fetchZiplineManifest(applicationName, manifestUrl),
-      applicationName = applicationName
-    )
-  }
+  ) = withDownloadMetrics(
+    applicationName = applicationName,
+    manifestUrl = manifestUrl,
+    tryBlock = {
+      download(
+        downloadDir = downloadDir,
+        downloadFileSystem = downloadFileSystem,
+        manifest = fetchZiplineManifest(applicationName, manifestUrl),
+        applicationName = applicationName
+      )
+    }
+  )
 
-  suspend fun download(
+  internal suspend fun download(
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifest: ZiplineManifest,
@@ -189,6 +200,43 @@ class ZiplineLoader(
       manifest = manifest,
       applicationName = applicationName
     )
+  }
+
+  private suspend fun <T> withApplicationLoadMetrics(
+    applicationName: String,
+    manifestUrl: String,
+    tryBlock: suspend () -> T,
+    catchBlock: suspend () -> T? = { null },
+    rethrow: Boolean = true,
+  ) = try {
+    eventListener.applicationLoadStart(applicationName, manifestUrl)
+    val result = tryBlock()
+    eventListener.applicationLoadEnd(applicationName, manifestUrl)
+    result
+  } catch (e: Exception) {
+    eventListener.applicationLoadFailed(applicationName, manifestUrl, e)
+    val result = catchBlock()
+    if (rethrow) {
+      throw e
+    } else {
+      result
+    }
+  }
+
+  private suspend fun <T> withDownloadMetrics(
+    applicationName: String,
+    manifestUrl: String,
+    tryBlock: suspend () -> T,
+    catchBlock: suspend () -> T? = { null }
+  ) = try {
+    eventListener.downloadStart(applicationName, manifestUrl)
+    val result = tryBlock()
+    eventListener.downloadEnd(applicationName, manifestUrl)
+    result
+  } catch (e: Exception) {
+    eventListener.downloadFailed(applicationName, manifestUrl, e)
+    catchBlock()
+    throw e
   }
 
   private suspend fun receive(

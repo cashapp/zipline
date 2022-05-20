@@ -20,7 +20,6 @@ import app.cash.zipline.loader.fetcher.Fetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 
@@ -33,8 +32,8 @@ fun ZiplineLoader(
   fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient, eventListener)),
 ): ZiplineLoader = ZiplineLoader(
   dispatcher = dispatcher,
-  serializersModule = serializersModule,
   eventListener = eventListener,
+  serializersModule = serializersModule,
   httpClient = OkHttpZiplineHttpClient(okHttpClient = httpClient),
   fetchers = fetchers
 )
