@@ -1,5 +1,5 @@
 [versions]
-androidx-compose = "1.1.1"
+androidx-compose = "1.2.0-beta02"
 compileSdk = "31"
 graalvm = "22.0.0.2"
 kotlin = "1.6.21"
