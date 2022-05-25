@@ -173,35 +173,6 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loaderUsesResourcesForPrebuiltManifestWhenNetworkOffline() = runBlocking {
-    // seed the embedded FS with zipline manifest and files
-    embeddedFileSystem.createDirectories(embeddedDir)
-    embeddedFileSystem.write(embeddedDir / getApplicationManifestFileName()) {
-      write(testFixtures.manifestByteString)
-    }
-    embeddedFileSystem.write(embeddedDir / testFixtures.alphaSha256Hex) {
-      write(testFixtures.alphaByteString)
-    }
-    embeddedFileSystem.write(embeddedDir / testFixtures.bravoSha256Hex) {
-      write(testFixtures.bravoByteString)
-    }
-
-    // load, resources hit, no download via cache
-    httpClient.filePathToByteString = mapOf(
-      // Note no actual manifest/alpha/bravo files are available on the cache / network
-    )
-    val ziplineWarmedCache = Zipline.create(dispatcher)
-    loader.load(ziplineWarmedCache, manifestUrl)
-    assertEquals(
-      ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
-      """
-      |alpha loaded
-      |bravo loaded
-      |""".trimMargin()
-    )
-  }
-
-  @Test
   fun downloadToDirectoryThenLoadFromAsEmbedded() = runBlocking {
     val downloadDir = "/downloads/latest".toPath()
     val downloadFileSystem = cacheFileSystem

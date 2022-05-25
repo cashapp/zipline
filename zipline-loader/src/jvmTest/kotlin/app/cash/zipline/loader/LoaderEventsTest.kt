@@ -53,7 +53,10 @@ class LoaderEventsTest {
         "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadFailed red https://example.com/files/red/red.manifest.zipline.json " +
           "java.io.IOException: 404: https://example.com/files/red/red.manifest.zipline.json not found",
-        "applicationLoadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "applicationLoadFailed red " +
+          "java.io.IOException: 404: https://example.com/files/red/red.manifest.zipline.json not found",
+        "applicationLoadStart red null",
+        "applicationLoadEnd red null",
       ),
       eventListener.takeAll(skipServiceEvents = true)
     )
