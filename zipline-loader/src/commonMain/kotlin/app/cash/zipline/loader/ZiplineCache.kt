@@ -135,7 +135,7 @@ class ZiplineCache internal constructor(
     database.pinsQueries.delete_pin(applicationName, fileId)
   }
 
-  /** @return null if there is no pinned manifest */
+  /** Returns null if there is no pinned manifest. */
   fun getPinnedManifest(applicationName: String): ZiplineManifest? {
     val manifestFile = database.filesQueries
       .selectPinnedManifest(applicationName)
@@ -158,21 +158,21 @@ class ZiplineCache internal constructor(
     database.transaction {
       database.pinsQueries.delete_application_pins(applicationName)
 
-      // Pin all modules in this manifest
+      // Pin all modules in this manifest.
       manifest.modules.forEach { (_, module) ->
         database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.let { metadata ->
           createPinIfNotExists(applicationName, metadata.id)
         }
       }
 
-      // Pin the manifest
+      // Pin the manifest.
       createPinIfNotExists(applicationName, manifestMetadata.id)
     }
   }
 
   /**
    * Unpin manifest and make all files open to pruning, except those included
-   *  in another pinned manifest
+   * in another pinned manifest.
    */
   fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
     val unpinManifestByteString = Json
@@ -182,7 +182,7 @@ class ZiplineCache internal constructor(
       .get(unpinManifestByteString.sha256().hex())
       .executeAsOneOrNull()
 
-    // Get fallback manifest metadata
+    // Get fallback manifest metadata.
     val fallbackManifestFile: Files? = unpinManifestFile?.let {
       database.filesQueries
         .selectPinnedManifestNotFileId(applicationName, it.id)
@@ -192,10 +192,10 @@ class ZiplineCache internal constructor(
       .executeAsOneOrNull()
 
     if (fallbackManifestFile == null) {
-      // There is no fallback manifest, delete all pins and return
+      // There is no fallback manifest, delete all pins and return.
       database.pinsQueries.delete_application_pins(applicationName)
     } else {
-      // Pin the fallback manifest, which removes all pins prior to pinning
+      // Pin the fallback manifest, which removes all pins prior to pinning.
       val fallbackManifest = read(fallbackManifestFile.sha256_hex)
         ?.decodeToZiplineManifest(eventListener, applicationName, "cache-read")
         ?: throw FileNotFoundException(
@@ -208,7 +208,7 @@ class ZiplineCache internal constructor(
   internal fun writeManifest(
     applicationName: String,
     sha256: ByteString,
-    content: ByteString
+    content: ByteString,
   ): Files? = getOrNull(sha256)
     ?: openForWrite(applicationName, sha256, true)?.let { metadata ->
       write(metadata, content)
@@ -216,10 +216,8 @@ class ZiplineCache internal constructor(
     }
 
   /**
-   * Returns file metadata if the file was absent and is now `DIRTY`. The caller is now the exclusive owner of this file
-   * and should proceed to write the file to the file system.
-   *
-   * @param isManifest set to the application id for only manifest files
+   * Returns file metadata if the file was absent and is now `DIRTY`. The caller is now the
+   * exclusive owner of this file and should proceed to write the file to the file system.
    */
   private fun openForWrite(
     applicationName: String,
@@ -242,7 +240,7 @@ class ZiplineCache internal constructor(
     )
     val metadata = getOrNull(sha256)!!
 
-    // Optimistically pin file, if the load fails it will be unpinned
+    // Optimistically pin file, if the load fails it will be unpinned.
     createPinIfNotExists(applicationName, metadata.id)
 
     metadata
@@ -253,7 +251,7 @@ class ZiplineCache internal constructor(
 
   private fun createPinIfNotExists(
     application_name: String,
-    file_id: Long
+    file_id: Long,
   ) {
     if (database.pinsQueries.get_pin(file_id, application_name).executeAsOneOrNull() == null) {
       database.pinsQueries.create_pin(file_id, application_name)
@@ -261,16 +259,16 @@ class ZiplineCache internal constructor(
   }
 
   /**
-   * Returns true if the file was `DIRTY` and is now `READY`. The caller is no longer the exclusive owner of this file.
-   * It may be deleted later to enforce the [maxSizeInBytes] constraint.
+   * Changes the state of [metadata] from `DIRTY` to `READY`. The caller is no longer the exclusive
+   * owner of this file. It may be deleted later to enforce the [maxSizeInBytes] constraint.
    *
-   * This cache does not guarantee that the file will still exist after the call to [setReady]. In particular, a file
-   * that exceeds the cache [maxSizeInBytes] will be deleted before this function returns. Load the file before calling
-   * this method if that's problematic.
+   * This cache does not guarantee that the file will still exist after the call to [setReady]. In
+   * particular, a file that exceeds the cache [maxSizeInBytes] will be deleted before this function
+   * returns. Load the file before calling this method if that's problematic.
    */
   private fun setReady(
     metadata: Files,
-    fileSizeBytes: Long
+    fileSizeBytes: Long,
   ) {
     database.transaction {
       // Go from DIRTY to READY.
@@ -312,14 +310,15 @@ class ZiplineCache internal constructor(
   ): Files? = database.filesQueries.getById(id).executeAsOneOrNull()
 
   /**
-   * Prune should be called on app boot to take into account any in-flight failed downloads or limit changes.
+   * Call this when opening the cache app to handle in-flight failed downloads and limit changes.
    *
-   * Prune is also called when any file transitions from [DIRTY] to [READY] since that file is now included
-   * in limit calculations.
+   * Prune is also called when any file transitions from `DIRTY` to `READY` since that file is now
+   * included in limit calculations.
    *
-   * Note: if a single file is larger than [maxSizeInBytes], it will be deleted immediately upon calls to [setReady].
-   * Callers must open such files for read before marking them as ready, assuming UNIX filesystem semantics where
-   * open files are not deleted from under processes that have opened them.
+   * Note: if a single file is larger than [maxSizeInBytes], it will be deleted immediately upon
+   * calls to [setReady]. Callers must open such files for read before marking them as ready,
+   * assuming UNIX filesystem semantics where open files are not deleted from under processes that
+   * have opened them.
    */
   internal fun prune() {
     while (true) {
@@ -333,13 +332,13 @@ class ZiplineCache internal constructor(
     }
   }
 
-  /** Count of number of files in the cache DB */
+  /** Returns the number of files in the cache DB. */
   internal fun countFiles() = database.filesQueries.count().executeAsOne().toInt()
 
-  /** Count of number of pins in the cache DB */
+  /** Returns the number of pins in the cache DB. */
   internal fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
 
-  /** Count of number of files  */
+  /** Prunes the cache and returns the number of files removed. */
   internal fun countPrunedFiles(): Int {
     val before = countFiles()
     prune()
@@ -358,7 +357,7 @@ fun createZiplineCache(
   driver: SqlDriver,
   fileSystem: FileSystem,
   directory: Path,
-  maxSizeInBytes: Int = 100 * 1024 * 1024,
+  maxSizeInBytes: Long = 100L * 1024L * 1024L,
   nowMs: () -> Long,
 ): ZiplineCache {
   val database = createDatabase(driver)
@@ -367,7 +366,7 @@ fun createZiplineCache(
     database = database,
     fileSystem = fileSystem,
     directory = directory,
-    maxSizeInBytes = maxSizeInBytes.toLong(),
+    maxSizeInBytes = maxSizeInBytes,
     nowMs = nowMs,
   )
   ziplineCache.prune()

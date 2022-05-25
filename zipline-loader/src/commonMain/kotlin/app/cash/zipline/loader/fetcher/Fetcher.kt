@@ -21,15 +21,16 @@ import kotlinx.coroutines.sync.withPermit
 import okio.ByteString
 
 /**
- * A list of [Fetcher] delegate in order responsibility of getting the desired [ByteString].
+ * Fetchers get a desired [ByteString] if possible.
  */
 interface Fetcher {
   /**
-   * Get the desired [ByteString] or null if not found.
+   * Returns the desired [ByteString], or null if not found.
    *
    * If this fetcher supports pinning, the returned value will be pinned for [applicationName] until
-   *   [pinManifest] is called.
-   * If a fetcher does not get a file, it returns null and the next [Fetcher] is called.
+   * [pinManifest] is called.
+   *
+   * If a fetcher cannot get a file, it returns null. The next [Fetcher] should be called.
    */
   suspend fun fetch(
     applicationName: String,
@@ -39,8 +40,9 @@ interface Fetcher {
   ): ByteString?
 
   /**
-   * Get the manifest for [applicationName] or null if not found.
-   * If a fetcher does not get a file, it returns null and the next [Fetcher] is called.
+   * Returns the manifest for [applicationName], or null if not found.
+   *
+   * If a fetcher cannot get a file, it returns null. The next [Fetcher] should be called.
    */
   suspend fun fetchManifest(
     applicationName: String,
@@ -51,10 +53,10 @@ interface Fetcher {
   /**
    * Permits all downloads for [applicationName] not in [manifest] to be pruned.
    *
-   * This assumes all artifacts in [manifest] are currently pinned, but it does not enforce this
-   * assumption.
+   * This assumes that all artifacts in [manifest] are currently pinned. Fetchers do not necessarily
+   * enforce this assumption.
    *
-   * Pin is called on all fetchers when a load succeeds.
+   * This function is called on all fetchers once a load succeeds.
    */
   suspend fun pinManifest(
     applicationName: String,
@@ -62,9 +64,9 @@ interface Fetcher {
   )
 
   /**
-   * Removes all optimistic pins for [applicationName] in [manifest] to permit them to be pruned.
+   * Removes the pins for [applicationName] in [manifest] so they may be pruned.
    *
-   * Unpin is called on all fetchers when a load succeeds.
+   * This function is called on all fetchers once a load fails.
    */
   suspend fun unpinManifest(
     applicationName: String,

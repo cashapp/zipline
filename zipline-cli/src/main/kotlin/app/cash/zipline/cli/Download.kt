@@ -25,7 +25,6 @@ import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
 import okhttp3.OkHttpClient
 import okio.FileSystem
@@ -33,7 +32,6 @@ import okio.Path.Companion.toOkioPath
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
-@OptIn(ExperimentalSerializationApi::class)
 @Command(
   name = NAME, description = ["Recursively download Zipline code to a directory from a URL."],
   mixinStandardHelpOptions = true, versionProvider = Main.VersionProvider::class

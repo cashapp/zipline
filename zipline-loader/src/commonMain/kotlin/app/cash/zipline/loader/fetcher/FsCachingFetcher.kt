@@ -40,10 +40,10 @@ class FsCachingFetcher(
     id: String,
     url: String
   ): ZiplineManifest? = try {
-    delegate.fetchManifest(applicationName, id, url)
+    delegate.fetchManifest(applicationName, id, url) ?: cache.getPinnedManifest(applicationName)
   } catch (e: Exception) {
     cache.getPinnedManifest(applicationName)
-  } ?: cache.getPinnedManifest(applicationName)
+  }
 
   override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) =
     cache.pinManifest(applicationName, manifest)

@@ -223,7 +223,7 @@ class ZiplineCacheTest {
 
       it.pinManifest("red", manifestFiretruck)
       assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
-      assertEquals(4, it.countFiles()) // apple manifest remains in cache until prune
+      assertEquals(4, it.countFiles()) // apple manifest remains in cache until prune.
       assertEquals(2, it.countPins())
     }
   }
@@ -251,7 +251,7 @@ class ZiplineCacheTest {
 
       it.unpinManifest("red", manifestFiretruck)
       assertEquals(manifestApple, it.getPinnedManifest("red"))
-      assertEquals(3, it.countFiles()) // firetruck manifest isn't saved to file cache
+      assertEquals(3, it.countFiles()) // firetruck manifest isn't saved to file cache.
       assertEquals(2, it.countPins())
     }
   }

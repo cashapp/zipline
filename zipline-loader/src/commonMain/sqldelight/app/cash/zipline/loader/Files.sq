@@ -10,9 +10,6 @@ CREATE TABLE files (
 );
 
 CREATE UNIQUE INDEX files_sha256_hex ON files(sha256_hex);
--- CREATE UNIQUE INDEX files_manifest_for_application_name ON files(manifest_for_application_name);
--- since we optimstically pin and write manifest files, there will be times when we have two manifests in DB
---    while the new manifest is added to cache but all code hasn't successfully loaded yet
 
 selectCacheSumBytes:
 SELECT SUM(size_bytes)

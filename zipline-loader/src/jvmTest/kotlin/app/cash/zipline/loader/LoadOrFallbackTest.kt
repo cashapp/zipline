@@ -149,8 +149,8 @@ class LoadOrFallbackTest {
 
     private val baseUrl = "https://example.com/files"
 
-    private lateinit var cache: ZiplineCache
-    private lateinit var loader: ZiplineLoader
+    private val cache: ZiplineCache
+    private val loader: ZiplineLoader
 
     init {
       Database.Schema.create(cacheDbDriver)
