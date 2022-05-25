@@ -109,17 +109,9 @@ suspend fun List<Fetcher>.fetchManifest(
   id: String,
   url: String?,
 ): ZiplineManifest? = concurrentDownloadsSemaphore.withPermit {
-  var firstException: Exception? = null
   for (fetcher in this) {
-    try {
-      return@withPermit fetcher.fetchManifest(applicationName, id, url) ?: continue
-    } catch (e: Exception) {
-      if (firstException == null) {
-        firstException = e
-      }
-    }
+    return@withPermit fetcher.fetchManifest(applicationName, id, url) ?: continue
   }
-  if (firstException != null) throw firstException
   return@withPermit null
 }
 
