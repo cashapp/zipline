@@ -25,8 +25,8 @@ import okio.ByteString
  * Fetch from the network.
  */
 class HttpFetcher(
-  private val eventListener: EventListener,
   private val httpClient: ZiplineHttpClient,
+  private val eventListener: EventListener = EventListener.NONE,
 ) : Fetcher {
   override suspend fun fetch(
     applicationName: String,

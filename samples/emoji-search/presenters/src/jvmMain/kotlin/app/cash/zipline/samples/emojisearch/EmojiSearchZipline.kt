@@ -67,9 +67,7 @@ class EmojiSearchZipline(
           directory = cacheDir,
           nowMs = { Clock.systemDefaultZone().instant().toEpochMilli() },
         ),
-        delegate = HttpFetcher(
-          eventListener = eventListener, httpClient = OkHttpZiplineHttpClient(client)
-        ),
+        delegate = HttpFetcher(OkHttpZiplineHttpClient(client)),
       ),
     ),
   )

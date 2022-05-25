@@ -67,10 +67,7 @@ class Download : Runnable {
       serializersModule = EmptySerializersModule,
       httpClient = OkHttpZiplineHttpClient(client),
       fetchers = listOf(
-        HttpFetcher(
-          eventListener = EventListener.NONE,
-          httpClient = OkHttpZiplineHttpClient(client),
-        )
+        HttpFetcher(OkHttpZiplineHttpClient(client))
       )
     )
     runBlocking {

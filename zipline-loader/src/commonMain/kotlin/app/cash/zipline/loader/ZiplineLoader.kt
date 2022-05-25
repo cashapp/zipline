@@ -39,6 +39,7 @@ import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
@@ -54,10 +55,10 @@ import okio.Path
  */
 class ZiplineLoader(
   private val dispatcher: CoroutineDispatcher,
-  private val eventListener: EventListener,
-  private val serializersModule: SerializersModule,
+  private val eventListener: EventListener = EventListener.NONE,
+  private val serializersModule: SerializersModule = EmptySerializersModule,
   private val httpClient: ZiplineHttpClient,
-  private val fetchers: List<Fetcher> = listOf(HttpFetcher(eventListener, httpClient)),
+  private val fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient, eventListener)),
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3

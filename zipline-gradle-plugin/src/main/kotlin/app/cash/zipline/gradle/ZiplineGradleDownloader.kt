@@ -45,10 +45,7 @@ class ZiplineGradleDownloader {
       serializersModule = EmptySerializersModule,
       httpClient = httpClient,
       fetchers = listOf(
-        HttpFetcher(
-          eventListener = eventListener,
-          httpClient = httpClient,
-        )
+        HttpFetcher(httpClient, eventListener),
       )
     )
     runBlocking {

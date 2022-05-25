@@ -149,7 +149,7 @@ class LoaderTestFixtures(
         ),
         FsCachingFetcher(
           cache = cache,
-          delegate = HttpFetcher(eventListener = eventListener, httpClient = httpClient),
+          delegate = HttpFetcher(httpClient, eventListener),
         ),
       )
     )
@@ -186,7 +186,7 @@ class LoaderTestFixtures(
             maxSizeInBytes = cacheMaxSizeInBytes,
             nowMs = nowMs,
           ),
-          delegate = HttpFetcher(eventListener = eventListener, httpClient = httpClient),
+          delegate = HttpFetcher(httpClient, eventListener),
         ),
       ),
     )
@@ -202,10 +202,7 @@ class LoaderTestFixtures(
       serializersModule = serializersModule,
       httpClient = httpClient,
       fetchers = listOf(
-        HttpFetcher(
-          eventListener = eventListener,
-          httpClient = httpClient,
-        ),
+        HttpFetcher(httpClient, eventListener),
       )
     )
   }
