@@ -10,6 +10,6 @@ dependencies {
   testImplementation(libs.kotlin.reflect)
   testImplementation(libs.kotlinx.coroutines.test)
   testImplementation(kotlin("compiler-embeddable"))
-  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.1")
+  testImplementation("com.github.tschuchortdev:kotlin-compile-testing:1.4.8")
   testImplementation("com.google.truth:truth:1.0")
 }
