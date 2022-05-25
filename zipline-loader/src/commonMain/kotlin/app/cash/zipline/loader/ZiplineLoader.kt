@@ -124,7 +124,8 @@ class ZiplineLoader(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
     pollingInterval: Duration,
-  ): Flow<Zipline> = manifestUrlFlow
+    initializer: (Zipline) -> Unit,
+    ): Flow<Zipline> = manifestUrlFlow
     .rebounce(pollingInterval)
     .mapNotNull { url ->
       eventListener.applicationLoadStart(applicationName, url)
