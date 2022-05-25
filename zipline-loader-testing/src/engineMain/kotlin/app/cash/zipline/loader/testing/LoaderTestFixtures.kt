@@ -142,14 +142,14 @@ class LoaderTestFixtures(
       serializersModule = serializersModule,
       httpClient = httpClient,
       fetchers = listOf(
-        FsCachingFetcher(
-          cache = cache,
-          delegate = HttpFetcher(eventListener = eventListener, httpClient = httpClient),
-        ),
         FsEmbeddedFetcher(
           embeddedDir = embeddedDir,
           embeddedFileSystem = embeddedFileSystem,
           eventListener = eventListener,
+        ),
+        FsCachingFetcher(
+          cache = cache,
+          delegate = HttpFetcher(eventListener = eventListener, httpClient = httpClient),
         ),
       )
     )

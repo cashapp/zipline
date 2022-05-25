@@ -248,7 +248,7 @@ class ZiplineLoader(
      */
     suspend fun run() {
       // Fetch modules local-first since we have a hash and all content is the same.
-      val byteString = fetchers.asReversed().fetch(
+      val byteString = fetchers.fetch(
         concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
         applicationName = applicationName,
         id = id,
@@ -267,7 +267,7 @@ class ZiplineLoader(
     manifestUrl: String?,
   ): ZiplineManifest {
     // Fetch manifests remote-first as that's where the freshest data is.
-    return fetchers.fetchManifest(
+    return fetchers.asReversed().fetchManifest(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       applicationName = applicationName,
       id = getApplicationManifestFileName(applicationName),
