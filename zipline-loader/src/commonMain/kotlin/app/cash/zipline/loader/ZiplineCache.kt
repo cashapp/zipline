@@ -90,12 +90,12 @@ class ZiplineCache internal constructor(
   suspend fun getOrPut(
     applicationName: String,
     sha256: ByteString,
-    download: suspend () -> ByteString
-  ): ByteString {
+    download: suspend () -> ByteString?
+  ): ByteString? {
     val read = read(sha256)
     if (read != null) return read
 
-    val contents = download()
+    val contents = download() ?: return null
     write(applicationName, sha256, contents)
     return contents
   }
@@ -320,7 +320,7 @@ class ZiplineCache internal constructor(
    * assuming UNIX filesystem semantics where open files are not deleted from under processes that
    * have opened them.
    */
-  internal fun prune() {
+  internal fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
     while (true) {
       val currentSize = database.filesQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
       if (currentSize <= maxSizeInBytes) return
@@ -337,14 +337,6 @@ class ZiplineCache internal constructor(
 
   /** Returns the number of pins in the cache DB. */
   internal fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
-
-  /** Prunes the cache and returns the number of files removed. */
-  internal fun countPrunedFiles(): Int {
-    val before = countFiles()
-    prune()
-    val after = countFiles()
-    return after - before
-  }
 
   private fun path(metadata: Files): Path {
     return directory / "entry-${metadata.id}.bin"

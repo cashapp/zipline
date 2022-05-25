@@ -34,13 +34,13 @@ class FsEmbeddedFetcher(
     applicationName: String,
     id: String,
     sha256: ByteString,
-    url: String
+    url: String,
   ): ByteString? = fetchByteString(embeddedDir / sha256.hex())
 
   override suspend fun fetchManifest(
     applicationName: String,
     id: String,
-    url: String
+    url: String?,
   ): ZiplineManifest? {
     val byteString = fetchByteString(embeddedDir / getApplicationManifestFileName(applicationName))
     return byteString?.decodeToZiplineManifest(eventListener, applicationName, url)

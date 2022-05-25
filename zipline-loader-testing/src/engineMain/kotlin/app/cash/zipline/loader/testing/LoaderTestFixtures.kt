@@ -45,7 +45,7 @@ import okio.Path
 
 @OptIn(ExperimentalSerializationApi::class)
 class LoaderTestFixtures(
-  val quickJs: QuickJs
+  val quickJs: QuickJs,
 ) {
   val alphaJs = createJs("alpha")
   val alphaByteString = createZiplineFile(alphaJs, "alpha.js")
@@ -142,14 +142,14 @@ class LoaderTestFixtures(
       serializersModule = serializersModule,
       httpClient = httpClient,
       fetchers = listOf(
+        FsCachingFetcher(
+          cache = cache,
+          delegate = HttpFetcher(eventListener, httpClient),
+        ),
         FsEmbeddedFetcher(
           embeddedDir = embeddedDir,
           embeddedFileSystem = embeddedFileSystem,
           eventListener = eventListener,
-        ),
-        FsCachingFetcher(
-          cache = cache,
-          delegate = HttpFetcher(httpClient, eventListener),
         ),
       )
     )

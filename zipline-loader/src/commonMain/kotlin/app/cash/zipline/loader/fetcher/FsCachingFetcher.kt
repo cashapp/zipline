@@ -30,19 +30,25 @@ class FsCachingFetcher(
     applicationName: String,
     id: String,
     sha256: ByteString,
-    url: String
-  ): ByteString = cache.getOrPut(applicationName, sha256) {
-    delegate.fetch(applicationName, id, sha256, url)!!
+    url: String,
+  ): ByteString? {
+    return cache.getOrPut(applicationName, sha256) {
+      delegate.fetch(applicationName, id, sha256, url)
+    }
   }
 
   override suspend fun fetchManifest(
     applicationName: String,
     id: String,
-    url: String
-  ): ZiplineManifest? = try {
-    delegate.fetchManifest(applicationName, id, url) ?: cache.getPinnedManifest(applicationName)
-  } catch (e: Exception) {
-    cache.getPinnedManifest(applicationName)
+    url: String?,
+  ): ZiplineManifest? {
+    // Prefer the network for the freshest manifest. Fallback to the cache if that fails.
+    return try {
+      delegate.fetchManifest(applicationName, id, url)
+        ?: cache.getPinnedManifest(applicationName)
+    } catch (e: Exception) {
+      cache.getPinnedManifest(applicationName) ?: throw e
+    }
   }
 
   override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) =
