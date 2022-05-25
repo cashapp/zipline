@@ -39,7 +39,7 @@ class ProductionFetcherReceiverTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private val cacheMaxSizeInBytes = 100 * 1024 * 1024
+  private val cacheMaxSizeInBytes = 100L * 1024L * 1024L
   private val cacheDirectory = "/zipline/cache".toPath()
   private var nowMillis = 1_000L
 

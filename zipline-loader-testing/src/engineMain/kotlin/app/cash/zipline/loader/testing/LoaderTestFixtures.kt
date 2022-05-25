@@ -157,15 +157,15 @@ class LoaderTestFixtures(
     fun createProductionZiplineLoader(
       dispatcher: CoroutineDispatcher,
       httpClient: ZiplineHttpClient,
-      embeddedDir: Path, // SqlDriver is already initialized to the platform and SQLite DB on disk
+      embeddedDir: Path,
       embeddedFileSystem: FileSystem,
       cacheDbDriver: SqlDriver,
       cacheDir: Path,
       cacheFileSystem: FileSystem,
-      cacheMaxSizeInBytes: Int = 100 * 1024 * 1024,
+      cacheMaxSizeInBytes: Long = 100L * 1024L * 1024L,  // 100 MiB
       serializersModule: SerializersModule = EmptySerializersModule,
       eventListener: EventListener = EventListener.NONE,
-      nowMs: () -> Long, // 100 MiB
+      nowMs: () -> Long,
     ) = ZiplineLoader(
       dispatcher = dispatcher,
       eventListener = eventListener,

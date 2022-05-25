@@ -54,15 +54,15 @@ class FetcherTest {
       id: String,
       url: String
     ): ZiplineManifest? {
-      TODO("Not yet implemented")
+      error("unexpected call")
     }
 
     override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
-      TODO("Not yet implemented")
+      error("unexpected call")
     }
 
     override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
-      TODO("Not yet implemented")
+      error("unexpected call")
     }
   }
 
@@ -82,15 +82,15 @@ class FetcherTest {
       id: String,
       url: String
     ): ZiplineManifest? {
-      TODO("Not yet implemented")
+      error("unexpected call")
     }
 
     override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
-      TODO("Not yet implemented")
+      error("unexpected call")
     }
 
     override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
-      TODO("Not yet implemented")
+      error("unexpected call")
     }
   }
 

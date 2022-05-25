@@ -17,7 +17,6 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.ZiplineLoader.Companion.DEFAULT_APPLICATION_NAME
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
@@ -44,7 +43,7 @@ class ZiplineLoaderTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private val cacheSize = 1024 * 1024
+  private val cacheSize = 1024L * 1024L
   private var nowMillis = 1_000L
 
   private val cacheFileSystem = FakeFileSystem()
