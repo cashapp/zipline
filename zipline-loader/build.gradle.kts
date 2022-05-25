@@ -95,6 +95,9 @@ kotlin {
     }
     val jvmTest by getting {
       dependsOn(jniTest)
+      dependencies {
+        implementation(projects.zipline.testing)
+      }
     }
 
     targets.withType<KotlinNativeTarget> {

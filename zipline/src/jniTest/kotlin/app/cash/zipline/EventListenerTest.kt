@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.LoggingEventListener
 import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.helloService

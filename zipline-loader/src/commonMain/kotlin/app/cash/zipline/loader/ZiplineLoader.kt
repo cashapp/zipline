@@ -26,6 +26,7 @@ import app.cash.zipline.loader.fetcher.unpinManifest
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -51,6 +52,9 @@ import okio.Path
  *
  * Loader attempts to load code as quickly as possible with
  * concurrent network downloads and code loading.
+ *
+ * @param fetchers this should be ordered from most-local to most-remote. Local resources will be
+ *     preferred for performance and remote resources will be preferred for freshness.
  */
 class ZiplineLoader(
   private val dispatcher: CoroutineDispatcher,
@@ -75,14 +79,13 @@ class ZiplineLoader(
     return try {
       createZiplineAndLoad(applicationName, manifestUrl, initializer)
     } catch (e: Exception) {
-      val url = "$FALLBACK_BASE_URL${getApplicationManifestFileName(applicationName)}"
-      createZiplineAndLoad(applicationName, url, initializer)
+      createZiplineAndLoad(applicationName, null, initializer)
     }
   }
 
   private suspend fun createZiplineAndLoad(
     applicationName: String,
-    manifestUrl: String,
+    manifestUrl: String?,
     initializer: (Zipline) -> Unit,
   ): Zipline {
     eventListener.applicationLoadStart(applicationName, manifestUrl)
@@ -225,7 +228,7 @@ class ZiplineLoader(
           }
         }
       } catch (e: Exception) {
-        // On exception, unpin this manifest; and rethrow so that the load attempt fails
+        // On exception, unpin this manifest; and rethrow so that the load attempt fails.
         fetchers.unpinManifest(applicationName, manifest)
         throw e
       }
@@ -244,13 +247,14 @@ class ZiplineLoader(
      * Fetch and receive ZiplineFile module
      */
     suspend fun run() {
-      val byteString = fetchers.fetch(
+      // Fetch modules local-first since we have a hash and all content is the same.
+      val byteString = fetchers.asReversed().fetch(
         concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
         applicationName = applicationName,
         id = id,
         sha256 = module.sha256,
         url = module.url,
-      )
+      )!!
       upstreams.joinAll()
       withContext(dispatcher) {
         receiver.receive(byteString, id, module.sha256)
@@ -260,19 +264,18 @@ class ZiplineLoader(
 
   private suspend fun fetchZiplineManifest(
     applicationName: String,
-    manifestUrl: String,
+    manifestUrl: String?,
   ): ZiplineManifest {
-    val manifest = fetchers.fetchManifest(
+    // Fetch manifests remote-first as that's where the freshest data is.
+    return fetchers.fetchManifest(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       applicationName = applicationName,
       id = getApplicationManifestFileName(applicationName),
       url = manifestUrl,
-    )
-    return httpClient.resolveUrls(manifest, manifestUrl)
+    )!!
   }
 
   companion object {
-    const val FALLBACK_BASE_URL = "fallback://"
     const val DEFAULT_APPLICATION_NAME = "default"
     private const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
     fun getApplicationManifestFileName(applicationName: String = DEFAULT_APPLICATION_NAME) =

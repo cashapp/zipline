@@ -52,7 +52,7 @@ class FetcherTest {
     override suspend fun fetchManifest(
       applicationName: String,
       id: String,
-      url: String
+      url: String?,
     ): ZiplineManifest? {
       error("unexpected call")
     }
@@ -80,7 +80,7 @@ class FetcherTest {
     override suspend fun fetchManifest(
       applicationName: String,
       id: String,
-      url: String
+      url: String?,
     ): ZiplineManifest? {
       error("unexpected call")
     }
