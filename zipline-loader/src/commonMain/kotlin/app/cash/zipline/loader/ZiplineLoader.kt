@@ -55,9 +55,9 @@ import okio.Path
  */
 class ZiplineLoader(
   private val dispatcher: CoroutineDispatcher,
+  private val httpClient: ZiplineHttpClient,
   private val eventListener: EventListener = EventListener.NONE,
   private val serializersModule: SerializersModule = EmptySerializersModule,
-  private val httpClient: ZiplineHttpClient,
   private val fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient, eventListener)),
 ) {
   private var concurrentDownloadsSemaphore = Semaphore(3)
