@@ -44,6 +44,24 @@ class LoaderEventsTest {
   }
 
   @Test
+  fun loadAlreadyCached() = runBlocking {
+    assertEquals("apple", tester.success("red", "apple"))
+    eventListener.takeAll()
+
+    // On the 2nd load, the manifest is fetched again but the module is not.
+    assertEquals("apple", tester.success("red", "apple"))
+    assertEquals(
+      listOf(
+        "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
+        "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
+        "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "applicationLoadEnd red https://example.com/files/red/red.manifest.zipline.json",
+      ),
+      eventListener.takeAll(skipServiceEvents = true)
+    )
+  }
+
+  @Test
   fun manifestDownloadFails() = runBlocking {
     tester.seedEmbedded("red", "firetruck")
     assertEquals("firetruck", tester.failureManifestFetchFails("red"))
