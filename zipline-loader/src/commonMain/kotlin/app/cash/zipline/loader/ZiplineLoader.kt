@@ -26,7 +26,6 @@ import app.cash.zipline.loader.fetcher.unpinManifest
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
-import kotlin.coroutines.cancellation.CancellationException
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -54,7 +53,7 @@ import okio.Path
  * Loader attempts to load code as quickly as possible with
  * concurrent network downloads and code loading.
  *
- * @param fetchers this should be ordered with network fetchers preceding embedded fetchers. That
+ * @param fetchers this should be ordered with embedded fetchers preceding network fetchers. That
  *     way the network is used for fresh resources and embedded is used for fast resources.
  */
 class ZiplineLoader(
@@ -249,7 +248,7 @@ class ZiplineLoader(
      */
     suspend fun run() {
       // Fetch modules local-first since we have a hash and all content is the same.
-      val byteString = fetchers.asReversed().fetch(
+      val byteString = fetchers.fetch(
         concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
         applicationName = applicationName,
         id = id,
@@ -268,7 +267,7 @@ class ZiplineLoader(
     manifestUrl: String?,
   ): ZiplineManifest {
     // Fetch manifests remote-first as that's where the freshest data is.
-    return fetchers.fetchManifest(
+    return fetchers.asReversed().fetchManifest(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       applicationName = applicationName,
       id = getApplicationManifestFileName(applicationName),
