@@ -45,8 +45,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
     fetchers = listOf(HttpFetcher(localDirectoryHttpClient)),
   )
 
-  val zipline = Zipline.create(dispatcher)
-  loader.load(zipline, "http://localhost:99999/manifest.zipline.json")
+  val zipline = loader.loadOrFail("test", "http://localhost:99999/manifest.zipline.json")
 
   val moduleName = "./basic-lib.js"
   zipline.quickJs.evaluate(
