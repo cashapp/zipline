@@ -57,11 +57,11 @@ class FetcherTest {
       error("unexpected call")
     }
 
-    override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
       error("unexpected call")
     }
 
-    override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
       error("unexpected call")
     }
   }
@@ -85,11 +85,11 @@ class FetcherTest {
       error("unexpected call")
     }
 
-    override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
       error("unexpected call")
     }
 
-    override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
       error("unexpected call")
     }
   }
