@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -38,7 +39,7 @@ class ProductionFetcherReceiverTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private val cacheMaxSizeInBytes = 100 * 1024 * 1024
+  private val cacheMaxSizeInBytes = 100L * 1024L * 1024L
   private val cacheDirectory = "/zipline/cache".toPath()
   private var nowMillis = 1_000L
 
@@ -60,6 +61,7 @@ class ProductionFetcherReceiverTest {
     fileSystem = FakeFileSystem()
     embeddedFileSystem = FakeFileSystem()
     cache = createZiplineCache(
+      eventListener = EventListener.NONE,
       driver = cacheDbDriver,
       fileSystem = fileSystem,
       directory = cacheDirectory,
@@ -83,7 +85,7 @@ class ProductionFetcherReceiverTest {
   }
 
   @Test
-  fun getFromEmbeddedFileSystemNoNetworkCall(): Unit = runBlocking {
+  fun getFromEmbeddedFileSystemNoNetworkCall() = runBlocking {
     embeddedFileSystem.createDirectories(embeddedDir)
     embeddedFileSystem.write(embeddedDir / testFixtures.alphaSha256Hex) {
       write(testFixtures.alphaByteString)
@@ -106,12 +108,12 @@ class ProductionFetcherReceiverTest {
   }
 
   @Test
-  fun getFromWarmCacheNoNetworkCall(): Unit = runBlocking {
-    cache.getOrPut(testFixtures.alphaSha256) {
+  fun getFromWarmCacheNoNetworkCall() = runBlocking {
+    cache.getOrPut("app1", testFixtures.alphaSha256) {
       testFixtures.alphaByteString
     }
     assertEquals(testFixtures.alphaByteString, cache.read(testFixtures.alphaSha256))
-    cache.getOrPut(testFixtures.bravoSha256) {
+    cache.getOrPut("app1", testFixtures.bravoSha256) {
       testFixtures.bravoByteString
     }
     assertEquals(testFixtures.bravoByteString, cache.read(testFixtures.bravoSha256))
@@ -130,7 +132,7 @@ class ProductionFetcherReceiverTest {
   }
 
   @Test
-  fun getFromNetworkPutInCache(): Unit = runBlocking {
+  fun getFromNetworkPutInCache() = runBlocking {
     assertNull(cache.read(testFixtures.alphaSha256))
     assertNull(cache.read(testFixtures.bravoSha256))
 
@@ -149,7 +151,7 @@ class ProductionFetcherReceiverTest {
       zipline.quickJs.evaluate("globalThis.log", "assert.js")
     )
 
-    val ziplineFileFromCache = cache.getOrPut(testFixtures.alphaSha256) {
+    val ziplineFileFromCache = cache.getOrPut("app1", testFixtures.alphaSha256) {
       "fake".encodeUtf8()
     }
     assertEquals(testFixtures.alphaByteString, ziplineFileFromCache)

@@ -67,6 +67,37 @@ abstract class EventListener {
   open fun serviceLeaked(name: String) {
   }
 
+  /** Invoked when an application load starts */
+  open fun applicationLoadStart(applicationName: String, manifestUrl: String) {
+  }
+
+  /** Invoked when an application load succeeds */
+  open fun applicationLoadEnd(applicationName: String, manifestUrl: String) {
+  }
+
+  /** Invoked when an application load fails */
+  open fun applicationLoadFailed(applicationName: String, manifestUrl: String, exception: Exception) {
+  }
+
+  /** Invoked when a network download starts */
+  open fun downloadStart(applicationName: String, url: String) {
+  }
+
+  /** Invoked when a network download succeeds */
+  open fun downloadEnd(applicationName: String, url: String) {
+  }
+
+
+  /** Invoked when a network download fails */
+  open fun downloadFailed(applicationName: String, url: String, exception: Exception) {
+  }
+
+  /**
+   * Invoked when the manifest couldn't be decoded as JSON. For example, this might occur if there's
+   * a captive portal on the network.
+   */
+  open fun manifestParseFailed(applicationName: String, url: String, exception: Exception) {
+  }
   companion object {
     val NONE: EventListener = object : EventListener() {}
   }

@@ -37,17 +37,17 @@ class EventListenerTest {
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)
   private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runBlocking {
     zipline.loadTestingJs()
     uncaughtExceptionHandler.setUp()
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runBlocking {
     zipline.close()
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun jvmCallJsService(): Unit = runBlocking(dispatcher) {
+  @Test fun jvmCallJsService() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
     assertThat(zipline.helloService.echo(EchoRequest("Jake")))
@@ -61,7 +61,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from JavaScript, Jake))")
   }
 
-  @Test fun jsCallJvmService(): Unit = runBlocking(dispatcher) {
+  @Test fun jsCallJvmService() = runBlocking {
     val jvmEchoService = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse {
         return EchoResponse("sup from the JVM, ${request.message}")
@@ -80,7 +80,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=sup from the JVM, homie))")
   }
 
-  @Test fun suspendingJvmCallJsService(): Unit = runBlocking(dispatcher) {
+  @Test fun suspendingJvmCallJsService() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.unblockSuspendingJs()")
 
@@ -96,7 +96,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from suspending JavaScript, Jake))")
   }
 
-  @Test fun suspendingJsCallJvmService(): Unit = runBlocking(dispatcher) {
+  @Test fun suspendingJsCallJvmService() = runBlocking {
     val jvmSuspendingEchoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
         return EchoResponse("hello from the suspending JVM, ${request.message}")
@@ -120,7 +120,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callEnd 3 $name $funName $request Success(EchoResponse(message=hello from the suspending JVM, Eric))")
   }
 
-  @Test fun jvmCallIncompatibleJsService(): Unit = runBlocking(dispatcher) {
+  @Test fun jvmCallIncompatibleJsService() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
     assertThat(assertFailsWith<Exception> {

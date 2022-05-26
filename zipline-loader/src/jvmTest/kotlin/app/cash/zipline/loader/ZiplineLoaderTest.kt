@@ -17,7 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
+import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
@@ -43,7 +43,7 @@ class ZiplineLoaderTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
   private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private val cacheSize = 1024 * 1024
+  private val cacheSize = 1024L * 1024L
   private var nowMillis = 1_000L
 
   private val cacheFileSystem = FakeFileSystem()
@@ -63,12 +63,11 @@ class ZiplineLoaderTest {
       httpClient = httpClient,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
+      cacheDbDriver = driver,
       cacheDir = "/zipline/cache".toPath(),
       cacheFileSystem = cacheFileSystem,
-      cacheDbDriver = driver,
-      cacheMaxSizeInBytes = cacheSize,
-      nowMs = { nowMillis }
-    )
+      cacheMaxSizeInBytes = cacheSize
+    ) { nowMillis }
   }
 
   @After
@@ -78,7 +77,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun happyPath(): Unit = runBlocking(dispatcher) {
+  fun happyPath() = runBlocking {
     httpClient.filePathToByteString = mapOf(
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
@@ -95,7 +94,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loadManifestFromUrl(): Unit = runBlocking(dispatcher) {
+  fun loadManifestFromUrl() = runBlocking {
     httpClient.filePathToByteString = mapOf(
       manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
       alphaUrl to testFixtures.alphaByteString,
@@ -113,7 +112,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loaderUsesCache(): Unit = runBlocking(dispatcher) {
+  fun loaderUsesCache() = runBlocking {
     // load, no cache hit, download
     httpClient.filePathToByteString = mapOf(
       manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
@@ -147,7 +146,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loaderUsesResourcesBeforeCacheButManifestOverNetwork(): Unit = runBlocking(dispatcher) {
+  fun loaderUsesResourcesBeforeCacheButManifestOverNetwork() = runBlocking {
     // seed the resources FS with zipline files
     embeddedFileSystem.createDirectories(embeddedDir)
     embeddedFileSystem.write(embeddedDir / testFixtures.alphaSha256Hex) {
@@ -174,10 +173,10 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun loaderUsesResourcesForPrebuiltManifestWhenNetworkOffline(): Unit = runBlocking(dispatcher) {
+  fun loaderUsesResourcesForPrebuiltManifestWhenNetworkOffline() = runBlocking {
     // seed the embedded FS with zipline manifest and files
     embeddedFileSystem.createDirectories(embeddedDir)
-    embeddedFileSystem.write(embeddedDir / PREBUILT_MANIFEST_FILE_NAME) {
+    embeddedFileSystem.write(embeddedDir / getApplicationManifestFileName()) {
       write(testFixtures.manifestByteString)
     }
     embeddedFileSystem.write(embeddedDir / testFixtures.alphaSha256Hex) {
@@ -203,7 +202,7 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun downloadToDirectoryThenLoadFromAsEmbedded(): Unit = runBlocking(dispatcher) {
+  fun downloadToDirectoryThenLoadFromAsEmbedded() = runBlocking {
     val downloadDir = "/downloads/latest".toPath()
     val downloadFileSystem = cacheFileSystem
     loader = createDownloadZiplineLoader(
@@ -211,7 +210,7 @@ class ZiplineLoaderTest {
       httpClient = httpClient,
     )
 
-    assertFalse(downloadFileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))
+    assertFalse(downloadFileSystem.exists(downloadDir / getApplicationManifestFileName()))
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
 
@@ -224,7 +223,7 @@ class ZiplineLoaderTest {
 
     assertEquals(
       testFixtures.manifestByteString,
-      downloadFileSystem.read(downloadDir / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+      downloadFileSystem.read(downloadDir / getApplicationManifestFileName()) { readByteString() })
     assertTrue(downloadFileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertEquals(
       testFixtures.alphaByteString,
@@ -241,12 +240,11 @@ class ZiplineLoaderTest {
       httpClient = httpClient,
       embeddedDir = downloadDir,
       embeddedFileSystem = downloadFileSystem,
+      cacheDbDriver = driver,
       cacheDir = "/zipline/cache".toPath(),
       cacheFileSystem = cacheFileSystem,
-      cacheDbDriver = driver,
-      cacheMaxSizeInBytes = cacheSize,
-      nowMs = { nowMillis }
-    )
+      cacheMaxSizeInBytes = cacheSize
+    ) { nowMillis }
     loader.load(zipline, testFixtures.manifest)
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
@@ -258,11 +256,11 @@ class ZiplineLoaderTest {
   }
 
   @Test
-  fun downloadToDirectory(): Unit = runBlocking(dispatcher) {
+  fun downloadToDirectory() = runBlocking {
     val fileSystem = FakeFileSystem()
     val downloadDir = "/zipline/download".toPath()
 
-    assertFalse(fileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))
+    assertFalse(fileSystem.exists(downloadDir / getApplicationManifestFileName()))
     assertFalse(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertFalse(fileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
 
@@ -275,10 +273,10 @@ class ZiplineLoaderTest {
     loader.download(downloadDir, fileSystem, testFixtures.manifest)
 
     // check that files have been downloaded to downloadDir as expected
-    assertTrue(fileSystem.exists(downloadDir / PREBUILT_MANIFEST_FILE_NAME))
+    assertTrue(fileSystem.exists(downloadDir / getApplicationManifestFileName()))
     assertEquals(
       testFixtures.manifestByteString,
-      fileSystem.read(downloadDir / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+      fileSystem.read(downloadDir / getApplicationManifestFileName()) { readByteString() })
     assertTrue(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertEquals(
       testFixtures.alphaByteString,

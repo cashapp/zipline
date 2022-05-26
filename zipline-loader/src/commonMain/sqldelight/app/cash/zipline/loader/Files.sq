@@ -1,0 +1,93 @@
+import app.cash.zipline.loader.FileState;
+
+CREATE TABLE files (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  sha256_hex TEXT NOT NULL,
+  manifest_for_application_name TEXT, -- LIKE 'red' or maybe 'red.manifest.json', null for all files except manifest
+  file_state TEXT AS FileState NOT NULL,
+  size_bytes INTEGER NOT NULL,
+  last_used_at_epoch_ms INTEGER NOT NULL
+);
+
+CREATE UNIQUE INDEX files_sha256_hex ON files(sha256_hex);
+
+selectCacheSumBytes:
+SELECT SUM(size_bytes)
+FROM files;
+
+count:
+SELECT COUNT(*) FROM files;
+
+get:
+SELECT *
+FROM files
+WHERE sha256_hex LIKE ('%' || :sha256_hex)
+LIMIT 1;
+
+getById:
+SELECT *
+FROM files
+WHERE id = :id
+LIMIT 1;
+
+getByIds:
+SELECT *
+FROM files
+WHERE id IN :ids;
+
+insert:
+INSERT INTO files(sha256_hex, manifest_for_application_name, file_state, size_bytes, last_used_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?);
+
+update:
+UPDATE files
+SET file_state = :file_state, size_bytes = :size_bytes, last_used_at_epoch_ms = :last_used_at_epoch_ms
+WHERE id = :id;
+
+selectOldestReady:
+SELECT id, sha256_hex, manifest_for_application_name, file_state, size_bytes, last_used_at_epoch_ms
+FROM files f
+LEFT JOIN pins p ON (f.id = p.file_id)
+WHERE
+  p.file_id IS NULL AND
+  f.file_state = 'READY'
+ORDER BY last_used_at_epoch_ms ASC
+LIMIT 1;
+
+selectPinnedManifest:
+SELECT
+id,
+sha256_hex,
+manifest_for_application_name,
+file_state,
+size_bytes,
+last_used_at_epoch_ms
+FROM files f
+LEFT JOIN pins p ON (
+  f.id = p.file_id AND
+  f.manifest_for_application_name = p.application_name
+)
+WHERE f.manifest_for_application_name = ?
+ORDER BY id DESC
+LIMIT 1;
+
+selectPinnedManifestNotFileId:
+SELECT
+id,
+sha256_hex,
+manifest_for_application_name,
+file_state,
+size_bytes,
+last_used_at_epoch_ms
+FROM files f
+LEFT JOIN pins p ON (
+  f.id = p.file_id AND
+  f.manifest_for_application_name = p.application_name
+)
+WHERE f.manifest_for_application_name = :application_name AND f.id != :not_file_id
+ORDER BY id DESC
+LIMIT 1;
+
+delete:
+DELETE FROM files
+WHERE id = :id;

@@ -16,6 +16,7 @@
 package app.cash.zipline.loader.fetcher
 
 import app.cash.zipline.loader.ZiplineCache
+import app.cash.zipline.loader.ZiplineManifest
 import okio.ByteString
 
 /**
@@ -26,12 +27,27 @@ class FsCachingFetcher(
   private val delegate: Fetcher,
 ) : Fetcher {
   override suspend fun fetch(
+    applicationName: String,
     id: String,
     sha256: ByteString,
-    url: String,
-    fileNameOverride: String?
-  ): ByteString =
-    cache.getOrPut(sha256) {
-      delegate.fetch(id, sha256, url, fileNameOverride)!!
-    }
+    url: String
+  ): ByteString = cache.getOrPut(applicationName, sha256) {
+    delegate.fetch(applicationName, id, sha256, url)!!
+  }
+
+  override suspend fun fetchManifest(
+    applicationName: String,
+    id: String,
+    url: String
+  ): ZiplineManifest? = try {
+    delegate.fetchManifest(applicationName, id, url) ?: cache.getPinnedManifest(applicationName)
+  } catch (e: Exception) {
+    cache.getPinnedManifest(applicationName)
+  }
+
+  override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) =
+    cache.pinManifest(applicationName, manifest)
+
+  override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) =
+    cache.unpinManifest(applicationName, manifest)
 }

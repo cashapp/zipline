@@ -16,15 +16,16 @@
 
 package app.cash.zipline.cli
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.cli.Download.Companion.NAME
 import app.cash.zipline.loader.OkHttpZiplineHttpClient
-import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.modules.EmptySerializersModule
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
@@ -36,6 +37,12 @@ import picocli.CommandLine.Option
   mixinStandardHelpOptions = true, versionProvider = Main.VersionProvider::class
 )
 class Download : Runnable {
+  @Option(
+    names = ["-A", "--application-name"],
+    description = ["Application name for the Zipline Manifest."], required = true
+  )
+  lateinit var applicationName: String
+
   @Option(
     names = ["-M", "--manifest-url"],
     description = ["URL to the Zipline Manifest for the code to download."], required = true
@@ -52,19 +59,20 @@ class Download : Runnable {
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
 
-  private fun download(manifestUrl: String, downloadDir: File) {
+  private fun download(applicationName: String, manifestUrl: String, downloadDir: File) {
     println("Zipline Download [manifestUrl=$manifestUrl][downloadDir=$downloadDir]...")
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
+      eventListener = EventListener.NONE,
+      serializersModule = EmptySerializersModule,
       httpClient = OkHttpZiplineHttpClient(client),
       fetchers = listOf(
-        HttpFetcher(
-          httpClient = OkHttpZiplineHttpClient(client),
-        )
+        HttpFetcher(OkHttpZiplineHttpClient(client))
       )
     )
     runBlocking {
       ziplineLoader.download(
+        applicationName = applicationName,
         downloadDir = downloadDir.toOkioPath(),
         downloadFileSystem = FileSystem.SYSTEM,
         manifestUrl = manifestUrl,
@@ -73,7 +81,7 @@ class Download : Runnable {
   }
 
   override fun run() {
-    download(manifestUrl = manifestUrl, downloadDir = downloadDir)
+    download(applicationName = applicationName, manifestUrl = manifestUrl, downloadDir = downloadDir)
   }
 
   companion object {

@@ -20,7 +20,11 @@ import okio.ByteString
 interface ZiplineHttpClient {
   suspend fun download(url: String): ByteString
 
-  /** Returns the URL of [link] relative to [baseUrl]. */
+  /**
+   * Returns the URL of [link] relative to [baseUrl].
+   *
+   * Resolve can be called multiple times on a [link] that has already been resolved.
+   */
   fun resolve(baseUrl: String, link: String): String
 }
 

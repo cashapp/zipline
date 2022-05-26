@@ -16,7 +16,7 @@
 package app.cash.zipline.cli
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
+import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -55,19 +55,26 @@ class DownloadTest {
   }
 
   @Test fun downloadWithParameters() {
-    fromArgs("-M", "test.cash.app", "-D", TMP_DIR_PATH.toString())
+    fromArgs("-A", "app1", "-D", TMP_DIR_PATH.toString(), "-M", "test.cash.app")
+  }
+
+  @Test fun downloadMissingApplicationName() {
+    val exception = assertFailsWith<MissingParameterException> {
+      fromArgs("-D", TMP_DIR_PATH.toString(), "-M", "test.cash.app")
+    }
+    assertEquals("Missing required option: '--application-name=<applicationName>'", exception.message)
   }
 
   @Test fun downloadMissingManifestUrl() {
     val exception = assertFailsWith<MissingParameterException> {
-      fromArgs("-D", TMP_DIR_PATH.toString())
+      fromArgs("-A", "app1", "-D", TMP_DIR_PATH.toString())
     }
     assertEquals("Missing required option: '--manifest-url=<manifestUrl>'", exception.message)
   }
 
   @Test fun downloadMissingDownloadDir() {
     val exception = assertFailsWith<MissingParameterException> {
-      fromArgs("-M", "test.cash.app")
+      fromArgs("-A", "app1", "-M", "test.cash.app")
     }
     assertEquals("Missing required option: '--download-dir=<downloadDir>'", exception.message)
   }
@@ -80,6 +87,7 @@ class DownloadTest {
 
     // Seed mock web server with zipline manifest and files
     // Zipline files
+    val applicationName = "app1"
     val manifest = ZiplineManifest.create(
       modules = mapOf(
         "id" to ZiplineModule(
@@ -110,11 +118,11 @@ class DownloadTest {
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
 
     // Download using the CLI
-    CommandLine(Download()).execute("-D", TMP_DIR_PATH.toString(), "-M", manifestUrl)
+    CommandLine(Download()).execute("-A", applicationName, "-D", TMP_DIR_PATH.toString(), "-M", manifestUrl)
 
     // Check that files were downloaded
     assertTrue(fileSystem.exists(TMP_DIR_PATH))
-    assertTrue(fileSystem.exists(TMP_DIR_PATH / PREBUILT_MANIFEST_FILE_NAME))
+    assertTrue(fileSystem.exists(TMP_DIR_PATH / getApplicationManifestFileName(applicationName)))
     assertTrue(fileSystem.exists(TMP_DIR_PATH / testFixtures.alphaSha256Hex))
   }
 

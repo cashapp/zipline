@@ -17,7 +17,7 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.ZiplineLoader.Companion.PREBUILT_MANIFEST_FILE_NAME
+import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -87,17 +87,18 @@ class ZiplineGradleDownloaderTest {
         .setBody(Buffer().write(testFixtures.alphaByteString))
     )
 
+    val applicationName = "app1"
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
 
-    ziplineDownloader.download(manifestUrl, downloadDir)
+    ziplineDownloader.download(downloadDir, applicationName, manifestUrl)
 
     // Confirm files successfully downloaded
     val fileSystem = FileSystem.SYSTEM
     val downloadDirPath = downloadDir.toOkioPath()
-    assertTrue(fileSystem.exists(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME))
+    assertTrue(fileSystem.exists(downloadDirPath / getApplicationManifestFileName(applicationName)))
     assertEquals(
       manifestJsonString.encodeUtf8(),
-      fileSystem.read(downloadDirPath / PREBUILT_MANIFEST_FILE_NAME) { readByteString() })
+      fileSystem.read(downloadDirPath / getApplicationManifestFileName(applicationName)) { readByteString() })
     assertTrue(fileSystem.exists(downloadDirPath / testFixtures.alphaSha256Hex))
     assertEquals(
       testFixtures.alphaByteString,

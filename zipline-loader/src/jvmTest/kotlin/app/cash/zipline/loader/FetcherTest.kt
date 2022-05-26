@@ -40,24 +40,57 @@ class FetcherTest {
 
   private val fetcherAlpha = object : Fetcher {
     override suspend fun fetch(
+      applicationName: String,
       id: String,
       sha256: ByteString,
       url: String,
-      fileNameOverride: String?
     ): ByteString? {
       alphaFetcherIds.add(id)
       return null
     }
+
+    override suspend fun fetchManifest(
+      applicationName: String,
+      id: String,
+      url: String
+    ): ZiplineManifest? {
+      error("unexpected call")
+    }
+
+    override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
+      error("unexpected call")
+    }
+
+    override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
+      error("unexpected call")
+    }
   }
+
   private val fetcherBravo = object : Fetcher {
     override suspend fun fetch(
+      applicationName: String,
       id: String,
       sha256: ByteString,
       url: String,
-      fileNameOverride: String?
     ): ByteString? {
       bravoFetcherIds.add(id)
       return bravoByteString
+    }
+
+    override suspend fun fetchManifest(
+      applicationName: String,
+      id: String,
+      url: String
+    ): ZiplineManifest? {
+      error("unexpected call")
+    }
+
+    override suspend fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
+      error("unexpected call")
+    }
+
+    override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
+      error("unexpected call")
     }
   }
 
@@ -79,21 +112,21 @@ class FetcherTest {
   }
 
   @Test
-  fun fetcherRunsInOrder(): Unit = runBlocking {
+  fun fetcherRunsInOrder() = runBlocking {
     val fetchers = listOf(fetcherAlpha, fetcherBravo)
     val actualByteString = fetchers.fetch(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+      applicationName = "foxtrot",
       id = "alpha",
       sha256 = "alpha".encodeUtf8().sha256(),
       url = "alpha",
-      fileNameOverride = null,
     )
     fetchers.fetch(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
+      applicationName = "foxtrot",
       id = "bravo",
       sha256 = "bravo".encodeUtf8().sha256(),
       url = "bravo",
-      fileNameOverride = null,
     )
     assertEquals(bravoByteString, actualByteString)
 

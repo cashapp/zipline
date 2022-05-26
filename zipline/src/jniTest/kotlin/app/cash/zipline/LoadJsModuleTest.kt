@@ -32,14 +32,14 @@ class LoadJsModuleTest {
   private val dispatcher = TestCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @Before fun setUp() = runBlocking {
   }
 
-  @After fun tearDown(): Unit = runBlocking(dispatcher) {
+  @After fun tearDown() = runBlocking {
     zipline.close()
   }
 
-  @Test fun factoryPopulatesExports(): Unit = runBlocking(dispatcher) {
+  @Test fun factoryPopulatesExports() = runBlocking {
     val moduleJs = """
       (function (root, factory) {
         if (typeof define === 'function' && define.amd)
@@ -57,7 +57,7 @@ class LoadJsModuleTest {
       .isEqualTo("""{"someValue":4321}""")
   }
 
-  @Test fun factoryReturnsExports(): Unit = runBlocking(dispatcher) {
+  @Test fun factoryReturnsExports() = runBlocking {
     val moduleJs = """
       (function webpackUniversalModuleDefinition(root, factory) {
         if(typeof exports === 'object' && typeof module === 'object')
@@ -79,7 +79,7 @@ class LoadJsModuleTest {
       .isEqualTo("""{"someValue":1234}""")
   }
 
-  @Test fun loadModuleBytecode(): Unit = runBlocking(dispatcher) {
+  @Test fun loadModuleBytecode() = runBlocking {
     val moduleJs = """
       define(function () {
         return {

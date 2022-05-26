@@ -28,6 +28,11 @@ class FakeZiplineHttpClient: ZiplineHttpClient {
 
   /** Note: this naive resolve() that doesn't support `../` etc. */
   override fun resolve(baseUrl: String, link: String): String {
-    return baseUrl.substringBeforeLast("/") + "/" + link
+    val calculatedBaseUrl = baseUrl.substringBeforeLast("/")
+    return if (link.startsWith(calculatedBaseUrl)) {
+      link
+    } else {
+      "$calculatedBaseUrl/$link"
+    }
   }
 }

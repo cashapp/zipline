@@ -15,10 +15,12 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
 import okio.FileSystem
 import okio.Path
 
 fun openZiplineCacheForTesting(
+  eventListener: EventListener = EventListener.NONE,
   database: Database,
   fileSystem: FileSystem,
   directory: Path,
@@ -26,6 +28,7 @@ fun openZiplineCacheForTesting(
   nowMs: () -> Long
 ): ZiplineCache {
   val ziplineCache = ZiplineCache(
+    eventListener = eventListener,
     database = database,
     fileSystem = fileSystem,
     directory = directory,

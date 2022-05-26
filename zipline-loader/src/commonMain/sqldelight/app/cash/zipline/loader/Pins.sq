@@ -1,0 +1,29 @@
+CREATE TABLE pins (
+  file_id INTEGER NOT NULL,
+  application_name TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX pins_file_id_application_name ON pins(file_id, application_name);
+CREATE INDEX pins_application_name ON pins(application_name);
+
+count:
+SELECT COUNT(*) FROM pins;
+
+delete_pin:
+DELETE FROM pins WHERE application_name = ? AND file_id = ?;
+
+delete_pins:
+DELETE FROM pins WHERE application_name = ? AND file_id IN ?;
+
+delete_application_pins:
+DELETE FROM pins WHERE application_name = ?;
+
+create_pin:
+INSERT INTO pins(file_id, application_name)
+VALUES (?, ?);
+
+get_pin:
+SELECT * FROM pins WHERE file_id = ? AND application_name = ?;
+
+get_pins:
+SELECT * FROM pins WHERE application_name = ?;
