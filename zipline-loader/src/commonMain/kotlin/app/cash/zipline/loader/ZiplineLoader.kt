@@ -89,9 +89,8 @@ class ZiplineLoader(
     initializer: (Zipline) -> Unit,
   ): Zipline {
     eventListener.applicationLoadStart(applicationName, manifestUrl)
+    val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
     try {
-      val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
-
       // Load from either pinned in cache or embedded by forcing network failure
       val manifest = fetchZiplineManifest(
         applicationName = applicationName,
@@ -115,6 +114,7 @@ class ZiplineLoader(
       eventListener.applicationLoadEnd(applicationName, manifestUrl)
       return zipline
     } catch (e: Exception) {
+      zipline.close()
       eventListener.applicationLoadFailed(applicationName, manifestUrl, e)
       throw e
     }
@@ -133,12 +133,13 @@ class ZiplineLoader(
     .distinctUntilChanged()
     .mapNotNull { (manifestUrl, manifest) ->
       eventListener.applicationLoadStart(applicationName, manifestUrl)
+      val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
       try {
-        val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
         receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
         eventListener.applicationLoadEnd(applicationName, manifestUrl)
         zipline
       } catch (e: Exception) {
+        zipline.close()
         eventListener.applicationLoadFailed(applicationName, manifestUrl, e)
         throw e
       }
