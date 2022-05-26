@@ -149,7 +149,7 @@ class LoaderTestFixtures(
         ),
         FsCachingFetcher(
           cache = cache,
-          delegate = HttpFetcher(eventListener = eventListener, httpClient = httpClient),
+          delegate = HttpFetcher(httpClient, eventListener),
         ),
       )
     )
