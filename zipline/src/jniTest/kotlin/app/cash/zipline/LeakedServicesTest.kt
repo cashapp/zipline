@@ -49,7 +49,7 @@ class LeakedServicesTest {
     triggerJvmLeakDetection()
     val name = "helloService"
     assertThat(eventListener.take()).isEqualTo("takeService $name")
-    assertThat(eventListener.take()).isEqualTo("serviceLeaked($name)")
+    assertThat(eventListener.take()).isEqualTo("serviceLeaked $name")
   }
 
   @Test fun jsLeaksService() = runBlocking {
@@ -62,7 +62,7 @@ class LeakedServicesTest {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.allocateAndLeakService()")
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.triggerLeakDetection()")
     assertThat(eventListener.take()).isEqualTo("bindService $name")
-    assertThat(eventListener.take()).isEqualTo("serviceLeaked($name)")
+    assertThat(eventListener.take()).isEqualTo("serviceLeaked $name")
   }
 
   /** Use a separate method so there's no hidden reference remaining on the stack. */
