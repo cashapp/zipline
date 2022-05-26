@@ -48,13 +48,13 @@ class HttpFetcher(
     return httpClient.resolveUrls(originalManifest, url)
   }
 
-  override suspend fun pinManifest(
+  override suspend fun pin(
     applicationName: String,
     manifest: ZiplineManifest,
   ) {
   }
 
-  override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
+  override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
   }
 
   private suspend fun fetchByteString(

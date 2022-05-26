@@ -29,10 +29,10 @@ interface Fetcher {
    * resource.
    *
    * If this fetcher supports pinning, the returned value will be pinned for [applicationName] until
-   * [pinManifest] is called.
+   * [pin] is called.
    *
    * @throws Exception if this fetcher knows how to fetch this resource but was unsuccessful in
-   * doing so.
+   *     doing so.
    */
   suspend fun fetch(
     applicationName: String,
@@ -60,7 +60,7 @@ interface Fetcher {
    *
    * This function is called on all fetchers once a load succeeds.
    */
-  suspend fun pinManifest(
+  suspend fun pin(
     applicationName: String,
     manifest: ZiplineManifest,
   )
@@ -70,7 +70,7 @@ interface Fetcher {
    *
    * This function is called on all fetchers once a load fails.
    */
-  suspend fun unpinManifest(
+  suspend fun unpin(
     applicationName: String,
     manifest: ZiplineManifest,
   )
@@ -119,12 +119,12 @@ suspend fun List<Fetcher>.pinManifest(
   applicationName: String,
   manifest: ZiplineManifest,
 ) = this.forEach { fetcher ->
-  fetcher.pinManifest(applicationName, manifest)
+  fetcher.pin(applicationName, manifest)
 }
 
 suspend fun List<Fetcher>.unpinManifest(
   applicationName: String,
   manifest: ZiplineManifest,
 ) = this.forEach { fetcher ->
-  fetcher.unpinManifest(applicationName, manifest)
+  fetcher.unpin(applicationName, manifest)
 }

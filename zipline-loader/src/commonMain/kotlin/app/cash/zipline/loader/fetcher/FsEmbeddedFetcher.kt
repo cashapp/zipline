@@ -46,13 +46,13 @@ class FsEmbeddedFetcher(
     return byteString?.decodeToZiplineManifest(eventListener, applicationName, url)
   }
 
-  override suspend fun pinManifest(
+  override suspend fun pin(
     applicationName: String,
     manifest: ZiplineManifest
   ) {
   }
 
-  override suspend fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
+  override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
   }
 
   private fun fetchByteString(filePath: Path) = when {
