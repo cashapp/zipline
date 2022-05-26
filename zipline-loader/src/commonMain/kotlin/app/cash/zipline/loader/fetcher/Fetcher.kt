@@ -25,12 +25,14 @@ import okio.ByteString
  */
 interface Fetcher {
   /**
-   * Returns the desired [ByteString], or null if not found.
+   * Returns the desired [ByteString], or null if this fetcher doesn't know how to fetch this
+   * resource.
    *
    * If this fetcher supports pinning, the returned value will be pinned for [applicationName] until
    * [pinManifest] is called.
    *
-   * If a fetcher cannot get a file, it returns null. The next [Fetcher] should be called.
+   * @throws Exception if this fetcher knows how to fetch this resource but was unsuccessful in
+   * doing so.
    */
   suspend fun fetch(
     applicationName: String,
@@ -47,7 +49,7 @@ interface Fetcher {
   suspend fun fetchManifest(
     applicationName: String,
     id: String,
-    url: String,
+    url: String?,
   ): ZiplineManifest?
 
   /**
@@ -83,19 +85,20 @@ suspend fun List<Fetcher>.fetch(
   id: String,
   sha256: ByteString,
   url: String,
-): ByteString = concurrentDownloadsSemaphore
-  .withPermit {
-    var byteString: ByteString? = null
-    for (fetcher in this) {
-      byteString = fetcher.fetch(applicationName, id, sha256, url)
-      if (byteString != null) break
+): ByteString? = concurrentDownloadsSemaphore.withPermit {
+  var firstException: Exception? = null
+  for (fetcher in this) {
+    try {
+      return@withPermit fetcher.fetch(applicationName, id, sha256, url) ?: continue
+    } catch (e: Exception) {
+      if (firstException == null) {
+        firstException = e
+      }
     }
-
-    checkNotNull(byteString) {
-      "Unable to fetch ByteString for [applicationName=$applicationName][id=$id][sha256=$sha256][url=$url]"
-    }
-    return byteString
   }
+  if (firstException != null) throw firstException
+  return@withPermit null
+}
 
 /**
  * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
@@ -104,20 +107,13 @@ suspend fun List<Fetcher>.fetchManifest(
   concurrentDownloadsSemaphore: Semaphore,
   applicationName: String,
   id: String,
-  url: String,
-): ZiplineManifest = concurrentDownloadsSemaphore
-  .withPermit {
-    var manifest: ZiplineManifest? = null
-    for (fetcher in this) {
-      manifest = fetcher.fetchManifest(applicationName, id, url)
-      if (manifest != null) break
-    }
-
-    checkNotNull(manifest) {
-      "Unable to fetch Manifest for [applicationName=$applicationName][id=$id][url=$url]"
-    }
-    return manifest
+  url: String?,
+): ZiplineManifest? = concurrentDownloadsSemaphore.withPermit {
+  for (fetcher in this) {
+    return@withPermit fetcher.fetchManifest(applicationName, id, url) ?: continue
   }
+  return@withPermit null
+}
 
 suspend fun List<Fetcher>.pinManifest(
   applicationName: String,

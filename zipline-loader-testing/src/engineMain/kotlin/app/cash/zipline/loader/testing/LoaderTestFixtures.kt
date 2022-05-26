@@ -45,7 +45,7 @@ import okio.Path
 
 @OptIn(ExperimentalSerializationApi::class)
 class LoaderTestFixtures(
-  val quickJs: QuickJs
+  val quickJs: QuickJs,
 ) {
   val alphaJs = createJs("alpha")
   val alphaByteString = createZiplineFile(alphaJs, "alpha.js")

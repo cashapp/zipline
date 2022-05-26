@@ -110,6 +110,7 @@ kotlin {
       dependencies {
         implementation(libs.truth)
         implementation(libs.kotlinx.coroutines.test)
+        implementation(projects.zipline.testing)
       }
     }
 

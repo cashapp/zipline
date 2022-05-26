@@ -19,10 +19,12 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
+import app.cash.zipline.loader.resolveUrls
 import okio.ByteString
 
 /**
- * Fetch from the network.
+ * Download resources from the network. If the download fails, the exception is reported to
+ * [eventListener] and this fetcher returns null.
  */
 class HttpFetcher(
   private val httpClient: ZiplineHttpClient,
@@ -32,21 +34,23 @@ class HttpFetcher(
     applicationName: String,
     id: String,
     sha256: ByteString,
-    url: String
-  ): ByteString = fetchByteString(applicationName, url)
+    url: String,
+  ) = fetchByteString(applicationName, url)
 
   override suspend fun fetchManifest(
     applicationName: String,
     id: String,
-    url: String
-  ): ZiplineManifest {
+    url: String?,
+  ): ZiplineManifest? {
+    if (url == null) return null // This fetcher requires URLs.
     val byteString = fetchByteString(applicationName, url)
-    return byteString.decodeToZiplineManifest(eventListener, applicationName, url)
+    val originalManifest = byteString.decodeToZiplineManifest(eventListener, applicationName, url)
+    return httpClient.resolveUrls(originalManifest, url)
   }
 
   override suspend fun pinManifest(
     applicationName: String,
-    manifest: ZiplineManifest
+    manifest: ZiplineManifest,
   ) {
   }
 
@@ -58,13 +62,13 @@ class HttpFetcher(
     url: String,
   ): ByteString {
     eventListener.downloadStart(applicationName, url)
-    val byteString = try {
+    val result = try {
       httpClient.download(url)
     } catch (e: Exception) {
       eventListener.downloadFailed(applicationName, url, e)
       throw e
     }
     eventListener.downloadEnd(applicationName, url)
-    return byteString
+    return result
   }
 }

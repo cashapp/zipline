@@ -54,7 +54,7 @@ data class ZiplineManifest private constructor(
     fun ByteString.decodeToZiplineManifest(
       eventListener: EventListener,
       applicationName: String,
-      url: String,
+      url: String?,
     ) = try {
       Json.decodeFromString<ZiplineManifest>(this.utf8())
     } catch (e: Exception) {
