@@ -77,15 +77,22 @@ class ZiplineLoader(
     initializer: (Zipline) -> Unit = {}
   ): Zipline {
     return try {
-      createZiplineAndLoad(applicationName, manifestUrl, initializer)
+      createZiplineAndLoad(applicationName, manifestUrl, null, initializer)
     } catch (e: Exception) {
-      createZiplineAndLoad(applicationName, null, initializer)
+      createZiplineAndLoad(applicationName, null, null, initializer)
     }
   }
 
+  /**
+   * Creates a Zipline for [applicationName] by fetching the manifest, fetching the modules, loading
+   * the code, and running the initializer.
+   *
+   * Pass either a [manifestUrl] or a [manifest]. There's no need to pass both.
+   */
   private suspend fun createZiplineAndLoad(
     applicationName: String,
     manifestUrl: String?,
+    manifest: ZiplineManifest?,
     initializer: (Zipline) -> Unit,
   ): Zipline {
     eventListener.applicationLoadStart(applicationName, manifestUrl)
@@ -93,24 +100,15 @@ class ZiplineLoader(
       val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
 
       // Load from either pinned in cache or embedded by forcing network failure
-      val manifest = fetchZiplineManifest(
-        applicationName = applicationName,
-        manifestUrl = manifestUrl,
-      )
-      receive(
-        ZiplineLoadReceiver(zipline),
-        manifest,
-        applicationName
-      )
+      @Suppress("NAME_SHADOWING")
+      val manifest = manifest ?: fetchZiplineManifest(applicationName, manifestUrl)
+      receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
 
       // Run caller lambda to validate and initialize the loaded code to confirm it works.
       initializer(zipline)
 
       // Pin stable application manifest after a successful load, and unpin all others.
-      fetchers.pinManifest(
-        applicationName = applicationName,
-        manifest = manifest
-      )
+      fetchers.pinManifest(applicationName, manifest)
 
       eventListener.applicationLoadEnd(applicationName, manifestUrl)
       return zipline
@@ -145,63 +143,41 @@ class ZiplineLoader(
     }
 
   /** Load application into Zipline without fallback on failure functionality. */
-  suspend fun load(
-    zipline: Zipline,
+  suspend fun loadOrFail(
+    applicationName: String,
     manifestUrl: String,
-    applicationName: String = DEFAULT_APPLICATION_NAME,
-  ) {
-    eventListener.applicationLoadStart(applicationName, manifestUrl)
-    try {
-      receive(
-        ZiplineLoadReceiver(zipline),
-        fetchZiplineManifest(applicationName, manifestUrl),
-        applicationName,
-      )
-      eventListener.applicationLoadEnd(applicationName, manifestUrl)
-    } catch (e: Exception) {
-      eventListener.applicationLoadFailed(applicationName, manifestUrl, e)
-      throw e
-    }
+    initializer: (Zipline) -> Unit = {},
+  ): Zipline {
+    return createZiplineAndLoad(applicationName, manifestUrl, null, initializer)
   }
 
-  internal suspend fun load(
-    zipline: Zipline,
+  internal suspend fun loadOrFail(
+    applicationName: String,
     manifest: ZiplineManifest,
-    applicationName: String = DEFAULT_APPLICATION_NAME,
-  ) {
-    eventListener.applicationLoadStart(applicationName, "no-manifest-url")
-    try {
-      receive(
-        ZiplineLoadReceiver(zipline),
-        manifest,
-        applicationName
-      )
-      eventListener.applicationLoadEnd(applicationName, "no-manifest-url")
-    } catch (e: Exception) {
-      eventListener.applicationLoadFailed(applicationName, "no-manifest-url", e)
-      throw e
-    }
+    initializer: (Zipline) -> Unit = {},
+  ): Zipline {
+    return createZiplineAndLoad(applicationName, null, manifest, initializer)
   }
 
   suspend fun download(
+    applicationName: String,
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifestUrl: String,
-    applicationName: String = DEFAULT_APPLICATION_NAME,
   ) {
     download(
+      applicationName = applicationName,
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
       manifest = fetchZiplineManifest(applicationName, manifestUrl),
-      applicationName = applicationName
     )
   }
 
   internal suspend fun download(
+    applicationName: String,
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifest: ZiplineManifest,
-    applicationName: String = DEFAULT_APPLICATION_NAME,
   ) {
     downloadFileSystem.createDirectories(downloadDir)
     downloadFileSystem.write(downloadDir / getApplicationManifestFileName(applicationName)) {
@@ -276,9 +252,8 @@ class ZiplineLoader(
   }
 
   companion object {
-    const val DEFAULT_APPLICATION_NAME = "default"
     private const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
-    fun getApplicationManifestFileName(applicationName: String = DEFAULT_APPLICATION_NAME) =
+    fun getApplicationManifestFileName(applicationName: String) =
       "$applicationName.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX"
   }
 }

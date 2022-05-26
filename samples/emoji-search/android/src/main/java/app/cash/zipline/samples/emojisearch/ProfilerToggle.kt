@@ -39,7 +39,7 @@ import okio.Closeable
  */
 class ProfilerToggle(
   val baseDir: File,
-  val quickJs: QuickJs,
+  val lazyQuickJs: () -> QuickJs?,
 ) {
   @Composable
   fun Wrap(
@@ -68,6 +68,7 @@ class ProfilerToggle(
     override val action get() = "Start"
 
     override fun toggle(): ProfilerState {
+      val quickJs = lazyQuickJs() ?: return this
       val now = DateTimeFormatter.ISO_INSTANT.format(Instant.now())
       val out = File(baseDir, "emoji-search-$now.hprof")
       val closeable = quickJs.startCpuSampling(out)

@@ -53,7 +53,7 @@ class ZiplineGradleDownloader {
         applicationName = applicationName,
         downloadDir = downloadDir.toOkioPath(),
         downloadFileSystem = FileSystem.SYSTEM,
-        manifestUrl = manifestUrl
+        manifestUrl = manifestUrl,
       )
     }
   }

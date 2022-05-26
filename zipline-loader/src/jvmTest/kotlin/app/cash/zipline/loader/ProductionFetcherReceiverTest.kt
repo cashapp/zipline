@@ -68,7 +68,6 @@ class ProductionFetcherReceiverTest {
       maxSizeInBytes = cacheMaxSizeInBytes,
       nowMs = { nowMillis }
     )
-    zipline = Zipline.create(dispatcher)
     loader = createProductionZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
@@ -96,7 +95,7 @@ class ProductionFetcherReceiverTest {
 
     httpClient.filePathToByteString = mapOf()
 
-    loader.load(zipline, testFixtures.manifest)
+    zipline = loader.loadOrFail("test", testFixtures.manifest)
 
     assertEquals(
       """
@@ -120,7 +119,7 @@ class ProductionFetcherReceiverTest {
 
     httpClient.filePathToByteString = mapOf()
 
-    loader.load(zipline, testFixtures.manifest)
+    zipline = loader.loadOrFail("test", testFixtures.manifest)
 
     assertEquals(
       """
@@ -141,7 +140,7 @@ class ProductionFetcherReceiverTest {
       bravoUrl to testFixtures.bravoByteString,
     )
 
-    loader.load(zipline, testFixtures.manifest)
+    zipline = loader.loadOrFail("test", testFixtures.manifest)
 
     assertEquals(
       """
