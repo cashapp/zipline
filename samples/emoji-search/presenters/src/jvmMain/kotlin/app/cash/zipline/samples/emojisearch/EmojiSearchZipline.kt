@@ -48,7 +48,6 @@ class EmojiSearchZipline {
     eventListener = eventListener,
     serializersModule = EmptySerializersModule,
     httpClient = client,
-    fetchers = listOf(HttpFetcher(client)),
   )
 
   var zipline: Zipline? = null

@@ -25,7 +25,6 @@ import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
-import app.cash.zipline.loader.createZiplineCache
 import app.cash.zipline.loader.fetcher.FsCachingFetcher
 import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
@@ -141,17 +140,11 @@ class LoaderTestFixtures(
       eventListener = eventListener,
       serializersModule = serializersModule,
       httpClient = httpClient,
-      fetchers = listOf(
-        FsEmbeddedFetcher(
-          embeddedDir = embeddedDir,
-          embeddedFileSystem = embeddedFileSystem,
-          eventListener = eventListener,
-        ),
-        FsCachingFetcher(
-          cache = cache,
-          delegate = HttpFetcher(httpClient, eventListener),
-        ),
-      )
+    ).withEmbedded(
+      embeddedDir = embeddedDir,
+      embeddedFileSystem = embeddedFileSystem,
+    ).withCache(
+      cache = cache,
     )
 
     fun createProductionZiplineLoader(
@@ -171,24 +164,15 @@ class LoaderTestFixtures(
       eventListener = eventListener,
       serializersModule = serializersModule,
       httpClient = httpClient,
-      fetchers = listOf(
-        FsEmbeddedFetcher(
-          embeddedDir = embeddedDir,
-          embeddedFileSystem = embeddedFileSystem,
-          eventListener = eventListener,
-        ),
-        FsCachingFetcher(
-          cache = createZiplineCache(
-            eventListener = eventListener,
-            driver = cacheDbDriver,
-            fileSystem = cacheFileSystem,
-            directory = cacheDir,
-            maxSizeInBytes = cacheMaxSizeInBytes,
-            nowMs = nowMs,
-          ),
-          delegate = HttpFetcher(httpClient, eventListener),
-        ),
-      ),
+    ).withEmbedded(
+      embeddedDir = embeddedDir,
+      embeddedFileSystem = embeddedFileSystem,
+    ).withCache(
+      driver = cacheDbDriver,
+      fileSystem = cacheFileSystem,
+      directory = cacheDir,
+      maxSizeInBytes = cacheMaxSizeInBytes,
+      nowMs = nowMs,
     )
 
     fun createDownloadZiplineLoader(
@@ -201,9 +185,6 @@ class LoaderTestFixtures(
       eventListener = eventListener,
       serializersModule = serializersModule,
       httpClient = httpClient,
-      fetchers = listOf(
-        HttpFetcher(httpClient, eventListener),
-      )
     )
   }
 }

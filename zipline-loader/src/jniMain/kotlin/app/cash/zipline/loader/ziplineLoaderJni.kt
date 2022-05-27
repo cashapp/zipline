@@ -30,11 +30,9 @@ fun ZiplineLoader(
   httpClient: OkHttpClient,
   serializersModule: SerializersModule = EmptySerializersModule,
   eventListener: EventListener = EventListener.NONE,
-  fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient, eventListener)),
 ): ZiplineLoader = ZiplineLoader(
   dispatcher = dispatcher,
   eventListener = eventListener,
   serializersModule = serializersModule,
   httpClient = OkHttpZiplineHttpClient(okHttpClient = httpClient),
-  fetchers = fetchers
 )

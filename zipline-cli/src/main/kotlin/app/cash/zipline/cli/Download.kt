@@ -66,9 +66,6 @@ class Download : Runnable {
       eventListener = EventListener.NONE,
       serializersModule = EmptySerializersModule,
       httpClient = OkHttpZiplineHttpClient(client),
-      fetchers = listOf(
-        HttpFetcher(OkHttpZiplineHttpClient(client))
-      )
     )
     runBlocking {
       ziplineLoader.download(
