@@ -15,27 +15,38 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.turbine.test
 import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createDownloadZiplineLoader
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createProductionZiplineLoader
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.DurationUnit
+import kotlin.time.ExperimentalTime
+import kotlin.time.toDuration
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.serialization.json.Json
+import okio.ByteString.Companion.encodeUtf8
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+@OptIn(ExperimentalTime::class)
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class ZiplineLoaderTest {
@@ -257,5 +268,41 @@ class ZiplineLoaderTest {
     assertEquals(
       testFixtures.bravoByteString,
       fileSystem.read(downloadDir / testFixtures.bravoSha256Hex) { readByteString() })
+  }
+
+  @Test
+  fun loadContinuously() = runBlocking {
+    val baseUrl = "https://example.com/files"
+    val applicationName = "red"
+    val appleZiplineFileByteString = testFixtures.createZiplineFile(createJs("apple"), "apple.js")
+    val appleManifest = createRelativeManifest("apple", appleZiplineFileByteString.sha256())
+    val appleManifestUrl = "$baseUrl/apple/${getApplicationManifestFileName(applicationName)}"
+
+    val firetruckZiplineFileByteString =
+      testFixtures.createZiplineFile(createJs("firetruck"), "firetruck.js")
+    val firetruckManifest =
+      createRelativeManifest("firetruck", firetruckZiplineFileByteString.sha256())
+    val firetruckManifestUrl =
+      "$baseUrl/firetruck/${getApplicationManifestFileName(applicationName)}"
+
+    httpClient.filePathToByteString = mapOf(
+      appleManifestUrl to Json.encodeToString(ZiplineManifest.serializer(), appleManifest)
+        .encodeUtf8(),
+      "$baseUrl/apple/apple.zipline" to appleZiplineFileByteString,
+      firetruckManifestUrl to Json.encodeToString(ZiplineManifest.serializer(), firetruckManifest)
+        .encodeUtf8(),
+      "$baseUrl/firetruck/firetruck.zipline" to firetruckZiplineFileByteString,
+    )
+
+    val manifestUrlFlow = flowOf(appleManifestUrl, firetruckManifestUrl)
+    loader.loadContinuously(
+      applicationName = "red",
+      manifestUrlFlow = manifestUrlFlow,
+      pollingInterval = 1000.toDuration(DurationUnit.MILLISECONDS),
+    ) {}.test {
+      assertEquals("apple", (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(" loaded\n"))
+      assertEquals("firetruck", (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(" loaded\n"))
+      cancel()
+    }
   }
 }

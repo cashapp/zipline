@@ -52,6 +52,7 @@ sqldelight-driver-android = { module = "com.squareup.sqldelight:android-driver",
 sqldelight-driver-native = { module = "com.squareup.sqldelight:native-driver", version.ref = "sqldelight" }
 sqldelight-driver-sqlite = { module = "com.squareup.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.34.0" }
+turbine = { module = "app.cash.turbine:turbine", version = "0.6.0" }
 truth = { module = "com.google.truth:truth", version = "1.0" }
 
 [plugins]
