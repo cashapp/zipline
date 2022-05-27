@@ -44,7 +44,6 @@ import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import okio.Path.Companion.toOkioPath
 
 @NoLiveLiterals
 class EmojiSearchActivity : ComponentActivity() {
@@ -56,13 +55,12 @@ class EmojiSearchActivity : ComponentActivity() {
     val events = MutableSharedFlow<EmojiSearchEvent>(extraBufferCapacity = Int.MAX_VALUE)
     val models = MutableStateFlow(initialViewModel)
 
-    val cacheDirectory = cacheDir.toOkioPath() / "zipline"
-    val emojiSearchZipline = EmojiSearchZipline(cacheDirectory)
+    val emojiSearchZipline = EmojiSearchZipline()
     emojiSearchZipline.produceModelsIn(scope, events, models)
 
     val profilerToggle = ProfilerToggle(
       baseDir = getDir("zipline-profiler", MODE_PRIVATE),
-      quickJs = emojiSearchZipline.zipline.quickJs
+      lazyQuickJs = { emojiSearchZipline.zipline?.quickJs }
     )
 
     setContent {

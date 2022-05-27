@@ -25,14 +25,13 @@ fun getTriviaService(zipline: Zipline): TriviaService {
 }
 
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
-  val zipline = Zipline.create(dispatcher)
   val manifestUrl = "http://localhost:8080/manifest.zipline.json"
   val loader = ZiplineLoader(dispatcher, OkHttpClient())
-  loader.load(zipline, manifestUrl)
-  val moduleName = "./zipline-root-trivia-js.js"
-  zipline.quickJs.evaluate(
-    "require('$moduleName').app.cash.zipline.samples.trivia.launchZipline()",
-    "launchZiplineJvm.kt"
-  )
-  return zipline
+  return loader.loadOrFail("trivia", manifestUrl) {
+    val moduleName = "./zipline-root-trivia-js.js"
+    it.quickJs.evaluate(
+      "require('$moduleName').app.cash.zipline.samples.trivia.launchZipline()",
+      "launchZiplineJvm.kt"
+    )
+  }
 }
