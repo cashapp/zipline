@@ -115,14 +115,14 @@ suspend fun List<Fetcher>.fetchManifest(
   return@withPermit null
 }
 
-suspend fun List<Fetcher>.pinManifest(
+suspend fun List<Fetcher>.pin(
   applicationName: String,
   manifest: ZiplineManifest,
 ) = this.forEach { fetcher ->
   fetcher.pin(applicationName, manifest)
 }
 
-suspend fun List<Fetcher>.unpinManifest(
+suspend fun List<Fetcher>.unpin(
   applicationName: String,
   manifest: ZiplineManifest,
 ) = this.forEach { fetcher ->

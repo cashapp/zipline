@@ -18,14 +18,17 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.fetcher.Fetcher
+import app.cash.zipline.loader.fetcher.FsCachingFetcher
+import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.fetcher.fetchManifest
-import app.cash.zipline.loader.fetcher.pinManifest
-import app.cash.zipline.loader.fetcher.unpinManifest
+import app.cash.zipline.loader.fetcher.pin
+import app.cash.zipline.loader.fetcher.unpin
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
+import com.squareup.sqldelight.db.SqlDriver
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -37,6 +40,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -56,13 +60,81 @@ import okio.Path
  * @param fetchers this should be ordered with embedded fetchers preceding network fetchers. That
  *     way the network is used for fresh resources and embedded is used for fast resources.
  */
-class ZiplineLoader(
+@OptIn(ExperimentalSerializationApi::class)
+class ZiplineLoader private constructor(
   private val dispatcher: CoroutineDispatcher,
   private val httpClient: ZiplineHttpClient,
   private val eventListener: EventListener = EventListener.NONE,
   private val serializersModule: SerializersModule = EmptySerializersModule,
-  private val fetchers: List<Fetcher> = listOf(HttpFetcher(httpClient, eventListener)),
+
+  private val embeddedDir: Path? = null,
+  private val embeddedFileSystem: FileSystem? = null,
+
+  private val cache: ZiplineCache? = null,
 ) {
+  constructor(
+    dispatcher: CoroutineDispatcher,
+    httpClient: ZiplineHttpClient,
+    eventListener: EventListener = EventListener.NONE,
+    serializersModule: SerializersModule = EmptySerializersModule,
+  ): this(
+    dispatcher = dispatcher,
+    httpClient = httpClient,
+    eventListener = eventListener,
+    serializersModule = serializersModule,
+    embeddedDir = null,
+    embeddedFileSystem = null,
+    cache = null
+  )
+
+  fun withEmbedded(
+    embeddedDir: Path,
+    embeddedFileSystem: FileSystem
+  ): ZiplineLoader = ZiplineLoader(
+    dispatcher = dispatcher,
+    httpClient = httpClient,
+    eventListener = eventListener,
+    serializersModule = serializersModule,
+    embeddedDir = embeddedDir,
+    embeddedFileSystem = embeddedFileSystem,
+    cache = cache,
+  )
+
+  fun withCache(
+    cache: ZiplineCache
+  ): ZiplineLoader = ZiplineLoader(
+    dispatcher = dispatcher,
+    httpClient = httpClient,
+    eventListener = eventListener,
+    serializersModule = serializersModule,
+    embeddedDir = embeddedDir,
+    embeddedFileSystem = embeddedFileSystem,
+    cache = cache,
+  )
+
+  fun withCache(
+    driver: SqlDriver,
+    fileSystem: FileSystem,
+    directory: Path,
+    maxSizeInBytes: Long,
+    nowMs: () -> Long
+  ): ZiplineLoader = ZiplineLoader(
+    dispatcher = dispatcher,
+    httpClient = httpClient,
+    eventListener = eventListener,
+    serializersModule = serializersModule,
+    embeddedDir = embeddedDir,
+    embeddedFileSystem = embeddedFileSystem,
+    cache = createZiplineCache(
+      eventListener = eventListener,
+      driver = driver,
+      fileSystem = fileSystem,
+      directory = directory,
+      maxSizeInBytes = maxSizeInBytes,
+      nowMs = nowMs,
+    ),
+  )
+
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3
     set(value) {
@@ -70,6 +142,30 @@ class ZiplineLoader(
       field = value
       concurrentDownloadsSemaphore = Semaphore(value)
     }
+
+  /**
+   * Ensure correct ordering of fetchers to provide offline first load via embedded fetcher primacy.
+   */
+  private val fetchers = run {
+    val result = mutableListOf<Fetcher>()
+    val httpFetcher = HttpFetcher(httpClient, eventListener)
+    if (embeddedDir != null && embeddedFileSystem != null) {
+      result += FsEmbeddedFetcher(
+        eventListener = eventListener,
+        embeddedDir = embeddedDir,
+        embeddedFileSystem = embeddedFileSystem,
+      )
+    }
+    if (cache != null) {
+      result += FsCachingFetcher(
+        cache = cache,
+        delegate = httpFetcher,
+      )
+    } else {
+      result += httpFetcher
+    }
+    result
+  }
 
   suspend fun loadOrFallBack(
     applicationName: String,
@@ -107,7 +203,7 @@ class ZiplineLoader(
       initializer(zipline)
 
       // Pin stable application manifest after a successful load, and unpin all others.
-      fetchers.pinManifest(applicationName, manifest)
+      fetchers.pin(applicationName, manifest)
 
       eventListener.applicationLoadEnd(applicationName, manifestUrl)
       return zipline
@@ -123,7 +219,7 @@ class ZiplineLoader(
     manifestUrlFlow: Flow<String>,
     pollingInterval: Duration,
     initializer: (Zipline) -> Unit,
-    ): Flow<Zipline> = manifestUrlFlow
+  ): Flow<Zipline> = manifestUrlFlow
     .rebounce(pollingInterval)
     .mapNotNull { url ->
       eventListener.applicationLoadStart(applicationName, url)
@@ -131,17 +227,12 @@ class ZiplineLoader(
     }
     .distinctUntilChanged()
     .mapNotNull { (manifestUrl, manifest) ->
-      eventListener.applicationLoadStart(applicationName, manifestUrl)
-      val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
-      try {
-        receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
-        eventListener.applicationLoadEnd(applicationName, manifestUrl)
-        zipline
-      } catch (e: Exception) {
-        zipline.close()
-        eventListener.applicationLoadFailed(applicationName, manifestUrl, e)
-        throw e
-      }
+      createZiplineAndLoad(
+        applicationName = applicationName,
+        manifestUrl = manifestUrl,
+        manifest = manifest,
+        initializer = initializer
+      )
     }
 
   /** Load application into Zipline without fallback on failure functionality. */
@@ -207,7 +298,7 @@ class ZiplineLoader(
         }
       } catch (e: Exception) {
         // On exception, unpin this manifest; and rethrow so that the load attempt fails.
-        fetchers.unpinManifest(applicationName, manifest)
+        fetchers.unpin(applicationName, manifest)
         throw e
       }
     }
