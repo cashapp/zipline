@@ -47,6 +47,20 @@ internal interface InboundCallHandler {
   suspend fun callSuspending(inboundCall: InboundCall): Array<String>
 }
 
+@PublishedApi
+internal abstract class InboundCallHandler2(
+  val argSerializers: List<KSerializer<*>>,
+  val resultSerializer: KSerializer<*>,
+) {
+  open fun call(args: List<*>): Any? {
+    error("unexpected call")
+  }
+
+  open suspend fun callSuspending(args: List<*>): Any? {
+    error("unexpected call")
+  }
+}
+
 /**
  * This class models a single call received from another Kotlin platform in the same process.
  *

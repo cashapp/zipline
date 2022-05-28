@@ -23,44 +23,40 @@ import org.jetbrains.kotlin.backend.common.ir.isSuspend
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.descriptors.ClassKind
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
-import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.addDispatchReceiver
 import org.jetbrains.kotlin.ir.builders.declarations.addFunction
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
+import org.jetbrains.kotlin.ir.builders.irAs
 import org.jetbrains.kotlin.ir.builders.irBlock
-import org.jetbrains.kotlin.ir.builders.irBranch
 import org.jetbrains.kotlin.ir.builders.irCall
-import org.jetbrains.kotlin.ir.builders.irElseBranch
-import org.jetbrains.kotlin.ir.builders.irEquals
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetObject
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irReturn
-import org.jetbrains.kotlin.ir.builders.irSet
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.builders.irTrue
-import org.jetbrains.kotlin.ir.builders.irWhen
+import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
-import org.jetbrains.kotlin.ir.expressions.IrBranch
 import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.expressions.IrGetValue
+import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.makeNullable
+import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
-import org.jetbrains.kotlin.ir.util.getPropertyGetter
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.name.Name
 
@@ -158,11 +154,22 @@ internal class AdapterGenerator(
       original.defaultType
     )
 
-    val inboundCallHandlerClass = irInboundCallHandlerClass(inboundBridgedInterface, adapterClass)
-    val inboundCallHandlerFunction = irInboundCallHandlerFunction(
+    var nextId = 0
+    val inboundCallHandlerClasses = inboundBridgedInterface.bridgedFunctions.associateWith {
+      irInboundCallHandlerClass(
+        "InboundCallHandler${nextId++}",
+        inboundBridgedInterface,
+        adapterClass,
+        it,
+      )
+    }
+
+    adapterClass.declarations += inboundCallHandlerClasses.values
+
+    val inboundCallHandlerFunction = irInboundCallHandlersFunction(
       bridgedInterface = inboundBridgedInterface,
       adapterClass = adapterClass,
-      inboundCallHandlerClass = inboundCallHandlerClass,
+      inboundCallHandlerClasses = inboundCallHandlerClasses
     )
 
     val outboundServiceClass = irOutboundServiceClass(outboundBridgedInterface, adapterClass)
@@ -172,7 +179,6 @@ internal class AdapterGenerator(
       outboundServiceClass = outboundServiceClass,
     )
 
-    adapterClass.declarations += inboundCallHandlerClass
     adapterClass.declarations += outboundServiceClass
 
     adapterClass.addFakeOverrides(
@@ -205,18 +211,29 @@ internal class AdapterGenerator(
     }
   }
 
-  /** Override `ZiplineServiceAdapter.inboundCallHandler()`. */
-  private fun irInboundCallHandlerFunction(
+  /** Override `ZiplineServiceAdapter.inboundCallHandlers()`. */
+  private fun irInboundCallHandlersFunction(
     bridgedInterface: BridgedInterface,
     adapterClass: IrClass,
-    inboundCallHandlerClass: IrClass,
+    inboundCallHandlerClasses: Map<IrSimpleFunctionSymbol, IrClass>,
   ): IrSimpleFunction {
-    // override fun inboundCallHandler(context: InboundBridge.Context): InboundCallHandler {
-    // }
-    val inboundCallHandlerFunction = adapterClass.addFunction {
+    // override fun inboundCallHandlers(
+    //   service: SampleService,
+    //   context: InboundBridge.Context,
+    // ): Map<String, InboundCallHandler2> { ... }
+    val mapOfStringInboundCallHandler2 = ziplineApis.map.typeWith(
+      pluginContext.symbols.string.defaultType,
+      ziplineApis.inboundCallHandler2.defaultType,
+    )
+    val mutableMapOfStringInboundCallHandler2 = ziplineApis.mutableMap.typeWith(
+      pluginContext.symbols.string.defaultType,
+      ziplineApis.inboundCallHandler2.defaultType,
+    )
+
+    val inboundCallHandlersFunction = adapterClass.addFunction {
       initDefaults(original)
-      name = ziplineApis.ziplineServiceAdapterInboundCallHandler.owner.name
-      returnType = ziplineApis.inboundCallHandler.defaultType
+      name = ziplineApis.ziplineServiceAdapterInboundCallHandlers.owner.name
+      returnType = mapOfStringInboundCallHandler2
     }.apply {
       addDispatchReceiver {
         initDefaults(original)
@@ -232,46 +249,90 @@ internal class AdapterGenerator(
         name = Name.identifier("context")
         type = ziplineApis.inboundBridgeContext.defaultType
       }
-      overriddenSymbols = listOf(ziplineApis.ziplineServiceAdapterInboundCallHandler)
+      overriddenSymbols = listOf(ziplineApis.ziplineServiceAdapterInboundCallHandlers)
     }
-    inboundCallHandlerFunction.irFunctionBody(
+
+    inboundCallHandlersFunction.irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = inboundCallHandlerFunction.symbol,
+      scopeOwnerSymbol = inboundCallHandlersFunction.symbol,
     ) {
-      +irReturn(
-        irCall(
-          callee = inboundCallHandlerClass.constructors.single().symbol,
-          type = inboundCallHandlerClass.defaultType
-        ).apply {
-          putValueArgument(0, irGet(inboundCallHandlerFunction.valueParameters[0]))
-          putValueArgument(1, irGet(inboundCallHandlerFunction.valueParameters[1]))
-        }
+      val serializers = bridgedInterface.declareSerializerTemporaries(
+        statementsBuilder = this@irFunctionBody,
+        contextParameter = inboundCallHandlersFunction.valueParameters[1]
       )
+
+      val result = irTemporary(
+        value = irCall(ziplineApis.mutableMapOfFunction).apply {
+          putTypeArgument(0, pluginContext.symbols.string.defaultType)
+          putTypeArgument(1, ziplineApis.inboundCallHandler2.defaultType)
+          type = mutableMapOfStringInboundCallHandler2
+        },
+        nameHint = "result",
+        isMutable = false
+      ).apply {
+        origin = IrDeclarationOrigin.DEFINED
+      }
+
+      // Each bridged function gets its own set() on the map.
+      for ((bridgedFunction, handlerClass) in inboundCallHandlerClasses) {
+        // GeneratedInboundCallHandler(
+        //   listOf<KSerializer<*>>(
+        //     serializer1,
+        //     serializer2,
+        //   ),
+        //   sampleResponseSerializer,
+        //   service,
+        // )
+        +irCall(ziplineApis.mutableMapPutFunction).apply {
+          dispatchReceiver = irGet(result)
+          putValueArgument(0, irString(bridgedFunction.owner.signature))
+          putValueArgument(1, irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
+            +irCall(
+              callee = handlerClass.constructors.single().symbol,
+              type = handlerClass.defaultType
+            ).apply {
+              putValueArgument(0, irCall(ziplineApis.listOfFunction).apply {
+                putTypeArgument(0, ziplineApis.kSerializer.starProjectedType)
+                putValueArgument(0,
+                  irVararg(
+                    ziplineApis.kSerializer.starProjectedType,
+                    bridgedFunction.owner.valueParameters.map { irGet(serializers[it.type]!!) }
+                  )
+                )
+              })
+              putValueArgument(1, irGet(serializers[bridgedFunction.owner.returnType]!!))
+              putValueArgument(2, irGet(inboundCallHandlersFunction.valueParameters[0]))
+            }
+          })
+        }
+      }
+
+      +irReturn(irGet(result))
     }
-    return inboundCallHandlerFunction
+
+    return inboundCallHandlersFunction
   }
 
-  // private class GeneratedInboundCallHandler(
-  //   private val service: SampleService,
-  //   override val context: InboundBridge.Context,
-  // ) : InboundCallHandler {
-  //   private val serializer_0 = context.serializersModule.serializer<SampleRequest>()
-  //   private val serializer_1 = context.serializersModule.serializer<SampleResponse>()
-  //
-  //   override fun call(inboundCall: InboundCall): Array<String> { ... }
-  //   override suspend fun callSuspending(inboundCall: InboundCall): Array<String> { ... }
+  // class RealInboundCallHandler2(
+  //   argSerializers: List<KSerializer<out Any?>>,
+  //   resultSerializer: KSerializer<out Any?>,
+  //   val service: SampleService,
+  // ) : InboundCallHandler2(argSerializers, resultSerializer) {
+  //   ...
   // }
   private fun irInboundCallHandlerClass(
+    className: String,
     bridgedInterface: BridgedInterface,
-    adapterClass: IrClass
+    adapterClass: IrClass,
+    bridgedFunction: IrSimpleFunctionSymbol,
   ): IrClass {
     val inboundCallHandler = irFactory.buildClass {
       initDefaults(original)
-      name = Name.identifier("GeneratedInboundCallHandler")
+      name = Name.identifier(className)
       visibility = DescriptorVisibilities.PRIVATE
     }.apply {
       parent = adapterClass
-      superTypes = listOf(ziplineApis.inboundCallHandler.defaultType)
+      superTypes = listOf(ziplineApis.inboundCallHandler2.defaultType)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
@@ -280,19 +341,28 @@ internal class AdapterGenerator(
     }.apply {
       addValueParameter {
         initDefaults(original)
-        name = Name.identifier("service")
-        type = bridgedInterface.type
+        name = Name.identifier("argSerializers")
+        type = ziplineApis.listOfKSerializerStar
       }
       addValueParameter {
-        initDefaults(adapterClass)
-        name = Name.identifier("context")
-        type = ziplineApis.inboundBridgeContext.defaultType
+        initDefaults(original)
+        name = Name.identifier("resultSerializer")
+        type = ziplineApis.kSerializer.starProjectedType
+      }
+      addValueParameter {
+        initDefaults(original)
+        name = Name.identifier("service")
+        type = bridgedInterface.type
       }
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
-          symbol = ziplineApis.any.constructors.single(),
-        )
+          symbol = ziplineApis.inboundCallHandler2.constructors.single(),
+          valueArgumentsCount = 2,
+        ) {
+          putValueArgument(0, irGet(valueParameters[0]))
+          putValueArgument(1, irGet(valueParameters[1]))
+        }
         statements += irInstanceInitializerCall(
           context = pluginContext,
           classSymbol = inboundCallHandler.symbol,
@@ -300,94 +370,45 @@ internal class AdapterGenerator(
       }
     }
 
-    val serviceProperty = irInboundServiceProperty(
-      bridgedInterface,
-      inboundCallHandler,
-      constructor.valueParameters[0]
-    )
+    // private val service: SampleService = service
+    val serviceProperty = irVal(
+      pluginContext = pluginContext,
+      propertyType = bridgedInterface.type,
+      declaringClass = inboundCallHandler,
+      propertyName = Name.identifier("service"),
+    ) {
+      irExprBody(irGet(constructor.valueParameters[2]))
+    }
     inboundCallHandler.declarations += serviceProperty
-
-    val contextProperty = irInboundContextProperty(
-      inboundCallHandler,
-      constructor.valueParameters[1]
-    )
-    inboundCallHandler.declarations += contextProperty
-
-    bridgedInterface.declareSerializerProperties(
-      inboundCallHandler,
-      constructor.valueParameters[1]
-    )
-
-    val supportedFunctionNamesProperty = bridgedInterface.irSupportedFunctionNamesProperty(
-      inboundCallHandler,
-    )
-    inboundCallHandler.declarations += supportedFunctionNamesProperty
 
     val callFunction = irCallFunction(
       inboundCallHandler = inboundCallHandler,
-      callSuspending = false
-    )
-    val callSuspendingFunction = irCallFunction(
-      inboundCallHandler = inboundCallHandler,
-      callSuspending = true
+      callSuspending = bridgedFunction.isSuspend,
     )
 
     // We add overrides here so we can call them below.
     inboundCallHandler.addFakeOverrides(
       irTypeSystemContext,
-      listOf(contextProperty, callFunction, callSuspendingFunction)
+      listOf(callFunction)
     )
 
     callFunction.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = callFunction.symbol,
     ) {
+      val inboundBridgeThis = callFunction.dispatchReceiverParameter!!
       +irReturn(
-        irCallFunctionBody(bridgedInterface, callFunction, serviceProperty, supportedFunctionNamesProperty)
-      )
-    }
-    callSuspendingFunction.irFunctionBody(
-      context = pluginContext,
-      scopeOwnerSymbol = callSuspendingFunction.symbol,
-    ) {
-      +irReturn(
-        irCallFunctionBody(bridgedInterface, callSuspendingFunction, serviceProperty, supportedFunctionNamesProperty)
+        irCallServiceFunction(
+          bridgedInterface = bridgedInterface,
+          callFunction = callFunction,
+          inboundCallHandlerThis = inboundBridgeThis,
+          serviceProperty = serviceProperty,
+          bridgedFunction = bridgedFunction,
+        )
       )
     }
 
     return inboundCallHandler
-  }
-
-  // private val service: SampleService = service
-  private fun irInboundServiceProperty(
-    bridgedInterface: BridgedInterface,
-    inboundCallHandlerClass: IrClass,
-    irServiceParameter: IrValueParameter
-  ): IrProperty {
-    return irVal(
-      pluginContext = pluginContext,
-      propertyType = bridgedInterface.type,
-      declaringClass = inboundCallHandlerClass,
-      propertyName = Name.identifier("service"),
-    ) {
-      irExprBody(irGet(irServiceParameter))
-    }
-  }
-
-  // override val context: InboundBridge.Context = context
-  private fun irInboundContextProperty(
-    inboundCallHandlerClass: IrClass,
-    irContextParameter: IrValueParameter
-  ): IrProperty {
-    return irVal(
-      pluginContext = pluginContext,
-      propertyType = ziplineApis.inboundBridgeContext.defaultType,
-      declaringClass = inboundCallHandlerClass,
-      propertyName = Name.identifier("context"),
-      overriddenProperty = ziplineApis.inboundCallHandlerContext,
-    ) {
-      irExprBody(irGet(irContextParameter))
-    }
   }
 
   /** Override either `InboundCallHandler.call()` or `InboundCallHandler.callSuspending()`. */
@@ -395,16 +416,16 @@ internal class AdapterGenerator(
     inboundCallHandler: IrClass,
     callSuspending: Boolean,
   ): IrSimpleFunction {
-    // override fun call(inboundCall: InboundCall): Array<String> {
+    // override fun call(args: List<*>): Any? {
     // }
     val inboundBridgeCall = when {
-      callSuspending -> ziplineApis.inboundCallHandlerCallSuspending
-      else -> ziplineApis.inboundCallHandlerCall
+      callSuspending -> ziplineApis.inboundCallHandler2CallSuspending
+      else -> ziplineApis.inboundCallHandler2Call
     }
     return inboundCallHandler.addFunction {
       initDefaults(original)
       name = inboundBridgeCall.owner.name
-      returnType = ziplineApis.stringArrayType
+      returnType = pluginContext.symbols.any.defaultType.makeNullable()
       isSuspend = callSuspending
     }.apply {
       addDispatchReceiver {
@@ -413,83 +434,14 @@ internal class AdapterGenerator(
       }
       addValueParameter {
         initDefaults(original)
-        name = Name.identifier("inboundCall")
-        type = ziplineApis.inboundCall.defaultType
+        name = Name.identifier("args")
+        type = ziplineApis.list.starProjectedType
       }
       overriddenSymbols = listOf(inboundBridgeCall)
     }
   }
 
-  /**
-   * The body of either `InboundCallHandler.call()` or `InboundCallHandler.callSuspending()`.
-   *
-   * ```
-   * when {
-   *   inboundCall.funName == "fun function1(com.example.RequestType1): com.example.ResponseType1" -> ...
-   *   inboundCall.funName == "fun function2(com.example.RequestType2): com.example.ResponseType2" -> ...
-   *   ...
-   *   else -> ...
-   * }
-   * ```
-   */
-  private fun IrBlockBodyBuilder.irCallFunctionBody(
-    bridgedInterface: BridgedInterface,
-    callFunction: IrSimpleFunction,
-    serviceProperty: IrProperty,
-    supportedFunctionNamesProperty: IrProperty,
-  ): IrExpression {
-    val result = mutableListOf<IrBranch>()
-    val inboundBridgeThis = callFunction.dispatchReceiverParameter!!
-
-    // Each bridged function gets its own branch in the when() expression.
-    for (bridgedFunction in bridgedInterface.bridgedFunctions) {
-      if (callFunction.isSuspend != bridgedFunction.isSuspend) continue
-
-      result += irBranch(
-        condition = irEquals(
-          arg1 = irFunName(callFunction),
-          arg2 = irString(bridgedFunction.owner.signature)
-        ),
-        result = irBlock {
-          +irCallEncodeResult(
-            bridgedInterface = bridgedInterface,
-            callFunction = callFunction,
-            resultExpression = irCallServiceFunction(
-              bridgedInterface = bridgedInterface,
-              callFunction = callFunction,
-              inboundCallHandlerThis = inboundBridgeThis,
-              serviceProperty = serviceProperty,
-              bridgedFunction = bridgedFunction
-            )
-          )
-        }
-      )
-    }
-
-    // Add an else clause that calls unexpectedFunction(supportedFunctionNames).
-    result += irElseBranch(irCallUnexpectedFunction(callFunction, supportedFunctionNamesProperty))
-
-    return irWhen(
-      type = ziplineApis.stringArrayType,
-      branches = result
-    )
-  }
-
-  /** `inboundCall.funName` */
-  private fun IrBuilderWithScope.irFunName(
-    callFunction: IrSimpleFunction,
-  ): IrExpression {
-    return irCall(
-      callee = ziplineApis.inboundCall.getPropertyGetter("funName")!!,
-      type = pluginContext.symbols.string.defaultType,
-    ).apply {
-      dispatchReceiver = irGetInboundCallParameter(
-        callFunction = callFunction,
-      )
-    }
-  }
-
-  /** `service.function1(...)` */
+  /** service.function(args[0] as Arg1Type, args[1] as Arg2Type) */
   private fun IrBuilderWithScope.irCallServiceFunction(
     bridgedInterface: BridgedInterface,
     callFunction: IrSimpleFunction,
@@ -510,11 +462,15 @@ internal class AdapterGenerator(
       for (p in bridgedFunction.owner.valueParameters.indices) {
         putValueArgument(
           p,
-          irCallDecodeParameter(
-            bridgedInterface = bridgedInterface,
-            callFunction = callFunction,
-            valueParameter = bridgedFunction.owner.valueParameters[p]
-          ),
+          irAs(
+            irCall(ziplineApis.listGetFunction).apply {
+              dispatchReceiver = irGet(callFunction.valueParameters[0])
+              putValueArgument(0, irInt(p))
+            },
+            bridgedInterface.resolveTypeParameters(
+              bridgedFunction.owner.valueParameters[p].type
+            ),
+          )
         )
       }
     }
@@ -529,84 +485,6 @@ internal class AdapterGenerator(
       callee = serviceProperty.getter!!,
     ).apply {
       dispatchReceiver = irGet(inboundCallHandlerThis)
-    }
-  }
-
-  /** `inboundCall.parameter(...)` */
-  private fun IrBuilderWithScope.irCallDecodeParameter(
-    bridgedInterface: BridgedInterface,
-    callFunction: IrSimpleFunction,
-    valueParameter: IrValueParameter,
-  ): IrExpression {
-    val valueParameterType = bridgedInterface.resolveTypeParameters(valueParameter.type)
-    return irCall(
-      type = valueParameterType,
-      callee = ziplineApis.inboundCallParameter,
-    ).apply {
-      dispatchReceiver = irGetInboundCallParameter(callFunction)
-      putTypeArgument(0, valueParameterType)
-      putValueArgument(
-        0,
-        bridgedInterface.serializerExpression(
-          this@irCallDecodeParameter,
-          valueParameterType,
-          callFunction.dispatchReceiverParameter!!
-        )
-      )
-    }
-  }
-
-  /** `inboundCall` */
-  private fun IrBuilderWithScope.irGetInboundCallParameter(
-    callFunction: IrSimpleFunction
-  ): IrGetValue {
-    return irGet(
-      type = ziplineApis.inboundCall.defaultType,
-      variable = callFunction.valueParameters[0].symbol,
-    )
-  }
-
-  /** `inboundCall.result(...)` */
-  private fun IrBuilderWithScope.irCallEncodeResult(
-    bridgedInterface: BridgedInterface,
-    callFunction: IrSimpleFunction,
-    resultExpression: IrExpression
-  ): IrExpression {
-    return irCall(
-      type = ziplineApis.stringArrayType,
-      callee = ziplineApis.inboundCallResult,
-    ).apply {
-      dispatchReceiver = irGetInboundCallParameter(callFunction)
-      putTypeArgument(0, resultExpression.type)
-      putValueArgument(
-        0,
-        bridgedInterface.serializerExpression(
-          this@irCallEncodeResult,
-          resultExpression.type,
-          callFunction.dispatchReceiverParameter!!
-        )
-      )
-      putValueArgument(1, resultExpression)
-    }
-  }
-
-  /** `inboundCall.unexpectedFunction(supportedFunctionNames)` */
-  private fun IrBuilderWithScope.irCallUnexpectedFunction(
-    callFunction: IrSimpleFunction,
-    supportedFunctionNamesProperty: IrProperty,
-  ): IrExpression {
-    return irCall(
-      type = ziplineApis.stringArrayType,
-      callee = ziplineApis.inboundCallUnexpectedFunction,
-    ).apply {
-      dispatchReceiver = irGetInboundCallParameter(callFunction)
-
-      putValueArgument(
-        0,
-        irCall(supportedFunctionNamesProperty.getter!!).apply {
-          dispatchReceiver = irGet(callFunction.dispatchReceiverParameter!!)
-        },
-      )
     }
   }
 

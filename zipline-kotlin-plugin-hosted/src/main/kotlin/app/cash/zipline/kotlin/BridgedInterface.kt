@@ -19,25 +19,23 @@ import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrElement
-import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
-import org.jetbrains.kotlin.ir.builders.IrBlockBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
+import org.jetbrains.kotlin.ir.builders.IrStatementsBuilder
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
-import org.jetbrains.kotlin.ir.builders.irString
+import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
+import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
-import org.jetbrains.kotlin.ir.expressions.impl.IrVarargImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
-import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.types.typeWith
@@ -102,15 +100,7 @@ internal class BridgedInterface(
   ) {
     check(typeToSerializerProperty.isEmpty()) { "declareSerializerProperties() called twice?" }
 
-    val serializedTypes = mutableSetOf<IrType>()
-    for (bridgedFunction in bridgedFunctions) {
-      for (valueParameter in bridgedFunction.owner.valueParameters) {
-        serializedTypes += resolveTypeParameters(valueParameter.type)
-      }
-      serializedTypes += resolveTypeParameters(bridgedFunction.owner.returnType)
-    }
-
-    for (serializedType in serializedTypes) {
+    for (serializedType in serializedTypes()) {
       val serializerProperty = irSerializerProperty(
         declaringClass = declaringClass,
         contextParameter = contextParameter,
@@ -142,7 +132,32 @@ internal class BridgedInterface(
     }
   }
 
-  private fun IrBlockBuilder.serializerExpression(
+  /** Declares local vars for all the serializers needed to bridge this interface. */
+  fun declareSerializerTemporaries(
+    statementsBuilder: IrStatementsBuilder<*>,
+    contextParameter: IrValueParameter,
+  ): Map<IrType, IrVariable> {
+    return serializedTypes().associateWith {
+      statementsBuilder.irTemporary(
+        value = statementsBuilder.serializerExpression(it, contextParameter),
+        nameHint = "serializer",
+        isMutable = false,
+      )
+    }
+  }
+
+  private fun serializedTypes(): MutableSet<IrType> {
+    val serializedTypes = mutableSetOf<IrType>()
+    for (bridgedFunction in bridgedFunctions) {
+      for (valueParameter in bridgedFunction.owner.valueParameters) {
+        serializedTypes += resolveTypeParameters(valueParameter.type)
+      }
+      serializedTypes += resolveTypeParameters(bridgedFunction.owner.returnType)
+    }
+    return serializedTypes
+  }
+
+  private fun IrBuilderWithScope.serializerExpression(
     type: IrType,
     contextParameter: IrValueParameter,
   ): IrExpression {
@@ -193,34 +208,6 @@ internal class BridgedInterface(
           }
         }
       }
-    }
-  }
-
-  fun irSupportedFunctionNamesProperty(declaringClass: IrClass): IrProperty {
-    val stringListType = pluginContext.symbols.list.typeWith(pluginContext.symbols.string.defaultType)
-    return irVal(
-      pluginContext = pluginContext,
-      propertyType = stringListType,
-      declaringClass = declaringClass,
-      propertyName = Name.identifier("supportedFunctionNames"),
-    ) {
-      val listOfFunctionSymbol = pluginContext.referenceFunctions(FqName("kotlin.collections.listOf"))
-        .single { it.owner.valueParameters.any { it.varargElementType != null } }
-      irExprBody(
-        irCall(listOfFunctionSymbol, stringListType).apply {
-          putValueArgument(
-            0,
-            IrVarargImpl(
-              UNDEFINED_OFFSET,
-              UNDEFINED_OFFSET,
-              context.irBuiltIns.arrayClass.typeWith(pluginContext.symbols.string.defaultType),
-              pluginContext.symbols.string.defaultType,
-              bridgedFunctions.map { it.owner.signature }
-                .map { irString(it) },
-            )
-          )
-        }
-      )
     }
   }
 

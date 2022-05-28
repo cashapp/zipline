@@ -21,6 +21,7 @@ import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 
@@ -133,7 +134,29 @@ class Endpoint internal constructor(
     adapter: ZiplineServiceAdapter<T>
   ) {
     eventListener.bindService(name, service)
-    inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext(name, service))
+
+    val context = newInboundContext(name, service)
+    val inboundCallHandlers = adapter.inboundCallHandlers(service, context)
+
+    inboundHandlers[name] = object : InboundCallHandler {
+      override val context: InboundBridge.Context = context
+
+      override fun call(inboundCall: InboundCall): Array<String> {
+        val handler = inboundCallHandlers[inboundCall.funName]
+          ?: return inboundCall.unexpectedFunction(inboundCallHandlers.keys.toList())
+        val decodedArgs = handler.argSerializers.map { inboundCall.parameter(it) }
+        val response = handler.call(decodedArgs)
+        return inboundCall.result(handler.resultSerializer as KSerializer<Any?>, response)
+      }
+
+      override suspend fun callSuspending(inboundCall: InboundCall): Array<String> {
+        val handler = inboundCallHandlers[inboundCall.funName]
+          ?: return inboundCall.unexpectedFunction(inboundCallHandlers.keys.toList())
+        val decodedArgs = handler.argSerializers.map { inboundCall.parameter(it) }
+        val response = handler.callSuspending(decodedArgs)
+        return inboundCall.result(handler.resultSerializer as KSerializer<Any?>, response)
+      }
+    }
   }
 
   fun <T : ZiplineService> take(name: String): T {

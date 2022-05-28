@@ -17,8 +17,7 @@ package app.cash.zipline.kotlin;
 
 import app.cash.zipline.internal.bridge.Endpoint;
 import app.cash.zipline.internal.bridge.InboundBridge;
-import app.cash.zipline.internal.bridge.InboundCall;
-import app.cash.zipline.internal.bridge.InboundCallHandler;
+import app.cash.zipline.internal.bridge.InboundCallHandler2;
 import app.cash.zipline.internal.bridge.OutboundBridge;
 import app.cash.zipline.internal.bridge.OutboundCall;
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
@@ -28,10 +27,11 @@ import app.cash.zipline.testing.EchoService;
 import app.cash.zipline.testing.EchoZiplineService;
 import app.cash.zipline.testing.GenericEchoService;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import kotlin.Pair;
 import kotlin.PublishedApi;
-import kotlin.coroutines.Continuation;
 import kotlin.coroutines.EmptyCoroutineContext;
 import kotlin.jvm.JvmClassMappingKt;
 import kotlin.reflect.KType;
@@ -41,10 +41,9 @@ import kotlinx.coroutines.CoroutineScope;
 import kotlinx.coroutines.CoroutineScopeKt;
 import kotlinx.serialization.KSerializer;
 import kotlinx.serialization.SerializersKt;
-
+import org.jetbrains.annotations.NotNull;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static kotlinx.serialization.SerializersKt.serializer;
 
 /**
  * Call these {@link PublishedApi} internal APIs from Java rather than from Kotlin to hack around
@@ -95,53 +94,24 @@ public final class ZiplineTestInternals {
       return "EchoService";
     }
 
-    @Override public InboundCallHandler inboundCallHandler(
+    @Override public Map<String, InboundCallHandler2> inboundCallHandlers(
         EchoService service, InboundBridge.Context context) {
-      return new GeneratedInboundCallHandler(service, context);
+      KSerializer<?> requestSerializer
+        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
+      KSerializer<?> responseSerializer
+        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
+      Map<String, InboundCallHandler2> result = new LinkedHashMap<>();
+      result.put("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+        new InboundCallHandler2(Arrays.asList(requestSerializer), responseSerializer) {
+          @Override public Object call(@NotNull List<?> args) {
+            return service.echo((EchoRequest) args.get(0));
+          }
+        });
+      return result;
     }
 
     @Override public EchoService outboundService(OutboundBridge.Context context) {
       return new GeneratedOutboundService(context);
-    }
-
-    private static class GeneratedInboundCallHandler implements InboundCallHandler {
-      private final EchoService service;
-      private final InboundBridge.Context context;
-      private final KSerializer<EchoRequest> requestSerializer;
-      private final KSerializer<EchoResponse> responseSerializer;
-
-      private final List<String> supportedFunctionNames = Arrays.asList(
-        "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
-      );
-
-      GeneratedInboundCallHandler(EchoService service, InboundBridge.Context context) {
-        this.service = service;
-        this.context = context;
-        this.requestSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
-        this.responseSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
-      }
-
-      @Override
-      public InboundBridge.Context getContext() {
-        return context;
-      }
-
-      @Override
-      public String[] call(InboundCall inboundCall) {
-        if (inboundCall.getFunName().equals("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse")) {
-          return inboundCall.result(responseSerializer, service.echo(
-            inboundCall.parameter(requestSerializer)));
-        } else {
-          return inboundCall.unexpectedFunction(supportedFunctionNames);
-        }
-      }
-
-      @Override public Object callSuspending(
-          InboundCall inboundCall, Continuation<? super String[]> continuation) {
-        return inboundCall.unexpectedFunction(supportedFunctionNames);
-      }
     }
 
     private static class GeneratedOutboundService implements EchoService {
@@ -177,54 +147,24 @@ public final class ZiplineTestInternals {
       return "GenericEchoService";
     }
 
-    @Override public InboundCallHandler inboundCallHandler(
+    @Override public Map<String, InboundCallHandler2> inboundCallHandlers(
         GenericEchoService<String> service, InboundBridge.Context context) {
-      return new GeneratedInboundCallHandler(service, context);
+      KSerializer<?> requestSerializer
+        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), stringKt);
+      KSerializer<?> responseSerializer
+        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), listOfStringKt);
+      Map<String, InboundCallHandler2> result = new LinkedHashMap<>();
+      result.put("fun genericEcho(T): kotlin.collections.List<T>",
+        new InboundCallHandler2(Arrays.asList(requestSerializer), responseSerializer) {
+          @Override public Object call(@NotNull List<?> args) {
+            return service.genericEcho((String) args.get(0));
+          }
+        });
+      return result;
     }
 
     @Override public GenericEchoService<String> outboundService(OutboundBridge.Context context) {
       return new GeneratedOutboundService(context);
-    }
-
-    private static class GeneratedInboundCallHandler implements InboundCallHandler {
-      private final GenericEchoService<String> service;
-      private final InboundBridge.Context context;
-      private final KSerializer<String> requestSerializer;
-      private final KSerializer<List<String>> responseSerializer;
-
-      private final List<String> supportedFunctionNames = Arrays.asList(
-        "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
-      );
-
-      GeneratedInboundCallHandler(
-          GenericEchoService<String> service, InboundBridge.Context context) {
-        this.service = service;
-        this.context = context;
-        this.requestSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), stringKt);
-        this.responseSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), listOfStringKt);
-      }
-
-      @Override
-      public InboundBridge.Context getContext() {
-        return context;
-      }
-
-      @Override
-      public String[] call(InboundCall inboundCall) {
-        if (inboundCall.getFunName().equals("fun genericEcho(T): kotlin.collections.List<T>")) {
-          return inboundCall.result(responseSerializer, service.genericEcho(
-            inboundCall.parameter(requestSerializer)));
-        } else {
-          return inboundCall.unexpectedFunction(supportedFunctionNames);
-        }
-      }
-
-      @Override public Object callSuspending(
-          InboundCall inboundCall, Continuation<? super String[]> continuation) {
-        return inboundCall.unexpectedFunction(supportedFunctionNames);
-      }
     }
 
     private static class GeneratedOutboundService implements GenericEchoService<String> {
@@ -259,57 +199,25 @@ public final class ZiplineTestInternals {
       return "EchoZiplineService";
     }
 
-    @Override public InboundCallHandler inboundCallHandler(
-        EchoZiplineService service,
-        InboundBridge.Context context) {
-      return new GeneratedInboundCallHandler(service, context);
+    @Override public Map<String, InboundCallHandler2> inboundCallHandlers(
+        EchoZiplineService service, InboundBridge.Context context) {
+      KSerializer<?> requestSerializer
+        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
+      KSerializer<?> responseSerializer
+        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
+      Map<String, InboundCallHandler2> result = new LinkedHashMap<>();
+      result.put("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+        new InboundCallHandler2(Arrays.asList(requestSerializer), responseSerializer) {
+          @Override public Object call(@NotNull List<?> args) {
+            return service.echo((EchoRequest) args.get(0));
+          }
+        });
+      return result;
     }
 
     @Override public EchoZiplineService outboundService(
       OutboundBridge.Context context) {
       return new GeneratedOutboundService(context);
-    }
-
-    private static class GeneratedInboundCallHandler
-        implements InboundCallHandler {
-      private final EchoZiplineService service;
-      private final InboundBridge.Context context;
-      private final KSerializer<EchoRequest> requestSerializer;
-      private final KSerializer<EchoResponse> responseSerializer;
-
-      private final List<String> supportedFunctionNames = Arrays.asList(
-        "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
-      );
-
-      GeneratedInboundCallHandler(EchoZiplineService service,
-          InboundBridge.Context context) {
-        this.service = service;
-        this.context = context;
-        this.requestSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
-        this.responseSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
-      }
-
-      @Override
-      public InboundBridge.Context getContext() {
-        return context;
-      }
-
-      @Override
-      public String[] call(InboundCall inboundCall) {
-        if (inboundCall.getFunName().equals("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse")) {
-          return inboundCall.result(responseSerializer, service.echo(
-            inboundCall.parameter(requestSerializer)));
-        } else {
-          return inboundCall.unexpectedFunction(supportedFunctionNames);
-        }
-      }
-
-      @Override public Object callSuspending(
-          InboundCall inboundCall, Continuation<? super String[]> continuation) {
-        return inboundCall.unexpectedFunction(supportedFunctionNames);
-      }
     }
 
     private static class GeneratedOutboundService

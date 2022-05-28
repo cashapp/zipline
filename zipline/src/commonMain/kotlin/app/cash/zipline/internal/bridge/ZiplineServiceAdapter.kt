@@ -25,17 +25,16 @@ import kotlinx.serialization.encoding.Encoder
  * Adapts [ZiplineService] implementations to receive incoming and send outgoing calls. Most
  * implementations are generated.
  */
-@PublishedApi
-internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
+@PublishedApi internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
   private val contextualSerializer = ContextualSerializer(PassByReference::class)
   abstract val serialName: String
 
   override val descriptor  = contextualSerializer.descriptor
 
-  abstract fun inboundCallHandler(
+  abstract fun inboundCallHandlers(
     service: T,
-    context: InboundBridge.Context
-  ): InboundCallHandler
+    context: InboundBridge.Context,
+  ): Map<String, InboundCallHandler2>
 
   abstract fun outboundService(
     context: OutboundBridge.Context
