@@ -35,7 +35,7 @@ class Endpoint internal constructor(
   internal val eventListener: EventListener,
   internal val outboundChannel: CallChannel,
 ) {
-  private val inboundServices = mutableMapOf<String, InboundService>()
+  private val inboundServices = mutableMapOf<String, InboundService<*>>()
   private var nextId = 1
 
   internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
@@ -76,7 +76,7 @@ class Endpoint internal constructor(
      * Note that this removes the handler for calls to is [ZiplineService.close]. We remove before
      * dispatching so it'll always be removed even if the call stalls or throws.
      */
-    private fun takeService(instanceName: String, funName: String): InboundService {
+    private fun takeService(instanceName: String, funName: String): InboundService<*> {
       val result = when (funName) {
         "fun close(): kotlin.Unit" -> inboundServices.remove(instanceName)
         else -> inboundServices[instanceName]
@@ -102,8 +102,8 @@ class Endpoint internal constructor(
     eventListener.bindService(name, service)
 
     val context = newInboundContext(name, service)
-    val callHandlers = adapter.inboundCallHandlers(service, context)
-    inboundServices[name] = InboundService(context, callHandlers)
+    val callHandlers = adapter.ziplineFunctions(context.serializersModule)
+    inboundServices[name] = InboundService(service, context, callHandlers)
   }
 
   fun <T : ZiplineService> take(name: String): T {
@@ -123,7 +123,7 @@ class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal fun remove(name: String): InboundService? {
+  internal fun remove(name: String): InboundService<*>? {
     return inboundServices.remove(name)
   }
 
@@ -143,9 +143,10 @@ class Endpoint internal constructor(
   @PublishedApi
   internal fun newOutboundContext(name: String) = OutboundBridge.Context(name, json, this)
 
-  internal inner class InboundService(
+  internal inner class InboundService<T : ZiplineService>(
+    val service: T,
     val context: InboundBridge.Context,
-    val handlers: Map<String, InboundCallHandler>,
+    val handlers: Map<String, ZiplineFunction<T>>,
   ) {
     fun call(call: InboundCall): Array<String> {
       return try {
@@ -154,7 +155,7 @@ class Endpoint internal constructor(
           call.unexpectedFunction(handlers.keys.toList())
         } else {
           val decodedArgs = handler.argSerializers.map { call.parameter(it) }
-          val response = handler.call(decodedArgs)
+          val response = handler.call(service, decodedArgs)
           call.result(handler.resultSerializer as KSerializer<Any?>, response)
         }
       } catch (e: Throwable) {
@@ -171,7 +172,7 @@ class Endpoint internal constructor(
             call.unexpectedFunction(handlers.keys.toList())
           } else {
             val decodedArgs = handler.argSerializers.map { call.parameter(it) }
-            val response = handler.callSuspending(decodedArgs)
+            val response = handler.callSuspending(service, decodedArgs)
             call.result(handler.resultSerializer as KSerializer<Any?>, response)
           }
         } catch (e: Exception) {

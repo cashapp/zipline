@@ -36,6 +36,7 @@ import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.types.typeWith
@@ -135,11 +136,11 @@ internal class BridgedInterface(
   /** Declares local vars for all the serializers needed to bridge this interface. */
   fun declareSerializerTemporaries(
     statementsBuilder: IrStatementsBuilder<*>,
-    contextParameter: IrValueParameter,
+    serializersModuleParameter: IrValueParameter,
   ): Map<IrType, IrVariable> {
     return serializedTypes().associateWith {
       statementsBuilder.irTemporary(
-        value = statementsBuilder.serializerExpression(it, contextParameter),
+        value = statementsBuilder.serializerExpression(it, serializersModuleParameter),
         nameHint = "serializer",
         isMutable = false,
       )
@@ -159,7 +160,7 @@ internal class BridgedInterface(
 
   private fun IrBuilderWithScope.serializerExpression(
     type: IrType,
-    contextParameter: IrValueParameter,
+    serializersModuleParameter: IrValueParameter,
   ): IrExpression {
     val kSerializerOfT = ziplineApis.kSerializer.typeWith(type)
     when {
@@ -185,26 +186,32 @@ internal class BridgedInterface(
           type = kSerializerOfT,
         ).apply {
           putTypeArgument(0, flowType)
-          putValueArgument(0, serializerExpression(flowType, contextParameter))
+          putValueArgument(0, serializerExpression(flowType, serializersModuleParameter))
         }
       }
 
       else -> {
-        // context.serializersModule.serializer<EchoRequest>()
-        val serializersModuleProperty = when (contextParameter.type.classFqName) {
-          ziplineApis.outboundBridgeContextFqName -> ziplineApis.outboundBridgeContextSerializersModule
-          ziplineApis.inboundBridgeContextFqName -> ziplineApis.inboundBridgeContextSerializersModule
-          else -> error("unexpected Context type")
-        }
+        // One of:
+        //   context.serializersModule.serializer<EchoRequest>()
+        //   serializersModule.serializer<EchoRequest>()
         return irCall(
           callee = ziplineApis.serializerFunction,
           type = kSerializerOfT,
         ).apply {
           putTypeArgument(0, type)
-          extensionReceiver = irCall(
-            callee = serializersModuleProperty.owner.getter!!,
-          ).apply {
-            dispatchReceiver = irGet(contextParameter)
+
+          extensionReceiver = when (serializersModuleParameter.type.classFqName) {
+            ziplineApis.outboundBridgeContextFqName -> {
+              irCall(
+                callee = ziplineApis.outboundBridgeContextSerializersModule.owner.getter!!,
+              ).apply {
+                dispatchReceiver = irGet(serializersModuleParameter)
+              }
+            }
+            ziplineApis.serializersModule.defaultType.classFqName -> {
+              irGet(serializersModuleParameter)
+            }
+            else -> error("unexpected Context type")
           }
         }
       }

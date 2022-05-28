@@ -20,6 +20,7 @@ import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.modules.SerializersModule
 
 /**
  * Adapts [ZiplineService] implementations to receive incoming and send outgoing calls. Most
@@ -29,12 +30,11 @@ import kotlinx.serialization.encoding.Encoder
   private val contextualSerializer = ContextualSerializer(PassByReference::class)
   abstract val serialName: String
 
-  override val descriptor  = contextualSerializer.descriptor
+  override val descriptor = contextualSerializer.descriptor
 
-  abstract fun inboundCallHandlers(
-    service: T,
-    context: InboundBridge.Context,
-  ): Map<String, InboundCallHandler>
+  abstract fun ziplineFunctions(
+    serializersModule: SerializersModule
+  ): Map<String, ZiplineFunction<T>>
 
   abstract fun outboundService(
     context: OutboundBridge.Context

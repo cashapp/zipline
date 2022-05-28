@@ -16,10 +16,9 @@
 package app.cash.zipline.kotlin;
 
 import app.cash.zipline.internal.bridge.Endpoint;
-import app.cash.zipline.internal.bridge.InboundBridge;
-import app.cash.zipline.internal.bridge.InboundCallHandler;
 import app.cash.zipline.internal.bridge.OutboundBridge;
 import app.cash.zipline.internal.bridge.OutboundCall;
+import app.cash.zipline.internal.bridge.ZiplineFunction;
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
 import app.cash.zipline.testing.EchoRequest;
 import app.cash.zipline.testing.EchoResponse;
@@ -41,7 +40,7 @@ import kotlinx.coroutines.CoroutineScope;
 import kotlinx.coroutines.CoroutineScopeKt;
 import kotlinx.serialization.KSerializer;
 import kotlinx.serialization.SerializersKt;
-import org.jetbrains.annotations.NotNull;
+import kotlinx.serialization.modules.SerializersModule;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -94,16 +93,18 @@ public final class ZiplineTestInternals {
       return "EchoService";
     }
 
-    @Override public Map<String, InboundCallHandler> inboundCallHandlers(
-        EchoService service, InboundBridge.Context context) {
+    @Override
+    public Map<String, ZiplineFunction<EchoService>> ziplineFunctions(
+        SerializersModule serializersModule) {
       KSerializer<?> requestSerializer
-        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
+        = (KSerializer) SerializersKt.serializer(serializersModule, echoRequestKt);
       KSerializer<?> responseSerializer
-        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
-      Map<String, InboundCallHandler> result = new LinkedHashMap<>();
+        = (KSerializer) SerializersKt.serializer(serializersModule, echoResponseKt);
+      Map<String, ZiplineFunction<EchoService>> result = new LinkedHashMap<>();
       result.put("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-        new InboundCallHandler(Arrays.asList(requestSerializer), responseSerializer) {
-          @Override public Object call(@NotNull List<?> args) {
+        new ZiplineFunction<EchoService>(Arrays.asList(requestSerializer), responseSerializer) {
+          @Override
+          public Object call(EchoService service, List<?> args) {
             return service.echo((EchoRequest) args.get(0));
           }
         });
@@ -147,16 +148,19 @@ public final class ZiplineTestInternals {
       return "GenericEchoService";
     }
 
-    @Override public Map<String, InboundCallHandler> inboundCallHandlers(
-        GenericEchoService<String> service, InboundBridge.Context context) {
+    @Override
+    public Map<String, ZiplineFunction<GenericEchoService<String>>> ziplineFunctions(
+        SerializersModule serializersModule) {
       KSerializer<?> requestSerializer
-        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), stringKt);
+        = (KSerializer) SerializersKt.serializer(serializersModule, stringKt);
       KSerializer<?> responseSerializer
-        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), listOfStringKt);
-      Map<String, InboundCallHandler> result = new LinkedHashMap<>();
+        = (KSerializer) SerializersKt.serializer(serializersModule, listOfStringKt);
+      Map<String, ZiplineFunction<GenericEchoService<String>>> result = new LinkedHashMap<>();
       result.put("fun genericEcho(T): kotlin.collections.List<T>",
-        new InboundCallHandler(Arrays.asList(requestSerializer), responseSerializer) {
-          @Override public Object call(@NotNull List<?> args) {
+        new ZiplineFunction<GenericEchoService<String>>(
+            Arrays.asList(requestSerializer), responseSerializer) {
+          @Override
+          public Object call(GenericEchoService<String> service, List<?> args) {
             return service.genericEcho((String) args.get(0));
           }
         });
@@ -199,16 +203,19 @@ public final class ZiplineTestInternals {
       return "EchoZiplineService";
     }
 
-    @Override public Map<String, InboundCallHandler> inboundCallHandlers(
-        EchoZiplineService service, InboundBridge.Context context) {
+    @Override
+    public Map<String, ZiplineFunction<EchoZiplineService>> ziplineFunctions(
+        SerializersModule serializersModule) {
       KSerializer<?> requestSerializer
-        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
+        = (KSerializer) SerializersKt.serializer(serializersModule, echoRequestKt);
       KSerializer<?> responseSerializer
-        = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
-      Map<String, InboundCallHandler> result = new LinkedHashMap<>();
+        = (KSerializer) SerializersKt.serializer(serializersModule, echoResponseKt);
+      Map<String, ZiplineFunction<EchoZiplineService>> result = new LinkedHashMap<>();
       result.put("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-        new InboundCallHandler(Arrays.asList(requestSerializer), responseSerializer) {
-          @Override public Object call(@NotNull List<?> args) {
+        new ZiplineFunction<EchoZiplineService>(
+            Arrays.asList(requestSerializer), responseSerializer) {
+          @Override
+          public Object call(EchoZiplineService service, List<?> args) {
             return service.echo((EchoRequest) args.get(0));
           }
         });
