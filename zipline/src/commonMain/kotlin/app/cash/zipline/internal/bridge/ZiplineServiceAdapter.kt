@@ -34,7 +34,7 @@ import kotlinx.serialization.encoding.Encoder
   abstract fun inboundCallHandlers(
     service: T,
     context: InboundBridge.Context,
-  ): Map<String, InboundCallHandler2>
+  ): Map<String, InboundCallHandler>
 
   abstract fun outboundService(
     context: OutboundBridge.Context

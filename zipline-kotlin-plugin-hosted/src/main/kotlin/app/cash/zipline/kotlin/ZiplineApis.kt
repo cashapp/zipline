@@ -105,17 +105,17 @@ internal class ZiplineApis(
       inboundBridgeContextFqName.child("serializersModule")
     ).single()
 
-  val inboundCallHandler2: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("InboundCallHandler2"))!!
+  val inboundCallHandler: IrClassSymbol
+    get() = pluginContext.referenceClass(bridgeFqName.child("InboundCallHandler"))!!
 
-  val inboundCallHandler2Call: IrSimpleFunctionSymbol
+  val inboundCallHandlerCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("InboundCallHandler2").child("call")
+      bridgeFqName.child("InboundCallHandler").child("call")
     ).single()
 
-  val inboundCallHandler2CallSuspending: IrSimpleFunctionSymbol
+  val inboundCallHandlerCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("InboundCallHandler2").child("callSuspending")
+      bridgeFqName.child("InboundCallHandler").child("callSuspending")
     ).single()
 
   val outboundCallInvoke: IrSimpleFunctionSymbol

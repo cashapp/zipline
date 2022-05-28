@@ -220,20 +220,20 @@ internal class AdapterGenerator(
     // override fun inboundCallHandlers(
     //   service: SampleService,
     //   context: InboundBridge.Context,
-    // ): Map<String, InboundCallHandler2> { ... }
-    val mapOfStringInboundCallHandler2 = ziplineApis.map.typeWith(
+    // ): Map<String, InboundCallHandler> { ... }
+    val mapOfStringInboundCallHandler = ziplineApis.map.typeWith(
       pluginContext.symbols.string.defaultType,
-      ziplineApis.inboundCallHandler2.defaultType,
+      ziplineApis.inboundCallHandler.defaultType,
     )
-    val mutableMapOfStringInboundCallHandler2 = ziplineApis.mutableMap.typeWith(
+    val mutableMapOfStringInboundCallHandler = ziplineApis.mutableMap.typeWith(
       pluginContext.symbols.string.defaultType,
-      ziplineApis.inboundCallHandler2.defaultType,
+      ziplineApis.inboundCallHandler.defaultType,
     )
 
     val inboundCallHandlersFunction = adapterClass.addFunction {
       initDefaults(original)
       name = ziplineApis.ziplineServiceAdapterInboundCallHandlers.owner.name
-      returnType = mapOfStringInboundCallHandler2
+      returnType = mapOfStringInboundCallHandler
     }.apply {
       addDispatchReceiver {
         initDefaults(original)
@@ -264,8 +264,8 @@ internal class AdapterGenerator(
       val result = irTemporary(
         value = irCall(ziplineApis.mutableMapOfFunction).apply {
           putTypeArgument(0, pluginContext.symbols.string.defaultType)
-          putTypeArgument(1, ziplineApis.inboundCallHandler2.defaultType)
-          type = mutableMapOfStringInboundCallHandler2
+          putTypeArgument(1, ziplineApis.inboundCallHandler.defaultType)
+          type = mutableMapOfStringInboundCallHandler
         },
         nameHint = "result",
         isMutable = false
@@ -313,11 +313,11 @@ internal class AdapterGenerator(
     return inboundCallHandlersFunction
   }
 
-  // class RealInboundCallHandler2(
+  // class InboundCallHandler0(
   //   argSerializers: List<KSerializer<out Any?>>,
   //   resultSerializer: KSerializer<out Any?>,
   //   val service: SampleService,
-  // ) : InboundCallHandler2(argSerializers, resultSerializer) {
+  // ) : InboundCallHandler(argSerializers, resultSerializer) {
   //   ...
   // }
   private fun irInboundCallHandlerClass(
@@ -332,7 +332,7 @@ internal class AdapterGenerator(
       visibility = DescriptorVisibilities.PRIVATE
     }.apply {
       parent = adapterClass
-      superTypes = listOf(ziplineApis.inboundCallHandler2.defaultType)
+      superTypes = listOf(ziplineApis.inboundCallHandler.defaultType)
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
@@ -357,7 +357,7 @@ internal class AdapterGenerator(
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
-          symbol = ziplineApis.inboundCallHandler2.constructors.single(),
+          symbol = ziplineApis.inboundCallHandler.constructors.single(),
           valueArgumentsCount = 2,
         ) {
           putValueArgument(0, irGet(valueParameters[0]))
@@ -419,8 +419,8 @@ internal class AdapterGenerator(
     // override fun call(args: List<*>): Any? {
     // }
     val inboundBridgeCall = when {
-      callSuspending -> ziplineApis.inboundCallHandler2CallSuspending
-      else -> ziplineApis.inboundCallHandler2Call
+      callSuspending -> ziplineApis.inboundCallHandlerCallSuspending
+      else -> ziplineApis.inboundCallHandlerCall
     }
     return inboundCallHandler.addFunction {
       initDefaults(original)

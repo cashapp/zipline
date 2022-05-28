@@ -16,7 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.InboundBridge
-import app.cash.zipline.internal.bridge.InboundCallHandler2
+import app.cash.zipline.internal.bridge.InboundCallHandler
 import app.cash.zipline.internal.bridge.OutboundBridge
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import kotlinx.serialization.KSerializer
@@ -54,11 +54,11 @@ interface SampleService : ZiplineService {
       override fun inboundCallHandlers(
         service: SampleService,
         context: InboundBridge.Context
-      ): Map<String, InboundCallHandler2> {
+      ): Map<String, InboundCallHandler> {
         val sampleRequestSerializer = context.serializersModule.serializer<SampleRequest>()
         val sampleResponseSerializer = context.serializersModule.serializer<SampleResponse>()
         val unitSerializer = Unit.serializer()
-        val result = mutableMapOf<String, InboundCallHandler2>()
+        val result = mutableMapOf<String, InboundCallHandler>()
         result["fun close(): kotlin.Unit"] =
           InboundCallHandler0(listOf(), unitSerializer, service)
         result["fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse"] =
@@ -70,7 +70,7 @@ interface SampleService : ZiplineService {
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
         val service: SampleService,
-      ) : InboundCallHandler2(argSerializers, resultSerializer) {
+      ) : InboundCallHandler(argSerializers, resultSerializer) {
         override fun call(args: List<*>): Any? = service.close()
       }
 
@@ -78,7 +78,7 @@ interface SampleService : ZiplineService {
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
         val service: SampleService,
-      ) : InboundCallHandler2(argSerializers, resultSerializer) {
+      ) : InboundCallHandler(argSerializers, resultSerializer) {
         override fun call(args: List<*>): Any? = service.ping(args[0] as SampleRequest)
       }
 

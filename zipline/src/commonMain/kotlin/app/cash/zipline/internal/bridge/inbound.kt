@@ -39,16 +39,7 @@ internal interface InboundBridge {
 }
 
 @PublishedApi
-internal interface InboundCallHandler {
-  val context: InboundBridge.Context
-
-  fun call(inboundCall: InboundCall): Array<String>
-
-  suspend fun callSuspending(inboundCall: InboundCall): Array<String>
-}
-
-@PublishedApi
-internal abstract class InboundCallHandler2(
+internal abstract class InboundCallHandler(
   val argSerializers: List<KSerializer<*>>,
   val resultSerializer: KSerializer<*>,
 ) {

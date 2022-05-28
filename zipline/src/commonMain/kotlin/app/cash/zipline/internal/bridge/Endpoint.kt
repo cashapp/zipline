@@ -35,13 +35,13 @@ class Endpoint internal constructor(
   internal val eventListener: EventListener,
   internal val outboundChannel: CallChannel,
 ) {
-  internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
+  private val inboundServices = mutableMapOf<String, InboundService>()
   private var nextId = 1
 
   internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
 
   val serviceNames: Set<String>
-    get() = inboundHandlers.keys.toSet()
+    get() = inboundServices.keys.toSet()
 
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
@@ -62,29 +62,118 @@ class Endpoint internal constructor(
     }
 
     override fun call(encodedArguments: Array<String>): Array<String> {
-      val inboundCall = InboundCall(encodedArguments)
-      val handler = takeHandler(inboundCall.serviceName, inboundCall.funName)
-      inboundCall.context = handler.context
+      val call = InboundCall(encodedArguments)
+      val service = takeService(call.serviceName, call.funName)
+      call.context = service.context
 
       return when {
-        inboundCall.callbackName.isNotEmpty() -> callSuspending(inboundCall, handler)
-        else -> call(inboundCall, handler)
+        call.callbackName.isNotEmpty() -> service.callSuspending(call)
+        else -> service.call(call)
       }
     }
 
-    private fun call(call: InboundCall, handler: InboundCallHandler): Array<String> {
+    /**
+     * Note that this removes the handler for calls to is [ZiplineService.close]. We remove before
+     * dispatching so it'll always be removed even if the call stalls or throws.
+     */
+    private fun takeService(instanceName: String, funName: String): InboundService {
+      val result = when (funName) {
+        "fun close(): kotlin.Unit" -> inboundServices.remove(instanceName)
+        else -> inboundServices[instanceName]
+      }
+      return result ?: error("no handler for $instanceName")
+    }
+
+    override fun disconnect(instanceName: String): Boolean {
+      return inboundServices.remove(instanceName) != null
+    }
+  }
+
+  fun <T : ZiplineService> bind(name: String, instance: T) {
+    error("unexpected call to Endpoint.bind: is the Zipline plugin configured?")
+  }
+
+  @PublishedApi
+  internal fun <T : ZiplineService> bind(
+    name: String,
+    service: T,
+    adapter: ZiplineServiceAdapter<T>
+  ) {
+    eventListener.bindService(name, service)
+
+    val context = newInboundContext(name, service)
+    val callHandlers = adapter.inboundCallHandlers(service, context)
+    inboundServices[name] = InboundService(context, callHandlers)
+  }
+
+  fun <T : ZiplineService> take(name: String): T {
+    error("unexpected call to Endpoint.take: is the Zipline plugin configured?")
+  }
+
+  @PublishedApi
+  internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    // Detect leaked old services when creating new services.
+    detectLeaks()
+
+    val outboundContext: OutboundBridge.Context = newOutboundContext(name)
+    val result = adapter.outboundService(outboundContext)
+    eventListener.takeService(name, result)
+    trackLeaks(eventListener, name, outboundContext, result)
+    return result
+  }
+
+  @PublishedApi
+  internal fun remove(name: String): InboundService? {
+    return inboundServices.remove(name)
+  }
+
+  internal fun generateName(prefix: String): String {
+    return "$prefix${nextId++}"
+  }
+
+  /** Derives the name of a [CancelCallback] from the name of a [SuspendCallback]. */
+  internal fun cancelCallbackName(name: String): String {
+    return "$name/cancel"
+  }
+
+  @PublishedApi
+  internal fun newInboundContext(name: String, service: ZiplineService) =
+    InboundBridge.Context(name, service, json, this)
+
+  @PublishedApi
+  internal fun newOutboundContext(name: String) = OutboundBridge.Context(name, json, this)
+
+  internal inner class InboundService(
+    val context: InboundBridge.Context,
+    val handlers: Map<String, InboundCallHandler>,
+  ) {
+    fun call(call: InboundCall): Array<String> {
       return try {
-        handler.call(call)
+        val handler = handlers[call.funName]
+        if (handler == null) {
+          call.unexpectedFunction(handlers.keys.toList())
+        } else {
+          val decodedArgs = handler.argSerializers.map { call.parameter(it) }
+          val response = handler.call(decodedArgs)
+          call.result(handler.resultSerializer as KSerializer<Any?>, response)
+        }
       } catch (e: Throwable) {
         call.resultException(e)
       }
     }
 
-    private fun callSuspending(call: InboundCall, handler: InboundCallHandler): Array<String> {
+    fun callSuspending(call: InboundCall): Array<String> {
       val suspendCallbackName = call.callbackName
       val job = scope.launch {
         val result = try {
-          handler.callSuspending(call)
+          val handler = handlers[call.funName]
+          if (handler == null) {
+            call.unexpectedFunction(handlers.keys.toList())
+          } else {
+            val decodedArgs = handler.argSerializers.map { call.parameter(it) }
+            val response = handler.callSuspending(decodedArgs)
+            call.result(handler.resultSerializer as KSerializer<Any?>, response)
+          }
         } catch (e: Exception) {
           call.resultException(e)
         }
@@ -105,94 +194,5 @@ class Endpoint internal constructor(
 
       return arrayOf()
     }
-
-    /**
-     * Note that this removes the handler for calls to is [ZiplineService.close]. We remove before
-     * dispatching so it'll always be removed even if the call stalls or throws.
-     */
-    private fun takeHandler(instanceName: String, funName: String): InboundCallHandler {
-      val result = when (funName) {
-        "fun close(): kotlin.Unit" -> inboundHandlers.remove(instanceName)
-        else -> inboundHandlers[instanceName]
-      }
-      return result ?: error("no handler for $instanceName")
-    }
-
-    override fun disconnect(instanceName: String): Boolean {
-      return inboundHandlers.remove(instanceName) != null
-    }
   }
-
-  fun <T : ZiplineService> bind(name: String, instance: T) {
-    error("unexpected call to Endpoint.bind: is the Zipline plugin configured?")
-  }
-
-  @PublishedApi
-  internal fun <T : ZiplineService> bind(
-    name: String,
-    service: T,
-    adapter: ZiplineServiceAdapter<T>
-  ) {
-    eventListener.bindService(name, service)
-
-    val context = newInboundContext(name, service)
-    val inboundCallHandlers = adapter.inboundCallHandlers(service, context)
-
-    inboundHandlers[name] = object : InboundCallHandler {
-      override val context: InboundBridge.Context = context
-
-      override fun call(inboundCall: InboundCall): Array<String> {
-        val handler = inboundCallHandlers[inboundCall.funName]
-          ?: return inboundCall.unexpectedFunction(inboundCallHandlers.keys.toList())
-        val decodedArgs = handler.argSerializers.map { inboundCall.parameter(it) }
-        val response = handler.call(decodedArgs)
-        return inboundCall.result(handler.resultSerializer as KSerializer<Any?>, response)
-      }
-
-      override suspend fun callSuspending(inboundCall: InboundCall): Array<String> {
-        val handler = inboundCallHandlers[inboundCall.funName]
-          ?: return inboundCall.unexpectedFunction(inboundCallHandlers.keys.toList())
-        val decodedArgs = handler.argSerializers.map { inboundCall.parameter(it) }
-        val response = handler.callSuspending(decodedArgs)
-        return inboundCall.result(handler.resultSerializer as KSerializer<Any?>, response)
-      }
-    }
-  }
-
-  fun <T : ZiplineService> take(name: String): T {
-    error("unexpected call to Endpoint.take: is the Zipline plugin configured?")
-  }
-
-  @PublishedApi
-  internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
-    // Detect leaked old services when creating new services.
-    detectLeaks()
-
-    val outboundContext: OutboundBridge.Context = newOutboundContext(name)
-    val result = adapter.outboundService(outboundContext)
-    eventListener.takeService(name, result)
-    trackLeaks(eventListener, name, outboundContext, result)
-    return result
-  }
-
-  @PublishedApi
-  internal fun remove(name: String): InboundCallHandler? {
-    return inboundHandlers.remove(name)
-  }
-
-  internal fun generateName(prefix: String): String {
-    return "$prefix${nextId++}"
-  }
-
-  /** Derives the name of a [CancelCallback] from the name of a [SuspendCallback]. */
-  internal fun cancelCallbackName(name: String): String {
-    return "$name/cancel"
-  }
-
-  @PublishedApi
-  internal fun newInboundContext(name: String, service: ZiplineService) =
-    InboundBridge.Context(name, service, json, this)
-
-  @PublishedApi
-  internal fun newOutboundContext(name: String) = OutboundBridge.Context(name, json, this)
 }
