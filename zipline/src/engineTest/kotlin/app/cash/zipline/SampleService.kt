@@ -15,8 +15,8 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.ZiplineFunction
 import app.cash.zipline.internal.bridge.OutboundBridge
+import app.cash.zipline.internal.bridge.ZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
@@ -53,29 +53,35 @@ interface SampleService : ZiplineService {
 
       override fun ziplineFunctions(
         serializersModule: SerializersModule,
-      ): Map<String, ZiplineFunction<SampleService>> {
+      ): List<ZiplineFunction<SampleService>> {
         val sampleRequestSerializer = serializersModule.serializer<SampleRequest>()
         val sampleResponseSerializer = serializersModule.serializer<SampleResponse>()
         val unitSerializer = Unit.serializer()
-        val result = mutableMapOf<String, ZiplineFunction<SampleService>>()
-        result["fun close(): kotlin.Unit"] =
-          ZiplineFunction0(listOf(), unitSerializer)
-        result["fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse"] =
-          ZiplineFunction1(listOf(sampleRequestSerializer), sampleResponseSerializer)
-        return result
+        return listOf(
+          ZiplineFunction0(listOf(), unitSerializer),
+          ZiplineFunction1(listOf(sampleRequestSerializer), sampleResponseSerializer),
+        )
       }
 
       class ZiplineFunction0(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
-      ) : ZiplineFunction<SampleService>(argSerializers, resultSerializer) {
+      ) : ZiplineFunction<SampleService>(
+        "fun close(): kotlin.Unit",
+        argSerializers,
+        resultSerializer,
+      ) {
         override fun call(service: SampleService, args: List<*>): Any? = service.close()
       }
 
       class ZiplineFunction1(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
-      ) : ZiplineFunction<SampleService>(argSerializers, resultSerializer) {
+      ) : ZiplineFunction<SampleService>(
+        "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
+        argSerializers,
+        resultSerializer,
+      ) {
         override fun call(service: SampleService, args: List<*>): Any? =
           service.ping(args[0] as SampleRequest)
       }

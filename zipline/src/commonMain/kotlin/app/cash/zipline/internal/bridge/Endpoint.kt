@@ -102,8 +102,9 @@ class Endpoint internal constructor(
     eventListener.bindService(name, service)
 
     val context = newInboundContext(name, service)
-    val callHandlers = adapter.ziplineFunctions(context.serializersModule)
-    inboundServices[name] = InboundService(service, context, callHandlers)
+    val ziplineFunctions = adapter.ziplineFunctions(context.serializersModule)
+    val ziplineFunctionsMap = ziplineFunctions.associateBy { it.name }
+    inboundServices[name] = InboundService(service, context, ziplineFunctionsMap)
   }
 
   fun <T : ZiplineService> take(name: String): T {

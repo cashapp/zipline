@@ -26,9 +26,7 @@ import app.cash.zipline.testing.EchoService;
 import app.cash.zipline.testing.EchoZiplineService;
 import app.cash.zipline.testing.GenericEchoService;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import kotlin.Pair;
 import kotlin.PublishedApi;
 import kotlin.coroutines.EmptyCoroutineContext;
@@ -93,22 +91,22 @@ public final class ZiplineTestInternals {
       return "EchoService";
     }
 
-    @Override
-    public Map<String, ZiplineFunction<EchoService>> ziplineFunctions(
+    @Override public List<ZiplineFunction<EchoService>> ziplineFunctions(
         SerializersModule serializersModule) {
       KSerializer<?> requestSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, echoRequestKt);
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, echoResponseKt);
-      Map<String, ZiplineFunction<EchoService>> result = new LinkedHashMap<>();
-      result.put("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-        new ZiplineFunction<EchoService>(Arrays.asList(requestSerializer), responseSerializer) {
+      return Arrays.asList(
+        new ZiplineFunction<EchoService>(
+            "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+            Arrays.asList(requestSerializer), responseSerializer) {
           @Override
           public Object call(EchoService service, List<?> args) {
             return service.echo((EchoRequest) args.get(0));
           }
-        });
-      return result;
+        }
+      );
     }
 
     @Override public EchoService outboundService(OutboundBridge.Context context) {
@@ -149,22 +147,20 @@ public final class ZiplineTestInternals {
     }
 
     @Override
-    public Map<String, ZiplineFunction<GenericEchoService<String>>> ziplineFunctions(
+    public List<ZiplineFunction<GenericEchoService<String>>> ziplineFunctions(
         SerializersModule serializersModule) {
       KSerializer<?> requestSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, stringKt);
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, listOfStringKt);
-      Map<String, ZiplineFunction<GenericEchoService<String>>> result = new LinkedHashMap<>();
-      result.put("fun genericEcho(T): kotlin.collections.List<T>",
+      return Arrays.asList(
         new ZiplineFunction<GenericEchoService<String>>(
+            "fun genericEcho(T): kotlin.collections.List<T>",
             Arrays.asList(requestSerializer), responseSerializer) {
-          @Override
-          public Object call(GenericEchoService<String> service, List<?> args) {
+          @Override public Object call(GenericEchoService<String> service, List<?> args) {
             return service.genericEcho((String) args.get(0));
           }
         });
-      return result;
     }
 
     @Override public GenericEchoService<String> outboundService(OutboundBridge.Context context) {
@@ -204,22 +200,20 @@ public final class ZiplineTestInternals {
     }
 
     @Override
-    public Map<String, ZiplineFunction<EchoZiplineService>> ziplineFunctions(
+    public List<ZiplineFunction<EchoZiplineService>> ziplineFunctions(
         SerializersModule serializersModule) {
       KSerializer<?> requestSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, echoRequestKt);
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, echoResponseKt);
-      Map<String, ZiplineFunction<EchoZiplineService>> result = new LinkedHashMap<>();
-      result.put("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      return Arrays.asList(
         new ZiplineFunction<EchoZiplineService>(
+            "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
             Arrays.asList(requestSerializer), responseSerializer) {
-          @Override
-          public Object call(EchoZiplineService service, List<?> args) {
+          @Override public Object call(EchoZiplineService service, List<?> args) {
             return service.echo((EchoRequest) args.get(0));
           }
         });
-      return result;
     }
 
     @Override public EchoZiplineService outboundService(

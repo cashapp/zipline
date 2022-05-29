@@ -30,7 +30,6 @@ import org.jetbrains.kotlin.ir.builders.declarations.addFunction
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
 import org.jetbrains.kotlin.ir.builders.irAs
-import org.jetbrains.kotlin.ir.builders.irBlock
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
@@ -47,7 +46,6 @@ import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.expressions.IrStatementOrigin
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.defaultType
@@ -219,21 +217,14 @@ internal class AdapterGenerator(
   ): IrSimpleFunction {
     // override fun ziplineFunctions(
     //   serializersModule: SerializersModule,
-    // ): Map<String, ZiplineFunction<SampleService>> { ... }
+    // ): List<ZiplineFunction<SampleService>> { ... }
     val ziplineFunctionT = ziplineApis.ziplineFunction.typeWith(bridgedInterface.type)
-    val mapOfStringZiplineFunctionT = ziplineApis.map.typeWith(
-      pluginContext.symbols.string.defaultType,
-      ziplineFunctionT,
-    )
-    val mutableMapOfStringZiplineFunctionT = ziplineApis.mutableMap.typeWith(
-      pluginContext.symbols.string.defaultType,
-      ziplineFunctionT,
-    )
+    val listOfZiplineFunctionT = ziplineApis.list.typeWith(ziplineFunctionT)
 
     val ziplineFunctionsFunction = adapterClass.addFunction {
       initDefaults(original)
       name = ziplineApis.ziplineServiceAdapterZiplineFunctions.owner.name
-      returnType = mapOfStringZiplineFunctionT
+      returnType = listOfZiplineFunctionT
     }.apply {
       addDispatchReceiver {
         initDefaults(original)
@@ -256,19 +247,8 @@ internal class AdapterGenerator(
         serializersModuleParameter = ziplineFunctionsFunction.valueParameters[0]
       )
 
-      val result = irTemporary(
-        value = irCall(ziplineApis.mutableMapOfFunction).apply {
-          putTypeArgument(0, pluginContext.symbols.string.defaultType)
-          putTypeArgument(1, ziplineFunctionT)
-          type = mutableMapOfStringZiplineFunctionT
-        },
-        nameHint = "result",
-        isMutable = false
-      ).apply {
-        origin = IrDeclarationOrigin.DEFINED
-      }
-
-      // Each bridged function gets its own set() on the map.
+      // Call each ZiplineFunction constructor.
+      val expressions = mutableListOf<IrExpression>()
       for ((bridgedFunction, handlerClass) in ziplineFunctionClasses) {
         // ZiplineFunction0(
         //   listOf<KSerializer<*>>(
@@ -277,30 +257,36 @@ internal class AdapterGenerator(
         //   ),
         //   sampleResponseSerializer,
         // )
-        +irCall(ziplineApis.mutableMapPutFunction).apply {
-          dispatchReceiver = irGet(result)
-          putValueArgument(0, irString(bridgedFunction.owner.signature))
-          putValueArgument(1, irBlock(origin = IrStatementOrigin.OBJECT_LITERAL) {
-            +irCall(
-              callee = handlerClass.constructors.single().symbol,
-              type = handlerClass.defaultType
-            ).apply {
-              putValueArgument(0, irCall(ziplineApis.listOfFunction).apply {
-                putTypeArgument(0, ziplineApis.kSerializer.starProjectedType)
-                putValueArgument(0,
-                  irVararg(
-                    ziplineApis.kSerializer.starProjectedType,
-                    bridgedFunction.owner.valueParameters.map { irGet(serializers[it.type]!!) }
-                  )
-                )
-              })
-              putValueArgument(1, irGet(serializers[bridgedFunction.owner.returnType]!!))
-            }
+        expressions += irCall(
+          callee = handlerClass.constructors.single().symbol,
+          type = handlerClass.defaultType
+        ).apply {
+          putValueArgument(0, irCall(ziplineApis.listOfFunction).apply {
+            putTypeArgument(0, ziplineApis.kSerializer.starProjectedType)
+            putValueArgument(0,
+              irVararg(
+                ziplineApis.kSerializer.starProjectedType,
+                bridgedFunction.owner.valueParameters.map { irGet(serializers[it.type]!!) }
+              )
+            )
           })
+          putValueArgument(1, irGet(serializers[bridgedFunction.owner.returnType]!!))
         }
       }
 
-      +irReturn(irGet(result))
+      // return listOf<ZiplineFunction<SampleService>>(
+      //   ZiplineFunction0(...),
+      //   ZiplineFunction1(...),
+      // )
+      +irReturn(irCall(ziplineApis.listOfFunction).apply {
+        putTypeArgument(0, ziplineFunctionT)
+        putValueArgument(0,
+          irVararg(
+            ziplineFunctionT,
+            expressions,
+          )
+        )
+      })
     }
 
     return ziplineFunctionsFunction
@@ -309,7 +295,11 @@ internal class AdapterGenerator(
   // class ZiplineFunction0(
   //   argSerializers: List<KSerializer<out Any?>>,
   //   resultSerializer: KSerializer<out Any?>,
-  // ) : ZiplineFunction<SampleService>(argSerializers, resultSerializer) {
+  // ) : ZiplineFunction<SampleService>(
+  //   "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
+  //   argSerializers,
+  //   resultSerializer,
+  // ) {
   //   ...
   // }
   private fun irZiplineFunctionClass(
@@ -345,10 +335,11 @@ internal class AdapterGenerator(
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = ziplineApis.ziplineFunction.constructors.single(),
-          valueArgumentsCount = 2,
+          valueArgumentsCount = 3,
         ) {
-          putValueArgument(0, irGet(valueParameters[0]))
-          putValueArgument(1, irGet(valueParameters[1]))
+          putValueArgument(0, irString(bridgedFunction.owner.signature))
+          putValueArgument(1, irGet(valueParameters[0]))
+          putValueArgument(2, irGet(valueParameters[1]))
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,

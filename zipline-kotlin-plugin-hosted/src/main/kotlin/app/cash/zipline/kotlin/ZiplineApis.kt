@@ -65,9 +65,6 @@ internal class ZiplineApis(
   val listOfKSerializerStar: IrSimpleType
     get() = list.typeWith(kSerializer.starProjectedType)
 
-  val mutableMap: IrClassSymbol
-    get() = pluginContext.referenceClass(collectionsFqName.child("MutableMap"))!!
-
   val serializerFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(serializationFqName.child("serializer"))
       .single {
@@ -80,32 +77,13 @@ internal class ZiplineApis(
     get() = pluginContext.referenceFunctions(bridgeFqName.child("flowSerializer"))
       .single()
 
-  val mutableMapOfFunction: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(collectionsFqName.child("mutableMapOf"))
-      .single { it.owner.valueParameters.isEmpty() }
-
   val listOfFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(collectionsFqName.child("listOf"))
       .single { it.owner.valueParameters.firstOrNull()?.isVararg == true }
 
-  val mutableMapPutFunction: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(
-      collectionsFqName.child("MutableMap").child("put")
-    ).single()
-
   val listGetFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
       collectionsFqName.child("List").child("get")
-    ).single()
-
-  val inboundBridgeContextFqName = bridgeFqName.child("InboundBridge").child("Context")
-
-  val inboundBridgeContext: IrClassSymbol
-    get() = pluginContext.referenceClass(inboundBridgeContextFqName)!!
-
-  val inboundBridgeContextSerializersModule: IrPropertySymbol
-    get() = pluginContext.referenceProperties(
-      inboundBridgeContextFqName.child("serializersModule")
     ).single()
 
   val ziplineFunction: IrClassSymbol

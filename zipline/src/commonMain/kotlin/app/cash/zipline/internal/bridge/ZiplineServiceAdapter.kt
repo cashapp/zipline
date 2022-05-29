@@ -34,7 +34,7 @@ import kotlinx.serialization.modules.SerializersModule
 
   abstract fun ziplineFunctions(
     serializersModule: SerializersModule
-  ): Map<String, ZiplineFunction<T>>
+  ): List<ZiplineFunction<T>>
 
   abstract fun outboundService(
     context: OutboundBridge.Context
