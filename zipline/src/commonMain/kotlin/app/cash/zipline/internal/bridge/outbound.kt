@@ -35,11 +35,12 @@ internal interface OutboundBridge {
     private val instanceName: String,
     val json: Json,
     @PublishedApi internal val endpoint: Endpoint,
+    private val ziplineFunctions: List<ZiplineFunction<*>>,
   ) {
     val serializersModule = json.serializersModule
     var closed = false
 
-    fun newCall(funName: String, parameterCount: Int): OutboundCall {
+    private fun newCall(funName: String, parameterCount: Int): OutboundCall {
       return OutboundCall(
         this,
         instanceName,
@@ -47,6 +48,32 @@ internal interface OutboundBridge {
         funName,
         parameterCount
       )
+    }
+
+    fun call(
+      service: ZiplineService,
+      functionIndex: Int,
+      vararg args: Any?,
+    ): Any? {
+      val function = ziplineFunctions[functionIndex]
+      val call = newCall(function.name, function.argSerializers.size)
+      for (i in function.argSerializers.indices) {
+        call.parameter(function.argSerializers[i] as KSerializer<Any?>, args[i])
+      }
+      return call.invoke(service, function.resultSerializer)
+    }
+
+    suspend fun callSuspending(
+      service: ZiplineService,
+      functionIndex: Int,
+      vararg args: Any?,
+    ): Any? {
+      val function = ziplineFunctions[functionIndex]
+      val call = newCall(function.name, function.argSerializers.size)
+      for (i in function.argSerializers.indices) {
+        call.parameter(function.argSerializers[i] as KSerializer<Any?>, args[i])
+      }
+      return call.invokeSuspending(service, function.resultSerializer)
     }
   }
 }

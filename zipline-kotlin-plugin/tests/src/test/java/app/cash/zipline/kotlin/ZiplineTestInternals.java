@@ -17,7 +17,6 @@ package app.cash.zipline.kotlin;
 
 import app.cash.zipline.internal.bridge.Endpoint;
 import app.cash.zipline.internal.bridge.OutboundBridge;
-import app.cash.zipline.internal.bridge.OutboundCall;
 import app.cash.zipline.internal.bridge.ZiplineFunction;
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
 import app.cash.zipline.testing.EchoRequest;
@@ -115,21 +114,13 @@ public final class ZiplineTestInternals {
 
     private static class GeneratedOutboundService implements EchoService {
       private final OutboundBridge.Context context;
-      private final KSerializer<EchoRequest> requestSerializer;
-      private final KSerializer<EchoResponse> responseSerializer;
 
       GeneratedOutboundService(OutboundBridge.Context context) {
         this.context = context;
-        this.requestSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
-        this.responseSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
       }
 
       @Override public EchoResponse echo(EchoRequest request) {
-        OutboundCall outboundCall = context.newCall("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse", 1);
-        outboundCall.parameter(requestSerializer, request);
-        return outboundCall.invoke(this, responseSerializer);
+        return (EchoResponse) context.call(this, 0, request);
       }
 
       @Override public void close() {
@@ -169,21 +160,13 @@ public final class ZiplineTestInternals {
 
     private static class GeneratedOutboundService implements GenericEchoService<String> {
       private final OutboundBridge.Context context;
-      private final KSerializer<String> requestSerializer;
-      private final KSerializer<List<String>> responseSerializer;
 
       GeneratedOutboundService(OutboundBridge.Context context) {
         this.context = context;
-        this.requestSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), stringKt);
-        this.responseSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), listOfStringKt);
       }
 
       @Override public List<String> genericEcho(String request) {
-        OutboundCall outboundCall = context.newCall("fun genericEcho(T): kotlin.collections.List<T>", 1);
-        outboundCall.parameter(requestSerializer, request);
-        return outboundCall.invoke(this, responseSerializer);
+        return (List<String>) context.call(this, 0, request);
       }
 
       @Override public void close() {
@@ -224,21 +207,13 @@ public final class ZiplineTestInternals {
     private static class GeneratedOutboundService
         implements EchoZiplineService {
       private final OutboundBridge.Context context;
-      private final KSerializer<EchoRequest> requestSerializer;
-      private final KSerializer<EchoResponse> responseSerializer;
 
       GeneratedOutboundService(OutboundBridge.Context context) {
         this.context = context;
-        this.requestSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoRequestKt);
-        this.responseSerializer
-          = (KSerializer) SerializersKt.serializer(context.getSerializersModule(), echoResponseKt);
       }
 
       @Override public EchoResponse echo(EchoRequest request) {
-        OutboundCall outboundCall = context.newCall("fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse", 1);
-        outboundCall.parameter(requestSerializer, request);
-        return outboundCall.invoke(this, responseSerializer);
+        return (EchoResponse) context.call(this, 0, request);
       }
 
       @Override public void close() {

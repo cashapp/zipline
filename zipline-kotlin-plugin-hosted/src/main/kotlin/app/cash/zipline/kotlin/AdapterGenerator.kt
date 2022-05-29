@@ -133,16 +133,7 @@ internal class AdapterGenerator(
     val serialNameProperty = irSerialNameProperty(adapterClass)
     adapterClass.declarations += serialNameProperty
 
-    val inboundBridgedInterface = BridgedInterface.create(
-      pluginContext,
-      messageCollector,
-      ziplineApis,
-      scope,
-      original,
-      "Zipline.take()",
-      original.defaultType
-    )
-    val outboundBridgedInterface = BridgedInterface.create(
+    val bridgedInterface = BridgedInterface.create(
       pluginContext,
       messageCollector,
       ziplineApis,
@@ -153,10 +144,10 @@ internal class AdapterGenerator(
     )
 
     var nextId = 0
-    val ziplineFunctionClasses = inboundBridgedInterface.bridgedFunctions.associateWith {
+    val ziplineFunctionClasses = bridgedInterface.bridgedFunctions.associateWith {
       irZiplineFunctionClass(
         "ZiplineFunction${nextId++}",
-        inboundBridgedInterface,
+        bridgedInterface,
         adapterClass,
         it,
       )
@@ -165,14 +156,14 @@ internal class AdapterGenerator(
     adapterClass.declarations += ziplineFunctionClasses.values
 
     val ziplineFunctionsFunction = irZiplineFunctionsFunction(
-      bridgedInterface = inboundBridgedInterface,
+      bridgedInterface = bridgedInterface,
       adapterClass = adapterClass,
       ziplineFunctionClasses = ziplineFunctionClasses
     )
 
-    val outboundServiceClass = irOutboundServiceClass(outboundBridgedInterface, adapterClass)
+    val outboundServiceClass = irOutboundServiceClass(bridgedInterface, adapterClass)
     val outboundServiceFunction = irOutboundServiceFunction(
-      bridgedInterface = outboundBridgedInterface,
+      bridgedInterface = bridgedInterface,
       adapterClass = adapterClass,
       outboundServiceClass = outboundServiceClass,
     )
@@ -484,9 +475,6 @@ internal class AdapterGenerator(
   // private class GeneratedOutboundService(
   //   private val context: OutboundBridge.Context
   // ) : SampleService {
-  //   private val serializer_0 = context.serializersModule.serializer<SampleRequest>()
-  //   private val serializer_1 = context.serializersModule.serializer<SampleResponse>()
-  //
   //   override fun ping(request: SampleRequest): SampleResponse { ... }
   // }
   private fun irOutboundServiceClass(
@@ -529,13 +517,9 @@ internal class AdapterGenerator(
     )
     outboundServiceClass.declarations += contextProperty
 
-    bridgedInterface.declareSerializerProperties(
-      outboundServiceClass,
-      constructor.valueParameters[0]
-    )
-
-    for (overridesList in bridgedInterface.bridgedFunctionsWithOverrides.values) {
+    for ((i, overridesList) in bridgedInterface.bridgedFunctionsWithOverrides.values.withIndex()) {
       outboundServiceClass.irBridgedFunction(
+        functionIndex = i,
         bridgedInterface = bridgedInterface,
         outboundContextProperty = contextProperty,
         overridesList = overridesList,
@@ -566,10 +550,14 @@ internal class AdapterGenerator(
   }
 
   private fun IrClass.irBridgedFunction(
+    functionIndex: Int,
     bridgedInterface: BridgedInterface,
     outboundContextProperty: IrProperty,
     overridesList: List<IrSimpleFunctionSymbol>,
   ): IrSimpleFunction {
+    // override fun ping(request: SampleRequest): SampleResponse {
+    //   return context.call(this, 0, request) as SampleResponse
+    // }
     val bridgedFunction = overridesList[0].owner
     val functionReturnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
     val result = addFunction {
@@ -593,6 +581,7 @@ internal class AdapterGenerator(
       }
     }
 
+    // return context.call(this, 0, request) as SampleResponse
     result.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = result.symbol
@@ -609,12 +598,6 @@ internal class AdapterGenerator(
         origin = IrDeclarationOrigin.DEFINED
       }
 
-      val newCall = irCall(ziplineApis.outboundBridgeContextNewCall).apply {
-        dispatchReceiver = irGet(contextLocal)
-        putValueArgument(0, irString(bridgedFunction.signature))
-        putValueArgument(1, irInt(bridgedFunction.valueParameters.size))
-      }
-
       // If this is the close() function, tell the OutboundContext that this instance is closed.
       //   context.close = true
       if (bridgedFunction.isZiplineClose()) {
@@ -624,63 +607,42 @@ internal class AdapterGenerator(
         }
       }
 
-      val outboundCallLocal = irTemporary(
-        value = newCall,
-        nameHint = "outboundCall",
-        isMutable = false
-      ).apply {
-        origin = IrDeclarationOrigin.DEFINED
-      }
-
-      // outboundCall.parameter<SampleRequest>(serializer_0, request)
-      for (valueParameter in result.valueParameters) {
-        val parameterType = bridgedInterface.resolveTypeParameters(valueParameter.type)
-        +irCall(callee = ziplineApis.outboundCallParameter).apply {
-          dispatchReceiver = irGet(outboundCallLocal)
-          putTypeArgument(0, parameterType)
-          putValueArgument(
-            0,
-            bridgedInterface.serializerExpression(
-              this@irFunctionBody,
-              parameterType,
-              result.dispatchReceiverParameter!!
-            )
-          )
-          putValueArgument(
-            1,
-            irGet(
-              type = valueParameter.type,
-              variable = valueParameter.symbol,
-            )
-          )
-        }
-      }
-
       // One of:
-      //   return outboundCall.<SampleResponse>invoke(serializer_2)
-      //   return outboundCall.<SampleResponse>invokeSuspending(serializer_2)
-      val invoke = when {
-        bridgedFunction.isSuspend -> ziplineApis.outboundCallInvokeSuspending
-        else -> ziplineApis.outboundCallInvoke
+      //   return context.call(service, index, arg0, arg1, arg2)
+      //   return context.callSuspending(service, index, arg0, arg1, arg2)
+      val callFunction = when {
+        bridgedFunction.isSuspend -> ziplineApis.outboundBridgeContextCallSuspending
+        else -> ziplineApis.outboundBridgeContextCall
       }
+      val call = irCall(callFunction).apply {
+        dispatchReceiver = irGet(contextLocal)
+        putValueArgument(
+          0,
+          irGet(result.dispatchReceiverParameter!!),
+        )
+        putValueArgument(
+          1,
+          irInt(functionIndex),
+        )
+        putValueArgument(
+          2,
+          irVararg(
+            elementType = pluginContext.symbols.any.defaultType.makeNullable(),
+            values = result.valueParameters.map {
+              irGet(
+                type = it.type,
+                variable = it.symbol,
+              )
+            }
+          )
+        )
+      }
+
       +irReturn(
-        value = irCall(callee = invoke).apply {
-          dispatchReceiver = irGet(outboundCallLocal)
+        value = irAs(
+          argument = call,
           type = functionReturnType
-          putTypeArgument(0, result.returnType)
-          putValueArgument(
-            0,
-            irGet(result.dispatchReceiverParameter!!)
-          )
-          putValueArgument(
-            1,
-            bridgedInterface.serializerExpression(
-              this@irFunctionBody,
-              functionReturnType,
-              result.dispatchReceiverParameter!!
-            )
-          )
-        },
+        ),
         returnTargetSymbol = result.symbol,
         type = pluginContext.irBuiltIns.nothingType,
       )

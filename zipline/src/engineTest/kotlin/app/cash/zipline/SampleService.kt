@@ -58,23 +58,12 @@ interface SampleService : ZiplineService {
         val sampleResponseSerializer = serializersModule.serializer<SampleResponse>()
         val unitSerializer = Unit.serializer()
         return listOf(
-          ZiplineFunction0(listOf(), unitSerializer),
-          ZiplineFunction1(listOf(sampleRequestSerializer), sampleResponseSerializer),
+          ZiplineFunction0(listOf(sampleRequestSerializer), sampleResponseSerializer),
+          ZiplineFunction1(listOf(), unitSerializer),
         )
       }
 
       class ZiplineFunction0(
-        argSerializers: List<KSerializer<*>>,
-        resultSerializer: KSerializer<*>,
-      ) : ZiplineFunction<SampleService>(
-        "fun close(): kotlin.Unit",
-        argSerializers,
-        resultSerializer,
-      ) {
-        override fun call(service: SampleService, args: List<*>): Any? = service.close()
-      }
-
-      class ZiplineFunction1(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
       ) : ZiplineFunction<SampleService>(
@@ -86,6 +75,17 @@ interface SampleService : ZiplineService {
           service.ping(args[0] as SampleRequest)
       }
 
+      class ZiplineFunction1(
+        argSerializers: List<KSerializer<*>>,
+        resultSerializer: KSerializer<*>,
+      ) : ZiplineFunction<SampleService>(
+        "fun close(): kotlin.Unit",
+        argSerializers,
+        resultSerializer,
+      ) {
+        override fun call(service: SampleService, args: List<*>): Any? = service.close()
+      }
+
       override fun outboundService(
         context: OutboundBridge.Context
       ): SampleService = GeneratedOutboundService(context)
@@ -93,19 +93,13 @@ interface SampleService : ZiplineService {
       private class GeneratedOutboundService(
         private val context: OutboundBridge.Context
       ) : SampleService {
-        private val requestSerializer = context.serializersModule.serializer<SampleRequest>()
-        private val responseSerializer = context.serializersModule.serializer<SampleResponse>()
-
         override fun ping(request: SampleRequest): SampleResponse {
-          val call = context.newCall("fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse", 1)
-          call.parameter(requestSerializer, request)
-          return call.invoke(this, responseSerializer)
+          return context.call(this, 0, request) as SampleResponse
         }
 
         override fun close() {
-          this.context.closed = true
-          val call = context.newCall("fun close(): kotlin.Unit", 0)
-          return call.invoke(this, Unit.serializer())
+          context.closed = true
+          return context.call(this, 1) as Unit
         }
       }
     }

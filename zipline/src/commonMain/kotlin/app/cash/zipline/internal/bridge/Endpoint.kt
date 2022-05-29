@@ -116,7 +116,8 @@ class Endpoint internal constructor(
     // Detect leaked old services when creating new services.
     detectLeaks()
 
-    val outboundContext: OutboundBridge.Context = newOutboundContext(name)
+    val ziplineFunctions = adapter.ziplineFunctions(json.serializersModule)
+    val outboundContext = newOutboundContext(name, ziplineFunctions)
     val result = adapter.outboundService(outboundContext)
     eventListener.takeService(name, result)
     trackLeaks(eventListener, name, outboundContext, result)
@@ -142,7 +143,10 @@ class Endpoint internal constructor(
     InboundBridge.Context(name, service, json, this)
 
   @PublishedApi
-  internal fun newOutboundContext(name: String) = OutboundBridge.Context(name, json, this)
+  internal fun newOutboundContext(
+    name: String,
+    ziplineFunctions: List<ZiplineFunction<*>>,
+  ) = OutboundBridge.Context(name, json, this, ziplineFunctions)
 
   internal inner class InboundService<T : ZiplineService>(
     val service: T,
