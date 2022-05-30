@@ -24,6 +24,9 @@ internal abstract class ZiplineFunction<T : ZiplineService>(
   val argSerializers: List<KSerializer<*>>,
   val resultSerializer: KSerializer<*>,
 ) {
+  val argsListSerializer = ArgsListSerializer(argSerializers)
+  val callResultSerializer = ResultSerializer(resultSerializer)
+
   open fun call(service: T, args: List<*>): Any? {
     error("unexpected call")
   }

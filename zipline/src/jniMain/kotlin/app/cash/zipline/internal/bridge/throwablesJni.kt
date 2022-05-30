@@ -38,7 +38,7 @@ internal actual fun toInboundThrowable(string: String): Throwable {
 
   val stackTrace = result.stackTrace
   for (i in stackTrace.size - 1 downTo 0) {
-    if (stackTrace[i].className == OutboundCall::class.qualifiedName) {
+    if (stackTrace[i].className == OutboundBridge.Context::class.qualifiedName) {
       result.stackTrace = stackTrace.sliceArray(i + 1 until stackTrace.size)
       break
     }

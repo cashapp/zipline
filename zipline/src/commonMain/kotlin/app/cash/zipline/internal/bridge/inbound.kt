@@ -17,9 +17,6 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineApiMismatchException
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.decodeFromStringFast
-import app.cash.zipline.internal.encodeToStringFast
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 
 /**
@@ -38,92 +35,13 @@ internal interface InboundBridge {
   }
 }
 
-/**
- * This class models a single call received from another Kotlin platform in the same process.
- *
- * Each use should call [parameter] once for each parameter of [funName], then [result] for the
- * function result. This will automatically decode parameters to the requested type and encode
- * results.
- *
- * Call [unexpectedFunction] if an unexpected function is encountered.
- */
-@PublishedApi
-internal class InboundCall(
-  val encodedArguments: Array<String>,
-) {
-  internal lateinit var context: InboundBridge.Context
-  val serviceName: String
-  val funName: String
-  val callbackName: String
-
-  private val arguments = ArrayList<Any?>(encodedArguments.size / 2)
-  private var callStartResult: Any? = null
-  private var i = 0
-
-  init {
-    var serviceName: String? = null
-    var funName: String? = null
-    var callbackName: String? = null
-    var skippedArguments = false
-    while (i < encodedArguments.size) {
-      when (encodedArguments[i]) {
-        LABEL_SERVICE_NAME -> serviceName = encodedArguments[i + 1]
-        LABEL_FUN_NAME -> funName = encodedArguments[i + 1]
-        LABEL_CALLBACK_NAME -> callbackName = encodedArguments[i + 1]
-        else -> skippedArguments = true
-      }
-      i += 2
-      if (serviceName != null && funName != null && callbackName != null) break
-    }
-
-    this.serviceName = serviceName!!
-    this.funName = funName!!
-    this.callbackName = callbackName!!
-    if (skippedArguments) i = 0
+fun unexpectedFunction(functionName: String?, supportedFunctionNames: Set<String>) = ZiplineApiMismatchException(
+  buildString {
+    appendLine("no such method (incompatible API versions?)")
+    appendLine("\tcalled:")
+    append("\t\t")
+    appendLine(functionName)
+    appendLine("\tavailable:")
+    supportedFunctionNames.joinTo(this, separator = "\n") { "\t\t$it" }
   }
-
-  fun <T> parameter(serializer: KSerializer<T>): T {
-    while (i < encodedArguments.size) {
-      val result = when (encodedArguments[i]) {
-        LABEL_VALUE -> context.json.decodeFromStringFast(serializer, encodedArguments[i + 1])
-        LABEL_NULL -> null as T
-        else -> {
-          // Ignore unknown argument.
-          i += 2
-          continue
-        }
-      }
-      arguments += result
-      i += 2
-      if (i == encodedArguments.size) {
-        callStartResult = context.endpoint.eventListener.callStart(context.name, context.service, funName, arguments)
-      }
-      return result
-    }
-    throw IllegalStateException("no such parameter")
-  }
-
-  fun <R> result(serializer: KSerializer<R>, value: R): Array<String> {
-    context.endpoint.eventListener.callEnd(context.name, context.service, funName, arguments, Result.success(value), callStartResult)
-    return when {
-      value != null -> arrayOf(LABEL_VALUE, context.json.encodeToStringFast(serializer, value))
-      else -> arrayOf(LABEL_NULL, "")
-    }
-  }
-
-  fun unexpectedFunction(supportedFunctionNames: List<String>): Array<String> = throw ZiplineApiMismatchException(
-    buildString {
-      appendLine("no such method (incompatible API versions?)")
-      appendLine("\tcalled:")
-      append("\t\t")
-      appendLine(funName)
-      appendLine("\tavailable:")
-      supportedFunctionNames.joinTo(this, separator = "\n") { "\t\t$it" }
-    }
-  )
-
-  fun resultException(e: Throwable): Array<String> {
-    context.endpoint.eventListener.callEnd(context.name, context.service, funName, arguments, Result.failure(e), callStartResult)
-    return arrayOf(LABEL_EXCEPTION, context.json.encodeToStringFast(ThrowableSerializer, e))
-  }
-}
+)
