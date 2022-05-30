@@ -168,9 +168,9 @@ Java_app_cash_zipline_JniCallChannel_serviceNamesArray(JNIEnv* env, jobject thiz
   return channel->serviceNamesArray(context, env);
 }
 
-extern "C" JNIEXPORT jobjectArray JNICALL
+extern "C" JNIEXPORT jstring JNICALL
 Java_app_cash_zipline_JniCallChannel_call(JNIEnv* env, jobject thiz, jlong _context,
-                                          jlong instance, jobjectArray encodedArguments) {
+                                          jlong instance, jstring callJson) {
   Context* context = reinterpret_cast<Context*>(_context);
   if (!context) {
     throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
@@ -183,7 +183,7 @@ Java_app_cash_zipline_JniCallChannel_call(JNIEnv* env, jobject thiz, jlong _cont
     return nullptr;
   }
 
-  return channel->call(context, env, encodedArguments);
+  return channel->call(context, env, callJson);
 }
 
 extern "C" JNIEXPORT jboolean JNICALL

@@ -53,12 +53,9 @@ internal class OutboundCallHandler(
     val encodedCall = endpoint.json.encodeToStringFast(endpoint.callSerializer, call)
 
     val callStart = endpoint.eventListener.callStart(call)
-    val encodedResult = endpoint.outboundChannel.call(arrayOf(encodedCall))
+    val encodedResult = endpoint.outboundChannel.call(encodedCall)
 
-    val result = endpoint.json.decodeFromStringFast(
-      function.callResultSerializer,
-      encodedResult.single(),
-    )
+    val result = endpoint.json.decodeFromStringFast(function.callResultSerializer, encodedResult)
     endpoint.eventListener.callEnd(call, result, callStart)
     return result.getOrThrow()
   }
@@ -95,7 +92,7 @@ internal class OutboundCallHandler(
           cancelCallback.cancel()
         }
 
-        endpoint.outboundChannel.call(arrayOf(encodedCall))
+        endpoint.outboundChannel.call(encodedCall)
       }
     }
   }

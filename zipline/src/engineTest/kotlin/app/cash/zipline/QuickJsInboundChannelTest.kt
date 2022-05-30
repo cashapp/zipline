@@ -43,7 +43,7 @@ class QuickJsInboundChannelTest {
       globalThis.$inboundChannelName = {};
       globalThis.$inboundChannelName.serviceNamesArray = function() {
       };
-      globalThis.$inboundChannelName.call = function(encodedArguments) {
+      globalThis.$inboundChannelName.call = function(jstring) {
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
       };
@@ -53,29 +53,14 @@ class QuickJsInboundChannelTest {
   @Test
   fun callHappyPath() {
     quickJs.evaluate("""
-      globalThis.$inboundChannelName.call = function(encodedArguments) {
-        var result = [
-          'received call()'
-        ];
-        result.push(...encodedArguments);
-        result.push('and the call was successful!');
-        return result;
+      globalThis.$inboundChannelName.call = function(callJson) {
+        return 'received call(' + callJson + ') and the call was successful!';
       };
     """.trimIndent())
 
     val inboundChannel = quickJs.getInboundChannel()
-    val result = inboundChannel.call(
-      encodedArguments = arrayOf("firstArg", "secondArg"),
-    )
-    assertContentEquals(
-      arrayOf(
-        "received call()",
-        "firstArg",
-        "secondArg",
-        "and the call was successful!",
-      ),
-      result,
-    )
+    val result = inboundChannel.call("firstArg")
+    assertEquals("received call(firstArg) and the call was successful!", result)
   }
 
   @Test
@@ -101,26 +86,22 @@ class QuickJsInboundChannelTest {
   @Test
   fun disconnectHappyPath() {
     quickJs.evaluate("""
-      var callLog = [];
-      globalThis.$inboundChannelName.call = function(instanceName, funName, encodedArguments) {
-        return callLog.pop();
+      var callLog = "";
+      globalThis.$inboundChannelName.call = function(callJson) {
+        var result = callLog;
+        callLog = "";
+        return result;
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
-        callLog.push(['disconnect', instanceName]);
+        callLog += 'disconnect(' + instanceName + ')';
         return true;
       };
     """.trimIndent())
 
     val inboundChannel = quickJs.getInboundChannel()
     assertTrue(inboundChannel.disconnect("service one"))
-    val result = inboundChannel.call(arrayOf())
-    assertContentEquals(
-      arrayOf(
-        "disconnect",
-        "service one",
-      ),
-      result,
-    )
+    val result = inboundChannel.call("")
+    assertEquals("disconnect(service one)", result)
   }
 
   @Test

@@ -52,22 +52,22 @@ jobjectArray InboundCallChannel::serviceNamesArray(Context *context, JNIEnv* env
   return javaResult;
 }
 
-jobjectArray InboundCallChannel::call(Context *context, JNIEnv* env,
-                                      jobjectArray encodedArguments) const {
+jstring InboundCallChannel::call(Context *context, JNIEnv* env,
+                                      jstring callJson) const {
   JSContext *jsContext = context->jsContext;
   JSValue global = JS_GetGlobalObject(jsContext);
   JSValue thisPointer = JS_GetProperty(jsContext, global, nameAtom);
   JSValueConst arguments[1];
-  arguments[0] = context->toJsStringArray(env, encodedArguments);
+  arguments[0] = context->toJsString(env, callJson);
 
   JSValue jsResult = JS_Invoke(jsContext, thisPointer, context->callAtom, 1, arguments);
-  jobjectArray javaResult;
+  jstring javaResult;
   auto tag = JS_VALUE_GET_NORM_TAG(jsResult);
   if (tag == JS_TAG_EXCEPTION) {
     context->throwJsException(env, jsResult);
     javaResult = nullptr;
-  } else if (tag == JS_TAG_OBJECT) {
-    javaResult = context->toJavaStringArray(env, jsResult);
+  } else if (tag == JS_TAG_STRING) {
+    javaResult = context->toJavaString(env, jsResult);
   } else {
     assert(false); // Unexpected tag.
   }

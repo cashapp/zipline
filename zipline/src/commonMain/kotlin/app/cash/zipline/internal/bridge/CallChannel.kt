@@ -36,7 +36,7 @@ internal interface CallChannel {
    * Kotlin/JS.
    */
   @JsName("call")
-  fun call(encodedArguments: Array<String>): Array<String>
+  fun call(callJson: String): String
 
   /**
    * Remove [instanceName] from the receiver. After making this call it is an error to make calls

@@ -19,10 +19,10 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 
 internal actual fun trackLeaks(
-    eventListener: EventListener,
-    serviceName: String,
-    callHandler: OutboundCallHandler,
-    service: ZiplineService
+  eventListener: EventListener,
+  serviceName: String,
+  callHandler: OutboundCallHandler,
+  service: ZiplineService
 ) {
   // TODO: can we implement this with ARC?
 }

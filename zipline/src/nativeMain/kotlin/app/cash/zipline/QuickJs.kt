@@ -348,9 +348,9 @@ actual class QuickJs private constructor(
 
   internal fun jsOutboundCall(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
     assert(argc == 1)
-    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as Array<String>
+    val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as String
     val result = outboundChannel!!.call(arg0)
-    return result.toJsValue()
+    return JS_NewString(context, result)
   }
 
   internal fun jsOutboundDisconnect(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {

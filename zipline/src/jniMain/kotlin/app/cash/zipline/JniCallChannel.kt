@@ -28,14 +28,14 @@ internal class JniCallChannel(
     instance: Long
   ): Array<String>
 
-  override fun call(encodedArguments: Array<String>) =
-    call(quickJs.context, instance, encodedArguments)
+  override fun call(callJson: String) =
+    call(quickJs.context, instance, callJson)
 
   private external fun call(
     context: Long,
     instance: Long,
-    encodedArguments: Array<String>,
-  ): Array<String>
+    callJson: String,
+  ): String
 
   override fun disconnect(instanceName: String): Boolean =
     disconnect(quickJs.context, instance, instanceName)

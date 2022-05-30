@@ -25,7 +25,7 @@ OutboundCallChannel::OutboundCallChannel(Context* c, JNIEnv* env, const char* na
       javaThis(env->NewGlobalRef(object)),
       callChannelClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("app/cash/zipline/internal/bridge/CallChannel")))),
       serviceNamesArrayMethod(env->GetMethodID(callChannelClass, "serviceNamesArray", "()[Ljava/lang/String;")),
-      callMethod(env->GetMethodID(callChannelClass, "call", "([Ljava/lang/String;)[Ljava/lang/String;")),
+      callMethod(env->GetMethodID(callChannelClass, "call", "(Ljava/lang/String;)Ljava/lang/String;")),
       disconnectMethod(env->GetMethodID(callChannelClass, "disconnect", "(Ljava/lang/String;)Z")) {
   functions.push_back(JS_CFUNC_DEF("serviceNamesArray", 0, OutboundCallChannel::serviceNamesArray));
   functions.push_back(JS_CFUNC_DEF("call", 1, OutboundCallChannel::call));
@@ -82,13 +82,13 @@ OutboundCallChannel::call(JSContext* ctx, JSValueConst this_val, int argc, JSVal
   auto env = context->getEnv();
   env->PushLocalFrame(argc + 1);
   jvalue args[1];
-  args[0].l = context->toJavaStringArray(env, argv[0]);
+  args[0].l = context->toJavaString(env, argv[0]);
 
-  jobjectArray javaResult = static_cast<jobjectArray>(env->CallObjectMethodA(
+  jstring javaResult = static_cast<jstring>(env->CallObjectMethodA(
       channel->javaThis, channel->callMethod, args));
   JSValue jsResult;
   if (!env->ExceptionCheck()) {
-    jsResult = context->toJsStringArray(env, javaResult);
+    jsResult = context->toJsString(env, javaResult);
   } else {
     jsResult = context->throwJavaExceptionFromJs(env);
   }
