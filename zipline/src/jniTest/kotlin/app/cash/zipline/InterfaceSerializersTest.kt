@@ -25,6 +25,7 @@ import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.serialization.SerializationException
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -97,7 +98,7 @@ class InterfaceSerializersTest {
       JvmMessageInterfaceService()
     )
 
-    val exception = assertFailsWith<QuickJsException> {
+    val exception = assertFailsWith<SerializationException> {
       ziplineNoSerializer.quickJs.evaluate(
         "testing.app.cash.zipline.testing.callInterfaceRequest()"
       )
@@ -112,7 +113,7 @@ class InterfaceSerializersTest {
       JvmMessageInterfaceService()
     )
 
-    val exception = assertFailsWith<QuickJsException> {
+    val exception = assertFailsWith<SerializationException> {
       ziplineNoSerializer.quickJs.evaluate(
         "testing.app.cash.zipline.testing.callInterfaceResponse()"
       )
