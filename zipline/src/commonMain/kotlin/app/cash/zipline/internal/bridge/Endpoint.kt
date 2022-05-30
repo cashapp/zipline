@@ -16,15 +16,10 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.EventListener
-import app.cash.zipline.ZiplineApiMismatchException
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
-import app.cash.zipline.internal.encodeToStringFast
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
-import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 
@@ -49,7 +44,7 @@ class Endpoint internal constructor(
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
 
-  internal val callSerializer = InternalCallSerializer(this)
+  internal val callSerializer = RealCallSerializer(this)
 
   /** This uses both Zipline-provided serializers and user-provided serializers. */
   internal val json: Json = Json {
@@ -93,8 +88,8 @@ class Endpoint internal constructor(
   ) {
     eventListener.bindService(name, service)
 
-    val functions: List<ZiplineFunction<T>> = adapter.ziplineFunctions(json.serializersModule)
-    inboundServices[name] = InboundService(name, service, functions)
+    val functions = adapter.ziplineFunctions(json.serializersModule)
+    inboundServices[name] = InboundService(service, this, functions)
   }
 
   fun <T : ZiplineService> take(name: String): T {
@@ -106,11 +101,11 @@ class Endpoint internal constructor(
     // Detect leaked old services when creating new services.
     detectLeaks()
 
-    val ziplineFunctions = adapter.ziplineFunctions(json.serializersModule)
-    val outboundContext = newOutboundContext(name, ziplineFunctions)
-    val result = adapter.outboundService(outboundContext)
+    val functions = adapter.ziplineFunctions(json.serializersModule)
+    val callHandler = OutboundCallHandler(name, this, functions)
+    val result = adapter.outboundService(callHandler)
     eventListener.takeService(name, result)
-    trackLeaks(eventListener, name, outboundContext, result)
+    trackLeaks(eventListener, name, callHandler, result)
     return result
   }
 
@@ -126,109 +121,5 @@ class Endpoint internal constructor(
   /** Derives the name of a [CancelCallback] from the name of a [SuspendCallback]. */
   internal fun cancelCallbackName(name: String): String {
     return "$name/cancel"
-  }
-
-  @PublishedApi
-  internal fun newOutboundContext(
-    name: String,
-    ziplineFunctions: List<ZiplineFunction<*>>,
-  ) = OutboundCallHandler(name, json, this, ziplineFunctions)
-
-  internal inner class InboundService<T : ZiplineService>(
-    private val serviceName: String,
-    private val service: T,
-    functionsList: List<ZiplineFunction<T>>,
-  ) {
-    val functions: Map<String, ZiplineFunction<T>> = functionsList.associateBy { it.name }
-
-    fun call(call: InternalCall): String {
-      // Removes the handler in calls to [ZiplineService.close]. We remove before dispatching so
-      // it'll always be removed even if the call stalls or throws.
-      if (call.functionName == "fun close(): kotlin.Unit") {
-        inboundServices.remove(call.serviceName)
-      }
-
-      val function = call.function as ZiplineFunction<ZiplineService>?
-      val args = call.args
-
-      val result: Result<Any?> = when {
-        function == null -> {
-          Result.failure(unexpectedFunction(call.functionName))
-        }
-        else -> {
-          val callStart = eventListener.callStart(serviceName, service, function.name, args)
-          val theResult = try {
-            val success = function.call(service, args)
-            Result.success(success)
-          } catch (e: Throwable) {
-            Result.failure(e)
-          }
-          eventListener.callEnd(serviceName, service, function.name, args, theResult, callStart)
-          theResult
-        }
-      }
-
-      return json.encodeToStringFast(
-        (call.function?.callResultSerializer ?: failureResultSerializer) as ResultSerializer<Any?>,
-        result,
-      )
-    }
-
-    fun callSuspending(call: InternalCall): Array<String> {
-      val suspendCallbackName = call.callbackName!!
-      val job = scope.launch {
-        val function = call.function as ZiplineFunction<ZiplineService>?
-        val args = call.args
-
-        val result: Result<Any?> = when {
-          function == null -> {
-            Result.failure(unexpectedFunction(call.functionName))
-          }
-          else -> {
-            val callStart = eventListener.callStart(serviceName, service, function.name, args)
-            val theResult = try {
-              val success = function.callSuspending(service, args)
-              Result.success(success)
-            } catch (e: Throwable) {
-              Result.failure(e)
-            }
-            eventListener.callEnd(serviceName, service, function.name, args, theResult, callStart)
-            theResult
-          }
-        }
-
-        val encodedResult = json.encodeToStringFast(
-          (call.function?.callResultSerializer ?: failureResultSerializer) as KSerializer<Any?>,
-          result,
-        )
-
-        scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
-        val suspendCallback = take<SuspendCallback>(suspendCallbackName)
-        suspendCallback.call(encodedResult)
-      }
-
-      val cancelCallbackName = cancelCallbackName(suspendCallbackName)
-      bind<CancelCallback>(cancelCallbackName, object : CancelCallback {
-        override fun cancel() {
-          job.cancel()
-        }
-      })
-      job.invokeOnCompletion {
-        remove(cancelCallbackName)
-      }
-
-      return arrayOf()
-    }
-
-    private fun unexpectedFunction(functionName: String?) = ZiplineApiMismatchException(
-      buildString {
-        appendLine("no such method (incompatible API versions?)")
-        appendLine("\tcalled:")
-        append("\t\t")
-        appendLine(functionName)
-        appendLine("\tavailable:")
-        functions.keys.joinTo(this, separator = "\n") { "\t\t$it" }
-      }
-    )
   }
 }

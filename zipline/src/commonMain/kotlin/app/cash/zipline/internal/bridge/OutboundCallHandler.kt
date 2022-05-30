@@ -22,7 +22,6 @@ import app.cash.zipline.internal.ziplineInternalPrefix
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import kotlinx.serialization.json.Json
 
 /**
  * Generated code uses this to make outbound calls.
@@ -30,72 +29,63 @@ import kotlinx.serialization.json.Json
 @PublishedApi
 internal class OutboundCallHandler(
   private val serviceName: String,
-  val json: Json,
-  @PublishedApi internal val endpoint: Endpoint,
-  private val ziplineFunctions: List<ZiplineFunction<*>>,
+  private val endpoint: Endpoint,
+  private val functionsList: List<ZiplineFunction<*>>,
 ) {
+  /** Used by generated code when closing a service. */
   var closed = false
 
+  /** Used by generated code to call a function. */
   fun call(
     service: ZiplineService,
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
-    val function = ziplineFunctions[functionIndex]
+    val function = functionsList[functionIndex]
     val argsList = args.toList()
-    val call = InternalCall(
+    val call = RealCall(
       serviceName = serviceName,
-      inboundService = null,
+      serviceOrNull = service,
       functionName = function.name,
       function = function,
-      callbackName = null,
       args = argsList
     )
-    val encodedCall = json.encodeToStringFast(endpoint.callSerializer, call)
+    val encodedCall = endpoint.json.encodeToStringFast(endpoint.callSerializer, call)
 
-    val callStart = endpoint.eventListener.callStart(serviceName, service, function.name, argsList)
+    val callStart = endpoint.eventListener.callStart(call)
     val encodedResult = endpoint.outboundChannel.call(arrayOf(encodedCall))
 
-    val result = json.decodeFromStringFast(function.callResultSerializer, encodedResult.single())
-    endpoint.eventListener.callEnd(
-      serviceName,
-      service,
-      function.name,
-      argsList,
-      result,
-      callStart
+    val result = endpoint.json.decodeFromStringFast(
+      function.callResultSerializer,
+      encodedResult.single(),
     )
+    endpoint.eventListener.callEnd(call, result, callStart)
     return result.getOrThrow()
   }
 
+  /** Used by generated code to call a suspending function. */
   suspend fun callSuspending(
     service: ZiplineService,
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
-    val function = ziplineFunctions[functionIndex]
+    val function = functionsList[functionIndex]
     val argsList = args.toList()
     val callbackName = endpoint.generateName(prefix = ziplineInternalPrefix)
-    val call = InternalCall(
+    val call = RealCall(
       serviceName = serviceName,
-      inboundService = null,
+      serviceOrNull = service,
       functionName = function.name,
       function = function,
       callbackName = callbackName,
       args = argsList
     )
-    val encodedCall = json.encodeToStringFast(endpoint.callSerializer, call)
-    val callStartResult =
-      endpoint.eventListener.callStart(serviceName, service, function.name, argsList)
+    val encodedCall = endpoint.json.encodeToStringFast(endpoint.callSerializer, call)
+    val callStart = endpoint.eventListener.callStart(call)
     return suspendCancellableCoroutine { continuation ->
       endpoint.incompleteContinuations += continuation
       endpoint.scope.launch {
-        val suspendCallback = RealSuspendCallback(
-          call = call,
-          service = service,
-          continuation = continuation,
-          callStartResult = callStartResult,
-        )
+        val suspendCallback = RealSuspendCallback(call, continuation, callStart)
         endpoint.bind<SuspendCallback>(callbackName, suspendCallback)
 
         continuation.invokeOnCancellation {
@@ -111,10 +101,9 @@ internal class OutboundCallHandler(
   }
 
   private inner class RealSuspendCallback<R>(
-    val call: InternalCall,
-    val service: ZiplineService,
+    val call: RealCall,
     val continuation: Continuation<R>,
-    val callStartResult: Any?,
+    val callStart: Any?,
   ) : SuspendCallback {
     /** True once this has been called. Used to prevent cancel-after-complete. */
     var completed = false
@@ -123,19 +112,12 @@ internal class OutboundCallHandler(
       completed = true
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
       endpoint.remove(call.callbackName!!)
-      val result = json.decodeFromStringFast(
+      val result = endpoint.json.decodeFromStringFast(
         call.function!!.callResultSerializer as ResultSerializer<R>,
         response
       )
       endpoint.incompleteContinuations -= continuation
-      endpoint.eventListener.callEnd(
-        name = serviceName,
-        service = service,
-        functionName = call.function.name,
-        args = call.args,
-        result = result,
-        callStartResult = callStartResult
-      )
+      endpoint.eventListener.callEnd(call, result, callStart)
       continuation.resumeWith(result)
     }
   }

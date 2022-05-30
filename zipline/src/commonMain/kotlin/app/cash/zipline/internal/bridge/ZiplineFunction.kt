@@ -27,6 +27,9 @@ internal abstract class ZiplineFunction<T : ZiplineService>(
   val argsListSerializer = ArgsListSerializer(argSerializers)
   val callResultSerializer = ResultSerializer(resultSerializer)
 
+  val isClose
+    get() = name == "fun close(): kotlin.Unit"
+
   open fun call(service: T, args: List<*>): Any? {
     error("unexpected call")
   }

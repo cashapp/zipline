@@ -38,12 +38,7 @@ abstract class EventListener {
    * @return any object. This value will be passed back to [callEnd] or [callFailed] when the call
    *     is completed. The base function always returns null.
    */
-  open fun callStart(
-    name: String,
-    service: ZiplineService,
-    functionName: String,
-    args: List<Any?>,
-  ): Any? {
+  open fun callStart(call: ZiplineCall): Any? {
     return null
   }
 
@@ -53,14 +48,7 @@ abstract class EventListener {
    * @param callStartResult the value returned by [callStart] for the start of this call. This is
    *     null unless [callStart] is overridden to return something else.
    */
-  open fun callEnd(
-    name: String,
-    service: ZiplineService,
-    functionName: String,
-    args: List<Any?>,
-    result: Result<Any?>,
-    callStartResult: Any?
-  ) {
+  open fun callEnd(call: ZiplineCall, result: Result<Any?>, callStartResult: Any?) {
   }
 
   /** Invoked when a service is garbage collected without being closed. */

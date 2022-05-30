@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineCall
+import app.cash.zipline.ZiplineService
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
@@ -27,13 +29,18 @@ import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.JsonDecoder
 
-internal class InternalCall(
-  val serviceName: String,
+internal class RealCall(
+  /** This is not-null, but may refer to a service that is not known by this endpoint. */
+  override val serviceName: String,
+
+  /** This is null for unknown services. */
+  val serviceOrNull: ZiplineService?,
 
   /** This is absent for outbound calls. */
-  val inboundService: Endpoint.InboundService<*>?,
+  val inboundService: InboundService<*>? = null,
 
-  val functionName: String,
+  /** This is not-null, but may refer to a function that is not known by this endpoint. */
+  override val functionName: String,
 
   /** This is null for unknown functions. */
   val function: ZiplineFunction<*>?,
@@ -43,10 +50,14 @@ internal class InternalCall(
    * array and the response is delivered to the [SuspendCallback]. Suspending calls may be canceled
    * before it returns by using the [CancelCallback].
    */
-  val callbackName: String?,
+  val callbackName: String? = null,
 
-  val args: List<*>,
-)
+  override val args: List<*>,
+) : ZiplineCall {
+  /** If this call gets far enough to notify events, the [serviceOrNull] is not null. */
+  override val service: ZiplineService
+    get() = serviceOrNull!!
+}
 
 /** This uses [Int] as a placeholder; in practice the element type depends on the argument type. */
 private val argsListDescriptor = ListSerializer(Int.serializer()).descriptor
@@ -63,18 +74,18 @@ internal val failureResultSerializer = ResultSerializer(Int.serializer())
  * This serializer is weird! Its args serializer is dependent on other properties. Therefore, it
  * (reasonably) assumes that JSON is decoded in the same order it's encoded.
  */
-internal class InternalCallSerializer(
+internal class RealCallSerializer(
   private val endpoint: Endpoint,
-) : KSerializer<InternalCall> {
+) : KSerializer<RealCall> {
 
-  override val descriptor = buildClassSerialDescriptor("InternalCall") {
+  override val descriptor = buildClassSerialDescriptor("RealCall") {
     element("service", String.serializer().descriptor)
     element("function", String.serializer().descriptor)
     element("callback", String.serializer().descriptor)
     element("args", argsListDescriptor)
   }
 
-  override fun serialize(encoder: Encoder, value: InternalCall) {
+  override fun serialize(encoder: Encoder, value: RealCall) {
     encoder.encodeStructure(descriptor) {
       encodeStringElement(descriptor, 0, value.serviceName)
       encodeStringElement(descriptor, 1, value.functionName)
@@ -85,10 +96,10 @@ internal class InternalCallSerializer(
     }
   }
 
-  override fun deserialize(decoder: Decoder): InternalCall {
+  override fun deserialize(decoder: Decoder): RealCall {
     return decoder.decodeStructure(descriptor) {
       var serviceName = ""
-      var inboundService: Endpoint.InboundService<*>? = null
+      var inboundService: InboundService<*>? = null
       var functionName = ""
       var function: ZiplineFunction<*>? = null
       var callbackName: String? = null
@@ -118,13 +129,14 @@ internal class InternalCallSerializer(
           else -> error("Unexpected index: $index")
         }
       }
-      return@decodeStructure InternalCall(
-        serviceName,
-        inboundService,
-        functionName,
-        function,
-        callbackName,
-        args
+      return@decodeStructure RealCall(
+        serviceName = serviceName,
+        serviceOrNull = inboundService?.service,
+        inboundService = inboundService,
+        functionName = functionName,
+        function = function,
+        callbackName = callbackName,
+        args = args
       )
     }
   }
