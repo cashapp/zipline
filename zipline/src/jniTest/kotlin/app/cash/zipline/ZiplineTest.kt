@@ -256,7 +256,6 @@ class ZiplineTest {
       	available:
       		fun echo(): app.cash.zipline.testing.EchoResponse
       		fun close(): kotlin.Unit
-     		at
       """.trimIndent()
     )
   }
@@ -276,7 +275,7 @@ class ZiplineTest {
         	available:
         		fun echo(): app.cash.zipline.testing.EchoResponse
         		fun close(): kotlin.Unit
-        	at
+            at
         """.trimIndent()
       )
   }

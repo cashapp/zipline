@@ -16,6 +16,7 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.EventListener
+import app.cash.zipline.ZiplineApiMismatchException
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
 import app.cash.zipline.internal.encodeToStringFast
@@ -93,10 +94,8 @@ class Endpoint internal constructor(
   ) {
     eventListener.bindService(name, service)
 
-    val context = newInboundContext(name, service)
-    val ziplineFunctions = adapter.ziplineFunctions(context.serializersModule)
-    val ziplineFunctionsMap = ziplineFunctions.associateBy { it.name }
-    inboundServices[name] = InboundService(service, context, ziplineFunctionsMap)
+    val functions: List<ZiplineFunction<T>> = adapter.ziplineFunctions(json.serializersModule)
+    inboundServices[name] = InboundService(name, service, functions)
   }
 
   fun <T : ZiplineService> take(name: String): T {
@@ -131,20 +130,18 @@ class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal fun newInboundContext(name: String, service: ZiplineService) =
-    InboundBridge.Context(name, service, json, this)
-
-  @PublishedApi
   internal fun newOutboundContext(
     name: String,
     ziplineFunctions: List<ZiplineFunction<*>>,
-  ) = OutboundBridge.Context(name, json, this, ziplineFunctions)
+  ) = OutboundCallHandler(name, json, this, ziplineFunctions)
 
   internal inner class InboundService<T : ZiplineService>(
+    val serviceName: String,
     val service: T,
-    val context: InboundBridge.Context,
-    val functions: Map<String, ZiplineFunction<T>>,
+    functionsList: List<ZiplineFunction<T>>,
   ) {
+    val functions: Map<String, ZiplineFunction<T>> = functionsList.associateBy { it.name }
+
     fun call(call: InboundCall): String {
       // Removes the handler in calls to [ZiplineService.close]. We remove before dispatching so
       // it'll always be removed even if the call stalls or throws.
@@ -153,12 +150,11 @@ class Endpoint internal constructor(
       }
 
       val function = call.function as ZiplineFunction<ZiplineService>?
-      val serviceName = call.serviceName!!
       val args = call.args
 
       val result: Result<Any?> = when {
         function == null || args == null -> {
-          Result.failure(unexpectedFunction(call.functionName, functions.keys))
+          Result.failure(unexpectedFunction(call.functionName))
         }
         else -> {
           val callStart = eventListener.callStart(serviceName, service, function.name, args)
@@ -173,7 +169,7 @@ class Endpoint internal constructor(
         }
       }
 
-      return context.json.encodeToStringFast(
+      return json.encodeToStringFast(
         (call.function?.callResultSerializer ?: failureResultSerializer) as ResultSerializer<Any?>,
         result,
       )
@@ -183,12 +179,11 @@ class Endpoint internal constructor(
       val suspendCallbackName = call.callbackName!!
       val job = scope.launch {
         val function = call.function as ZiplineFunction<ZiplineService>?
-        val serviceName = call.serviceName!!
         val args = call.args
 
         val result: Result<Any?> = when {
           function == null || args == null -> {
-            Result.failure(unexpectedFunction(call.functionName, functions.keys))
+            Result.failure(unexpectedFunction(call.functionName))
           }
           else -> {
             val callStart = eventListener.callStart(serviceName, service, function.name, args)
@@ -203,7 +198,7 @@ class Endpoint internal constructor(
           }
         }
 
-        val encodedResult = context.json.encodeToStringFast(
+        val encodedResult = json.encodeToStringFast(
           (call.function?.callResultSerializer ?: failureResultSerializer) as KSerializer<Any?>,
           result,
         )
@@ -225,5 +220,16 @@ class Endpoint internal constructor(
 
       return arrayOf()
     }
+
+    private fun unexpectedFunction(functionName: String?) = ZiplineApiMismatchException(
+      buildString {
+        appendLine("no such method (incompatible API versions?)")
+        appendLine("\tcalled:")
+        append("\t\t")
+        appendLine(functionName)
+        appendLine("\tavailable:")
+        functions.keys.joinTo(this, separator = "\n") { "\t\t$it" }
+      }
+    )
   }
 }

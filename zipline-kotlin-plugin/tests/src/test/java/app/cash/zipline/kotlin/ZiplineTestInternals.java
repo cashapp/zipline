@@ -15,8 +15,8 @@
  */
 package app.cash.zipline.kotlin;
 
+import app.cash.zipline.internal.bridge.OutboundCallHandler;
 import app.cash.zipline.internal.bridge.Endpoint;
-import app.cash.zipline.internal.bridge.OutboundBridge;
 import app.cash.zipline.internal.bridge.ZiplineFunction;
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
 import app.cash.zipline.testing.EchoRequest;
@@ -108,19 +108,19 @@ public final class ZiplineTestInternals {
       );
     }
 
-    @Override public EchoService outboundService(OutboundBridge.Context context) {
-      return new GeneratedOutboundService(context);
+    @Override public EchoService outboundService(OutboundCallHandler callHandler) {
+      return new GeneratedOutboundService(callHandler);
     }
 
     private static class GeneratedOutboundService implements EchoService {
-      private final OutboundBridge.Context context;
+      private final OutboundCallHandler callHandler;
 
-      GeneratedOutboundService(OutboundBridge.Context context) {
-        this.context = context;
+      GeneratedOutboundService(OutboundCallHandler callHandler) {
+        this.callHandler = callHandler;
       }
 
       @Override public EchoResponse echo(EchoRequest request) {
-        return (EchoResponse) context.call(this, 0, request);
+        return (EchoResponse) callHandler.call(this, 0, request);
       }
 
       @Override public void close() {
@@ -154,19 +154,19 @@ public final class ZiplineTestInternals {
         });
     }
 
-    @Override public GenericEchoService<String> outboundService(OutboundBridge.Context context) {
-      return new GeneratedOutboundService(context);
+    @Override public GenericEchoService<String> outboundService(OutboundCallHandler callHandler) {
+      return new GeneratedOutboundService(callHandler);
     }
 
     private static class GeneratedOutboundService implements GenericEchoService<String> {
-      private final OutboundBridge.Context context;
+      private final OutboundCallHandler callHandler;
 
-      GeneratedOutboundService(OutboundBridge.Context context) {
-        this.context = context;
+      GeneratedOutboundService(OutboundCallHandler callHandler) {
+        this.callHandler = callHandler;
       }
 
       @Override public List<String> genericEcho(String request) {
-        return (List<String>) context.call(this, 0, request);
+        return (List<String>) callHandler.call(this, 0, request);
       }
 
       @Override public void close() {
@@ -200,20 +200,20 @@ public final class ZiplineTestInternals {
     }
 
     @Override public EchoZiplineService outboundService(
-      OutboundBridge.Context context) {
-      return new GeneratedOutboundService(context);
+      OutboundCallHandler callHandler) {
+      return new GeneratedOutboundService(callHandler);
     }
 
     private static class GeneratedOutboundService
         implements EchoZiplineService {
-      private final OutboundBridge.Context context;
+      private final OutboundCallHandler callHandler;
 
-      GeneratedOutboundService(OutboundBridge.Context context) {
-        this.context = context;
+      GeneratedOutboundService(OutboundCallHandler callHandler) {
+        this.callHandler = callHandler;
       }
 
       @Override public EchoResponse echo(EchoRequest request) {
-        return (EchoResponse) context.call(this, 0, request);
+        return (EchoResponse) callHandler.call(this, 0, request);
       }
 
       @Override public void close() {

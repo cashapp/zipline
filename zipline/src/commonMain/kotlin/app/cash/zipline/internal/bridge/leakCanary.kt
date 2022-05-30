@@ -25,7 +25,7 @@ import app.cash.zipline.ZiplineService
 internal expect fun trackLeaks(
   eventListener: EventListener,
   name: String,
-  context: OutboundBridge.Context,
+  callHandler: OutboundCallHandler,
   service: ZiplineService
 )
 

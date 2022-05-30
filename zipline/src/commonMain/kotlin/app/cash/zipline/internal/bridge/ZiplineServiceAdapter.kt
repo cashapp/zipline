@@ -37,7 +37,7 @@ import kotlinx.serialization.modules.SerializersModule
   ): List<ZiplineFunction<T>>
 
   abstract fun outboundService(
-    context: OutboundBridge.Context
+    callHandler: OutboundCallHandler
   ): T
 
   override fun serialize(encoder: Encoder, value: T) {

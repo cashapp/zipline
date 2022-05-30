@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.OutboundBridge
+import app.cash.zipline.internal.bridge.OutboundCallHandler
 import app.cash.zipline.internal.bridge.ZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import kotlinx.serialization.KSerializer
@@ -87,19 +87,19 @@ interface SampleService : ZiplineService {
       }
 
       override fun outboundService(
-        context: OutboundBridge.Context
-      ): SampleService = GeneratedOutboundService(context)
+        callHandler: OutboundCallHandler
+      ): SampleService = GeneratedOutboundService(callHandler)
 
       private class GeneratedOutboundService(
-        private val context: OutboundBridge.Context
+        private val callHandler: OutboundCallHandler
       ) : SampleService {
         override fun ping(request: SampleRequest): SampleResponse {
-          return context.call(this, 0, request) as SampleResponse
+          return callHandler.call(this, 0, request) as SampleResponse
         }
 
         override fun close() {
-          context.closed = true
-          return context.call(this, 1) as Unit
+          callHandler.closed = true
+          return callHandler.call(this, 1) as Unit
         }
       }
     }

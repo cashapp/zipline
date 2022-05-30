@@ -99,24 +99,24 @@ internal class ZiplineApis(
       bridgeFqName.child("ZiplineFunction").child("callSuspending")
     ).single()
 
-  val outboundBridgeContextFqName = bridgeFqName.child("OutboundBridge").child("Context")
+  val outboundCallHandlerFqName = bridgeFqName.child("OutboundCallHandler")
 
-  val outboundBridgeContext: IrClassSymbol
-    get() = pluginContext.referenceClass(outboundBridgeContextFqName)!!
+  val outboundCallHandler: IrClassSymbol
+    get() = pluginContext.referenceClass(outboundCallHandlerFqName)!!
 
-  val outboundBridgeContextClosed: IrPropertySymbol
+  val outboundCallHandlerClosed: IrPropertySymbol
     get() = pluginContext.referenceProperties(
-      outboundBridgeContextFqName.child("closed")
+      outboundCallHandlerFqName.child("closed")
     ).single()
 
-  val outboundBridgeContextCall: IrSimpleFunctionSymbol
+  val outboundCallHandlerCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      outboundBridgeContextFqName.child("call")
+      outboundCallHandlerFqName.child("call")
     ).single()
 
-  val outboundBridgeContextCallSuspending: IrSimpleFunctionSymbol
+  val outboundCallHandlerCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      outboundBridgeContextFqName.child("callSuspending")
+      outboundCallHandlerFqName.child("callSuspending")
     ).single()
 
   val ziplineService: IrClassSymbol

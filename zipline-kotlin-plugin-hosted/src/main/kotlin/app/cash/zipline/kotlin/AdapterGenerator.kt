@@ -439,7 +439,7 @@ internal class AdapterGenerator(
     adapterClass: IrClass,
     outboundServiceClass: IrClass,
   ): IrSimpleFunction {
-    // override fun outboundService(context: OutboundBridge.Context): SampleService
+    // override fun outboundService(callHandler: OutboundCallHandler): SampleService
     val outboundServiceFunction = adapterClass.addFunction {
       initDefaults(original)
       name = ziplineApis.ziplineServiceAdapterOutboundService.owner.name
@@ -451,8 +451,8 @@ internal class AdapterGenerator(
       }
       addValueParameter {
         initDefaults(original)
-        name = Name.identifier("context")
-        type = ziplineApis.outboundBridgeContext.defaultType
+        name = Name.identifier("callHandler")
+        type = ziplineApis.outboundCallHandler.defaultType
       }
       overriddenSymbols = listOf(ziplineApis.ziplineServiceAdapterOutboundService)
     }
@@ -473,7 +473,7 @@ internal class AdapterGenerator(
   }
 
   // private class GeneratedOutboundService(
-  //   private val context: OutboundBridge.Context
+  //   private val callHandler: OutboundCallHandler
   // ) : SampleService {
   //   override fun ping(request: SampleRequest): SampleResponse { ... }
   // }
@@ -496,8 +496,8 @@ internal class AdapterGenerator(
     }.apply {
       addValueParameter {
         initDefaults(adapterClass)
-        name = Name.identifier("context")
-        type = ziplineApis.outboundBridgeContext.defaultType
+        name = Name.identifier("callHandler")
+        type = ziplineApis.outboundCallHandler.defaultType
       }
     }
     constructor.irConstructorBody(pluginContext) { statements ->
@@ -511,17 +511,17 @@ internal class AdapterGenerator(
       )
     }
 
-    val contextProperty = irOutboundContextProperty(
+    val callHandlerProperty = irCallHandlerProperty(
       outboundServiceClass,
       constructor.valueParameters[0]
     )
-    outboundServiceClass.declarations += contextProperty
+    outboundServiceClass.declarations += callHandlerProperty
 
     for ((i, overridesList) in bridgedInterface.bridgedFunctionsWithOverrides.values.withIndex()) {
       outboundServiceClass.irBridgedFunction(
         functionIndex = i,
         bridgedInterface = bridgedInterface,
-        outboundContextProperty = contextProperty,
+        callHandlerProperty = callHandlerProperty,
         overridesList = overridesList,
       )
     }
@@ -534,29 +534,29 @@ internal class AdapterGenerator(
     return outboundServiceClass
   }
 
-  // override val context: OutboundBridge.Context = context
-  private fun irOutboundContextProperty(
+  // override val callHandler: OutboundCallHandler = callHandler
+  private fun irCallHandlerProperty(
     outboundCallHandlerClass: IrClass,
-    irContextParameter: IrValueParameter
+    irCallHandlerParameter: IrValueParameter
   ): IrProperty {
     return irVal(
       pluginContext = pluginContext,
-      propertyType = ziplineApis.outboundBridgeContext.defaultType,
+      propertyType = ziplineApis.outboundCallHandler.defaultType,
       declaringClass = outboundCallHandlerClass,
-      propertyName = Name.identifier("context")
+      propertyName = Name.identifier("callHandler")
     ) {
-      irExprBody(irGet(irContextParameter))
+      irExprBody(irGet(irCallHandlerParameter))
     }
   }
 
   private fun IrClass.irBridgedFunction(
     functionIndex: Int,
     bridgedInterface: BridgedInterface,
-    outboundContextProperty: IrProperty,
+    callHandlerProperty: IrProperty,
     overridesList: List<IrSimpleFunctionSymbol>,
   ): IrSimpleFunction {
     // override fun ping(request: SampleRequest): SampleResponse {
-    //   return context.call(this, 0, request) as SampleResponse
+    //   return callHandler.call(this, 0, request) as SampleResponse
     // }
     val bridgedFunction = overridesList[0].owner
     val functionReturnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
@@ -581,41 +581,41 @@ internal class AdapterGenerator(
       }
     }
 
-    // return context.call(this, 0, request) as SampleResponse
+    // return callHandler.call(this, 0, request) as SampleResponse
     result.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = result.symbol
     ) {
-      val contextLocal = irTemporary(
+      val callHandlerLocal = irTemporary(
         value = irCall(
-          callee = outboundContextProperty.getter!!
+          callee = callHandlerProperty.getter!!
         ).apply {
           dispatchReceiver = irGet(result.dispatchReceiverParameter!!)
         },
-        nameHint = "context",
+        nameHint = "callHandler",
         isMutable = false
       ).apply {
         origin = IrDeclarationOrigin.DEFINED
       }
 
-      // If this is the close() function, tell the OutboundContext that this instance is closed.
-      //   context.close = true
+      // If this is the close() function, tell the OutboundCallHandler that this instance is closed.
+      //   callHandler.close = true
       if (bridgedFunction.isZiplineClose()) {
-        +irCall(ziplineApis.outboundBridgeContextClosed.owner.setter!!).apply {
-          dispatchReceiver = irGet(contextLocal)
+        +irCall(ziplineApis.outboundCallHandlerClosed.owner.setter!!).apply {
+          dispatchReceiver = irGet(callHandlerLocal)
           putValueArgument(0, irTrue())
         }
       }
 
       // One of:
-      //   return context.call(service, index, arg0, arg1, arg2)
-      //   return context.callSuspending(service, index, arg0, arg1, arg2)
+      //   return callHandler.call(service, index, arg0, arg1, arg2)
+      //   return callHandler.callSuspending(service, index, arg0, arg1, arg2)
       val callFunction = when {
-        bridgedFunction.isSuspend -> ziplineApis.outboundBridgeContextCallSuspending
-        else -> ziplineApis.outboundBridgeContextCall
+        bridgedFunction.isSuspend -> ziplineApis.outboundCallHandlerCallSuspending
+        else -> ziplineApis.outboundCallHandlerCall
       }
       val call = irCall(callFunction).apply {
-        dispatchReceiver = irGet(contextLocal)
+        dispatchReceiver = irGet(callHandlerLocal)
         putValueArgument(
           0,
           irGet(result.dispatchReceiverParameter!!),

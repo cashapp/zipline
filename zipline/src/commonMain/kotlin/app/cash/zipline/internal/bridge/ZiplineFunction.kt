@@ -21,8 +21,8 @@ import kotlinx.serialization.KSerializer
 @PublishedApi
 internal abstract class ZiplineFunction<T : ZiplineService>(
   val name: String,
-  val argSerializers: List<KSerializer<*>>,
-  val resultSerializer: KSerializer<*>,
+  argSerializers: List<KSerializer<*>>,
+  resultSerializer: KSerializer<*>,
 ) {
   val argsListSerializer = ArgsListSerializer(argSerializers)
   val callResultSerializer = ResultSerializer(resultSerializer)
