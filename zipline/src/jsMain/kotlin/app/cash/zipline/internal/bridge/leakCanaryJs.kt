@@ -34,11 +34,11 @@ val registry = run {
 
 internal actual fun trackLeaks(
   eventListener: EventListener,
-  name: String,
+  serviceName: String,
   callHandler: OutboundCallHandler,
   service: ZiplineService
 ) {
-  registry.register(service, ZiplineServiceReference(eventListener, name, callHandler))
+  registry.register(service, ZiplineServiceReference(eventListener, serviceName, callHandler))
 }
 
 internal actual fun detectLeaks() {

@@ -27,19 +27,15 @@ import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.JsonDecoder
 
-internal interface InternalCall
-
-internal class OutboundCall(
+internal class InternalCall(
   val serviceName: String,
-  val function: ZiplineFunction<*>,
-  val callbackName: String?,
-  val args: List<*>,
-) : InternalCall
 
-internal class InboundCall(
-  val serviceName: String?,
-  val service: Endpoint.InboundService<*>?,
-  val functionName: String?,
+  /** This is absent for outbound calls. */
+  val inboundService: Endpoint.InboundService<*>?,
+
+  val functionName: String,
+
+  /** This is null for unknown functions. */
   val function: ZiplineFunction<*>?,
 
   /**
@@ -48,8 +44,9 @@ internal class InboundCall(
    * before it returns by using the [CancelCallback].
    */
   val callbackName: String?,
-  val args: List<*>?,
-) : InternalCall
+
+  val args: List<*>,
+)
 
 /** This uses [Int] as a placeholder; in practice the element type depends on the argument type. */
 private val argsListDescriptor = ListSerializer(Int.serializer()).descriptor
@@ -57,6 +54,15 @@ private val argsListDescriptor = ListSerializer(Int.serializer()).descriptor
 /** This uses [Int] as a placeholder; it doesn't matter 'cause we're only encoding failures. */
 internal val failureResultSerializer = ResultSerializer(Int.serializer())
 
+/**
+ * Encode and decode calls using [ZiplineFunction.argsListSerializer].
+ *
+ * When serializing outbound calls the function instance is a member of the call. To deserialize
+ * inbound calls the function must be looked up from [endpoint] using the service and function name.
+ *
+ * This serializer is weird! Its args serializer is dependent on other properties. Therefore, it
+ * (reasonably) assumes that JSON is decoded in the same order it's encoded.
+ */
 internal class InternalCallSerializer(
   private val endpoint: Endpoint,
 ) : KSerializer<InternalCall> {
@@ -69,35 +75,33 @@ internal class InternalCallSerializer(
   }
 
   override fun serialize(encoder: Encoder, value: InternalCall) {
-    check(value is OutboundCall)
-
     encoder.encodeStructure(descriptor) {
       encodeStringElement(descriptor, 0, value.serviceName)
-      encodeStringElement(descriptor, 1, value.function.name)
+      encodeStringElement(descriptor, 1, value.functionName)
       if (value.callbackName != null) {
         encodeStringElement(descriptor, 2, value.callbackName)
       }
-      encodeSerializableElement(descriptor, 3, value.function.argsListSerializer, value.args)
+      encodeSerializableElement(descriptor, 3, value.function!!.argsListSerializer, value.args)
     }
   }
 
   override fun deserialize(decoder: Decoder): InternalCall {
     return decoder.decodeStructure(descriptor) {
-      var serviceName: String? = null
-      var service: Endpoint.InboundService<*>? = null
-      var functionName: String? = null
+      var serviceName = ""
+      var inboundService: Endpoint.InboundService<*>? = null
+      var functionName = ""
       var function: ZiplineFunction<*>? = null
       var callbackName: String? = null
-      var args: List<*>? = null
+      var args = listOf<Any?>()
       while (true) {
         when (val index = decodeElementIndex(descriptor)) {
           0 -> {
             serviceName = decodeStringElement(descriptor, index)
-            service = endpoint.inboundServices[serviceName]
+            inboundService = endpoint.inboundServices[serviceName]
           }
           1 -> {
             functionName = decodeStringElement(descriptor, index)
-            function = service?.functions?.get(functionName)
+            function = inboundService?.functions?.get(functionName)
           }
           2 -> {
             callbackName = decodeStringElement(descriptor, index)
@@ -114,9 +118,9 @@ internal class InternalCallSerializer(
           else -> error("Unexpected index: $index")
         }
       }
-      return@decodeStructure InboundCall(
+      return@decodeStructure InternalCall(
         serviceName,
-        service,
+        inboundService,
         functionName,
         function,
         callbackName,

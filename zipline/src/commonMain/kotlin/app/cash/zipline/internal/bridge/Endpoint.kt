@@ -49,7 +49,7 @@ class Endpoint internal constructor(
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
 
-  private val callSerializer = InternalCallSerializer(this)
+  internal val callSerializer = InternalCallSerializer(this)
 
   /** This uses both Zipline-provided serializers and user-provided serializers. */
   internal val json: Json = Json {
@@ -67,9 +67,8 @@ class Endpoint internal constructor(
     }
 
     override fun call(encodedArguments: Array<String>): Array<String> {
-      val call = json.decodeFromStringFast(callSerializer, encodedArguments.single()) as InboundCall
-
-      val service = call.service ?: error("no handler for ${call.serviceName}")
+      val call = json.decodeFromStringFast(callSerializer, encodedArguments.single())
+      val service = call.inboundService ?: error("no handler for ${call.serviceName}")
 
       return when {
         call.callbackName != null -> service.callSuspending(call)
@@ -136,13 +135,13 @@ class Endpoint internal constructor(
   ) = OutboundCallHandler(name, json, this, ziplineFunctions)
 
   internal inner class InboundService<T : ZiplineService>(
-    val serviceName: String,
-    val service: T,
+    private val serviceName: String,
+    private val service: T,
     functionsList: List<ZiplineFunction<T>>,
   ) {
     val functions: Map<String, ZiplineFunction<T>> = functionsList.associateBy { it.name }
 
-    fun call(call: InboundCall): String {
+    fun call(call: InternalCall): String {
       // Removes the handler in calls to [ZiplineService.close]. We remove before dispatching so
       // it'll always be removed even if the call stalls or throws.
       if (call.functionName == "fun close(): kotlin.Unit") {
@@ -153,7 +152,7 @@ class Endpoint internal constructor(
       val args = call.args
 
       val result: Result<Any?> = when {
-        function == null || args == null -> {
+        function == null -> {
           Result.failure(unexpectedFunction(call.functionName))
         }
         else -> {
@@ -175,14 +174,14 @@ class Endpoint internal constructor(
       )
     }
 
-    fun callSuspending(call: InboundCall): Array<String> {
+    fun callSuspending(call: InternalCall): Array<String> {
       val suspendCallbackName = call.callbackName!!
       val job = scope.launch {
         val function = call.function as ZiplineFunction<ZiplineService>?
         val args = call.args
 
         val result: Result<Any?> = when {
-          function == null || args == null -> {
+          function == null -> {
             Result.failure(unexpectedFunction(call.functionName))
           }
           else -> {
