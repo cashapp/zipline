@@ -23,11 +23,11 @@ import java.util.Collections.synchronizedSet
 
 internal actual fun trackLeaks(
   eventListener: EventListener,
-  name: String,
-  context: OutboundBridge.Context,
+  serviceName: String,
+  callHandler: OutboundCallHandler,
   service: ZiplineService
 ) {
-  allReferencesSet += ZiplineServiceReference(eventListener, name, context, service)
+  allReferencesSet += ZiplineServiceReference(eventListener, serviceName, callHandler, service)
 }
 
 internal actual fun detectLeaks() {
@@ -45,14 +45,14 @@ private val allReferencesQueue = ReferenceQueue<ZiplineService>()
 
 private class ZiplineServiceReference(
   private val eventListener: EventListener,
-  private val name: String,
-  private val context: OutboundBridge.Context,
+  private val serviceName: String,
+  private val callHandler: OutboundCallHandler,
   service: ZiplineService
 ) : PhantomReference<ZiplineService>(service, allReferencesQueue) {
   fun afterGc() {
     allReferencesSet.remove(this)
-    if (!context.closed) {
-      eventListener.serviceLeaked(name)
+    if (!callHandler.closed) {
+      eventListener.serviceLeaked(serviceName)
     }
   }
 }

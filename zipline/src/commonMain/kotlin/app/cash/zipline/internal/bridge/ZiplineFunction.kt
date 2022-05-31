@@ -15,18 +15,26 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
+import kotlinx.serialization.KSerializer
 
-internal actual fun trackLeaks(
-    eventListener: EventListener,
-    serviceName: String,
-    callHandler: OutboundCallHandler,
-    service: ZiplineService
+@PublishedApi
+internal abstract class ZiplineFunction<T : ZiplineService>(
+  val name: String,
+  argSerializers: List<KSerializer<*>>,
+  resultSerializer: KSerializer<*>,
 ) {
-  // TODO: can we implement this with ARC?
-}
+  val argsListSerializer = ArgsListSerializer(argSerializers)
+  val callResultSerializer = ResultSerializer(resultSerializer)
 
-internal actual fun detectLeaks() {
-  // TODO: can we implement this with ARC?
+  val isClose
+    get() = name == "fun close(): kotlin.Unit"
+
+  open fun call(service: T, args: List<*>): Any? {
+    error("unexpected call")
+  }
+
+  open suspend fun callSuspending(service: T, args: List<*>): Any? {
+    error("unexpected call")
+  }
 }

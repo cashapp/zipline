@@ -26,5 +26,5 @@ import app.cash.zipline.ZiplineService
  */
 @PublishedApi
 internal interface SuspendCallback : ZiplineService {
-  fun call(response: Array<String>)
+  fun call(response: String)
 }

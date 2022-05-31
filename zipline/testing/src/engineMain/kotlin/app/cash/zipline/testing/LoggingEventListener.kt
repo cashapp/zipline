@@ -16,6 +16,7 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.EventListener
+import app.cash.zipline.ZiplineCall
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.ziplineInternalPrefix
 
@@ -37,31 +38,19 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun callStart(
-    name: String,
-    service: ZiplineService,
-    functionName: String,
-    args: List<Any?>
-  ): Any {
+  override fun callStart(call: ZiplineCall): Any? {
     val callId = nextCallId++
     log += LogEntry(
-      serviceName = name,
-      log = "callStart $callId $name $functionName $args"
+      serviceName = call.serviceName,
+      log = "callStart $callId ${call.serviceName} ${call.functionName} ${call.args}"
     )
     return callId
   }
 
-  override fun callEnd(
-    name: String,
-    service: ZiplineService,
-    functionName: String,
-    args: List<Any?>,
-    result: Result<Any?>,
-    callStartResult: Any?
-  ) {
+  override fun callEnd(call: ZiplineCall, result: Result<Any?>, callStartResult: Any?) {
     log += LogEntry(
-      serviceName = name,
-      log = "callEnd $callStartResult $name $functionName $args $result"
+      serviceName = call.serviceName,
+      log = "callEnd $callStartResult ${call.serviceName} ${call.functionName} ${call.args} $result"
     )
   }
 

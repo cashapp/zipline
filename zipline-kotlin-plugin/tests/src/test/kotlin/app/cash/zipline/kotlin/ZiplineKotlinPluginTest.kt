@@ -23,11 +23,9 @@ import app.cash.zipline.testing.GenericEchoService
 import com.google.common.truth.Truth.assertThat
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
-import java.lang.reflect.ParameterizedType
 import kotlin.test.assertEquals
 import kotlinx.serialization.KSerializer
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
-import org.jetbrains.kotlin.descriptors.runtime.structure.parameterizedTypeArguments
 import org.junit.Ignore
 import org.junit.Test
 
@@ -298,15 +296,6 @@ class ZiplineKotlinPluginTest {
       )
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
-
-    val callHandlerClass = result.classLoader.loadClass(
-      "app.cash.zipline.testing.SampleService\$Companion\$Adapter\$GeneratedInboundCallHandler"
-    )
-    assertThat(callHandlerClass).isNotNull()
-    assertThat(callHandlerClass.declaredFields.map {
-      val parameterizedType = it.genericType as? ParameterizedType ?: return@map null
-      parameterizedType.parameterizedTypeArguments[0].typeName
-    }).contains("kotlinx.coroutines.flow.Flow<app.cash.zipline.testing.EchoResponse>")
   }
 }
 

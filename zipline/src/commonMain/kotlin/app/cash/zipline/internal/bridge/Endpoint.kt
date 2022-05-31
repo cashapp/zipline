@@ -17,10 +17,9 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
+import app.cash.zipline.internal.decodeFromStringFast
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 
@@ -34,16 +33,18 @@ class Endpoint internal constructor(
   internal val eventListener: EventListener,
   internal val outboundChannel: CallChannel,
 ) {
-  internal val inboundHandlers = mutableMapOf<String, InboundCallHandler>()
+  internal val inboundServices = mutableMapOf<String, InboundService<*>>()
   private var nextId = 1
 
   internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
 
   val serviceNames: Set<String>
-    get() = inboundHandlers.keys.toSet()
+    get() = inboundServices.keys.toSet()
 
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
+
+  internal val callSerializer = RealCallSerializer(this)
 
   /** This uses both Zipline-provided serializers and user-provided serializers. */
   internal val json: Json = Json {
@@ -61,64 +62,17 @@ class Endpoint internal constructor(
     }
 
     override fun call(encodedArguments: Array<String>): Array<String> {
-      val inboundCall = InboundCall(encodedArguments)
-      val handler = takeHandler(inboundCall.serviceName, inboundCall.funName)
-      inboundCall.context = handler.context
+      val call = json.decodeFromStringFast(callSerializer, encodedArguments.single())
+      val service = call.inboundService ?: error("no handler for ${call.serviceName}")
 
       return when {
-        inboundCall.callbackName.isNotEmpty() -> callSuspending(inboundCall, handler)
-        else -> call(inboundCall, handler)
+        call.callbackName != null -> service.callSuspending(call)
+        else -> arrayOf(service.call(call))
       }
-    }
-
-    private fun call(call: InboundCall, handler: InboundCallHandler): Array<String> {
-      return try {
-        handler.call(call)
-      } catch (e: Throwable) {
-        call.resultException(e)
-      }
-    }
-
-    private fun callSuspending(call: InboundCall, handler: InboundCallHandler): Array<String> {
-      val suspendCallbackName = call.callbackName
-      val job = scope.launch {
-        val result = try {
-          handler.callSuspending(call)
-        } catch (e: Exception) {
-          call.resultException(e)
-        }
-        scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
-        val suspendCallback = take<SuspendCallback>(suspendCallbackName)
-        suspendCallback.call(result)
-      }
-
-      val cancelCallbackName = cancelCallbackName(suspendCallbackName)
-      bind<CancelCallback>(cancelCallbackName, object : CancelCallback {
-        override fun cancel() {
-          job.cancel()
-        }
-      })
-      job.invokeOnCompletion {
-        remove(cancelCallbackName)
-      }
-
-      return arrayOf()
-    }
-
-    /**
-     * Note that this removes the handler for calls to is [ZiplineService.close]. We remove before
-     * dispatching so it'll always be removed even if the call stalls or throws.
-     */
-    private fun takeHandler(instanceName: String, funName: String): InboundCallHandler {
-      val result = when (funName) {
-        "fun close(): kotlin.Unit" -> inboundHandlers.remove(instanceName)
-        else -> inboundHandlers[instanceName]
-      }
-      return result ?: error("no handler for $instanceName")
     }
 
     override fun disconnect(instanceName: String): Boolean {
-      return inboundHandlers.remove(instanceName) != null
+      return inboundServices.remove(instanceName) != null
     }
   }
 
@@ -133,7 +87,9 @@ class Endpoint internal constructor(
     adapter: ZiplineServiceAdapter<T>
   ) {
     eventListener.bindService(name, service)
-    inboundHandlers[name] = adapter.inboundCallHandler(service, newInboundContext(name, service))
+
+    val functions = adapter.ziplineFunctions(json.serializersModule)
+    inboundServices[name] = InboundService(service, this, functions)
   }
 
   fun <T : ZiplineService> take(name: String): T {
@@ -145,16 +101,17 @@ class Endpoint internal constructor(
     // Detect leaked old services when creating new services.
     detectLeaks()
 
-    val outboundContext: OutboundBridge.Context = newOutboundContext(name)
-    val result = adapter.outboundService(outboundContext)
+    val functions = adapter.ziplineFunctions(json.serializersModule)
+    val callHandler = OutboundCallHandler(name, this, functions)
+    val result = adapter.outboundService(callHandler)
     eventListener.takeService(name, result)
-    trackLeaks(eventListener, name, outboundContext, result)
+    trackLeaks(eventListener, name, callHandler, result)
     return result
   }
 
   @PublishedApi
-  internal fun remove(name: String): InboundCallHandler? {
-    return inboundHandlers.remove(name)
+  internal fun remove(name: String): InboundService<*>? {
+    return inboundServices.remove(name)
   }
 
   internal fun generateName(prefix: String): String {
@@ -165,11 +122,4 @@ class Endpoint internal constructor(
   internal fun cancelCallbackName(name: String): String {
     return "$name/cancel"
   }
-
-  @PublishedApi
-  internal fun newInboundContext(name: String, service: ZiplineService) =
-    InboundBridge.Context(name, service, json, this)
-
-  @PublishedApi
-  internal fun newOutboundContext(name: String) = OutboundBridge.Context(name, json, this)
 }
