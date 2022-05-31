@@ -61,13 +61,13 @@ class Endpoint internal constructor(
       return serviceNames.toTypedArray()
     }
 
-    override fun call(encodedArguments: Array<String>): Array<String> {
-      val call = json.decodeFromStringFast(callSerializer, encodedArguments.single())
+    override fun call(callJson: String): String {
+      val call = json.decodeFromStringFast(callSerializer, callJson)
       val service = call.inboundService ?: error("no handler for ${call.serviceName}")
 
       return when {
         call.callbackName != null -> service.callSuspending(call)
-        else -> arrayOf(service.call(call))
+        else -> service.call(call)
       }
     }
 

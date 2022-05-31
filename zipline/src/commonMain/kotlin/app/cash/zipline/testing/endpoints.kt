@@ -35,8 +35,8 @@ internal fun newEndpointPair(
         return b.inboundChannel.serviceNamesArray()
       }
 
-      override fun call(encodedArguments: Array<String>): Array<String> {
-        return b.inboundChannel.call(encodedArguments)
+      override fun call(callJson: String): String {
+        return b.inboundChannel.call(callJson)
       }
 
       override fun disconnect(instanceName: String): Boolean {

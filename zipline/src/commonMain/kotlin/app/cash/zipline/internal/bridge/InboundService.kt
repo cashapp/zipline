@@ -64,7 +64,7 @@ internal class InboundService<T : ZiplineService>(
     )
   }
 
-  fun callSuspending(call: RealCall): Array<String> {
+  fun callSuspending(call: RealCall): String {
     val suspendCallbackName = call.callbackName!!
     val job = endpoint.scope.launch {
       val function = call.function as ZiplineFunction<ZiplineService>?
@@ -107,7 +107,7 @@ internal class InboundService<T : ZiplineService>(
       endpoint.remove(cancelCallbackName)
     }
 
-    return arrayOf()
+    return ""
   }
 
   private fun unexpectedFunction(functionName: String?) = ZiplineApiMismatchException(
