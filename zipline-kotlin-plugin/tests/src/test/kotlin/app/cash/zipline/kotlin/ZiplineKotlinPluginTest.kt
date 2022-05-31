@@ -26,7 +26,6 @@ import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
 import kotlinx.serialization.KSerializer
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
-import org.junit.Ignore
 import org.junit.Test
 
 /** Confirm bridge calls are rewritten to use `OutboundBridge` or `InboundBridge` as appropriate. */
@@ -176,7 +175,6 @@ class ZiplineKotlinPluginTest {
   }
 
   @Test
-  @Ignore("generics are broken after the ZiplineService refactoring")
   fun `generic service`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(
@@ -212,7 +210,6 @@ class ZiplineKotlinPluginTest {
   }
 
   @Test
-  @Ignore("generics are broken after the ZiplineService refactoring")
   fun `generic client`() {
     val result = compile(
       sourceFile = SourceFile.kotlin(

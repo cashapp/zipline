@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.IrStatementsBuilder
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.declarations.IrVariable
@@ -34,7 +35,7 @@ import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
-import org.jetbrains.kotlin.ir.types.typeWith
+import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -89,17 +90,25 @@ internal class BridgedInterface(
   fun declareSerializerTemporaries(
     statementsBuilder: IrStatementsBuilder<*>,
     serializersModuleParameter: IrValueParameter,
+    typesExpression: IrVariable,
   ): Map<IrType, IrVariable> {
-    return serializedTypes().associateWith {
-      statementsBuilder.irTemporary(
-        value = statementsBuilder.serializerExpression(it, serializersModuleParameter),
+    val result = mutableMapOf<IrType, IrVariable>()
+    for ((typeIndex, serializedType) in serializedTypes().withIndex()) {
+      result[serializedType] = statementsBuilder.irTemporary(
+        value = statementsBuilder.serializerExpression(
+          type = serializedType,
+          serializersModuleParameter = serializersModuleParameter,
+          typeIndex = typeIndex,
+          typesExpression = typesExpression,
+        ),
         nameHint = "serializer",
         isMutable = false,
       )
     }
+    return result
   }
 
-  private fun serializedTypes(): MutableSet<IrType> {
+  fun serializedTypes(): Set<IrType> {
     val serializedTypes = mutableSetOf<IrType>()
     for (bridgedFunction in bridgedFunctions) {
       for (valueParameter in bridgedFunction.owner.valueParameters) {
@@ -113,8 +122,9 @@ internal class BridgedInterface(
   private fun IrBuilderWithScope.serializerExpression(
     type: IrType,
     serializersModuleParameter: IrValueParameter,
+    typeIndex: Int = -1,
+    typesExpression: IrVariable? = null,
   ): IrExpression {
-    val kSerializerOfT = ziplineApis.kSerializer.typeWith(type)
     when {
       type.isSubtypeOfClass(ziplineApis.ziplineService) -> {
         // EchoService.Companion.Adapter
@@ -127,26 +137,41 @@ internal class BridgedInterface(
           ziplineApis,
           this@BridgedInterface.scope,
           type.getClass()!!,
-        ).adapterExpression()
+        ).adapterExpression(type as IrSimpleType)
       }
 
+      // TODO(jwilson): change flows to use type parameters, then make typesExpression non-nullable.
       type.classFqName == ziplineApis.flowFqName -> {
         // flowSerializer<Message>(context.serializersModule.serializer<Message>())
         val flowType = (type as IrSimpleType).arguments[0] as IrType
         return irCall(
           callee = ziplineApis.flowSerializerFunction,
-          type = kSerializerOfT,
+          type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
           putTypeArgument(0, flowType)
           putValueArgument(0, serializerExpression(flowType, serializersModuleParameter))
         }
       }
 
+      typesExpression != null -> {
+        // serializersModule.serializer(types.get(typeIndex))
+        return irCall(
+          callee = ziplineApis.serializerFunctionValueParam,
+          type = ziplineApis.kSerializer.starProjectedType,
+        ).apply {
+          putValueArgument(0, irCall(ziplineApis.listGetFunction).apply {
+            dispatchReceiver = irGet(typesExpression)
+            putValueArgument(0, irInt(typeIndex))
+          })
+          extensionReceiver = irGet(serializersModuleParameter)
+        }
+      }
+
       else -> {
         // serializersModule.serializer<EchoRequest>()
         return irCall(
-          callee = ziplineApis.serializerFunction,
-          type = kSerializerOfT,
+          callee = ziplineApis.serializerFunctionTypeParam,
+          type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
           putTypeArgument(0, type)
           extensionReceiver = irGet(serializersModuleParameter)

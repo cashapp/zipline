@@ -22,6 +22,7 @@ import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.functions
@@ -46,12 +47,17 @@ internal class ZiplineApis(
   private val endpointFqName = bridgeFqName.child("Endpoint")
   val flowFqName = FqName("kotlinx.coroutines.flow").child("Flow")
   private val collectionsFqName = FqName("kotlin.collections")
+  private val reflectFqName = FqName("kotlin.reflect")
+  private val ktypeFqName = reflectFqName.child("KType")
 
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!
 
   val kSerializer: IrClassSymbol
     get() = pluginContext.referenceClass(serializationFqName.child("KSerializer"))!!
+
+  val kType: IrClassSymbol
+    get() = pluginContext.referenceClass(ktypeFqName)!!
 
   val serializersModule: IrClassSymbol
     get() = pluginContext.referenceClass(serializersModuleFqName)!!
@@ -65,12 +71,24 @@ internal class ZiplineApis(
   val listOfKSerializerStar: IrSimpleType
     get() = list.typeWith(kSerializer.starProjectedType)
 
-  val serializerFunction: IrSimpleFunctionSymbol
+  val listOfKType: IrSimpleType
+    get() = list.typeWith(kType.defaultType)
+
+  val serializerFunctionTypeParam: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(serializationFqName.child("serializer"))
       .single {
         it.owner.extensionReceiverParameter?.type?.classFqName == serializersModuleFqName &&
           it.owner.valueParameters.isEmpty() &&
           it.owner.typeParameters.size == 1
+      }
+
+  val serializerFunctionValueParam: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(serializationFqName.child("serializer"))
+      .single {
+        it.owner.extensionReceiverParameter?.type?.classFqName == serializersModuleFqName &&
+          it.owner.valueParameters.size == 1 &&
+          it.owner.valueParameters[0].type.classFqName == ktypeFqName &&
+          it.owner.typeParameters.isEmpty()
       }
 
   val flowSerializerFunction: IrSimpleFunctionSymbol
@@ -80,6 +98,10 @@ internal class ZiplineApis(
   val listOfFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(collectionsFqName.child("listOf"))
       .single { it.owner.valueParameters.firstOrNull()?.isVararg == true }
+
+  val typeOfFunction: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(reflectFqName.child("typeOf"))
+      .single()
 
   val listGetFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
