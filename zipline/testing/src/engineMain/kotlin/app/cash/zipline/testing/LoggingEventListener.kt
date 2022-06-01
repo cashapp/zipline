@@ -18,6 +18,8 @@ package app.cash.zipline.testing
 import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineCall
 import app.cash.zipline.ZiplineService
+import app.cash.zipline.internal.bridge.CancelCallback
+import app.cash.zipline.internal.bridge.SuspendCallback
 import app.cash.zipline.internal.ziplineInternalPrefix
 
 class LoggingEventListener : EventListener() {
@@ -25,14 +27,16 @@ class LoggingEventListener : EventListener() {
   private val log = ArrayDeque<LogEntry>()
 
   override fun bindService(name: String, service: ZiplineService) {
-    log += LogEntry(
+    log(
+      service = service,
       serviceName = name,
       log = "bindService $name"
     )
   }
 
   override fun takeService(name: String, service: ZiplineService) {
-    log += LogEntry(
+    log(
+      service = service,
       serviceName = name,
       log = "takeService $name"
     )
@@ -40,7 +44,8 @@ class LoggingEventListener : EventListener() {
 
   override fun callStart(call: ZiplineCall): Any? {
     val callId = nextCallId++
-    log += LogEntry(
+    log(
+      service = call.service,
       serviceName = call.serviceName,
       log = "callStart $callId ${call.serviceName} ${call.functionName} ${call.args}"
     )
@@ -48,28 +53,29 @@ class LoggingEventListener : EventListener() {
   }
 
   override fun callEnd(call: ZiplineCall, result: Result<Any?>, callStartResult: Any?) {
-    log += LogEntry(
+    log(
+      service = call.service,
       serviceName = call.serviceName,
       log = "callEnd $callStartResult ${call.serviceName} ${call.functionName} ${call.args} $result"
     )
   }
 
   override fun serviceLeaked(name: String) {
-    log += LogEntry(
+    log(
       serviceName = name,
       log = "serviceLeaked $name"
     )
   }
 
   override fun applicationLoadStart(applicationName: String, manifestUrl: String?) {
-    log += LogEntry(
+    log(
       applicationName = applicationName,
       log = "applicationLoadStart $applicationName $manifestUrl"
     )
   }
 
   override fun applicationLoadEnd(applicationName: String, manifestUrl: String?) {
-    log += LogEntry(
+    log(
       applicationName = applicationName,
       log = "applicationLoadEnd $applicationName $manifestUrl"
     )
@@ -80,35 +86,35 @@ class LoggingEventListener : EventListener() {
     manifestUrl: String?,
     exception: Exception
   ) {
-    log += LogEntry(
+    log(
       applicationName = applicationName,
       log = "applicationLoadFailed $applicationName $exception"
     )
   }
 
   override fun downloadStart(applicationName: String, url: String) {
-    log += LogEntry(
+    log(
       applicationName = applicationName,
       log = "downloadStart $applicationName $url"
     )
   }
 
   override fun downloadEnd(applicationName: String, url: String) {
-    log += LogEntry(
+    log(
       applicationName = applicationName,
       log = "downloadEnd $applicationName $url"
     )
   }
 
   override fun downloadFailed(applicationName: String, url: String, exception: Exception) {
-    log += LogEntry(
+    log(
       applicationName = applicationName,
       log = "downloadFailed $applicationName $url $exception"
     )
   }
 
   override fun manifestParseFailed(applicationName: String, url: String?, exception: Exception) {
-    log += LogEntry(
+    log(
       applicationName = applicationName,
       log = "manifestParseFailed $applicationName $url"
     )
@@ -141,9 +147,22 @@ class LoggingEventListener : EventListener() {
     }
   }
 
+  private fun log(
+    service: ZiplineService? = null,
+    serviceName: String? = null,
+    applicationName: String? = null,
+    log: String
+  ) {
+    val isInternalService = service is CancelCallback ||
+      service is SuspendCallback<*> ||
+      serviceName?.startsWith(ziplineInternalPrefix) == true
+    this.log += LogEntry(serviceName, applicationName, isInternalService, log)
+  }
+
   data class LogEntry(
-    val serviceName: String? = null,
-    val applicationName: String? = null,
+    val serviceName: String?,
+    val applicationName: String?,
+    val isInternalService: Boolean,
     val log: String
   ) {
     fun matches(
@@ -151,9 +170,10 @@ class LoggingEventListener : EventListener() {
       skipApplicationEvents: Boolean,
       skipInternalServices: Boolean,
     ) : Boolean {
-      return (!skipServiceEvents || serviceName == null) &&
-        (!skipApplicationEvents || applicationName == null) &&
-        (!skipInternalServices || serviceName?.startsWith(ziplineInternalPrefix) != true)
+      val skip = (skipServiceEvents && serviceName != null)
+        || (skipApplicationEvents && applicationName != null)
+        || (skipInternalServices && isInternalService)
+      return !skip
     }
   }
 }

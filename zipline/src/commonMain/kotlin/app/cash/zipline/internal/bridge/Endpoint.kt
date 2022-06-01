@@ -66,7 +66,7 @@ class Endpoint internal constructor(
       val service = call.inboundService ?: error("no handler for ${call.serviceName}")
 
       return when {
-        call.callbackName != null -> service.callSuspending(call)
+        call.suspendCallback != null -> service.callSuspending(call, call.suspendCallback)
         else -> service.call(call)
       }
     }
@@ -112,6 +112,18 @@ class Endpoint internal constructor(
   @PublishedApi
   internal fun remove(name: String): InboundService<*>? {
     return inboundServices.remove(name)
+  }
+
+  @PublishedApi
+  internal fun remove(service: ZiplineService) {
+    val i = inboundServices.values.iterator()
+    while (i.hasNext()) {
+      val inboundService = i.next()
+      if (inboundService.service === service) {
+        i.remove()
+        return
+      }
+    }
   }
 
   internal fun generateName(prefix: String): String {

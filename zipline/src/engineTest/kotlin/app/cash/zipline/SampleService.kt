@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.OutboundCallHandler
+import app.cash.zipline.internal.bridge.SuspendCallback
 import app.cash.zipline.internal.bridge.ZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import kotlin.reflect.KType
@@ -48,10 +49,14 @@ interface SampleService<T> : ZiplineService {
     /** This function's body is what callers use to create a properly-typed adapter. */
     internal inline fun <reified T> manualAdapter(): ManualAdapter<T> {
       return ManualAdapter<T>(
-        listOf(
+        listOf<KType>(
           typeOf<SampleRequest>(),
           typeOf<SampleResponse>(),
+          typeOf<List<T>>(),
           typeOf<Unit>(),
+        ),
+        listOf<KSerializer<*>>(
+          ziplineServiceSerializer<SuspendCallback<T>>()
         )
       )
     }
@@ -62,7 +67,8 @@ interface SampleService<T> : ZiplineService {
      * `AdapterGenerator`.
      */
     internal class ManualAdapter<TX>(
-      private val types: List<KType>
+      private val types: List<KType>,
+      private val serializers: List<KSerializer<*>>,
     ) : ZiplineServiceAdapter<SampleService<TX>>() {
       override val serialName: String = "SampleService"
 
@@ -108,11 +114,12 @@ interface SampleService<T> : ZiplineService {
         val sampleRequestSerializer = serializersModule.serializer(types[0])
         val sampleResponseSerializer = serializersModule.serializer(types[1])
         val listOfTSerializer = serializersModule.serializer(types[2])
-        val tSerializer = serializersModule.serializer(types[3])
-        val unitSerializer = serializersModule.serializer(types[4])
+        val unitSerializer = serializersModule.serializer(types[3])
+        val serializers = serializers
+        val suspendCallbackTSerializer = serializers[0]
         return listOf(
           ZiplineFunction0(listOf(sampleRequestSerializer), sampleResponseSerializer),
-          ZiplineFunction1(listOf(listOfTSerializer), tSerializer),
+          ZiplineFunction1(listOf(listOfTSerializer), suspendCallbackTSerializer),
           ZiplineFunction2(listOf(), unitSerializer),
         )
       }

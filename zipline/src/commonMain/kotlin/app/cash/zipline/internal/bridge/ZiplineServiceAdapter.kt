@@ -26,7 +26,8 @@ import kotlinx.serialization.modules.SerializersModule
  * Adapts [ZiplineService] implementations to receive incoming and send outgoing calls. Most
  * implementations are generated.
  */
-@PublishedApi internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
+@PublishedApi
+internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
   private val contextualSerializer = ContextualSerializer(PassByReference::class)
   abstract val serialName: String
 

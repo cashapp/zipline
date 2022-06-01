@@ -45,6 +45,7 @@ internal class ZiplineApis(
   private val ziplineServiceAdapterFunctionFqName = bridgeFqName.child("ziplineServiceAdapter")
   private val ziplineServiceAdapterFqName = bridgeFqName.child("ZiplineServiceAdapter")
   private val endpointFqName = bridgeFqName.child("Endpoint")
+  private val suspendCallbackFqName = bridgeFqName.child("SuspendCallback")
   val flowFqName = FqName("kotlinx.coroutines.flow").child("Flow")
   private val collectionsFqName = FqName("kotlin.collections")
   private val reflectFqName = FqName("kotlin.reflect")
@@ -161,6 +162,9 @@ internal class ZiplineApis(
     get() = ziplineServiceAdapter.functions.single {
       it.owner.name.identifier == "outboundService"
     }
+
+  val suspendCallback: IrClassSymbol
+    get() = pluginContext.referenceClass(suspendCallbackFqName)!!
 
   /** Keys are functions like `Zipline.take()` and values are their rewrite targets. */
   val ziplineServiceAdapterFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(

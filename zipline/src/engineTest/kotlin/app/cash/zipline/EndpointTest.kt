@@ -168,10 +168,10 @@ internal class EndpointTest {
     val echoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
         // In the middle of a suspending call there's a temporary reference to the callback.
-        assertEquals(setOf("echoService", "zipline/1/cancel"), endpointA.serviceNames)
-        assertEquals(setOf("echoService", "zipline/1/cancel"), endpointB.clientNames)
-        assertEquals(setOf("zipline/1"), endpointA.clientNames)
-        assertEquals(setOf("zipline/1"), endpointB.serviceNames)
+        assertEquals(setOf("echoService", "service/1"), endpointA.serviceNames)
+        assertEquals(setOf("echoService", "service/1"), endpointB.clientNames)
+        assertEquals(setOf("service/1"), endpointA.clientNames)
+        assertEquals(setOf("service/1"), endpointB.serviceNames)
         return EchoResponse("hello, ${request.message}")
       }
     }
