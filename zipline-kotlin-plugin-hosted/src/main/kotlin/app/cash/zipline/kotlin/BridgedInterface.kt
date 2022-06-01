@@ -108,7 +108,8 @@ internal class BridgedInterface(
     return result
   }
 
-  fun serializedTypes(): Set<IrType> {
+  /** The returned list is deterministically ordered. */
+  fun serializedTypes(): List<IrType> {
     val serializedTypes = mutableSetOf<IrType>()
     for (bridgedFunction in bridgedFunctions) {
       for (valueParameter in bridgedFunction.owner.valueParameters) {
@@ -116,7 +117,7 @@ internal class BridgedInterface(
       }
       serializedTypes += resolveTypeParameters(bridgedFunction.owner.returnType)
     }
-    return serializedTypes
+    return serializedTypes.sortedBy { (it as IrSimpleType).asString() }
   }
 
   private fun IrBuilderWithScope.serializerExpression(

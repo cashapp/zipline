@@ -43,7 +43,8 @@ interface SampleService : ZiplineService {
   fun ping(request: SampleRequest): SampleResponse
 
   companion object {
-    internal inline fun <reified T> adapter(): ManualAdapter {
+    /** This function's body is what callers use to create a properly-typed adapter. */
+    internal inline fun <reified T> manualAdapter(): ManualAdapter {
       return ManualAdapter(
         listOf(
           typeOf<SampleRequest>(),
