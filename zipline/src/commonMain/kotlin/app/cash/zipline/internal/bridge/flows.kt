@@ -16,32 +16,22 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.decodeFromStringFast
-import app.cash.zipline.internal.encodeToStringFast
 import app.cash.zipline.ziplineServiceSerializer
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
-import kotlinx.serialization.json.Json
-
-@PublishedApi
-internal fun <T> flowSerializer(itemSerializer: KSerializer<T>): KSerializer<Flow<T>> {
-  return FlowSerializer(itemSerializer)
-}
 
 // Zipline can only bridge interfaces, not implementations, so split this in two.
-internal interface FlowZiplineService : ZiplineService {
-  suspend fun collectJson(collector: FlowZiplineCollector)
+@PublishedApi
+internal interface FlowZiplineService<T> : ZiplineService {
+  suspend fun collectJson(collector: FlowZiplineCollector<T>)
 }
 
-internal interface FlowZiplineCollector : ZiplineService {
-  suspend fun emit(value: String)
-}
-
-private val json = Json {
-  useArrayPolymorphism = true
+@PublishedApi
+internal interface FlowZiplineCollector<T> : ZiplineService {
+  suspend fun emit(value: T)
 }
 
 /**
@@ -49,10 +39,10 @@ private val json = Json {
  * [FlowZiplineService] instances which can be serialized by [ziplineServiceSerializer] to
  * pass-by-reference.
  */
+@PublishedApi
 internal class FlowSerializer<T>(
-  private val itemSerializer: KSerializer<T>,
+  private val delegateSerializer: KSerializer<FlowZiplineService<T>>,
 ) : KSerializer<Flow<T>> {
-  private val delegateSerializer = ziplineServiceSerializer<FlowZiplineService>()
   override val descriptor = delegateSerializer.descriptor
 
   override fun serialize(encoder: Encoder, value: Flow<T>) {
@@ -60,13 +50,12 @@ internal class FlowSerializer<T>(
     return encoder.encodeSerializableValue(delegateSerializer, service)
   }
 
-  private fun Flow<T>.toZiplineService(): FlowZiplineService {
-    return object : FlowZiplineService {
-      override suspend fun collectJson(collector: FlowZiplineCollector) {
+  private fun Flow<T>.toZiplineService(): FlowZiplineService<T> {
+    return object : FlowZiplineService<T> {
+      override suspend fun collectJson(collector: FlowZiplineCollector<T>) {
         try {
           this@toZiplineService.collect {
-            val value = json.encodeToStringFast(itemSerializer, it)
-            collector.emit(value)
+            collector.emit(it)
           }
         } finally {
           collector.close()
@@ -80,15 +69,14 @@ internal class FlowSerializer<T>(
     return service.toFlow()
   }
 
-  private fun FlowZiplineService.toFlow(): Flow<T> {
+  private fun FlowZiplineService<T>.toFlow(): Flow<T> {
     return channelFlow {
       invokeOnClose {
         this@toFlow.close()
       }
-      this@toFlow.collectJson(object : FlowZiplineCollector {
-        override suspend fun emit(value: String) {
-          val item = json.decodeFromStringFast(itemSerializer, value)
-          this@channelFlow.send(item)
+      this@toFlow.collectJson(object : FlowZiplineCollector<T> {
+        override suspend fun emit(value: T) {
+          this@channelFlow.send(value)
         }
       })
     }

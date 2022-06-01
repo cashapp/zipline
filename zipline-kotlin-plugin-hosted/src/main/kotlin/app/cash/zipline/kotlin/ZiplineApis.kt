@@ -92,9 +92,11 @@ internal class ZiplineApis(
           it.owner.typeParameters.isEmpty()
       }
 
-  val flowSerializerFunction: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(bridgeFqName.child("flowSerializer"))
-      .single()
+  val flowSerializer: IrClassSymbol
+    get() = pluginContext.referenceClass(bridgeFqName.child("FlowSerializer"))!!
+
+  val flowZiplineService: IrClassSymbol
+    get() = pluginContext.referenceClass(bridgeFqName.child("FlowZiplineService"))!!
 
   val listOfFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(collectionsFqName.child("listOf"))
