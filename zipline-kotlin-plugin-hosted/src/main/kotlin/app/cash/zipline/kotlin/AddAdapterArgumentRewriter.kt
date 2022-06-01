@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
+import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.util.irCall
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
@@ -77,7 +78,7 @@ internal class AddAdapterArgumentRewriter(
       ziplineApis,
       scope,
       bridgedInterface.typeIrClass
-    ).adapterExpression()
+    ).adapterExpression(bridgedInterfaceType as IrSimpleType)
 
     return irCall(original, rewrittenFunction).apply {
       putValueArgument(valueArgumentsCount - 1, adapterExpression)

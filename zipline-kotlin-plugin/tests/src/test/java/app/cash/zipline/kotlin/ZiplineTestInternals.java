@@ -15,8 +15,8 @@
  */
 package app.cash.zipline.kotlin;
 
-import app.cash.zipline.internal.bridge.OutboundCallHandler;
 import app.cash.zipline.internal.bridge.Endpoint;
+import app.cash.zipline.internal.bridge.OutboundCallHandler;
 import app.cash.zipline.internal.bridge.ZiplineFunction;
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
 import app.cash.zipline.testing.EchoRequest;
@@ -80,6 +80,7 @@ public final class ZiplineTestInternals {
   /** Simulate generated code for inbound calls. */
   public static void bindGenericEchoService(
       Endpoint endpoint, String name, GenericEchoService<String> echoService) {
+    endpoint.bind(name, echoService, GenericEchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate a generated subclass of ZiplineServiceAdapter. */

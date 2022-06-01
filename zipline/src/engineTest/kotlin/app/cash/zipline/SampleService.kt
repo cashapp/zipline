@@ -18,9 +18,10 @@ package app.cash.zipline
 import app.cash.zipline.internal.bridge.OutboundCallHandler
 import app.cash.zipline.internal.bridge.ZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
+import kotlin.reflect.KType
+import kotlin.reflect.typeOf
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
 
@@ -42,21 +43,33 @@ interface SampleService : ZiplineService {
   fun ping(request: SampleRequest): SampleResponse
 
   companion object {
+    /** This function's body is what callers use to create a properly-typed adapter. */
+    internal inline fun <reified T> manualAdapter(): ManualAdapter {
+      return ManualAdapter(
+        listOf(
+          typeOf<SampleRequest>(),
+          typeOf<SampleResponse>(),
+          typeOf<Unit>(),
+        )
+      )
+    }
+
     /**
      * We expect this manually-written adapter to be consistent with the generated one. This exists
      * mostly to model what the expected generated code should look like when making changes to
      * `AdapterGenerator`.
      */
-    internal object ManualAdapter
-      : ZiplineServiceAdapter<SampleService>(), KSerializer<SampleService> {
+    internal class ManualAdapter(
+      private val types: List<KType>
+    ) : ZiplineServiceAdapter<SampleService>(), KSerializer<SampleService> {
       override val serialName: String = "SampleService"
 
       override fun ziplineFunctions(
         serializersModule: SerializersModule,
       ): List<ZiplineFunction<SampleService>> {
-        val sampleRequestSerializer = serializersModule.serializer<SampleRequest>()
-        val sampleResponseSerializer = serializersModule.serializer<SampleResponse>()
-        val unitSerializer = Unit.serializer()
+        val sampleRequestSerializer = serializersModule.serializer(types[0])
+        val sampleResponseSerializer = serializersModule.serializer(types[1])
+        val unitSerializer = serializersModule.serializer(types[2])
         return listOf(
           ZiplineFunction0(listOf(sampleRequestSerializer), sampleResponseSerializer),
           ZiplineFunction1(listOf(), unitSerializer),

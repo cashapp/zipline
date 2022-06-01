@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.GenericEchoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
@@ -275,5 +276,36 @@ internal class EndpointTest {
 
     assertEquals("this is a response", deferredResponse.await().message)
     deferredResponse.cancel()
+  }
+
+  @Test
+  fun genericRequestAndResponse() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val stringService = object : GenericEchoService<String> {
+      override fun genericEcho(request: String): List<String> {
+        return listOf("x", request)
+      }
+    }
+    endpointA.bind<GenericEchoService<String>>("strings", stringService)
+    val stringClient = endpointB.take<GenericEchoService<String>>("strings")
+
+    val mapsService = object : GenericEchoService<Map<String, Int>> {
+      override fun genericEcho(request: Map<String, Int>): List<Map<String, Int>> {
+        return listOf(mapOf(), request)
+      }
+    }
+    endpointA.bind<GenericEchoService<Map<String, Int>>>("maps", mapsService)
+    val mapsClient = endpointB.take<GenericEchoService<Map<String, Int>>>("maps")
+
+    assertEquals(
+      listOf(mapOf(), mapOf("one" to 1, "two" to 2)),
+      mapsClient.genericEcho(mapOf("one" to 1, "two" to 2))
+    )
+
+    assertEquals(
+      listOf("x", "hello"),
+      stringClient.genericEcho("hello")
+    )
   }
 }

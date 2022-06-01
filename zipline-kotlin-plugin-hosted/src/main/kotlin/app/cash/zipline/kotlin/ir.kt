@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.IrStatement
+import org.jetbrains.kotlin.ir.UNDEFINED_OFFSET
 import org.jetbrains.kotlin.ir.builders.IrBlockBodyBuilder
 import org.jetbrains.kotlin.ir.builders.IrBlockBuilder
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
@@ -121,8 +122,8 @@ internal fun IrBuilderWithScope.irReturn(
 
 /** Set up reasonable defaults for a generated function or constructor. */
 fun IrFunctionBuilder.initDefaults(original: IrElement) {
-  this.startOffset = original.startOffset
-  this.endOffset = original.endOffset
+  this.startOffset = original.startOffset.toSyntheticIfUnknown()
+  this.endOffset = original.endOffset.toSyntheticIfUnknown()
   this.origin = IrDeclarationOrigin.DEFINED
   this.visibility = DescriptorVisibilities.PUBLIC
   this.modality = Modality.OPEN
@@ -131,16 +132,28 @@ fun IrFunctionBuilder.initDefaults(original: IrElement) {
 
 /** Set up reasonable defaults for a generated class. */
 fun IrClassBuilder.initDefaults(original: IrElement) {
-  this.startOffset = original.startOffset
-  this.endOffset = original.endOffset
+  this.startOffset = original.startOffset.toSyntheticIfUnknown()
+  this.endOffset = original.endOffset.toSyntheticIfUnknown()
   this.name = Name.special("<no name provided>")
   this.visibility = DescriptorVisibilities.LOCAL
 }
 
 /** Set up reasonable defaults for a value parameter. */
 fun IrValueParameterBuilder.initDefaults(original: IrElement) {
-  this.startOffset = original.startOffset
-  this.endOffset = original.endOffset
+  this.startOffset = original.startOffset.toSyntheticIfUnknown()
+  this.endOffset = original.endOffset.toSyntheticIfUnknown()
+}
+
+/**
+ * When we generate code based on classes outside of the current module unit we get elements that
+ * use `UNDEFINED_OFFSET`. Make sure we don't propagate this further into generated code; that
+ * causes LLVM code generation to fail.
+ */
+private fun Int.toSyntheticIfUnknown(): Int {
+  return when (this) {
+    UNDEFINED_OFFSET -> SYNTHETIC_OFFSET
+    else -> this
+  }
 }
 
 fun IrConstructor.irConstructorBody(
