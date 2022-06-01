@@ -165,7 +165,7 @@ in this repo as are the release tags. Available versions are listed on
 
 [qjs]: https://bellard.org/quickjs/
 [LeakCanary]: https://square.github.io/leakcanary/
-[trivia.kt]: https://github.com/cashapp/zipline/blob/trunk/samples/trivia/trivia-shared/src/commonMain/kotlin/app/cash/zipline/samples/trivia/trivia.kt
-[triviaJs.kt]: https://github.com/cashapp/zipline/blob/trunk/samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/triviaJs.kt
-[launchZiplineJs.kt]: https://github.com/cashapp/zipline/blob/trunk/samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/launchZiplineJs.kt
-[launchZiplineJvm.kt]: https://github.com/cashapp/zipline/blob/trunk/samples/trivia/trivia-host/src/main/kotlin/app/cash/zipline/samples/trivia/launchZiplineJvm.kt
+[trivia.kt]: samples/trivia/trivia-shared/src/commonMain/kotlin/app/cash/zipline/samples/trivia/trivia.kt
+[triviaJs.kt]: samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/triviaJs.kt
+[launchZiplineJs.kt]: samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/launchZiplineJs.kt
+[launchZiplineJvm.kt]: samples/trivia/trivia-host/src/main/kotlin/app/cash/zipline/samples/trivia/launchZiplineJvm.kt
