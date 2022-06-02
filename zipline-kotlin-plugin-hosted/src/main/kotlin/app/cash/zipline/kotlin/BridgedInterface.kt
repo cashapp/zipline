@@ -23,6 +23,7 @@ import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.IrStatementsBuilder
 import org.jetbrains.kotlin.ir.builders.irCall
+import org.jetbrains.kotlin.ir.builders.irCallConstructor
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irTemporary
@@ -38,6 +39,7 @@ import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
+import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -181,16 +183,20 @@ internal class BridgedInterface(
         ).adapterExpression(type as IrSimpleType)
       }
 
-      // TODO(jwilson): change flows to use type parameters, then make typesExpression non-nullable.
       type.classFqName == ziplineApis.flowFqName -> {
-        // flowSerializer<Message>(context.serializersModule.serializer<Message>())
+        // FlowSerializer<T>(ziplineServiceSerializer<FlowZiplineService<T>>())
         val flowType = (type as IrSimpleType).arguments[0] as IrType
-        return irCall(
-          callee = ziplineApis.flowSerializerFunction,
-          type = ziplineApis.kSerializer.starProjectedType,
+        val flowZiplineServiceT = ziplineApis.flowZiplineService.typeWith(flowType)
+        val flowSerializerT = ziplineApis.flowSerializer.typeWith(flowType)
+        return irCallConstructor(
+          callee = ziplineApis.flowSerializer.constructors.single(),
+          typeArguments = listOf(flowType)
         ).apply {
-          putTypeArgument(0, flowType)
-          putValueArgument(0, serializerExpression(flowType, serializersModuleParameter))
+          this.type = flowSerializerT
+          putValueArgument(
+            0,
+            serializerExpression(flowZiplineServiceT, serializersModuleParameter),
+          )
         }
       }
 
