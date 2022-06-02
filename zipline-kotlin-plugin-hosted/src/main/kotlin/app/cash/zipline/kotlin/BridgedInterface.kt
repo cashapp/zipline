@@ -17,6 +17,7 @@ package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.backend.common.ir.isSuspend
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
@@ -36,6 +37,7 @@ import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.types.starProjectedType
+import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -86,17 +88,57 @@ internal class BridgedInterface(
   val bridgedFunctions: List<IrSimpleFunctionSymbol>
     get() = bridgedFunctionsWithOverrides.values.map { it[0] }
 
+  fun adapterConstructorArguments(): AdapterConstructorArguments {
+    val requiredTypes = mutableSetOf<IrType>()
+    for (bridgedFunction in bridgedFunctions) {
+      for (valueParameter in bridgedFunction.owner.valueParameters) {
+        val resolvedParameterType = resolveTypeParameters(valueParameter.type)
+        requiredTypes += resolvedParameterType
+      }
+      val resolvedReturnType = resolveTypeParameters(bridgedFunction.owner.returnType)
+      requiredTypes += when {
+        bridgedFunction.isSuspend -> ziplineApis.suspendCallback.typeWith(resolvedReturnType)
+        else -> resolvedReturnType
+      }
+    }
+
+    val allTypesSorted = requiredTypes.sortedBy { (it as IrSimpleType).asString() }
+    val (ziplineServiceTypes, reifiedTypes) = allTypesSorted.partition {
+      it.isSubtypeOfClass(ziplineApis.ziplineService)
+    }
+
+    return AdapterConstructorArguments(
+      reifiedTypes = reifiedTypes,
+      ziplineServiceTypes = ziplineServiceTypes,
+    )
+  }
+
   /** Declares local vars for all the serializers needed to bridge this interface. */
   fun declareSerializerTemporaries(
     statementsBuilder: IrStatementsBuilder<*>,
     serializersModuleParameter: IrValueParameter,
     typesExpression: IrVariable,
+    serializersExpression: IrVariable,
+  ): Map<IrType, IrVariable> {
+    return statementsBuilder.irDeclareSerializerTemporaries(
+      arguments = adapterConstructorArguments(),
+      serializersModuleParameter = serializersModuleParameter,
+      typesExpression = typesExpression,
+      serializersExpression = serializersExpression,
+    )
+  }
+
+  private fun IrStatementsBuilder<*>.irDeclareSerializerTemporaries(
+    arguments: AdapterConstructorArguments,
+    serializersModuleParameter: IrValueParameter,
+    typesExpression: IrVariable,
+    serializersExpression: IrVariable,
   ): Map<IrType, IrVariable> {
     val result = mutableMapOf<IrType, IrVariable>()
-    for ((typeIndex, serializedType) in serializedTypes().withIndex()) {
-      result[serializedType] = statementsBuilder.irTemporary(
-        value = statementsBuilder.serializerExpression(
-          type = serializedType,
+    for ((typeIndex, type) in arguments.reifiedTypes.withIndex()) {
+      result[type] = irTemporary(
+        value = serializerExpression(
+          type = type,
           serializersModuleParameter = serializersModuleParameter,
           typeIndex = typeIndex,
           typesExpression = typesExpression,
@@ -105,19 +147,17 @@ internal class BridgedInterface(
         isMutable = false,
       )
     }
-    return result
-  }
-
-  /** The returned list is deterministically ordered. */
-  fun serializedTypes(): List<IrType> {
-    val serializedTypes = mutableSetOf<IrType>()
-    for (bridgedFunction in bridgedFunctions) {
-      for (valueParameter in bridgedFunction.owner.valueParameters) {
-        serializedTypes += resolveTypeParameters(valueParameter.type)
-      }
-      serializedTypes += resolveTypeParameters(bridgedFunction.owner.returnType)
+    for ((typeIndex, type) in arguments.ziplineServiceTypes.withIndex()) {
+      result[type] = irTemporary(
+        value = irCall(ziplineApis.listGetFunction).apply {
+          dispatchReceiver = irGet(serializersExpression)
+          putValueArgument(0, irInt(typeIndex))
+        },
+        nameHint = "serializer",
+        isMutable = false,
+      )
     }
-    return serializedTypes.sortedBy { (it as IrSimpleType).asString() }
+    return result
   }
 
   private fun IrBuilderWithScope.serializerExpression(

@@ -59,13 +59,12 @@ internal class InboundService<T : ZiplineService>(
     }
 
     return endpoint.json.encodeToStringFast(
-      (call.function?.callResultSerializer ?: failureResultSerializer) as ResultSerializer<Any?>,
+      (call.function?.kotlinResultSerializer ?: failureResultSerializer) as KSerializer<Any?>,
       result,
     )
   }
 
-  fun callSuspending(call: RealCall): String {
-    val suspendCallbackName = call.callbackName!!
+  fun callSuspending(call: RealCall, suspendCallback: SuspendCallback<Any?>): String {
     val job = endpoint.scope.launch {
       val function = call.function as ZiplineFunction<ZiplineService>?
       val args = call.args
@@ -87,27 +86,25 @@ internal class InboundService<T : ZiplineService>(
         }
       }
 
-      val encodedResult = endpoint.json.encodeToStringFast(
-        (call.function?.callResultSerializer ?: failureResultSerializer) as KSerializer<Any?>,
-        result,
-      )
+      // Don't resume a continuation if the Zipline has since been closed.
+      endpoint.scope.ensureActive()
 
-      endpoint.scope.ensureActive() // Don't resume a continuation if the Zipline has since been closed.
-      val suspendCallback = endpoint.take<SuspendCallback>(suspendCallbackName)
-      suspendCallback.call(encodedResult)
+      when {
+        result.isSuccess -> suspendCallback.success(result.getOrNull())
+        else -> suspendCallback.failure(result.exceptionOrNull()!!)
+      }
     }
 
-    val cancelCallbackName = endpoint.cancelCallbackName(suspendCallbackName)
-    endpoint.bind<CancelCallback>(cancelCallbackName, object : CancelCallback {
+    val cancelCallback = object : CancelCallback {
       override fun cancel() {
         job.cancel()
       }
-    })
+    }
     job.invokeOnCompletion {
-      endpoint.remove(cancelCallbackName)
+      endpoint.remove(cancelCallback)
     }
 
-    return ""
+    return endpoint.json.encodeToStringFast(cancelCallbackSerializer, cancelCallback)
   }
 
   private fun unexpectedFunction(functionName: String?) = ZiplineApiMismatchException(

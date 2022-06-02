@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Block, Inc.
+ * Copyright (C) 2022 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.internal.bridge
+package app.cash.zipline.kotlin
 
-import app.cash.zipline.ZiplineService
+import org.jetbrains.kotlin.ir.types.IrType
 
 /**
- * A bridged interface to cancel suspending calls. This is used internally by Zipline to send
- * a cancellation signal from the calling endpoint to the receiving endpoint.
- *
- * It is not necessary for the calling endpoint to [ZiplineService.close] this; that's handled
- * automatically by the receiving service.
+ * Type information that instances of `ZiplineServiceAdapter` instances need at construction time.
+ * Use [BridgedInterface.adapterConstructorArguments] to create an instance.
  */
-interface CancelCallback : ZiplineService {
-  fun cancel()
-}
+class AdapterConstructorArguments(
+  /** Types that may use of type variables. These vary with the class generic parameters. */
+  val reifiedTypes: List<IrType>,
+
+  /** Types that implement `ZiplineService`. */
+  val ziplineServiceTypes: List<IrType>,
+)

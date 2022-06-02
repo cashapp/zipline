@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.OutboundCallHandler
+import app.cash.zipline.internal.bridge.SuspendCallback
 import app.cash.zipline.internal.bridge.ZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import kotlin.reflect.KType
@@ -39,17 +40,23 @@ data class SampleResponse(
  * Note that this interface is unused. It only serves as a sample for what the code generators
  * should consume and produce.
  */
-interface SampleService : ZiplineService {
+interface SampleService<T> : ZiplineService {
   fun ping(request: SampleRequest): SampleResponse
+
+  suspend fun reduce(request: List<T>): T
 
   companion object {
     /** This function's body is what callers use to create a properly-typed adapter. */
-    internal inline fun <reified T> manualAdapter(): ManualAdapter {
-      return ManualAdapter(
-        listOf(
+    internal inline fun <reified T> manualAdapter(): ManualAdapter<T> {
+      return ManualAdapter<T>(
+        listOf<KType>(
           typeOf<SampleRequest>(),
           typeOf<SampleResponse>(),
+          typeOf<List<T>>(),
           typeOf<Unit>(),
+        ),
+        listOf<KSerializer<*>>(
+          ziplineServiceSerializer<SuspendCallback<T>>()
         )
       )
     }
@@ -59,60 +66,85 @@ interface SampleService : ZiplineService {
      * mostly to model what the expected generated code should look like when making changes to
      * `AdapterGenerator`.
      */
-    internal class ManualAdapter(
-      private val types: List<KType>
-    ) : ZiplineServiceAdapter<SampleService>(), KSerializer<SampleService> {
+    internal class ManualAdapter<TX>(
+      private val types: List<KType>,
+      private val serializers: List<KSerializer<*>>,
+    ) : ZiplineServiceAdapter<SampleService<TX>>() {
       override val serialName: String = "SampleService"
 
-      override fun ziplineFunctions(
-        serializersModule: SerializersModule,
-      ): List<ZiplineFunction<SampleService>> {
-        val sampleRequestSerializer = serializersModule.serializer(types[0])
-        val sampleResponseSerializer = serializersModule.serializer(types[1])
-        val unitSerializer = serializersModule.serializer(types[2])
-        return listOf(
-          ZiplineFunction0(listOf(sampleRequestSerializer), sampleResponseSerializer),
-          ZiplineFunction1(listOf(), unitSerializer),
-        )
-      }
-
-      class ZiplineFunction0(
+      class ZiplineFunction0<TF>(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
-      ) : ZiplineFunction<SampleService>(
+      ) : ZiplineFunction<SampleService<TF>>(
         "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
         argSerializers,
         resultSerializer,
       ) {
-        override fun call(service: SampleService, args: List<*>): Any? =
+        override fun call(service: SampleService<TF>, args: List<*>): Any? =
           service.ping(args[0] as SampleRequest)
       }
 
-      class ZiplineFunction1(
+      class ZiplineFunction1<TF>(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
-      ) : ZiplineFunction<SampleService>(
+      ) : ZiplineFunction<SampleService<TF>>(
+        "suspend fun reduce(List<T>): T",
+        argSerializers,
+        resultSerializer,
+      ) {
+        override suspend fun callSuspending(service: SampleService<TF>, args: List<*>) =
+          service.reduce(args[0] as List<TF>)
+      }
+
+      class ZiplineFunction2<TF>(
+        argSerializers: List<KSerializer<*>>,
+        resultSerializer: KSerializer<*>,
+      ) : ZiplineFunction<SampleService<TF>>(
         "fun close(): kotlin.Unit",
         argSerializers,
         resultSerializer,
       ) {
-        override fun call(service: SampleService, args: List<*>): Any? = service.close()
+        override fun call(service: SampleService<TF>, args: List<*>): Any? = service.close()
+      }
+
+      override fun ziplineFunctions(
+        serializersModule: SerializersModule,
+      ): List<ZiplineFunction<SampleService<TX>>> {
+        val types = types
+        val sampleRequestSerializer = serializersModule.serializer(types[0])
+        val sampleResponseSerializer = serializersModule.serializer(types[1])
+        val listOfTSerializer = serializersModule.serializer(types[2])
+        val unitSerializer = serializersModule.serializer(types[3])
+        val serializers = serializers
+        val suspendCallbackTSerializer = serializers[0]
+        return listOf(
+          ZiplineFunction0(listOf(sampleRequestSerializer), sampleResponseSerializer),
+          ZiplineFunction1(listOf(listOfTSerializer), suspendCallbackTSerializer),
+          ZiplineFunction2(listOf(), unitSerializer),
+        )
       }
 
       override fun outboundService(
         callHandler: OutboundCallHandler
-      ): SampleService = GeneratedOutboundService(callHandler)
+      ): SampleService<TX> = GeneratedOutboundService(callHandler)
 
-      private class GeneratedOutboundService(
+      private class GeneratedOutboundService<TS>(
         private val callHandler: OutboundCallHandler
-      ) : SampleService {
+      ) : SampleService<TS> {
         override fun ping(request: SampleRequest): SampleResponse {
+          val callHandler = callHandler
           return callHandler.call(this, 0, request) as SampleResponse
         }
 
+        override suspend fun reduce(request: List<TS>): TS {
+          val callHandler = callHandler
+          return callHandler.callSuspending(this, 1, request) as TS
+        }
+
         override fun close() {
+          val callHandler = callHandler
           callHandler.closed = true
-          return callHandler.call(this, 1) as Unit
+          return callHandler.call(this, 2) as Unit
         }
       }
     }

@@ -22,10 +22,17 @@ import kotlinx.serialization.KSerializer
 internal abstract class ZiplineFunction<T : ZiplineService>(
   val name: String,
   argSerializers: List<KSerializer<*>>,
-  resultSerializer: KSerializer<*>,
+
+  /**
+   * For blocking calls this is a serializer for the standalone result. For suspending calls this
+   * is a serializer for a `SuspendCallback<T>` where `T` is the response type.
+   */
+  val resultOrSuspendCallbackSerializer: KSerializer<*>,
 ) {
   val argsListSerializer = ArgsListSerializer(argSerializers)
-  val callResultSerializer = ResultSerializer(resultSerializer)
+
+  /** A serializer for a `Result<T>` which supports success or failure. */
+  val kotlinResultSerializer = ResultSerializer(resultOrSuspendCallbackSerializer)
 
   val isClose
     get() = name == "fun close(): kotlin.Unit"

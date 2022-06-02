@@ -17,6 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineCall
 import app.cash.zipline.ZiplineService
+import app.cash.zipline.ziplineServiceSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
@@ -46,11 +47,10 @@ internal class RealCall(
   val function: ZiplineFunction<*>?,
 
   /**
-   * If this function is suspending, this callback name is not null. This function returns an empty
-   * array and the response is delivered to the [SuspendCallback]. Suspending calls may be canceled
-   * before it returns by using the [CancelCallback].
+   * If this function is suspending, this callback is not null. The function returns an encoded
+   * [CancelCallback] and the response is delivered to the [SuspendCallback].
    */
-  val callbackName: String? = null,
+  val suspendCallback: SuspendCallback<Any?>? = null,
 
   override val args: List<*>,
 ) : ZiplineCall {
@@ -64,6 +64,12 @@ private val argsListDescriptor = ListSerializer(Int.serializer()).descriptor
 
 /** This uses [Int] as a placeholder; it doesn't matter 'cause we're only encoding failures. */
 internal val failureResultSerializer = ResultSerializer(Int.serializer())
+
+/** This uses [Int] as a placeholder; it doesn't matter 'cause we're only encoding failures. */
+internal val failureSuspendCallbackSerializer = ziplineServiceSerializer<SuspendCallback<Int>>()
+
+/** Serialize any cancel callback using pass-by-reference. */
+internal val cancelCallbackSerializer = ziplineServiceSerializer<CancelCallback>()
 
 /**
  * Encode and decode calls using [ZiplineFunction.argsListSerializer].
@@ -89,8 +95,13 @@ internal class RealCallSerializer(
     encoder.encodeStructure(descriptor) {
       encodeStringElement(descriptor, 0, value.serviceName)
       encodeStringElement(descriptor, 1, value.functionName)
-      if (value.callbackName != null) {
-        encodeStringElement(descriptor, 2, value.callbackName)
+      if (value.suspendCallback != null) {
+        encodeSerializableElement(
+          descriptor,
+          2,
+          value.function!!.resultOrSuspendCallbackSerializer as KSerializer<Any?>,
+          value.suspendCallback,
+        )
       }
       encodeSerializableElement(descriptor, 3, value.function!!.argsListSerializer, value.args)
     }
@@ -102,7 +113,7 @@ internal class RealCallSerializer(
       var inboundService: InboundService<*>? = null
       var functionName = ""
       var function: ZiplineFunction<*>? = null
-      var callbackName: String? = null
+      var suspendCallback: SuspendCallback<Any?>? = null
       var args = listOf<Any?>()
       while (true) {
         when (val index = decodeElementIndex(descriptor)) {
@@ -115,7 +126,20 @@ internal class RealCallSerializer(
             function = inboundService?.functions?.get(functionName)
           }
           2 -> {
-            callbackName = decodeStringElement(descriptor, index)
+            if (function != null) {
+              suspendCallback = decodeSerializableElement(
+                descriptor,
+                index,
+                function.resultOrSuspendCallbackSerializer as KSerializer<SuspendCallback<Any?>>
+              )
+            } else {
+              // We can use any suspend callback if we're only returning failures.
+              suspendCallback = decodeSerializableElement(
+                descriptor,
+                index,
+                failureSuspendCallbackSerializer as KSerializer<SuspendCallback<Any?>>
+              )
+            }
           }
           3 -> {
             if (function != null) {
@@ -135,7 +159,7 @@ internal class RealCallSerializer(
         inboundService = inboundService,
         functionName = functionName,
         function = function,
-        callbackName = callbackName,
+        suspendCallback = suspendCallback,
         args = args
       )
     }
