@@ -2,12 +2,17 @@ $dokka.format:html-v1
 $dokka.linkExtension:html
 $dokka.location:app.cash.zipline.internal.bridge////PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/index.html
 $dokka.location:app.cash.zipline.internal.bridge//registry/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/registry.html
+$dokka.location:app.cash.zipline.internal.bridge/CancelCallback///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-cancel-callback/index.html
+$dokka.location:app.cash.zipline.internal.bridge/CancelCallback/cancel/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-cancel-callback/cancel.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/index.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/bind/#kotlin.String#TypeParam(bounds=[app.cash.zipline.ZiplineService])/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/bind.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/clientNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/client-names.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/service-names.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint/take/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/take.html
 $dokka.location:app.cash.zipline.internal.bridge/PassByReference///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-pass-by-reference/index.html
+$dokka.location:app.cash.zipline.internal.bridge/SuspendCallback///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-suspend-callback/index.html
+$dokka.location:app.cash.zipline.internal.bridge/SuspendCallback/failure/#kotlin.Throwable/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-suspend-callback/failure.html
+$dokka.location:app.cash.zipline.internal.bridge/SuspendCallback/success/#TypeParam(bounds=[kotlin.Any?])/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-suspend-callback/success.html
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
 $dokka.location:app.cash.zipline//ziplineServiceSerializer/#/PointingToDeclaration/zipline/app.cash.zipline/zipline-service-serializer.html
 $dokka.location:app.cash.zipline/EventListener.Companion///PointingToDeclaration/zipline/app.cash.zipline/-event-listener/-companion/index.html
