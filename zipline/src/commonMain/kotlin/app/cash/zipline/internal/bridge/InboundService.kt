@@ -46,7 +46,11 @@ internal class InboundService<T : ZiplineService>(
       endpoint.inboundServices.remove(internalCall.serviceName)
     }
 
-    val callStart = endpoint.eventListener.callStart(externalCall)
+    val callStart = when (externalCall.service) {
+      !is SuspendCallback<*> -> endpoint.eventListener.callStart(externalCall)
+      else -> Unit // Don't call callStart() for suspend callbacks.
+    }
+
     val theResult = try {
       val success = function.call(service, internalCall.args)
       Result.success(success)
@@ -55,7 +59,10 @@ internal class InboundService<T : ZiplineService>(
     }
 
     val callResult = endpoint.callCodec.encodeResult(function, theResult)
-    endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+    when (externalCall.service) {
+      !is SuspendCallback<*> -> endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+      else -> Unit // Don't call callEnd() for suspend callbacks.
+    }
     return callResult.encodedResult
   }
 

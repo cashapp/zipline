@@ -50,10 +50,16 @@ internal class OutboundCallHandler(
       args = argsList
     )
     val externalCall = endpoint.callCodec.encodeCall(internalCall, service)
-    val callStart = endpoint.eventListener.callStart(externalCall)
+    val callStart = when (service) {
+      !is SuspendCallback<*> -> endpoint.eventListener.callStart(externalCall)
+      else -> Unit // Don't call callStart() for suspend callbacks.
+    }
     val encodedResult = endpoint.outboundChannel.call(externalCall.encodedCall)
     val callResult = endpoint.callCodec.decodeResult(function, encodedResult)
-    endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+    when (service) {
+      !is SuspendCallback<*> -> endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+      else -> Unit // Don't call callEnd() for suspend callbacks.
+    }
     return callResult.result.getOrThrow()
   }
 

@@ -22,6 +22,7 @@ import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newEndpointPair
+import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
@@ -38,6 +39,14 @@ import kotlinx.serialization.json.JsonElement
 internal class EventListenerEndpointTest {
   private val clientListener = CallListener()
   private val serviceListener = CallListener()
+
+  @AfterTest
+  fun tearDown() {
+    assertTrue(clientListener.calls.isEmpty())
+    assertTrue(clientListener.results.isEmpty())
+    assertTrue(serviceListener.calls.isEmpty())
+    assertTrue(serviceListener.results.isEmpty())
+  }
 
   @Test
   fun simpleRequestAndResponse() = runBlocking {
