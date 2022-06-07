@@ -31,6 +31,9 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+/**
+ * This test exercises event listeners using QuickJS.
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class EventListenerTest {
   private val dispatcher = TestCoroutineDispatcher()
