@@ -63,7 +63,6 @@ internal class OutboundCallHandler(
     return callResult.result.getOrThrow()
   }
 
-
   /** Used by generated code to call a suspending function. */
   suspend fun callSuspending(
     service: ZiplineService,

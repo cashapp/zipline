@@ -113,7 +113,12 @@ class Endpoint internal constructor(
     val callHandler = OutboundCallHandler(name, this, functions)
     val result = adapter.outboundService(callHandler)
     eventListener.takeService(name, result)
-    trackLeaks(eventListener, name, callHandler, result)
+
+    // Track leaks for services that can't release themselves automatically.
+    if (result !is SuspendCallback<*> && result !is CancelCallback) {
+      trackLeaks(eventListener, name, callHandler, result)
+    }
+
     return result
   }
 

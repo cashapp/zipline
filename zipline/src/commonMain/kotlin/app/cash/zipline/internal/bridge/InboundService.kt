@@ -109,11 +109,16 @@ internal class InboundService<T : ZiplineService>(
         job.cancel()
       }
     }
+
+    // Note that encoding the cancelCallback has the side effect of registering it on the endpoint.
+    // This must precede configuring the invokeOnCompletion() handler.
+    val encodedCallback = endpoint.json.encodeToStringFast(cancelCallbackSerializer, cancelCallback)
+
     job.invokeOnCompletion {
       endpoint.remove(cancelCallback)
     }
 
-    return endpoint.json.encodeToStringFast(cancelCallbackSerializer, cancelCallback)
+    return encodedCallback
   }
 
   private fun unexpectedFunction(functionName: String?) = ZiplineApiMismatchException(

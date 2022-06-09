@@ -19,6 +19,7 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.LoggingEventListener
+import app.cash.zipline.testing.SuspendingEchoService
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -63,6 +64,52 @@ class LeakedServicesTest {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.triggerLeakDetection()")
     assertThat(eventListener.take()).isEqualTo("bindService $name")
     assertThat(eventListener.take()).isEqualTo("serviceLeaked $name")
+  }
+
+  /**
+   * Confirm we don't leak `SuspendCallback` or `CancelCallback` objects after making suspending
+   * calls. These don't use [ZiplineService.close] for clean up.
+   */
+  @Test fun jvmCallsJsSuspendCallbacksNotLeaked(): Unit = runBlocking {
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.unblockSuspendingJs()")
+
+    val service = zipline.take<SuspendingEchoService>("jsSuspendingEchoService")
+    service.suspendingEcho(EchoRequest("Jake"))
+
+    assertThat(zipline.serviceNames).containsExactly(
+      "zipline/console",
+      "zipline/event_loop",
+      "zipline/event_listener",
+    )
+    assertThat(zipline.clientNames).containsExactly(
+      "zipline/js",
+      "jsSuspendingEchoService",
+    )
+  }
+
+  @Test fun jsCallsJvmSuspendCallbacksNotLeaked(): Unit = runBlocking {
+    val jvmSuspendingEchoService = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        return EchoResponse("hello from the suspending JVM, ${request.message}")
+      }
+    }
+
+    zipline.bind<SuspendingEchoService>(
+      "jvmSuspendingEchoService",
+      jvmSuspendingEchoService
+    )
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('Eric')")
+
+    assertThat(zipline.serviceNames).containsExactly(
+      "zipline/console",
+      "zipline/event_loop",
+      "zipline/event_listener",
+      "jvmSuspendingEchoService",
+    )
+    assertThat(zipline.clientNames).containsExactly(
+      "zipline/js",
+    )
   }
 
   /** Use a separate method so there's no hidden reference remaining on the stack. */
