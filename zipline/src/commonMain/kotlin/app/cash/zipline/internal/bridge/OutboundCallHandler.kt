@@ -96,9 +96,11 @@ internal class OutboundCallHandler(
         )
 
         continuation.invokeOnCancellation {
-          // TODO(jwilson): post this work to the zipline dispatcher
-          if (suspendCallback.completed) return@invokeOnCancellation
-          cancelCallback.cancel()
+          endpoint.scope.launch {
+            if (!suspendCallback.completed) {
+              cancelCallback.cancel()
+            }
+          }
         }
       }
     }
