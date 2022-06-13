@@ -19,9 +19,11 @@ import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 
 actual class DriverFactory {
-  actual fun createDriver(): SqlDriver {
+  actual fun createDriver(
+    schema: SqlDriver.Schema
+  ): SqlDriver {
     val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-    Database.Schema.create(driver)
+    schema.create(driver)
     return driver
   }
 

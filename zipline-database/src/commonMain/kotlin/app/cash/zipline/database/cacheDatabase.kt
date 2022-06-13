@@ -19,7 +19,9 @@ import com.squareup.sqldelight.db.SqlDriver
 
 expect class DriverFactory {
   /** Create a SqlDelight SqlDriver to be used in creating and managing a SqlLite instance on disk */
-  fun createDriver(): SqlDriver
+  fun createDriver(
+    schema: SqlDriver.Schema
+  ): SqlDriver
 
   /** Creates a Database according to generated Schema and runs migrations using a SqlDriver */
   fun <D> createDatabase(

@@ -19,9 +19,11 @@ import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
 
 actual class DriverFactory(private val context: android.content.Context) {
-  actual fun createDriver(): SqlDriver {
+  actual fun createDriver(
+    schema: SqlDriver.Schema
+  ): SqlDriver {
     return AndroidSqliteDriver(
-      schema = Database.Schema,
+      schema = schema,
       context = context,
       name = "zipline-loader.db",
       useNoBackupDirectory = true,

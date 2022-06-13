@@ -19,9 +19,11 @@ import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
 
 actual class DriverFactory {
-  actual fun createDriver(): SqlDriver {
+  actual fun createDriver(
+    schema: SqlDriver.Schema
+  ): SqlDriver {
     return NativeSqliteDriver(
-      schema = Database.Schema,
+      schema = schema,
       name = "zipline-loader.db",
     )
   }
