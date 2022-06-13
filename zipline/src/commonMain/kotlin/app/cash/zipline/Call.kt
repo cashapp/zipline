@@ -18,22 +18,41 @@ package app.cash.zipline
 /**
  * A single invocation of a function declared on a [ZiplineService].
  */
-interface ZiplineCall {
+class Call(
   /** The name of the service as used in [Zipline.bind] or [Zipline.take]. */
-  val serviceName: String
+  val serviceName: String,
 
   /**
    * The service instance. Do not downcast this to a concrete type; it may be a generated
    * implementation of the interface.
    */
-  val service: ZiplineService
+  val service: ZiplineService,
 
   /** The signature of the function that was invoked. */
-  val functionName: String
+  val functionName: String,
 
   /**
    * The original arguments passed to the function, in the order they appear in the function
    * signature.
    */
-  val args: List<*>
+  val args: List<*>,
+
+  /**
+   * Zipline's internal encoding of the call. This is intended to help with both debugging and
+   * optimization. The content of this string is not a stable format and should not be operated on
+   * programmatically.
+   *
+   * You can reduce the overhead of Zipline calls by making fewer calls or by and shrinking their
+   * encoded size.
+   */
+  val encodedCall: String,
+
+  serviceNames: List<String>,
+) {
+  /**
+   * Names of [ZiplineService] instances passed in the parameters of this call. These are opaque
+   * generated IDs that can be correlated to [EventListener.serviceLeaked] if the service is not
+   * closed properly.
+   */
+  val serviceNames: List<String> = serviceNames.toList() // Defensive copy.
 }

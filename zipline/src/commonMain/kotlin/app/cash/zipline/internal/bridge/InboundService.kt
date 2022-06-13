@@ -15,12 +15,13 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.Call
+import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineApiMismatchException
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.encodeToStringFast
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
-import kotlinx.serialization.KSerializer
 
 /**
  * Inbound calls use this to call into the real service.
@@ -32,57 +33,59 @@ internal class InboundService<T : ZiplineService>(
 ) {
   val functions: Map<String, ZiplineFunction<T>> = functionsList.associateBy { it.name }
 
-  fun call(call: RealCall): String {
-    val function = call.function as ZiplineFunction<ZiplineService>?
+  fun call(
+    internalCall: InternalCall,
+    externalCall: Call,
+  ): String {
+    val function = internalCall.function as ZiplineFunction<ZiplineService>?
+      ?: return endpoint.callCodec.encodeFailure(unexpectedFunction(internalCall.functionName))
 
-    val result: Result<Any?> = when {
-      function == null -> {
-        Result.failure(unexpectedFunction(call.functionName))
-      }
-      else -> {
-        // Removes the handler in calls to [ZiplineService.close]. We remove before dispatching so
-        // it'll always be removed even if the call stalls or throws.
-        if (function.isClose) {
-          endpoint.inboundServices.remove(call.serviceName)
-        }
-
-        val callStart = endpoint.eventListener.callStart(call)
-        val theResult = try {
-          val success = function.call(service, call.args)
-          Result.success(success)
-        } catch (e: Throwable) {
-          Result.failure(e)
-        }
-        endpoint.eventListener.callEnd(call, theResult, callStart)
-        theResult
-      }
+    // Removes the handler in calls to [ZiplineService.close]. We remove before dispatching so
+    // it'll always be removed even if the call stalls or throws.
+    if (function.isClose) {
+      endpoint.inboundServices.remove(internalCall.serviceName)
     }
 
-    return endpoint.json.encodeToStringFast(
-      (call.function?.kotlinResultSerializer ?: failureResultSerializer) as KSerializer<Any?>,
-      result,
-    )
+    val callStart = when (externalCall.service) {
+      !is SuspendCallback<*> -> endpoint.eventListener.callStart(externalCall)
+      else -> Unit // Don't call callStart() for suspend callbacks.
+    }
+
+    val theResult = runCatching {
+      function.call(service, internalCall.args)
+    }
+
+    val callResult = endpoint.callCodec.encodeResult(function, theResult)
+    when (externalCall.service) {
+      !is SuspendCallback<*> -> endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+      else -> Unit // Don't call callEnd() for suspend callbacks.
+    }
+    return callResult.encodedResult
   }
 
-  fun callSuspending(call: RealCall, suspendCallback: SuspendCallback<Any?>): String {
+  fun callSuspending(
+    internalCall: InternalCall,
+    externalCall: Call,
+    suspendCallback: SuspendCallback<Any?>,
+  ): String {
     val job = endpoint.scope.launch {
-      val function = call.function as ZiplineFunction<ZiplineService>?
-      val args = call.args
+      val function = internalCall.function as ZiplineFunction<ZiplineService>?
+      val args = internalCall.args
 
-      val result: Result<Any?> = when {
-        function == null -> {
-          Result.failure(unexpectedFunction(call.functionName))
+      val result: Result<Any?>
+      if (function == null) {
+        result = Result.failure(unexpectedFunction(internalCall.functionName))
+      } else {
+        val callStart = endpoint.eventListener.callStart(externalCall)
+        result = runCatching {
+          function.callSuspending(service, args)
         }
-        else -> {
-          val callStart = endpoint.eventListener.callStart(call)
-          val theResult = try {
-            val success = function.callSuspending(service, args)
-            Result.success(success)
-          } catch (e: Throwable) {
-            Result.failure(e)
-          }
-          endpoint.eventListener.callEnd(call, theResult, callStart)
-          theResult
+        endpoint.callCodec.nextOutboundCallCallback = { callbackCall ->
+          endpoint.eventListener.callEnd(
+            externalCall,
+            CallResult(result, callbackCall.encodedCall, callbackCall.serviceNames),
+            callStart,
+          )
         }
       }
 

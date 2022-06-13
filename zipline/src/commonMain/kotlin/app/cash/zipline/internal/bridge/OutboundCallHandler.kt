@@ -15,9 +15,10 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.Call
+import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
-import app.cash.zipline.internal.encodeToStringFast
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -42,22 +43,26 @@ internal class OutboundCallHandler(
   ): Any? {
     val function = functionsList[functionIndex]
     val argsList = args.toList()
-    val call = RealCall(
+    val internalCall = InternalCall(
       serviceName = serviceName,
-      serviceOrNull = service,
       functionName = function.name,
       function = function,
       args = argsList
     )
-    val encodedCall = endpoint.json.encodeToStringFast(endpoint.callSerializer, call)
-
-    val callStart = endpoint.eventListener.callStart(call)
-    val encodedResult = endpoint.outboundChannel.call(encodedCall)
-
-    val result = endpoint.json.decodeFromStringFast(function.kotlinResultSerializer, encodedResult)
-    endpoint.eventListener.callEnd(call, result, callStart)
-    return result.getOrThrow()
+    val externalCall = endpoint.callCodec.encodeCall(internalCall, service)
+    val callStart = when (service) {
+      !is SuspendCallback<*> -> endpoint.eventListener.callStart(externalCall)
+      else -> Unit // Don't call callStart() for suspend callbacks.
+    }
+    val encodedResult = endpoint.outboundChannel.call(externalCall.encodedCall)
+    val callResult = endpoint.callCodec.decodeResult(function, encodedResult)
+    when (service) {
+      !is SuspendCallback<*> -> endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+      else -> Unit // Don't call callEnd() for suspend callbacks.
+    }
+    return callResult.result.getOrThrow()
   }
+
 
   /** Used by generated code to call a suspending function. */
   suspend fun callSuspending(
@@ -68,23 +73,23 @@ internal class OutboundCallHandler(
     val function = functionsList[functionIndex]
     val argsList = args.toList()
     val suspendCallback = RealSuspendCallback<Any?>()
-    val call = RealCall(
+    val internalCall = InternalCall(
       serviceName = serviceName,
-      serviceOrNull = service,
       functionName = function.name,
       function = function,
       suspendCallback = suspendCallback,
       args = argsList,
     )
-    suspendCallback.call = call
-    val encodedCall = endpoint.json.encodeToStringFast(endpoint.callSerializer, call)
-    suspendCallback.callStart = endpoint.eventListener.callStart(call)
+    val externalCall = endpoint.callCodec.encodeCall(internalCall, service)
+    suspendCallback.internalCall = internalCall
+    suspendCallback.externalCall = externalCall
+    suspendCallback.callStart = endpoint.eventListener.callStart(externalCall)
 
     return suspendCancellableCoroutine { continuation ->
       suspendCallback.continuation = continuation
       endpoint.incompleteContinuations += continuation
       endpoint.scope.launch {
-        val encodedCancelCallback = endpoint.outboundChannel.call(encodedCall)
+        val encodedCancelCallback = endpoint.outboundChannel.call(externalCall.encodedCall)
         val cancelCallback = endpoint.json.decodeFromStringFast(
           cancelCallbackSerializer,
           encodedCancelCallback,
@@ -100,7 +105,8 @@ internal class OutboundCallHandler(
   }
 
   private inner class RealSuspendCallback<R> : SuspendCallback<R> {
-    lateinit var call: RealCall
+    lateinit var internalCall: InternalCall
+    lateinit var externalCall: Call
     lateinit var continuation: Continuation<R>
     var callStart: Any? = null
 
@@ -116,11 +122,13 @@ internal class OutboundCallHandler(
     }
 
     private fun call(result: Result<R>) {
+      val suspendCall = endpoint.callCodec.lastInboundCall!!
+      val callResult = CallResult(result, suspendCall.encodedCall, suspendCall.serviceNames)
       completed = true
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
       endpoint.remove(this@RealSuspendCallback)
       endpoint.incompleteContinuations -= continuation
-      endpoint.eventListener.callEnd(call, result, callStart)
+      endpoint.eventListener.callEnd(externalCall, callResult, callStart)
       continuation.resumeWith(result)
     }
   }

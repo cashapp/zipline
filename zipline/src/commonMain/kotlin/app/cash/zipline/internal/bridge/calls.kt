@@ -15,8 +15,6 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.ZiplineCall
-import app.cash.zipline.ZiplineService
 import app.cash.zipline.ziplineServiceSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -30,18 +28,15 @@ import kotlinx.serialization.encoding.decodeStructure
 import kotlinx.serialization.encoding.encodeStructure
 import kotlinx.serialization.json.JsonDecoder
 
-internal class RealCall(
+internal class InternalCall(
   /** This is not-null, but may refer to a service that is not known by this endpoint. */
-  override val serviceName: String,
-
-  /** This is null for unknown services. */
-  val serviceOrNull: ZiplineService?,
+  val serviceName: String,
 
   /** This is absent for outbound calls. */
   val inboundService: InboundService<*>? = null,
 
   /** This is not-null, but may refer to a function that is not known by this endpoint. */
-  override val functionName: String,
+  val functionName: String,
 
   /** This is null for unknown functions. */
   val function: ZiplineFunction<*>?,
@@ -52,12 +47,8 @@ internal class RealCall(
    */
   val suspendCallback: SuspendCallback<Any?>? = null,
 
-  override val args: List<*>,
-) : ZiplineCall {
-  /** If this call gets far enough to notify events, the [serviceOrNull] is not null. */
-  override val service: ZiplineService
-    get() = serviceOrNull!!
-}
+  val args: List<*>,
+)
 
 /** This uses [Int] as a placeholder; in practice the element type depends on the argument type. */
 private val argsListDescriptor = ListSerializer(Int.serializer()).descriptor
@@ -82,7 +73,7 @@ internal val cancelCallbackSerializer = ziplineServiceSerializer<CancelCallback>
  */
 internal class RealCallSerializer(
   private val endpoint: Endpoint,
-) : KSerializer<RealCall> {
+) : KSerializer<InternalCall> {
 
   override val descriptor = buildClassSerialDescriptor("RealCall") {
     element("service", String.serializer().descriptor)
@@ -91,7 +82,7 @@ internal class RealCallSerializer(
     element("args", argsListDescriptor)
   }
 
-  override fun serialize(encoder: Encoder, value: RealCall) {
+  override fun serialize(encoder: Encoder, value: InternalCall) {
     encoder.encodeStructure(descriptor) {
       encodeStringElement(descriptor, 0, value.serviceName)
       encodeStringElement(descriptor, 1, value.functionName)
@@ -107,7 +98,7 @@ internal class RealCallSerializer(
     }
   }
 
-  override fun deserialize(decoder: Decoder): RealCall {
+  override fun deserialize(decoder: Decoder): InternalCall {
     return decoder.decodeStructure(descriptor) {
       var serviceName = ""
       var inboundService: InboundService<*>? = null
@@ -153,9 +144,8 @@ internal class RealCallSerializer(
           else -> error("Unexpected index: $index")
         }
       }
-      return@decodeStructure RealCall(
+      return@decodeStructure InternalCall(
         serviceName = serviceName,
-        serviceOrNull = inboundService?.service,
         inboundService = inboundService,
         functionName = functionName,
         function = function,

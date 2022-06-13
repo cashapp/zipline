@@ -17,7 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.decodeFromStringFast
+import app.cash.zipline.internal.passByReferencePrefix
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
@@ -44,8 +44,6 @@ class Endpoint internal constructor(
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
 
-  internal val callSerializer = RealCallSerializer(this)
-
   /** This uses both Zipline-provided serializers and user-provided serializers. */
   internal val json: Json = Json {
     useArrayPolymorphism = true
@@ -56,18 +54,28 @@ class Endpoint internal constructor(
     }
   }
 
+  internal val callCodec = CallCodec(this)
+
   internal val inboundChannel = object : CallChannel {
     override fun serviceNamesArray(): Array<String> {
       return serviceNames.toTypedArray()
     }
 
     override fun call(callJson: String): String {
-      val call = json.decodeFromStringFast(callSerializer, callJson)
-      val service = call.inboundService ?: error("no handler for ${call.serviceName}")
+      val internalCall = callCodec.decodeCall(callJson)
+      val inboundService = internalCall.inboundService!!
+      val externalCall = callCodec.lastInboundCall!!
 
       return when {
-        call.suspendCallback != null -> service.callSuspending(call, call.suspendCallback)
-        else -> service.call(call)
+        internalCall.suspendCallback != null -> inboundService.callSuspending(
+          internalCall,
+          externalCall,
+          internalCall.suspendCallback
+        )
+        else -> inboundService.call(
+          internalCall,
+          externalCall
+        )
       }
     }
 
@@ -126,12 +134,7 @@ class Endpoint internal constructor(
     }
   }
 
-  internal fun generateName(prefix: String): String {
-    return "$prefix${nextId++}"
-  }
-
-  /** Derives the name of a [CancelCallback] from the name of a [SuspendCallback]. */
-  internal fun cancelCallbackName(name: String): String {
-    return "$name/cancel"
+  internal fun generatePassByReferenceName(): String {
+    return "$passByReferencePrefix${nextId++}"
   }
 }

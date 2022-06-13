@@ -15,8 +15,9 @@
  */
 package app.cash.zipline.testing
 
+import app.cash.zipline.Call
+import app.cash.zipline.CallResult
 import app.cash.zipline.EventListener
-import app.cash.zipline.ZiplineCall
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.bridge.CancelCallback
 import app.cash.zipline.internal.bridge.SuspendCallback
@@ -42,7 +43,7 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun callStart(call: ZiplineCall): Any? {
+  override fun callStart(call: Call): Any? {
     val callId = nextCallId++
     log(
       service = call.service,
@@ -52,11 +53,12 @@ class LoggingEventListener : EventListener() {
     return callId
   }
 
-  override fun callEnd(call: ZiplineCall, result: Result<Any?>, callStartResult: Any?) {
+  override fun callEnd(call: Call, result: CallResult, callStartResult: Any?) {
     log(
       service = call.service,
       serviceName = call.serviceName,
-      log = "callEnd $callStartResult ${call.serviceName} ${call.functionName} ${call.args} $result"
+      log = "callEnd $callStartResult " +
+        "${call.serviceName} ${call.functionName} ${call.args} ${result.result}"
     )
   }
 

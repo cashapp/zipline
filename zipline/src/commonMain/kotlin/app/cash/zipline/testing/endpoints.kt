@@ -28,9 +28,11 @@ import kotlinx.serialization.modules.SerializersModule
 internal fun newEndpointPair(
   scope: CoroutineScope,
   serializersModule: SerializersModule = EmptySerializersModule,
+  listenerA: EventListener = EventListener.NONE,
+  listenerB: EventListener = EventListener.NONE,
 ): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
-    val a: Endpoint = Endpoint(scope, serializersModule, EventListener.NONE, object : CallChannel {
+    val a: Endpoint = Endpoint(scope, serializersModule, listenerA, object : CallChannel {
       override fun serviceNamesArray(): Array<String> {
         return b.inboundChannel.serviceNamesArray()
       }
@@ -44,7 +46,7 @@ internal fun newEndpointPair(
       }
     })
 
-    val b: Endpoint = Endpoint(scope, serializersModule, EventListener.NONE, a.inboundChannel)
+    val b: Endpoint = Endpoint(scope, serializersModule, listenerB, a.inboundChannel)
   }
 
   return pair.a to pair.b
