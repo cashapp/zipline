@@ -22,10 +22,10 @@ expect class DriverFactory {
   fun createDriver(): SqlDriver
 
   /** Creates a Database according to generated Schema and runs migrations using a SqlDriver */
-  fun createDatabase(
+  fun <D> createDatabase(
     sqlDriver: SqlDriver,
     schema: SqlDriver.Schema,
-  )
+  ): D
 }
 
 /** Identify if an exception is from platform specific SqlLite library */

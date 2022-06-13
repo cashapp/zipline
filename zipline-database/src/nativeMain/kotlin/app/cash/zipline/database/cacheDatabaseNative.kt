@@ -26,10 +26,10 @@ actual class DriverFactory {
     )
   }
 
-  actual fun createDatabase(
+  actual fun <D> createDatabase(
     sqlDriver: SqlDriver,
     schema: SqlDriver.Schema
-  ) {
+  ): D {
   }
 }
 

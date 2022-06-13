@@ -28,10 +28,10 @@ actual class DriverFactory(private val context: android.content.Context) {
     )
   }
 
-  actual fun createDatabase(
+  actual fun <D> createDatabase(
     sqlDriver: SqlDriver,
     schema: SqlDriver.Schema
-  ) {
+  ): D {
   }
 }
 

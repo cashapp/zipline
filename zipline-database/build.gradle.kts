@@ -34,6 +34,7 @@ kotlin {
         api(libs.kotlinx.coroutines.core)
         api(projects.zipline)
         api(libs.okio.core)
+        api(libs.sqldelight.runtime)
         implementation(libs.kotlinx.serialization.json)
       }
     }
