@@ -51,11 +51,8 @@ internal class InboundService<T : ZiplineService>(
       else -> Unit // Don't call callStart() for suspend callbacks.
     }
 
-    val theResult = try {
-      val success = function.call(service, internalCall.args)
-      Result.success(success)
-    } catch (e: Throwable) {
-      Result.failure(e)
+    val theResult = runCatching {
+      function.call(service, internalCall.args)
     }
 
     val callResult = endpoint.callCodec.encodeResult(function, theResult)
@@ -80,11 +77,8 @@ internal class InboundService<T : ZiplineService>(
         result = Result.failure(unexpectedFunction(internalCall.functionName))
       } else {
         val callStart = endpoint.eventListener.callStart(externalCall)
-        result = try {
-          val success = function.callSuspending(service, args)
-          Result.success(success)
-        } catch (e: Throwable) {
-          Result.failure(e)
+        result = runCatching {
+          function.callSuspending(service, args)
         }
         endpoint.callCodec.nextOutboundCallCallback = { callbackCall ->
           endpoint.eventListener.callEnd(
