@@ -27,8 +27,12 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -308,4 +312,50 @@ internal class EndpointTest {
       stringClient.genericEcho("hello")
     )
   }
+
+  @Test
+  fun cancelIsAlwaysReceivedOnZiplineDispatcher() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val channel = Channel<String>(1)
+
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        return suspendCancellableCoroutine {
+          it.invokeOnCancellation {
+            channel.trySend("Canceled on $dispatcher")
+          }
+          channel.trySend("Invoked on $dispatcher")
+        }
+      }
+    }
+
+    endpointA.bind<SuspendingEchoService>("helloService", service)
+    val client = endpointB.take<SuspendingEchoService>("helloService")
+
+    val deferredResponse = async {
+      client.suspendingEcho(EchoRequest("ping"))
+    }
+
+    assertEquals(
+      "Invoked on $dispatcher",
+      channel.receive(),
+    )
+
+    launch(Dispatchers.Unconfined) {
+      deferredResponse.cancel()
+    }
+
+    assertFailsWith<CancellationException> {
+      deferredResponse.await()
+    }
+
+    assertEquals(
+      "Canceled on $dispatcher",
+      channel.receive(),
+    )
+  }
+
+  @OptIn(ExperimentalStdlibApi::class)
+  private val CoroutineScope.dispatcher: CoroutineDispatcher
+    get() = coroutineContext[CoroutineDispatcher.Key]!!
 }
