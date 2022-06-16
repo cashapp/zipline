@@ -20,7 +20,8 @@ import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 
 actual class DriverFactory {
   actual fun createDriver(
-    schema: SqlDriver.Schema
+    schema: SqlDriver.Schema,
+    dbPath: String,
   ): SqlDriver {
     val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
     schema.create(driver)
@@ -31,6 +32,7 @@ actual class DriverFactory {
     sqlDriver: SqlDriver,
     schema: SqlDriver.Schema
   ): D {
+    return schema.create(sqlDriver) as D
   }
 }
 

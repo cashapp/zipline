@@ -15,23 +15,70 @@
  */
 package app.cash.zipline.database
 
+import co.touchlab.sqliter.DatabaseConfiguration
+import co.touchlab.sqliter.DatabaseFileContext
+import co.touchlab.sqliter.native.NativeDatabaseManager
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
+import com.squareup.sqldelight.drivers.native.wrapConnection
 
-actual class DriverFactory {
-  actual fun createDriver(
-    schema: SqlDriver.Schema
-  ): SqlDriver {
-    return NativeSqliteDriver(
-      schema = schema,
-      name = "zipline-loader.db",
+actual class DriverFactory(
+  private val dbPath: String,
+  private val schema: SqlDriver.Schema,
+) {
+  actual fun createDriver(): SqlDriver {
+    val basePath = dbPath.substringBeforeLast('/')
+    val name = dbPath.substringAfterLast('/')
+    val configuration = DatabaseConfiguration(
+      extendedConfig = DatabaseConfiguration.Extended(
+        basePath = basePath,
+      ),
+      name = name,
+      version = schema.version,
+      create = { connection ->
+        wrapConnection(connection, schema::create)
+      },
+      upgrade = { connection, oldVersion, newVersion ->
+        wrapConnection(connection) { schema.migrate(it, oldVersion, newVersion) }
+      }
     )
+    val success = sanityCheck(configuration)
+
+    // Attempt to delete a problematic database
+    if (!success)
+      DatabaseFileContext.deleteDatabase(name, basePath)
+
+    return NativeSqliteDriver(configuration = configuration)
   }
 
   actual fun <D> createDatabase(
     sqlDriver: SqlDriver,
-    schema: SqlDriver.Schema
   ): D {
+    return schema.create(sqlDriver) as D
+  }
+
+  private fun sanityCheck(configuration: DatabaseConfiguration): Boolean {
+    val databaseManager = NativeDatabaseManager(dbPath, configuration)
+    val conn = databaseManager.createMultiThreadedConnection()
+    var success = true
+
+    try {
+      // If the tables don't exist, createStatement fails
+      val stmt = conn.createStatement(
+        "SELECT count(*) FROM entity_fts UNION\n" +
+          "SELECT count(*) FROM entity_lookup UNION\n" +
+          "SELECT count(*) FROM statics"
+      )
+
+      stmt.finalizeStatement()
+    } catch (e: Exception) {
+      reportCrash(e)
+      success = false
+    } finally {
+      conn.close()
+    }
+
+    return success
   }
 }
 

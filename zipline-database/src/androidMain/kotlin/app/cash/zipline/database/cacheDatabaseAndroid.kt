@@ -17,23 +17,25 @@ package app.cash.zipline.database
 
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
+import okio.Path.Companion.toOkioPath
 
-actual class DriverFactory(private val context: android.content.Context) {
-  actual fun createDriver(
-    schema: SqlDriver.Schema
-  ): SqlDriver {
+actual class DriverFactory(
+  private val context: android.content.Context,
+  private val schema: SqlDriver.Schema,
+) {
+  actual fun createDriver(): SqlDriver {
     return AndroidSqliteDriver(
       schema = schema,
       context = context,
-      name = "zipline-loader.db",
+      name = (context.cacheDir.toOkioPath() / "zipline" / "zipline-loader.db").toString(),
       useNoBackupDirectory = true,
     )
   }
 
   actual fun <D> createDatabase(
     sqlDriver: SqlDriver,
-    schema: SqlDriver.Schema
   ): D {
+    return schema.create(sqlDriver) as D
   }
 }
 

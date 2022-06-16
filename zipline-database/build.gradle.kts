@@ -63,6 +63,7 @@ kotlin {
       dependsOn(engineMain)
       dependencies {
         implementation(libs.sqldelight.driver.native)
+        implementation(libs.crashkios)
       }
     }
     targets.withType<KotlinNativeTarget> {
