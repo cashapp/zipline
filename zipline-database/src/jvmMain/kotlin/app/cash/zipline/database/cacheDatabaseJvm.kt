@@ -18,11 +18,11 @@ package app.cash.zipline.database
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 
-actual class DriverFactory {
-  actual fun createDriver(
-    schema: SqlDriver.Schema,
-    dbPath: String,
-  ): SqlDriver {
+/** JVM implementation is used for testing and thus is In-Memory. */
+actual class DriverFactory(
+  private val schema: SqlDriver.Schema
+) {
+  actual fun createDriver(): SqlDriver {
     val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
     schema.create(driver)
     return driver
@@ -30,7 +30,6 @@ actual class DriverFactory {
 
   actual fun <D> createDatabase(
     sqlDriver: SqlDriver,
-    schema: SqlDriver.Schema
   ): D {
     return schema.create(sqlDriver) as D
   }
