@@ -26,6 +26,7 @@ import com.squareup.sqldelight.drivers.native.wrapConnection
 actual class DatabaseFactory(
   private val dbPath: String,
   private val schema: SqlDriver.Schema,
+  /** SQL table names used to verify that databases have been created correctly as expected. */
   private val tableNames: List<String>,
 ) {
   actual fun createDriver(): SqlDriver {
@@ -47,8 +48,9 @@ actual class DatabaseFactory(
     val success = sanityCheck(configuration)
 
     // Attempt to delete a problematic database
-    if (!success)
+    if (!success) {
       DatabaseFileContext.deleteDatabase(name, basePath)
+    }
 
     return NativeSqliteDriver(configuration = configuration)
   }
@@ -58,10 +60,9 @@ actual class DatabaseFactory(
     val conn = databaseManager.createMultiThreadedConnection()
     var success = true
 
-    // TODO pass in the database table names
     try {
       // If the tables don't exist, createStatement fails
-      val stmtSql = tableNames.joinToString(" UNION\n") { table ->
+      val stmtSql = tableNames.joinToString(" UNION\n ") { table ->
         "SELECT count(*) FROM $table"
       }
       val stmt = conn.createStatement(stmtSql)
