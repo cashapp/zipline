@@ -26,4 +26,11 @@ class CacheDatabaseJvmTest {
   fun `happy path`() {
     assertEquals(0, database.produceQueries.count().executeAsOne())
   }
+
+  @Test
+  fun `multiple create calls succeed`() {
+    databaseFactory.createDriver()
+    databaseFactory.createDriver()
+    databaseFactory.createDriver()
+  }
 }
