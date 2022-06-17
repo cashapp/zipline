@@ -15,14 +15,15 @@
  */
 package app.cash.zipline.database
 
+import com.squareup.sqldelight.Transacter
 import com.squareup.sqldelight.db.SqlDriver
 
-expect class DriverFactory {
+expect class DatabaseFactory {
   /** Create a SqlDelight SqlDriver to be used in creating and managing a SqlLite instance on disk */
   fun createDriver(): SqlDriver
 
   /** Creates a Database according to generated Schema and runs migrations using a SqlDriver */
-  fun <D> createDatabase(
+  fun <D: Transacter> createDatabase(
     sqlDriver: SqlDriver,
   ): D
 }

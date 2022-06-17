@@ -34,6 +34,7 @@ kotlin {
       dependencies {
         api(libs.kotlinx.coroutines.core)
         api(projects.zipline)
+        api(projects.ziplineDatabase)
         api(libs.okio.core)
         implementation(libs.kotlinx.serialization.json)
       }

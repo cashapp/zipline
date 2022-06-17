@@ -15,11 +15,12 @@
  */
 package app.cash.zipline.database
 
+import com.squareup.sqldelight.Transacter
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
 import okio.Path.Companion.toOkioPath
 
-actual class DriverFactory(
+actual class DatabaseFactory(
   private val context: android.content.Context,
   private val schema: SqlDriver.Schema,
 ) {
@@ -32,7 +33,7 @@ actual class DriverFactory(
     )
   }
 
-  actual fun <D> createDatabase(
+  actual fun <D: Transacter> createDatabase(
     sqlDriver: SqlDriver,
   ): D {
     return schema.create(sqlDriver) as D

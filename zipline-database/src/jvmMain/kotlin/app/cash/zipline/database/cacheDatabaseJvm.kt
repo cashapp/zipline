@@ -15,11 +15,12 @@
  */
 package app.cash.zipline.database
 
+import com.squareup.sqldelight.Transacter
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 
 /** JVM implementation is used for testing and thus is In-Memory. */
-actual class DriverFactory(
+actual class DatabaseFactory(
   private val schema: SqlDriver.Schema
 ) {
   actual fun createDriver(): SqlDriver {
@@ -28,9 +29,11 @@ actual class DriverFactory(
     return driver
   }
 
-  actual fun <D> createDatabase(
+  actual fun <D: Transacter> createDatabase(
     sqlDriver: SqlDriver,
   ): D {
+
+
     return schema.create(sqlDriver) as D
   }
 }

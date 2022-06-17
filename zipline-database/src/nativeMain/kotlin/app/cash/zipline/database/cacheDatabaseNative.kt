@@ -18,11 +18,12 @@ package app.cash.zipline.database
 import co.touchlab.sqliter.DatabaseConfiguration
 import co.touchlab.sqliter.DatabaseFileContext
 import co.touchlab.sqliter.native.NativeDatabaseManager
+import com.squareup.sqldelight.Transacter
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
 import com.squareup.sqldelight.drivers.native.wrapConnection
 
-actual class DriverFactory(
+actual class DatabaseFactory(
   private val dbPath: String,
   private val schema: SqlDriver.Schema,
 ) {
@@ -51,7 +52,7 @@ actual class DriverFactory(
     return NativeSqliteDriver(configuration = configuration)
   }
 
-  actual fun <D> createDatabase(
+  actual fun <D: Transacter> createDatabase(
     sqlDriver: SqlDriver,
   ): D {
     return schema.create(sqlDriver) as D
@@ -62,6 +63,7 @@ actual class DriverFactory(
     val conn = databaseManager.createMultiThreadedConnection()
     var success = true
 
+    // TODO pass in the database table names
     try {
       // If the tables don't exist, createStatement fails
       val stmt = conn.createStatement(

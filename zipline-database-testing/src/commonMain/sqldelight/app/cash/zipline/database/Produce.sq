@@ -1,0 +1,30 @@
+CREATE TABLE fruits (
+  id INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  color TEXT NOT NULL
+);
+
+CREATE UNIQUE INDEX id_name ON fruits(id, name);
+
+addItem:
+INSERT INTO fruits(name, color)
+VALUES (?, ?);
+
+count:
+SELECT COUNT(*) FROM fruits;
+
+get:
+SELECT *
+FROM fruits
+WHERE name LIKE ('%' || :name)
+LIMIT 1;
+
+getById:
+SELECT *
+FROM fruits
+WHERE id = :id
+LIMIT 1;
+
+delete:
+DELETE FROM fruits
+WHERE id = :id;

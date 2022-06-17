@@ -75,12 +75,12 @@ kotlin {
     val commonTest by getting {
       dependencies {
         implementation(kotlin("test"))
+        implementation(projects.ziplineDatabaseTesting)
       }
     }
     val engineTest by creating {
       dependsOn(commonTest)
       dependencies {
-        implementation(projects.ziplineLoaderTesting)
       }
     }
     val jniTest by creating {
