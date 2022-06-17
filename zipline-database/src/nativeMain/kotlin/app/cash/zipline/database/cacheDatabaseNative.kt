@@ -52,12 +52,6 @@ actual class DatabaseFactory(
     return NativeSqliteDriver(configuration = configuration)
   }
 
-  actual fun <D: Transacter> createDatabase(
-    sqlDriver: SqlDriver,
-  ): D {
-    return schema.create(sqlDriver) as D
-  }
-
   private fun sanityCheck(configuration: DatabaseConfiguration): Boolean {
     val databaseManager = NativeDatabaseManager(dbPath, configuration)
     val conn = databaseManager.createMultiThreadedConnection()

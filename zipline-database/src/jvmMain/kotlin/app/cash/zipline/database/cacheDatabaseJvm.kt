@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.database
 
-import com.squareup.sqldelight.Transacter
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 
@@ -27,14 +26,6 @@ actual class DatabaseFactory(
     val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
     schema.create(driver)
     return driver
-  }
-
-  actual fun <D: Transacter> createDatabase(
-    sqlDriver: SqlDriver,
-  ): D {
-
-
-    return schema.create(sqlDriver) as D
   }
 }
 

@@ -2,6 +2,7 @@ package app.cash.zipline.database
 
 import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.assertEquals
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -13,12 +14,16 @@ class CacheDatabaseJvmTest {
   @Before
   fun before() {
     driver = databaseFactory.createDriver()
-    database = databaseFactory.createDatabase(driver)
+    database = Produce(driver)
+  }
+
+  @After
+  fun tearDown() {
+    driver.close()
   }
 
   @Test
   fun `happy path`() {
     assertEquals(0, database.produceQueries.count().executeAsOne())
-
   }
 }

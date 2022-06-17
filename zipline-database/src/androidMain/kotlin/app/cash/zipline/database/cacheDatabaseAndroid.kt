@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.database
 
-import com.squareup.sqldelight.Transacter
 import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
 import okio.Path.Companion.toOkioPath
@@ -31,12 +30,6 @@ actual class DatabaseFactory(
       name = (context.cacheDir.toOkioPath() / "zipline" / "zipline-loader.db").toString(),
       useNoBackupDirectory = true,
     )
-  }
-
-  actual fun <D: Transacter> createDatabase(
-    sqlDriver: SqlDriver,
-  ): D {
-    return schema.create(sqlDriver) as D
   }
 }
 
