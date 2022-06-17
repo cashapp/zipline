@@ -16,6 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
+import app.cash.zipline.database.isSqlException
 import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.serialization.json.Json
@@ -343,7 +344,6 @@ class ZiplineCache internal constructor(
   }
 }
 
-// TODO add schema version checker and automigration for non-Android platforms
 fun createZiplineCache(
   eventListener: EventListener,
   driver: SqlDriver,

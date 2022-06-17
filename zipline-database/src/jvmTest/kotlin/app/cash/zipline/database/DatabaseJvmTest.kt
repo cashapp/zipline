@@ -6,14 +6,14 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-class CacheDatabaseJvmTest {
-  private val databaseFactory = DatabaseFactory(Produce.Schema)
+class DatabaseJvmTest {
+  private val driverFactory = DriverFactory(Produce.Schema)
   private lateinit var driver: SqlDriver
   private lateinit var database: Produce
 
   @Before
   fun before() {
-    driver = databaseFactory.createDriver()
+    driver = driverFactory.createDriver()
     database = Produce(driver)
   }
 
@@ -29,8 +29,8 @@ class CacheDatabaseJvmTest {
 
   @Test
   fun `multiple create calls succeed`() {
-    databaseFactory.createDriver()
-    databaseFactory.createDriver()
-    databaseFactory.createDriver()
+    driverFactory.createDriver()
+    driverFactory.createDriver()
+    driverFactory.createDriver()
   }
 }

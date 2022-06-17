@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.turbine.test
 import app.cash.zipline.QuickJs
+import app.cash.zipline.database.DriverFactory
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
@@ -26,7 +27,7 @@ import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createProductionZiplineLoader
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
+import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -34,7 +35,6 @@ import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -52,7 +52,8 @@ import org.junit.Test
 class ZiplineLoaderTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+  private val driverFactory = DriverFactory(Database.Schema)
+  private lateinit var driver: SqlDriver
   private val cacheSize = 1024L * 1024L
   private var nowMillis = 1_000L
 
@@ -65,7 +66,7 @@ class ZiplineLoaderTest {
 
   @Before
   fun setUp() {
-    Database.Schema.create(driver)
+    driver = driverFactory.createDriver()
     quickJs = QuickJs.create()
     testFixtures = LoaderTestFixtures(quickJs)
     loader = createProductionZiplineLoader(
@@ -82,8 +83,8 @@ class ZiplineLoaderTest {
 
   @After
   fun tearDown() {
-    quickJs.close()
     driver.close()
+    quickJs.close()
   }
 
   @Test
@@ -300,8 +301,18 @@ class ZiplineLoaderTest {
       manifestUrlFlow = manifestUrlFlow,
       pollingInterval = 1000.toDuration(DurationUnit.MILLISECONDS),
     ) {}.test {
-      assertEquals("apple", (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(" loaded\n"))
-      assertEquals("firetruck", (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(" loaded\n"))
+      assertEquals(
+        "apple",
+        (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
+          " loaded\n"
+        )
+      )
+      assertEquals(
+        "firetruck",
+        (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
+          " loaded\n"
+        )
+      )
       cancel()
     }
   }

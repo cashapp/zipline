@@ -20,7 +20,7 @@ import com.squareup.sqldelight.db.SqlDriver
 import okio.Path
 import okio.Path.Companion.toOkioPath
 
-actual class DatabaseFactory(
+actual class DriverFactory(
   private val context: android.content.Context,
   private val schema: SqlDriver.Schema,
   private val dbName: Path,

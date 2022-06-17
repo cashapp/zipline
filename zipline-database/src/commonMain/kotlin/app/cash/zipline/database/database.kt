@@ -13,19 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline.database
 
 import com.squareup.sqldelight.db.SqlDriver
-import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
 
-actual class DriverFactory {
-  actual fun createDriver(): SqlDriver {
-    return NativeSqliteDriver(
-      schema = Database.Schema,
-      name = "zipline-loader.db",
-    )
-  }
+expect class DriverFactory {
+  /**
+   * Create a SqlDriver to be used in creating and managing a SqlLite instance on disk.
+   *
+   * Database is created and migrated after the driver is initialized prior to return.
+   */
+  fun createDriver(): SqlDriver
 }
 
-// TODO find the native exception class
-actual fun isSqlException(e: Exception): Boolean = TODO()
+/** Identify if an exception is from platform specific SqlLite library */
+expect fun isSqlException(e: Exception): Boolean

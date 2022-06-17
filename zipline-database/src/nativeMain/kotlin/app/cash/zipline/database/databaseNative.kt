@@ -18,12 +18,11 @@ package app.cash.zipline.database
 import co.touchlab.sqliter.DatabaseConfiguration
 import co.touchlab.sqliter.DatabaseFileContext
 import co.touchlab.sqliter.native.NativeDatabaseManager
-import com.squareup.sqldelight.Transacter
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
 import com.squareup.sqldelight.drivers.native.wrapConnection
 
-actual class DatabaseFactory(
+actual class DriverFactory(
   private val dbPath: String,
   private val schema: SqlDriver.Schema,
   /** SQL table names used to verify that databases have been created correctly as expected. */

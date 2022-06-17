@@ -19,6 +19,7 @@ import app.cash.zipline.testing.LoggingEventListener
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import org.junit.After
 import org.junit.Test
 
 @Suppress("UnstableApiUsage")
@@ -26,6 +27,11 @@ import org.junit.Test
 class LoaderEventsTest {
   private val eventListener = LoggingEventListener()
   private val tester = LoaderTester(eventListener)
+
+  @After
+  fun tearDown() {
+    tester.close()
+  }
 
   @Test
   fun happyPathEvents() = runBlocking {

@@ -18,11 +18,12 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
+import app.cash.zipline.database.DriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createProductionZiplineLoader
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
+import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
@@ -38,7 +39,8 @@ import org.junit.Test
 class ProductionFetcherReceiverTest {
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+  private val driverFactory = DriverFactory(Database.Schema)
+  private lateinit var driver: SqlDriver
   private val cacheMaxSizeInBytes = 100L * 1024L * 1024L
   private val cacheDirectory = "/zipline/cache".toPath()
   private var nowMillis = 1_000L
@@ -55,14 +57,14 @@ class ProductionFetcherReceiverTest {
 
   @Before
   fun setUp() {
-    Database.Schema.create(cacheDbDriver)
+    driver = driverFactory.createDriver()
     quickJs = QuickJs.create()
     testFixtures = LoaderTestFixtures(quickJs)
     fileSystem = FakeFileSystem()
     embeddedFileSystem = FakeFileSystem()
     cache = createZiplineCache(
       eventListener = EventListener.NONE,
-      driver = cacheDbDriver,
+      driver = driver,
       fileSystem = fileSystem,
       directory = cacheDirectory,
       maxSizeInBytes = cacheMaxSizeInBytes,
@@ -79,8 +81,8 @@ class ProductionFetcherReceiverTest {
 
   @After
   fun tearDown() {
+    driver.close()
     quickJs.close()
-    cacheDbDriver.close()
   }
 
   @Test

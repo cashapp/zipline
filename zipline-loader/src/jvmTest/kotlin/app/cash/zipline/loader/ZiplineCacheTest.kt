@@ -16,11 +16,11 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.database.DriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver.Companion.IN_MEMORY
+import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -37,7 +37,8 @@ import org.junit.Before
 import org.junit.Test
 
 class ZiplineCacheTest {
-  private val driver = JdbcSqliteDriver(IN_MEMORY)
+  private val driverFactory = DriverFactory(Database.Schema)
+  private lateinit var driver: SqlDriver
   private lateinit var database: Database
   private lateinit var fileSystem: FileSystem
   private val directory = "/zipline/cache".toPath()
@@ -49,7 +50,7 @@ class ZiplineCacheTest {
   @Before
   fun setUp() {
     fileSystem = FakeFileSystem()
-    Database.Schema.create(driver)
+    driver = driverFactory.createDriver()
     database = createDatabase(driver)
 
     quickJs = QuickJs.create()
@@ -59,6 +60,7 @@ class ZiplineCacheTest {
   @After
   fun tearDown() {
     driver.close()
+    quickJs.close()
   }
 
   @Test

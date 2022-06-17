@@ -16,15 +16,17 @@
 package app.cash.zipline.database
 
 import com.squareup.sqldelight.db.SqlDriver
+import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 
-expect class DatabaseFactory {
-  /**
-   * Create a SqlDriver to be used in creating and managing a SqlLite instance on disk.
-   *
-   * Database is created and migrated after the driver is initialized prior to return.
-   */
-  fun createDriver(): SqlDriver
+/** JVM implementation is used for testing and thus is In-Memory. */
+actual class DriverFactory(
+  private val schema: SqlDriver.Schema
+) {
+  actual fun createDriver(): SqlDriver {
+    val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+    schema.create(driver)
+    return driver
+  }
 }
 
-/** Identify if an exception is from platform specific SqlLite library */
-expect fun isSqlException(e: Exception): Boolean
+actual fun isSqlException(e: Exception) = e is java.sql.SQLException
