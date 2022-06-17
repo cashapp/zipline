@@ -26,6 +26,7 @@ import com.squareup.sqldelight.drivers.native.wrapConnection
 actual class DatabaseFactory(
   private val dbPath: String,
   private val schema: SqlDriver.Schema,
+  private val tableNames: List<String>,
 ) {
   actual fun createDriver(): SqlDriver {
     val basePath = dbPath.substringBeforeLast('/')
@@ -60,11 +61,10 @@ actual class DatabaseFactory(
     // TODO pass in the database table names
     try {
       // If the tables don't exist, createStatement fails
-      val stmt = conn.createStatement(
-        "SELECT count(*) FROM entity_fts UNION\n" +
-          "SELECT count(*) FROM entity_lookup UNION\n" +
-          "SELECT count(*) FROM statics"
-      )
+      val stmtSql = tableNames.joinToString(" UNION\n") { table ->
+        "SELECT count(*) FROM $table"
+      }
+      val stmt = conn.createStatement(stmtSql)
 
       stmt.finalizeStatement()
     } catch (e: Exception) {
