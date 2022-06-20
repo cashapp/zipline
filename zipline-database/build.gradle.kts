@@ -31,11 +31,8 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        api(libs.kotlinx.coroutines.core)
-        api(projects.zipline)
         api(libs.okio.core)
         api(libs.sqldelight.runtime)
-        implementation(libs.kotlinx.serialization.json)
       }
     }
     val engineMain by creating {
@@ -87,7 +84,6 @@ kotlin {
       dependsOn(engineTest)
       dependencies {
         implementation(libs.junit)
-        implementation(libs.kotlinx.coroutines.test)
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(libs.sqlite.jdbc)
@@ -97,7 +93,6 @@ kotlin {
     val jvmTest by getting {
       dependsOn(jniTest)
       dependencies {
-        implementation(projects.zipline.testing)
       }
     }
 
