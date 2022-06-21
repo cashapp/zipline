@@ -15,66 +15,19 @@
  */
 package app.cash.zipline.database
 
-import co.touchlab.sqliter.DatabaseConfiguration
-import co.touchlab.sqliter.DatabaseFileContext
-import co.touchlab.sqliter.native.NativeDatabaseManager
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
-import com.squareup.sqldelight.drivers.native.wrapConnection
 
 actual class DriverFactory(
-  private val dbPath: String,
   private val schema: SqlDriver.Schema,
-  /** SQL table names used to verify that databases have been created correctly as expected. */
-  private val tableNames: List<String>,
+  private val dbName: String,
 ) {
-  actual fun createDriver(): SqlDriver {
-    val basePath = dbPath.substringBeforeLast('/')
-    val name = dbPath.substringAfterLast('/')
-    val configuration = DatabaseConfiguration(
-      extendedConfig = DatabaseConfiguration.Extended(
-        basePath = basePath,
-      ),
-      name = name,
-      version = schema.version,
-      create = { connection ->
-        wrapConnection(connection, schema::create)
-      },
-      upgrade = { connection, oldVersion, newVersion ->
-        wrapConnection(connection) { schema.migrate(it, oldVersion, newVersion) }
-      }
-    )
-    val success = sanityCheck(configuration)
-
-    // Attempt to delete a problematic database
-    if (!success) {
-      DatabaseFileContext.deleteDatabase(name, basePath)
-    }
-
-    return NativeSqliteDriver(configuration = configuration)
+  init {
+    validateDbName(dbName)
   }
 
-  private fun sanityCheck(configuration: DatabaseConfiguration): Boolean {
-    val databaseManager = NativeDatabaseManager(dbPath, configuration)
-    val conn = databaseManager.createMultiThreadedConnection()
-    var success = true
-
-    try {
-      // If the tables don't exist, createStatement fails
-      val stmtSql = tableNames.joinToString(" UNION\n ") { table ->
-        "SELECT count(*) FROM $table"
-      }
-      val stmt = conn.createStatement(stmtSql)
-
-      stmt.finalizeStatement()
-    } catch (e: Exception) {
-      reportCrash(e)
-      success = false
-    } finally {
-      conn.close()
-    }
-
-    return success
+  actual fun createDriver(): SqlDriver {
+    return NativeSqliteDriver(schema, dbName)
   }
 }
 

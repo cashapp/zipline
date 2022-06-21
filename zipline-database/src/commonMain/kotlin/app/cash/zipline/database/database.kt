@@ -28,3 +28,9 @@ expect class DriverFactory {
 
 /** Identify if an exception is from platform specific SqlLite library */
 expect fun isSqlException(e: Exception): Boolean
+
+fun validateDbName(dbName: String) {
+  require(dbName.endsWith(".db")) {
+    "dbName must end with file suffix .db"
+  }
+}

@@ -56,18 +56,6 @@ kotlin {
         implementation(libs.sqldelight.driver.android)
       }
     }
-    val nativeMain by creating {
-      dependsOn(engineMain)
-      dependencies {
-        implementation(libs.sqldelight.driver.native)
-        implementation(libs.crashkios)
-      }
-    }
-    targets.withType<KotlinNativeTarget> {
-      val main by compilations.getting {
-        defaultSourceSet.dependsOn(nativeMain)
-      }
-    }
 
     val commonTest by getting {
       dependencies {
@@ -95,10 +83,27 @@ kotlin {
       dependencies {
       }
     }
-
+    val nativeMain by creating {
+      dependsOn(engineMain)
+      dependencies {
+        implementation(libs.sqldelight.driver.native)
+        implementation(libs.crashkios)
+      }
+    }
+    val nativeTest by creating {
+      dependsOn(engineTest)
+      dependencies {
+        implementation(libs.sqldelight.driver.native)
+        implementation(libs.crashkios)
+      }
+    }
     targets.withType<KotlinNativeTarget> {
-      val test by compilations.getting
-      test.defaultSourceSet.dependsOn(engineTest)
+      val main by compilations.getting {
+        defaultSourceSet.dependsOn(nativeMain)
+      }
+      val test by compilations.getting {
+        defaultSourceSet.dependsOn(nativeTest)
+      }
     }
   }
 }
