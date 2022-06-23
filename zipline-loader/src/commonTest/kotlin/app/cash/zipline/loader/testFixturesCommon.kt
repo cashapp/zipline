@@ -19,6 +19,8 @@ package app.cash.zipline.loader
 import okio.ByteString.Companion.encodeUtf8
 
 val TEST_MANIFEST_PRODUCTION = ZiplineManifest.create(
+  applicationId = "",
+  prepareFunction = "",
   modules = mapOf(
     "kotlinx-serialization-json" to ZiplineModule(
       url = "/kotlinx-serialization-kotlinx-serialization-json-js-ir.zipline",

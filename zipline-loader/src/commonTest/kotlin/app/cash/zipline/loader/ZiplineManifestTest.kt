@@ -28,6 +28,8 @@ class ZiplineManifestTest {
   @Test
   fun manifestSortsModulesOnCreate() {
     val unsorted = ZiplineManifest.create(
+      applicationId = "",
+      prepareFunction = "",
       modules = mapOf(
         "bravo" to ZiplineModule(
           url = "/bravo.zipline",
@@ -42,6 +44,8 @@ class ZiplineManifestTest {
       )
     )
     val sorted = ZiplineManifest.create(
+      applicationId = "",
+      prepareFunction = "",
       modules = mapOf(
         "alpha" to ZiplineModule(
           url = "/alpha.zipline",
@@ -61,10 +65,14 @@ class ZiplineManifestTest {
   @Test
   fun manifestChecksThatModulesAreSortedIfClassIsCopied() {
     val empty = ZiplineManifest.create(
+      applicationId = "",
+      prepareFunction = "",
       modules = mapOf()
     )
     val unsortedException = assertFailsWith<IllegalArgumentException> {
       empty.copy(
+        applicationId = "",
+        prepareFunction = "",
         modules = mapOf(
           "bravo" to ZiplineModule(
             url = "/bravo.zipline",
@@ -90,6 +98,8 @@ class ZiplineManifestTest {
   fun failsOnCreateWhenCyclicalDependencies() {
     val selfDependencyException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
+        applicationId = "",
+        prepareFunction = "",
         modules = mapOf(
           "alpha" to ZiplineModule(
             url = "/alpha.zipline",
@@ -106,6 +116,8 @@ class ZiplineManifestTest {
 
     val cyclicalException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
+        applicationId = "",
+        prepareFunction = "",
         modules = mapOf(
           "alpha" to ZiplineModule(
             url = "/alpha.zipline",
@@ -129,6 +141,8 @@ class ZiplineManifestTest {
   @Test
   fun serializesToJson() {
     val original = ZiplineManifest.create(
+      applicationId = "",
+      prepareFunction = "",
       modules = mapOf(
         "alpha" to ZiplineModule(
           url = "/alpha.zipline",
@@ -147,6 +161,8 @@ class ZiplineManifestTest {
     assertEquals(
         """
         |{
+        |    "applicationId": "",
+        |    "prepareFunction": "",
         |    "modules": {
         |        "alpha": {
         |            "url": "/alpha.zipline",

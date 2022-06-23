@@ -61,11 +61,11 @@ class ZiplineGradleDownloaderTest {
   fun `integration test to load from mock url`() {
     // Zipline files
     val manifest = ZiplineManifest.create(
+      applicationId = "",
+      prepareFunction = "",
       modules = mapOf(
         "id" to ZiplineModule(
           url = webServer.url("/latest/app/alpha.zipline").toString(),
-          moduleId = "",
-          prepareFunction = "",
           sha256 = testFixtures.alphaSha256,
           dependsOnIds = listOf(),
           patchFrom = null,

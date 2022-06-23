@@ -44,8 +44,6 @@ object ZiplineCompiler {
         // TODO name the zipline as the SHA of the source code, only compile a new file when the SHA changes
         val outputZiplineFilePath = jsFile.nameWithoutExtension + ".zipline"
         val outputZiplineFile = File(outputDir.path, outputZiplineFilePath)
-        val outputTsTypeDefinitionFile = File(outputDir.path, "${jsFile.nameWithoutExtension}.d.ts")
-        val prepareFunction = getPrepareFunctionName(outputTsTypeDefinitionFile)
 
         val quickJs = QuickJs.create()
         quickJs.use {
@@ -74,15 +72,21 @@ object ZiplineCompiler {
           val ziplineSha256 = bytecode.toByteString().sha256()
           modules["./${jsFile.name}"] = ZiplineModule(
             url = outputZiplineFilePath,
-            moduleId = "./${jsFile.name}",
-            prepareFunction = prepareFunction,
             sha256 = ziplineSha256,
             dependsOnIds = dependencies
           )
         }
       }
     }
-    val manifest = ZiplineManifest.create(modules)
+    val applicationModuleJsFileNameWithoutExtention = modules.entries.last().key.removePrefix("./").removeSuffix(".js")
+    val outputTsTypeDefinitionFile = File(inputDir.path, "${applicationModuleJsFileNameWithoutExtention}.d.ts")
+    val applicationId = "./$applicationModuleJsFileNameWithoutExtention"
+    val prepareFunction = getPrepareFunctionName(outputTsTypeDefinitionFile)
+    val manifest = ZiplineManifest.create(
+      applicationId = applicationId,
+      prepareFunction = prepareFunction,
+      modules = modules,
+    )
     val manifestFile = File(outputDir.path, "manifest.zipline.json")
     manifestFile.writeText(Json.encodeToString(manifest))
   }

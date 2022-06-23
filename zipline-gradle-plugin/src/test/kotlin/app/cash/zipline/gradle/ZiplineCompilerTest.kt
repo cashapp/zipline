@@ -92,13 +92,13 @@ class ZiplineCompilerTest {
       |type Nullable<T> = T | null | undefined
       |declare const __doNotImplementIt: unique symbol
       |type __doNotImplementIt = typeof __doNotImplementIt
-      |export namespace com.squareup.cash.treehouse.playground {
-      |    function prepareTreehouse(): void;
+      |export namespace app.cash.zipline.test {
+      |    function prepareHello(): void;
       |}
-      |export as namespace cash_treehouse_playground_treehouse_playground;
+      |export as namespace cash_zipline_test;
     """.trimMargin()
 
-    val expectedPrepareFunction = "com.squareup.cash.treehouse.playground.prepareTreehouse"
+    val expectedPrepareFunction = "app.cash.zipline.test.prepareHello"
 
     assertEquals(expectedPrepareFunction, getPrepareFunctionName(exampleDTsContents))
   }
@@ -114,7 +114,13 @@ class ZiplineCompilerTest {
 
     ZiplineCompiler.compile(inputDir, outputDir)
 
-    val expectedNumberFiles = if (dirHasSourceMaps) inputDir.listFiles()!!.size / 2 else inputDir.listFiles()!!.size
+    val expectedNumberFiles =
+      if (dirHasSourceMaps) {
+        // Assume that the application module has a .d.ts file but all others only have .js and .js.map
+        (inputDir.listFiles()!!.size - 1) / 2
+      } else {
+        inputDir.listFiles()!!.size
+      }
     // Don't include Zipline manifest
     val actualNumberFiles = (outputDir.listFiles()?.size ?: 0) - 1
     assertEquals(expectedNumberFiles, actualNumberFiles)
@@ -133,9 +139,10 @@ class ZiplineCompilerTest {
     manifest.modules.keys.forEach { ziplineFilePath ->
       // Ignore the Zipline Manifest JSON file
       if (!ziplineFilePath.endsWith(".zipline.json")) nonManifestFileAssertions(
-        File(outputDir, ziplineFilePath
-            .removePrefix("./")
-            .replace(".js", ".zipline")
+        File(
+          outputDir, ziplineFilePath
+          .removePrefix("./")
+          .replace(".js", ".zipline")
         )
       )
     }

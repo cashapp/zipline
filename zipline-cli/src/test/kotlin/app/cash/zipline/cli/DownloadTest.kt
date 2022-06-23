@@ -89,6 +89,8 @@ class DownloadTest {
     // Zipline files
     val applicationName = "app1"
     val manifest = ZiplineManifest.create(
+      applicationId = "",
+      prepareFunction = "",
       modules = mapOf(
         "id" to ZiplineModule(
           url = webServer.url("/latest/app/alpha.zipline").toString(),

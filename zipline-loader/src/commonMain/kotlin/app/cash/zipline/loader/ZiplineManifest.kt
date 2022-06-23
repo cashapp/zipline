@@ -28,6 +28,10 @@ import okio.ByteString
  */
 @Serializable
 data class ZiplineManifest private constructor(
+  /** JS module ID for the application. */
+  val applicationId: String,
+  /** Main function to start the application. */
+  val prepareFunction: String,
   /** This is an ordered map; its modules are always topologically sorted. */
   val modules: Map<String, ZiplineModule>
 ) {
@@ -38,17 +42,24 @@ data class ZiplineManifest private constructor(
   }
 
   companion object {
-    fun create(modules: Map<String, ZiplineModule>): ZiplineManifest =
-      ZiplineManifest(modules.keys
-        .toList()
-        .topologicalSort { id ->
-          modules[id]?.dependsOnIds
-            ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
-        }
-        .associateWith { id ->
-          modules[id]
-            ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
-        }
+    fun create(
+      applicationId: String,
+      prepareFunction: String,
+      modules: Map<String, ZiplineModule>
+    ): ZiplineManifest =
+      ZiplineManifest(
+        applicationId = applicationId,
+        prepareFunction = prepareFunction,
+        modules = modules.keys
+          .toList()
+          .topologicalSort { id ->
+            modules[id]?.dependsOnIds
+              ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
+          }
+          .associateWith { id ->
+            modules[id]
+              ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
+          }
       )
 
     fun ByteString.decodeToZiplineManifest(

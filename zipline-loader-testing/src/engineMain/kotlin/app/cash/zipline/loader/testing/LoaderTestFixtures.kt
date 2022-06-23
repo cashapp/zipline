@@ -25,9 +25,6 @@ import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
-import app.cash.zipline.loader.fetcher.FsCachingFetcher
-import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
-import app.cash.zipline.loader.fetcher.HttpFetcher
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -57,18 +54,16 @@ class LoaderTestFixtures(
   val bravoSha256Hex = bravoSha256.hex()
 
   val manifestWithRelativeUrls = ZiplineManifest.create(
+    applicationId = "",
+    prepareFunction = "",
     modules = mapOf(
       "bravo" to ZiplineModule(
         url = bravoRelativeUrl,
-        moduleId = "",
-        prepareFunction = "",
         sha256 = bravoByteString.sha256(),
         dependsOnIds = listOf("alpha"),
       ),
       "alpha" to ZiplineModule(
         url = alphaRelativeUrl,
-        moduleId = "",
-        prepareFunction = "",
         sha256 = alphaByteString.sha256(),
         dependsOnIds = listOf(),
       ),
@@ -79,6 +74,8 @@ class LoaderTestFixtures(
   val manifestWithRelativeUrlsByteString = manifestWithRelativeUrlsJsonString.encodeUtf8()
 
   val manifest = manifestWithRelativeUrls.copy(
+    applicationId = "",
+    prepareFunction = "",
     modules = manifestWithRelativeUrls.modules.mapValues { (_, module) ->
       module.copy(
         url = when (module.url) {
@@ -114,11 +111,11 @@ class LoaderTestFixtures(
       seed: String,
       seedFileSha256: ByteString
     ) = ZiplineManifest.create(
+      applicationId = "",
+      prepareFunction = "",
       modules = mapOf(
         seed to ZiplineModule(
           url = "$seed.zipline",
-          moduleId = "",
-          prepareFunction = "",
           sha256 = seedFileSha256,
         )
       )
