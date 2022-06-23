@@ -64,6 +64,8 @@ class ZiplineGradleDownloaderTest {
       modules = mapOf(
         "id" to ZiplineModule(
           url = webServer.url("/latest/app/alpha.zipline").toString(),
+          moduleId = "",
+          prepareFunction = "",
           sha256 = testFixtures.alphaSha256,
           dependsOnIds = listOf(),
           patchFrom = null,

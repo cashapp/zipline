@@ -17,6 +17,7 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.gradle.ZiplineCompiler.getPrepareFunctionName
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
@@ -83,6 +84,23 @@ class ZiplineCompilerTest {
         ZiplineFile.read(source)
       }.quickjsBytecode.toByteArray())
     }
+  }
+
+  @Test
+  fun `extract qualified prepare function`() {
+    val exampleDTsContents = """
+      |type Nullable<T> = T | null | undefined
+      |declare const __doNotImplementIt: unique symbol
+      |type __doNotImplementIt = typeof __doNotImplementIt
+      |export namespace com.squareup.cash.treehouse.playground {
+      |    function prepareTreehouse(): void;
+      |}
+      |export as namespace cash_treehouse_playground_treehouse_playground;
+    """.trimMargin()
+
+    val expectedPrepareFunction = "com.squareup.cash.treehouse.playground.prepareTreehouse"
+
+    assertEquals(expectedPrepareFunction, getPrepareFunctionName(exampleDTsContents))
   }
 
   private fun assertZiplineCompile(

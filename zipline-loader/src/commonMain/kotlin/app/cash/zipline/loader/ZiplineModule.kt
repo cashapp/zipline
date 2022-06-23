@@ -22,6 +22,10 @@ import okio.ByteString
 data class ZiplineModule(
   /** This may be an absolute URL, or relative to an enclosing manifest. */
   val url: String,
+  /** Module JS relative file path used in launching app */
+  val moduleId: String,
+  /** Fully qualified function to be called to launch app */
+  val prepareFunction: String,
   @Serializable(with = ByteStringAsHexSerializer::class)
   val sha256: ByteString,
   val dependsOnIds: List<String> = listOf(),

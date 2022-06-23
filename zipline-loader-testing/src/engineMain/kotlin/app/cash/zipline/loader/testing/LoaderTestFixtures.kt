@@ -60,11 +60,15 @@ class LoaderTestFixtures(
     modules = mapOf(
       "bravo" to ZiplineModule(
         url = bravoRelativeUrl,
+        moduleId = "",
+        prepareFunction = "",
         sha256 = bravoByteString.sha256(),
         dependsOnIds = listOf("alpha"),
       ),
       "alpha" to ZiplineModule(
         url = alphaRelativeUrl,
+        moduleId = "",
+        prepareFunction = "",
         sha256 = alphaByteString.sha256(),
         dependsOnIds = listOf(),
       ),
@@ -113,6 +117,8 @@ class LoaderTestFixtures(
       modules = mapOf(
         seed to ZiplineModule(
           url = "$seed.zipline",
+          moduleId = "",
+          prepareFunction = "",
           sha256 = seedFileSha256,
         )
       )

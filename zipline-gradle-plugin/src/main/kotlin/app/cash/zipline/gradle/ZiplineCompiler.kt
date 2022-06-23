@@ -39,10 +39,13 @@ object ZiplineCompiler {
     val files = inputDir.listFiles()
     files!!.forEach { jsFile ->
       if (jsFile.path.endsWith(".js")) {
-        val jsSourceMapFile = files.singleOrNull { sourceMap -> sourceMap.path == "${jsFile.path}.map" }
+        val jsSourceMapFile =
+          files.singleOrNull { sourceMap -> sourceMap.path == "${jsFile.path}.map" }
         // TODO name the zipline as the SHA of the source code, only compile a new file when the SHA changes
         val outputZiplineFilePath = jsFile.nameWithoutExtension + ".zipline"
         val outputZiplineFile = File(outputDir.path, outputZiplineFilePath)
+        val outputTsTypeDefinitionFile = File(outputDir.path, "${jsFile.nameWithoutExtension}.d.ts")
+        val prepareFunction = getPrepareFunctionName(outputTsTypeDefinitionFile)
 
         val quickJs = QuickJs.create()
         quickJs.use {
@@ -71,6 +74,8 @@ object ZiplineCompiler {
           val ziplineSha256 = bytecode.toByteString().sha256()
           modules["./${jsFile.name}"] = ZiplineModule(
             url = outputZiplineFilePath,
+            moduleId = "./${jsFile.name}",
+            prepareFunction = prepareFunction,
             sha256 = ziplineSha256,
             dependsOnIds = dependencies
           )
@@ -80,6 +85,17 @@ object ZiplineCompiler {
     val manifest = ZiplineManifest.create(modules)
     val manifestFile = File(outputDir.path, "manifest.zipline.json")
     manifestFile.writeText(Json.encodeToString(manifest))
+  }
+
+  internal fun getPrepareFunctionName(tsTypeDefinitionFile: File): String {
+    val contents = tsTypeDefinitionFile.readText()
+    return getPrepareFunctionName(contents)
+  }
+
+  internal fun getPrepareFunctionName(contents: String): String {
+    val jsPackages = "(?<=(export namespace\\s)).*(?=\\s\\{)".toRegex().findAll(contents).toList().map { it.value }.first()
+    val functionName = "(?<=(function\\s)).*(?=\\(\\))".toRegex().findAll(contents).toList().map { it.value }.first()
+    return "$jsPackages.$functionName"
   }
 }
 
