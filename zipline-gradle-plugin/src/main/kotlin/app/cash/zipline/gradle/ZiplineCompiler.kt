@@ -78,10 +78,13 @@ object ZiplineCompiler {
         }
       }
     }
-    val applicationModuleJsFileNameWithoutExtention = modules.entries.last().key.removePrefix("./").removeSuffix(".js")
+
+    val sortedModules = ZiplineManifest.create("temp", "temp", modules).modules
+    val applicationModuleJsFileNameWithoutExtention = sortedModules.entries.last().key.removePrefix("./").removeSuffix(".js")
     val outputTsTypeDefinitionFile = File(inputDir.path, "${applicationModuleJsFileNameWithoutExtention}.d.ts")
-    val applicationId = "./$applicationModuleJsFileNameWithoutExtention"
+    val applicationId = "./${applicationModuleJsFileNameWithoutExtention}.js"
     val prepareFunction = getPrepareFunctionName(outputTsTypeDefinitionFile)
+
     val manifest = ZiplineManifest.create(
       applicationId = applicationId,
       prepareFunction = prepareFunction,

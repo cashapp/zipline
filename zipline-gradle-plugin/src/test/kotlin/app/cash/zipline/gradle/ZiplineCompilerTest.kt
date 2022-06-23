@@ -115,11 +115,11 @@ class ZiplineCompilerTest {
     ZiplineCompiler.compile(inputDir, outputDir)
 
     val expectedNumberFiles =
+      // Assume that the application module has a .d.ts file but all others only have .js and .js.map
       if (dirHasSourceMaps) {
-        // Assume that the application module has a .d.ts file but all others only have .js and .js.map
         (inputDir.listFiles()!!.size - 1) / 2
       } else {
-        inputDir.listFiles()!!.size
+        (inputDir.listFiles()!!.size - 1)
       }
     // Don't include Zipline manifest
     val actualNumberFiles = (outputDir.listFiles()?.size ?: 0) - 1
