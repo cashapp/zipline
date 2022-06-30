@@ -18,7 +18,7 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
-import app.cash.zipline.database.DriverFactory
+import app.cash.zipline.loader.internal.database.DriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl

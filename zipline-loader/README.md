@@ -35,3 +35,8 @@ Files shipped with the app package use a flat file structure.
 
 When an application's successfully loads, its manifest and modules are _pinned_. Pinned files are
 not deleted when the cache is pruned. They are unpinned when a newer version is successfully loaded.
+
+## Database
+
+This module uses [SqlDelight](https://cashapp.github.io/sqldelight/) to interact with SQLite. The
+database tracks downloaded file state, eviction, and pinning.

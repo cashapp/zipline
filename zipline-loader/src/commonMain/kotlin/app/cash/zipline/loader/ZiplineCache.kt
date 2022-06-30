@@ -16,7 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import app.cash.zipline.database.isSqlException
+import app.cash.zipline.loader.internal.database.isSqlException
 import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.serialization.json.Json

@@ -18,10 +18,9 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
-import app.cash.zipline.database.DriverFactory
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
+import app.cash.zipline.loader.internal.database.DriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
