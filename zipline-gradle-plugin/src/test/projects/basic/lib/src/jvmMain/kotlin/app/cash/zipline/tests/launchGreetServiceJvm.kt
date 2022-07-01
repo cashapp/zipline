@@ -18,7 +18,6 @@ package app.cash.zipline.tests
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
-import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineDispatcher
