@@ -16,15 +16,13 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
-import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
+import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
@@ -39,57 +37,41 @@ class LoaderTester(
   /** Delegate to JUnit's temporary folder rule. */
   private val temporaryFolder = TemporaryFolder()
 
-  private val httpClient = FakeZiplineHttpClient()
+  val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val sqlDriverFactory = SqlDriverFactory()
   private val cacheMaxSizeInBytes = 100 * 1024 * 1024
-  private val cacheDirectory = "/zipline/cache".toPath()
   private var nowMillis = 1_000L
 
-  private var zipline: Zipline = Zipline.create(dispatcher)
-  private var fileSystem = FakeFileSystem()
+  private var zipline = Zipline.create(dispatcher)
 
-  private var embeddedFileSystem = FakeFileSystem()
-  private val embeddedDir = "/zipline".toPath()
-  private var quickJs = QuickJs.create()
-  private var testFixtures = LoaderTestFixtures(quickJs)
+  val embeddedFileSystem = FakeFileSystem()
+  val embeddedDir = "/zipline".toPath()
+  private var testFixtures = LoaderTestFixtures()
 
   private val baseUrl = "https://example.com/files"
 
-  private lateinit var driver: SqlDriver
-  private lateinit var database: Database
-  private lateinit var cache: ZiplineCache
-  private lateinit var loader: ZiplineLoader
+  internal lateinit var loader: ZiplineLoader
+  internal lateinit var cache: ZiplineCache
 
   override fun apply(base: Statement, description: Description): Statement {
     val statement = object : Statement() {
       override fun evaluate() {
-        driver = sqlDriverFactory.create(
-          path = temporaryFolder.root.toOkioPath() / "zipline.db",
-          schema = Database.Schema,
-        )
-        database = createDatabase(driver)
-        cache = openZiplineCacheForTesting(
+        loader = ZiplineLoader(
+          dispatcher = dispatcher,
+          httpClient = httpClient,
           eventListener = eventListener,
-          database = database,
-          directory = cacheDirectory,
-          fileSystem = fileSystem,
+        ).withEmbedded(
+          embeddedDir = embeddedDir,
+          embeddedFileSystem = embeddedFileSystem,
+        ).withCache(
+          directory = temporaryFolder.root.toOkioPath(),
+          fileSystem = FileSystem.SYSTEM,
           maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
           nowMs = { nowMillis },
         )
-        loader = LoaderTestFixtures.createProductionZiplineLoader(
-          dispatcher = dispatcher,
-          httpClient = httpClient,
-          embeddedDir = embeddedDir,
-          embeddedFileSystem = embeddedFileSystem,
-          cache = cache,
-          eventListener = eventListener,
-        )
-        driver.use {
-          quickJs.use {
-            base.evaluate()
-          }
-        }
+        cache = loader.cache!!
+        base.evaluate()
+        loader.close()
       }
     }
     return temporaryFolder.apply(statement, description)

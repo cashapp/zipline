@@ -16,12 +16,12 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import app.cash.zipline.loader.internal.database.isSqlException
 import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
-import com.squareup.sqldelight.db.SqlDriver
+import app.cash.zipline.loader.internal.database.isSqlException
 import kotlinx.serialization.json.Json
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
+import okio.Closeable
 import okio.FileNotFoundException
 import okio.FileSystem
 import okio.Path
@@ -60,14 +60,15 @@ import okio.Path
  * This cache does not prevent multiple processes from accessing the cache simultaneously. Don't do this; it'll corrupt
  * the cache and behavior is undefined.
  */
-class ZiplineCache internal constructor(
+internal class ZiplineCache internal constructor(
   private val eventListener: EventListener,
+  databaseCloseable: Closeable,
   private val database: Database,
   private val fileSystem: FileSystem,
   private val directory: Path,
   private val maxSizeInBytes: Long,
   private val nowMs: () -> Long,
-) {
+) : Closeable by databaseCloseable {
   fun write(applicationName: String, sha256: ByteString, content: ByteString) {
     val metadata = openForWrite(applicationName, sha256, false) ?: return
     write(metadata, content)
@@ -342,25 +343,4 @@ class ZiplineCache internal constructor(
   private fun path(metadata: Files): Path {
     return directory / "entry-${metadata.id}.bin"
   }
-}
-
-fun createZiplineCache(
-  eventListener: EventListener,
-  driver: SqlDriver,
-  fileSystem: FileSystem,
-  directory: Path,
-  maxSizeInBytes: Long = 100L * 1024L * 1024L,
-  nowMs: () -> Long,
-): ZiplineCache {
-  val database = createDatabase(driver)
-  val ziplineCache = ZiplineCache(
-    eventListener = eventListener,
-    database = database,
-    fileSystem = fileSystem,
-    directory = directory,
-    maxSizeInBytes = maxSizeInBytes,
-    nowMs = nowMs,
-  )
-  ziplineCache.prune()
-  return ziplineCache
 }

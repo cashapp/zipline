@@ -15,61 +15,36 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createDownloadZiplineLoader
-import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import okio.FileSystem
-import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
-import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.TemporaryFolder
 
 class DownloadOnlyFetcherReceiverTest {
-  @JvmField @Rule
-  val temporaryFolder = TemporaryFolder()
-
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val sqlDriverFactory = SqlDriverFactory()
-  private lateinit var driver: SqlDriver
   private lateinit var fileSystem: FileSystem
   private val downloadDir = "/zipline/downloads".toPath()
-  private lateinit var quickJs: QuickJs
   private lateinit var testFixtures: LoaderTestFixtures
 
   private lateinit var loader: ZiplineLoader
 
   @Before
   fun setUp() {
-    driver = sqlDriverFactory.create(
-      path = temporaryFolder.root.toOkioPath() / "zipline.db",
-      schema = Database.Schema,
-    )
-    quickJs = QuickJs.create()
-    testFixtures = LoaderTestFixtures(quickJs)
+    testFixtures = LoaderTestFixtures()
     fileSystem = FakeFileSystem()
-    loader = createDownloadZiplineLoader(
+    loader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
     )
-  }
-
-  @After
-  fun tearDown() {
-    driver.close()
-    quickJs.close()
   }
 
   @Test

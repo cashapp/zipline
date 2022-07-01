@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.QuickJs
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
@@ -43,33 +43,28 @@ class ZiplineCacheTest {
   @JvmField @Rule
   val temporaryFolder = TemporaryFolder()
 
-  private val sqlDriverFactory = SqlDriverFactory()
   private lateinit var driver: SqlDriver
   private lateinit var database: Database
   private lateinit var fileSystem: FileSystem
   private val directory = "/zipline/cache".toPath()
   private val cacheSize = 64
   private var nowMillis = 1_000L
-  private lateinit var quickJs: QuickJs
   private lateinit var testFixtures: LoaderTestFixtures
 
   @Before
   fun setUp() {
     fileSystem = FakeFileSystem()
-    driver = sqlDriverFactory.create(
+    driver = SqlDriverFactory().create(
       path = temporaryFolder.root.toOkioPath() / "zipline.db",
       schema = Database.Schema,
     )
     database = createDatabase(driver)
-
-    quickJs = QuickJs.create()
-    testFixtures = LoaderTestFixtures(quickJs)
+    testFixtures = LoaderTestFixtures()
   }
 
   @After
   fun tearDown() {
     driver.close()
-    quickJs.close()
   }
 
   @Test
@@ -300,12 +295,16 @@ class ZiplineCacheTest {
     cacheSize: Int = this.cacheSize,
     block: suspend (ZiplineCache) -> T,
   ): T {
-    val cache = openZiplineCacheForTesting(
+    val cache = ZiplineCache(
+      eventListener = EventListener.NONE,
+      databaseCloseable = driver,
       database = database,
       fileSystem = fileSystem,
       directory = directory,
-      maxSizeInBytes = cacheSize.toLong()
-    ) { nowMillis }
+      maxSizeInBytes = cacheSize.toLong(),
+      nowMs = { nowMillis },
+    )
+    cache.prune()
     return block(cache)
   }
 }

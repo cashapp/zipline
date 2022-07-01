@@ -22,7 +22,7 @@ import okio.ByteString
 /**
  * Fetch from the network and save to local fileSystem cache once downloaded.
  */
-class FsCachingFetcher(
+internal class FsCachingFetcher(
   private val cache: ZiplineCache,
   private val delegate: Fetcher,
 ) : Fetcher {

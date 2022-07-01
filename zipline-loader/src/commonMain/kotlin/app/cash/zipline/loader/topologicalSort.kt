@@ -24,7 +24,7 @@ package app.cash.zipline.loader
  *
  * Implementation inspiration: https://www.interviewcake.com/concept/java/topological-sort
  */
-fun <T> List<T>.topologicalSort(sourceToTarget: (T) -> Iterable<T>): List<T> {
+internal fun <T> List<T>.topologicalSort(sourceToTarget: (T) -> Iterable<T>): List<T> {
   // Build a reverse index, from targets to sources.
   val targetToSources = mutableMapOf<T, MutableSet<T>>()
   val queue = ArrayDeque<T>()
@@ -65,7 +65,7 @@ fun <T> List<T>.topologicalSort(sourceToTarget: (T) -> Iterable<T>): List<T> {
   return result
 }
 
-fun <T> List<T>.isTopologicallySorted(sourceToTarget: (T) -> Iterable<T>): Boolean {
+internal fun <T> List<T>.isTopologicallySorted(sourceToTarget: (T) -> Iterable<T>): Boolean {
   val seenNodes = mutableSetOf<T>()
   for (node in this) {
     if (sourceToTarget(node).any { it !in seenNodes }) return false

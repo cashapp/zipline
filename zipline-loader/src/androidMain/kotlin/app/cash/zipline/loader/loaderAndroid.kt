@@ -15,7 +15,33 @@
  */
 package app.cash.zipline.loader
 
+import android.content.Context
+import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.internal.database.SqlDriverFactory
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.serialization.modules.EmptySerializersModule
+import kotlinx.serialization.modules.SerializersModule
+import okhttp3.OkHttpClient
 
-actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
+internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
   loadJsModule(bytecode, id)
+
+fun ZiplineLoader(
+  context: Context,
+  dispatcher: CoroutineDispatcher,
+  httpClient: OkHttpClient,
+  eventListener: EventListener = EventListener.NONE,
+  serializersModule: SerializersModule = EmptySerializersModule,
+): ZiplineLoader {
+  return ZiplineLoader(
+    sqlDriverFactory = SqlDriverFactory(context),
+    dispatcher = dispatcher,
+    httpClient = OkHttpZiplineHttpClient(okHttpClient = httpClient),
+    eventListener = eventListener,
+    serializersModule = serializersModule,
+    embeddedDir = null,
+    embeddedFileSystem = null,
+    cache = null,
+  )
+}
