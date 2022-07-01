@@ -49,6 +49,23 @@ import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path
 
+fun ZiplineLoader(
+  dispatcher: CoroutineDispatcher,
+  httpClient: ZiplineHttpClient,
+  eventListener: EventListener = EventListener.NONE,
+  serializersModule: SerializersModule = EmptySerializersModule,
+): ZiplineLoader {
+  return ZiplineLoader(
+    dispatcher = dispatcher,
+    httpClient = httpClient,
+    eventListener = eventListener,
+    serializersModule = serializersModule,
+    embeddedDir = null,
+    embeddedFileSystem = null,
+    cache = null,
+  )
+}
+
 /**
  * Gets code from an HTTP server, or optional local cache
  * or embedded filesystem, and handles with a receiver
@@ -61,32 +78,15 @@ import okio.Path
  *     way the network is used for fresh resources and embedded is used for fast resources.
  */
 @OptIn(ExperimentalSerializationApi::class)
-class ZiplineLoader private constructor(
+class ZiplineLoader internal constructor(
   private val dispatcher: CoroutineDispatcher,
   private val httpClient: ZiplineHttpClient,
-  private val eventListener: EventListener = EventListener.NONE,
-  private val serializersModule: SerializersModule = EmptySerializersModule,
-
-  private val embeddedDir: Path? = null,
-  private val embeddedFileSystem: FileSystem? = null,
-
-  private val cache: ZiplineCache? = null,
+  private val eventListener: EventListener,
+  private val serializersModule: SerializersModule,
+  private val embeddedDir: Path?,
+  private val embeddedFileSystem: FileSystem?,
+  private val cache: ZiplineCache?,
 ) {
-  constructor(
-    dispatcher: CoroutineDispatcher,
-    httpClient: ZiplineHttpClient,
-    eventListener: EventListener = EventListener.NONE,
-    serializersModule: SerializersModule = EmptySerializersModule,
-  ): this(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    eventListener = eventListener,
-    serializersModule = serializersModule,
-    embeddedDir = null,
-    embeddedFileSystem = null,
-    cache = null
-  )
-
   fun withEmbedded(
     embeddedDir: Path,
     embeddedFileSystem: FileSystem
@@ -101,7 +101,7 @@ class ZiplineLoader private constructor(
   )
 
   fun withCache(
-    cache: ZiplineCache
+    cache: ZiplineCache,
   ): ZiplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = httpClient,
@@ -118,13 +118,7 @@ class ZiplineLoader private constructor(
     directory: Path,
     maxSizeInBytes: Long,
     nowMs: () -> Long
-  ): ZiplineLoader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    eventListener = eventListener,
-    serializersModule = serializersModule,
-    embeddedDir = embeddedDir,
-    embeddedFileSystem = embeddedFileSystem,
+  ): ZiplineLoader = withCache(
     cache = createZiplineCache(
       eventListener = eventListener,
       driver = driver,

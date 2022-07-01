@@ -17,16 +17,16 @@ package app.cash.zipline.loader.internal.database
 
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
+import java.sql.SQLException
+import okio.Path
 
-/** JVM implementation is used for testing and thus is In-Memory. */
-actual class DriverFactory(
-  private val schema: SqlDriver.Schema
-) {
-  actual fun createDriver(): SqlDriver {
-    val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
+internal actual class DriverFactory {
+  actual fun createDriver(path: Path, schema: SqlDriver.Schema): SqlDriver {
+    validateDbPath(path)
+    val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:$path")
     schema.create(driver)
     return driver
   }
 }
 
-actual fun isSqlException(e: Exception) = e is java.sql.SQLException
+internal actual fun isSqlException(e: Exception) = e is SQLException

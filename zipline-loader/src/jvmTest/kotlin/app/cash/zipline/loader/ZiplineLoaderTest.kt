@@ -40,19 +40,25 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
+import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 @OptIn(ExperimentalTime::class)
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class ZiplineLoaderTest {
+  @JvmField @Rule
+  val temporaryFolder = TemporaryFolder()
+
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val driverFactory = DriverFactory(Database.Schema)
+  private val driverFactory = DriverFactory()
   private lateinit var driver: SqlDriver
   private val cacheSize = 1024L * 1024L
   private var nowMillis = 1_000L
@@ -66,7 +72,10 @@ class ZiplineLoaderTest {
 
   @Before
   fun setUp() {
-    driver = driverFactory.createDriver()
+    driver = driverFactory.createDriver(
+      path = temporaryFolder.root.toOkioPath() / "zipline.db",
+      schema = Database.Schema,
+    )
     quickJs = QuickJs.create()
     testFixtures = LoaderTestFixtures(quickJs)
     loader = createProductionZiplineLoader(

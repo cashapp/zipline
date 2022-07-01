@@ -27,16 +27,22 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 class DownloadOnlyFetcherReceiverTest {
+  @JvmField @Rule
+  val temporaryFolder = TemporaryFolder()
+
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val driverFactory = DriverFactory(Database.Schema)
+  private val driverFactory = DriverFactory()
   private lateinit var driver: SqlDriver
   private lateinit var fileSystem: FileSystem
   private val downloadDir = "/zipline/downloads".toPath()
@@ -47,7 +53,10 @@ class DownloadOnlyFetcherReceiverTest {
 
   @Before
   fun setUp() {
-    driver = driverFactory.createDriver()
+    driver = driverFactory.createDriver(
+      path = temporaryFolder.root.toOkioPath() / "zipline.db",
+      schema = Database.Schema,
+    )
     quickJs = QuickJs.create()
     testFixtures = LoaderTestFixtures(quickJs)
     fileSystem = FakeFileSystem()

@@ -30,16 +30,22 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 class ProductionFetcherReceiverTest {
+  @JvmField @Rule
+  val temporaryFolder = TemporaryFolder()
+
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val driverFactory = DriverFactory(Database.Schema)
+  private val driverFactory = DriverFactory()
   private lateinit var driver: SqlDriver
   private val cacheMaxSizeInBytes = 100L * 1024L * 1024L
   private val cacheDirectory = "/zipline/cache".toPath()
@@ -57,7 +63,10 @@ class ProductionFetcherReceiverTest {
 
   @Before
   fun setUp() {
-    driver = driverFactory.createDriver()
+    driver = driverFactory.createDriver(
+      path = temporaryFolder.root.toOkioPath() / "zipline.db",
+      schema = Database.Schema,
+    )
     quickJs = QuickJs.create()
     testFixtures = LoaderTestFixtures(quickJs)
     fileSystem = FakeFileSystem()

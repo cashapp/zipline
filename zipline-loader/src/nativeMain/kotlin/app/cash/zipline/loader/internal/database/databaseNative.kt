@@ -15,21 +15,32 @@
  */
 package app.cash.zipline.loader.internal.database
 
+import co.touchlab.sqliter.DatabaseConfiguration
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
+import com.squareup.sqldelight.drivers.native.wrapConnection
+import okio.Path
 
-actual class DriverFactory(
-  private val schema: SqlDriver.Schema,
-  private val dbName: String,
-) {
-  init {
-    validateDbName(dbName)
-  }
-
-  actual fun createDriver(): SqlDriver {
-    return NativeSqliteDriver(schema, dbName)
+internal actual class DriverFactory {
+  actual fun createDriver(path: Path, schema: SqlDriver.Schema): SqlDriver {
+    validateDbPath(path)
+    return NativeSqliteDriver(
+      configuration = DatabaseConfiguration(
+        name = path.name,
+        version = schema.version,
+        create = { connection ->
+          wrapConnection(connection) { schema.create(it) }
+        },
+        upgrade = { connection, oldVersion, newVersion ->
+          wrapConnection(connection) { schema.migrate(it, oldVersion, newVersion) }
+        },
+        extendedConfig = DatabaseConfiguration.Extended(
+          basePath = path.parent!!.toString(),
+        ),
+      )
+    )
   }
 }
 
 // TODO find the native exception class
-actual fun isSqlException(e: Exception): Boolean = TODO()
+internal actual fun isSqlException(e: Exception): Boolean = TODO()

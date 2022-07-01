@@ -15,30 +15,42 @@
  */
 package app.cash.zipline.loader.internal.database
 
+import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import okio.FileSystem
+import okio.Path.Companion.toPath
 
 class DatabaseNativeTest {
+  private val driverPath = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "zipline.db"
+
+  @BeforeTest
+  fun setUp() {
+    FileSystem.SYSTEM.delete(driverPath, mustExist = false)
+  }
+
   @Test
   fun `happy path`() {
-    val driverFactory = DriverFactory(
+    val driverFactory = DriverFactory()
+    val driver = driverFactory.createDriver(
+      path = driverPath,
       schema = Produce.Schema,
-      dbName = "zipline-database-test.db"
     )
-    val driver = driverFactory.createDriver()
     val database = Produce(driver)
     assertEquals(0, database.produceQueries.count().executeAsOne())
+    driver.close()
   }
 
   @Test
   fun dbPathMustEndWithDb() {
+    val driverFactory = DriverFactory()
     val exception = assertFailsWith<IllegalArgumentException> {
-      DriverFactory(
+      driverFactory.createDriver(
+        path = "zipline-database-test.not-db".toPath(),
         schema = Produce.Schema,
-        dbName = "zipline-database-test.not-db"
       )
     }
-    assertEquals("dbName must end with file suffix .db", exception.message)
+    assertEquals("path name must end with file suffix .db", exception.message)
   }
 }

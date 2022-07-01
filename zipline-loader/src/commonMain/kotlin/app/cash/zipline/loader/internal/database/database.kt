@@ -16,21 +16,22 @@
 package app.cash.zipline.loader.internal.database
 
 import com.squareup.sqldelight.db.SqlDriver
+import okio.Path
 
-expect class DriverFactory {
+internal expect class DriverFactory {
   /**
    * Create a SqlDriver to be used in creating and managing a SqlLite instance on disk.
    *
    * Database is created and migrated after the driver is initialized prior to return.
    */
-  fun createDriver(): SqlDriver
+  fun createDriver(path: Path, schema: SqlDriver.Schema): SqlDriver
 }
 
 /** Identify if an exception is from platform specific SqlLite library */
-expect fun isSqlException(e: Exception): Boolean
+internal expect fun isSqlException(e: Exception): Boolean
 
-fun validateDbName(dbName: String) {
-  require(dbName.endsWith(".db")) {
-    "dbName must end with file suffix .db"
+internal fun validateDbPath(path: Path) {
+  require(path.name.endsWith(".db")) {
+    "path name must end with file suffix .db"
   }
 }

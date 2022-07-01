@@ -30,14 +30,20 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 class ZiplineCacheTest {
-  private val driverFactory = DriverFactory(Database.Schema)
+  @JvmField @Rule
+  val temporaryFolder = TemporaryFolder()
+
+  private val driverFactory = DriverFactory()
   private lateinit var driver: SqlDriver
   private lateinit var database: Database
   private lateinit var fileSystem: FileSystem
@@ -50,7 +56,10 @@ class ZiplineCacheTest {
   @Before
   fun setUp() {
     fileSystem = FakeFileSystem()
-    driver = driverFactory.createDriver()
+    driver = driverFactory.createDriver(
+      path = temporaryFolder.root.toOkioPath() / "zipline.db",
+      schema = Database.Schema,
+    )
     database = createDatabase(driver)
 
     quickJs = QuickJs.create()

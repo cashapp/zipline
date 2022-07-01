@@ -107,9 +107,14 @@ kotlin {
       }
     }
 
+    val nativeTest by creating {
+      dependencies {
+        implementation(projects.ziplineLoaderTesting)
+      }
+    }
     targets.withType<KotlinNativeTarget> {
       val test by compilations.getting
-      test.defaultSourceSet.dependsOn(engineTest)
+      test.defaultSourceSet.dependsOn(nativeTest)
     }
   }
 }

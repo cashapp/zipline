@@ -17,18 +17,27 @@ package app.cash.zipline.loader.internal.database
 
 import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.assertEquals
+import okio.Path.Companion.toOkioPath
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 class DatabaseJvmTest {
-  private val driverFactory = DriverFactory(Produce.Schema)
+  @JvmField @Rule
+  val temporaryFolder = TemporaryFolder()
+
+  private val driverFactory = DriverFactory()
   private lateinit var driver: SqlDriver
   private lateinit var database: Produce
 
   @Before
   fun before() {
-    driver = driverFactory.createDriver()
+    driver = driverFactory.createDriver(
+      path = temporaryFolder.root.toOkioPath() / "zipline.db",
+      schema = Produce.Schema,
+    )
     database = Produce(driver)
   }
 
@@ -44,8 +53,20 @@ class DatabaseJvmTest {
 
   @Test
   fun `multiple create calls succeed`() {
-    driverFactory.createDriver()
-    driverFactory.createDriver()
-    driverFactory.createDriver()
+    val driver1 = driverFactory.createDriver(
+      path = temporaryFolder.root.toOkioPath() / "database1.db",
+      schema = Produce.Schema,
+    )
+    val driver2 = driverFactory.createDriver(
+      path = temporaryFolder.root.toOkioPath() / "database2.db",
+      schema = Produce.Schema,
+    )
+    val driver3 = driverFactory.createDriver(
+      path = temporaryFolder.root.toOkioPath() / "database3.db",
+      schema = Produce.Schema,
+    )
+    driver1.close()
+    driver2.close()
+    driver3.close()
   }
 }
