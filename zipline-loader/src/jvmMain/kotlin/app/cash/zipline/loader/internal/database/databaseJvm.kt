@@ -20,8 +20,8 @@ import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import java.sql.SQLException
 import okio.Path
 
-internal actual class DriverFactory {
-  actual fun createDriver(path: Path, schema: SqlDriver.Schema): SqlDriver {
+internal actual class SqlDriverFactory {
+  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
     validateDbPath(path)
     val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:$path")
     schema.create(driver)

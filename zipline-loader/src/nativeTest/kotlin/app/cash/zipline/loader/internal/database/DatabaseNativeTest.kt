@@ -32,8 +32,8 @@ class DatabaseNativeTest {
 
   @Test
   fun `happy path`() {
-    val driverFactory = DriverFactory()
-    val driver = driverFactory.createDriver(
+    val sqlDriverFactory = SqlDriverFactory()
+    val driver = sqlDriverFactory.create(
       path = driverPath,
       schema = Produce.Schema,
     )
@@ -44,9 +44,9 @@ class DatabaseNativeTest {
 
   @Test
   fun dbPathMustEndWithDb() {
-    val driverFactory = DriverFactory()
+    val sqlDriverFactory = SqlDriverFactory()
     val exception = assertFailsWith<IllegalArgumentException> {
-      driverFactory.createDriver(
+      sqlDriverFactory.create(
         path = "zipline-database-test.not-db".toPath(),
         schema = Produce.Schema,
       )

@@ -21,8 +21,8 @@ import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
 import com.squareup.sqldelight.drivers.native.wrapConnection
 import okio.Path
 
-internal actual class DriverFactory {
-  actual fun createDriver(path: Path, schema: SqlDriver.Schema): SqlDriver {
+internal actual class SqlDriverFactory {
+  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
     validateDbPath(path)
     return NativeSqliteDriver(
       configuration = DatabaseConfiguration(

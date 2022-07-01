@@ -16,7 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.internal.database.DriverFactory
+import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
@@ -42,7 +42,7 @@ class DownloadOnlyFetcherReceiverTest {
 
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val driverFactory = DriverFactory()
+  private val sqlDriverFactory = SqlDriverFactory()
   private lateinit var driver: SqlDriver
   private lateinit var fileSystem: FileSystem
   private val downloadDir = "/zipline/downloads".toPath()
@@ -53,7 +53,7 @@ class DownloadOnlyFetcherReceiverTest {
 
   @Before
   fun setUp() {
-    driver = driverFactory.createDriver(
+    driver = sqlDriverFactory.create(
       path = temporaryFolder.root.toOkioPath() / "zipline.db",
       schema = Database.Schema,
     )

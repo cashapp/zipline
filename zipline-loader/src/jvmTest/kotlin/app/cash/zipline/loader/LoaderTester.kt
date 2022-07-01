@@ -19,7 +19,7 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
-import app.cash.zipline.loader.internal.database.DriverFactory
+import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import com.squareup.sqldelight.db.SqlDriver
 import kotlinx.coroutines.test.TestCoroutineDispatcher
@@ -41,7 +41,7 @@ class LoaderTester(
 
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val driverFactory = DriverFactory()
+  private val sqlDriverFactory = SqlDriverFactory()
   private val cacheMaxSizeInBytes = 100 * 1024 * 1024
   private val cacheDirectory = "/zipline/cache".toPath()
   private var nowMillis = 1_000L
@@ -64,7 +64,7 @@ class LoaderTester(
   override fun apply(base: Statement, description: Description): Statement {
     val statement = object : Statement() {
       override fun evaluate() {
-        driver = driverFactory.createDriver(
+        driver = sqlDriverFactory.create(
           path = temporaryFolder.root.toOkioPath() / "zipline.db",
           schema = Database.Schema,
         )

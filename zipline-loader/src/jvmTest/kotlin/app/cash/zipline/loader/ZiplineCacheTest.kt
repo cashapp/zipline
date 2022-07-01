@@ -16,7 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.loader.internal.database.DriverFactory
+import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
@@ -43,7 +43,7 @@ class ZiplineCacheTest {
   @JvmField @Rule
   val temporaryFolder = TemporaryFolder()
 
-  private val driverFactory = DriverFactory()
+  private val sqlDriverFactory = SqlDriverFactory()
   private lateinit var driver: SqlDriver
   private lateinit var database: Database
   private lateinit var fileSystem: FileSystem
@@ -56,7 +56,7 @@ class ZiplineCacheTest {
   @Before
   fun setUp() {
     fileSystem = FakeFileSystem()
-    driver = driverFactory.createDriver(
+    driver = sqlDriverFactory.create(
       path = temporaryFolder.root.toOkioPath() / "zipline.db",
       schema = Database.Schema,
     )

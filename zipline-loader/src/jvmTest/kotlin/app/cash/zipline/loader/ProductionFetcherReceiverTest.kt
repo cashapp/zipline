@@ -18,7 +18,7 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.internal.database.DriverFactory
+import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
@@ -45,7 +45,7 @@ class ProductionFetcherReceiverTest {
 
   private val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val driverFactory = DriverFactory()
+  private val sqlDriverFactory = SqlDriverFactory()
   private lateinit var driver: SqlDriver
   private val cacheMaxSizeInBytes = 100L * 1024L * 1024L
   private val cacheDirectory = "/zipline/cache".toPath()
@@ -63,7 +63,7 @@ class ProductionFetcherReceiverTest {
 
   @Before
   fun setUp() {
-    driver = driverFactory.createDriver(
+    driver = sqlDriverFactory.create(
       path = temporaryFolder.root.toOkioPath() / "zipline.db",
       schema = Database.Schema,
     )

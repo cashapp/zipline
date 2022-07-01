@@ -28,13 +28,13 @@ class DatabaseJvmTest {
   @JvmField @Rule
   val temporaryFolder = TemporaryFolder()
 
-  private val driverFactory = DriverFactory()
+  private val sqlDriverFactory = SqlDriverFactory()
   private lateinit var driver: SqlDriver
   private lateinit var database: Produce
 
   @Before
   fun before() {
-    driver = driverFactory.createDriver(
+    driver = sqlDriverFactory.create(
       path = temporaryFolder.root.toOkioPath() / "zipline.db",
       schema = Produce.Schema,
     )
@@ -53,15 +53,15 @@ class DatabaseJvmTest {
 
   @Test
   fun `multiple create calls succeed`() {
-    val driver1 = driverFactory.createDriver(
+    val driver1 = sqlDriverFactory.create(
       path = temporaryFolder.root.toOkioPath() / "database1.db",
       schema = Produce.Schema,
     )
-    val driver2 = driverFactory.createDriver(
+    val driver2 = sqlDriverFactory.create(
       path = temporaryFolder.root.toOkioPath() / "database2.db",
       schema = Produce.Schema,
     )
-    val driver3 = driverFactory.createDriver(
+    val driver3 = sqlDriverFactory.create(
       path = temporaryFolder.root.toOkioPath() / "database3.db",
       schema = Produce.Schema,
     )

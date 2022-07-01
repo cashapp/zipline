@@ -21,10 +21,10 @@ import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
 import okio.Path
 
-internal actual class DriverFactory(
+internal actual class SqlDriverFactory(
   private val context: Context,
 ) {
-  actual fun createDriver(path: Path, schema: SqlDriver.Schema): SqlDriver {
+  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
     validateDbPath(path)
     return AndroidSqliteDriver(
       schema = schema,

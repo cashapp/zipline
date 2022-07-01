@@ -18,13 +18,13 @@ package app.cash.zipline.loader.internal.database
 import com.squareup.sqldelight.db.SqlDriver
 import okio.Path
 
-internal expect class DriverFactory {
+internal expect class SqlDriverFactory {
   /**
    * Create a SqlDriver to be used in creating and managing a SqlLite instance on disk.
    *
    * Database is created and migrated after the driver is initialized prior to return.
    */
-  fun createDriver(path: Path, schema: SqlDriver.Schema): SqlDriver
+  fun create(path: Path, schema: SqlDriver.Schema): SqlDriver
 }
 
 /** Identify if an exception is from platform specific SqlLite library */
