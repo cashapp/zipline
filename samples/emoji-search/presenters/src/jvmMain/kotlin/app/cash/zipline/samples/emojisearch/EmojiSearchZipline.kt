@@ -15,10 +15,8 @@
  */
 package app.cash.zipline.samples.emojisearch
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader
-import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
@@ -28,11 +26,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.modules.EmptySerializersModule
 import okhttp3.OkHttpClient
 
-@OptIn(ExperimentalSerializationApi::class)
 class EmojiSearchZipline {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
@@ -42,11 +37,8 @@ class EmojiSearchZipline {
   private val manifestUrl = "http://10.0.2.2:8080/manifest.zipline.json"
   private val moduleName = "./zipline-root-presenters.js"
 
-  private val eventListener = EventListener.NONE
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
-    eventListener = eventListener,
-    serializersModule = EmptySerializersModule,
     httpClient = client,
   )
 

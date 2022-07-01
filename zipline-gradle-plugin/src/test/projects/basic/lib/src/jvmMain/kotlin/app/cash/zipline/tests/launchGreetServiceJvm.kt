@@ -39,10 +39,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
 
     override fun resolve(baseUrl: String, link: String) = "http://localhost:99999/$link"
   }
-  val loader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = localDirectoryHttpClient,
-  )
+  val loader = ZiplineLoader(dispatcher, localDirectoryHttpClient)
 
   val zipline = loader.loadOrFail("test", "http://localhost:99999/manifest.zipline.json")
 

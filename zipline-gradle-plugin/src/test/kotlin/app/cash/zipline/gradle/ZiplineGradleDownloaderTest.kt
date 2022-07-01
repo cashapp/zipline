@@ -16,7 +16,6 @@
 
 package app.cash.zipline.gradle
 
-import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
@@ -37,8 +36,7 @@ import org.junit.Before
 import org.junit.Test
 
 class ZiplineGradleDownloaderTest {
-  private lateinit var quickJs: QuickJs
-  private lateinit var testFixtures: LoaderTestFixtures
+  private val testFixtures = LoaderTestFixtures()
   private val webServer = MockWebServer()
   private val ziplineDownloader = ZiplineGradleDownloader()
   private val rootProject = File("src/test/resources/downloaderTest")
@@ -46,14 +44,11 @@ class ZiplineGradleDownloaderTest {
 
   @Before
   fun setUp() {
-    quickJs = QuickJs.create()
-    testFixtures = LoaderTestFixtures(quickJs)
     rootProject.deleteRecursively()
   }
 
   @After
   fun tearDown() {
-    quickJs.close()
     rootProject.deleteRecursively()
   }
 

@@ -22,30 +22,22 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import okio.FileSystem
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
-import org.junit.Before
 import org.junit.Test
 
 class DownloadOnlyFetcherReceiverTest {
-  private val httpClient = FakeZiplineHttpClient()
+  private val testFixtures = LoaderTestFixtures()
+
   private val dispatcher = TestCoroutineDispatcher()
-  private lateinit var fileSystem: FileSystem
+  private val httpClient = FakeZiplineHttpClient()
+  private val loader = ZiplineLoader(
+    dispatcher = dispatcher,
+    httpClient = httpClient,
+  )
+
+  private val fileSystem = FakeFileSystem()
   private val downloadDir = "/zipline/downloads".toPath()
-  private lateinit var testFixtures: LoaderTestFixtures
-
-  private lateinit var loader: ZiplineLoader
-
-  @Before
-  fun setUp() {
-    testFixtures = LoaderTestFixtures()
-    fileSystem = FakeFileSystem()
-    loader = ZiplineLoader(
-      dispatcher = dispatcher,
-      httpClient = httpClient,
-    )
-  }
 
   @Test
   fun getFileFromNetworkSaveToFs() = runBlocking {
