@@ -146,4 +146,24 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
     assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(java.lang.Exception: ZiplineApiMismatchException: no such method")
   }
+
+  @Test fun jsCallIncompatibleJvmService() = runBlocking {
+    val jvmPotatoService = object : PotatoService {
+      override fun echo(): EchoResponse {
+        error("unexpected call")
+      }
+    }
+    zipline.bind<PotatoService>("supService", jvmPotatoService)
+
+    assertThat(assertFailsWith<QuickJsException> {
+      zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
+    }).hasMessageThat().startsWith("app.cash.zipline.ZiplineApiMismatchException: no such method")
+
+    val name = "supService"
+    val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
+    val request = "[]"
+    assertThat(eventListener.take()).isEqualTo("bindService $name")
+    assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
+    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such method")
+  }
 }

@@ -15,6 +15,9 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineApiMismatchException
+import app.cash.zipline.ZiplineFunction
+import app.cash.zipline.ZiplineService
 import app.cash.zipline.ziplineServiceSerializer
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
@@ -35,11 +38,11 @@ internal class InternalCall(
   /** This is absent for outbound calls. */
   val inboundService: InboundService<*>? = null,
 
-  /** This is not-null, but may refer to a function that is not known by this endpoint. */
-  val functionName: String,
-
-  /** This is null for unknown functions. */
-  val function: ZiplineFunction<*>?,
+  /**
+   * The function being called. If the function is unknown to the receiver, it will synthesize a
+   * [ZiplineFunction] instance that always throws [ZiplineApiMismatchException].
+   */
+  val function: ZiplineFunction<*>,
 
   /**
    * If this function is suspending, this callback is not null. The function returns an encoded
@@ -52,9 +55,6 @@ internal class InternalCall(
 
 /** This uses [Int] as a placeholder; in practice the element type depends on the argument type. */
 private val argsListDescriptor = ListSerializer(Int.serializer()).descriptor
-
-/** This uses [Int] as a placeholder; it doesn't matter 'cause we're only encoding failures. */
-internal val failureResultSerializer = ResultSerializer(Int.serializer())
 
 /** This uses [Int] as a placeholder; it doesn't matter 'cause we're only encoding failures. */
 internal val failureSuspendCallbackSerializer = ziplineServiceSerializer<SuspendCallback<Int>>()
@@ -85,16 +85,20 @@ internal class RealCallSerializer(
   override fun serialize(encoder: Encoder, value: InternalCall) {
     encoder.encodeStructure(descriptor) {
       encodeStringElement(descriptor, 0, value.serviceName)
-      encodeStringElement(descriptor, 1, value.functionName)
+      encodeStringElement(descriptor, 1, value.function.name)
       if (value.suspendCallback != null) {
+        val function = value.function as SuspendingZiplineFunction<*>
         encodeSerializableElement(
           descriptor,
           2,
-          value.function!!.resultOrSuspendCallbackSerializer as KSerializer<Any?>,
+          function.suspendCallbackSerializer as KSerializer<Any?>,
           value.suspendCallback,
         )
+        encodeSerializableElement(descriptor, 3, function.argsListSerializer, value.args)
+      } else {
+        val function = value.function as ReturningZiplineFunction<*>
+        encodeSerializableElement(descriptor, 3, function.argsListSerializer, value.args)
       }
-      encodeSerializableElement(descriptor, 3, value.function!!.argsListSerializer, value.args)
     }
   }
 
@@ -117,24 +121,26 @@ internal class RealCallSerializer(
             function = inboundService?.functions?.get(functionName)
           }
           2 -> {
-            if (function != null) {
-              suspendCallback = decodeSerializableElement(
-                descriptor,
-                index,
-                function.resultOrSuspendCallbackSerializer as KSerializer<SuspendCallback<Any?>>
-              )
-            } else {
+            val serializer = when (function) {
+              is SuspendingZiplineFunction<*> -> function.suspendCallbackSerializer
               // We can use any suspend callback if we're only returning failures.
-              suspendCallback = decodeSerializableElement(
-                descriptor,
-                index,
-                failureSuspendCallbackSerializer as KSerializer<SuspendCallback<Any?>>
-              )
-            }
+              else -> failureSuspendCallbackSerializer
+            } as KSerializer<SuspendCallback<Any?>>
+
+            suspendCallback = decodeSerializableElement(
+              descriptor,
+              index,
+              serializer,
+            )
           }
           3 -> {
-            if (function != null) {
-              args = decodeSerializableElement(descriptor, index, function.argsListSerializer)
+            val argsListSerializer = when (function) {
+              is SuspendingZiplineFunction<*> -> function.argsListSerializer
+              is ReturningZiplineFunction<*> -> function.argsListSerializer
+              else -> null
+            }
+            if (argsListSerializer != null) {
+              args = decodeSerializableElement(descriptor, index, argsListSerializer)
             } else {
               // Discard args for unknown function.
               (decoder as JsonDecoder).decodeJsonElement()
@@ -147,8 +153,8 @@ internal class RealCallSerializer(
       return@decodeStructure InternalCall(
         serviceName = serviceName,
         inboundService = inboundService,
-        functionName = functionName,
-        function = function,
+        function = function
+          ?: unknownFunction<ZiplineService>(functionName, inboundService, suspendCallback),
         suspendCallback = suspendCallback,
         args = args
       )
@@ -215,6 +221,44 @@ internal class ResultSerializer<T>(
         }
       }
       return@decodeStructure result!!
+    }
+  }
+}
+
+/** Returns a function that always throws [ZiplineApiMismatchException] when called. */
+private fun <T : ZiplineService> unknownFunction(
+  functionName: String,
+  inboundService: InboundService<*>?,
+  suspendCallback: SuspendCallback<Any?>?,
+): ZiplineFunction<T> {
+  val message = buildString {
+    appendLine("no such method (incompatible API versions?)")
+    appendLine("\tcalled:")
+    append("\t\t")
+    appendLine(functionName)
+    if (inboundService != null) {
+      appendLine("\tavailable:")
+      inboundService.functions.keys.joinTo(this, separator = "\n") { "\t\t$it" }
+    }
+  }
+
+  if (suspendCallback != null) {
+    return object : SuspendingZiplineFunction<T>(
+      name = functionName,
+      argSerializers = listOf(),
+      suspendCallbackSerializer = failureSuspendCallbackSerializer,
+    ) {
+      override suspend fun callSuspending(service: T, args: List<*>) =
+        throw ZiplineApiMismatchException(message)
+    }
+  } else {
+    return object : ReturningZiplineFunction<T>(
+      name = functionName,
+      argSerializers = listOf(),
+      resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
+    ) {
+      override fun call(service: T, args: List<*>) =
+        throw ZiplineApiMismatchException(message)
     }
   }
 }

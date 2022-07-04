@@ -16,8 +16,9 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.OutboundCallHandler
+import app.cash.zipline.internal.bridge.ReturningZiplineFunction
 import app.cash.zipline.internal.bridge.SuspendCallback
-import app.cash.zipline.internal.bridge.ZiplineFunction
+import app.cash.zipline.internal.bridge.SuspendingZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
@@ -75,7 +76,7 @@ interface SampleService<T> : ZiplineService {
       class ZiplineFunction0<TF>(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
-      ) : ZiplineFunction<SampleService<TF>>(
+      ) : ReturningZiplineFunction<SampleService<TF>>(
         "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
         argSerializers,
         resultSerializer,
@@ -87,7 +88,7 @@ interface SampleService<T> : ZiplineService {
       class ZiplineFunction1<TF>(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
-      ) : ZiplineFunction<SampleService<TF>>(
+      ) : SuspendingZiplineFunction<SampleService<TF>>(
         "suspend fun reduce(List<T>): T",
         argSerializers,
         resultSerializer,
@@ -99,7 +100,7 @@ interface SampleService<T> : ZiplineService {
       class ZiplineFunction2<TF>(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
-      ) : ZiplineFunction<SampleService<TF>>(
+      ) : ReturningZiplineFunction<SampleService<TF>>(
         "fun close(): kotlin.Unit",
         argSerializers,
         resultSerializer,

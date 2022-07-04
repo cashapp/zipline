@@ -57,7 +57,7 @@ internal class CallCodec(
     val result = Call(
       internalCall.serviceName,
       service,
-      internalCall.functionName,
+      internalCall.function,
       internalCall.args,
       encodedCall,
       encodedServiceNames
@@ -82,7 +82,7 @@ internal class CallCodec(
     lastInboundCall = Call(
       internalCall.serviceName,
       inboundService.service,
-      internalCall.functionName,
+      internalCall.function,
       internalCall.args,
       callJson,
       decodedServiceNames
@@ -90,15 +90,8 @@ internal class CallCodec(
     return internalCall
   }
 
-  internal fun encodeFailure(throwable: Throwable): String {
-    return endpoint.json.encodeToStringFast(
-      failureResultSerializer as KSerializer<Any?>,
-      Result.failure<Any?>(throwable),
-    )
-  }
-
   internal fun encodeResult(
-    function: ZiplineFunction<*>,
+    function: ReturningZiplineFunction<*>,
     result: Result<Any?>,
   ): CallResult {
     encodedServiceNames.clear()
@@ -110,7 +103,7 @@ internal class CallCodec(
   }
 
   internal fun decodeResult(
-    function: ZiplineFunction<*>,
+    function: ReturningZiplineFunction<*>,
     resultJson: String,
   ): CallResult {
     decodedServiceNames.clear()

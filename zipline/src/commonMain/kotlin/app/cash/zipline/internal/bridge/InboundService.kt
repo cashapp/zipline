@@ -17,7 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
-import app.cash.zipline.ZiplineApiMismatchException
+import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.encodeToStringFast
 import kotlinx.coroutines.ensureActive
@@ -37,8 +37,7 @@ internal class InboundService<T : ZiplineService>(
     internalCall: InternalCall,
     externalCall: Call,
   ): String {
-    val function = internalCall.function as ZiplineFunction<ZiplineService>?
-      ?: return endpoint.callCodec.encodeFailure(unexpectedFunction(internalCall.functionName))
+    val function = internalCall.function as ReturningZiplineFunction<ZiplineService>
 
     // Removes the handler in calls to [ZiplineService.close]. We remove before dispatching so
     // it'll always be removed even if the call stalls or throws.
@@ -69,24 +68,19 @@ internal class InboundService<T : ZiplineService>(
     suspendCallback: SuspendCallback<Any?>,
   ): String {
     val job = endpoint.scope.launch {
-      val function = internalCall.function as ZiplineFunction<ZiplineService>?
+      val function = internalCall.function as SuspendingZiplineFunction<ZiplineService>
       val args = internalCall.args
 
-      val result: Result<Any?>
-      if (function == null) {
-        result = Result.failure(unexpectedFunction(internalCall.functionName))
-      } else {
-        val callStart = endpoint.eventListener.callStart(externalCall)
-        result = runCatching {
-          function.callSuspending(service, args)
-        }
-        endpoint.callCodec.nextOutboundCallCallback = { callbackCall ->
-          endpoint.eventListener.callEnd(
-            externalCall,
-            CallResult(result, callbackCall.encodedCall, callbackCall.serviceNames),
-            callStart,
-          )
-        }
+      val callStart = endpoint.eventListener.callStart(externalCall)
+      val result = runCatching {
+        function.callSuspending(service, args)
+      }
+      endpoint.callCodec.nextOutboundCallCallback = { callbackCall ->
+        endpoint.eventListener.callEnd(
+          externalCall,
+          CallResult(result, callbackCall.encodedCall, callbackCall.serviceNames),
+          callStart,
+        )
       }
 
       // Don't resume a continuation if the Zipline has since been closed.
@@ -109,15 +103,4 @@ internal class InboundService<T : ZiplineService>(
 
     return endpoint.json.encodeToStringFast(cancelCallbackSerializer, cancelCallback)
   }
-
-  private fun unexpectedFunction(functionName: String?) = ZiplineApiMismatchException(
-    buildString {
-      appendLine("no such method (incompatible API versions?)")
-      appendLine("\tcalled:")
-      append("\t\t")
-      appendLine(functionName)
-      appendLine("\tavailable:")
-      functions.keys.joinTo(this, separator = "\n") { "\t\t$it" }
-    }
-  )
 }

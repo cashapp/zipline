@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.KSerializer

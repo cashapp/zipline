@@ -112,16 +112,22 @@ internal class ZiplineApis(
     ).single()
 
   val ziplineFunction: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("ZiplineFunction"))!!
+    get() = pluginContext.referenceClass(packageFqName.child("ZiplineFunction"))!!
 
-  val ziplineFunctionCall: IrSimpleFunctionSymbol
+  val returningZiplineFunction: IrClassSymbol
+    get() = pluginContext.referenceClass(bridgeFqName.child("ReturningZiplineFunction"))!!
+
+  val suspendingZiplineFunction: IrClassSymbol
+    get() = pluginContext.referenceClass(bridgeFqName.child("SuspendingZiplineFunction"))!!
+
+  val returningZiplineFunctionCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("ZiplineFunction").child("call")
+      bridgeFqName.child("ReturningZiplineFunction").child("call")
     ).single()
 
-  val ziplineFunctionCallSuspending: IrSimpleFunctionSymbol
+  val suspendingZiplineFunctionCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("ZiplineFunction").child("callSuspending")
+      bridgeFqName.child("SuspendingZiplineFunction").child("callSuspending")
     ).single()
 
   val outboundCallHandlerFqName = bridgeFqName.child("OutboundCallHandler")

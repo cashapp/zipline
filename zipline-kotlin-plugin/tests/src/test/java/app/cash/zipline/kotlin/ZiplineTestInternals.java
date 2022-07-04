@@ -17,7 +17,8 @@ package app.cash.zipline.kotlin;
 
 import app.cash.zipline.internal.bridge.Endpoint;
 import app.cash.zipline.internal.bridge.OutboundCallHandler;
-import app.cash.zipline.internal.bridge.ZiplineFunction;
+import app.cash.zipline.internal.bridge.ReturningZiplineFunction;
+import app.cash.zipline.ZiplineFunction;
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
 import app.cash.zipline.testing.EchoRequest;
 import app.cash.zipline.testing.EchoResponse;
@@ -98,7 +99,7 @@ public final class ZiplineTestInternals {
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, echoResponseKt);
       return Arrays.asList(
-        new ZiplineFunction<EchoService>(
+        new ReturningZiplineFunction<EchoService>(
             "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
             Arrays.asList(requestSerializer), responseSerializer) {
           @Override
@@ -146,7 +147,7 @@ public final class ZiplineTestInternals {
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, listOfStringKt);
       return Arrays.asList(
-        new ZiplineFunction<GenericEchoService<String>>(
+        new ReturningZiplineFunction<GenericEchoService<String>>(
             "fun genericEcho(T): kotlin.collections.List<T>",
             Arrays.asList(requestSerializer), responseSerializer) {
           @Override public Object call(GenericEchoService<String> service, List<?> args) {
@@ -191,7 +192,7 @@ public final class ZiplineTestInternals {
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, echoResponseKt);
       return Arrays.asList(
-        new ZiplineFunction<EchoZiplineService>(
+        new ReturningZiplineFunction<EchoZiplineService>(
             "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
             Arrays.asList(requestSerializer), responseSerializer) {
           @Override public Object call(EchoZiplineService service, List<?> args) {
