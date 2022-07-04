@@ -18,8 +18,8 @@ package app.cash.zipline.internal
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.json.Json
 
-actual fun <T> Json.decodeFromStringFast(deserializer: KSerializer<T>, string: String): T =
+internal actual fun <T> Json.decodeFromStringFast(deserializer: KSerializer<T>, string: String): T =
   decodeFromString(deserializer, string)
 
-actual fun <T> Json.encodeToStringFast(serializer: KSerializer<T>, value: T): String =
+internal actual fun <T> Json.encodeToStringFast(serializer: KSerializer<T>, value: T): String =
   encodeToString(serializer, value)

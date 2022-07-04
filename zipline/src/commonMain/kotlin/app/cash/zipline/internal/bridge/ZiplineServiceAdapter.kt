@@ -18,6 +18,7 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
 import kotlinx.serialization.ContextualSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
@@ -27,6 +28,7 @@ import kotlinx.serialization.modules.SerializersModule
  * Adapts [ZiplineService] implementations to receive incoming and send outgoing calls. Most
  * implementations are generated.
  */
+@OptIn(ExperimentalSerializationApi::class) // Zipline must track ContextualSerializer API changes.
 @PublishedApi
 internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
   private val contextualSerializer = ContextualSerializer(PassByReference::class)

@@ -95,6 +95,7 @@ internal class CallCodec(
     result: Result<Any?>,
   ): CallResult {
     encodedServiceNames.clear()
+    @Suppress("UNCHECKED_CAST") // We delegate to the right serializer to encode.
     val resultJson = endpoint.json.encodeToStringFast(
       function.kotlinResultSerializer as KSerializer<Any?>,
       result,

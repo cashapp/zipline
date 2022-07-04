@@ -25,6 +25,7 @@ import kotlinx.serialization.modules.SerializersModule
 internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
   loadJsModule(bytecode, id)
 
+@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,

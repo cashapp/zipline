@@ -29,7 +29,6 @@ import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
 
-@OptIn(ExperimentalSerializationApi::class)
 class LoaderTestFixtures {
   val alphaJs = createJs("alpha")
   val alphaByteString = createZiplineFile(alphaJs, "alpha.js")

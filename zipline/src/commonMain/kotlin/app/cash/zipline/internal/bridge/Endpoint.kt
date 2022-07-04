@@ -84,6 +84,7 @@ class Endpoint internal constructor(
     }
   }
 
+  @Suppress("UNUSED_PARAMETER") // Parameters are used by the compiler plug-in.
   fun <T : ZiplineService> bind(name: String, instance: T) {
     error("unexpected call to Endpoint.bind: is the Zipline plugin configured?")
   }
@@ -100,6 +101,7 @@ class Endpoint internal constructor(
     inboundServices[name] = InboundService(service, this, functions)
   }
 
+  @Suppress("UNUSED_PARAMETER") // Parameter is used by the compiler plug-in.
   fun <T : ZiplineService> take(name: String): T {
     error("unexpected call to Endpoint.take: is the Zipline plugin configured?")
   }

@@ -20,8 +20,8 @@ import app.cash.zipline.ZiplineService
 
 private val referenceQueue: dynamic = js("""[]""")
 
-val registry = run {
-  // Declare a local so `referenceQueue` is accessible to the js() block below.
+internal val registry = run {
+  @Suppress("UNUSED_VARIABLE") // `referenceQueue` is used by the js() block below.
   val referenceQueue = referenceQueue
   js(
     """

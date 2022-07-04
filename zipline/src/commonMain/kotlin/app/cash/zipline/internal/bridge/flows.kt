@@ -17,6 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.ziplineServiceSerializer
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.KSerializer
@@ -69,6 +70,7 @@ internal class FlowSerializer<T>(
     return service.toFlow()
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class) // Zipline must track changes to kotlinx.coroutines.
   private fun FlowZiplineService<T>.toFlow(): Flow<T> {
     return channelFlow {
       invokeOnClose {

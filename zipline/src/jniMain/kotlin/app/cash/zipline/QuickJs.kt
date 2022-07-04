@@ -123,7 +123,7 @@ actual class QuickJs private constructor(
     return JniCallChannel(this, instance)
   }
 
-  internal actual fun gc() {
+  actual fun gc() {
     gc(context)
   }
 
