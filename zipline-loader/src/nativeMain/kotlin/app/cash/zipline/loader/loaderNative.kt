@@ -19,6 +19,7 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
