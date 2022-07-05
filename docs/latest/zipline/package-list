@@ -1,7 +1,6 @@
 $dokka.format:html-v1
 $dokka.linkExtension:html
 $dokka.location:app.cash.zipline.internal.bridge////PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/index.html
-$dokka.location:app.cash.zipline.internal.bridge//registry/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/registry.html
 $dokka.location:app.cash.zipline.internal.bridge/CancelCallback///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-cancel-callback/index.html
 $dokka.location:app.cash.zipline.internal.bridge/CancelCallback/cancel/#/PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-cancel-callback/cancel.html
 $dokka.location:app.cash.zipline.internal.bridge/Endpoint///PointingToDeclaration/zipline/app.cash.zipline.internal.bridge/-endpoint/index.html
@@ -83,6 +82,7 @@ $dokka.location:app.cash.zipline/QuickJs/close/#/PointingToDeclaration/zipline/
 $dokka.location:app.cash.zipline/QuickJs/compile/#kotlin.String#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/compile.html
 $dokka.location:app.cash.zipline/QuickJs/evaluate/#kotlin.String#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/evaluate.html
 $dokka.location:app.cash.zipline/QuickJs/execute/#kotlin.ByteArray/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/execute.html
+$dokka.location:app.cash.zipline/QuickJs/gc/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/gc.html
 $dokka.location:app.cash.zipline/QuickJs/gcThreshold/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/gc-threshold.html
 $dokka.location:app.cash.zipline/QuickJs/interruptHandler/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/interrupt-handler.html
 $dokka.location:app.cash.zipline/QuickJs/maxStackSize/#/PointingToDeclaration/zipline/app.cash.zipline/-quick-js/max-stack-size.html
