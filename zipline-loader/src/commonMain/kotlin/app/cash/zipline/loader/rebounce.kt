@@ -12,7 +12,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
  * emitted by [this]. This is the inverse of `Flow.debounce()`.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-fun <T> Flow<T>.rebounce(duration: Duration): Flow<T> {
+internal fun <T> Flow<T>.rebounce(duration: Duration): Flow<T> {
   return transformLatest {
     while (true) {
       emit(it)

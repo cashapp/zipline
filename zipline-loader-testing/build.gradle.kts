@@ -5,6 +5,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
+  id("com.squareup.sqldelight")
 }
 
 kotlin {
@@ -59,5 +60,11 @@ kotlin {
         compilationName.capitalize()
       project.dependencies.add(pluginConfigurationName, pluginDependency)
     }
+  }
+}
+
+sqldelight {
+  database("Produce") {
+    packageName = "app.cash.zipline.loader.internal.database"
   }
 }

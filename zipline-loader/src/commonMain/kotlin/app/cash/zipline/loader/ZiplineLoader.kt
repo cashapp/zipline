@@ -25,10 +25,10 @@ import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.fetcher.fetchManifest
 import app.cash.zipline.loader.fetcher.pin
 import app.cash.zipline.loader.fetcher.unpin
+import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.receiver.FsSaveReceiver
 import app.cash.zipline.loader.receiver.Receiver
 import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
-import com.squareup.sqldelight.db.SqlDriver
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -43,9 +43,9 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okio.ByteString.Companion.encodeUtf8
+import okio.Closeable
 import okio.FileSystem
 import okio.Path
 
@@ -61,36 +61,25 @@ import okio.Path
  *     way the network is used for fresh resources and embedded is used for fast resources.
  */
 @OptIn(ExperimentalSerializationApi::class)
-class ZiplineLoader private constructor(
+class ZiplineLoader internal constructor(
+  private val sqlDriverFactory: SqlDriverFactory,
   private val dispatcher: CoroutineDispatcher,
   private val httpClient: ZiplineHttpClient,
-  private val eventListener: EventListener = EventListener.NONE,
-  private val serializersModule: SerializersModule = EmptySerializersModule,
-
-  private val embeddedDir: Path? = null,
-  private val embeddedFileSystem: FileSystem? = null,
-
-  private val cache: ZiplineCache? = null,
-) {
-  constructor(
-    dispatcher: CoroutineDispatcher,
-    httpClient: ZiplineHttpClient,
-    eventListener: EventListener = EventListener.NONE,
-    serializersModule: SerializersModule = EmptySerializersModule,
-  ): this(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    eventListener = eventListener,
-    serializersModule = serializersModule,
-    embeddedDir = null,
-    embeddedFileSystem = null,
-    cache = null
-  )
+  private val eventListener: EventListener,
+  private val serializersModule: SerializersModule,
+  private val embeddedDir: Path?,
+  private val embeddedFileSystem: FileSystem?,
+  internal val cache: ZiplineCache?,
+) : Closeable {
+  override fun close() {
+    cache?.close()
+  }
 
   fun withEmbedded(
     embeddedDir: Path,
     embeddedFileSystem: FileSystem
   ): ZiplineLoader = ZiplineLoader(
+    sqlDriverFactory = sqlDriverFactory,
     dispatcher = dispatcher,
     httpClient = httpClient,
     eventListener = eventListener,
@@ -101,39 +90,39 @@ class ZiplineLoader private constructor(
   )
 
   fun withCache(
-    cache: ZiplineCache
-  ): ZiplineLoader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    eventListener = eventListener,
-    serializersModule = serializersModule,
-    embeddedDir = embeddedDir,
-    embeddedFileSystem = embeddedFileSystem,
-    cache = cache,
-  )
-
-  fun withCache(
-    driver: SqlDriver,
     fileSystem: FileSystem,
     directory: Path,
     maxSizeInBytes: Long,
     nowMs: () -> Long
-  ): ZiplineLoader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = httpClient,
-    eventListener = eventListener,
-    serializersModule = serializersModule,
-    embeddedDir = embeddedDir,
-    embeddedFileSystem = embeddedFileSystem,
-    cache = createZiplineCache(
+  ): ZiplineLoader {
+    val driver = sqlDriverFactory.create(directory / "zipline.db", Database.Schema)
+    val databaseCloseable = object : Closeable {
+      override fun close() {
+        driver.close()
+      }
+    }
+    val database = createDatabase(driver = driver)
+    val cache = ZiplineCache(
       eventListener = eventListener,
-      driver = driver,
+      databaseCloseable = databaseCloseable,
+      database = database,
       fileSystem = fileSystem,
       directory = directory,
       maxSizeInBytes = maxSizeInBytes,
       nowMs = nowMs,
-    ),
-  )
+    )
+    cache.prune()
+    return ZiplineLoader(
+      sqlDriverFactory = sqlDriverFactory,
+      dispatcher = dispatcher,
+      httpClient = httpClient,
+      eventListener = eventListener,
+      serializersModule = serializersModule,
+      embeddedDir = embeddedDir,
+      embeddedFileSystem = embeddedFileSystem,
+      cache = cache,
+    )
+  }
 
   private var concurrentDownloadsSemaphore = Semaphore(3)
   var concurrentDownloads = 3

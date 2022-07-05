@@ -13,17 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline.loader.internal.database
 
+import android.content.Context
+import android.database.SQLException
+import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
+import okio.Path
 
-actual class DriverFactory {
-  actual fun createDriver(): SqlDriver {
-    val driver: SqlDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-    Database.Schema.create(driver)
-    return driver
+internal actual class SqlDriverFactory(
+  private val context: Context,
+) {
+  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
+    validateDbPath(path)
+    return AndroidSqliteDriver(
+      schema = schema,
+      context = context,
+      name = path.toString(),
+      useNoBackupDirectory = false, // The cache directory is already in a no-backup directory.
+    )
   }
 }
 
-actual fun isSqlException(e: Exception) = e is java.sql.SQLException
+internal actual fun isSqlException(e: Exception) = e is SQLException

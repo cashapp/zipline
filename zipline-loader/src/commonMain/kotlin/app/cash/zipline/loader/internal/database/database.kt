@@ -13,20 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline.loader.internal.database
 
-import com.squareup.sqldelight.android.AndroidSqliteDriver
 import com.squareup.sqldelight.db.SqlDriver
+import okio.Path
 
-actual class DriverFactory(private val context: android.content.Context) {
-  actual fun createDriver(): SqlDriver {
-    return AndroidSqliteDriver(
-      schema = Database.Schema,
-      context = context,
-      name = "zipline-loader.db",
-      useNoBackupDirectory = true,
-    )
-  }
+internal expect class SqlDriverFactory {
+  /**
+   * Create a SqlDriver to be used in creating and managing a SqlLite instance on disk.
+   *
+   * Database is created and migrated after the driver is initialized prior to return.
+   */
+  fun create(path: Path, schema: SqlDriver.Schema): SqlDriver
 }
 
-actual fun isSqlException(e: Exception) = e is android.database.SQLException
+/** Identify if an exception is from platform specific SqlLite library */
+internal expect fun isSqlException(e: Exception): Boolean
+
+internal fun validateDbPath(path: Path) {
+  require(path.name.endsWith(".db")) {
+    "path name must end with file suffix .db"
+  }
+}

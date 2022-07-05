@@ -16,16 +16,12 @@
 
 package app.cash.zipline.cli
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.cli.Download.Companion.NAME
-import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
-import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.modules.EmptySerializersModule
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
@@ -61,12 +57,7 @@ class Download : Runnable {
 
   private fun download(applicationName: String, manifestUrl: String, downloadDir: File) {
     println("Zipline Download [manifestUrl=$manifestUrl][downloadDir=$downloadDir]...")
-    val ziplineLoader = ZiplineLoader(
-      dispatcher = dispatcher,
-      eventListener = EventListener.NONE,
-      serializersModule = EmptySerializersModule,
-      httpClient = OkHttpZiplineHttpClient(client),
-    )
+    val ziplineLoader = ZiplineLoader(dispatcher, client)
     runBlocking {
       ziplineLoader.download(
         applicationName = applicationName,

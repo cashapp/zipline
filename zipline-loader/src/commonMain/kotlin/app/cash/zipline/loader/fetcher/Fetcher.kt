@@ -23,7 +23,7 @@ import okio.ByteString
 /**
  * Fetchers get a desired [ByteString] if possible.
  */
-interface Fetcher {
+internal interface Fetcher {
   /**
    * Returns the desired [ByteString], or null if this fetcher doesn't know how to fetch this
    * resource.
@@ -79,7 +79,7 @@ interface Fetcher {
 /**
  * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
  */
-suspend fun List<Fetcher>.fetch(
+internal suspend fun List<Fetcher>.fetch(
   concurrentDownloadsSemaphore: Semaphore,
   applicationName: String,
   id: String,
@@ -103,7 +103,7 @@ suspend fun List<Fetcher>.fetch(
 /**
  * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
  */
-suspend fun List<Fetcher>.fetchManifest(
+internal suspend fun List<Fetcher>.fetchManifest(
   concurrentDownloadsSemaphore: Semaphore,
   applicationName: String,
   id: String,
@@ -115,14 +115,14 @@ suspend fun List<Fetcher>.fetchManifest(
   return@withPermit null
 }
 
-suspend fun List<Fetcher>.pin(
+internal suspend fun List<Fetcher>.pin(
   applicationName: String,
   manifest: ZiplineManifest,
 ) = this.forEach { fetcher ->
   fetcher.pin(applicationName, manifest)
 }
 
-suspend fun List<Fetcher>.unpin(
+internal suspend fun List<Fetcher>.unpin(
   applicationName: String,
   manifest: ZiplineManifest,
 ) = this.forEach { fetcher ->

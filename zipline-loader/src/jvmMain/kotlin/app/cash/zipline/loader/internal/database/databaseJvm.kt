@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline.loader.internal.database
 
 import com.squareup.sqldelight.db.SqlDriver
-import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
+import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
+import java.sql.SQLException
+import okio.Path
 
-actual class DriverFactory {
-  actual fun createDriver(): SqlDriver {
-    return NativeSqliteDriver(
-      schema = Database.Schema,
-      name = "zipline-loader.db",
-    )
+internal actual class SqlDriverFactory {
+  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
+    validateDbPath(path)
+    val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:$path")
+    schema.create(driver)
+    return driver
   }
 }
 
-// TODO find the native exception class
-actual fun isSqlException(e: Exception): Boolean = TODO()
+internal actual fun isSqlException(e: Exception) = e is SQLException

@@ -15,12 +15,12 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.QuickJs
+import app.cash.zipline.EventListener
+import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver.Companion.IN_MEMORY
+import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -30,30 +30,36 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 class ZiplineCacheTest {
-  private val driver = JdbcSqliteDriver(IN_MEMORY)
+  @JvmField @Rule
+  val temporaryFolder = TemporaryFolder()
+
+  private lateinit var driver: SqlDriver
   private lateinit var database: Database
   private lateinit var fileSystem: FileSystem
   private val directory = "/zipline/cache".toPath()
   private val cacheSize = 64
   private var nowMillis = 1_000L
-  private lateinit var quickJs: QuickJs
   private lateinit var testFixtures: LoaderTestFixtures
 
   @Before
   fun setUp() {
     fileSystem = FakeFileSystem()
-    Database.Schema.create(driver)
+    driver = SqlDriverFactory().create(
+      path = temporaryFolder.root.toOkioPath() / "zipline.db",
+      schema = Database.Schema,
+    )
     database = createDatabase(driver)
-
-    quickJs = QuickJs.create()
-    testFixtures = LoaderTestFixtures(quickJs)
+    testFixtures = LoaderTestFixtures()
   }
 
   @After
@@ -289,12 +295,16 @@ class ZiplineCacheTest {
     cacheSize: Int = this.cacheSize,
     block: suspend (ZiplineCache) -> T,
   ): T {
-    val cache = openZiplineCacheForTesting(
+    val cache = ZiplineCache(
+      eventListener = EventListener.NONE,
+      databaseCloseable = driver,
       database = database,
       fileSystem = fileSystem,
       directory = directory,
-      maxSizeInBytes = cacheSize.toLong()
-    ) { nowMillis }
+      maxSizeInBytes = cacheSize.toLong(),
+      nowMs = { nowMillis },
+    )
+    cache.prune()
     return block(cache)
   }
 }

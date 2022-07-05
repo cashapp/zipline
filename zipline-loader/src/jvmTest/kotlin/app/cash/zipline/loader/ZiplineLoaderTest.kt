@@ -16,17 +16,13 @@
 package app.cash.zipline.loader
 
 import app.cash.turbine.test
-import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createDownloadZiplineLoader
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createProductionZiplineLoader
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
@@ -34,56 +30,38 @@ import kotlin.time.DurationUnit
 import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
+import okio.FileSystem
+import okio.Path
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
-import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 @OptIn(ExperimentalTime::class)
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class ZiplineLoaderTest {
-  private val httpClient = FakeZiplineHttpClient()
-  private val dispatcher = TestCoroutineDispatcher()
-  private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private val cacheSize = 1024L * 1024L
-  private var nowMillis = 1_000L
+  @JvmField @Rule
+  val tester = LoaderTester()
 
-  private val cacheFileSystem = FakeFileSystem()
-  private val embeddedDir = "/zipline".toPath()
-  private val embeddedFileSystem = FakeFileSystem()
-  private lateinit var quickJs: QuickJs
-  private lateinit var testFixtures: LoaderTestFixtures
   private lateinit var loader: ZiplineLoader
+  private lateinit var httpClient: FakeZiplineHttpClient
+  private lateinit var embeddedFileSystem: FileSystem
+  private lateinit var embeddedDir: Path
+
+  private val testFixtures = LoaderTestFixtures()
 
   @Before
   fun setUp() {
-    Database.Schema.create(driver)
-    quickJs = QuickJs.create()
-    testFixtures = LoaderTestFixtures(quickJs)
-    loader = createProductionZiplineLoader(
-      dispatcher = dispatcher,
-      httpClient = httpClient,
-      embeddedDir = embeddedDir,
-      embeddedFileSystem = embeddedFileSystem,
-      cacheDbDriver = driver,
-      cacheDir = "/zipline/cache".toPath(),
-      cacheFileSystem = cacheFileSystem,
-      cacheMaxSizeInBytes = cacheSize
-    ) { nowMillis }
-  }
-
-  @After
-  fun tearDown() {
-    quickJs.close()
-    driver.close()
+    loader = tester.loader
+    httpClient = tester.httpClient
+    embeddedFileSystem = tester.embeddedFileSystem
+    embeddedDir = tester.embeddedDir
   }
 
   @Test
@@ -184,12 +162,8 @@ class ZiplineLoaderTest {
 
   @Test
   fun downloadToDirectoryThenLoadFromAsEmbedded() = runBlocking {
+    val downloadFileSystem = FakeFileSystem()
     val downloadDir = "/downloads/latest".toPath()
-    val downloadFileSystem = cacheFileSystem
-    loader = createDownloadZiplineLoader(
-      dispatcher = dispatcher,
-      httpClient = httpClient,
-    )
 
     assertFalse(downloadFileSystem.exists(downloadDir / getApplicationManifestFileName("test")))
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
@@ -217,16 +191,6 @@ class ZiplineLoaderTest {
       downloadFileSystem.read(downloadDir / testFixtures.bravoSha256Hex) { readByteString() })
 
     // Load into Zipline.
-    loader = createProductionZiplineLoader(
-      dispatcher = dispatcher,
-      httpClient = httpClient,
-      embeddedDir = downloadDir,
-      embeddedFileSystem = downloadFileSystem,
-      cacheDbDriver = driver,
-      cacheDir = "/zipline/cache".toPath(),
-      cacheFileSystem = cacheFileSystem,
-      cacheMaxSizeInBytes = cacheSize
-    ) { nowMillis }
     val zipline = loader.loadOrFail("test", testFixtures.manifest)
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
@@ -252,7 +216,6 @@ class ZiplineLoaderTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    loader = createDownloadZiplineLoader(dispatcher, httpClient)
     loader.download("test", downloadDir, fileSystem, testFixtures.manifest)
 
     // check that files have been downloaded to downloadDir as expected
@@ -300,8 +263,18 @@ class ZiplineLoaderTest {
       manifestUrlFlow = manifestUrlFlow,
       pollingInterval = 1000.toDuration(DurationUnit.MILLISECONDS),
     ) {}.test {
-      assertEquals("apple", (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(" loaded\n"))
-      assertEquals("firetruck", (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(" loaded\n"))
+      assertEquals(
+        "apple",
+        (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
+          " loaded\n"
+        )
+      )
+      assertEquals(
+        "firetruck",
+        (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
+          " loaded\n"
+        )
+      )
       cancel()
     }
   }

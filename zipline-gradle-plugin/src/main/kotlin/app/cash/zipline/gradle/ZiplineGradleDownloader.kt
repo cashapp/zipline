@@ -16,35 +16,22 @@
 
 package app.cash.zipline.gradle
 
-import app.cash.zipline.EventListener
-import app.cash.zipline.loader.OkHttpZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
-import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.modules.EmptySerializersModule
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 
-@OptIn(ExperimentalSerializationApi::class)
 class ZiplineGradleDownloader {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
-  private val eventListener: EventListener = EventListener.NONE
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
 
   fun download(downloadDir: File, applicationName: String, manifestUrl: String) {
-    val httpClient = OkHttpZiplineHttpClient(client)
-    val ziplineLoader = ZiplineLoader(
-      dispatcher = dispatcher,
-      eventListener = eventListener,
-      serializersModule = EmptySerializersModule,
-      httpClient = httpClient,
-    )
+    val ziplineLoader = ZiplineLoader(dispatcher, client)
     runBlocking {
       ziplineLoader.download(
         applicationName = applicationName,

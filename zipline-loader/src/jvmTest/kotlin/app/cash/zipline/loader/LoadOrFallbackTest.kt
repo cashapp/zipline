@@ -18,12 +18,14 @@ package app.cash.zipline.loader
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import org.junit.Rule
 import org.junit.Test
 
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class LoadOrFallbackTest {
-  private val tester = LoaderTester()
+  @JvmField @Rule
+  val tester = LoaderTester()
 
   @Test
   fun preferNetworkWhenThatWorks() = runBlocking {

@@ -15,72 +15,44 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.EventListener
-import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createProductionZiplineLoader
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
-import okio.Path.Companion.toPath
-import okio.fakefilesystem.FakeFileSystem
+import okio.Path
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class ProductionFetcherReceiverTest {
-  private val httpClient = FakeZiplineHttpClient()
-  private val dispatcher = TestCoroutineDispatcher()
-  private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
-  private val cacheMaxSizeInBytes = 100L * 1024L * 1024L
-  private val cacheDirectory = "/zipline/cache".toPath()
-  private var nowMillis = 1_000L
+  @JvmField @Rule
+  val tester = LoaderTester()
+
+  private lateinit var loader: ZiplineLoader
+  private lateinit var cache: ZiplineCache
+  private lateinit var embeddedFileSystem: FileSystem
+  private lateinit var embeddedDir: Path
+  private val testFixtures = LoaderTestFixtures()
 
   private lateinit var zipline: Zipline
-  private lateinit var cache: ZiplineCache
-
-  private lateinit var fileSystem: FileSystem
-  private lateinit var embeddedFileSystem: FileSystem
-  private val embeddedDir = "/zipline".toPath()
-  private lateinit var quickJs: QuickJs
-  private lateinit var testFixtures: LoaderTestFixtures
-  private lateinit var loader: ZiplineLoader
 
   @Before
   fun setUp() {
-    Database.Schema.create(cacheDbDriver)
-    quickJs = QuickJs.create()
-    testFixtures = LoaderTestFixtures(quickJs)
-    fileSystem = FakeFileSystem()
-    embeddedFileSystem = FakeFileSystem()
-    cache = createZiplineCache(
-      eventListener = EventListener.NONE,
-      driver = cacheDbDriver,
-      fileSystem = fileSystem,
-      directory = cacheDirectory,
-      maxSizeInBytes = cacheMaxSizeInBytes,
-      nowMs = { nowMillis }
-    )
-    loader = createProductionZiplineLoader(
-      dispatcher = dispatcher,
-      httpClient = httpClient,
-      embeddedDir = embeddedDir,
-      embeddedFileSystem = embeddedFileSystem,
-      cache = cache,
-    )
+    loader = tester.loader
+    cache = tester.cache
+    embeddedFileSystem = tester.embeddedFileSystem
+    embeddedDir = tester.embeddedDir
   }
 
   @After
   fun tearDown() {
-    quickJs.close()
-    cacheDbDriver.close()
+    loader.close()
   }
 
   @Test
@@ -93,7 +65,7 @@ class ProductionFetcherReceiverTest {
       write(testFixtures.bravoByteString)
     }
 
-    httpClient.filePathToByteString = mapOf()
+    tester.httpClient.filePathToByteString = mapOf()
 
     zipline = loader.loadOrFail("test", testFixtures.manifest)
 
@@ -117,7 +89,7 @@ class ProductionFetcherReceiverTest {
     }
     assertEquals(testFixtures.bravoByteString, cache.read(testFixtures.bravoSha256))
 
-    httpClient.filePathToByteString = mapOf()
+    tester.httpClient.filePathToByteString = mapOf()
 
     zipline = loader.loadOrFail("test", testFixtures.manifest)
 
@@ -135,7 +107,7 @@ class ProductionFetcherReceiverTest {
     assertNull(cache.read(testFixtures.alphaSha256))
     assertNull(cache.read(testFixtures.bravoSha256))
 
-    httpClient.filePathToByteString = mapOf(
+    tester.httpClient.filePathToByteString = mapOf(
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )

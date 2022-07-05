@@ -18,17 +18,6 @@ package app.cash.zipline.loader
 import com.squareup.sqldelight.EnumColumnAdapter
 import com.squareup.sqldelight.db.SqlDriver
 
-expect class DriverFactory {
-  fun createDriver(): SqlDriver
-}
-
-expect fun isSqlException(e: Exception): Boolean
-
-fun createDatabase(driverFactory: DriverFactory): Database {
-  val driver = driverFactory.createDriver()
-  return createDatabase(driver)
-}
-
 fun createDatabase(driver: SqlDriver): Database {
   return Database(
     driver,

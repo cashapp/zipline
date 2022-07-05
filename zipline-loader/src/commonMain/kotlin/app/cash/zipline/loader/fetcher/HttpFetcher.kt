@@ -26,7 +26,7 @@ import okio.ByteString
  * Download resources from the network. If the download fails, the exception is reported to
  * [eventListener] and this fetcher returns null.
  */
-class HttpFetcher(
+internal class HttpFetcher(
   private val httpClient: ZiplineHttpClient,
   private val eventListener: EventListener = EventListener.NONE,
 ) : Fetcher {

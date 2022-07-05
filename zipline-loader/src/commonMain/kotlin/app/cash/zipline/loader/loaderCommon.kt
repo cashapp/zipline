@@ -18,4 +18,4 @@ package app.cash.zipline.loader
 import app.cash.zipline.Zipline
 
 // TODO: drop this once we adopt Kotlin Hierarchical Multiplatform projects
-expect fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String)
+internal expect fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String)

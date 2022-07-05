@@ -35,6 +35,7 @@ kotlin {
         api(libs.kotlinx.coroutines.core)
         api(projects.zipline)
         api(libs.okio.core)
+        api(libs.sqldelight.runtime)
         implementation(libs.kotlinx.serialization.json)
       }
     }
@@ -70,6 +71,9 @@ kotlin {
       val main by compilations.getting {
         defaultSourceSet.dependsOn(nativeMain)
       }
+      main.dependencies {
+        implementation(libs.sqldelight.driver.native)
+      }
     }
 
     val commonTest by getting {
@@ -98,12 +102,18 @@ kotlin {
       dependsOn(jniTest)
       dependencies {
         implementation(projects.zipline.testing)
+        implementation(projects.ziplineLoaderTesting)
       }
     }
 
+    val nativeTest by creating {
+      dependencies {
+        implementation(projects.ziplineLoaderTesting)
+      }
+    }
     targets.withType<KotlinNativeTarget> {
       val test by compilations.getting
-      test.defaultSourceSet.dependsOn(engineTest)
+      test.defaultSourceSet.dependsOn(nativeTest)
     }
   }
 }

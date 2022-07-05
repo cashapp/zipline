@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.cli
 
-import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
@@ -29,8 +28,6 @@ import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
 import okio.FileSystem
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import picocli.CommandLine
 import picocli.CommandLine.MissingParameterException
@@ -39,20 +36,8 @@ class DownloadTest {
   private val TMP_DIR_PATH = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "zipline-download"
 
   private val webServer = MockWebServer()
+  private val testFixtures = LoaderTestFixtures()
   private val fileSystem = FileSystem.SYSTEM
-  private lateinit var quickJs: QuickJs
-  private lateinit var testFixtures: LoaderTestFixtures
-
-  @Before
-  fun setUp() {
-    quickJs = QuickJs.create()
-    testFixtures = LoaderTestFixtures(quickJs)
-  }
-
-  @After
-  fun tearDown() {
-    quickJs.close()
-  }
 
   @Test fun downloadWithParameters() {
     fromArgs("-A", "app1", "-D", TMP_DIR_PATH.toString(), "-M", "test.cash.app")

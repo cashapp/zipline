@@ -18,7 +18,6 @@ package app.cash.zipline.tests
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
-import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineDispatcher
@@ -39,10 +38,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
 
     override fun resolve(baseUrl: String, link: String) = "http://localhost:99999/$link"
   }
-  val loader = ZiplineLoader(
-    dispatcher = dispatcher,
-    httpClient = localDirectoryHttpClient,
-  )
+  val loader = ZiplineLoader(dispatcher, localDirectoryHttpClient)
 
   val zipline = loader.loadOrFail("test", "http://localhost:99999/manifest.zipline.json")
 

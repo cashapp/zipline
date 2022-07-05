@@ -24,7 +24,7 @@ import okio.ByteString
 /**
  * Load the [ZiplineFile] into a Zipline runtime instance.
  */
-class ZiplineLoadReceiver(
+internal class ZiplineLoadReceiver(
   private val zipline: Zipline
 ) : Receiver {
   override suspend fun receive(byteString: ByteString, id: String, sha256: ByteString) {

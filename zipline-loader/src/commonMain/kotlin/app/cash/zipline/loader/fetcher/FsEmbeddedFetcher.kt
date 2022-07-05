@@ -25,7 +25,7 @@ import okio.Path
 /**
  * Fetch from embedded fileSystem that ships with the app.
  */
-class FsEmbeddedFetcher(
+internal class FsEmbeddedFetcher(
   private val embeddedDir: Path,
   private val embeddedFileSystem: FileSystem,
   private val eventListener: EventListener,

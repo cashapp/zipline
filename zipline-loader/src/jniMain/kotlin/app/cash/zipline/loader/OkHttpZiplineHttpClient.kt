@@ -27,7 +27,7 @@ import okhttp3.Request
 import okhttp3.Response
 import okio.ByteString
 
-class OkHttpZiplineHttpClient(
+internal class OkHttpZiplineHttpClient(
   private val okHttpClient: OkHttpClient
 ) : ZiplineHttpClient {
   override suspend fun download(url: String): ByteString {

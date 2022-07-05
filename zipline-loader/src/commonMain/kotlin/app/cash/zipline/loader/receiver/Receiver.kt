@@ -20,7 +20,7 @@ import okio.ByteString
 /**
  * After getting a [ByteString], [Receiver]s are iteratively called in order to handle.
  */
-interface Receiver {
+internal interface Receiver {
   /**
    * Handle a [ByteString] which can include loading it into a [Zipline] runtime
    *  or saving to fileSystem.

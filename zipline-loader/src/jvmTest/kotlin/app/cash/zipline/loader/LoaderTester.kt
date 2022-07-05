@@ -16,74 +16,81 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import app.cash.zipline.QuickJs
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
 import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
+import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
+import org.junit.rules.TemporaryFolder
+import org.junit.rules.TestRule
+import org.junit.runner.Description
+import org.junit.runners.model.Statement
 
 class LoaderTester(
-  eventListener: EventListener = EventListener.NONE,
-) {
-  private val httpClient = FakeZiplineHttpClient()
+  private val eventListener: EventListener = EventListener.NONE,
+): TestRule {
+  /** Delegate to JUnit's temporary folder rule. */
+  private val temporaryFolder = TemporaryFolder()
+
+  val httpClient = FakeZiplineHttpClient()
   private val dispatcher = TestCoroutineDispatcher()
-  private val cacheDbDriver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
   private val cacheMaxSizeInBytes = 100 * 1024 * 1024
-  private val cacheDirectory = "/zipline/cache".toPath()
   private var nowMillis = 1_000L
 
-  private var zipline: Zipline = Zipline.create(dispatcher)
-  private var fileSystem: FileSystem = FakeFileSystem()
-  private var database: Database = createDatabase(cacheDbDriver)
+  private var zipline = Zipline.create(dispatcher)
 
-  private var embeddedFileSystem: FileSystem = FakeFileSystem()
-  private val embeddedDir = "/zipline".toPath()
-  private var quickJs = QuickJs.create()
-  private var testFixtures = LoaderTestFixtures(quickJs)
+  val embeddedFileSystem = FakeFileSystem()
+  val embeddedDir = "/zipline".toPath()
+  private var testFixtures = LoaderTestFixtures()
 
   private val baseUrl = "https://example.com/files"
 
-  private val cache: ZiplineCache
-  private val loader: ZiplineLoader
+  internal lateinit var loader: ZiplineLoader
+  internal lateinit var cache: ZiplineCache
 
-  init {
-    Database.Schema.create(cacheDbDriver)
-    cache = openZiplineCacheForTesting(
-      eventListener = eventListener,
-      database = database,
-      directory = cacheDirectory,
-      fileSystem = fileSystem,
-      maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
-      nowMs = { nowMillis },
-    )
-    loader = LoaderTestFixtures.createProductionZiplineLoader(
-      dispatcher = dispatcher,
-      httpClient = httpClient,
-      embeddedDir = embeddedDir,
-      embeddedFileSystem = embeddedFileSystem,
-      cache = cache,
-      eventListener = eventListener,
-    )
+  override fun apply(base: Statement, description: Description): Statement {
+    val statement = object : Statement() {
+      override fun evaluate() {
+        loader = ZiplineLoader(
+          dispatcher = dispatcher,
+          httpClient = httpClient,
+          eventListener = eventListener,
+        ).withEmbedded(
+          embeddedDir = embeddedDir,
+          embeddedFileSystem = embeddedFileSystem,
+        ).withCache(
+          directory = temporaryFolder.root.toOkioPath(),
+          fileSystem = FileSystem.SYSTEM,
+          maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
+          nowMs = { nowMillis },
+        )
+        cache = loader.cache!!
+        base.evaluate()
+        loader.close()
+      }
+    }
+    return temporaryFolder.apply(statement, description)
   }
 
   fun seedEmbedded(applicationName: String, seed: String) {
     embeddedFileSystem.createDirectories(embeddedDir)
-    val ziplineFileByteString = testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
+    val ziplineFileByteString =
+      testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
     val sha256 = ziplineFileByteString.sha256()
     val manifest = LoaderTestFixtures.createRelativeManifest(seed, sha256)
     val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
     embeddedFileSystem.write(embeddedDir / sha256.hex()) {
       write(ziplineFileByteString)
     }
-    embeddedFileSystem.write(embeddedDir / getApplicationManifestFileName(
+    embeddedFileSystem.write(
+      embeddedDir / getApplicationManifestFileName(
         applicationName
-    )
+      )
     ) {
       write(manifestJsonString.encodeUtf8())
     }
@@ -91,7 +98,8 @@ class LoaderTester(
 
   suspend fun success(applicationName: String, seed: String): String {
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
-    val ziplineFileByteString = testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
+    val ziplineFileByteString =
+      testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
     val manifest = LoaderTestFixtures.createRelativeManifest(seed, ziplineFileByteString.sha256())
     val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
     httpClient.filePathToByteString = mapOf(
@@ -123,7 +131,7 @@ class LoaderTester(
     val seed = "fail"
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
     val ziplineFileByteString = testFixtures.createZiplineFile(
-        LoaderTestFixtures.createJs(seed), "$seed.js"
+      LoaderTestFixtures.createJs(seed), "$seed.js"
     )
     httpClient.filePathToByteString = mapOf(
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
@@ -136,7 +144,8 @@ class LoaderTester(
 
   suspend fun failureCodeFetchFails(applicationName: String): String {
     val seed = "unreachable"
-    val ziplineFileByteString = testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
+    val ziplineFileByteString =
+      testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
     val manifest = LoaderTestFixtures.createRelativeManifest(seed, ziplineFileByteString.sha256())
     val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
@@ -154,9 +163,10 @@ class LoaderTester(
   suspend fun failureCodeLoadFails(applicationName: String): String {
     val seed = "broken"
     val ziplineFileByteString = testFixtures.createZiplineFile(
-        LoaderTestFixtures.createFailureJs(
-            seed
-        ), "$seed.js")
+      LoaderTestFixtures.createFailureJs(
+        seed
+      ), "$seed.js"
+    )
     val manifest = LoaderTestFixtures.createRelativeManifest(seed, ziplineFileByteString.sha256())
     val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 
@@ -174,7 +184,8 @@ class LoaderTester(
 
   suspend fun failureCodeRunFails(applicationName: String): String {
     val seed = "crashes"
-    val ziplineFileByteString = testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
+    val ziplineFileByteString =
+      testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
     val manifest = LoaderTestFixtures.createRelativeManifest(seed, ziplineFileByteString.sha256())
     val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
 

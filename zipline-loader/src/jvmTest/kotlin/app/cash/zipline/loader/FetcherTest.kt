@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.fetcher.Fetcher
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -24,18 +23,16 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
-import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 class FetcherTest {
   private var concurrentDownloadsSemaphore = Semaphore(3)
 
-  private lateinit var quickJs: QuickJs
   private lateinit var testFixtures: LoaderTestFixtures
 
-  private var alphaFetcherIds: MutableList<String> = mutableListOf()
-  private var bravoFetcherIds: MutableList<String> = mutableListOf()
+  private var alphaFetcherIds = mutableListOf<String>()
+  private var bravoFetcherIds = mutableListOf<String>()
   private lateinit var bravoByteString: ByteString
 
   private val fetcherAlpha = object : Fetcher {
@@ -101,14 +98,8 @@ class FetcherTest {
     alphaFetcherIds.clear()
     bravoFetcherIds.clear()
     alphaReceiverIds.clear()
-    quickJs = QuickJs.create()
-    testFixtures = LoaderTestFixtures(quickJs)
+    testFixtures = LoaderTestFixtures()
     bravoByteString = "test".encodeUtf8()
-  }
-
-  @After
-  fun tearDown() {
-    quickJs.close()
   }
 
   @Test

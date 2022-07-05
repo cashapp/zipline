@@ -16,36 +16,21 @@
 
 package app.cash.zipline.loader.testing
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
-import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.ZiplineFile
-import app.cash.zipline.loader.ZiplineHttpClient
-import app.cash.zipline.loader.ZiplineLoader
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
-import app.cash.zipline.loader.fetcher.FsCachingFetcher
-import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
-import app.cash.zipline.loader.fetcher.HttpFetcher
-import com.squareup.sqldelight.db.SqlDriver
-import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
 import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.ByteString.Companion.toByteString
-import okio.FileSystem
-import okio.Path
 
 @OptIn(ExperimentalSerializationApi::class)
-class LoaderTestFixtures(
-  val quickJs: QuickJs,
-) {
+class LoaderTestFixtures {
   val alphaJs = createJs("alpha")
   val alphaByteString = createZiplineFile(alphaJs, "alpha.js")
   val alphaSha256 = alphaByteString.sha256()
@@ -90,9 +75,15 @@ class LoaderTestFixtures(
   val manifestByteString = manifestJsonString.encodeUtf8()
 
   fun createZiplineFile(javaScript: String, fileName: String): ByteString {
+    val quickJs = QuickJs.create()
+    val compiledJavaScript = try {
+      quickJs.compile(javaScript, fileName)
+    } finally {
+      quickJs.close()
+    }
     val ziplineFile = ZiplineFile(
       CURRENT_ZIPLINE_VERSION,
-      quickJs.compile(javaScript, fileName).toByteString()
+      compiledJavaScript.toByteString()
     )
     val buffer = Buffer()
     ziplineFile.writeTo(buffer)
@@ -126,65 +117,5 @@ class LoaderTestFixtures(
     fun createFailureJs(seed: String) = """
       |throw Error('$seed');
       |""".trimMargin()
-
-    fun createProductionZiplineLoader(
-      dispatcher: CoroutineDispatcher,
-      httpClient: ZiplineHttpClient,
-      embeddedDir: Path,
-      embeddedFileSystem: FileSystem,
-      cache: ZiplineCache,
-      serializersModule: SerializersModule = EmptySerializersModule,
-      eventListener: EventListener = EventListener.NONE,
-    ) = ZiplineLoader(
-      dispatcher = dispatcher,
-      eventListener = eventListener,
-      serializersModule = serializersModule,
-      httpClient = httpClient,
-    ).withEmbedded(
-      embeddedDir = embeddedDir,
-      embeddedFileSystem = embeddedFileSystem,
-    ).withCache(
-      cache = cache,
-    )
-
-    fun createProductionZiplineLoader(
-      dispatcher: CoroutineDispatcher,
-      httpClient: ZiplineHttpClient,
-      embeddedDir: Path,
-      embeddedFileSystem: FileSystem,
-      cacheDbDriver: SqlDriver,
-      cacheDir: Path,
-      cacheFileSystem: FileSystem,
-      cacheMaxSizeInBytes: Long = 100L * 1024L * 1024L,  // 100 MiB
-      serializersModule: SerializersModule = EmptySerializersModule,
-      eventListener: EventListener = EventListener.NONE,
-      nowMs: () -> Long,
-    ) = ZiplineLoader(
-      dispatcher = dispatcher,
-      eventListener = eventListener,
-      serializersModule = serializersModule,
-      httpClient = httpClient,
-    ).withEmbedded(
-      embeddedDir = embeddedDir,
-      embeddedFileSystem = embeddedFileSystem,
-    ).withCache(
-      driver = cacheDbDriver,
-      fileSystem = cacheFileSystem,
-      directory = cacheDir,
-      maxSizeInBytes = cacheMaxSizeInBytes,
-      nowMs = nowMs,
-    )
-
-    fun createDownloadZiplineLoader(
-      dispatcher: CoroutineDispatcher,
-      httpClient: ZiplineHttpClient,
-      serializersModule: SerializersModule = EmptySerializersModule,
-      eventListener: EventListener = EventListener.NONE,
-    ) = ZiplineLoader(
-      dispatcher = dispatcher,
-      eventListener = eventListener,
-      serializersModule = serializersModule,
-      httpClient = httpClient,
-    )
   }
 }
