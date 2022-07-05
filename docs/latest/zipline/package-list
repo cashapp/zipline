@@ -16,10 +16,10 @@ $dokka.location:app.cash.zipline.internal.bridge/SuspendCallback/success/#TypePa
 $dokka.location:app.cash.zipline////PointingToDeclaration/zipline/app.cash.zipline/index.html
 $dokka.location:app.cash.zipline//ziplineServiceSerializer/#/PointingToDeclaration/zipline/app.cash.zipline/zipline-service-serializer.html
 $dokka.location:app.cash.zipline/Call///PointingToDeclaration/zipline/app.cash.zipline/-call/index.html
-$dokka.location:app.cash.zipline/Call/Call/#kotlin.String#app.cash.zipline.ZiplineService#kotlin.String#kotlin.collections.List[*]#kotlin.String#kotlin.collections.List[kotlin.String]/PointingToDeclaration/zipline/app.cash.zipline/-call/-call.html
+$dokka.location:app.cash.zipline/Call/Call/#kotlin.String#app.cash.zipline.ZiplineService#app.cash.zipline.ZiplineFunction[*]#kotlin.collections.List[*]#kotlin.String#kotlin.collections.List[kotlin.String]/PointingToDeclaration/zipline/app.cash.zipline/-call/-call.html
 $dokka.location:app.cash.zipline/Call/args/#/PointingToDeclaration/zipline/app.cash.zipline/-call/args.html
 $dokka.location:app.cash.zipline/Call/encodedCall/#/PointingToDeclaration/zipline/app.cash.zipline/-call/encoded-call.html
-$dokka.location:app.cash.zipline/Call/functionName/#/PointingToDeclaration/zipline/app.cash.zipline/-call/function-name.html
+$dokka.location:app.cash.zipline/Call/function/#/PointingToDeclaration/zipline/app.cash.zipline/-call/function.html
 $dokka.location:app.cash.zipline/Call/service/#/PointingToDeclaration/zipline/app.cash.zipline/-call/service.html
 $dokka.location:app.cash.zipline/Call/serviceName/#/PointingToDeclaration/zipline/app.cash.zipline/-call/service-name.html
 $dokka.location:app.cash.zipline/Call/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline/-call/service-names.html
@@ -107,6 +107,9 @@ $dokka.location:app.cash.zipline/Zipline/take/#kotlin.String/PointingToDeclarati
 $dokka.location:app.cash.zipline/ZiplineApiMismatchException///PointingToDeclaration/zipline/app.cash.zipline/-zipline-api-mismatch-exception/index.html
 $dokka.location:app.cash.zipline/ZiplineApiMismatchException/ZiplineApiMismatchException/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-zipline-api-mismatch-exception/-zipline-api-mismatch-exception.html
 $dokka.location:app.cash.zipline/ZiplineApiMismatchException/message/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-api-mismatch-exception/message.html
+$dokka.location:app.cash.zipline/ZiplineFunction///PointingToDeclaration/zipline/app.cash.zipline/-zipline-function/index.html
+$dokka.location:app.cash.zipline/ZiplineFunction/isClose/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-function/is-close.html
+$dokka.location:app.cash.zipline/ZiplineFunction/name/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-function/name.html
 $dokka.location:app.cash.zipline/ZiplineService///PointingToDeclaration/zipline/app.cash.zipline/-zipline-service/index.html
 $dokka.location:app.cash.zipline/ZiplineService/close/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline-service/close.html
 app.cash.zipline
