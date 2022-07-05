@@ -21,10 +21,10 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromDynamic
 import kotlinx.serialization.json.encodeToDynamic
 
-@OptIn(ExperimentalSerializationApi::class)
-actual fun <T> Json.decodeFromStringFast(deserializer: KSerializer<T>, string: String): T =
+@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to decodeFromDynamic.
+internal actual fun <T> Json.decodeFromStringFast(deserializer: KSerializer<T>, string: String): T =
   decodeFromDynamic(deserializer, JSON.parse(string))
 
-@OptIn(ExperimentalSerializationApi::class)
-actual fun <T> Json.encodeToStringFast(serializer: KSerializer<T>, value: T): String =
+@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to encodeToDynamic.
+internal actual fun <T> Json.encodeToStringFast(serializer: KSerializer<T>, value: T): String =
   JSON.stringify(encodeToDynamic(serializer, value))

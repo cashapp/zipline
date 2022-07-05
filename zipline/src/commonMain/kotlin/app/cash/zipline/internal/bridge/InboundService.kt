@@ -37,6 +37,7 @@ internal class InboundService<T : ZiplineService>(
     internalCall: InternalCall,
     externalCall: Call,
   ): String {
+    @Suppress("UNCHECKED_CAST") // We found this function by matching on its service type T.
     val function = internalCall.function as ReturningZiplineFunction<ZiplineService>
 
     // Removes the handler in calls to [ZiplineService.close]. We remove before dispatching so
@@ -68,6 +69,7 @@ internal class InboundService<T : ZiplineService>(
     suspendCallback: SuspendCallback<Any?>,
   ): String {
     val job = endpoint.scope.launch {
+      @Suppress("UNCHECKED_CAST") // We found this function by matching on its service type T.
       val function = internalCall.function as SuspendingZiplineFunction<ZiplineService>
       val args = internalCall.args
 

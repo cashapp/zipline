@@ -19,12 +19,14 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.internal.database.SqlDriverFactory
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
   loadJsModule(bytecode, id)
 
+@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,

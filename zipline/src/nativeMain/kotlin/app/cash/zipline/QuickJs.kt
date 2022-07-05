@@ -373,7 +373,7 @@ actual class QuickJs private constructor(
     return InboundCallChannel(this)
   }
 
-  internal actual fun gc() {
+  actual fun gc() {
     JS_RunGC(runtime)
   }
 

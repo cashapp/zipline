@@ -29,6 +29,10 @@ kotlin {
   tvosX64()
 
   sourceSets {
+    all {
+      languageSettings.optIn("kotlin.js.ExperimentalJsExport")
+    }
+
     val commonMain by getting {
       dependencies {
         implementation(projects.zipline)

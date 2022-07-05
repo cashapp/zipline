@@ -16,11 +16,10 @@
 package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.Zipline
-import kotlinx.serialization.ExperimentalSerializationApi
 
 private val zipline by lazy { Zipline.get() }
 
-@OptIn(ExperimentalSerializationApi::class)
+@OptIn(ExperimentalJsExport::class)
 @JsExport
 fun preparePresenters() {
   val hostApi = zipline.take<HostApi>(

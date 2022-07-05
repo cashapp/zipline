@@ -24,6 +24,6 @@ import kotlinx.serialization.json.Json
  * in Kotlin/JS. In one sample this optimization reduced overall execution time by 35%.
  */
 
-expect fun <T> Json.decodeFromStringFast(deserializer: KSerializer<T>, string: String): T
+internal expect fun <T> Json.decodeFromStringFast(deserializer: KSerializer<T>, string: String): T
 
-expect fun <T> Json.encodeToStringFast(serializer: KSerializer<T>, value: T): String
+internal expect fun <T> Json.encodeToStringFast(serializer: KSerializer<T>, value: T): String

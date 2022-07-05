@@ -81,8 +81,11 @@ expect class QuickJs {
 
   internal fun getInboundChannel(): CallChannel
 
-  /** Manually invoke cycle removal for testing. */
-  internal fun gc()
+  /**
+   * Manually invoke cycle removal. This is intended for testing only and is never necessary to
+   * call in regular execution.
+   */
+  fun gc()
 
   fun close()
 }

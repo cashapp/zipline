@@ -63,7 +63,7 @@ internal val failureSuspendCallbackSerializer = ziplineServiceSerializer<Suspend
 internal val cancelCallbackSerializer = ziplineServiceSerializer<CancelCallback>()
 
 /**
- * Encode and decode calls using [ZiplineFunction.argsListSerializer].
+ * Encode and decode calls using `ZiplineFunction.argsListSerializer`.
  *
  * When serializing outbound calls the function instance is a member of the call. To deserialize
  * inbound calls the function must be looked up from [endpoint] using the service and function name.
@@ -88,6 +88,7 @@ internal class RealCallSerializer(
       encodeStringElement(descriptor, 1, value.function.name)
       if (value.suspendCallback != null) {
         val function = value.function as SuspendingZiplineFunction<*>
+        @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
         encodeSerializableElement(
           descriptor,
           2,
@@ -121,6 +122,7 @@ internal class RealCallSerializer(
             function = inboundService?.functions?.get(functionName)
           }
           2 -> {
+            @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
             val serializer = when (function) {
               is SuspendingZiplineFunction<*> -> function.suspendCallbackSerializer
               // We can use any suspend callback if we're only returning failures.
@@ -171,6 +173,7 @@ internal class ArgsListSerializer(
     check(value.size == serializers.size)
     encoder.encodeStructure(descriptor) {
       for (i in serializers.indices) {
+        @Suppress("UNCHECKED_CAST") // We don't have a type argument T for each parameter.
         encodeSerializableElement(descriptor, i, serializers[i] as KSerializer<Any?>, value[i])
       }
     }
@@ -202,6 +205,7 @@ internal class ResultSerializer<T>(
   override fun serialize(encoder: Encoder, value: Result<T>) {
     encoder.encodeStructure(descriptor) {
       if (value.isSuccess) {
+        @Suppress("UNCHECKED_CAST") // We know the value of a success result is a 'T'.
         encodeSerializableElement(descriptor, 0, successSerializer, value.getOrNull() as T)
       } else {
         encodeSerializableElement(descriptor, 1, ThrowableSerializer, value.exceptionOrNull()!!)

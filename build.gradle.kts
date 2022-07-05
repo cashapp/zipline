@@ -4,6 +4,7 @@ import com.vanniktech.maven.publish.SonatypeHost
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 
 buildscript {
   repositories {
@@ -64,6 +65,14 @@ subprojects {
         events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.PASSED)
       }
       exceptionFormat = TestExceptionFormat.FULL
+    }
+  }
+
+  tasks.withType<KotlinCompile<*>> {
+    kotlinOptions {
+      freeCompilerArgs += listOf(
+        "-opt-in=kotlin.RequiresOptIn"
+      )
     }
   }
 }
