@@ -89,6 +89,7 @@ $ ./gradlew samples:trivia:trivia-host:shadowJar
 java -jar samples/trivia/trivia-host/build/libs/trivia-host-1.0.0-SNAPSHOT-all.jar
 ```
 
+
 ### Interface bridging
 
 Zipline makes it easy to share interfaces with Kotlin/JS. Define an interface in `commonMain`,
@@ -140,6 +141,31 @@ After using a bridged interface it must be closed so the peer object can be garb
 is difficult to get right, so Zipline borrows ideas from [LeakCanary] and aggressively detects
 when a `close()` call is missed.
 
+
+### Requirements
+
+Zipline works on Android 4.3+ (API level 18+), Java 8+, and [Kotlin/Native].
+
+Zipline uses unstable APIs in its implementation and is sensitive to version updates for these
+components.
+
+| Component            | Supported Version | Notes                                                                                                 |
+| :------------------- | :---------------- | :---------------------------------------------------------------------------------------------------- |
+| Kotlin Compiler      | 1.6.21            | Kotlin compiler plugins do not yet have a stable API.                                                 |
+| Kotlin Coroutines    | 1.6.1-native-mt   | For `invokeOnClose()`.                                                                                |
+| Kotlin Serialization | 1.3.3             | For `decodeFromDynamic()`, `encodeToDynamic()`, `EmptySerializersModule`, and `ContextualSerializer`. |
+
+We intend to use stable APIs as soon as they are available.
+
+We intend to keep Zipline host and runtime releases interoperable so you can upgrade each
+independently.
+
+| Host Zipline Version  | Supported Runtime Zipline Versions              |
+| --------------------: | :---------------------------------------------- |
+|                   0.x | Exact same 0.x version as the host.             |
+|                   1.x | Any 1.x version.                                |
+
+
 ### License
 
     Copyright 2015 Square, Inc.
@@ -156,6 +182,7 @@ when a `close()` call is missed.
     See the License for the specific language governing permissions and
     limitations under the License.
 
+
 # Duktape-Android
 
 This project was previously known as Duktape-Android and packaged the
@@ -163,9 +190,10 @@ This project was previously known as Duktape-Android and packaged the
 in this repo as are the release tags. Available versions are listed on
 [Maven central](https://search.maven.org/artifact/com.squareup.duktape/duktape-android).
 
-[qjs]: https://bellard.org/quickjs/
+[Kotlin/Native]: https://kotlinlang.org/docs/multiplatform-dsl-reference.html#targets
 [LeakCanary]: https://square.github.io/leakcanary/
-[trivia.kt]: samples/trivia/trivia-shared/src/commonMain/kotlin/app/cash/zipline/samples/trivia/trivia.kt
-[triviaJs.kt]: samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/triviaJs.kt
 [launchZiplineJs.kt]: samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/launchZiplineJs.kt
 [launchZiplineJvm.kt]: samples/trivia/trivia-host/src/main/kotlin/app/cash/zipline/samples/trivia/launchZiplineJvm.kt
+[qjs]: https://bellard.org/quickjs/
+[trivia.kt]: samples/trivia/trivia-shared/src/commonMain/kotlin/app/cash/zipline/samples/trivia/trivia.kt
+[triviaJs.kt]: samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/triviaJs.kt
