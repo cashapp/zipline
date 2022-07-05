@@ -38,7 +38,6 @@ import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
 import okio.fakefilesystem.FakeFileSystem
-import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -63,11 +62,6 @@ class ZiplineLoaderTest {
     httpClient = tester.httpClient
     embeddedFileSystem = tester.embeddedFileSystem
     embeddedDir = tester.embeddedDir
-  }
-
-  @After
-  fun tearDown() {
-    loader.close()
   }
 
   @Test

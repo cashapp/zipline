@@ -30,7 +30,7 @@ internal actual class SqlDriverFactory(
       schema = schema,
       context = context,
       name = path.toString(),
-      useNoBackupDirectory = true,
+      useNoBackupDirectory = false, // The cache directory is already in a no-backup directory.
     )
   }
 }

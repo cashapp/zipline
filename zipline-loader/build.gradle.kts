@@ -72,7 +72,6 @@ kotlin {
         defaultSourceSet.dependsOn(nativeMain)
       }
       main.dependencies {
-        implementation(libs.crashkios)
         implementation(libs.sqldelight.driver.native)
       }
     }
