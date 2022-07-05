@@ -70,7 +70,7 @@ subprojects {
 
   tasks.withType<KotlinCompile<*>> {
     kotlinOptions {
-      freeCompilerArgs = listOf(
+      freeCompilerArgs += listOf(
         "-opt-in=kotlin.RequiresOptIn"
       )
     }
