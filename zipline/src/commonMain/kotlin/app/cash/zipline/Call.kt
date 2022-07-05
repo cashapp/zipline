@@ -28,8 +28,11 @@ class Call(
    */
   val service: ZiplineService,
 
-  /** The signature of the function that was invoked. */
-  val functionName: String,
+  /**
+   * The function being called. If the function is unknown to the receiver, it will synthesize a
+   * [ZiplineFunction] instance that always throws [ZiplineApiMismatchException].
+   */
+  val function: ZiplineFunction<*>,
 
   /**
    * The original arguments passed to the function, in the order they appear in the function

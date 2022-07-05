@@ -71,7 +71,7 @@ internal class EventListenerEndpointTest {
     assertEquals(client, clientCall.service)
     assertEquals(
       "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-      clientCall.functionName,
+      clientCall.function.name,
     )
     assertEquals(listOf(EchoRequest("ping")), clientCall.args)
     assertEquals(
@@ -95,7 +95,7 @@ internal class EventListenerEndpointTest {
     assertEquals(service, serviceCall.service) // Note this is different from clientCall.service.
     assertEquals(
       "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-      serviceCall.functionName,
+      serviceCall.function.name,
     )
     assertEquals(listOf(EchoRequest("ping")), serviceCall.args)
     assertEquals(
@@ -166,7 +166,7 @@ internal class EventListenerEndpointTest {
     assertEquals(client, clientCall.service)
     assertEquals(
       "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-      clientCall.functionName,
+      clientCall.function.name,
     )
     assertEquals(listOf(EchoRequest("ping")), clientCall.args)
     assertEquals(
@@ -191,7 +191,7 @@ internal class EventListenerEndpointTest {
     assertEquals(service, serviceCall.service) // Note this is different from clientCall.service.
     assertEquals(
       "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-      serviceCall.functionName,
+      serviceCall.function.name,
     )
     assertEquals(listOf(EchoRequest("ping")), serviceCall.args)
     assertEquals(
@@ -284,7 +284,7 @@ internal class EventListenerEndpointTest {
     assertEquals(client, clientCall.service)
     assertEquals(
       "fun transform(kotlin.String, app.cash.zipline.testing.EchoService): app.cash.zipline.testing.EchoService",
-      clientCall.functionName,
+      clientCall.function.name,
     )
     assertEquals(listOf("hello", serviceArgument), clientCall.args)
     assertEquals(
@@ -307,7 +307,7 @@ internal class EventListenerEndpointTest {
     assertEquals(service, serviceCall.service) // Note this is different from clientCall.service.
     assertEquals(
       "fun transform(kotlin.String, app.cash.zipline.testing.EchoService): app.cash.zipline.testing.EchoService",
-      serviceCall.functionName,
+      serviceCall.function.name,
     )
     assertEquals("hello", serviceCall.args[0])
     assertNotSame(serviceCall.args[1], serviceArgument) // The service receives a stub.

@@ -17,6 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
+import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
 import kotlin.coroutines.Continuation
@@ -41,11 +42,10 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
-    val function = functionsList[functionIndex]
+    val function = functionsList[functionIndex] as ReturningZiplineFunction<*>
     val argsList = args.toList()
     val internalCall = InternalCall(
       serviceName = serviceName,
-      functionName = function.name,
       function = function,
       args = argsList
     )
@@ -70,12 +70,11 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
-    val function = functionsList[functionIndex]
+    val function = functionsList[functionIndex] as SuspendingZiplineFunction<*>
     val argsList = args.toList()
     val suspendCallback = RealSuspendCallback<Any?>()
     val internalCall = InternalCall(
       serviceName = serviceName,
-      functionName = function.name,
       function = function,
       suspendCallback = suspendCallback,
       args = argsList,

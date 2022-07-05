@@ -444,7 +444,7 @@ internal class AdapterGenerator(
   // class ZiplineFunction0(
   //   argSerializers: List<KSerializer<out Any?>>,
   //   resultSerializer: KSerializer<out Any?>,
-  // ) : ZiplineFunction<SampleService>(
+  // ) : ReturningZiplineFunction<SampleService>(
   //   "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
   //   argSerializers,
   //   resultSerializer,
@@ -468,9 +468,14 @@ internal class AdapterGenerator(
       thisReceiver?.type = defaultDispatchReceiver
     }
 
+    val supertype = when {
+      bridgedFunction.isSuspend -> ziplineApis.suspendingZiplineFunction
+      else -> ziplineApis.returningZiplineFunction
+    }
+
     val bridgedInterfaceT = bridgedInterface.type
       .remapTypeParameters(original, functionClass)
-    functionClass.superTypes = listOf(ziplineApis.ziplineFunction.typeWith(bridgedInterfaceT))
+    functionClass.superTypes = listOf(supertype.typeWith(bridgedInterfaceT))
 
     functionClass.addConstructor {
       initDefaults(original)
@@ -488,7 +493,7 @@ internal class AdapterGenerator(
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
-          symbol = ziplineApis.ziplineFunction.constructors.single(),
+          symbol = supertype.constructors.single(),
           valueArgumentsCount = 3,
           typeArgumentsCount = 1,
         ) {
@@ -533,7 +538,10 @@ internal class AdapterGenerator(
     return functionClass
   }
 
-  /** Override either `ZiplineFunction.call()` or `ZiplineFunction.callSuspending()`. */
+  /**
+   * Override either `ReturningZiplineFunction.call()` or
+   * `SuspendingZiplineFunction.callSuspending()`.
+   */
   private fun irCallFunction(
     ziplineFunctionClass: IrClass,
     callSuspending: Boolean,
@@ -542,8 +550,8 @@ internal class AdapterGenerator(
     // override fun call(service: SampleService, args: List<*>): Any? {
     // }
     val ziplineFunctionCall = when {
-      callSuspending -> ziplineApis.ziplineFunctionCallSuspending
-      else -> ziplineApis.ziplineFunctionCall
+      callSuspending -> ziplineApis.suspendingZiplineFunctionCallSuspending
+      else -> ziplineApis.returningZiplineFunctionCall
     }
     return ziplineFunctionClass.addFunction {
       initDefaults(original)
