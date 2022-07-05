@@ -79,9 +79,6 @@ kotlin {
 
     val engineMain by creating {
       dependsOn(commonMain)
-      dependencies {
-        api(libs.okio.core)
-      }
       kotlin.srcDir(versionWriterTaskProvider)
     }
     val engineTest by creating {
