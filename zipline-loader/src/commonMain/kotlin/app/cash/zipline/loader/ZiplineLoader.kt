@@ -60,7 +60,6 @@ import okio.Path
  * @param fetchers this should be ordered with embedded fetchers preceding network fetchers. That
  *     way the network is used for fresh resources and embedded is used for fast resources.
  */
-@OptIn(ExperimentalSerializationApi::class)
 class ZiplineLoader private constructor(
   private val dispatcher: CoroutineDispatcher,
   private val httpClient: ZiplineHttpClient,

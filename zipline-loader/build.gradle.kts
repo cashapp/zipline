@@ -30,6 +30,10 @@ kotlin {
   tvosX64()
 
   sourceSets {
+    all {
+      languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
+    }
+
     val commonMain by getting {
       dependencies {
         api(libs.kotlinx.coroutines.core)

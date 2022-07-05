@@ -32,6 +32,9 @@ expect class Zipline {
    */
   val json: Json
 
+  /** JS file to use in launch script */
+  val applicationId: String
+
   fun <T : ZiplineService> bind(name: String, instance: T)
 
   fun <T : ZiplineService> take(name: String): T

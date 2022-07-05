@@ -17,6 +17,7 @@ package app.cash.zipline.samples.trivia
 
 import app.cash.zipline.Zipline
 
+@OptIn(ExperimentalJsExport::class)
 @JsExport
 fun launchZipline() {
   val zipline = Zipline.get()
