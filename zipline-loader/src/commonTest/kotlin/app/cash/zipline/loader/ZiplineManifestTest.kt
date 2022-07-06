@@ -71,8 +71,8 @@ class ZiplineManifestTest {
     )
     val unsortedException = assertFailsWith<IllegalArgumentException> {
       empty.copy(
-        applicationId = "",
-        prepareFunction = "",
+        mainModuleId = "./alpha.js",
+        mainFunction = "zipline.main()",
         modules = mapOf(
           "bravo" to ZiplineModule(
             url = "/bravo.zipline",

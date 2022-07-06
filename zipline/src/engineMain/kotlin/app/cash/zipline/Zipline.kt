@@ -50,7 +50,6 @@ actual class Zipline private constructor(
   dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
   eventListener: EventListener,
-  actual val applicationId: String,
 ) {
   private val endpoint = Endpoint(
     scope = scope,
@@ -179,7 +178,7 @@ actual class Zipline private constructor(
       quickJs.evaluate(DEFINE_JS, "define.js")
 
       val scope = CoroutineScope(dispatcher)
-      return Zipline(quickJs, serializersModule, dispatcher, scope, eventListener, )
+      return Zipline(quickJs, serializersModule, dispatcher, scope, eventListener)
     }
   }
 }

@@ -1,6 +1,5 @@
 package app.cash.zipline.samples.emojisearch
 
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
@@ -8,7 +7,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
-@ExperimentalCoroutinesApi
 class RealEmojiSearchPresenter(
   private val hostApi: HostApi
 ) : EmojiSearchPresenter {

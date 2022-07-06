@@ -74,8 +74,8 @@ class LoaderTestFixtures(
   val manifestWithRelativeUrlsByteString = manifestWithRelativeUrlsJsonString.encodeUtf8()
 
   val manifest = manifestWithRelativeUrls.copy(
-    applicationId = "",
-    prepareFunction = "",
+    mainModuleId = "./alpha.js",
+    mainFunction = "zipline.main()",
     modules = manifestWithRelativeUrls.modules.mapValues { (_, module) ->
       module.copy(
         url = when (module.url) {
