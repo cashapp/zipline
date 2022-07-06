@@ -28,8 +28,8 @@ class ZiplineManifestTest {
   @Test
   fun manifestSortsModulesOnCreate() {
     val unsorted = ZiplineManifest.create(
-      applicationId = "",
-      prepareFunction = "",
+      mainModuleId = "",
+      mainFunction = "",
       modules = mapOf(
         "bravo" to ZiplineModule(
           url = "/bravo.zipline",
@@ -44,8 +44,8 @@ class ZiplineManifestTest {
       )
     )
     val sorted = ZiplineManifest.create(
-      applicationId = "",
-      prepareFunction = "",
+      mainModuleId = "",
+      mainFunction = "",
       modules = mapOf(
         "alpha" to ZiplineModule(
           url = "/alpha.zipline",
@@ -65,8 +65,8 @@ class ZiplineManifestTest {
   @Test
   fun manifestChecksThatModulesAreSortedIfClassIsCopied() {
     val empty = ZiplineManifest.create(
-      applicationId = "",
-      prepareFunction = "",
+      mainModuleId = "",
+      mainFunction = "",
       modules = mapOf()
     )
     val unsortedException = assertFailsWith<IllegalArgumentException> {
@@ -98,8 +98,8 @@ class ZiplineManifestTest {
   fun failsOnCreateWhenCyclicalDependencies() {
     val selfDependencyException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
-        applicationId = "",
-        prepareFunction = "",
+        mainModuleId = "",
+        mainFunction = "",
         modules = mapOf(
           "alpha" to ZiplineModule(
             url = "/alpha.zipline",
@@ -116,8 +116,8 @@ class ZiplineManifestTest {
 
     val cyclicalException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
-        applicationId = "",
-        prepareFunction = "",
+        mainModuleId = "",
+        mainFunction = "",
         modules = mapOf(
           "alpha" to ZiplineModule(
             url = "/alpha.zipline",
@@ -141,8 +141,8 @@ class ZiplineManifestTest {
   @Test
   fun serializesToJson() {
     val original = ZiplineManifest.create(
-      applicationId = "",
-      prepareFunction = "",
+      mainModuleId = "",
+      mainFunction = "",
       modules = mapOf(
         "alpha" to ZiplineModule(
           url = "/alpha.zipline",

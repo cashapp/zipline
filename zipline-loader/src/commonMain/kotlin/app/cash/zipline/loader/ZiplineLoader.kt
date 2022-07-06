@@ -40,7 +40,6 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -169,7 +168,7 @@ class ZiplineLoader private constructor(
   suspend fun loadOrFallBack(
     applicationName: String,
     manifestUrl: String,
-    initializer: (Zipline) -> Unit = {}
+    initializer: (Zipline, String) -> Unit = { zipline: Zipline, mainModuleId: String -> }
   ): Zipline {
     return try {
       createZiplineAndLoad(applicationName, manifestUrl, null, initializer)
@@ -188,7 +187,7 @@ class ZiplineLoader private constructor(
     applicationName: String,
     manifestUrl: String?,
     manifest: ZiplineManifest?,
-    initializer: (Zipline) -> Unit,
+    initializer: (Zipline, String) -> Unit
   ): Zipline {
     eventListener.applicationLoadStart(applicationName, manifestUrl)
     val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
@@ -199,7 +198,7 @@ class ZiplineLoader private constructor(
       receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
 
       // Run caller lambda to validate and initialize the loaded code to confirm it works.
-      initializer(zipline)
+      initializer(zipline, manifest.mainFunction)
 
       // Pin stable application manifest after a successful load, and unpin all others.
       fetchers.pin(applicationName, manifest)
@@ -217,7 +216,7 @@ class ZiplineLoader private constructor(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
     pollingInterval: Duration,
-    initializer: (Zipline) -> Unit,
+    initializer: (Zipline, String) -> Unit = { zipline: Zipline, mainModuleId: String -> },
   ): Flow<Zipline> = manifestUrlFlow
     .rebounce(pollingInterval)
     .mapNotNull { url ->
@@ -238,7 +237,7 @@ class ZiplineLoader private constructor(
   suspend fun loadOrFail(
     applicationName: String,
     manifestUrl: String,
-    initializer: (Zipline) -> Unit = {},
+    initializer: (Zipline, String) -> Unit = { zipline: Zipline, mainModuleId: String -> },
   ): Zipline {
     return createZiplineAndLoad(applicationName, manifestUrl, null, initializer)
   }
@@ -246,7 +245,7 @@ class ZiplineLoader private constructor(
   internal suspend fun loadOrFail(
     applicationName: String,
     manifest: ZiplineManifest,
-    initializer: (Zipline) -> Unit = {},
+    initializer: (Zipline, String) -> Unit = { zipline: Zipline, mainModuleId: String -> },
   ): Zipline {
     return createZiplineAndLoad(applicationName, null, manifest, initializer)
   }

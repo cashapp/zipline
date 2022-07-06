@@ -166,6 +166,11 @@ actual class Zipline private constructor(
     quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
   }
 
+  /** Runs the entrypoint for the application. */
+  fun runMainFunction(mainModuleId: String) {
+    quickJs.evaluate("require('$mainModuleId').zipline.ziplineMain()", "zipline-main.js")
+  }
+
   companion object {
     fun create(
       dispatcher: CoroutineDispatcher,

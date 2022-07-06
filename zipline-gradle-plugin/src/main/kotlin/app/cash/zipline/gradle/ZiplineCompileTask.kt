@@ -48,6 +48,8 @@ abstract class ZiplineCompileTask @Inject constructor(
   @get:OutputDirectory
   val outputDir: DirectoryProperty = objectFactory.directoryProperty()
 
+  var mainFunction: String? = null
+
   @get:OutputFile
   val webpackConfigFile: File by lazy {
     project.projectDir.resolve(configFilePath)
@@ -57,7 +59,7 @@ abstract class ZiplineCompileTask @Inject constructor(
   fun task() {
     val inputDirFile = inputDir.get().asFile
     val outputDirFile = outputDir.get().asFile
-    ZiplineCompiler.compile(inputDirFile, outputDirFile)
+    ZiplineCompiler.compile(inputDirFile, outputDirFile, mainFunction)
 
     val webpackHome = project.rootProject.buildDir.resolve("js/packages/placeholder-name")
     val directory = outputDirFile.relativeTo(webpackHome)

@@ -46,13 +46,13 @@ data class ZiplineManifest private constructor(
 
   companion object {
     fun create(
-      applicationId: String,
-      prepareFunction: String,
+      mainModuleId: String,
+      mainFunction: String,
       modules: Map<String, ZiplineModule>
     ): ZiplineManifest =
       ZiplineManifest(
-        mainModuleId = applicationId,
-        mainFunction = prepareFunction,
+        mainModuleId = mainModuleId,
+        mainFunction = mainFunction,
         modules = modules.keys
           .toList()
           .topologicalSort { id ->

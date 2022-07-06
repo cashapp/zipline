@@ -54,8 +54,8 @@ class LoaderTestFixtures(
   val bravoSha256Hex = bravoSha256.hex()
 
   val manifestWithRelativeUrls = ZiplineManifest.create(
-    applicationId = "",
-    prepareFunction = "",
+    mainModuleId = "",
+    mainFunction = "",
     modules = mapOf(
       "bravo" to ZiplineModule(
         url = bravoRelativeUrl,
@@ -111,8 +111,8 @@ class LoaderTestFixtures(
       seed: String,
       seedFileSha256: ByteString
     ) = ZiplineManifest.create(
-      applicationId = "",
-      prepareFunction = "",
+      mainModuleId = "",
+      mainFunction = "",
       modules = mapOf(
         seed to ZiplineModule(
           url = "$seed.zipline",

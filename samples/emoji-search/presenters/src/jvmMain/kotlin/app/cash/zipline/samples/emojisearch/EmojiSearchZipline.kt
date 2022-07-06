@@ -18,7 +18,6 @@ package app.cash.zipline.samples.emojisearch
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader
-import app.cash.zipline.loader.fetcher.HttpFetcher
 import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
@@ -58,11 +57,9 @@ class EmojiSearchZipline {
     modelsStateFlow: MutableStateFlow<EmojiSearchViewModel>
   ) {
     coroutineScope.launch(dispatcher) {
-      val zipline = ziplineLoader.loadOrFallBack("emojiSearch", manifestUrl) {
+      val zipline = ziplineLoader.loadOrFallBack("emojiSearch", manifestUrl) { it, mainModuleId ->
         it.bind<HostApi>("hostApi", hostApi)
-        it.quickJs.evaluate(
-          "require('$moduleName').app.cash.zipline.samples.emojisearch.preparePresenters()"
-        )
+        it.runMainFunction(mainModuleId)
       }
       this@EmojiSearchZipline.zipline = zipline
       val presenter = zipline.take<EmojiSearchPresenter>("emojiSearchPresenter")

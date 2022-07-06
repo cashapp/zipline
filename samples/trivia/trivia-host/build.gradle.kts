@@ -20,6 +20,6 @@ dependencies {
 
 val shadowJar by tasks.getting(ShadowJar::class) {
   manifest {
-    attributes("Main-Class" to "app.cash.zipline.samples.trivia.TriviaJvmKt")
+    attributes("Main-Class" to "app.cash.zipline.samples.trivia.triviaJvmKt")
   }
 }
