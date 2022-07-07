@@ -122,10 +122,10 @@ internal class ZiplineServiceTest {
 
     assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
     helloService.close()
-    val failure = assertFailsWith<IllegalStateException> {
+    val failure = assertFailsWith<Exception> {
       helloService.echo(EchoRequest("Jake"))
     }
-    assertTrue("no handler" in (failure.message ?: ""), failure.message)
+    assertTrue("no such service" in (failure.message ?: ""), failure.message)
     assertEquals(setOf("factory"), endpointA.serviceNames)
   }
 
