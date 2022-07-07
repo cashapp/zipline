@@ -154,12 +154,68 @@ internal class RealCallSerializer(
       }
       return@decodeStructure InternalCall(
         serviceName = serviceName,
-        inboundService = inboundService,
-        function = function
-          ?: unknownFunction<ZiplineService>(functionName, inboundService, suspendCallback),
+        inboundService = inboundService ?: unknownService(),
+        function = function ?: unknownFunction<ZiplineService>(
+          serviceName, functionName, inboundService, suspendCallback
+        ),
         suspendCallback = suspendCallback,
         args = args
       )
+    }
+  }
+
+  /** Returns a fake service that implements no functions. */
+  private fun unknownService(): InboundService<*> {
+    return InboundService(
+      service = object : ZiplineService {},
+      endpoint = endpoint,
+      functionsList = listOf()
+    )
+  }
+
+  /** Returns a function that always throws [ZiplineApiMismatchException] when called. */
+  private fun <T : ZiplineService> unknownFunction(
+    serviceName: String,
+    functionName: String,
+    inboundService: InboundService<*>?,
+    suspendCallback: SuspendCallback<Any?>?,
+  ): ZiplineFunction<T> {
+    val message = buildString {
+      if (inboundService == null) {
+        appendLine("no such service (service closed?)")
+        appendLine("\tcalled service:")
+        append("\t\t")
+        appendLine(serviceName)
+        appendLine("\tavailable services:")
+        endpoint.inboundServices.keys.joinTo(this, separator = "\n") { "\t\t$it" }
+      } else {
+        appendLine("no such method (incompatible API versions?)")
+        appendLine("\tcalled function:")
+        append("\t\t")
+        appendLine(functionName)
+        appendLine("\tavailable functions:")
+        inboundService.functions.keys.joinTo(this, separator = "\n") { "\t\t$it" }
+      }
+    }
+
+    if (suspendCallback != null) {
+      return object : SuspendingZiplineFunction<T>(
+        name = functionName,
+        argSerializers = listOf(),
+        suspendCallbackSerializer = failureSuspendCallbackSerializer,
+      ) {
+        override suspend fun callSuspending(service: T, args: List<*>) =
+          throw ZiplineApiMismatchException(message)
+      }
+    } else {
+      return object : ReturningZiplineFunction<T>(
+        name = functionName,
+        argSerializers = listOf(),
+        resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
+      ) {
+        override fun call(service: T, args: List<*>) =
+          throw ZiplineApiMismatchException(message)
+      }
     }
   }
 }
@@ -225,44 +281,6 @@ internal class ResultSerializer<T>(
         }
       }
       return@decodeStructure result!!
-    }
-  }
-}
-
-/** Returns a function that always throws [ZiplineApiMismatchException] when called. */
-private fun <T : ZiplineService> unknownFunction(
-  functionName: String,
-  inboundService: InboundService<*>?,
-  suspendCallback: SuspendCallback<Any?>?,
-): ZiplineFunction<T> {
-  val message = buildString {
-    appendLine("no such method (incompatible API versions?)")
-    appendLine("\tcalled:")
-    append("\t\t")
-    appendLine(functionName)
-    if (inboundService != null) {
-      appendLine("\tavailable:")
-      inboundService.functions.keys.joinTo(this, separator = "\n") { "\t\t$it" }
-    }
-  }
-
-  if (suspendCallback != null) {
-    return object : SuspendingZiplineFunction<T>(
-      name = functionName,
-      argSerializers = listOf(),
-      suspendCallbackSerializer = failureSuspendCallbackSerializer,
-    ) {
-      override suspend fun callSuspending(service: T, args: List<*>) =
-        throw ZiplineApiMismatchException(message)
-    }
-  } else {
-    return object : ReturningZiplineFunction<T>(
-      name = functionName,
-      argSerializers = listOf(),
-      resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
-    ) {
-      override fun call(service: T, args: List<*>) =
-        throw ZiplineApiMismatchException(message)
     }
   }
 }
