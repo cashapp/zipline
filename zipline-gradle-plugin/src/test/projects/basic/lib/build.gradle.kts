@@ -1,5 +1,4 @@
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
+import app.cash.zipline.gradle.ZiplineCompileTask
 
 plugins {
   kotlin("multiplatform")
@@ -37,4 +36,9 @@ val launchGreetService by tasks.creating(JavaExec::class) {
   dependsOn(":lib:compileProductionExecutableKotlinJsZipline")
   classpath = jvmTestRuntimeClasspath
   mainClass.set("app.cash.zipline.tests.LaunchGreetServiceJvmKt")
+}
+
+tasks.withType(ZiplineCompileTask::class) {
+  mainModuleId.set("")
+  mainFunction.set("")
 }

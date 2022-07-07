@@ -28,6 +28,8 @@ class ZiplineManifestTest {
   @Test
   fun manifestSortsModulesOnCreate() {
     val unsorted = ZiplineManifest.create(
+      mainModuleId = "./app.js",
+      mainFunction = "zipline.ziplineMain()",
       modules = mapOf(
         "bravo" to ZiplineModule(
           url = "/bravo.zipline",
@@ -42,6 +44,8 @@ class ZiplineManifestTest {
       )
     )
     val sorted = ZiplineManifest.create(
+      mainModuleId = "./app.js",
+      mainFunction = "zipline.ziplineMain()",
       modules = mapOf(
         "alpha" to ZiplineModule(
           url = "/alpha.zipline",
@@ -61,6 +65,8 @@ class ZiplineManifestTest {
   @Test
   fun manifestChecksThatModulesAreSortedIfClassIsCopied() {
     val empty = ZiplineManifest.create(
+      mainModuleId = "./app.js",
+      mainFunction = "zipline.ziplineMain()",
       modules = mapOf()
     )
     val unsortedException = assertFailsWith<IllegalArgumentException> {
@@ -90,6 +96,8 @@ class ZiplineManifestTest {
   fun failsOnCreateWhenCyclicalDependencies() {
     val selfDependencyException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
+        mainModuleId = "./app.js",
+        mainFunction = "zipline.ziplineMain()",
         modules = mapOf(
           "alpha" to ZiplineModule(
             url = "/alpha.zipline",
@@ -106,6 +114,8 @@ class ZiplineManifestTest {
 
     val cyclicalException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
+        mainModuleId = "./app.js",
+        mainFunction = "zipline.ziplineMain()",
         modules = mapOf(
           "alpha" to ZiplineModule(
             url = "/alpha.zipline",
@@ -129,6 +139,8 @@ class ZiplineManifestTest {
   @Test
   fun serializesToJson() {
     val original = ZiplineManifest.create(
+      mainModuleId = "./app.js",
+      mainFunction = "zipline.ziplineMain()",
       modules = mapOf(
         "alpha" to ZiplineModule(
           url = "/alpha.zipline",
@@ -147,6 +159,8 @@ class ZiplineManifestTest {
     assertEquals(
         """
         |{
+        |    "mainModuleId": "./app.js",
+        |    "mainFunction": "zipline.ziplineMain()",
         |    "modules": {
         |        "alpha": {
         |            "url": "/alpha.zipline",

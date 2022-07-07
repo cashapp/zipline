@@ -33,7 +33,9 @@ import okio.sink
 object ZiplineCompiler {
   fun compile(
     inputDir: File,
-    outputDir: File
+    outputDir: File,
+    mainModuleId: String,
+    mainFunction: String
   ) {
     val modules = mutableMapOf<String, ZiplineModule>()
     val files = inputDir.listFiles()
@@ -77,7 +79,7 @@ object ZiplineCompiler {
         }
       }
     }
-    val manifest = ZiplineManifest.create(modules)
+    val manifest = ZiplineManifest.create(mainModuleId, mainFunction, modules)
     val manifestFile = File(outputDir.path, "manifest.zipline.json")
     manifestFile.writeText(Json.encodeToString(manifest))
   }
@@ -90,5 +92,10 @@ object ZiplineCompiler {
 fun main(vararg args: String) {
   val outputDir = File(args[1])
   outputDir.mkdirs()
-  ZiplineCompiler.compile(inputDir = File(args[0]), outputDir = outputDir)
+  ZiplineCompiler.compile(
+    inputDir = File(args[0]),
+    outputDir = outputDir,
+    mainModuleId = args[2],
+    mainFunction = args[3],
+  )
 }

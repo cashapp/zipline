@@ -6,6 +6,19 @@ Zipline Compilation
 
 The plugin compiles JavaScript files into `.zipline` files. These binary files are faster to launch.
 
+The plugin requires setting the following variables which are used in compilation.
+
+- `mainModuleId`: This is the JS module that your application's entrypoint function is in. This will usually be the last key in the `modules` map in the generated ZiplineManifest which is sorted topologically.
+- `mainFunction`: This is the fully qualified function call to start your application, note it does include the trailing `()` to initiate the call.
+
+```kts
+import app.cash.zipline.gradle.ZiplineCompileTask
+
+tasks.withType(ZiplineCompileTask::class) {
+  mainModuleId.set("./app-root.js")
+  mainFunction.set("my.path.prepareFunction()")
+}
+```
 
 Webpack Config
 ==============

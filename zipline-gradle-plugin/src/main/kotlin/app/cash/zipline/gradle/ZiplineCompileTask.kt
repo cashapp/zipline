@@ -21,6 +21,8 @@ import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
+import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.OutputFile
@@ -48,6 +50,12 @@ abstract class ZiplineCompileTask @Inject constructor(
   @get:OutputDirectory
   val outputDir: DirectoryProperty = objectFactory.directoryProperty()
 
+  @get:Input
+  val mainModuleId: Property<String> = objectFactory.property(String::class.java)
+
+  @get:Input
+  val mainFunction: Property<String> = objectFactory.property(String::class.java)
+
   @get:OutputFile
   val webpackConfigFile: File by lazy {
     project.projectDir.resolve(configFilePath)
@@ -57,7 +65,10 @@ abstract class ZiplineCompileTask @Inject constructor(
   fun task() {
     val inputDirFile = inputDir.get().asFile
     val outputDirFile = outputDir.get().asFile
-    ZiplineCompiler.compile(inputDirFile, outputDirFile)
+    val mainModuleId = mainModuleId.get()
+    val mainFunction = mainFunction.get()
+
+    ZiplineCompiler.compile(inputDirFile, outputDirFile, mainModuleId, mainFunction)
 
     val webpackHome = project.rootProject.buildDir.resolve("js/packages/placeholder-name")
     val directory = outputDirFile.relativeTo(webpackHome)
