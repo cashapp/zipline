@@ -45,20 +45,20 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     version = BuildConfig.KOTLIN_PLUGIN_VERSION,
   )
 
-  override fun apply(project: Project) {
-    super.apply(project)
+  override fun apply(target: Project) {
+    super.apply(target)
 
-    val extension = project.extensions.findByType(KotlinMultiplatformExtension::class.java)
+    val extension = target.extensions.findByType(KotlinMultiplatformExtension::class.java)
       ?: return
 
     extension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
       kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
-        registerCompileZiplineTask(project, kotlinBinary)
+        registerCompileZiplineTask(target, kotlinBinary)
       }
     }
 
-    project.tasks.named("clean", Delete::class.java).configure { clean ->
-      clean.delete.add(project.projectDir.resolve(ZiplineCompileTask.configFilePath))
+    target.tasks.named("clean", Delete::class.java).configure { clean ->
+      clean.delete.add(target.projectDir.resolve(ZiplineCompileTask.configFilePath))
     }
   }
 

@@ -21,7 +21,6 @@ import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.Buffer
@@ -41,6 +40,8 @@ class LoaderTestFixtures {
   val bravoSha256Hex = bravoSha256.hex()
 
   val manifestWithRelativeUrls = ZiplineManifest.create(
+    mainModuleId = "./app.js",
+    mainFunction = "zipline.ziplineMain()",
     modules = mapOf(
       "bravo" to ZiplineModule(
         url = bravoRelativeUrl,
@@ -100,6 +101,8 @@ class LoaderTestFixtures {
       seed: String,
       seedFileSha256: ByteString
     ) = ZiplineManifest.create(
+      mainModuleId = "./app.js",
+      mainFunction = "zipline.ziplineMain()",
       modules = mapOf(
         seed to ZiplineModule(
           url = "$seed.zipline",

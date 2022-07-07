@@ -1,5 +1,4 @@
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootExtension
-import org.jetbrains.kotlin.gradle.targets.js.nodejs.NodeJsRootPlugin
+import app.cash.zipline.gradle.ZiplineCompileTask
 
 plugins {
   kotlin("multiplatform")
@@ -24,4 +23,9 @@ kotlin {
       }
     }
   }
+}
+
+tasks.withType(ZiplineCompileTask::class) {
+  mainModuleId.set("")
+  mainFunction.set("")
 }

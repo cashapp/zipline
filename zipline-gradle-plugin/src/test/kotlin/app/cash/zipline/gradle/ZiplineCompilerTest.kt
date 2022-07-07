@@ -94,7 +94,9 @@ class ZiplineCompilerTest {
     val outputDir = File("$rootProject/build/zipline")
     outputDir.mkdirs()
 
-    ZiplineCompiler.compile(inputDir, outputDir)
+    val mainModuleId = "./app.js"
+    val mainFunction = "zipline.ziplineMain()"
+    ZiplineCompiler.compile(inputDir, outputDir, mainModuleId, mainFunction)
 
     val expectedNumberFiles = if (dirHasSourceMaps) inputDir.listFiles()!!.size / 2 else inputDir.listFiles()!!.size
     // Don't include Zipline manifest
@@ -105,6 +107,10 @@ class ZiplineCompilerTest {
     val manifestFile = File(outputDir, "manifest.zipline.json")
     val manifestString = manifestFile.readText()
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestString)
+
+    // Confirm that mainModuleId and mainFunction have been added to the manifest
+    assertEquals(mainModuleId, manifest.mainModuleId)
+    assertEquals(mainFunction, manifest.mainFunction)
 
     // Confirm that all manifest files are present in outputDir
     outputDir.listFiles()!!.forEach { ziplineFile ->

@@ -56,6 +56,8 @@ class ZiplineGradleDownloaderTest {
   fun `integration test to load from mock url`() {
     // Zipline files
     val manifest = ZiplineManifest.create(
+      mainModuleId = "./app.js",
+      mainFunction = "zipline.ziplineMain()",
       modules = mapOf(
         "id" to ZiplineModule(
           url = webServer.url("/latest/app/alpha.zipline").toString(),

@@ -1,3 +1,5 @@
+import app.cash.zipline.gradle.ZiplineCompileTask
+
 plugins {
   kotlin("multiplatform")
   id("app.cash.zipline")
@@ -20,4 +22,9 @@ val jvmTestRuntimeClasspath by configurations.getting
 val bindAndTakeJvm by tasks.creating(JavaExec::class) {
   classpath = jvmTestRuntimeClasspath
   mainClass.set("app.cash.zipline.tests.BindAndTakeJvmKt")
+}
+
+tasks.withType(ZiplineCompileTask::class) {
+  mainModuleId.set("")
+  mainFunction.set("")
 }
