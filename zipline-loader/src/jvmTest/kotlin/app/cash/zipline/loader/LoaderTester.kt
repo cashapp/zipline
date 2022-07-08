@@ -214,14 +214,11 @@ class LoaderTester(
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
     zipline = loader.loadOrFallBack(applicationName, manifestUrl) {
-      val loadedSeed =
-        (it.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
-          " loaded\n"
-        )
+      val loadedSeed = (it.quickJs.evaluate("globalThis.log", "assert.js") as String)
+        .removeSuffix(" loaded\n")
       if (loadedSeed == seed) throw IllegalArgumentException("Zipline code run failed")
     }
-    return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
-      " loaded\n"
-    )
+    return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String)
+      .removeSuffix(" loaded\n")
   }
 }

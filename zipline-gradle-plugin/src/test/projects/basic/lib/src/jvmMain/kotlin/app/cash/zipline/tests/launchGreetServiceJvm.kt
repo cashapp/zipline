@@ -42,12 +42,6 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
 
   val zipline = loader.loadOrFail("test", "http://localhost:99999/manifest.zipline.json")
 
-  val moduleName = "./basic-lib.js"
-  zipline.quickJs.evaluate(
-    "require('$moduleName').app.cash.zipline.tests.launchGreetService()",
-    "launchGreetServiceJvm.kt"
-  )
-
   return zipline
 }
 

@@ -52,9 +52,6 @@ class EmojiSearchZipline {
     coroutineScope.launch(dispatcher) {
       val zipline = ziplineLoader.loadOrFallBack("emojiSearch", manifestUrl) {
         it.bind<HostApi>("hostApi", hostApi)
-        it.quickJs.evaluate(
-          "require('$moduleName').app.cash.zipline.samples.emojisearch.preparePresenters()"
-        )
       }
       this@EmojiSearchZipline.zipline = zipline
       val presenter = zipline.take<EmojiSearchPresenter>("emojiSearchPresenter")

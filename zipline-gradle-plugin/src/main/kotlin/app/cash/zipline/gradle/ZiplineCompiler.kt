@@ -36,8 +36,8 @@ object ZiplineCompiler {
   fun compile(
     inputDir: File,
     outputDir: File,
-    mainModuleId: String? = null,
     mainFunction: String? = null,
+    mainModuleId: String? = null,
     manifestSigner: ManifestSigner? = null,
   ) {
     val modules = mutableMapOf<String, ZiplineModule>()
@@ -84,7 +84,9 @@ object ZiplineCompiler {
         )
       }
     }
-    val unsignedManifest = ZiplineManifest.create(modules, mainModuleId, mainFunction)
+    val unsignedManifest = ZiplineManifest.create(
+      modules = modules, mainFunction = mainFunction, mainModuleId = mainModuleId
+    )
 
     val manifest = manifestSigner?.sign(unsignedManifest) ?: unsignedManifest
 
@@ -106,7 +108,7 @@ fun main(vararg args: String) {
   ZiplineCompiler.compile(
     inputDir = inputDir,
     outputDir = outputDir,
-    mainModuleId = argsList.removeFirstOrNull(),
     mainFunction = argsList.removeFirstOrNull(),
+    mainModuleId = argsList.removeFirstOrNull(),
   )
 }

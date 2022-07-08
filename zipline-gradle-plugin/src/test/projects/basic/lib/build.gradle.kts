@@ -39,6 +39,5 @@ val launchGreetService by tasks.creating(JavaExec::class) {
 }
 
 tasks.withType(ZiplineCompileTask::class) {
-  mainModuleId.set("")
-  mainFunction.set("")
+  mainFunction.set("app.cash.zipline.tests.launchGreetService()")
 }

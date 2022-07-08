@@ -261,7 +261,7 @@ class ZiplineLoaderTest {
       applicationName = "red",
       manifestUrlFlow = manifestUrlFlow,
       pollingInterval = 1000.toDuration(DurationUnit.MILLISECONDS),
-    ) {}.test {
+    ).test {
       assertEquals(
         "apple",
         (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
@@ -286,7 +286,7 @@ class ZiplineLoaderTest {
     return createZiplineAndLoad(
       applicationName = applicationName,
       manifestUrl = null,
-      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest),
+      providedManifest = LoadedManifest(ByteString.EMPTY, manifest),
       initializer = initializer,
     )
   }
