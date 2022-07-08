@@ -16,7 +16,6 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.ByteString
@@ -28,15 +27,15 @@ import okio.ByteString
  */
 @Serializable
 data class ZiplineManifest private constructor(
+  /** This is an ordered map; its modules are always topologically sorted. */
+  val modules: Map<String, ZiplineModule>,
   /**
    * JS module ID for the application (ie. "./alpha-app.js").
    * This will usually be the last module in the manifest once it is topologically sorted.
    */
-  val mainModuleId: String,
+  val mainModuleId: String?,
   /** Fully qualified main function to start the application (ie. "zipline.main()"). */
-  val mainFunction: String,
-  /** This is an ordered map; its modules are always topologically sorted. */
-  val modules: Map<String, ZiplineModule>
+  val mainFunction: String?,
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
@@ -46,12 +45,10 @@ data class ZiplineManifest private constructor(
 
   companion object {
     fun create(
-      mainModuleId: String,
-      mainFunction: String,
-      modules: Map<String, ZiplineModule>
+      modules: Map<String, ZiplineModule>,
+      mainModuleId: String? = null,
+      mainFunction: String? = null,
     ): ZiplineManifest = ZiplineManifest(
-      mainModuleId = mainModuleId,
-      mainFunction = mainFunction,
       modules = modules.keys
         .toList()
         .topologicalSort { id ->
@@ -61,7 +58,9 @@ data class ZiplineManifest private constructor(
         .associateWith { id ->
           modules[id]
             ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
-        }
+        },
+      mainModuleId = mainModuleId,
+      mainFunction = mainFunction,
     )
 
     fun ByteString.decodeToZiplineManifest(

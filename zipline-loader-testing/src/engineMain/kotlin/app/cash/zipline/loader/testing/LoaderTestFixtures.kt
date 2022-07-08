@@ -40,8 +40,6 @@ class LoaderTestFixtures {
   val bravoSha256Hex = bravoSha256.hex()
 
   val manifestWithRelativeUrls = ZiplineManifest.create(
-    mainModuleId = "./app.js",
-    mainFunction = "zipline.ziplineMain()",
     modules = mapOf(
       "bravo" to ZiplineModule(
         url = bravoRelativeUrl,
@@ -53,7 +51,9 @@ class LoaderTestFixtures {
         sha256 = alphaByteString.sha256(),
         dependsOnIds = listOf(),
       ),
-    )
+    ),
+    mainModuleId = "./app.js",
+    mainFunction = "zipline.ziplineMain()",
   )
 
   val manifestWithRelativeUrlsJsonString = Json.encodeToString(manifestWithRelativeUrls)
@@ -101,14 +101,14 @@ class LoaderTestFixtures {
       seed: String,
       seedFileSha256: ByteString
     ) = ZiplineManifest.create(
-      mainModuleId = "./app.js",
-      mainFunction = "zipline.ziplineMain()",
       modules = mapOf(
         seed to ZiplineModule(
           url = "$seed.zipline",
           sha256 = seedFileSha256,
         )
-      )
+      ),
+      mainModuleId = "./app.js",
+      mainFunction = "zipline.ziplineMain()",
     )
 
     fun createJs(seed: String) = """

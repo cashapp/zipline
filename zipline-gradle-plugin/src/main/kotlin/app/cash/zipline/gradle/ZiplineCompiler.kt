@@ -34,8 +34,8 @@ object ZiplineCompiler {
   fun compile(
     inputDir: File,
     outputDir: File,
-    mainModuleId: String,
-    mainFunction: String
+    mainModuleId: String? = null,
+    mainFunction: String? = null,
   ) {
     val modules = mutableMapOf<String, ZiplineModule>()
     val files = inputDir.listFiles()
@@ -79,7 +79,7 @@ object ZiplineCompiler {
         }
       }
     }
-    val manifest = ZiplineManifest.create(mainModuleId, mainFunction, modules)
+    val manifest = ZiplineManifest.create(modules, mainModuleId, mainFunction)
     val manifestFile = File(outputDir.path, "manifest.zipline.json")
     manifestFile.writeText(Json.encodeToString(manifest))
   }
@@ -90,12 +90,15 @@ object ZiplineCompiler {
  * instead use the Gradle plugin.
  */
 fun main(vararg args: String) {
-  val outputDir = File(args[1])
+  val argsList = args.toMutableList()
+
+  val inputDir = File(argsList.removeFirst())
+  val outputDir = File(argsList.removeFirst())
   outputDir.mkdirs()
   ZiplineCompiler.compile(
-    inputDir = File(args[0]),
+    inputDir = inputDir,
     outputDir = outputDir,
-    mainModuleId = args[2],
-    mainFunction = args[3],
+    mainModuleId = argsList.removeFirstOrNull(),
+    mainFunction = argsList.removeFirstOrNull(),
   )
 }
