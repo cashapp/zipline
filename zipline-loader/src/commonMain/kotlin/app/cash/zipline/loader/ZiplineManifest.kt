@@ -16,6 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.ByteString
