@@ -65,8 +65,8 @@ abstract class ZiplineCompileTask @Inject constructor(
   fun task() {
     val inputDirFile = inputDir.get().asFile
     val outputDirFile = outputDir.get().asFile
-    val mainModuleId = mainModuleId.get()
-    val mainFunction = mainFunction.get()
+    val mainModuleId = mainModuleId.orNull
+    val mainFunction = mainFunction.orNull
 
     ZiplineCompiler.compile(inputDirFile, outputDirFile, mainModuleId, mainFunction)
 
