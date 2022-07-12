@@ -519,7 +519,7 @@ final class Ed25519 {
   /**
    * Compares two byte values in constant time.
    *
-   * Please note that this doesn't reuse {@link Curve25519#eq} method since the below inputs are
+   * Please note that this doesn't reuse {@code Curve25519#eq} method since the below inputs are
    * byte values.
    */
   private static int eq(int a, int b) {
@@ -1505,7 +1505,7 @@ final class Ed25519 {
 
   static byte[] getHashedScalar(final byte[] privateKey)
       throws GeneralSecurityException {
-    MessageDigest digest = EngineFactory.MESSAGE_DIGEST.getInstance("SHA-512");
+    MessageDigest digest = MessageDigest.getInstance("SHA-512");
     digest.update(privateKey, 0, FIELD_LEN);
     byte[] h = digest.digest();
     // https://tools.ietf.org/html/rfc8032#section-5.1.2.
@@ -1522,18 +1522,18 @@ final class Ed25519 {
    * Returns the EdDSA signature for the {@code message} based on the {@code hashedPrivateKey}.
    *
    * @param message to sign
-   * @param publicKey {@link Ed25519#scalarMultToBytes(byte[])} of {@code hashedPrivateKey}
+   * @param publicKey {@code Ed25519#scalarMultToBytes(byte[])} of {@code hashedPrivateKey}
    * @param hashedPrivateKey {@link Ed25519#getHashedScalar(byte[])} of the private key
    * @return signature for the {@code message}.
    * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
-   * {@link EngineFactory}.MESSAGE_DIGEST.
+   * {@code EngineFactory}.MESSAGE_DIGEST.
    */
   static byte[] sign(final byte[] message, final byte[] publicKey, final byte[] hashedPrivateKey)
       throws GeneralSecurityException {
     // Copying the message to make it thread-safe. Otherwise, if the caller modifies the message
     // between the first and the second hash then it might leak the private key.
     byte[] messageCopy = Arrays.copyOfRange(message, 0, message.length);
-    MessageDigest digest = EngineFactory.MESSAGE_DIGEST.getInstance("SHA-512");
+    MessageDigest digest = MessageDigest.getInstance("SHA-512");
     digest.update(hashedPrivateKey, FIELD_LEN, FIELD_LEN);
     digest.update(messageCopy);
     byte[] r = digest.digest();
@@ -1585,7 +1585,7 @@ final class Ed25519 {
    * {@code publicKey}.
    *
    * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
-   * {@link EngineFactory}.MESSAGE_DIGEST.
+   * {@code EngineFactory}.MESSAGE_DIGEST.
    */
   static boolean verify(final byte[] message, final byte[] signature,
       final byte[] publicKey) throws GeneralSecurityException {
@@ -1596,7 +1596,7 @@ final class Ed25519 {
     if (!isSmallerThanGroupOrder(s)) {
       return false;
     }
-    MessageDigest digest = EngineFactory.MESSAGE_DIGEST.getInstance("SHA-512");
+    MessageDigest digest = MessageDigest.getInstance("SHA-512");
     digest.update(signature, 0, FIELD_LEN);
     digest.update(publicKey);
     digest.update(message);

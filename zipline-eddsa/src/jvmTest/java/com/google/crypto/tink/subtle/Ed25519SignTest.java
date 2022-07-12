@@ -16,22 +16,18 @@
 
 package com.google.crypto.tink.subtle;
 
+import java.security.GeneralSecurityException;
+import java.util.List;
+import java.util.TreeSet;
+import okio.ByteString;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.JUnit4;
+import static com.google.crypto.tink.subtle.WycheproofKt.loadEddsaTestJson;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.fail;
-
-import com.google.crypto.tink.config.TinkFips;
-import com.google.crypto.tink.testing.TestUtil;
-import com.google.crypto.tink.testing.WycheproofTestUtil;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import java.security.GeneralSecurityException;
-import java.util.TreeSet;
-import org.junit.Assume;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
 
 /**
  * Unit tests for {@link Ed25519Sign}.
@@ -40,10 +36,12 @@ import org.junit.runners.JUnit4;
 @RunWith(JUnit4.class)
 public final class Ed25519SignTest {
 
+  public String hexEncode(byte[] bytes) {
+    return ByteString.of(bytes).hex();
+  }
+
   @Test
   public void testSigningOneKeyWithMultipleMessages() throws Exception {
-    Assume.assumeFalse(TinkFips.useOnlyFips());
-
     Ed25519Sign.KeyPair keyPair = Ed25519Sign.KeyPair.newKeyPair();
     Ed25519Sign signer = new Ed25519Sign(keyPair.getPrivateKey());
     Ed25519Verify verifier = new Ed25519Verify(keyPair.getPublicKey());
@@ -56,18 +54,16 @@ public final class Ed25519SignTest {
         fail(
             String.format(
                 "\n\nMessage: %s\nSignature: %s\nPrivateKey: %s\nPublicKey: %s\n",
-                TestUtil.hexEncode(msg),
-                TestUtil.hexEncode(sig),
-                TestUtil.hexEncode(keyPair.getPrivateKey()),
-                TestUtil.hexEncode(keyPair.getPublicKey())));
+                hexEncode(msg),
+                hexEncode(sig),
+                hexEncode(keyPair.getPrivateKey()),
+                hexEncode(keyPair.getPublicKey())));
       }
     }
   }
 
   @Test
   public void testSigningOneKeyWithTheSameMessage() throws Exception {
-    Assume.assumeFalse(TinkFips.useOnlyFips());
-
     Ed25519Sign.KeyPair keyPair = Ed25519Sign.KeyPair.newKeyPair();
     Ed25519Sign signer = new Ed25519Sign(keyPair.getPrivateKey());
     Ed25519Verify verifier = new Ed25519Verify(keyPair.getPublicKey());
@@ -75,17 +71,17 @@ public final class Ed25519SignTest {
     TreeSet<String> allSignatures = new TreeSet<String>();
     for (int i = 0; i < 100; i++) {
       byte[] sig = signer.sign(msg);
-      allSignatures.add(TestUtil.hexEncode(sig));
+      allSignatures.add(hexEncode(sig));
       try {
         verifier.verify(sig, msg);
       } catch (GeneralSecurityException ex) {
         fail(
             String.format(
                 "\n\nMessage: %s\nSignature: %s\nPrivateKey: %s\nPublicKey: %s\n",
-                TestUtil.hexEncode(msg),
-                TestUtil.hexEncode(sig),
-                TestUtil.hexEncode(keyPair.getPrivateKey()),
-                TestUtil.hexEncode(keyPair.getPublicKey())));
+                hexEncode(msg),
+                hexEncode(sig),
+                hexEncode(keyPair.getPrivateKey()),
+                hexEncode(keyPair.getPublicKey())));
       }
     }
     // Ed25519 is deterministic, expect a unique signature for the same message.
@@ -94,8 +90,6 @@ public final class Ed25519SignTest {
 
   @Test
   public void testSignWithPrivateKeyLengthDifferentFrom32Byte() throws Exception {
-    Assume.assumeFalse(TinkFips.useOnlyFips());
-
     assertThrows(
         IllegalArgumentException.class,
         () -> {
@@ -110,8 +104,6 @@ public final class Ed25519SignTest {
 
   @Test
   public void testSigningWithMultipleRandomKeysAndMessages() throws Exception {
-    Assume.assumeFalse(TinkFips.useOnlyFips());
-
     for (int i = 0; i < 100; i++) {
       Ed25519Sign.KeyPair keyPair = Ed25519Sign.KeyPair.newKeyPair();
       Ed25519Sign signer = new Ed25519Sign(keyPair.getPrivateKey());
@@ -124,44 +116,27 @@ public final class Ed25519SignTest {
         fail(
             String.format(
                 "\n\nMessage: %s\nSignature: %s\nPrivateKey: %s\nPublicKey: %s\n",
-                TestUtil.hexEncode(msg),
-                TestUtil.hexEncode(sig),
-                TestUtil.hexEncode(keyPair.getPrivateKey()),
-                TestUtil.hexEncode(keyPair.getPublicKey())));
+                hexEncode(msg),
+                hexEncode(sig),
+                hexEncode(keyPair.getPrivateKey()),
+                hexEncode(keyPair.getPublicKey())));
       }
-    }
-  }
-
-  private byte[] getMessage(JsonObject testcase) throws Exception {
-    if (testcase.has("msg")) {
-      return Hex.decode(testcase.get("msg").getAsString());
-    } else {
-      return Hex.decode(testcase.get("message").getAsString());
     }
   }
 
   @Test
   public void testSigningWithWycheproofVectors() throws Exception {
-    Assume.assumeFalse(TinkFips.useOnlyFips());
-
-    JsonObject json =
-        WycheproofTestUtil.readJson("../wycheproof/testvectors/eddsa_test.json");
     int errors = 0;
-    JsonArray testGroups = json.get("testGroups").getAsJsonArray();
-    for (int i = 0; i < testGroups.size(); i++) {
-      JsonObject group = testGroups.get(i).getAsJsonObject();
-      JsonObject key = group.get("key").getAsJsonObject();
-      byte[] privateKey = Hex.decode(key.get("sk").getAsString());
-      JsonArray tests = group.get("tests").getAsJsonArray();
-      for (int j = 0; j < tests.size(); j++) {
-        JsonObject testcase = tests.get(j).getAsJsonObject();
-        String tcId =
-            String.format(
-                "testcase %d (%s)",
-                testcase.get("tcId").getAsInt(), testcase.get("comment").getAsString());
-        byte[] msg = getMessage(testcase);
-        byte[] sig = Hex.decode(testcase.get("sig").getAsString());
-        String result = testcase.get("result").getAsString();
+    List<TestGroup> testGroups = loadEddsaTestJson().getTestGroups();
+    for (TestGroup group : testGroups) {
+      Key key = group.getKey();
+      byte[] privateKey = ByteString.decodeHex(key.getSk()).toByteArray();
+      List<TestCase> tests = group.getTests();
+      for (TestCase testcase : tests) {
+        String tcId = String.format("testcase %d (%s)", testcase.getTcId(), testcase.getComment());
+        byte[] msg = ByteString.decodeHex(testcase.getMsg()).toByteArray();
+        byte[] sig = ByteString.decodeHex(testcase.getSig()).toByteArray();
+        String result = testcase.getResult();
         if (result.equals("invalid")) {
           continue;
         }
@@ -175,18 +150,8 @@ public final class Ed25519SignTest {
 
   @Test
   public void testKeyPairFromSeedTooShort() throws Exception {
-    Assume.assumeFalse(TinkFips.useOnlyFips());
-
     byte[] keyMaterial = Random.randBytes(10);
     assertThrows(
         IllegalArgumentException.class, () -> Ed25519Sign.KeyPair.newKeyPairFromSeed(keyMaterial));
-  }
-
-  @Test
-  public void testFailIfFipsModuleNotAvailable() throws Exception {
-    Assume.assumeTrue(TinkFips.useOnlyFips());
-
-    byte[] key = Random.randBytes(32);
-    assertThrows(GeneralSecurityException.class, () -> new Ed25519Sign(key));
   }
 }

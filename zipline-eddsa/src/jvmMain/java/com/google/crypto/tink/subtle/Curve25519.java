@@ -16,22 +16,21 @@
 
 package com.google.crypto.tink.subtle;
 
-import com.google.crypto.tink.annotations.Alpha;
 import java.security.InvalidKeyException;
 import java.util.Arrays;
+import okio.ByteString;
 
 /**
  * This class implements point arithmetic on the elliptic curve <a
  * href="https://cr.yp.to/ecdh/curve25519-20060209.pdf">Curve25519</a>.
  *
  * <p>This class only implements point arithmetic, if you want to use the ECDH Curve25519 function,
- * please checkout {@link com.google.crypto.tink.subtle.X25519}.
+ * please checkout {@code com.google.crypto.tink.subtle.X25519}.
  *
  * <p>This implementation is based on <a
  * href="https://github.com/agl/curve25519-donna/blob/master/curve25519-donna.c">curve255-donna C
  * implementation</a>.
  */
-@Alpha
 final class Curve25519 {
   // https://cr.yp.to/ecdh.html#validate doesn't recommend validating peer's public key. However,
   // validating public key doesn't harm security and in certain cases, prevents unwanted edge
@@ -329,7 +328,7 @@ final class Curve25519 {
     if (!isCollinear(q, resultx, nqpqx, nqpqz)) {
       throw new IllegalStateException(
           "Arithmetic error in curve multiplication with the public key: "
-              + Hex.encode(qBytes));
+              + ByteString.of(qBytes).hex());
     }
   }
 
@@ -348,7 +347,7 @@ final class Curve25519 {
 
     for (int i = 0; i < BANNED_PUBLIC_KEYS.length; i++) {
       if (Bytes.equal(BANNED_PUBLIC_KEYS[i], pubKey)) {
-        throw new InvalidKeyException("Banned public key: " + Hex.encode(BANNED_PUBLIC_KEYS[i]));
+        throw new InvalidKeyException("Banned public key: " + ByteString.of(BANNED_PUBLIC_KEYS[i]).hex());
       }
     }
   }

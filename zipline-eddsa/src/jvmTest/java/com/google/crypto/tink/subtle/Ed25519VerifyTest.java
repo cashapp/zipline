@@ -16,18 +16,15 @@
 
 package com.google.crypto.tink.subtle;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-
-import com.google.crypto.tink.config.TinkFips;
-import com.google.crypto.tink.testing.WycheproofTestUtil;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import java.security.GeneralSecurityException;
-import org.junit.Assume;
+import java.util.List;
+import okio.ByteString;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.JUnit4;
+import static com.google.crypto.tink.subtle.WycheproofKt.loadEddsaTestJson;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 /**
  * Unit tests for {@link Ed25519Verify}.
@@ -37,8 +34,6 @@ import org.junit.runners.JUnit4;
 public final class Ed25519VerifyTest {
   @Test
   public void testVerificationWithPublicKeyLengthDifferentFrom32Byte() throws Exception {
-    Assume.assumeFalse(TinkFips.useOnlyFips());
-
     assertThrows(
         IllegalArgumentException.class,
         () -> {
@@ -51,35 +46,19 @@ public final class Ed25519VerifyTest {
         });
   }
 
-  private byte[] getMessage(JsonObject testcase) throws Exception {
-    if (testcase.has("msg")) {
-      return Hex.decode(testcase.get("msg").getAsString());
-    } else {
-      return Hex.decode(testcase.get("message").getAsString());
-    }
-  }
-
   @Test
   public void testVerificationWithWycheproofVectors() throws Exception {
-    Assume.assumeFalse(TinkFips.useOnlyFips());
-
-    JsonObject json =
-        WycheproofTestUtil.readJson("../wycheproof/testvectors/eddsa_test.json");
     int errors = 0;
-    JsonArray testGroups = json.get("testGroups").getAsJsonArray();
-    for (int i = 0; i < testGroups.size(); i++) {
-      JsonObject group = testGroups.get(i).getAsJsonObject();
-      JsonObject key = group.get("key").getAsJsonObject();
-      byte[] publicKey = Hex.decode(key.get("pk").getAsString());
-      JsonArray tests = group.get("tests").getAsJsonArray();
-      for (int j = 0; j < tests.size(); j++) {
-        JsonObject testcase = tests.get(j).getAsJsonObject();
-        String tcId =
-            String.format("testcase %d (%s)",
-                testcase.get("tcId").getAsInt(), testcase.get("comment").getAsString());
-        byte[] msg = getMessage(testcase);
-        byte[] sig = Hex.decode(testcase.get("sig").getAsString());
-        String result = testcase.get("result").getAsString();
+    List<TestGroup> testGroups = loadEddsaTestJson().getTestGroups();
+    for (TestGroup group : testGroups) {
+      Key key = group.getKey();
+      byte[] publicKey = ByteString.decodeHex(key.getPk()).toByteArray();
+      List<TestCase> tests = group.getTests();
+      for (TestCase testcase : tests) {
+        String tcId = String.format("testcase %d (%s)", testcase.getTcId(), testcase.getComment());
+        byte[] msg = ByteString.decodeHex(testcase.getMsg()).toByteArray();
+        byte[] sig = ByteString.decodeHex(testcase.getSig()).toByteArray();
+        String result = testcase.getResult();
         Ed25519Verify verifier = new Ed25519Verify(publicKey);
         try {
           verifier.verify(sig, msg);
@@ -96,12 +75,5 @@ public final class Ed25519VerifyTest {
       }
     }
     assertEquals(0, errors);
-  }
-
-  @Test
-  public void testFailIfFipsModuleNotAvailable() throws Exception {
-    Assume.assumeTrue(TinkFips.useOnlyFips());
-
-    assertThrows(RuntimeException.class, () -> new Ed25519Verify(new byte[32]));
   }
 }

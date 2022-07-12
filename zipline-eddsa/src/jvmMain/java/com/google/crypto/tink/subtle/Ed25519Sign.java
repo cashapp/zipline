@@ -16,8 +16,6 @@
 
 package com.google.crypto.tink.subtle;
 
-import com.google.crypto.tink.PublicKeySign;
-import com.google.crypto.tink.config.TinkFips;
 import java.security.GeneralSecurityException;
 import java.util.Arrays;
 
@@ -35,10 +33,7 @@ import java.util.Arrays;
  *
  * @since 1.1.0
  */
-public final class Ed25519Sign implements PublicKeySign {
-  public static final TinkFips.AlgorithmFipsCompatibility FIPS =
-      TinkFips.AlgorithmFipsCompatibility.ALGORITHM_NOT_FIPS;
-
+public final class Ed25519Sign {
   public static final int SECRET_KEY_LEN = Field25519.FIELD_LEN;
 
   private final byte[] hashedPrivateKey;
@@ -48,14 +43,10 @@ public final class Ed25519Sign implements PublicKeySign {
    * Constructs a Ed25519Sign with the {@code privateKey}.
    *
    * @param privateKey 32-byte random sequence.
-   * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in {@link
+   * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in {@code
    *     EngineFactory}.MESSAGE_DIGEST.
    */
   public Ed25519Sign(final byte[] privateKey) throws GeneralSecurityException {
-    if (!FIPS.isCompatible()) {
-      throw new GeneralSecurityException("Can not use Ed25519 in FIPS-mode.");
-    }
-
     if (privateKey.length != SECRET_KEY_LEN) {
       throw new IllegalArgumentException(
           String.format("Given private key's length is not %s", SECRET_KEY_LEN));
@@ -65,7 +56,6 @@ public final class Ed25519Sign implements PublicKeySign {
     this.publicKey = Ed25519.scalarMultWithBaseToBytes(this.hashedPrivateKey);
   }
 
-  @Override
   public byte[] sign(final byte[] data) throws GeneralSecurityException {
     return Ed25519.sign(data, publicKey, hashedPrivateKey);
   }

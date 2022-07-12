@@ -16,7 +16,6 @@
 
 package com.google.crypto.tink.subtle;
 
-import com.google.crypto.tink.annotations.Alpha;
 import java.util.Arrays;
 
 /**
@@ -34,7 +33,6 @@ import java.util.Arrays;
  *
  * <p>i.e. the limbs are 26, 25, 26, 25, ... bits wide.
  */
-@Alpha
 final class Field25519 {
   /**
    * During Field25519 computation, the mixed radix representation may be in different forms:

@@ -32,7 +32,7 @@ final class Ed25519Constants {
    * Base point for the Edwards twisted curve = (x, 4/5) and its exponentiations. B_TABLE[i][j] =
    * (j+1)*256^i*B for i in [0, 32) and j in [0, 8). Base point B = B_TABLE[0][0]
    *
-   * <p>See {@link Ed25519ConstantsGenerator}.
+   * <p>See {@code Ed25519ConstantsGenerator}.
    */
   static final Ed25519.CachedXYT[][] B_TABLE;
   static final Ed25519.CachedXYT[] B2;
