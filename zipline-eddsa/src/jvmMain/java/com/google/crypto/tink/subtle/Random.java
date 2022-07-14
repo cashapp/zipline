@@ -17,6 +17,7 @@
 package com.google.crypto.tink.subtle;
 
 import java.security.SecureRandom;
+import okio.ByteString;
 
 /**
  * A simple wrapper of {@link SecureRandom}.
@@ -38,17 +39,9 @@ public final class Random {
   }
 
   /** @return a random byte array of size {@code size}. */
-  public static byte[] randBytes(int size) {
+  public static ByteString randBytes(int size) {
     byte[] rand = new byte[size];
     localRandom.get().nextBytes(rand);
-    return rand;
-  }
-
-  public static final int randInt(int max) {
-    return localRandom.get().nextInt(max);
-  }
-
-  public static final int randInt() {
-    return localRandom.get().nextInt();
+    return ByteString.of(rand);
   }
 }

@@ -16,6 +16,10 @@
 
 package com.google.crypto.tink.subtle;
 
+import java.security.GeneralSecurityException;
+import java.security.MessageDigest;
+import java.util.Arrays;
+import okio.ByteString;
 import static com.google.crypto.tink.subtle.Ed25519Constants.B2;
 import static com.google.crypto.tink.subtle.Ed25519Constants.B_TABLE;
 import static com.google.crypto.tink.subtle.Ed25519Constants.D;
@@ -23,10 +27,6 @@ import static com.google.crypto.tink.subtle.Ed25519Constants.D2;
 import static com.google.crypto.tink.subtle.Ed25519Constants.SQRTM1;
 import static com.google.crypto.tink.subtle.Field25519.FIELD_LEN;
 import static com.google.crypto.tink.subtle.Field25519.LIMB_CNT;
-
-import java.security.GeneralSecurityException;
-import java.security.MessageDigest;
-import java.util.Arrays;
 
 /**
  * This implementation is based on the ed25519/ref10 implementation in NaCl.
@@ -44,8 +44,6 @@ import java.util.Arrays;
  */
 final class Ed25519 {
 
-  public static final int SECRET_KEY_LEN = FIELD_LEN;
-  public static final int PUBLIC_KEY_LEN = FIELD_LEN;
   public static final int SIGNATURE_LEN = FIELD_LEN * 2;
 
   // (x = 0, y = 1) point
@@ -294,10 +292,6 @@ final class Ed25519 {
     final long[] yPlusX;
     final long[] yMinusX;
     final long[] t2d;
-
-    CachedXYT() {
-      this(new long[LIMB_CNT], new long[LIMB_CNT], new long[LIMB_CNT]);
-    }
 
     /**
      * Creates a cached XYZT with Z = 1
@@ -639,8 +633,8 @@ final class Ed25519 {
    * Preconditions:
    * a[31] <= 127
    */
-  static byte[] scalarMultWithBaseToBytes(byte[] a) {
-    return scalarMultWithBase(a).toBytes();
+  static ByteString scalarMultWithBaseToBytes(ByteString a) {
+    return ByteString.of(scalarMultWithBase(a.toByteArray()).toBytes());
   }
 
   @SuppressWarnings("NarrowingCompoundAssignment")
@@ -1503,10 +1497,11 @@ final class Ed25519 {
     s[31] = (byte) (s11 >> 17);
   }
 
-  static byte[] getHashedScalar(final byte[] privateKey)
+  static ByteString getHashedScalar(ByteString privateKey)
       throws GeneralSecurityException {
+    byte[] privateKeyBytes = privateKey.toByteArray();
     MessageDigest digest = MessageDigest.getInstance("SHA-512");
-    digest.update(privateKey, 0, FIELD_LEN);
+    digest.update(privateKeyBytes, 0, FIELD_LEN);
     byte[] h = digest.digest();
     // https://tools.ietf.org/html/rfc8032#section-5.1.2.
     // Clear the lowest three bits of the first octet.
@@ -1515,7 +1510,7 @@ final class Ed25519 {
     h[31] = (byte) (h[31] & 127);
     // Set the second highest bit if the last octet.
     h[31] = (byte) (h[31] | 64);
-    return h;
+    return ByteString.of(h);
   }
 
   /**
@@ -1523,18 +1518,21 @@ final class Ed25519 {
    *
    * @param message to sign
    * @param publicKey {@code Ed25519#scalarMultToBytes(byte[])} of {@code hashedPrivateKey}
-   * @param hashedPrivateKey {@link Ed25519#getHashedScalar(byte[])} of the private key
+   * @param hashedPrivateKey {@link Ed25519#getHashedScalar(ByteString)} of the private key
    * @return signature for the {@code message}.
    * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
    * {@code EngineFactory}.MESSAGE_DIGEST.
    */
-  static byte[] sign(final byte[] message, final byte[] publicKey, final byte[] hashedPrivateKey)
+  static ByteString sign(final ByteString message, ByteString publicKey, ByteString hashedPrivateKey)
       throws GeneralSecurityException {
+    byte[] messageBytes = message.toByteArray();
+    byte[] hashedPrivateKeyBytes = hashedPrivateKey.toByteArray();
+    byte[] publicKeyBytes = publicKey.toByteArray();
     // Copying the message to make it thread-safe. Otherwise, if the caller modifies the message
     // between the first and the second hash then it might leak the private key.
-    byte[] messageCopy = Arrays.copyOfRange(message, 0, message.length);
+    byte[] messageCopy = Arrays.copyOfRange(messageBytes, 0, messageBytes.length);
     MessageDigest digest = MessageDigest.getInstance("SHA-512");
-    digest.update(hashedPrivateKey, FIELD_LEN, FIELD_LEN);
+    digest.update(hashedPrivateKeyBytes, FIELD_LEN, FIELD_LEN);
     digest.update(messageCopy);
     byte[] r = digest.digest();
     reduce(r);
@@ -1542,13 +1540,13 @@ final class Ed25519 {
     byte[] rB = Arrays.copyOfRange(scalarMultWithBase(r).toBytes(), 0, FIELD_LEN);
     digest.reset();
     digest.update(rB);
-    digest.update(publicKey);
+    digest.update(publicKeyBytes);
     digest.update(messageCopy);
     byte[] hram = digest.digest();
     reduce(hram);
     byte[] s = new byte[FIELD_LEN];
-    mulAdd(s, hram, hashedPrivateKey, r);
-    return Bytes.concat(rB, s);
+    mulAdd(s, hram, hashedPrivateKeyBytes, r);
+    return ByteString.of(Bytes.concat(rB, s));
   }
 
 
@@ -1587,27 +1585,30 @@ final class Ed25519 {
    * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
    * {@code EngineFactory}.MESSAGE_DIGEST.
    */
-  static boolean verify(final byte[] message, final byte[] signature,
-      final byte[] publicKey) throws GeneralSecurityException {
-    if (signature.length != SIGNATURE_LEN) {
+  static boolean verify(final ByteString message, final ByteString signature,
+      final ByteString publicKey) throws GeneralSecurityException {
+    byte[] publicKeyBytes = publicKey.toByteArray();
+    byte[] signatureBytes = signature.toByteArray();
+    byte[] messageBytes = message.toByteArray();
+    if (signature.size() != SIGNATURE_LEN) {
       return false;
     }
-    byte[] s = Arrays.copyOfRange(signature, FIELD_LEN, SIGNATURE_LEN);
+    byte[] s = Arrays.copyOfRange(signatureBytes, FIELD_LEN, SIGNATURE_LEN);
     if (!isSmallerThanGroupOrder(s)) {
       return false;
     }
     MessageDigest digest = MessageDigest.getInstance("SHA-512");
-    digest.update(signature, 0, FIELD_LEN);
-    digest.update(publicKey);
-    digest.update(message);
+    digest.update(signatureBytes, 0, FIELD_LEN);
+    digest.update(publicKeyBytes);
+    digest.update(messageBytes);
     byte[] h = digest.digest();
     reduce(h);
 
-    XYZT negPublicKey = XYZT.fromBytesNegateVarTime(publicKey);
+    XYZT negPublicKey = XYZT.fromBytesNegateVarTime(publicKeyBytes);
     XYZ xyz = doubleScalarMultVarTime(h, negPublicKey, s);
     byte[] expectedR = xyz.toBytes();
     for (int i = 0; i < FIELD_LEN; i++) {
-      if (expectedR[i] != signature[i]) {
+      if (expectedR[i] != signatureBytes[i]) {
         return false;
       }
     }
