@@ -17,7 +17,7 @@
 package com.google.crypto.tink.subtle;
 
 import java.security.GeneralSecurityException;
-import java.util.Arrays;
+import okio.ByteString;
 
 /**
  * Ed25519 signing.
@@ -36,8 +36,8 @@ import java.util.Arrays;
 public final class Ed25519Sign {
   public static final int SECRET_KEY_LEN = Field25519.FIELD_LEN;
 
-  private final byte[] hashedPrivateKey;
-  private final byte[] publicKey;
+  private final ByteString hashedPrivateKey;
+  private final ByteString publicKey;
 
   /**
    * Constructs a Ed25519Sign with the {@code privateKey}.
@@ -46,8 +46,8 @@ public final class Ed25519Sign {
    * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in {@code
    *     EngineFactory}.MESSAGE_DIGEST.
    */
-  public Ed25519Sign(final byte[] privateKey) throws GeneralSecurityException {
-    if (privateKey.length != SECRET_KEY_LEN) {
+  public Ed25519Sign(final ByteString privateKey) throws GeneralSecurityException {
+    if (privateKey.size() != SECRET_KEY_LEN) {
       throw new IllegalArgumentException(
           String.format("Given private key's length is not %s", SECRET_KEY_LEN));
     }
@@ -56,27 +56,27 @@ public final class Ed25519Sign {
     this.publicKey = Ed25519.scalarMultWithBaseToBytes(this.hashedPrivateKey);
   }
 
-  public byte[] sign(final byte[] data) throws GeneralSecurityException {
+  public ByteString sign(final ByteString data) throws GeneralSecurityException {
     return Ed25519.sign(data, publicKey, hashedPrivateKey);
   }
 
   /** Defines the KeyPair consisting of a private key and its corresponding public key. */
   public static final class KeyPair {
 
-    private final byte[] publicKey;
-    private final byte[] privateKey;
+    private final ByteString publicKey;
+    private final ByteString privateKey;
 
-    private KeyPair(final byte[] publicKey, final byte[] privateKey) {
+    private KeyPair(ByteString publicKey, ByteString privateKey) {
       this.publicKey = publicKey;
       this.privateKey = privateKey;
     }
 
-    public byte[] getPublicKey() {
-      return Arrays.copyOf(publicKey, publicKey.length);
+    public ByteString getPublicKey() {
+      return publicKey;
     }
 
-    public byte[] getPrivateKey() {
-      return Arrays.copyOf(privateKey, privateKey.length);
+    public ByteString getPrivateKey() {
+      return privateKey;
     }
 
     /** Returns a new <publicKey, privateKey> KeyPair. */
@@ -85,13 +85,13 @@ public final class Ed25519Sign {
     }
 
     /** Returns a new <publicKey, privateKey> KeyPair generated from a seed. */
-    public static KeyPair newKeyPairFromSeed(byte[] secretSeed) throws GeneralSecurityException {
-      if (secretSeed.length != Field25519.FIELD_LEN) {
+    public static KeyPair newKeyPairFromSeed(ByteString secretSeed) throws GeneralSecurityException {
+      if (secretSeed.size() != Field25519.FIELD_LEN) {
         throw new IllegalArgumentException(
             String.format("Given secret seed length is not %s", Field25519.FIELD_LEN));
       }
-      byte[] privateKey = secretSeed;
-      byte[] publicKey = Ed25519.scalarMultWithBaseToBytes(Ed25519.getHashedScalar(privateKey));
+      ByteString privateKey = secretSeed;
+      ByteString publicKey = Ed25519.scalarMultWithBaseToBytes(Ed25519.getHashedScalar(privateKey));
       return new KeyPair(publicKey, privateKey);
     }
   }

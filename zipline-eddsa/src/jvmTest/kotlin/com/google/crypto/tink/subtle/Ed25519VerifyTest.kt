@@ -17,6 +17,7 @@ package com.google.crypto.tink.subtle
 
 import java.security.GeneralSecurityException
 import okio.ByteString.Companion.decodeHex
+import okio.ByteString.Companion.toByteString
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Test
@@ -28,10 +29,10 @@ class Ed25519VerifyTest {
   @Test
   fun testVerificationWithPublicKeyLengthDifferentFrom32Byte() {
     assertThrows(IllegalArgumentException::class.java) {
-      Ed25519Verify(ByteArray(31))
+      Ed25519Verify(ByteArray(31).toByteString())
     }
     assertThrows(IllegalArgumentException::class.java) {
-      Ed25519Verify(ByteArray(33))
+      Ed25519Verify(ByteArray(33).toByteString())
     }
   }
 
@@ -41,12 +42,12 @@ class Ed25519VerifyTest {
     val testGroups = loadEddsaTestJson().testGroups
     for (group in testGroups) {
       val key = group.key
-      val publicKey = key.pk.decodeHex().toByteArray()
+      val publicKey = key.pk.decodeHex()
       val tests = group.tests
       for (testcase in tests) {
         val tcId = "testcase ${testcase.tcId} (${testcase.comment})"
-        val msg = testcase.msg.decodeHex().toByteArray()
-        val sig = testcase.sig.decodeHex().toByteArray()
+        val msg = testcase.msg.decodeHex()
+        val sig = testcase.sig.decodeHex()
         val result = testcase.result
         val verifier = Ed25519Verify(publicKey)
         try {

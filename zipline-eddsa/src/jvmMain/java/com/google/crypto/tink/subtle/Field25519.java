@@ -96,16 +96,6 @@ final class Field25519 {
   }
 
   /**
-   * Find the difference of two numbers: output = in - output
-   * (note the order of the arguments!).
-   *
-   * On entry: in, output are in reduced-size form.
-   */
-  static void sub(long[] output, long[] in) {
-    sub(output, in, output);
-  }
-
-  /**
    * Multiply a number by a scalar: output = in * scalar
    */
   static void scalarProduct(long[] output, long[] in, long scalar) {

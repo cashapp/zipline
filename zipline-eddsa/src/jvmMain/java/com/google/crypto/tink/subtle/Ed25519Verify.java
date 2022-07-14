@@ -42,20 +42,20 @@ public final class Ed25519Verify {
 
   private final ByteString publicKey;
 
-  public Ed25519Verify(final byte[] publicKey) {
-    if (publicKey.length != PUBLIC_KEY_LEN) {
+  public Ed25519Verify(final ByteString publicKey) {
+    if (publicKey.size() != PUBLIC_KEY_LEN) {
       throw new IllegalArgumentException(
           String.format("Given public key's length is not %s.", PUBLIC_KEY_LEN));
     }
-    this.publicKey = ByteString.of(publicKey);
+    this.publicKey = publicKey;
   }
 
-  public void verify(byte[] signature, byte[] data) throws GeneralSecurityException {
-    if (signature.length != SIGNATURE_LEN) {
+  public void verify(ByteString signature, ByteString data) throws GeneralSecurityException {
+    if (signature.size() != SIGNATURE_LEN) {
       throw new GeneralSecurityException(
           String.format("The length of the signature is not %s.", SIGNATURE_LEN));
     }
-    if (!Ed25519.verify(data, signature, publicKey.toByteArray())) {
+    if (!Ed25519.verify(data, signature, publicKey)) {
       throw new GeneralSecurityException("Signature check failed.");
     }
   }

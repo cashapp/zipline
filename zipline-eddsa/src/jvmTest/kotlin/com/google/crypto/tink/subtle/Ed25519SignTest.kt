@@ -17,10 +17,8 @@ package com.google.crypto.tink.subtle
 
 import java.security.GeneralSecurityException
 import java.util.TreeSet
-import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.toByteString
-import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
 import org.junit.Assert.fail
@@ -43,10 +41,10 @@ class Ed25519SignTest {
       } catch (ex: GeneralSecurityException) {
         fail(
           """
-          |Message: ${msg.toByteString().hex()}
-          |Signature: ${sig.toByteString().hex()}
-          |PrivateKey: ${keyPair.privateKey.toByteString().hex()}
-          |PublicKey: ${keyPair.publicKey.toByteString().hex()}
+          |Message: ${msg.hex()}
+          |Signature: ${sig.hex()}
+          |PrivateKey: ${keyPair.privateKey.hex()}
+          |PublicKey: ${keyPair.publicKey.hex()}
           """.trimMargin(),
         )
       }
@@ -62,16 +60,16 @@ class Ed25519SignTest {
     val allSignatures = TreeSet<String>()
     for (i in 0..99) {
       val sig = signer.sign(msg)
-      allSignatures.add(ByteString.of(*sig).hex())
+      allSignatures.add(sig.hex())
       try {
         verifier.verify(sig, msg)
       } catch (ex: GeneralSecurityException) {
         fail(
           """
-          |Message: ${msg.toByteString().hex()}
-          |Signature: ${sig.toByteString().hex()}
-          |PrivateKey: ${keyPair.privateKey.toByteString().hex()}
-          |PublicKey: ${keyPair.publicKey.toByteString().hex()}
+          |Message: ${msg.hex()}
+          |Signature: ${sig.hex()}
+          |PrivateKey: ${keyPair.privateKey.hex()}
+          |PublicKey: ${keyPair.publicKey.hex()}
           """.trimMargin(),
         )
       }
@@ -83,10 +81,10 @@ class Ed25519SignTest {
   @Test
   fun testSignWithPrivateKeyLengthDifferentFrom32Byte() {
     assertThrows(IllegalArgumentException::class.java) {
-      Ed25519Sign(ByteArray(31))
+      Ed25519Sign(ByteArray(31).toByteString())
     }
     assertThrows(IllegalArgumentException::class.java) {
-      Ed25519Sign(ByteArray(33))
+      Ed25519Sign(ByteArray(33).toByteString())
     }
   }
 
@@ -103,10 +101,10 @@ class Ed25519SignTest {
       } catch (ex: GeneralSecurityException) {
         fail(
           """
-          |Message: ${msg.toByteString().hex()}
-          |Signature: ${sig.toByteString().hex()}
-          |PrivateKey: ${keyPair.privateKey.toByteString().hex()}
-          |PublicKey: ${keyPair.publicKey.toByteString().hex()}
+          |Message: ${msg.hex()}
+          |Signature: ${sig.hex()}
+          |PrivateKey: ${keyPair.privateKey.hex()}
+          |PublicKey: ${keyPair.publicKey.hex()}
           """.trimMargin(),
         )
       }
@@ -119,19 +117,19 @@ class Ed25519SignTest {
     val testGroups = loadEddsaTestJson().testGroups
     for (group in testGroups) {
       val key = group.key
-      val privateKey = key.sk.decodeHex().toByteArray()
+      val privateKey = key.sk.decodeHex()
       val tests = group.tests
       for (testcase in tests) {
         val tcId = "testcase ${testcase.tcId} (${testcase.comment})"
-        val msg = testcase.msg.decodeHex().toByteArray()
-        val sig = testcase.sig.decodeHex().toByteArray()
+        val msg = testcase.msg.decodeHex()
+        val sig = testcase.sig.decodeHex()
         val result = testcase.result
         if (result == "invalid") {
           continue
         }
         val signer = Ed25519Sign(privateKey)
         val computedSig = signer.sign(msg)
-        assertArrayEquals(tcId, sig, computedSig)
+        assertEquals(tcId, sig, computedSig)
       }
     }
     assertEquals(0, errors.toLong())
