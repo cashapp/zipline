@@ -22,16 +22,17 @@ import okio.ByteString
 /**
  * Ed25519 verifying.
  *
- * <h3>Usage</h3>
+ * # Usage
  *
- * <pre>`// get the publicKey from the other party.
- * Ed25519Verify verifier = new Ed25519Verify(publicKey);
+ * ```
+ * // get the publicKey from the other party.
+ * val verifier = new Ed25519Verify(publicKey)
  * try {
- * verifier.verify(signature, message);
- * } catch (GeneralSecurityException e) {
- * // all the rest of security exceptions.
+ *   verifier.verify(signature, message);
+ * } catch (e: GeneralSecurityException) {
+ *   // all the rest of security exceptions.
  * }
-`</pre> *
+ * ```
  *
  * @since 1.1.0
  */

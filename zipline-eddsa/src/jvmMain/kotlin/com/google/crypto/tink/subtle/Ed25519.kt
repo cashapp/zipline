@@ -255,10 +255,13 @@ internal object Ed25519 {
    * readable and 1:1 corresponds to ref10 impl.
    *
    * Can be converted to XYZT as follows:
+   *
+   * ```
    * X1 = X * T = x * Z * T = x * Z1
    * Y1 = Y * Z = y * T * Z = y * Z1
    * Z1 = Z * T = Z * T
    * T1 = X * Y = x * Z * y * T = x * y * Z1 = X1Y1 / Z1
+   * ```
    */
   private class PartialXYZT {
     val xyz: XYZ
@@ -554,11 +557,11 @@ internal object Ed25519 {
 
   /**
    * Computes [a]*B
-   * where a = a[0]+256*a[1]+...+256^31 a[31] and
+   * where `a = a[0]+256*a[1]+...+256^31 a[31]` and
    * B is the Ed25519 base point (x,4/5) with x positive.
    *
    * Preconditions:
-   * a[31] <= 127
+   * `a[31] <= 127`
    * @throws IllegalStateException iff there is arithmetic error.
    */
   private fun scalarMultWithBase(a: ByteArray): XYZ {
@@ -624,11 +627,11 @@ internal object Ed25519 {
 
   /**
    * Computes [a]*B
-   * where a = a[0]+256*a[1]+...+256^31 a[31] and
+   * where `a = a[0]+256*a[1]+...+256^31 a[31]` and
    * B is the Ed25519 base point (x,4/5) with x positive.
    *
    * Preconditions:
-   * a[31] <= 127
+   * `a[31] <= 127`
    */
   @JvmStatic
   fun scalarMultWithBaseToBytes(a: ByteString): ByteString {
@@ -675,8 +678,8 @@ internal object Ed25519 {
 
   /**
    * Computes [a]*[pointA]+[b]*B
-   * where a = a[0]+256*a[1]+...+256^31*a[31].
-   * and b = b[0]+256*b[1]+...+256^31*b[31].
+   * where `a = a[0]+256*a[1]+...+256^31*a[31]`.
+   * and `b = b[0]+256*b[1]+...+256^31*b[31]`.
    * B is the Ed25519 base point (x,4/5) with x positive.
    *
    * Note that execution time varies based on the input since this will only be used in verification
@@ -758,7 +761,7 @@ internal object Ed25519 {
   }
 
   /**
-   * Computes [in]^(2^252-3) mod 2^255-19 and puts the result in [out].
+   * Computes [inLongArray]^(2^252-3) mod 2^255-19 and puts the result in [out].
    */
   private fun pow2252m3(out: LongArray, inLongArray: LongArray) {
     val t0 = LongArray(Field25519.LIMB_CNT)
@@ -1148,12 +1151,12 @@ internal object Ed25519 {
 
   /**
    * Input:
-   * a[0]+256*a[1]+...+256^31*a[31] = a
-   * b[0]+256*b[1]+...+256^31*b[31] = b
-   * c[0]+256*c[1]+...+256^31*c[31] = c
+   * `a[0]+256*a[1]+...+256^31*a[31] = a`
+   * `b[0]+256*b[1]+...+256^31*b[31] = b`
+   * `c[0]+256*c[1]+...+256^31*c[31] = c`
    *
    * Output:
-   * s[0]+256*s[1]+...+256^31*s[31] = (ab+c) mod l
+   * `s[0]+256*s[1]+...+256^31*s[31] = (ab+c) mod l`
    * where l = 2^252 + 27742317777372353535851937790883648493.
    */
   private fun mulAdd(
