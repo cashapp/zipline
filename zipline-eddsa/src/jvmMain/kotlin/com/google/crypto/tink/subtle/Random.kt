@@ -13,35 +13,33 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
+package com.google.crypto.tink.subtle
 
-package com.google.crypto.tink.subtle;
-
-import java.security.SecureRandom;
-import okio.ByteString;
+import java.security.SecureRandom
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
 
 /**
- * A simple wrapper of {@link SecureRandom}.
+ * A simple wrapper of [SecureRandom].
  *
  * @since 1.0.0
  */
-public final class Random {
-  private static final ThreadLocal<SecureRandom> localRandom = new ThreadLocal<SecureRandom>() {
-    @Override
-    protected SecureRandom initialValue() {
-      return newDefaultSecureRandom();
-    }
-  };
-
-  private static SecureRandom newDefaultSecureRandom() {
-    SecureRandom retval = new SecureRandom();
-    retval.nextLong(); // force seeding
-    return retval;
+object Random {
+  private val localRandom: ThreadLocal<SecureRandom> = object : ThreadLocal<SecureRandom>() {
+    override fun initialValue(): SecureRandom = newDefaultSecureRandom()
   }
 
-  /** @return a random byte array of size {@code size}. */
-  public static ByteString randBytes(int size) {
-    byte[] rand = new byte[size];
-    localRandom.get().nextBytes(rand);
-    return ByteString.of(rand);
+  private fun newDefaultSecureRandom(): SecureRandom {
+    val result = SecureRandom()
+    result.nextLong() // force seeding
+    return result
+  }
+
+  /** Returns a random byte array of size [size]. */
+  @JvmStatic
+  fun randBytes(size: Int): ByteString {
+    val rand = ByteArray(size)
+    localRandom.get().nextBytes(rand)
+    return rand.toByteString()
   }
 }

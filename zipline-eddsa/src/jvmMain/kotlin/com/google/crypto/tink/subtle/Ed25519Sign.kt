@@ -13,86 +13,76 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
+package com.google.crypto.tink.subtle
 
-package com.google.crypto.tink.subtle;
-
-import java.security.GeneralSecurityException;
-import okio.ByteString;
+import com.google.crypto.tink.subtle.Ed25519.getHashedScalar
+import com.google.crypto.tink.subtle.Ed25519.scalarMultWithBaseToBytes
+import com.google.crypto.tink.subtle.Ed25519.sign
+import com.google.crypto.tink.subtle.Random.randBytes
+import java.security.GeneralSecurityException
+import okio.ByteString
 
 /**
  * Ed25519 signing.
  *
- * <h3>Usage</h3>
+ * # Usage
  *
- * <pre>{@code
- * Ed25519Sign.KeyPair keyPair = Ed25519Sign.KeyPair.newKeyPair();
+ * ```
+ * val keyPair = Ed25519Sign.KeyPair.newKeyPair()
+ *
  * // securely store keyPair and share keyPair.getPublicKey()
- * Ed25519Sign signer = new Ed25519Sign(keyPair.getPrivateKey());
- * byte[] signature = signer.sign(message);
- * }</pre>
+ * val signer = Ed25519Sign(keyPair.getPrivateKey())
+ * val signature = signer.sign(message)
+ * ```
  *
  * @since 1.1.0
+ *
+ * @param privateKey 32-byte random sequence.
+ * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
+ *     `EngineFactory`.MESSAGE_DIGEST.
  */
-public final class Ed25519Sign {
-  public static final int SECRET_KEY_LEN = Field25519.FIELD_LEN;
+class Ed25519Sign(privateKey: ByteString) {
+  private val hashedPrivateKey: ByteString
+  private val publicKey: ByteString
 
-  private final ByteString hashedPrivateKey;
-  private final ByteString publicKey;
-
-  /**
-   * Constructs a Ed25519Sign with the {@code privateKey}.
-   *
-   * @param privateKey 32-byte random sequence.
-   * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in {@code
-   *     EngineFactory}.MESSAGE_DIGEST.
-   */
-  public Ed25519Sign(final ByteString privateKey) throws GeneralSecurityException {
-    if (privateKey.size() != SECRET_KEY_LEN) {
-      throw new IllegalArgumentException(
-          String.format("Given private key's length is not %s", SECRET_KEY_LEN));
+  init {
+    require(privateKey.size == SECRET_KEY_LEN) {
+      "Given private key's length is not $SECRET_KEY_LEN"
     }
-
-    this.hashedPrivateKey = Ed25519.getHashedScalar(privateKey);
-    this.publicKey = Ed25519.scalarMultWithBaseToBytes(this.hashedPrivateKey);
+    hashedPrivateKey = getHashedScalar(privateKey)
+    publicKey = scalarMultWithBaseToBytes(hashedPrivateKey)
   }
 
-  public ByteString sign(final ByteString data) throws GeneralSecurityException {
-    return Ed25519.sign(data, publicKey, hashedPrivateKey);
+  @Throws(GeneralSecurityException::class)
+  fun sign(data: ByteString): ByteString {
+    return sign(data, publicKey, hashedPrivateKey)
   }
 
-  /** Defines the KeyPair consisting of a private key and its corresponding public key. */
-  public static final class KeyPair {
-
-    private final ByteString publicKey;
-    private final ByteString privateKey;
-
-    private KeyPair(ByteString publicKey, ByteString privateKey) {
-      this.publicKey = publicKey;
-      this.privateKey = privateKey;
-    }
-
-    public ByteString getPublicKey() {
-      return publicKey;
-    }
-
-    public ByteString getPrivateKey() {
-      return privateKey;
-    }
-
-    /** Returns a new <publicKey, privateKey> KeyPair. */
-    public static KeyPair newKeyPair() throws GeneralSecurityException {
-      return newKeyPairFromSeed(Random.randBytes(Field25519.FIELD_LEN));
-    }
-
-    /** Returns a new <publicKey, privateKey> KeyPair generated from a seed. */
-    public static KeyPair newKeyPairFromSeed(ByteString secretSeed) throws GeneralSecurityException {
-      if (secretSeed.size() != Field25519.FIELD_LEN) {
-        throw new IllegalArgumentException(
-            String.format("Given secret seed length is not %s", Field25519.FIELD_LEN));
+  /** Defines the KeyPair consisting of a private key and its corresponding public key.  */
+  class KeyPair private constructor(
+    val publicKey: ByteString,
+    val privateKey: ByteString,
+  ) {
+    companion object {
+      /** Returns a new `<publicKey / privateKey>` KeyPair.  */
+      @Throws(GeneralSecurityException::class)
+      fun newKeyPair(): KeyPair {
+        return newKeyPairFromSeed(randBytes(Field25519.FIELD_LEN))
       }
-      ByteString privateKey = secretSeed;
-      ByteString publicKey = Ed25519.scalarMultWithBaseToBytes(Ed25519.getHashedScalar(privateKey));
-      return new KeyPair(publicKey, privateKey);
+
+      /** Returns a new `<publicKey / privateKey>` KeyPair generated from a seed. */
+      @Throws(GeneralSecurityException::class)
+      fun newKeyPairFromSeed(secretSeed: ByteString): KeyPair {
+        require(secretSeed.size == Field25519.FIELD_LEN) {
+          "Given secret seed length is not ${Field25519.FIELD_LEN}"
+        }
+        val publicKey = scalarMultWithBaseToBytes(getHashedScalar(secretSeed))
+        return KeyPair(publicKey, secretSeed)
+      }
     }
+  }
+
+  companion object {
+    const val SECRET_KEY_LEN = Field25519.FIELD_LEN
   }
 }

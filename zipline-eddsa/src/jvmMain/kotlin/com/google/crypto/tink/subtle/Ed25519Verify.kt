@@ -13,50 +13,50 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
+package com.google.crypto.tink.subtle
 
-package com.google.crypto.tink.subtle;
-
-import java.security.GeneralSecurityException;
-import okio.ByteString;
+import com.google.crypto.tink.subtle.Ed25519.verify
+import java.security.GeneralSecurityException
+import okio.ByteString
 
 /**
  * Ed25519 verifying.
  *
  * <h3>Usage</h3>
  *
- * <pre>{@code
- * // get the publicKey from the other party.
+ * <pre>`// get the publicKey from the other party.
  * Ed25519Verify verifier = new Ed25519Verify(publicKey);
  * try {
- *   verifier.verify(signature, message);
+ * verifier.verify(signature, message);
  * } catch (GeneralSecurityException e) {
- *   // all the rest of security exceptions.
+ * // all the rest of security exceptions.
  * }
- * }</pre>
+`</pre> *
  *
  * @since 1.1.0
  */
-public final class Ed25519Verify {
-  public static final int PUBLIC_KEY_LEN = Field25519.FIELD_LEN;
-  public static final int SIGNATURE_LEN = Field25519.FIELD_LEN * 2;
+class Ed25519Verify(publicKey: ByteString) {
+  private val publicKey: ByteString
 
-  private final ByteString publicKey;
-
-  public Ed25519Verify(final ByteString publicKey) {
-    if (publicKey.size() != PUBLIC_KEY_LEN) {
-      throw new IllegalArgumentException(
-          String.format("Given public key's length is not %s.", PUBLIC_KEY_LEN));
+  init {
+    require(publicKey.size == PUBLIC_KEY_LEN) {
+      "Given public key's length is not $PUBLIC_KEY_LEN."
     }
-    this.publicKey = publicKey;
+    this.publicKey = publicKey
   }
 
-  public void verify(ByteString signature, ByteString data) throws GeneralSecurityException {
-    if (signature.size() != SIGNATURE_LEN) {
-      throw new GeneralSecurityException(
-          String.format("The length of the signature is not %s.", SIGNATURE_LEN));
+  @Throws(GeneralSecurityException::class)
+  fun verify(signature: ByteString, data: ByteString) {
+    if (signature.size != SIGNATURE_LEN) {
+      throw GeneralSecurityException("The length of the signature is not $SIGNATURE_LEN.")
     }
-    if (!Ed25519.verify(data, signature, publicKey)) {
-      throw new GeneralSecurityException("Signature check failed.");
+    if (!verify(data, signature, publicKey)) {
+      throw GeneralSecurityException("Signature check failed.")
     }
+  }
+
+  companion object {
+    const val PUBLIC_KEY_LEN = Field25519.FIELD_LEN
+    const val SIGNATURE_LEN = Field25519.FIELD_LEN * 2
   }
 }

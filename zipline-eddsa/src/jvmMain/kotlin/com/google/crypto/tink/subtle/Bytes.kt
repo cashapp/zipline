@@ -13,56 +13,55 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
+package com.google.crypto.tink.subtle
 
-package com.google.crypto.tink.subtle;
-
-import java.security.GeneralSecurityException;
+import java.security.GeneralSecurityException
 
 /**
  * Helper methods that deal with byte arrays.
  *
  * @since 1.0.0
  */
-public final class Bytes {
+object Bytes {
   /**
    * Best effort fix-timing array comparison.
    *
    * @return true if two arrays are equal.
    */
-  public static boolean equal(final byte[] x, final byte[] y) {
-    if (x == null || y == null) {
-      return false;
+  @JvmStatic
+  fun equal(x: ByteArray, y: ByteArray): Boolean {
+    if (x.size != y.size) {
+      return false
     }
-    if (x.length != y.length) {
-      return false;
+    var res = 0
+    for (i in x.indices) {
+      res = res or (x[i].toInt() xor y[i].toInt())
     }
-    int res = 0;
-    for (int i = 0; i < x.length; i++) {
-      res |= x[i] ^ y[i];
-    }
-    return res == 0;
+    return res == 0
   }
 
   /**
-   * Returns the concatenation of the input arrays in a single array. For example, {@code concat(new
-   * byte[] {a, b}, new byte[] {}, new byte[] {c}} returns the array {@code {a, b, c}}.
+   * Returns the concatenation of the input arrays in a single array. For example, `concat(new
+   * byte[] {a, b}, new byte[] {}, new byte[] {c}` returns the array `{a, b, c}`.
    *
    * @return a single array containing all the values from the source arrays, in order
    */
-  public static byte[] concat(byte[]... chunks) throws GeneralSecurityException {
-    int length = 0;
-    for (byte[] chunk : chunks) {
-      if (length > Integer.MAX_VALUE - chunk.length) {
-        throw new GeneralSecurityException("exceeded size limit");
+  @JvmStatic
+  @Throws(GeneralSecurityException::class)
+  fun concat(vararg chunks: ByteArray): ByteArray {
+    var length = 0
+    for (chunk in chunks) {
+      if (length > Int.MAX_VALUE - chunk.size) {
+        throw GeneralSecurityException("exceeded size limit")
       }
-      length += chunk.length;
+      length += chunk.size
     }
-    byte[] res = new byte[length];
-    int pos = 0;
-    for (byte[] chunk : chunks) {
-      System.arraycopy(chunk, 0, res, pos, chunk.length);
-      pos += chunk.length;
+    val res = ByteArray(length)
+    var pos = 0
+    for (chunk in chunks) {
+      System.arraycopy(chunk, 0, res, pos, chunk.size)
+      pos += chunk.size
     }
-    return res;
+    return res
   }
 }
