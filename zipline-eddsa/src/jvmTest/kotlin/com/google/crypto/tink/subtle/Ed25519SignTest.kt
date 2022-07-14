@@ -13,145 +13,135 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
+package com.google.crypto.tink.subtle
 
-package com.google.crypto.tink.subtle;
-
-import java.security.GeneralSecurityException;
-import java.util.List;
-import java.util.TreeSet;
-import okio.ByteString;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import static com.google.crypto.tink.subtle.WycheproofKt.loadEddsaTestJson;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.fail;
+import java.security.GeneralSecurityException
+import java.util.TreeSet
+import okio.ByteString
+import okio.ByteString.Companion.decodeHex
+import okio.ByteString.Companion.toByteString
+import org.junit.Assert.assertArrayEquals
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Assert.fail
+import org.junit.Test
 
 /**
- * Unit tests for {@link Ed25519Sign}.
- *
+ * Tink's unit tests for [Ed25519Sign].
  */
-@RunWith(JUnit4.class)
-public final class Ed25519SignTest {
-
-  public String hexEncode(byte[] bytes) {
-    return ByteString.of(bytes).hex();
-  }
-
+class Ed25519SignTest {
   @Test
-  public void testSigningOneKeyWithMultipleMessages() throws Exception {
-    Ed25519Sign.KeyPair keyPair = Ed25519Sign.KeyPair.newKeyPair();
-    Ed25519Sign signer = new Ed25519Sign(keyPair.getPrivateKey());
-    Ed25519Verify verifier = new Ed25519Verify(keyPair.getPublicKey());
-    for (int i = 0; i < 100; i++) {
-      byte[] msg = Random.randBytes(20);
-      byte[] sig = signer.sign(msg);
+  fun testSigningOneKeyWithMultipleMessages() {
+    val keyPair = Ed25519Sign.KeyPair.newKeyPair()
+    val signer = Ed25519Sign(keyPair.privateKey)
+    val verifier = Ed25519Verify(keyPair.publicKey)
+    for (i in 0..99) {
+      val msg = Random.randBytes(20)
+      val sig = signer.sign(msg)
       try {
-        verifier.verify(sig, msg);
-      } catch (GeneralSecurityException ex) {
+        verifier.verify(sig, msg)
+      } catch (ex: GeneralSecurityException) {
         fail(
-            String.format(
-                "\n\nMessage: %s\nSignature: %s\nPrivateKey: %s\nPublicKey: %s\n",
-                hexEncode(msg),
-                hexEncode(sig),
-                hexEncode(keyPair.getPrivateKey()),
-                hexEncode(keyPair.getPublicKey())));
+          """
+          |Message: ${msg.toByteString().hex()}
+          |Signature: ${sig.toByteString().hex()}
+          |PrivateKey: ${keyPair.privateKey.toByteString().hex()}
+          |PublicKey: ${keyPair.publicKey.toByteString().hex()}
+          """.trimMargin(),
+        )
       }
     }
   }
 
   @Test
-  public void testSigningOneKeyWithTheSameMessage() throws Exception {
-    Ed25519Sign.KeyPair keyPair = Ed25519Sign.KeyPair.newKeyPair();
-    Ed25519Sign signer = new Ed25519Sign(keyPair.getPrivateKey());
-    Ed25519Verify verifier = new Ed25519Verify(keyPair.getPublicKey());
-    byte[] msg = Random.randBytes(20);
-    TreeSet<String> allSignatures = new TreeSet<String>();
-    for (int i = 0; i < 100; i++) {
-      byte[] sig = signer.sign(msg);
-      allSignatures.add(hexEncode(sig));
+  fun testSigningOneKeyWithTheSameMessage() {
+    val keyPair = Ed25519Sign.KeyPair.newKeyPair()
+    val signer = Ed25519Sign(keyPair.privateKey)
+    val verifier = Ed25519Verify(keyPair.publicKey)
+    val msg = Random.randBytes(20)
+    val allSignatures = TreeSet<String>()
+    for (i in 0..99) {
+      val sig = signer.sign(msg)
+      allSignatures.add(ByteString.of(*sig).hex())
       try {
-        verifier.verify(sig, msg);
-      } catch (GeneralSecurityException ex) {
+        verifier.verify(sig, msg)
+      } catch (ex: GeneralSecurityException) {
         fail(
-            String.format(
-                "\n\nMessage: %s\nSignature: %s\nPrivateKey: %s\nPublicKey: %s\n",
-                hexEncode(msg),
-                hexEncode(sig),
-                hexEncode(keyPair.getPrivateKey()),
-                hexEncode(keyPair.getPublicKey())));
+          """
+          |Message: ${msg.toByteString().hex()}
+          |Signature: ${sig.toByteString().hex()}
+          |PrivateKey: ${keyPair.privateKey.toByteString().hex()}
+          |PublicKey: ${keyPair.publicKey.toByteString().hex()}
+          """.trimMargin(),
+        )
       }
     }
     // Ed25519 is deterministic, expect a unique signature for the same message.
-    assertEquals(1, allSignatures.size());
+    assertEquals(1, allSignatures.size.toLong())
   }
 
   @Test
-  public void testSignWithPrivateKeyLengthDifferentFrom32Byte() throws Exception {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          Ed25519Sign unused = new Ed25519Sign(new byte[31]);
-        });
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          Ed25519Sign unused = new Ed25519Sign(new byte[33]);
-        });
+  fun testSignWithPrivateKeyLengthDifferentFrom32Byte() {
+    assertThrows(IllegalArgumentException::class.java) {
+      Ed25519Sign(ByteArray(31))
+    }
+    assertThrows(IllegalArgumentException::class.java) {
+      Ed25519Sign(ByteArray(33))
+    }
   }
 
   @Test
-  public void testSigningWithMultipleRandomKeysAndMessages() throws Exception {
-    for (int i = 0; i < 100; i++) {
-      Ed25519Sign.KeyPair keyPair = Ed25519Sign.KeyPair.newKeyPair();
-      Ed25519Sign signer = new Ed25519Sign(keyPair.getPrivateKey());
-      Ed25519Verify verifier = new Ed25519Verify(keyPair.getPublicKey());
-      byte[] msg = Random.randBytes(20);
-      byte[] sig = signer.sign(msg);
+  fun testSigningWithMultipleRandomKeysAndMessages() {
+    for (i in 0..99) {
+      val keyPair = Ed25519Sign.KeyPair.newKeyPair()
+      val signer = Ed25519Sign(keyPair.privateKey)
+      val verifier = Ed25519Verify(keyPair.publicKey)
+      val msg = Random.randBytes(20)
+      val sig = signer.sign(msg)
       try {
-        verifier.verify(sig, msg);
-      } catch (GeneralSecurityException ex) {
+        verifier.verify(sig, msg)
+      } catch (ex: GeneralSecurityException) {
         fail(
-            String.format(
-                "\n\nMessage: %s\nSignature: %s\nPrivateKey: %s\nPublicKey: %s\n",
-                hexEncode(msg),
-                hexEncode(sig),
-                hexEncode(keyPair.getPrivateKey()),
-                hexEncode(keyPair.getPublicKey())));
+          """
+          |Message: ${msg.toByteString().hex()}
+          |Signature: ${sig.toByteString().hex()}
+          |PrivateKey: ${keyPair.privateKey.toByteString().hex()}
+          |PublicKey: ${keyPair.publicKey.toByteString().hex()}
+          """.trimMargin(),
+        )
       }
     }
   }
 
   @Test
-  public void testSigningWithWycheproofVectors() throws Exception {
-    int errors = 0;
-    List<TestGroup> testGroups = loadEddsaTestJson().getTestGroups();
-    for (TestGroup group : testGroups) {
-      Key key = group.getKey();
-      byte[] privateKey = ByteString.decodeHex(key.getSk()).toByteArray();
-      List<TestCase> tests = group.getTests();
-      for (TestCase testcase : tests) {
-        String tcId = String.format("testcase %d (%s)", testcase.getTcId(), testcase.getComment());
-        byte[] msg = ByteString.decodeHex(testcase.getMsg()).toByteArray();
-        byte[] sig = ByteString.decodeHex(testcase.getSig()).toByteArray();
-        String result = testcase.getResult();
-        if (result.equals("invalid")) {
-          continue;
+  fun testSigningWithWycheproofVectors() {
+    val errors = 0
+    val testGroups = loadEddsaTestJson().testGroups
+    for (group in testGroups) {
+      val key = group.key
+      val privateKey = key.sk.decodeHex().toByteArray()
+      val tests = group.tests
+      for (testcase in tests) {
+        val tcId = "testcase ${testcase.tcId} (${testcase.comment})"
+        val msg = testcase.msg.decodeHex().toByteArray()
+        val sig = testcase.sig.decodeHex().toByteArray()
+        val result = testcase.result
+        if (result == "invalid") {
+          continue
         }
-        Ed25519Sign signer = new Ed25519Sign(privateKey);
-        byte[] computedSig = signer.sign(msg);
-        assertArrayEquals(tcId, sig, computedSig);
+        val signer = Ed25519Sign(privateKey)
+        val computedSig = signer.sign(msg)
+        assertArrayEquals(tcId, sig, computedSig)
       }
     }
-    assertEquals(0, errors);
+    assertEquals(0, errors.toLong())
   }
 
   @Test
-  public void testKeyPairFromSeedTooShort() throws Exception {
-    byte[] keyMaterial = Random.randBytes(10);
-    assertThrows(
-        IllegalArgumentException.class, () -> Ed25519Sign.KeyPair.newKeyPairFromSeed(keyMaterial));
+  fun testKeyPairFromSeedTooShort() {
+    val keyMaterial = Random.randBytes(10)
+    assertThrows(IllegalArgumentException::class.java) {
+      Ed25519Sign.KeyPair.newKeyPairFromSeed(keyMaterial)
+    }
   }
 }

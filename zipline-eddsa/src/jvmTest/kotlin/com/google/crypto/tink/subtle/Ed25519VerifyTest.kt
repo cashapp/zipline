@@ -13,67 +13,56 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
+package com.google.crypto.tink.subtle
 
-package com.google.crypto.tink.subtle;
-
-import java.security.GeneralSecurityException;
-import java.util.List;
-import okio.ByteString;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.junit.runners.JUnit4;
-import static com.google.crypto.tink.subtle.WycheproofKt.loadEddsaTestJson;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
+import java.security.GeneralSecurityException
+import okio.ByteString.Companion.decodeHex
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertThrows
+import org.junit.Test
 
 /**
- * Unit tests for {@link Ed25519Verify}.
- *
+ * Tink's unit tests for [Ed25519Verify].
  */
-@RunWith(JUnit4.class)
-public final class Ed25519VerifyTest {
+class Ed25519VerifyTest {
   @Test
-  public void testVerificationWithPublicKeyLengthDifferentFrom32Byte() throws Exception {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          Ed25519Verify unused = new Ed25519Verify(new byte[31]);
-        });
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> {
-          Ed25519Verify unused = new Ed25519Verify(new byte[33]);
-        });
+  fun testVerificationWithPublicKeyLengthDifferentFrom32Byte() {
+    assertThrows(IllegalArgumentException::class.java) {
+      Ed25519Verify(ByteArray(31))
+    }
+    assertThrows(IllegalArgumentException::class.java) {
+      Ed25519Verify(ByteArray(33))
+    }
   }
 
   @Test
-  public void testVerificationWithWycheproofVectors() throws Exception {
-    int errors = 0;
-    List<TestGroup> testGroups = loadEddsaTestJson().getTestGroups();
-    for (TestGroup group : testGroups) {
-      Key key = group.getKey();
-      byte[] publicKey = ByteString.decodeHex(key.getPk()).toByteArray();
-      List<TestCase> tests = group.getTests();
-      for (TestCase testcase : tests) {
-        String tcId = String.format("testcase %d (%s)", testcase.getTcId(), testcase.getComment());
-        byte[] msg = ByteString.decodeHex(testcase.getMsg()).toByteArray();
-        byte[] sig = ByteString.decodeHex(testcase.getSig()).toByteArray();
-        String result = testcase.getResult();
-        Ed25519Verify verifier = new Ed25519Verify(publicKey);
+  fun testVerificationWithWycheproofVectors() {
+    var errors = 0
+    val testGroups = loadEddsaTestJson().testGroups
+    for (group in testGroups) {
+      val key = group.key
+      val publicKey = key.pk.decodeHex().toByteArray()
+      val tests = group.tests
+      for (testcase in tests) {
+        val tcId = "testcase ${testcase.tcId} (${testcase.comment})"
+        val msg = testcase.msg.decodeHex().toByteArray()
+        val sig = testcase.sig.decodeHex().toByteArray()
+        val result = testcase.result
+        val verifier = Ed25519Verify(publicKey)
         try {
-          verifier.verify(sig, msg);
-          if (result.equals("invalid")) {
-            System.out.printf("FAIL %s: accepting invalid signature%n", tcId);
-            errors++;
+          verifier.verify(sig, msg)
+          if (result == "invalid") {
+            println("FAIL ${tcId}: accepting invalid signature")
+            errors++
           }
-        } catch (GeneralSecurityException ex) {
-          if (result.equals("valid")) {
-            System.out.printf("FAIL %s: rejecting valid signature, exception: %s%n", tcId, ex);
-            errors++;
+        } catch (ex: GeneralSecurityException) {
+          if (result == "valid") {
+            println("FAIL ${tcId}: rejecting valid signature, exception: $ex")
+            errors++
           }
         }
       }
     }
-    assertEquals(0, errors);
+    assertEquals(0, errors.toLong())
   }
 }
