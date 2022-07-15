@@ -13,10 +13,9 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-package com.google.crypto.tink.subtle
+package app.cash.zipline.loader.internal.tink.subtle
 
-import com.google.crypto.tink.subtle.Ed25519.verify
-import java.security.GeneralSecurityException
+import app.cash.zipline.loader.internal.tink.subtle.Ed25519.verify
 import okio.ByteString
 
 /**
@@ -27,33 +26,27 @@ import okio.ByteString
  * ```
  * // get the publicKey from the other party.
  * val verifier = new Ed25519Verify(publicKey)
- * try {
- *   verifier.verify(signature, message);
- * } catch (e: GeneralSecurityException) {
- *   // all the rest of security exceptions.
+ * if (!verifier.verify(signature, message)) {
+ *   // Signature didn't verify.
  * }
  * ```
  *
  * @since 1.1.0
  */
-class Ed25519Verify(publicKey: ByteString) {
-  private val publicKey: ByteString
-
+internal class Ed25519Verify(
+  private val publicKey: ByteString,
+) {
   init {
     require(publicKey.size == PUBLIC_KEY_LEN) {
       "Given public key's length is not $PUBLIC_KEY_LEN."
     }
-    this.publicKey = publicKey
   }
 
-  @Throws(GeneralSecurityException::class)
-  fun verify(signature: ByteString, data: ByteString) {
+  fun verify(signature: ByteString, data: ByteString): Boolean {
     if (signature.size != SIGNATURE_LEN) {
-      throw GeneralSecurityException("The length of the signature is not $SIGNATURE_LEN.")
+      return false
     }
-    if (!verify(data, signature, publicKey)) {
-      throw GeneralSecurityException("Signature check failed.")
-    }
+    return verify(data, signature, publicKey)
   }
 
   companion object {

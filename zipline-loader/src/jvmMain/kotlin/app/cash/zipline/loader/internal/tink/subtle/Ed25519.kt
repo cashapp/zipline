@@ -13,14 +13,10 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-package com.google.crypto.tink.subtle
+package app.cash.zipline.loader.internal.tink.subtle
 
-import com.google.crypto.tink.subtle.Bytes.concat
-import com.google.crypto.tink.subtle.Bytes.equal
-import com.google.crypto.tink.subtle.Curve25519.copyConditional
-import java.security.GeneralSecurityException
-import java.security.MessageDigest
-import java.util.Arrays
+import app.cash.zipline.loader.internal.tink.subtle.Curve25519.copyConditional
+import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 
@@ -37,10 +33,9 @@ import okio.ByteString.Companion.toByteString
  *     Curves](https://eprint.iacr.org/2008/013.pdf)
  * @see [Hisil H., Wong K.KH., Carter G., Dawson E. (2008) Twisted Edwards Curves
  *     Revisited](https://eprint.iacr.org/2008/522.pdf)
- *
  */
 internal object Ed25519 {
-  const val SIGNATURE_LEN = Field25519.FIELD_LEN * 2
+  private const val SIGNATURE_LEN = Field25519.FIELD_LEN * 2
 
   // (x = 0, y = 1) point
   private val CACHED_NEUTRAL = CachedXYT(
@@ -55,6 +50,19 @@ internal object Ed25519 {
       longArrayOf(1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
     ),
     longArrayOf(1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
+  )
+
+  // The order of the generator as unsigned bytes in little endian order.
+  // (2^252 + 0x14def9dea2f79cd65812631a5cf5d3ed, cf. RFC 7748)
+  private val GROUP_ORDER = byteArrayOf(
+    0xed.toByte(), 0xd3.toByte(), 0xf5.toByte(), 0x5c.toByte(),
+    0x1a.toByte(), 0x63.toByte(), 0x12.toByte(), 0x58.toByte(),
+    0xd6.toByte(), 0x9c.toByte(), 0xf7.toByte(), 0xa2.toByte(),
+    0xde.toByte(), 0xf9.toByte(), 0xde.toByte(), 0x14.toByte(),
+    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
+    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x10.toByte()
   )
 
   /**
@@ -86,9 +94,9 @@ internal object Ed25519 {
     }
 
     constructor(xyz: XYZ) {
-      x = Arrays.copyOf(xyz.x, Field25519.LIMB_CNT)
-      y = Arrays.copyOf(xyz.y, Field25519.LIMB_CNT)
-      z = Arrays.copyOf(xyz.z, Field25519.LIMB_CNT)
+      x = xyz.x.copyOf(Field25519.LIMB_CNT)
+      y = xyz.y.copyOf(Field25519.LIMB_CNT)
+      z = xyz.z.copyOf(Field25519.LIMB_CNT)
     }
 
     constructor(partialXYZT: PartialXYZT) : this() {
@@ -136,10 +144,26 @@ internal object Ed25519 {
       // reduce it here.
       Field25519.reduce(rhs, rhs)
       // z^2 (y^2 - x^2) == z^4 + D * x^2 * y^2
-      return equal(Field25519.contract(lhs), Field25519.contract(rhs))
+      return fixedTimingEqual(Field25519.contract(lhs), Field25519.contract(rhs))
     }
 
     companion object {
+      /**
+       * Best effort fix-timing array comparison.
+       *
+       * @return true if two arrays are equal.
+       */
+      fun fixedTimingEqual(x: ByteArray, y: ByteArray): Boolean {
+        if (x.size != y.size) {
+          return false
+        }
+        var res = 0
+        for (i in x.indices) {
+          res = res or (x[i].toInt() xor y[i].toInt())
+        }
+        return res == 0
+      }
+
       /**
        * ge_p1p1_to_p2.c
        */
@@ -188,7 +212,6 @@ internal object Ed25519 {
        * Decodes `s` into an extented projective point.
        * See Section 5.1.3 Decoding in https://tools.ietf.org/html/rfc8032#section-5.1.3
        */
-      @Throws(GeneralSecurityException::class)
       fun fromBytesNegateVarTime(s: ByteArray): XYZT {
         val x = LongArray(Field25519.LIMB_CNT)
         val y = Field25519.expand(s)
@@ -220,20 +243,16 @@ internal object Ed25519 {
         Field25519.sub(check, vxx, u) // vx^2-u
         if (isNonZeroVarTime(check)) {
           Field25519.sum(check, vxx, u) // vx^2+u
-          if (isNonZeroVarTime(check)) {
-            throw GeneralSecurityException(
-              "Cannot convert given bytes to extended projective "
-                + "coordinates. No square root exists for modulo 2^255-19"
-            )
+          check(!isNonZeroVarTime(check)) {
+            "Cannot convert given bytes to extended projective " +
+              "coordinates. No square root exists for modulo 2^255-19"
           }
           Field25519.mult(x, x, Ed25519Constants.SQRTM1)
         }
 
-        if (!isNonZeroVarTime(x) && s[31].toInt() and 0xff shr 7 != 0) {
-          throw GeneralSecurityException(
-            "Cannot convert given bytes to extended projective "
-              + "coordinates. Computed x is zero and encoded x's least significant bit is not zero"
-          )
+        check(isNonZeroVarTime(x) || s[31].toInt() and 0xff shr 7 == 0) {
+          "Cannot convert given bytes to extended projective " +
+            "coordinates. Computed x is zero and encoded x's least significant bit is not zero"
         }
         if (getLsb(x) == s[31].toInt() and 0xff shr 7) {
           neg(x, x)
@@ -278,7 +297,7 @@ internal object Ed25519 {
 
     constructor(other: PartialXYZT) {
       xyz = XYZ(other.xyz)
-      t = Arrays.copyOf(other.t, Field25519.LIMB_CNT)
+      t = other.t.copyOf(Field25519.LIMB_CNT)
     }
   }
 
@@ -306,14 +325,14 @@ internal object Ed25519 {
     }
 
     constructor(other: CachedXYT) {
-      yPlusX = Arrays.copyOf(other.yPlusX, Field25519.LIMB_CNT)
-      yMinusX = Arrays.copyOf(other.yMinusX, Field25519.LIMB_CNT)
-      t2d = Arrays.copyOf(other.t2d, Field25519.LIMB_CNT)
+      yPlusX = other.yPlusX.copyOf(Field25519.LIMB_CNT)
+      yMinusX = other.yMinusX.copyOf(Field25519.LIMB_CNT)
+      t2d = other.t2d.copyOf(Field25519.LIMB_CNT)
     }
 
     // z is one implicitly, so this just copies {@code in} to {@code output}.
     open fun multByZ(output: LongArray, inLongArray: LongArray) {
-      System.arraycopy(inLongArray, 0, output, 0, Field25519.LIMB_CNT)
+      inLongArray.copyInto(output, endIndex = Field25519.LIMB_CNT)
     }
 
     /**
@@ -348,7 +367,7 @@ internal object Ed25519 {
     constructor(xyzt: XYZT) : this() {
       Field25519.sum(yPlusX, xyzt.xyz.y, xyzt.xyz.x)
       Field25519.sub(yMinusX, xyzt.xyz.y, xyzt.xyz.x)
-      System.arraycopy(xyzt.xyz.z, 0, z, 0, Field25519.LIMB_CNT)
+      xyzt.xyz.z.copyInto(z, endIndex = Field25519.LIMB_CNT)
       Field25519.mult(t2d, xyzt.t, Ed25519Constants.D2)
     }
 
@@ -527,14 +546,14 @@ internal object Ed25519 {
    * This is a constant time operation where point b*B*256^pos is stored in [t].
    * When b is 0, t remains the same (i.e., neutral point).
    *
-   * Although B_TABLE[32][8] (B_TABLE[i][j] = (j+1)*B*256^i) has j values in [0, 7], the select
+   * Although `B_TABLE[32][8] (B_TABLE[i][j] = (j+1)*B*256^i)` has j values in `[0, 7]`, the select
    * method negates the corresponding point if b is negative (which is straight forward in elliptic
-   * curves by just negating y coordinate). Therefore we can get multiples of B with the half of
+   * curves by just negating y coordinate). Therefore, we can get multiples of B with the half of
    * memory requirements.
    *
    * @param t neutral element (i.e., point 0), also serves as output.
-   * @param pos in B[pos][j] = (j+1)*B*256^pos
-   * @param b value in [-8, 8] range.
+   * @param pos in `B[pos][j] = (j+1)*B*256^pos`
+   * @param b value in `[-8, 8]` range.
    */
   private fun select(t: CachedXYT, pos: Int, b: Byte) {
     val bnegative = b.toInt() and 0xff shr 7
@@ -547,9 +566,9 @@ internal object Ed25519 {
     t.copyConditional(Ed25519Constants.B_TABLE[pos][5], eq(babs, 6))
     t.copyConditional(Ed25519Constants.B_TABLE[pos][6], eq(babs, 7))
     t.copyConditional(Ed25519Constants.B_TABLE[pos][7], eq(babs, 8))
-    val yPlusX = Arrays.copyOf(t.yMinusX, Field25519.LIMB_CNT)
-    val yMinusX = Arrays.copyOf(t.yPlusX, Field25519.LIMB_CNT)
-    val t2d = Arrays.copyOf(t.t2d, Field25519.LIMB_CNT)
+    val yPlusX = t.yMinusX.copyOf(Field25519.LIMB_CNT)
+    val yMinusX = t.yPlusX.copyOf(Field25519.LIMB_CNT)
+    val t2d = t.t2d.copyOf(Field25519.LIMB_CNT)
     neg(t2d, t2d)
     val minust = CachedXYT(yPlusX, yMinusX, t2d)
     t.copyConditional(minust, bnegative)
@@ -633,9 +652,8 @@ internal object Ed25519 {
    * Preconditions:
    * `a[31] <= 127`
    */
-  @JvmStatic
   fun scalarMultWithBaseToBytes(a: ByteString): ByteString {
-    return ByteString.of(*scalarMultWithBase(a.toByteArray()).toBytes())
+    return scalarMultWithBase(a.toByteArray()).toBytes().toByteString()
   }
 
   private fun slide(a: ByteArray): ByteArray {
@@ -727,13 +745,13 @@ internal object Ed25519 {
   }
 
   /**
-   * Returns true if [inLongArray] is nonzero.
+   * Returns true if [in1] is nonzero.
    *
-   * Note that execution time might depend on the input [inLongArray].
+   * Note that execution time might depend on the input [in1].
    */
-  private fun isNonZeroVarTime(inLongArray: LongArray): Boolean {
-    val inCopy = LongArray(inLongArray.size + 1)
-    System.arraycopy(inLongArray, 0, inCopy, 0, inLongArray.size)
+  private fun isNonZeroVarTime(in1: LongArray): Boolean {
+    val inCopy = LongArray(in1.size + 1)
+    in1.copyInto(inCopy, endIndex = in1.size)
     Field25519.reduceCoefficients(inCopy)
     val bytes = Field25519.contract(inCopy)
     for (b in bytes) {
@@ -752,11 +770,11 @@ internal object Ed25519 {
   }
 
   /**
-   * Negates all values in [in] and store it in [out].
+   * Negates all values in [in1] and store it in [out].
    */
-  private fun neg(out: LongArray, inLongArray: LongArray) {
-    for (i in inLongArray.indices) {
-      out[i] = -inLongArray[i]
+  private fun neg(out: LongArray, in1: LongArray) {
+    for (i in in1.indices) {
+      out[i] = -in1[i]
     }
   }
 
@@ -923,23 +941,6 @@ internal object Ed25519 {
     val s21 = 2097151L and (load3(s, 55) shr 1)
     val s22 = 2097151L and (load4(s, 57) shr 6)
     val s23 = load4(s, 60) shr 3
-    var carry0: Long
-    var carry1: Long
-    var carry2: Long
-    var carry3: Long
-    var carry4: Long
-    var carry5: Long
-    var carry6: Long
-    var carry7: Long
-    var carry8: Long
-    var carry9: Long
-    var carry10: Long
-    var carry11: Long
-    val carry12: Long
-    val carry13: Long
-    val carry14: Long
-    val carry15: Long
-    val carry16: Long
 
     // s23*2^462 = s23*2^210*2^252 is equivalent to s23*2^210*m in mod l
     // As m is a 125 bit number, the result needs to scattered to 6 limbs (125/21 ceil is 6)
@@ -994,18 +995,18 @@ internal object Ed25519 {
     // s18 = 0;
 
     // Reduce the bit length of limbs from s6 to s15 to 21-bits.
-    carry6 = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry8 = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry10 = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
-    carry12 = s12 + (1 shl 20) shr 21; s13 += carry12; s12 -= carry12 shl 21
-    carry14 = s14 + (1 shl 20) shr 21; s15 += carry14; s14 -= carry14 shl 21
-    carry16 = s16 + (1 shl 20) shr 21; s17 += carry16; s16 -= carry16 shl 21
+    var carry6: Long = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
+    var carry8: Long = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
+    var carry10: Long = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
+    val carry12: Long = s12 + (1 shl 20) shr 21; s13 += carry12; s12 -= carry12 shl 21
+    val carry14: Long = s14 + (1 shl 20) shr 21; s15 += carry14; s14 -= carry14 shl 21
+    val carry16: Long = s16 + (1 shl 20) shr 21; s17 += carry16; s16 -= carry16 shl 21
 
-    carry7 = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry9 = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry11 = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
-    carry13 = s13 + (1 shl 20) shr 21; s14 += carry13; s13 -= carry13 shl 21
-    carry15 = s15 + (1 shl 20) shr 21; s16 += carry15; s15 -= carry15 shl 21
+    var carry7: Long = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
+    var carry9: Long = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
+    var carry11: Long = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
+    val carry13: Long = s13 + (1 shl 20) shr 21; s14 += carry13; s13 -= carry13 shl 21
+    val carry15: Long = s15 + (1 shl 20) shr 21; s16 += carry15; s15 -= carry15 shl 21
 
     // Resume reduction where we left off.
     s5 += s17 * 666643
@@ -1057,16 +1058,16 @@ internal object Ed25519 {
     s12 = 0
 
     // Reduce the range of limbs from s0 to s11 to 21-bits.
-    carry0 = s0 + (1 shl 20) shr 21; s1 += carry0; s0 -= carry0 shl 21
-    carry2 = s2 + (1 shl 20) shr 21; s3 += carry2; s2 -= carry2 shl 21
-    carry4 = s4 + (1 shl 20) shr 21; s5 += carry4; s4 -= carry4 shl 21
+    var carry0: Long = s0 + (1 shl 20) shr 21; s1 += carry0; s0 -= carry0 shl 21
+    var carry2: Long = s2 + (1 shl 20) shr 21; s3 += carry2; s2 -= carry2 shl 21
+    var carry4: Long = s4 + (1 shl 20) shr 21; s5 += carry4; s4 -= carry4 shl 21
     carry6 = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
     carry8 = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
     carry10 = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
 
-    carry1 = s1 + (1 shl 20) shr 21; s2 += carry1; s1 -= carry1 shl 21
-    carry3 = s3 + (1 shl 20) shr 21; s4 += carry3; s3 -= carry3 shl 21
-    carry5 = s5 + (1 shl 20) shr 21; s6 += carry5; s5 -= carry5 shl 21
+    var carry1: Long = s1 + (1 shl 20) shr 21; s2 += carry1; s1 -= carry1 shl 21
+    var carry3: Long = s3 + (1 shl 20) shr 21; s4 += carry3; s3 -= carry3 shl 21
+    var carry5: Long = s5 + (1 shl 20) shr 21; s6 += carry5; s5 -= carry5 shl 21
     carry7 = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
     carry9 = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
     carry11 = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
@@ -1203,110 +1204,56 @@ internal object Ed25519 {
     val c9 = 2097151L and (load4(c, 23) shr 5)
     val c10 = 2097151L and (load3(c, 26) shr 2)
     val c11 = load4(c, 28) shr 7
-    var s0: Long
-    var s1: Long
-    var s2: Long
-    var s3: Long
-    var s4: Long
-    var s5: Long
-    var s6: Long
-    var s7: Long
-    var s8: Long
-    var s9: Long
-    var s10: Long
-    var s11: Long
-    var s12: Long
-    var s13: Long
-    var s14: Long
-    var s15: Long
-    var s16: Long
-    var s17: Long
-    var s18: Long
-    var s19: Long
-    var s20: Long
-    var s21: Long
-    var s22: Long
-    var s23: Long
-    var carry0: Long
-    var carry1: Long
-    var carry2: Long
-    var carry3: Long
-    var carry4: Long
-    var carry5: Long
-    var carry6: Long
-    var carry7: Long
-    var carry8: Long
-    var carry9: Long
-    var carry10: Long
-    var carry11: Long
-    var carry12: Long
-    var carry13: Long
-    var carry14: Long
-    var carry15: Long
-    var carry16: Long
-    val carry17: Long
-    val carry18: Long
-    val carry19: Long
-    val carry20: Long
-    val carry21: Long
-    val carry22: Long
 
-    s0 = c0 + a0 * b0
-    s1 = c1 + a0 * b1 + a1 * b0
-    s2 = c2 + a0 * b2 + a1 * b1 + a2 * b0
-    s3 = c3 + a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0
-    s4 = c4 + a0 * b4 + a1 * b3 + a2 * b2 + a3 * b1 + a4 * b0
-    s5 = c5 + a0 * b5 + a1 * b4 + a2 * b3 + a3 * b2 + a4 * b1 + a5 * b0
-    s6 = c6 + a0 * b6 + a1 * b5 + a2 * b4 + a3 * b3 + a4 * b2 + a5 * b1 + a6 * b0
-    s7 = c7 + a0 * b7 + a1 * b6 + a2 * b5 + a3 * b4 + a4 * b3 + a5 * b2 + a6 * b1 + a7 * b0
-    s8 =
-      c8 + a0 * b8 + a1 * b7 + a2 * b6 + a3 * b5 + a4 * b4 + a5 * b3 + a6 * b2 + a7 * b1 + a8 * b0
-    s9 =
-      c9 + a0 * b9 + a1 * b8 + a2 * b7 + a3 * b6 + a4 * b5 + a5 * b4 + a6 * b3 + a7 * b2 + a8 * b1 + a9 * b0
-    s10 =
-      c10 + a0 * b10 + a1 * b9 + a2 * b8 + a3 * b7 + a4 * b6 + a5 * b5 + a6 * b4 + a7 * b3 + a8 * b2 + a9 * b1 + a10 * b0
-    s11 =
-      c11 + a0 * b11 + a1 * b10 + a2 * b9 + a3 * b8 + a4 * b7 + a5 * b6 + a6 * b5 + a7 * b4 + a8 * b3 + a9 * b2 + a10 * b1 + a11 * b0
-    s12 =
-      a1 * b11 + a2 * b10 + a3 * b9 + a4 * b8 + a5 * b7 + a6 * b6 + a7 * b5 + a8 * b4 + a9 * b3 + a10 * b2 + a11 * b1
-    s13 =
-      a2 * b11 + a3 * b10 + a4 * b9 + a5 * b8 + a6 * b7 + a7 * b6 + a8 * b5 + a9 * b4 + a10 * b3 + a11 * b2
-    s14 =
-      a3 * b11 + a4 * b10 + a5 * b9 + a6 * b8 + a7 * b7 + a8 * b6 + a9 * b5 + a10 * b4 + a11 * b3
-    s15 = a4 * b11 + a5 * b10 + a6 * b9 + a7 * b8 + a8 * b7 + a9 * b6 + a10 * b5 + a11 * b4
-    s16 = a5 * b11 + a6 * b10 + a7 * b9 + a8 * b8 + a9 * b7 + a10 * b6 + a11 * b5
-    s17 = a6 * b11 + a7 * b10 + a8 * b9 + a9 * b8 + a10 * b7 + a11 * b6
-    s18 = a7 * b11 + a8 * b10 + a9 * b9 + a10 * b8 + a11 * b7
-    s19 = a8 * b11 + a9 * b10 + a10 * b9 + a11 * b8
-    s20 = a9 * b11 + a10 * b10 + a11 * b9
-    s21 = a10 * b11 + a11 * b10
-    s22 = a11 * b11
-    s23 = 0
+    var s0: Long = c0 + a0 * b0
+    var s1: Long = c1 + a0 * b1 + a1 * b0
+    var s2: Long = c2 + a0 * b2 + a1 * b1 + a2 * b0
+    var s3: Long = c3 + a0 * b3 + a1 * b2 + a2 * b1 + a3 * b0
+    var s4: Long = c4 + a0 * b4 + a1 * b3 + a2 * b2 + a3 * b1 + a4 * b0
+    var s5: Long = c5 + a0 * b5 + a1 * b4 + a2 * b3 + a3 * b2 + a4 * b1 + a5 * b0
+    var s6: Long = c6 + a0 * b6 + a1 * b5 + a2 * b4 + a3 * b3 + a4 * b2 + a5 * b1 + a6 * b0
+    var s7: Long = c7 + a0 * b7 + a1 * b6 + a2 * b5 + a3 * b4 + a4 * b3 + a5 * b2 + a6 * b1 + a7 * b0
+    var s8: Long = c8 + a0 * b8 + a1 * b7 + a2 * b6 + a3 * b5 + a4 * b4 + a5 * b3 + a6 * b2 + a7 * b1 + a8 * b0
+    var s9: Long = c9 + a0 * b9 + a1 * b8 + a2 * b7 + a3 * b6 + a4 * b5 + a5 * b4 + a6 * b3 + a7 * b2 + a8 * b1 + a9 * b0
+    var s10: Long = c10 + a0 * b10 + a1 * b9 + a2 * b8 + a3 * b7 + a4 * b6 + a5 * b5 + a6 * b4 + a7 * b3 + a8 * b2 + a9 * b1 + a10 * b0
+    var s11: Long = c11 + a0 * b11 + a1 * b10 + a2 * b9 + a3 * b8 + a4 * b7 + a5 * b6 + a6 * b5 + a7 * b4 + a8 * b3 + a9 * b2 + a10 * b1 + a11 * b0
+    var s12: Long = a1 * b11 + a2 * b10 + a3 * b9 + a4 * b8 + a5 * b7 + a6 * b6 + a7 * b5 + a8 * b4 + a9 * b3 + a10 * b2 + a11 * b1
+    var s13: Long = a2 * b11 + a3 * b10 + a4 * b9 + a5 * b8 + a6 * b7 + a7 * b6 + a8 * b5 + a9 * b4 + a10 * b3 + a11 * b2
+    var s14: Long = a3 * b11 + a4 * b10 + a5 * b9 + a6 * b8 + a7 * b7 + a8 * b6 + a9 * b5 + a10 * b4 + a11 * b3
+    var s15: Long = a4 * b11 + a5 * b10 + a6 * b9 + a7 * b8 + a8 * b7 + a9 * b6 + a10 * b5 + a11 * b4
+    var s16: Long = a5 * b11 + a6 * b10 + a7 * b9 + a8 * b8 + a9 * b7 + a10 * b6 + a11 * b5
+    var s17: Long = a6 * b11 + a7 * b10 + a8 * b9 + a9 * b8 + a10 * b7 + a11 * b6
+    var s18: Long = a7 * b11 + a8 * b10 + a9 * b9 + a10 * b8 + a11 * b7
+    var s19: Long = a8 * b11 + a9 * b10 + a10 * b9 + a11 * b8
+    var s20: Long = a9 * b11 + a10 * b10 + a11 * b9
+    var s21: Long = a10 * b11 + a11 * b10
+    var s22: Long = a11 * b11
+    var s23: Long = 0
 
-    carry0 = s0 + (1 shl 20) shr 21; s1 += carry0; s0 -= carry0 shl 21
-    carry2 = s2 + (1 shl 20) shr 21; s3 += carry2; s2 -= carry2 shl 21
-    carry4 = s4 + (1 shl 20) shr 21; s5 += carry4; s4 -= carry4 shl 21
-    carry6 = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry8 = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry10 = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
-    carry12 = s12 + (1 shl 20) shr 21; s13 += carry12; s12 -= carry12 shl 21
-    carry14 = s14 + (1 shl 20) shr 21; s15 += carry14; s14 -= carry14 shl 21
-    carry16 = s16 + (1 shl 20) shr 21; s17 += carry16; s16 -= carry16 shl 21
-    carry18 = s18 + (1 shl 20) shr 21; s19 += carry18; s18 -= carry18 shl 21
-    carry20 = s20 + (1 shl 20) shr 21; s21 += carry20; s20 -= carry20 shl 21
-    carry22 = s22 + (1 shl 20) shr 21; s23 += carry22; s22 -= carry22 shl 21
+    var carry0: Long = s0 + (1 shl 20) shr 21; s1 += carry0; s0 -= carry0 shl 21
+    var carry2: Long = s2 + (1 shl 20) shr 21; s3 += carry2; s2 -= carry2 shl 21
+    var carry4: Long = s4 + (1 shl 20) shr 21; s5 += carry4; s4 -= carry4 shl 21
+    var carry6: Long = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
+    var carry8: Long = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
+    var carry10: Long = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
+    var carry12: Long = s12 + (1 shl 20) shr 21; s13 += carry12; s12 -= carry12 shl 21
+    var carry14: Long = s14 + (1 shl 20) shr 21; s15 += carry14; s14 -= carry14 shl 21
+    var carry16: Long = s16 + (1 shl 20) shr 21; s17 += carry16; s16 -= carry16 shl 21
+    val carry18: Long = s18 + (1 shl 20) shr 21; s19 += carry18; s18 -= carry18 shl 21
+    val carry20: Long = s20 + (1 shl 20) shr 21; s21 += carry20; s20 -= carry20 shl 21
+    val carry22: Long = s22 + (1 shl 20) shr 21; s23 += carry22; s22 -= carry22 shl 21
 
-    carry1 = s1 + (1 shl 20) shr 21; s2 += carry1; s1 -= carry1 shl 21
-    carry3 = s3 + (1 shl 20) shr 21; s4 += carry3; s3 -= carry3 shl 21
-    carry5 = s5 + (1 shl 20) shr 21; s6 += carry5; s5 -= carry5 shl 21
-    carry7 = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry9 = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry11 = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
-    carry13 = s13 + (1 shl 20) shr 21; s14 += carry13; s13 -= carry13 shl 21
-    carry15 = s15 + (1 shl 20) shr 21; s16 += carry15; s15 -= carry15 shl 21
-    carry17 = s17 + (1 shl 20) shr 21; s18 += carry17; s17 -= carry17 shl 21
-    carry19 = s19 + (1 shl 20) shr 21; s20 += carry19; s19 -= carry19 shl 21
-    carry21 = s21 + (1 shl 20) shr 21; s22 += carry21; s21 -= carry21 shl 21
+    var carry1: Long = s1 + (1 shl 20) shr 21; s2 += carry1; s1 -= carry1 shl 21
+    var carry3: Long = s3 + (1 shl 20) shr 21; s4 += carry3; s3 -= carry3 shl 21
+    var carry5: Long = s5 + (1 shl 20) shr 21; s6 += carry5; s5 -= carry5 shl 21
+    var carry7: Long = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
+    var carry9: Long = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
+    var carry11: Long = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
+    var carry13: Long = s13 + (1 shl 20) shr 21; s14 += carry13; s13 -= carry13 shl 21
+    var carry15: Long = s15 + (1 shl 20) shr 21; s16 += carry15; s15 -= carry15 shl 21
+    val carry17: Long = s17 + (1 shl 20) shr 21; s18 += carry17; s17 -= carry17 shl 21
+    val carry19: Long = s19 + (1 shl 20) shr 21; s20 += carry19; s19 -= carry19 shl 21
+    val carry21: Long = s21 + (1 shl 20) shr 21; s22 += carry21; s21 -= carry21 shl 21
 
     s11 += s23 * 666643
     s12 += s23 * 470296
@@ -1506,13 +1453,8 @@ internal object Ed25519 {
     s[31] = (s11 shr 17).toByte()
   }
 
-  @JvmStatic
-  @Throws(GeneralSecurityException::class)
   fun getHashedScalar(privateKey: ByteString): ByteString {
-    val privateKeyBytes = privateKey.toByteArray()
-    val digest = MessageDigest.getInstance("SHA-512")
-    digest.update(privateKeyBytes, 0, Field25519.FIELD_LEN)
-    val h = digest.digest()
+    val h = privateKey.sha512().toByteArray()
     // https://tools.ietf.org/html/rfc8032#section-5.1.2.
     // Clear the lowest three bits of the first octet.
     h[0] = (h[0].toInt() and 248).toByte()
@@ -1530,53 +1472,37 @@ internal object Ed25519 {
    * @param publicKey [Ed25519.scalarMultToBytes] of [hashedPrivateKey]
    * @param hashedPrivateKey [Ed25519.getHashedScalar] of the private key
    * @return signature for the [message].
-   * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
-   * `EngineFactory.MESSAGE_DIGEST`.
    */
-  @JvmStatic
-  @Throws(GeneralSecurityException::class)
   fun sign(message: ByteString, publicKey: ByteString, hashedPrivateKey: ByteString): ByteString {
-    val messageBytes = message.toByteArray()
     val hashedPrivateKeyBytes = hashedPrivateKey.toByteArray()
-    val publicKeyBytes = publicKey.toByteArray()
-    // Copying the message to make it thread-safe. Otherwise, if the caller modifies the message
-    // between the first and the second hash then it might leak the private key.
-    val messageCopy = Arrays.copyOfRange(messageBytes, 0, messageBytes.size)
-    val digest = MessageDigest.getInstance("SHA-512")
-    digest.update(hashedPrivateKeyBytes, Field25519.FIELD_LEN, Field25519.FIELD_LEN)
-    digest.update(messageCopy)
-    val r = digest.digest()
+    val digest = Buffer()
+    digest.write(hashedPrivateKey, Field25519.FIELD_LEN, Field25519.FIELD_LEN)
+    digest.write(message)
+    val r = digest.sha512().toByteArray()
     reduce(r)
 
-    val rB = Arrays.copyOfRange(scalarMultWithBase(r).toBytes(), 0, Field25519.FIELD_LEN)
-    digest.reset()
-    digest.update(rB)
-    digest.update(publicKeyBytes)
-    digest.update(messageCopy)
-    val hram = digest.digest()
+    val rB = scalarMultWithBase(r).toBytes().copyOfRange(0, Field25519.FIELD_LEN)
+    digest.clear()
+    digest.write(rB)
+    digest.write(publicKey)
+    digest.write(message)
+    val hram = digest.sha512().toByteArray()
     reduce(hram)
     val s = ByteArray(Field25519.FIELD_LEN)
     mulAdd(s, hram, hashedPrivateKeyBytes, r)
-    return ByteString.of(*concat(rB, s))
+
+    return Buffer()
+      .write(rB)
+      .write(s)
+      .readByteString()
   }
 
-  // The order of the generator as unsigned bytes in little endian order.
-  // (2^252 + 0x14def9dea2f79cd65812631a5cf5d3ed, cf. RFC 7748)
-  val GROUP_ORDER = byteArrayOf(
-    0xed.toByte(), 0xd3.toByte(), 0xf5.toByte(), 0x5c.toByte(),
-    0x1a.toByte(), 0x63.toByte(), 0x12.toByte(), 0x58.toByte(),
-    0xd6.toByte(), 0x9c.toByte(), 0xf7.toByte(), 0xa2.toByte(),
-    0xde.toByte(), 0xf9.toByte(), 0xde.toByte(), 0x14.toByte(),
-    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
-    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
-    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
-    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x10.toByte()
-  )
-
-  // Checks whether s represents an integer smaller than the order of the group.
-  // This is needed to ensure that EdDSA signatures are non-malleable, as failing to check
-  // the range of S allows to modify signatures (cf. RFC 8032, Section 5.2.7 and Section 8.4.)
-  // @param s an integer in little-endian order.
+  /**
+   * Checks whether s represents an integer smaller than the order of the group.
+   * This is needed to ensure that EdDSA signatures are non-malleable, as failing to check
+   * the range of S allows to modify signatures (cf. RFC 8032, Section 5.2.7 and Section 8.4.)
+   * @param s an integer in little-endian order.
+   */
   private fun isSmallerThanGroupOrder(s: ByteArray): Boolean {
     for (j in Field25519.FIELD_LEN - 1 downTo 0) {
       // compare unsigned bytes
@@ -1592,12 +1518,7 @@ internal object Ed25519 {
   /**
    * Returns true if the EdDSA [signature] with [message], can be verified with
    * [publicKey].
-   *
-   * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
-   * `EngineFactory.MESSAGE_DIGEST`.
    */
-  @JvmStatic
-  @Throws(GeneralSecurityException::class)
   fun verify(
     message: ByteString,
     signature: ByteString,
@@ -1605,19 +1526,18 @@ internal object Ed25519 {
   ): Boolean {
     val publicKeyBytes = publicKey.toByteArray()
     val signatureBytes = signature.toByteArray()
-    val messageBytes = message.toByteArray()
     if (signature.size != SIGNATURE_LEN) {
       return false
     }
-    val s = Arrays.copyOfRange(signatureBytes, Field25519.FIELD_LEN, SIGNATURE_LEN)
+    val s = signatureBytes.copyOfRange(Field25519.FIELD_LEN, SIGNATURE_LEN)
     if (!isSmallerThanGroupOrder(s)) {
       return false
     }
-    val digest = MessageDigest.getInstance("SHA-512")
-    digest.update(signatureBytes, 0, Field25519.FIELD_LEN)
-    digest.update(publicKeyBytes)
-    digest.update(messageBytes)
-    val h = digest.digest()
+    val digest = Buffer()
+    digest.write(signature, 0, Field25519.FIELD_LEN)
+    digest.write(publicKey)
+    digest.write(message)
+    val h = digest.sha512().toByteArray()
     reduce(h)
 
     val negPublicKey = XYZT.fromBytesNegateVarTime(publicKeyBytes)
