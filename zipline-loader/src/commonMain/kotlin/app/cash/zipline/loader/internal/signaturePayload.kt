@@ -20,8 +20,6 @@ import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
-import okio.ByteString
-import okio.ByteString.Companion.encodeUtf8
 
 /**
  * Signature Payload
@@ -137,15 +135,6 @@ internal fun signaturePayload(manifest: JsonElement): JsonElement {
   }
 
   return JsonObject(newContent)
-}
-
-/**
- * For better performance, we sign the SHA-256 hash of the signature payload, rather than the
- * signature payload itself.
- */
-internal fun signaturePayloadSha256(manifestJson: String): ByteString {
-  val signaturePayload = signaturePayload(manifestJson)
-  return signaturePayload.encodeUtf8().sha256()
 }
 
 internal fun signaturePayload(manifestJson: String): String {

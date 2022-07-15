@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.fetcher.FetchedManifest
 import app.cash.zipline.loader.fetcher.Fetcher
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -50,7 +51,7 @@ class FetcherTest {
       applicationName: String,
       id: String,
       url: String?,
-    ): ZiplineManifest? {
+    ): FetchedManifest? {
       error("unexpected call")
     }
 
@@ -78,7 +79,7 @@ class FetcherTest {
       applicationName: String,
       id: String,
       url: String?,
-    ): ZiplineManifest? {
+    ): FetchedManifest? {
       error("unexpected call")
     }
 

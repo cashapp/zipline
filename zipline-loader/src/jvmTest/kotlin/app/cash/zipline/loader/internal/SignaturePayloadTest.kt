@@ -54,8 +54,8 @@ class SignaturePayloadTest {
     )
 
     assertEquals(
-      signaturePayloadSha256(manifestA.toJson()),
-      signaturePayloadSha256(manifestB.toJson()),
+      signaturePayload(manifestA.toJson()),
+      signaturePayload(manifestB.toJson()),
     )
   }
 
@@ -85,8 +85,8 @@ class SignaturePayloadTest {
     )
 
     assertEquals(
-      signaturePayloadSha256(manifestA.toJson()),
-      signaturePayloadSha256(manifestB.toJson()),
+      signaturePayload(manifestA.toJson()),
+      signaturePayload(manifestB.toJson()),
     )
   }
 
@@ -116,8 +116,8 @@ class SignaturePayloadTest {
     )
 
     assertNotEquals(
-      signaturePayloadSha256(manifestA.toJson()),
-      signaturePayloadSha256(manifestB.toJson()),
+      signaturePayload(manifestA.toJson()),
+      signaturePayload(manifestB.toJson()),
     )
   }
 
@@ -147,8 +147,8 @@ class SignaturePayloadTest {
     )
 
     assertNotEquals(
-      signaturePayloadSha256(manifestA.toJson()),
-      signaturePayloadSha256(manifestB.toJson()),
+      signaturePayload(manifestA.toJson()),
+      signaturePayload(manifestB.toJson()),
     )
   }
 
@@ -178,8 +178,8 @@ class SignaturePayloadTest {
     )
 
     assertNotEquals(
-      signaturePayloadSha256(manifestA.toJson()),
-      signaturePayloadSha256(manifestB.toJson()),
+      signaturePayload(manifestA.toJson()),
+      signaturePayload(manifestB.toJson()),
     )
   }
 
@@ -202,8 +202,8 @@ class SignaturePayloadTest {
     )
 
     assertNotEquals(
-      signaturePayloadSha256(manifestA.toJson()),
-      signaturePayloadSha256(manifestB.toJson()),
+      signaturePayload(manifestA.toJson()),
+      signaturePayload(manifestB.toJson()),
     )
   }
 
@@ -226,8 +226,8 @@ class SignaturePayloadTest {
     )
 
     assertNotEquals(
-      signaturePayloadSha256(manifestA.toJson()),
-      signaturePayloadSha256(manifestB.toJson()),
+      signaturePayload(manifestA.toJson()),
+      signaturePayload(manifestB.toJson()),
     )
   }
 
@@ -300,29 +300,6 @@ class SignaturePayloadTest {
     assertEquals(
       """{"modules":{"./kotlin_kotlin.js":{"url":"","sha256":"6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"}},"signatures":{"sigA":""}}""",
       signaturePayload(manifestJson),
-    )
-  }
-
-  @Test
-  fun signaturePayloadSha256() {
-    val manifestJson = """
-      |{
-      |    "modules": {
-      |        "./kotlin_kotlin.js": {
-      |            "url": "kotlin_kotlin.zipline",
-      |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
-      |        }
-      |    },
-      |    "signatures": {
-      |        "sigA": "0f91508b8451a8ed4eedf723f22613fe"
-      |    }
-      |}
-      """.trimMargin()
-
-    // Golden value.
-    assertEquals(
-      "176d765609ce425181daf694209c25eb33c7c7a1f0551d121278008f48a02bd2".decodeHex(),
-      signaturePayloadSha256(manifestJson),
     )
   }
 

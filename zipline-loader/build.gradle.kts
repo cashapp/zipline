@@ -80,6 +80,7 @@ kotlin {
     val commonTest by getting {
       dependencies {
         implementation(kotlin("test"))
+        implementation(projects.ziplineLoaderTesting)
       }
     }
     val engineTest by creating {
