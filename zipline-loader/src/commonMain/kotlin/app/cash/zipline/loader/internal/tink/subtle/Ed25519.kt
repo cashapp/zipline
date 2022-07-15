@@ -351,7 +351,7 @@ internal object Ed25519 {
    * @param z Z
    * @param t2d 2d * (XY/Z)
    */
-  private class CachedXYZT constructor(
+  private class CachedXYZT(
     yPlusX: LongArray = LongArray(Field25519.LIMB_CNT),
     yMinusX: LongArray = LongArray(Field25519.LIMB_CNT),
     private val z: LongArray = LongArray(Field25519.LIMB_CNT),
