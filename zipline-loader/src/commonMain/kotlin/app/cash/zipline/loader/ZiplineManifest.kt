@@ -37,6 +37,12 @@ data class ZiplineManifest private constructor(
   val mainModuleId: String?,
   /** Fully qualified main function to start the application (ie. "zipline.main()"). */
   val mainFunction: String?,
+
+  /**
+   * A manifest may include many signatures, in order of preference. The keys of the map are the
+   * signing key names. The values of the map are hex-encoded signatures.
+   */
+  val signatures: Map<String, String>,
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
@@ -49,6 +55,7 @@ data class ZiplineManifest private constructor(
       modules: Map<String, ZiplineModule>,
       mainModuleId: String? = null,
       mainFunction: String? = null,
+      signatures: Map<String, String> = mapOf(),
     ): ZiplineManifest = ZiplineManifest(
       modules = modules.keys
         .toList()
@@ -62,6 +69,7 @@ data class ZiplineManifest private constructor(
         },
       mainModuleId = mainModuleId,
       mainFunction = mainFunction,
+      signatures = signatures,
     )
 
     fun ByteString.decodeToZiplineManifest(

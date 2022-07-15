@@ -163,7 +163,9 @@ class ZiplineManifestTest {
         |        }
         |    },
         |    "mainModuleId": "./app.js",
-        |    "mainFunction": "zipline.ziplineMain()"
+        |    "mainFunction": "zipline.ziplineMain()",
+        |    "signatures": {
+        |    }
         |}
       """.trimMargin(),
       serialized
