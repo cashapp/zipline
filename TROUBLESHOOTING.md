@@ -19,7 +19,7 @@ Caused by: java.lang.IllegalStateException: Unable to read /jni/aarch64/libquick
 
 For tests like `app.cash.zipline.ConsoleTest`, failures with the above stacktrace point to missing `.dylib` prebuilt C libraries necessary for using QuickJS from within Kotlin Multiplatform.
 
-To fix, download the latest published JVM JAR and extract the files in the `jni` directory into `/zipline/zipline/src/jvmMain/resources/jni` in your local Zipline repo on disk.
+To fix, download the latest published JVM JAR (name should be like `zipline-jvm-0.1.0-square.47.jar`) and extract the files in the `jni` directory into `/zipline/zipline/src/jvmMain/resources/jni` in your local Zipline repo on disk.
 
 ### Java Architecture Mismatch
 
