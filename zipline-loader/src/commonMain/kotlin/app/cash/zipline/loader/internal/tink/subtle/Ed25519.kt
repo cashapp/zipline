@@ -187,7 +187,7 @@ internal object Ed25519 {
    *
    * https://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html
    */
-  private class XYZT constructor(
+  private class XYZT(
     val xyz: XYZ = XYZ(),
     val t: LongArray = LongArray(Field25519.LIMB_CNT),
   ) {
