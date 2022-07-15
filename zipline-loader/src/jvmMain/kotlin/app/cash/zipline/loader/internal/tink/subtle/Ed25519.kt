@@ -243,20 +243,16 @@ internal object Ed25519 {
         Field25519.sub(check, vxx, u) // vx^2-u
         if (isNonZeroVarTime(check)) {
           Field25519.sum(check, vxx, u) // vx^2+u
-          if (isNonZeroVarTime(check)) {
-            throw IllegalStateException(
-              "Cannot convert given bytes to extended projective "
-                + "coordinates. No square root exists for modulo 2^255-19"
-            )
+          check(!isNonZeroVarTime(check)) {
+            "Cannot convert given bytes to extended projective " +
+              "coordinates. No square root exists for modulo 2^255-19"
           }
           Field25519.mult(x, x, Ed25519Constants.SQRTM1)
         }
 
-        if (!isNonZeroVarTime(x) && s[31].toInt() and 0xff shr 7 != 0) {
-          throw IllegalStateException(
-            "Cannot convert given bytes to extended projective "
-              + "coordinates. Computed x is zero and encoded x's least significant bit is not zero"
-          )
+        check(isNonZeroVarTime(x) || s[31].toInt() and 0xff shr 7 == 0) {
+          "Cannot convert given bytes to extended projective " +
+            "coordinates. Computed x is zero and encoded x's least significant bit is not zero"
         }
         if (getLsb(x) == s[31].toInt() and 0xff shr 7) {
           neg(x, x)
