@@ -82,7 +82,6 @@ internal object Ed25519 {
     val y: LongArray
     val z: LongArray
 
-    @JvmOverloads
     constructor(
       x: LongArray = LongArray(Field25519.LIMB_CNT),
       y: LongArray = LongArray(Field25519.LIMB_CNT),
@@ -188,7 +187,7 @@ internal object Ed25519 {
    *
    * https://hyperelliptic.org/EFD/g1p/auto-twisted-extended.html
    */
-  private class XYZT @JvmOverloads constructor(
+  private class XYZT constructor(
     val xyz: XYZ = XYZ(),
     val t: LongArray = LongArray(Field25519.LIMB_CNT),
   ) {
@@ -286,7 +285,6 @@ internal object Ed25519 {
     val xyz: XYZ
     val t: LongArray
 
-    @JvmOverloads
     constructor(
       xyz: XYZ = XYZ(),
       t: LongArray = LongArray(Field25519.LIMB_CNT),
@@ -345,7 +343,6 @@ internal object Ed25519 {
     }
   }
 
-
   /**
    * Creates a cached XYZT
    *
@@ -354,7 +351,7 @@ internal object Ed25519 {
    * @param z Z
    * @param t2d 2d * (XY/Z)
    */
-  private class CachedXYZT @JvmOverloads constructor(
+  private class CachedXYZT constructor(
     yPlusX: LongArray = LongArray(Field25519.LIMB_CNT),
     yMinusX: LongArray = LongArray(Field25519.LIMB_CNT),
     private val z: LongArray = LongArray(Field25519.LIMB_CNT),

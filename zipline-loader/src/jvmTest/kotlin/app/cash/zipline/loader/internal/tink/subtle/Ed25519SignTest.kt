@@ -29,7 +29,7 @@ import org.junit.Test
 class Ed25519SignTest {
   @Test
   fun testSigningOneKeyWithMultipleMessages() {
-    val keyPair = Ed25519Sign.KeyPair.newKeyPair()
+    val keyPair = KeyPair.newKeyPair()
     val signer = Ed25519Sign(keyPair.privateKey)
     val verifier = Ed25519Verify(keyPair.publicKey)
     for (i in 0..99) {
@@ -50,7 +50,7 @@ class Ed25519SignTest {
 
   @Test
   fun testSigningOneKeyWithTheSameMessage() {
-    val keyPair = Ed25519Sign.KeyPair.newKeyPair()
+    val keyPair = KeyPair.newKeyPair()
     val signer = Ed25519Sign(keyPair.privateKey)
     val verifier = Ed25519Verify(keyPair.publicKey)
     val msg = Random.randBytes(20)
@@ -86,7 +86,7 @@ class Ed25519SignTest {
   @Test
   fun testSigningWithMultipleRandomKeysAndMessages() {
     for (i in 0..99) {
-      val keyPair = Ed25519Sign.KeyPair.newKeyPair()
+      val keyPair = KeyPair.newKeyPair()
       val signer = Ed25519Sign(keyPair.privateKey)
       val verifier = Ed25519Verify(keyPair.publicKey)
       val msg = Random.randBytes(20)
@@ -132,7 +132,7 @@ class Ed25519SignTest {
   fun testKeyPairFromSeedTooShort() {
     val keyMaterial = Random.randBytes(10)
     assertThrows(IllegalArgumentException::class.java) {
-      Ed25519Sign.KeyPair.newKeyPairFromSeed(keyMaterial)
+      KeyPair.newKeyPairFromSeed(keyMaterial)
     }
   }
 }
