@@ -13,9 +13,9 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-package com.google.crypto.tink.subtle
+package app.cash.zipline.loader.internal.tink.subtle
 
-import com.google.crypto.tink.subtle.Ed25519.verify
+import app.cash.zipline.loader.internal.tink.subtle.Ed25519.verify
 import okio.ByteString
 
 /**
@@ -33,14 +33,13 @@ import okio.ByteString
  *
  * @since 1.1.0
  */
-class Ed25519Verify(publicKey: ByteString) {
-  private val publicKey: ByteString
-
+internal class Ed25519Verify(
+  private val publicKey: ByteString,
+) {
   init {
     require(publicKey.size == PUBLIC_KEY_LEN) {
       "Given public key's length is not $PUBLIC_KEY_LEN."
     }
-    this.publicKey = publicKey
   }
 
   fun verify(signature: ByteString, data: ByteString): Boolean {

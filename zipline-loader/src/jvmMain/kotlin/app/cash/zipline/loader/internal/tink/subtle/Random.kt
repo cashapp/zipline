@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-package com.google.crypto.tink.subtle
+package app.cash.zipline.loader.internal.tink.subtle
 
 import java.security.SecureRandom
 import okio.ByteString
@@ -24,7 +24,7 @@ import okio.ByteString.Companion.toByteString
  *
  * @since 1.0.0
  */
-object Random {
+internal object Random {
   private val localRandom: ThreadLocal<SecureRandom> = object : ThreadLocal<SecureRandom>() {
     override fun initialValue(): SecureRandom = newDefaultSecureRandom()
   }
@@ -36,7 +36,6 @@ object Random {
   }
 
   /** Returns a random byte array of size [size]. */
-  @JvmStatic
   fun randBytes(size: Int): ByteString {
     val rand = ByteArray(size)
     localRandom.get().nextBytes(rand)

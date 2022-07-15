@@ -3,7 +3,6 @@ rootProject.name = "zipline-root"
 include(":zipline")
 include(":zipline:testing")
 include(":zipline-cli")
-include(":zipline-eddsa")
 include(":zipline-gradle-plugin")
 include(":zipline-kotlin-plugin")
 include(":zipline-kotlin-plugin-hosted")

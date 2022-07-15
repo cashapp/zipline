@@ -13,12 +13,12 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-package com.google.crypto.tink.subtle
+package app.cash.zipline.loader.internal.tink.subtle
 
-import com.google.crypto.tink.subtle.Ed25519.getHashedScalar
-import com.google.crypto.tink.subtle.Ed25519.scalarMultWithBaseToBytes
-import com.google.crypto.tink.subtle.Ed25519.sign
-import com.google.crypto.tink.subtle.Random.randBytes
+import app.cash.zipline.loader.internal.tink.subtle.Ed25519.getHashedScalar
+import app.cash.zipline.loader.internal.tink.subtle.Ed25519.scalarMultWithBaseToBytes
+import app.cash.zipline.loader.internal.tink.subtle.Ed25519.sign
+import app.cash.zipline.loader.internal.tink.subtle.Random.randBytes
 import okio.ByteString
 
 /**
@@ -35,21 +35,11 @@ import okio.ByteString
  * ```
  *
  * @since 1.1.0
- *
- * @param privateKey 32-byte random sequence.
  */
-class Ed25519Sign(privateKey: ByteString) {
-  private val hashedPrivateKey: ByteString
-  private val publicKey: ByteString
-
-  init {
-    require(privateKey.size == SECRET_KEY_LEN) {
-      "Given private key's length is not $SECRET_KEY_LEN"
-    }
-    hashedPrivateKey = getHashedScalar(privateKey)
-    publicKey = scalarMultWithBaseToBytes(hashedPrivateKey)
-  }
-
+internal class Ed25519Sign private constructor(
+  private val hashedPrivateKey: ByteString,
+  private val publicKey: ByteString,
+) {
   fun sign(data: ByteString): ByteString {
     return sign(data, publicKey, hashedPrivateKey)
   }
@@ -77,6 +67,18 @@ class Ed25519Sign(privateKey: ByteString) {
   }
 
   companion object {
-    const val SECRET_KEY_LEN = Field25519.FIELD_LEN
+    private const val SECRET_KEY_LEN = Field25519.FIELD_LEN
+
+    /**
+     * @param privateKey 32-byte random sequence.
+     */
+    operator fun invoke(privateKey: ByteString): Ed25519Sign {
+      require(privateKey.size == SECRET_KEY_LEN) {
+        "Given private key's length is not $SECRET_KEY_LEN"
+      }
+      val hashedPrivateKey = getHashedScalar(privateKey)
+      val publicKey = scalarMultWithBaseToBytes(hashedPrivateKey)
+      return Ed25519Sign(hashedPrivateKey, publicKey)
+    }
   }
 }

@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-package com.google.crypto.tink.subtle
+package app.cash.zipline.loader.internal.tink.subtle
 
 /**
  * This class implements point arithmetic on the elliptic curve
@@ -36,7 +36,6 @@ internal object Curve25519 {
    * values in a[10..19] or b[10..19] aren't swapped, and all all values in a[0..9],b[0..9] must
    * have magnitude less than Integer.MAX_VALUE.
    */
-  @JvmStatic
   fun copyConditional(a: LongArray, b: LongArray, icopy: Int) {
     val copy = -icopy
     for (i in 0 until Field25519.LIMB_CNT) {

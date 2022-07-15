@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 ////////////////////////////////////////////////////////////////////////////////
-package com.google.crypto.tink.subtle
+package app.cash.zipline.loader.internal.tink.subtle
 
 /**
  * Defines field 25519 function based on [curve25519-donna C
@@ -373,7 +373,6 @@ internal object Field25519 {
   /**
    * Takes a little-endian, 32-byte number and expands it into mixed radix form.
    */
-  @JvmStatic
   fun expand(input: ByteArray): LongArray {
     val output = LongArray(LIMB_CNT)
     for (i in 0 until LIMB_CNT) {
