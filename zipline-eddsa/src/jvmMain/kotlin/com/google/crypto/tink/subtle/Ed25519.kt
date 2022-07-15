@@ -18,9 +18,7 @@ package com.google.crypto.tink.subtle
 import com.google.crypto.tink.subtle.Bytes.concat
 import com.google.crypto.tink.subtle.Bytes.equal
 import com.google.crypto.tink.subtle.Curve25519.copyConditional
-import java.security.GeneralSecurityException
-import java.security.MessageDigest
-import java.util.Arrays
+import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 
@@ -86,9 +84,9 @@ internal object Ed25519 {
     }
 
     constructor(xyz: XYZ) {
-      x = Arrays.copyOf(xyz.x, Field25519.LIMB_CNT)
-      y = Arrays.copyOf(xyz.y, Field25519.LIMB_CNT)
-      z = Arrays.copyOf(xyz.z, Field25519.LIMB_CNT)
+      x = xyz.x.copyOf(Field25519.LIMB_CNT)
+      y = xyz.y.copyOf(Field25519.LIMB_CNT)
+      z = xyz.z.copyOf(Field25519.LIMB_CNT)
     }
 
     constructor(partialXYZT: PartialXYZT) : this() {
@@ -188,7 +186,6 @@ internal object Ed25519 {
        * Decodes `s` into an extented projective point.
        * See Section 5.1.3 Decoding in https://tools.ietf.org/html/rfc8032#section-5.1.3
        */
-      @Throws(GeneralSecurityException::class)
       fun fromBytesNegateVarTime(s: ByteArray): XYZT {
         val x = LongArray(Field25519.LIMB_CNT)
         val y = Field25519.expand(s)
@@ -221,7 +218,7 @@ internal object Ed25519 {
         if (isNonZeroVarTime(check)) {
           Field25519.sum(check, vxx, u) // vx^2+u
           if (isNonZeroVarTime(check)) {
-            throw GeneralSecurityException(
+            throw IllegalStateException(
               "Cannot convert given bytes to extended projective "
                 + "coordinates. No square root exists for modulo 2^255-19"
             )
@@ -230,7 +227,7 @@ internal object Ed25519 {
         }
 
         if (!isNonZeroVarTime(x) && s[31].toInt() and 0xff shr 7 != 0) {
-          throw GeneralSecurityException(
+          throw IllegalStateException(
             "Cannot convert given bytes to extended projective "
               + "coordinates. Computed x is zero and encoded x's least significant bit is not zero"
           )
@@ -278,7 +275,7 @@ internal object Ed25519 {
 
     constructor(other: PartialXYZT) {
       xyz = XYZ(other.xyz)
-      t = Arrays.copyOf(other.t, Field25519.LIMB_CNT)
+      t = other.t.copyOf(Field25519.LIMB_CNT)
     }
   }
 
@@ -306,14 +303,14 @@ internal object Ed25519 {
     }
 
     constructor(other: CachedXYT) {
-      yPlusX = Arrays.copyOf(other.yPlusX, Field25519.LIMB_CNT)
-      yMinusX = Arrays.copyOf(other.yMinusX, Field25519.LIMB_CNT)
-      t2d = Arrays.copyOf(other.t2d, Field25519.LIMB_CNT)
+      yPlusX = other.yPlusX.copyOf(Field25519.LIMB_CNT)
+      yMinusX = other.yMinusX.copyOf(Field25519.LIMB_CNT)
+      t2d = other.t2d.copyOf(Field25519.LIMB_CNT)
     }
 
     // z is one implicitly, so this just copies {@code in} to {@code output}.
     open fun multByZ(output: LongArray, inLongArray: LongArray) {
-      System.arraycopy(inLongArray, 0, output, 0, Field25519.LIMB_CNT)
+      inLongArray.copyInto(output, endIndex = Field25519.LIMB_CNT)
     }
 
     /**
@@ -348,7 +345,7 @@ internal object Ed25519 {
     constructor(xyzt: XYZT) : this() {
       Field25519.sum(yPlusX, xyzt.xyz.y, xyzt.xyz.x)
       Field25519.sub(yMinusX, xyzt.xyz.y, xyzt.xyz.x)
-      System.arraycopy(xyzt.xyz.z, 0, z, 0, Field25519.LIMB_CNT)
+      xyzt.xyz.z.copyInto(z, endIndex = Field25519.LIMB_CNT)
       Field25519.mult(t2d, xyzt.t, Ed25519Constants.D2)
     }
 
@@ -527,14 +524,14 @@ internal object Ed25519 {
    * This is a constant time operation where point b*B*256^pos is stored in [t].
    * When b is 0, t remains the same (i.e., neutral point).
    *
-   * Although B_TABLE[32][8] (B_TABLE[i][j] = (j+1)*B*256^i) has j values in [0, 7], the select
+   * Although `B_TABLE[32][8] (B_TABLE[i][j] = (j+1)*B*256^i)` has j values in `[0, 7]`, the select
    * method negates the corresponding point if b is negative (which is straight forward in elliptic
-   * curves by just negating y coordinate). Therefore we can get multiples of B with the half of
+   * curves by just negating y coordinate). Therefore, we can get multiples of B with the half of
    * memory requirements.
    *
    * @param t neutral element (i.e., point 0), also serves as output.
-   * @param pos in B[pos][j] = (j+1)*B*256^pos
-   * @param b value in [-8, 8] range.
+   * @param pos in `B[pos][j] = (j+1)*B*256^pos`
+   * @param b value in `[-8, 8]` range.
    */
   private fun select(t: CachedXYT, pos: Int, b: Byte) {
     val bnegative = b.toInt() and 0xff shr 7
@@ -547,9 +544,9 @@ internal object Ed25519 {
     t.copyConditional(Ed25519Constants.B_TABLE[pos][5], eq(babs, 6))
     t.copyConditional(Ed25519Constants.B_TABLE[pos][6], eq(babs, 7))
     t.copyConditional(Ed25519Constants.B_TABLE[pos][7], eq(babs, 8))
-    val yPlusX = Arrays.copyOf(t.yMinusX, Field25519.LIMB_CNT)
-    val yMinusX = Arrays.copyOf(t.yPlusX, Field25519.LIMB_CNT)
-    val t2d = Arrays.copyOf(t.t2d, Field25519.LIMB_CNT)
+    val yPlusX = t.yMinusX.copyOf(Field25519.LIMB_CNT)
+    val yMinusX = t.yPlusX.copyOf(Field25519.LIMB_CNT)
+    val t2d = t.t2d.copyOf(Field25519.LIMB_CNT)
     neg(t2d, t2d)
     val minust = CachedXYT(yPlusX, yMinusX, t2d)
     t.copyConditional(minust, bnegative)
@@ -635,7 +632,7 @@ internal object Ed25519 {
    */
   @JvmStatic
   fun scalarMultWithBaseToBytes(a: ByteString): ByteString {
-    return ByteString.of(*scalarMultWithBase(a.toByteArray()).toBytes())
+    return scalarMultWithBase(a.toByteArray()).toBytes().toByteString()
   }
 
   private fun slide(a: ByteArray): ByteArray {
@@ -727,13 +724,13 @@ internal object Ed25519 {
   }
 
   /**
-   * Returns true if [inLongArray] is nonzero.
+   * Returns true if [in1] is nonzero.
    *
-   * Note that execution time might depend on the input [inLongArray].
+   * Note that execution time might depend on the input [in1].
    */
-  private fun isNonZeroVarTime(inLongArray: LongArray): Boolean {
-    val inCopy = LongArray(inLongArray.size + 1)
-    System.arraycopy(inLongArray, 0, inCopy, 0, inLongArray.size)
+  private fun isNonZeroVarTime(in1: LongArray): Boolean {
+    val inCopy = LongArray(in1.size + 1)
+    in1.copyInto(inCopy, endIndex = in1.size)
     Field25519.reduceCoefficients(inCopy)
     val bytes = Field25519.contract(inCopy)
     for (b in bytes) {
@@ -752,11 +749,11 @@ internal object Ed25519 {
   }
 
   /**
-   * Negates all values in [in] and store it in [out].
+   * Negates all values in [in1] and store it in [out].
    */
-  private fun neg(out: LongArray, inLongArray: LongArray) {
-    for (i in inLongArray.indices) {
-      out[i] = -inLongArray[i]
+  private fun neg(out: LongArray, in1: LongArray) {
+    for (i in in1.indices) {
+      out[i] = -in1[i]
     }
   }
 
@@ -1507,12 +1504,8 @@ internal object Ed25519 {
   }
 
   @JvmStatic
-  @Throws(GeneralSecurityException::class)
   fun getHashedScalar(privateKey: ByteString): ByteString {
-    val privateKeyBytes = privateKey.toByteArray()
-    val digest = MessageDigest.getInstance("SHA-512")
-    digest.update(privateKeyBytes, 0, Field25519.FIELD_LEN)
-    val h = digest.digest()
+    val h = privateKey.sha512().toByteArray()
     // https://tools.ietf.org/html/rfc8032#section-5.1.2.
     // Clear the lowest three bits of the first octet.
     h[0] = (h[0].toInt() and 248).toByte()
@@ -1530,34 +1523,26 @@ internal object Ed25519 {
    * @param publicKey [Ed25519.scalarMultToBytes] of [hashedPrivateKey]
    * @param hashedPrivateKey [Ed25519.getHashedScalar] of the private key
    * @return signature for the [message].
-   * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
-   * `EngineFactory.MESSAGE_DIGEST`.
    */
   @JvmStatic
-  @Throws(GeneralSecurityException::class)
   fun sign(message: ByteString, publicKey: ByteString, hashedPrivateKey: ByteString): ByteString {
-    val messageBytes = message.toByteArray()
     val hashedPrivateKeyBytes = hashedPrivateKey.toByteArray()
-    val publicKeyBytes = publicKey.toByteArray()
-    // Copying the message to make it thread-safe. Otherwise, if the caller modifies the message
-    // between the first and the second hash then it might leak the private key.
-    val messageCopy = Arrays.copyOfRange(messageBytes, 0, messageBytes.size)
-    val digest = MessageDigest.getInstance("SHA-512")
-    digest.update(hashedPrivateKeyBytes, Field25519.FIELD_LEN, Field25519.FIELD_LEN)
-    digest.update(messageCopy)
-    val r = digest.digest()
+    val digest = Buffer()
+    digest.write(hashedPrivateKey, Field25519.FIELD_LEN, Field25519.FIELD_LEN)
+    digest.write(message)
+    val r = digest.sha512().toByteArray()
     reduce(r)
 
-    val rB = Arrays.copyOfRange(scalarMultWithBase(r).toBytes(), 0, Field25519.FIELD_LEN)
-    digest.reset()
-    digest.update(rB)
-    digest.update(publicKeyBytes)
-    digest.update(messageCopy)
-    val hram = digest.digest()
+    val rB = scalarMultWithBase(r).toBytes().copyOfRange(0, Field25519.FIELD_LEN)
+    digest.clear()
+    digest.write(rB)
+    digest.write(publicKey)
+    digest.write(message)
+    val hram = digest.sha512().toByteArray()
     reduce(hram)
     val s = ByteArray(Field25519.FIELD_LEN)
     mulAdd(s, hram, hashedPrivateKeyBytes, r)
-    return ByteString.of(*concat(rB, s))
+    return concat(rB, s).toByteString()
   }
 
   // The order of the generator as unsigned bytes in little endian order.
@@ -1592,12 +1577,8 @@ internal object Ed25519 {
   /**
    * Returns true if the EdDSA [signature] with [message], can be verified with
    * [publicKey].
-   *
-   * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
-   * `EngineFactory.MESSAGE_DIGEST`.
    */
   @JvmStatic
-  @Throws(GeneralSecurityException::class)
   fun verify(
     message: ByteString,
     signature: ByteString,
@@ -1605,19 +1586,18 @@ internal object Ed25519 {
   ): Boolean {
     val publicKeyBytes = publicKey.toByteArray()
     val signatureBytes = signature.toByteArray()
-    val messageBytes = message.toByteArray()
     if (signature.size != SIGNATURE_LEN) {
       return false
     }
-    val s = Arrays.copyOfRange(signatureBytes, Field25519.FIELD_LEN, SIGNATURE_LEN)
+    val s = signatureBytes.copyOfRange(Field25519.FIELD_LEN, SIGNATURE_LEN)
     if (!isSmallerThanGroupOrder(s)) {
       return false
     }
-    val digest = MessageDigest.getInstance("SHA-512")
-    digest.update(signatureBytes, 0, Field25519.FIELD_LEN)
-    digest.update(publicKeyBytes)
-    digest.update(messageBytes)
-    val h = digest.digest()
+    val digest = Buffer()
+    digest.write(signature, 0, Field25519.FIELD_LEN)
+    digest.write(publicKey)
+    digest.write(message)
+    val h = digest.sha512().toByteArray()
     reduce(h)
 
     val negPublicKey = XYZT.fromBytesNegateVarTime(publicKeyBytes)

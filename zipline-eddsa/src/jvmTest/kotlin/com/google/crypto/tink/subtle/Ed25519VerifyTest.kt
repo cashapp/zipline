@@ -15,7 +15,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.google.crypto.tink.subtle
 
-import java.security.GeneralSecurityException
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.toByteString
 import org.junit.Assert.assertEquals
@@ -50,15 +49,14 @@ class Ed25519VerifyTest {
         val sig = testcase.sig.decodeHex()
         val result = testcase.result
         val verifier = Ed25519Verify(publicKey)
-        try {
-          verifier.verify(sig, msg)
+        if (verifier.verify(sig, msg)) {
           if (result == "invalid") {
             println("FAIL ${tcId}: accepting invalid signature")
             errors++
           }
-        } catch (ex: GeneralSecurityException) {
+        } else {
           if (result == "valid") {
-            println("FAIL ${tcId}: rejecting valid signature, exception: $ex")
+            println("FAIL ${tcId}: rejecting valid signature")
             errors++
           }
         }

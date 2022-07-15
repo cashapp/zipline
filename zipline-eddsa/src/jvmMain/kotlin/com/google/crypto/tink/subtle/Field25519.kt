@@ -15,8 +15,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.google.crypto.tink.subtle
 
-import java.util.Arrays
-
 /**
  * Defines field 25519 function based on [curve25519-donna C
  * implementation](https://github.com/agl/curve25519-donna/blob/master/curve25519-donna.c)
@@ -207,17 +205,17 @@ internal object Field25519 {
    * @param output An output array of size [LIMB_CNT]. After the call `|output[i]| < 2^26` will
    *     hold.
    */
-  fun reduce(input: LongArray, output: LongArray?) {
+  fun reduce(input: LongArray, output: LongArray) {
     val tmp: LongArray
     if (input.size == 19) {
       tmp = input
     } else {
       tmp = LongArray(19)
-      System.arraycopy(input, 0, tmp, 0, input.size)
+      input.copyInto(tmp, endIndex = input.size)
     }
     reduceSizeByModularReduction(tmp)
     reduceCoefficients(tmp)
-    System.arraycopy(tmp, 0, output, 0, LIMB_CNT)
+    tmp.copyInto(output, endIndex = LIMB_CNT)
   }
 
   /**
@@ -312,7 +310,7 @@ internal object Field25519 {
    * The output is reduced degree (indeed, one need only provide storage for 10 limbs) and
    * `|output[i]| < 2^26`.
    */
-  fun mult(output: LongArray?, inLongArray: LongArray, in2: LongArray) {
+  fun mult(output: LongArray, inLongArray: LongArray, in2: LongArray) {
     val t = LongArray(19)
     product(t, inLongArray, in2)
     // |t[i]| < 2^26
@@ -364,7 +362,7 @@ internal object Field25519 {
    * On exit: The |output| argument is in reduced coefficients form (indeed, one need only provide
    * storage for 10 limbs) and `|out[i]| < 2^26`.
    */
-  fun square(output: LongArray?, in1: LongArray) {
+  fun square(output: LongArray, in1: LongArray) {
     val t = LongArray(19)
     squareInner(t, in1)
     // |t[i]| < 14*2^54 because the largest product of two limbs will be < 2^(27+27) and SquareInner
@@ -393,8 +391,8 @@ internal object Field25519 {
    *
    * On entry: `|input_limbs[i]| < 2^26`
    */
-  fun contract(inputLimbs: LongArray?): ByteArray {
-    val input = Arrays.copyOf(inputLimbs, LIMB_CNT)
+  fun contract(inputLimbs: LongArray): ByteArray {
+    val input = inputLimbs.copyOf(LIMB_CNT)
     for (j in 0..1) {
       for (i in 0..8) {
         // This calculation is a time-invariant way to make input[i] non-negative by borrowing
@@ -499,7 +497,7 @@ internal object Field25519 {
    * Shamelessly copied from agl's code which was shamelessly copied from djb's code. Only the
    * comment format and the variable namings are different from those.
    */
-  fun inverse(out: LongArray?, z: LongArray) {
+  fun inverse(out: LongArray, z: LongArray) {
     val z2 = LongArray(LIMB_CNT)
     val z9 = LongArray(LIMB_CNT)
     val z11 = LongArray(LIMB_CNT)

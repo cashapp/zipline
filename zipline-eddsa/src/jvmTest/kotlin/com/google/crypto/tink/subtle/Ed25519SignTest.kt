@@ -15,7 +15,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.google.crypto.tink.subtle
 
-import java.security.GeneralSecurityException
 import java.util.TreeSet
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.toByteString
@@ -36,9 +35,7 @@ class Ed25519SignTest {
     for (i in 0..99) {
       val msg = Random.randBytes(20)
       val sig = signer.sign(msg)
-      try {
-        verifier.verify(sig, msg)
-      } catch (ex: GeneralSecurityException) {
+      if (!verifier.verify(sig, msg)) {
         fail(
           """
           |Message: ${msg.hex()}
@@ -61,9 +58,7 @@ class Ed25519SignTest {
     for (i in 0..99) {
       val sig = signer.sign(msg)
       allSignatures.add(sig.hex())
-      try {
-        verifier.verify(sig, msg)
-      } catch (ex: GeneralSecurityException) {
+      if (!verifier.verify(sig, msg)) {
         fail(
           """
           |Message: ${msg.hex()}
@@ -96,9 +91,7 @@ class Ed25519SignTest {
       val verifier = Ed25519Verify(keyPair.publicKey)
       val msg = Random.randBytes(20)
       val sig = signer.sign(msg)
-      try {
-        verifier.verify(sig, msg)
-      } catch (ex: GeneralSecurityException) {
+      if (!verifier.verify(sig, msg)) {
         fail(
           """
           |Message: ${msg.hex()}

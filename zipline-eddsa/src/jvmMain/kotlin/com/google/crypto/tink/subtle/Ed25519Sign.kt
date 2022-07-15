@@ -19,7 +19,6 @@ import com.google.crypto.tink.subtle.Ed25519.getHashedScalar
 import com.google.crypto.tink.subtle.Ed25519.scalarMultWithBaseToBytes
 import com.google.crypto.tink.subtle.Ed25519.sign
 import com.google.crypto.tink.subtle.Random.randBytes
-import java.security.GeneralSecurityException
 import okio.ByteString
 
 /**
@@ -38,8 +37,6 @@ import okio.ByteString
  * @since 1.1.0
  *
  * @param privateKey 32-byte random sequence.
- * @throws GeneralSecurityException if there is no SHA-512 algorithm defined in
- *     `EngineFactory`.MESSAGE_DIGEST.
  */
 class Ed25519Sign(privateKey: ByteString) {
   private val hashedPrivateKey: ByteString
@@ -53,7 +50,6 @@ class Ed25519Sign(privateKey: ByteString) {
     publicKey = scalarMultWithBaseToBytes(hashedPrivateKey)
   }
 
-  @Throws(GeneralSecurityException::class)
   fun sign(data: ByteString): ByteString {
     return sign(data, publicKey, hashedPrivateKey)
   }
@@ -65,13 +61,11 @@ class Ed25519Sign(privateKey: ByteString) {
   ) {
     companion object {
       /** Returns a new `<publicKey / privateKey>` KeyPair.  */
-      @Throws(GeneralSecurityException::class)
       fun newKeyPair(): KeyPair {
         return newKeyPairFromSeed(randBytes(Field25519.FIELD_LEN))
       }
 
       /** Returns a new `<publicKey / privateKey>` KeyPair generated from a seed. */
-      @Throws(GeneralSecurityException::class)
       fun newKeyPairFromSeed(secretSeed: ByteString): KeyPair {
         require(secretSeed.size == Field25519.FIELD_LEN) {
           "Given secret seed length is not ${Field25519.FIELD_LEN}"

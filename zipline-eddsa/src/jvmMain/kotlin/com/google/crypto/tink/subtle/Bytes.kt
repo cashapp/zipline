@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 package com.google.crypto.tink.subtle
 
-import java.security.GeneralSecurityException
+import okio.Buffer
 
 /**
  * Helper methods that deal with byte arrays.
@@ -47,21 +47,11 @@ object Bytes {
    * @return a single array containing all the values from the source arrays, in order
    */
   @JvmStatic
-  @Throws(GeneralSecurityException::class)
   fun concat(vararg chunks: ByteArray): ByteArray {
-    var length = 0
+    val buffer = Buffer()
     for (chunk in chunks) {
-      if (length > Int.MAX_VALUE - chunk.size) {
-        throw GeneralSecurityException("exceeded size limit")
-      }
-      length += chunk.size
+      buffer.write(chunk)
     }
-    val res = ByteArray(length)
-    var pos = 0
-    for (chunk in chunks) {
-      System.arraycopy(chunk, 0, res, pos, chunk.size)
-      pos += chunk.size
-    }
-    return res
+    return buffer.readByteArray()
   }
 }

@@ -82,7 +82,7 @@ internal object Ed25519Constants {
   private fun toLittleEndian(n: BigInteger): ByteArray {
     val b = ByteArray(32)
     val nBytes = n.toByteArray()
-    System.arraycopy(nBytes, 0, b, 32 - nBytes.size, nBytes.size)
+    nBytes.copyInto(b, destinationOffset = 32 - nBytes.size, endIndex = nBytes.size)
     for (i in 0 until b.size / 2) {
       val t = b[i]
       b[i] = b[b.size - i - 1]
