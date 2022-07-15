@@ -28,7 +28,6 @@ package app.cash.zipline.loader.internal.tink.subtle
  * 2^204·x[8] + 2^230·x[9],
  * ```
  *
- *
  * i.e. the limbs are 26, 25, 26, 25, ... bits wide.
  */
 internal object Field25519 {

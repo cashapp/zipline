@@ -18,7 +18,6 @@ package app.cash.zipline.loader.internal.tink.subtle
 import app.cash.zipline.loader.internal.tink.subtle.Ed25519.getHashedScalar
 import app.cash.zipline.loader.internal.tink.subtle.Ed25519.scalarMultWithBaseToBytes
 import app.cash.zipline.loader.internal.tink.subtle.Ed25519.sign
-import app.cash.zipline.loader.internal.tink.subtle.Random.randBytes
 import okio.ByteString
 
 /**
@@ -42,28 +41,6 @@ internal class Ed25519Sign private constructor(
 ) {
   fun sign(data: ByteString): ByteString {
     return sign(data, publicKey, hashedPrivateKey)
-  }
-
-  /** Defines the KeyPair consisting of a private key and its corresponding public key.  */
-  class KeyPair private constructor(
-    val publicKey: ByteString,
-    val privateKey: ByteString,
-  ) {
-    companion object {
-      /** Returns a new `<publicKey / privateKey>` KeyPair.  */
-      fun newKeyPair(): KeyPair {
-        return newKeyPairFromSeed(randBytes(Field25519.FIELD_LEN))
-      }
-
-      /** Returns a new `<publicKey / privateKey>` KeyPair generated from a seed. */
-      fun newKeyPairFromSeed(secretSeed: ByteString): KeyPair {
-        require(secretSeed.size == Field25519.FIELD_LEN) {
-          "Given secret seed length is not ${Field25519.FIELD_LEN}"
-        }
-        val publicKey = scalarMultWithBaseToBytes(getHashedScalar(secretSeed))
-        return KeyPair(publicKey, secretSeed)
-      }
-    }
   }
 
   companion object {
