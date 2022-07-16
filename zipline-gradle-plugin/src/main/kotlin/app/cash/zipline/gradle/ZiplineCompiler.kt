@@ -27,6 +27,7 @@ import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.toByteString
+import okio.HashingSink
 import okio.buffer
 import okio.sink
 
@@ -39,44 +40,46 @@ object ZiplineCompiler {
   ) {
     val modules = mutableMapOf<String, ZiplineModule>()
     val files = inputDir.listFiles()
-    files!!.forEach { jsFile ->
-      if (jsFile.path.endsWith(".js")) {
-        val jsSourceMapFile = files.singleOrNull { sourceMap -> sourceMap.path == "${jsFile.path}.map" }
-        // TODO name the zipline as the SHA of the source code, only compile a new file when the SHA changes
-        val outputZiplineFilePath = jsFile.nameWithoutExtension + ".zipline"
-        val outputZiplineFile = File(outputDir.path, outputZiplineFilePath)
+    for (jsFile in files!!) {
+      if (!jsFile.path.endsWith(".js")) continue
 
-        val quickJs = QuickJs.create()
-        quickJs.use {
-          var bytecode = quickJs.compile(jsFile.readText(), jsFile.name)
+      val jsSourceMapFile = files.singleOrNull { sourceMap -> sourceMap.path == "${jsFile.path}.map" }
+      // TODO name the zipline as the SHA of the source code, only compile a new file when the SHA changes
+      val outputZiplineFilePath = jsFile.nameWithoutExtension + ".zipline"
+      val outputZiplineFile = File(outputDir.path, outputZiplineFilePath)
 
-          if (jsSourceMapFile != null) {
-            // rewrite the bytecode with source line numbers
-            bytecode = applySourceMapToBytecode(bytecode, jsSourceMapFile.readText())
-          }
-          val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode.toByteString())
-          // Use executes block then closes the sink.
-          outputZiplineFile.sink().buffer().use {
+      val quickJs = QuickJs.create()
+      quickJs.use {
+        var bytecode = quickJs.compile(jsFile.readText(), jsFile.name)
+
+        if (jsSourceMapFile != null) {
+          // rewrite the bytecode with source line numbers
+          bytecode = applySourceMapToBytecode(bytecode, jsSourceMapFile.readText())
+        }
+        val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode.toByteString())
+        val sha256 = outputZiplineFile.sink().use { fileSink ->
+          val hashingSink = HashingSink.sha256(fileSink)
+          hashingSink.buffer().use {
             ziplineFile.writeTo(it)
           }
-
-          quickJs.evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
-          quickJs.execute(bytecode)
-          val dependenciesString = quickJs
-            .evaluate("globalThis.$CURRENT_MODULE_DEPENDENCIES", "getDependencies.js") as String?
-          val dependencies = Json.decodeFromString<List<String>>(
-            dependenciesString
-            // If define is never called, dependencies is returned as null
-              ?: "[]"
-          )
-
-          val ziplineSha256 = bytecode.toByteString().sha256()
-          modules["./${jsFile.name}"] = ZiplineModule(
-            url = outputZiplineFilePath,
-            sha256 = ziplineSha256,
-            dependsOnIds = dependencies
-          )
+          hashingSink.hash
         }
+
+        quickJs.evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
+        quickJs.execute(bytecode)
+        val dependenciesString = quickJs
+          .evaluate("globalThis.$CURRENT_MODULE_DEPENDENCIES", "getDependencies.js") as String?
+        val dependencies = Json.decodeFromString<List<String>>(
+          dependenciesString
+          // If define is never called, dependencies is returned as null
+            ?: "[]"
+        )
+
+        modules["./${jsFile.name}"] = ZiplineModule(
+          url = outputZiplineFilePath,
+          sha256 = sha256,
+          dependsOnIds = dependencies
+        )
       }
     }
     val manifest = ZiplineManifest.create(modules, mainModuleId, mainFunction)
