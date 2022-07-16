@@ -19,6 +19,7 @@ package app.cash.zipline.gradle
 import app.cash.zipline.QuickJs
 import app.cash.zipline.bytecode.applySourceMapToBytecode
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
+import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
@@ -37,6 +38,7 @@ object ZiplineCompiler {
     outputDir: File,
     mainModuleId: String? = null,
     mainFunction: String? = null,
+    manifestSigner: ManifestSigner? = null,
   ) {
     val modules = mutableMapOf<String, ZiplineModule>()
     val files = inputDir.listFiles()
@@ -82,7 +84,13 @@ object ZiplineCompiler {
         )
       }
     }
-    val manifest = ZiplineManifest.create(modules, mainModuleId, mainFunction)
+    val unsignedManifest = ZiplineManifest.create(modules, mainModuleId, mainFunction)
+
+    val manifest = when {
+      manifestSigner != null -> manifestSigner.sign(unsignedManifest)
+      else -> unsignedManifest
+    }
+
     val manifestFile = File(outputDir.path, "manifest.zipline.json")
     manifestFile.writeText(Json.encodeToString(manifest))
   }
