@@ -314,6 +314,9 @@ class ZiplineLoader internal constructor(
         sha256 = module.sha256,
         url = module.url,
       )!!
+      check(byteString.sha256() == module.sha256) {
+        "checksum mismatch for $id"
+      }
       upstreams.joinAll()
       withContext(dispatcher) {
         receiver.receive(byteString, id, module.sha256)
