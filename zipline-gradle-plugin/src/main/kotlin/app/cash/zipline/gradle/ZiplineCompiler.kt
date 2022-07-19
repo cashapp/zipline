@@ -86,10 +86,7 @@ object ZiplineCompiler {
     }
     val unsignedManifest = ZiplineManifest.create(modules, mainModuleId, mainFunction)
 
-    val manifest = when {
-      manifestSigner != null -> manifestSigner.sign(unsignedManifest)
-      else -> unsignedManifest
-    }
+    val manifest = manifestSigner?.sign(unsignedManifest) ?: unsignedManifest
 
     val manifestFile = File(outputDir.path, "manifest.zipline.json")
     manifestFile.writeText(Json.encodeToString(manifest))
