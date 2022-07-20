@@ -138,6 +138,23 @@ class ZiplinePluginTest {
     assertThat(ziplineOut.resolve("multipleJsTargets-lib-blue.zipline").exists()).isTrue()
   }
 
+  @Test
+  fun manifestSigning() {
+    val projectDir = File("src/test/projects/signing")
+
+    val taskName = ":lib:compileDevelopmentExecutableKotlinJsZipline"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(taskName)!!.outcome)
+
+    val ziplineOut = projectDir.resolve(
+      "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
+    )
+    val manifest = ziplineOut.resolve("manifest.zipline.json")
+    assertThat(manifest.readText())
+      .containsMatch(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}""")
+  }
+
   private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {
     val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
     File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)
