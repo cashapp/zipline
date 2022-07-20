@@ -217,7 +217,7 @@ class ZiplineCacheTest {
       it.write("red", fileApple.sha256(), fileApple)
       val manifestApple = createRelativeManifest("apple", fileApple.sha256())
       it.pinManifest("red", manifestApple)
-      assertEquals(manifestApple, it.getPinnedManifest("red"))
+      assertEquals(manifestApple, it.getPinnedManifest("red")?.manifest)
       assertEquals(2, it.countFiles())
       assertEquals(2, it.countPins())
 
@@ -228,7 +228,7 @@ class ZiplineCacheTest {
       assertEquals(3, it.countPins())
 
       it.pinManifest("red", manifestFiretruck)
-      assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
+      assertEquals(manifestFiretruck, it.getPinnedManifest("red")?.manifest)
       assertEquals(4, it.countFiles()) // apple manifest remains in cache until prune.
       assertEquals(2, it.countPins())
     }
@@ -245,7 +245,7 @@ class ZiplineCacheTest {
       it.write("red", fileApple.sha256(), fileApple)
       val manifestApple = createRelativeManifest("apple", fileApple.sha256())
       it.pinManifest("red", manifestApple)
-      assertEquals(manifestApple, it.getPinnedManifest("red"))
+      assertEquals(manifestApple, it.getPinnedManifest("red")?.manifest)
       assertEquals(2, it.countFiles())
       assertEquals(2, it.countPins())
 
@@ -256,7 +256,7 @@ class ZiplineCacheTest {
       assertEquals(3, it.countPins())
 
       it.unpinManifest("red", manifestFiretruck)
-      assertEquals(manifestApple, it.getPinnedManifest("red"))
+      assertEquals(manifestApple, it.getPinnedManifest("red")?.manifest)
       assertEquals(3, it.countFiles()) // firetruck manifest isn't saved to file cache.
       assertEquals(2, it.countPins())
     }
@@ -274,7 +274,7 @@ class ZiplineCacheTest {
       it.write("red", fileFiretruck.sha256(), fileFiretruck)
       val manifestFiretruck = createRelativeManifest("firetruck", fileFiretruck.sha256())
 
-      assertEquals(manifestApple, it.getPinnedManifest("red"))
+      assertEquals(manifestApple, it.getPinnedManifest("red")?.manifest)
       assertEquals(3, it.countPins())
 
       val manifestFiretruckByteString = Json
@@ -283,7 +283,7 @@ class ZiplineCacheTest {
       it.writeManifest("red", manifestFiretruckByteString.sha256(), manifestFiretruckByteString)
       assertEquals(4, it.countPins())
 
-      assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
+      assertEquals(manifestFiretruck, it.getPinnedManifest("red")?.manifest)
     }
   }
 

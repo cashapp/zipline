@@ -50,7 +50,7 @@ internal interface Fetcher {
     applicationName: String,
     id: String,
     url: String?,
-  ): ZiplineManifest?
+  ): LoadedManifest?
 
   /**
    * Permits all downloads for [applicationName] not in [manifest] to be pruned.
@@ -75,6 +75,15 @@ internal interface Fetcher {
     manifest: ZiplineManifest,
   )
 }
+
+/**
+ * A manifest plus the original bytes we loaded for it. We need the original bytes for signature
+ * verification.
+ */
+class LoadedManifest(
+  val manifestBytes: ByteString,
+  val manifest: ZiplineManifest,
+)
 
 /**
  * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
@@ -108,7 +117,7 @@ internal suspend fun List<Fetcher>.fetchManifest(
   applicationName: String,
   id: String,
   url: String?,
-): ZiplineManifest? = concurrentDownloadsSemaphore.withPermit {
+): LoadedManifest? = concurrentDownloadsSemaphore.withPermit {
   for (fetcher in this) {
     return@withPermit fetcher.fetchManifest(applicationName, id, url) ?: continue
   }

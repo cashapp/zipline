@@ -25,7 +25,9 @@ kotlin {
 
   sourceSets {
     val commonMain by getting {
-
+      dependencies {
+        api(libs.okio.core)
+      }
     }
 
     val engineMain by creating {

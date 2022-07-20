@@ -16,9 +16,12 @@
 
 package app.cash.zipline.gradle
 
+import app.cash.zipline.loader.ManifestSigner
 import java.io.File
 import javax.inject.Inject
+import okio.ByteString.Companion.decodeHex
 import org.gradle.api.DefaultTask
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
@@ -56,6 +59,10 @@ abstract class ZiplineCompileTask @Inject constructor(
   @get:Input
   val mainFunction: Property<String> = objectFactory.property(String::class.java)
 
+  @get:Input
+  val signingKeys: NamedDomainObjectContainer<ManifestSigningKey> =
+    objectFactory.domainObjectContainer(ManifestSigningKey::class.java)
+
   @get:OutputFile
   val webpackConfigFile: File by lazy {
     project.projectDir.resolve(configFilePath)
@@ -67,8 +74,18 @@ abstract class ZiplineCompileTask @Inject constructor(
     val outputDirFile = outputDir.get().asFile
     val mainModuleId = mainModuleId.orNull
     val mainFunction = mainFunction.orNull
+    val manifestSigner = when {
+      signingKeys.isNotEmpty() -> {
+        val builder = ManifestSigner.Builder()
+        for ((name, manifestSigningKey) in signingKeys.asMap) {
+          builder.addEd25519(name, manifestSigningKey.privateKeyHex.decodeHex())
+        }
+        builder.build()
+      }
+      else -> null
+    }
 
-    ZiplineCompiler.compile(inputDirFile, outputDirFile, mainModuleId, mainFunction)
+    ZiplineCompiler.compile(inputDirFile, outputDirFile, mainModuleId, mainFunction, manifestSigner)
 
     val webpackHome = project.rootProject.buildDir.resolve("js/packages/placeholder-name")
     val directory = outputDirFile.relativeTo(webpackHome)

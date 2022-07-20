@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
+import app.cash.zipline.loader.fetcher.LoadedManifest
 import app.cash.zipline.loader.internal.database.isSqlException
 import kotlinx.serialization.json.Json
 import okio.ByteString
@@ -138,15 +139,16 @@ internal class ZiplineCache internal constructor(
   }
 
   /** Returns null if there is no pinned manifest. */
-  fun getPinnedManifest(applicationName: String): ZiplineManifest? {
+  fun getPinnedManifest(applicationName: String): LoadedManifest? {
     val manifestFile = database.filesQueries
       .selectPinnedManifest(applicationName)
       .executeAsOneOrNull() ?: return null
-    val manifestByteString = read(manifestFile.sha256_hex)
+    val manifestBytes = read(manifestFile.sha256_hex)
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
       )
-    return Json.decodeFromString(ZiplineManifest.serializer(), manifestByteString.utf8())
+    val manifest = Json.decodeFromString(ZiplineManifest.serializer(), manifestBytes.utf8())
+    return LoadedManifest(manifestBytes, manifest)
   }
 
   /** Pins manifest and unpins all other files and manifests */

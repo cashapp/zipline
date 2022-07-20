@@ -40,7 +40,6 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -66,6 +65,7 @@ class ZiplineLoader internal constructor(
   private val httpClient: ZiplineHttpClient,
   private val eventListener: EventListener,
   private val serializersModule: SerializersModule,
+  private val manifestVerifier: ManifestVerifier?,
   private val embeddedDir: Path?,
   private val embeddedFileSystem: FileSystem?,
   internal val cache: ZiplineCache?,
@@ -83,6 +83,7 @@ class ZiplineLoader internal constructor(
     httpClient = httpClient,
     eventListener = eventListener,
     serializersModule = serializersModule,
+    manifestVerifier = manifestVerifier,
     embeddedDir = embeddedDir,
     embeddedFileSystem = embeddedFileSystem,
     cache = cache,
@@ -117,6 +118,7 @@ class ZiplineLoader internal constructor(
       httpClient = httpClient,
       eventListener = eventListener,
       serializersModule = serializersModule,
+      manifestVerifier = manifestVerifier,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
       cache = cache,
@@ -184,7 +186,7 @@ class ZiplineLoader internal constructor(
     try {
       // Load from either pinned in cache or embedded by forcing network failure
       @Suppress("NAME_SHADOWING")
-      val manifest = manifest ?: fetchZiplineManifest(applicationName, manifestUrl)
+      val manifest = manifest ?: fetchAndVerifyZiplineManifest(applicationName, manifestUrl)
       receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
 
       // Run caller lambda to validate and initialize the loaded code to confirm it works.
@@ -211,7 +213,7 @@ class ZiplineLoader internal constructor(
     .rebounce(pollingInterval)
     .mapNotNull { url ->
       eventListener.applicationLoadStart(applicationName, url)
-      url to fetchZiplineManifest(applicationName, url)
+      url to fetchAndVerifyZiplineManifest(applicationName, url)
     }
     .distinctUntilChanged()
     .mapNotNull { (manifestUrl, manifest) ->
@@ -250,7 +252,7 @@ class ZiplineLoader internal constructor(
       applicationName = applicationName,
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
-      manifest = fetchZiplineManifest(applicationName, manifestUrl),
+      manifest = fetchAndVerifyZiplineManifest(applicationName, manifestUrl),
     )
   }
 
@@ -312,6 +314,9 @@ class ZiplineLoader internal constructor(
         sha256 = module.sha256,
         url = module.url,
       )!!
+      check(byteString.sha256() == module.sha256) {
+        "checksum mismatch for $id"
+      }
       upstreams.joinAll()
       withContext(dispatcher) {
         receiver.receive(byteString, id, module.sha256)
@@ -319,17 +324,25 @@ class ZiplineLoader internal constructor(
     }
   }
 
-  private suspend fun fetchZiplineManifest(
+  /**
+   * This verifies the manifest regardless of its origin. That way we defend against changes to the
+   * manifest on a server as well as in the local cache.
+   */
+  private suspend fun fetchAndVerifyZiplineManifest(
     applicationName: String,
     manifestUrl: String?,
   ): ZiplineManifest {
     // Fetch manifests remote-first as that's where the freshest data is.
-    return fetchers.asReversed().fetchManifest(
+    val loaded = fetchers.asReversed().fetchManifest(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       applicationName = applicationName,
       id = getApplicationManifestFileName(applicationName),
       url = manifestUrl,
     )!!
+    val manifestBytes = loaded.manifestBytes
+    val manifest = loaded.manifest
+    manifestVerifier?.verify(manifestBytes, manifest)
+    return manifest
   }
 
   companion object {

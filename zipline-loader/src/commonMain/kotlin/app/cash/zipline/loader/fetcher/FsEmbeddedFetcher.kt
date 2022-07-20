@@ -41,9 +41,12 @@ internal class FsEmbeddedFetcher(
     applicationName: String,
     id: String,
     url: String?,
-  ): ZiplineManifest? {
-    val byteString = fetchByteString(embeddedDir / getApplicationManifestFileName(applicationName))
-    return byteString?.decodeToZiplineManifest(eventListener, applicationName, url)
+  ): LoadedManifest? {
+    val manifestBytes = fetchByteString(
+      embeddedDir / getApplicationManifestFileName(applicationName)
+    ) ?: return null
+    val manifest = manifestBytes.decodeToZiplineManifest(eventListener, applicationName, url)
+    return LoadedManifest(manifestBytes, manifest)
   }
 
   override suspend fun pin(

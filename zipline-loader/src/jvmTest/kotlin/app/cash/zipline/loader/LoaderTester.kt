@@ -33,6 +33,7 @@ import org.junit.runners.model.Statement
 
 class LoaderTester(
   private val eventListener: EventListener = EventListener.NONE,
+  private val manifestVerifier: ManifestVerifier? = null,
 ): TestRule {
   /** Delegate to JUnit's temporary folder rule. */
   private val temporaryFolder = TemporaryFolder()
@@ -60,6 +61,7 @@ class LoaderTester(
           dispatcher = dispatcher,
           httpClient = httpClient,
           eventListener = eventListener,
+          manifestVerifier = manifestVerifier,
         ).withEmbedded(
           embeddedDir = embeddedDir,
           embeddedFileSystem = embeddedFileSystem,
