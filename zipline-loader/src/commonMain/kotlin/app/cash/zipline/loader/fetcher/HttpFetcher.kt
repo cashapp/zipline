@@ -41,7 +41,7 @@ internal class HttpFetcher(
     applicationName: String,
     id: String,
     url: String?,
-  ): FetchedManifest? {
+  ): LoadedManifest? {
     if (url == null) return null // This fetcher requires URLs.
     val manifestBytes = fetchByteString(applicationName, url)
     val manifestWithRelativeUrls = manifestBytes.decodeToZiplineManifest(
@@ -50,7 +50,7 @@ internal class HttpFetcher(
       url,
     )
     val manifest = httpClient.resolveUrls(manifestWithRelativeUrls, url)
-    return FetchedManifest(manifestBytes, manifest)
+    return LoadedManifest(manifestBytes, manifest)
   }
 
   override suspend fun pin(

@@ -41,7 +41,7 @@ internal class FsCachingFetcher(
     applicationName: String,
     id: String,
     url: String?,
-  ): FetchedManifest? {
+  ): LoadedManifest? {
     // Prefer the network for the freshest manifest. Fallback to the cache if that fails.
     return try {
       delegate.fetchManifest(applicationName, id, url)

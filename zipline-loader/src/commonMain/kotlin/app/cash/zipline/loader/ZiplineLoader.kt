@@ -333,14 +333,14 @@ class ZiplineLoader internal constructor(
     manifestUrl: String?,
   ): ZiplineManifest {
     // Fetch manifests remote-first as that's where the freshest data is.
-    val fetched = fetchers.asReversed().fetchManifest(
+    val loaded = fetchers.asReversed().fetchManifest(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       applicationName = applicationName,
       id = getApplicationManifestFileName(applicationName),
       url = manifestUrl,
     )!!
-    val manifestBytes = fetched.manifestBytes
-    val manifest = fetched.manifest
+    val manifestBytes = loaded.manifestBytes
+    val manifest = loaded.manifest
     manifestVerifier?.verify(manifestBytes, manifest)
     return manifest
   }

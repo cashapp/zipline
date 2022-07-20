@@ -50,7 +50,7 @@ internal interface Fetcher {
     applicationName: String,
     id: String,
     url: String?,
-  ): FetchedManifest?
+  ): LoadedManifest?
 
   /**
    * Permits all downloads for [applicationName] not in [manifest] to be pruned.
@@ -80,7 +80,7 @@ internal interface Fetcher {
  * A manifest plus the original bytes we loaded for it. We need the original bytes for signature
  * verification.
  */
-class FetchedManifest(
+class LoadedManifest(
   val manifestBytes: ByteString,
   val manifest: ZiplineManifest,
 )
@@ -117,7 +117,7 @@ internal suspend fun List<Fetcher>.fetchManifest(
   applicationName: String,
   id: String,
   url: String?,
-): FetchedManifest? = concurrentDownloadsSemaphore.withPermit {
+): LoadedManifest? = concurrentDownloadsSemaphore.withPermit {
   for (fetcher in this) {
     return@withPermit fetcher.fetchManifest(applicationName, id, url) ?: continue
   }
