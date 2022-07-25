@@ -27,7 +27,6 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
@@ -217,7 +216,7 @@ class ZiplineCacheTest {
       it.write("red", fileApple.sha256(), fileApple)
       val manifestApple = createRelativeManifest("apple", fileApple.sha256())
       it.pinManifest("red", manifestApple)
-      assertEquals(manifestApple, it.getPinnedManifest("red")?.manifest)
+      assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(2, it.countFiles())
       assertEquals(2, it.countPins())
 
@@ -228,7 +227,7 @@ class ZiplineCacheTest {
       assertEquals(3, it.countPins())
 
       it.pinManifest("red", manifestFiretruck)
-      assertEquals(manifestFiretruck, it.getPinnedManifest("red")?.manifest)
+      assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
       assertEquals(4, it.countFiles()) // apple manifest remains in cache until prune.
       assertEquals(2, it.countPins())
     }
@@ -245,7 +244,7 @@ class ZiplineCacheTest {
       it.write("red", fileApple.sha256(), fileApple)
       val manifestApple = createRelativeManifest("apple", fileApple.sha256())
       it.pinManifest("red", manifestApple)
-      assertEquals(manifestApple, it.getPinnedManifest("red")?.manifest)
+      assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(2, it.countFiles())
       assertEquals(2, it.countPins())
 
@@ -256,7 +255,7 @@ class ZiplineCacheTest {
       assertEquals(3, it.countPins())
 
       it.unpinManifest("red", manifestFiretruck)
-      assertEquals(manifestApple, it.getPinnedManifest("red")?.manifest)
+      assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(3, it.countFiles()) // firetruck manifest isn't saved to file cache.
       assertEquals(2, it.countPins())
     }
@@ -274,16 +273,17 @@ class ZiplineCacheTest {
       it.write("red", fileFiretruck.sha256(), fileFiretruck)
       val manifestFiretruck = createRelativeManifest("firetruck", fileFiretruck.sha256())
 
-      assertEquals(manifestApple, it.getPinnedManifest("red")?.manifest)
+      assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(3, it.countPins())
 
-      val manifestFiretruckByteString = Json
-        .encodeToString(ZiplineManifest.serializer(), manifestFiretruck)
-        .encodeUtf8()
-      it.writeManifest("red", manifestFiretruckByteString.sha256(), manifestFiretruckByteString)
+      it.writeManifest(
+        "red",
+        manifestFiretruck.manifestBytes.sha256(),
+        manifestFiretruck.manifestBytes
+      )
       assertEquals(4, it.countPins())
 
-      assertEquals(manifestFiretruck, it.getPinnedManifest("red")?.manifest)
+      assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
     }
   }
 

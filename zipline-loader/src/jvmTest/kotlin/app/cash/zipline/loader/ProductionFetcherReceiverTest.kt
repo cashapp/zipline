@@ -16,12 +16,14 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.fetcher.LoadedManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
+import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path
@@ -126,5 +128,18 @@ class ProductionFetcherReceiverTest {
       "fake".encodeUtf8()
     }
     assertEquals(testFixtures.alphaByteString, ziplineFileFromCache)
+  }
+
+  private suspend fun ZiplineLoader.loadOrFail(
+    applicationName: String,
+    manifest: ZiplineManifest,
+    initializer: (Zipline) -> Unit = {},
+  ): Zipline {
+    return createZiplineAndLoad(
+      applicationName = applicationName,
+      manifestUrl = null,
+      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest),
+      initializer = initializer,
+    )
   }
 }
