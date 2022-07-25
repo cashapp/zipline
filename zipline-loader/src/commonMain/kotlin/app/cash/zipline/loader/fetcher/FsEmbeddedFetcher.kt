@@ -18,7 +18,6 @@ package app.cash.zipline.loader.fetcher
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.ZiplineManifest
-import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
@@ -45,17 +44,19 @@ internal class FsEmbeddedFetcher(
     val manifestBytes = fetchByteString(
       embeddedDir / getApplicationManifestFileName(applicationName)
     ) ?: return null
-    val manifest = manifestBytes.decodeToZiplineManifest(eventListener, applicationName, url)
-    return LoadedManifest(manifestBytes, manifest)
+    return LoadedManifest(manifestBytes)
   }
 
   override suspend fun pin(
     applicationName: String,
-    manifest: ZiplineManifest
+    loadedManifest: LoadedManifest,
   ) {
   }
 
-  override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
+  override suspend fun unpin(
+    applicationName: String,
+    loadedManifest: LoadedManifest,
+  ) {
   }
 
   private fun fetchByteString(filePath: Path) = when {

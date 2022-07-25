@@ -20,8 +20,6 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlinx.coroutines.test.TestCoroutineDispatcher
-import kotlinx.serialization.json.Json
-import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import okio.Path.Companion.toPath
@@ -50,6 +48,9 @@ class LoaderTester(
   private var testFixtures = LoaderTestFixtures()
 
   private val baseUrl = "https://example.com/files"
+
+  /** True to inject an extra field in encoded JSON to test forwards-compatibility. */
+  internal var includeUnknownFieldInJson = false
 
   internal lateinit var loader: ZiplineLoader
   internal lateinit var cache: ZiplineCache
@@ -84,8 +85,11 @@ class LoaderTester(
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
     val sha256 = ziplineFileByteString.sha256()
-    val manifest = LoaderTestFixtures.createRelativeManifest(seed, sha256)
-    val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
+    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
+      seed,
+      sha256,
+      includeUnknownFieldInJson,
+    )
     embeddedFileSystem.write(embeddedDir / sha256.hex()) {
       write(ziplineFileByteString)
     }
@@ -94,7 +98,7 @@ class LoaderTester(
         applicationName
       )
     ) {
-      write(manifestJsonString.encodeUtf8())
+      write(loadedManifest.manifestBytes)
     }
   }
 
@@ -102,10 +106,13 @@ class LoaderTester(
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
-    val manifest = LoaderTestFixtures.createRelativeManifest(seed, ziplineFileByteString.sha256())
-    val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
+    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
+      seed,
+      ziplineFileByteString.sha256(),
+      includeUnknownFieldInJson,
+    )
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifestJsonString.encodeUtf8(),
+      manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
     zipline = loader.loadOrFallBack(applicationName, manifestUrl)
@@ -148,13 +155,16 @@ class LoaderTester(
     val seed = "unreachable"
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
-    val manifest = LoaderTestFixtures.createRelativeManifest(seed, ziplineFileByteString.sha256())
-    val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
+    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
+      seed,
+      ziplineFileByteString.sha256(),
+      includeUnknownFieldInJson,
+    )
 
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
 
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifestJsonString.encodeUtf8(),
+      manifestUrl to loadedManifest.manifestBytes,
     )
     zipline = loader.loadOrFallBack(applicationName, manifestUrl)
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
@@ -169,13 +179,16 @@ class LoaderTester(
         seed
       ), "$seed.js"
     )
-    val manifest = LoaderTestFixtures.createRelativeManifest(seed, ziplineFileByteString.sha256())
-    val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
+    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
+      seed,
+      ziplineFileByteString.sha256(),
+      includeUnknownFieldInJson,
+    )
 
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
 
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifestJsonString.encodeUtf8(),
+      manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
     zipline = loader.loadOrFallBack(applicationName, manifestUrl)
@@ -188,13 +201,16 @@ class LoaderTester(
     val seed = "crashes"
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
-    val manifest = LoaderTestFixtures.createRelativeManifest(seed, ziplineFileByteString.sha256())
-    val manifestJsonString = Json.encodeToString(ZiplineManifest.serializer(), manifest)
+    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
+      seed,
+      ziplineFileByteString.sha256(),
+      includeUnknownFieldInJson,
+    )
 
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
 
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifestJsonString.encodeUtf8(),
+      manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
     zipline = loader.loadOrFallBack(applicationName, manifestUrl) {

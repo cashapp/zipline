@@ -111,4 +111,15 @@ class LoadOrFallbackTest {
     })
     assertEquals(-1, tester.prune())
   }
+
+  @Test
+  fun manifestContainsUnknownField() = runBlocking {
+    tester.includeUnknownFieldInJson = true
+    tester.seedEmbedded("red", "firetruck")
+    assertEquals("firetruck", tester.failureManifestFetchFails("red"))
+    assertEquals("firetruck", tester.failureCodeRunFails("red"))
+    assertEquals("firetruck", tester.failureCodeLoadFails("red"))
+    assertEquals("firetruck", tester.success("red", "firetruck"))
+    assertEquals("firetruck", tester.failureCodeFetchFails("red"))
+  }
 }

@@ -16,12 +16,9 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import app.cash.zipline.loader.ZiplineManifest.Companion.decodeToZiplineManifest
 import app.cash.zipline.loader.fetcher.LoadedManifest
 import app.cash.zipline.loader.internal.database.isSqlException
-import kotlinx.serialization.json.Json
 import okio.ByteString
-import okio.ByteString.Companion.encodeUtf8
 import okio.Closeable
 import okio.FileNotFoundException
 import okio.FileSystem
@@ -147,23 +144,21 @@ internal class ZiplineCache internal constructor(
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
       )
-    val manifest = Json.decodeFromString(ZiplineManifest.serializer(), manifestBytes.utf8())
-    return LoadedManifest(manifestBytes, manifest)
+    return LoadedManifest(manifestBytes)
   }
 
   /** Pins manifest and unpins all other files and manifests */
-  fun pinManifest(applicationName: String, manifest: ZiplineManifest) {
-    val manifestByteString = Json
-      .encodeToString(ZiplineManifest.serializer(), manifest).encodeUtf8()
+  fun pinManifest(applicationName: String, loadedManifest: LoadedManifest) {
+    val manifestBytes = loadedManifest.manifestBytes
     val manifestMetadata =
-      writeManifest(applicationName, manifestByteString.sha256(), manifestByteString)
+      writeManifest(applicationName, manifestBytes.sha256(), manifestBytes)
         ?: return
 
     database.transaction {
       database.pinsQueries.delete_application_pins(applicationName)
 
       // Pin all modules in this manifest.
-      manifest.modules.forEach { (_, module) ->
+      loadedManifest.manifest.modules.forEach { (_, module) ->
         database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.let { metadata ->
           createPinIfNotExists(applicationName, metadata.id)
         }
@@ -178,12 +173,10 @@ internal class ZiplineCache internal constructor(
    * Unpin manifest and make all files open to pruning, except those included
    * in another pinned manifest.
    */
-  fun unpinManifest(applicationName: String, manifest: ZiplineManifest) {
-    val unpinManifestByteString = Json
-      .encodeToString(ZiplineManifest.serializer(), manifest)
-      .encodeUtf8()
+  fun unpinManifest(applicationName: String, loadedManifest: LoadedManifest) {
+    val unpinManifestBytes = loadedManifest.manifestBytes
     val unpinManifestFile = database.filesQueries
-      .get(unpinManifestByteString.sha256().hex())
+      .get(unpinManifestBytes.sha256().hex())
       .executeAsOneOrNull()
 
     // Get fallback manifest metadata.
@@ -200,11 +193,11 @@ internal class ZiplineCache internal constructor(
       database.pinsQueries.delete_application_pins(applicationName)
     } else {
       // Pin the fallback manifest, which removes all pins prior to pinning.
-      val fallbackManifest = read(fallbackManifestFile.sha256_hex)
-        ?.decodeToZiplineManifest(eventListener, applicationName, "cache-read")
+      val fallbackManifestBytes = read(fallbackManifestFile.sha256_hex)
         ?: throw FileNotFoundException(
           "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
         )
+      val fallbackManifest = LoadedManifest(fallbackManifestBytes)
       pinManifest(applicationName, fallbackManifest)
     }
   }

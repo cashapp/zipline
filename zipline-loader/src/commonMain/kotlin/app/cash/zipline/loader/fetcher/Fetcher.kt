@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.loader.fetcher
 
-import app.cash.zipline.loader.ZiplineManifest
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import okio.ByteString
@@ -62,7 +61,7 @@ internal interface Fetcher {
    */
   suspend fun pin(
     applicationName: String,
-    manifest: ZiplineManifest,
+    loadedManifest: LoadedManifest,
   )
 
   /**
@@ -72,18 +71,9 @@ internal interface Fetcher {
    */
   suspend fun unpin(
     applicationName: String,
-    manifest: ZiplineManifest,
+    loadedManifest: LoadedManifest,
   )
 }
-
-/**
- * A manifest plus the original bytes we loaded for it. We need the original bytes for signature
- * verification.
- */
-class LoadedManifest(
-  val manifestBytes: ByteString,
-  val manifest: ZiplineManifest,
-)
 
 /**
  * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
@@ -126,14 +116,14 @@ internal suspend fun List<Fetcher>.fetchManifest(
 
 internal suspend fun List<Fetcher>.pin(
   applicationName: String,
-  manifest: ZiplineManifest,
+  loadedManifest: LoadedManifest,
 ) = this.forEach { fetcher ->
-  fetcher.pin(applicationName, manifest)
+  fetcher.pin(applicationName, loadedManifest)
 }
 
 internal suspend fun List<Fetcher>.unpin(
   applicationName: String,
-  manifest: ZiplineManifest,
+  loadedManifest: LoadedManifest,
 ) = this.forEach { fetcher ->
-  fetcher.unpin(applicationName, manifest)
+  fetcher.unpin(applicationName, loadedManifest)
 }

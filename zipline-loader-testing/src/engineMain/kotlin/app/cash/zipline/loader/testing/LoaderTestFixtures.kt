@@ -21,8 +21,13 @@ import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
+import app.cash.zipline.loader.fetcher.LoadedManifest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.encodeToJsonElement
+import kotlinx.serialization.json.jsonObject
 import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
@@ -73,6 +78,7 @@ class LoaderTestFixtures {
 
   val manifestJsonString = Json.encodeToString(manifest)
   val manifestByteString = manifestJsonString.encodeUtf8()
+  val loadedManifest = LoadedManifest(manifestByteString, manifest)
 
   fun createZiplineFile(javaScript: String, fileName: String): ByteString {
     val quickJs = QuickJs.create()
@@ -99,17 +105,38 @@ class LoaderTestFixtures {
 
     fun createRelativeManifest(
       seed: String,
-      seedFileSha256: ByteString
-    ) = ZiplineManifest.create(
-      modules = mapOf(
-        seed to ZiplineModule(
-          url = "$seed.zipline",
-          sha256 = seedFileSha256,
-        )
-      ),
-      mainModuleId = "./app.js",
-      mainFunction = "zipline.ziplineMain()",
-    )
+      seedFileSha256: ByteString,
+      includeUnknownFieldInJson: Boolean = false,
+    ): LoadedManifest {
+      val manifest = ZiplineManifest.create(
+        modules = mapOf(
+          seed to ZiplineModule(
+            url = "$seed.zipline",
+            sha256 = seedFileSha256,
+          )
+        ),
+        mainModuleId = "./app.js",
+        mainFunction = "zipline.ziplineMain()",
+      )
+
+      // Synthesize an unknown field to test forward-compatibility.
+      val manifestJson = when {
+        includeUnknownFieldInJson -> {
+          val jsonElement = Json.encodeToJsonElement(manifest)
+          val map = jsonElement.jsonObject.toMutableMap()
+          map["unknownKey"] = JsonPrimitive("unknownValue")
+          Json.encodeToString(JsonObject(map))
+        }
+        else -> {
+          Json.encodeToString(manifest)
+        }
+      }
+
+      return LoadedManifest(
+        manifestJson.encodeUtf8(),
+        manifest,
+      )
+    }
 
     fun createJs(seed: String) = """
       |globalThis.log = globalThis.log || "";

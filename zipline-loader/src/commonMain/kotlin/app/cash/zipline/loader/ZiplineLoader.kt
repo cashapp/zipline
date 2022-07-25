@@ -21,6 +21,7 @@ import app.cash.zipline.loader.fetcher.Fetcher
 import app.cash.zipline.loader.fetcher.FsCachingFetcher
 import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
 import app.cash.zipline.loader.fetcher.HttpFetcher
+import app.cash.zipline.loader.fetcher.LoadedManifest
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.fetcher.fetchManifest
 import app.cash.zipline.loader.fetcher.pin
@@ -40,10 +41,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.withContext
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
-import okio.ByteString.Companion.encodeUtf8
 import okio.Closeable
 import okio.FileSystem
 import okio.Path
@@ -175,10 +173,10 @@ class ZiplineLoader internal constructor(
    *
    * Pass either a [manifestUrl] or a [manifest]. There's no need to pass both.
    */
-  private suspend fun createZiplineAndLoad(
+  internal suspend fun createZiplineAndLoad(
     applicationName: String,
     manifestUrl: String?,
-    manifest: ZiplineManifest?,
+    loadedManifest: LoadedManifest?,
     initializer: (Zipline) -> Unit,
   ): Zipline {
     eventListener.applicationLoadStart(applicationName, manifestUrl)
@@ -186,14 +184,14 @@ class ZiplineLoader internal constructor(
     try {
       // Load from either pinned in cache or embedded by forcing network failure
       @Suppress("NAME_SHADOWING")
-      val manifest = manifest ?: fetchAndVerifyZiplineManifest(applicationName, manifestUrl)
-      receive(ZiplineLoadReceiver(zipline), manifest, applicationName)
+      val loaded = loadedManifest ?: fetchAndVerifyZiplineManifest(applicationName, manifestUrl)
+      receive(ZiplineLoadReceiver(zipline), loaded, applicationName)
 
       // Run caller lambda to validate and initialize the loaded code to confirm it works.
       initializer(zipline)
 
       // Pin stable application manifest after a successful load, and unpin all others.
-      fetchers.pin(applicationName, manifest)
+      fetchers.pin(applicationName, loaded)
 
       eventListener.applicationLoadEnd(applicationName, manifestUrl)
       return zipline
@@ -216,11 +214,11 @@ class ZiplineLoader internal constructor(
       url to fetchAndVerifyZiplineManifest(applicationName, url)
     }
     .distinctUntilChanged()
-    .mapNotNull { (manifestUrl, manifest) ->
+    .mapNotNull { (manifestUrl, loadedManifest) ->
       createZiplineAndLoad(
         applicationName = applicationName,
         manifestUrl = manifestUrl,
-        manifest = manifest,
+        loadedManifest = loadedManifest,
         initializer = initializer
       )
     }
@@ -234,14 +232,6 @@ class ZiplineLoader internal constructor(
     return createZiplineAndLoad(applicationName, manifestUrl, null, initializer)
   }
 
-  internal suspend fun loadOrFail(
-    applicationName: String,
-    manifest: ZiplineManifest,
-    initializer: (Zipline) -> Unit = {},
-  ): Zipline {
-    return createZiplineAndLoad(applicationName, null, manifest, initializer)
-  }
-
   suspend fun download(
     applicationName: String,
     downloadDir: Path,
@@ -252,7 +242,7 @@ class ZiplineLoader internal constructor(
       applicationName = applicationName,
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
-      manifest = fetchAndVerifyZiplineManifest(applicationName, manifestUrl),
+      loadedManifest = fetchAndVerifyZiplineManifest(applicationName, manifestUrl),
     )
   }
 
@@ -260,22 +250,22 @@ class ZiplineLoader internal constructor(
     applicationName: String,
     downloadDir: Path,
     downloadFileSystem: FileSystem,
-    manifest: ZiplineManifest,
+    loadedManifest: LoadedManifest,
   ) {
     downloadFileSystem.createDirectories(downloadDir)
     downloadFileSystem.write(downloadDir / getApplicationManifestFileName(applicationName)) {
-      write(Json.encodeToString(manifest).encodeUtf8())
+      write(loadedManifest.manifestBytes)
     }
-    receive(FsSaveReceiver(downloadFileSystem, downloadDir), manifest, applicationName)
+    receive(FsSaveReceiver(downloadFileSystem, downloadDir), loadedManifest, applicationName)
   }
 
   private suspend fun receive(
     receiver: Receiver,
-    manifest: ZiplineManifest,
+    loadedManifest: LoadedManifest,
     applicationName: String,
   ) {
     coroutineScope {
-      val loads = manifest.modules.map {
+      val loads = loadedManifest.manifest.modules.map {
         ModuleJob(applicationName, it.key, it.value, receiver)
       }
       try {
@@ -288,7 +278,7 @@ class ZiplineLoader internal constructor(
         }
       } catch (e: Exception) {
         // On exception, unpin this manifest; and rethrow so that the load attempt fails.
-        fetchers.unpin(applicationName, manifest)
+        fetchers.unpin(applicationName, loadedManifest)
         throw e
       }
     }
@@ -331,7 +321,7 @@ class ZiplineLoader internal constructor(
   private suspend fun fetchAndVerifyZiplineManifest(
     applicationName: String,
     manifestUrl: String?,
-  ): ZiplineManifest {
+  ): LoadedManifest {
     // Fetch manifests remote-first as that's where the freshest data is.
     val loaded = fetchers.asReversed().fetchManifest(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
@@ -342,7 +332,7 @@ class ZiplineLoader internal constructor(
     val manifestBytes = loaded.manifestBytes
     val manifest = loaded.manifest
     manifestVerifier?.verify(manifestBytes, manifest)
-    return manifest
+    return loaded
   }
 
   companion object {

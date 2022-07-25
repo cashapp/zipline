@@ -16,7 +16,9 @@
 package app.cash.zipline.loader
 
 import app.cash.turbine.test
+import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
+import app.cash.zipline.loader.fetcher.LoadedManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
@@ -32,8 +34,7 @@ import kotlin.time.toDuration
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.json.Json
-import okio.ByteString.Companion.encodeUtf8
+import okio.ByteString
 import okio.FileSystem
 import okio.Path
 import okio.Path.Companion.toPath
@@ -216,7 +217,7 @@ class ZiplineLoaderTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    loader.download("test", downloadDir, fileSystem, testFixtures.manifest)
+    loader.download("test", downloadDir, fileSystem, testFixtures.loadedManifest)
 
     // check that files have been downloaded to downloadDir as expected
     assertTrue(fileSystem.exists(downloadDir / getApplicationManifestFileName("test")))
@@ -249,11 +250,9 @@ class ZiplineLoaderTest {
       "$baseUrl/firetruck/${getApplicationManifestFileName(applicationName)}"
 
     httpClient.filePathToByteString = mapOf(
-      appleManifestUrl to Json.encodeToString(ZiplineManifest.serializer(), appleManifest)
-        .encodeUtf8(),
+      appleManifestUrl to appleManifest.manifestBytes,
       "$baseUrl/apple/apple.zipline" to appleZiplineFileByteString,
-      firetruckManifestUrl to Json.encodeToString(ZiplineManifest.serializer(), firetruckManifest)
-        .encodeUtf8(),
+      firetruckManifestUrl to firetruckManifest.manifestBytes,
       "$baseUrl/firetruck/firetruck.zipline" to firetruckZiplineFileByteString,
     )
 
@@ -277,5 +276,18 @@ class ZiplineLoaderTest {
       )
       cancel()
     }
+  }
+
+  private suspend fun ZiplineLoader.loadOrFail(
+    applicationName: String,
+    manifest: ZiplineManifest,
+    initializer: (Zipline) -> Unit = {},
+  ): Zipline {
+    return createZiplineAndLoad(
+      applicationName = applicationName,
+      manifestUrl = null,
+      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest),
+      initializer = initializer,
+    )
   }
 }

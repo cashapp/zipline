@@ -16,7 +16,6 @@
 package app.cash.zipline.loader.fetcher
 
 import app.cash.zipline.loader.ZiplineCache
-import app.cash.zipline.loader.ZiplineManifest
 import okio.ByteString
 
 /**
@@ -51,9 +50,9 @@ internal class FsCachingFetcher(
     }
   }
 
-  override suspend fun pin(applicationName: String, manifest: ZiplineManifest) =
-    cache.pinManifest(applicationName, manifest)
+  override suspend fun pin(applicationName: String, loadedManifest: LoadedManifest) =
+    cache.pinManifest(applicationName, loadedManifest)
 
-  override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) =
-    cache.unpinManifest(applicationName, manifest)
+  override suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest) =
+    cache.unpinManifest(applicationName, loadedManifest)
 }

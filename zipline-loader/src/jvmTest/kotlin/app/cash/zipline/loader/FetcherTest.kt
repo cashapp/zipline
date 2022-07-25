@@ -15,8 +15,8 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.loader.fetcher.LoadedManifest
 import app.cash.zipline.loader.fetcher.Fetcher
+import app.cash.zipline.loader.fetcher.LoadedManifest
 import app.cash.zipline.loader.fetcher.fetch
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlin.test.assertEquals
@@ -55,11 +55,11 @@ class FetcherTest {
       error("unexpected call")
     }
 
-    override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun pin(applicationName: String, loadedManifest: LoadedManifest) {
       error("unexpected call")
     }
 
-    override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest) {
       error("unexpected call")
     }
   }
@@ -83,11 +83,11 @@ class FetcherTest {
       error("unexpected call")
     }
 
-    override suspend fun pin(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun pin(applicationName: String, loadedManifest: LoadedManifest) {
       error("unexpected call")
     }
 
-    override suspend fun unpin(applicationName: String, manifest: ZiplineManifest) {
+    override suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest) {
       error("unexpected call")
     }
   }
