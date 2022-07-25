@@ -80,7 +80,9 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
 
     project.tasks.withType(KotlinWebpack::class.java).configureEach { kotlinWebpack ->
-      kotlinWebpack.dependsOn(compileZiplineTaskName)
+      if (kotlinBinary.mode.toString().equals(kotlinWebpack.mode.toString(), ignoreCase = true)) {
+        kotlinWebpack.dependsOn(compileZiplineTaskName)
+      }
     }
   }
 
