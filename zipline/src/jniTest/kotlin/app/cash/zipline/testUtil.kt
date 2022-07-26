@@ -21,12 +21,12 @@ import kotlin.reflect.KClass
 /** Load our testing libraries into QuickJS. */
 fun Zipline.loadTestingJs() {
   // Load modules in topologically-sorted order. In production the zipline-manifest does this.
-  loadJsModuleFromResource("./kotlin_kotlin.js")
-  loadJsModuleFromResource("./kotlin_org_jetbrains_kotlinx_atomicfu.js")
-  loadJsModuleFromResource("./kotlin_org_jetbrains_kotlinx_kotlinx_serialization_core.js")
-  loadJsModuleFromResource("./kotlin_org_jetbrains_kotlinx_kotlinx_serialization_json.js")
-  loadJsModuleFromResource("./kotlin_org_jetbrains_kotlinx_kotlinx_coroutines_core.js")
-  loadJsModuleFromResource("./kotlin_app_cash_zipline_zipline.js")
+  loadJsModuleFromResource("./kotlin-kotlin-stdlib-js-ir.js")
+  loadJsModuleFromResource("./88b0986a7186d029-atomicfu-js-ir.js")
+  loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-core-js-ir.js")
+  loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-json-js-ir.js")
+  loadJsModuleFromResource("./kotlinx.coroutines-kotlinx-coroutines-core-js-ir.js")
+  loadJsModuleFromResource("./zipline-root-zipline.js")
   loadJsModuleFromResource("./zipline-root-testing.js")
   quickJs.evaluate("globalThis['testing'] = require('./zipline-root-testing.js');")
 }

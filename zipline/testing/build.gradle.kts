@@ -1,6 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
-import org.jetbrains.kotlin.gradle.plugin.mpp.AbstractKotlinNativeCompilation
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
@@ -55,16 +54,11 @@ kotlin {
 
   targets.all {
     compilations.all {
-      val pluginDependency = if (this is AbstractKotlinNativeCompilation) {
-        projects.ziplineKotlinPluginHosted
-      } else {
-        projects.ziplineKotlinPlugin
-      }
       // Naming logic from https://github.com/JetBrains/kotlin/blob/a0e6fb03f0288f0bff12be80c402d8a62b5b045a/libraries/tools/kotlin-gradle-plugin/src/main/kotlin/org/jetbrains/kotlin/gradle/plugin/KotlinTargetConfigurator.kt#L519-L520
       val pluginConfigurationName = PLUGIN_CLASSPATH_CONFIGURATION_NAME +
         target.disambiguationClassifier.orEmpty().capitalize() +
         compilationName.capitalize()
-      project.dependencies.add(pluginConfigurationName, pluginDependency)
+      project.dependencies.add(pluginConfigurationName, projects.ziplineKotlinPlugin)
     }
   }
 }
