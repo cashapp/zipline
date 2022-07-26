@@ -25,7 +25,14 @@ android {
   }
 
   composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.androidx.compose.get()
+    kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
+  }
+
+  kotlinOptions {
+    freeCompilerArgs += listOf(
+      "-P",
+      "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
+    )
   }
 
   packagingOptions {
