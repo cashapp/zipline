@@ -17,7 +17,6 @@ buildscript {
     classpath(libs.mavenPublish.gradle.plugin)
     classpath(libs.kotlin.gradle.plugin)
     classpath(libs.kotlin.serialization)
-    classpath(libs.graal.gradle.plugin)
     classpath(libs.dokka.gradle.plugin)
     classpath(libs.shadowJar.gradle.plugin)
     classpath(libs.cklib.gradle.plugin)
