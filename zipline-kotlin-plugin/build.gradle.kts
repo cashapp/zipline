@@ -5,20 +5,28 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 
 plugins {
   kotlin("jvm")
+  kotlin("kapt")
+  id("com.github.gmazzo.buildconfig")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
+  id("com.github.johnrengelman.shadow")
 }
 
 dependencies {
-  compileOnly(projects.ziplineKotlinPluginHosted)
+  compileOnly(kotlin("compiler"))
+
+  kapt("com.google.auto.service:auto-service:1.0")
+  compileOnly("com.google.auto.service:auto-service-annotations:1.0")
 }
 
-val shadowJar = tasks.register("embeddedPlugin", ShadowJar::class.java) {
-  configurations = listOf(project.configurations.getByName("compileClasspath"))
+buildConfig {
+  packageName("app.cash.zipline.kotlin")
+  buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${libs.plugins.zipline.kotlin.get()}\"")
+}
+
+val shadowJar = tasks.named("shadowJar", ShadowJar::class.java)
+shadowJar.configure {
   relocate("com.intellij", "org.jetbrains.kotlin.com.intellij")
-  archiveBaseName.set("embedded")
-  archiveVersion.set("")
-  destinationDirectory.set(File(buildDir, "repackaged"))
 }
 
 configurations {
