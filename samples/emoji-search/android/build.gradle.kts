@@ -28,13 +28,6 @@ android {
     kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
   }
 
-  kotlinOptions {
-    freeCompilerArgs += listOf(
-      "-P",
-      "plugin:androidx.compose.compiler.plugins.kotlin:suppressKotlinVersionCompatibilityCheck=true"
-    )
-  }
-
   packagingOptions {
     resources {
       excludes += "/META-INF/{AL2.0,LGPL2.1}"
