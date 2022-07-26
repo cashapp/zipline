@@ -11,6 +11,13 @@ jacoco.exec
 .externalNativeBuild
 .cxx
 
+# iOS
+*.pbxuser
+# Ignore generated Xcode projects
+*.xcworkspace
+xcuserdata
+Pods
+
 # Release
 docs/0.x
 

@@ -63,7 +63,7 @@ jobs:
           path: zipline/src/jvmMain/resources/*
           if-no-files-found: error
 
-  android-emulator:
+  android:
     # We build on a Mac to get hardware acceleration for the Android emulator.
     runs-on: macos-latest
 
@@ -82,11 +82,29 @@ jobs:
           api-level: 29
           script: ./gradlew connectedCheck
 
+  ios:
+    runs-on: macos-latest
+
+    steps:
+      - uses: actions/checkout@v3
+      - uses: gradle/wrapper-validation-action@v1
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: 11
+
+      - name: Build Xcode samples
+        run: |
+          cd samples/emoji-search/ios/app
+          pod install
+          xcodebuild -workspace EmojiSearchApp.xcworkspace -scheme EmojiSearchApp -destination 'platform=iOS Simulator,name=iPhone 12,OS=latest'
+
   publish:
     runs-on: macos-latest
     needs:
       - build
-      - android-emulator
+      - android
+      - ios
 
     steps:
       - uses: actions/checkout@v3

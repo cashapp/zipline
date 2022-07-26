@@ -9,6 +9,9 @@ plugins {
 }
 
 kotlin {
+  ios()
+  iosSimulatorArm64("ios")
+
   android()
 
   js {
@@ -22,11 +25,21 @@ kotlin {
         implementation("app.cash.zipline:zipline")
       }
     }
+    val hostMain by creating {
+      dependsOn(commonMain)
+      dependencies {
+        implementation("app.cash.zipline:zipline-loader")
+        api(libs.okio.core)
+      }
+    }
+    val iosMain by getting {
+      dependsOn(hostMain)
+    }
     val androidMain by getting {
+      dependsOn(hostMain)
       dependencies {
         implementation(libs.okHttp.core)
         implementation(libs.sqldelight.driver.android)
-        implementation("app.cash.zipline:zipline-loader")
       }
     }
   }
