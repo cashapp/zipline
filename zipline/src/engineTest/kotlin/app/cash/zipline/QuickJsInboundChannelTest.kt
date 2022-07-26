@@ -113,7 +113,7 @@ class QuickJsInboundChannelTest {
     val t = assertFailsWith<IllegalStateException> {
       quickJs.getInboundChannel()
     }
-    assertEquals("A global JavaScript object called $inboundChannelName was not found", t.message)
+    assertEquals("A global JavaScript object called $inboundChannelName was not found. Try confirming that Zipline.get() has been called to initialize $inboundChannelName.", t.message)
   }
 
   @Test

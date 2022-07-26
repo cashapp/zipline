@@ -96,7 +96,12 @@ class ZiplineCompilerTest {
 
     val mainModuleId = "./app.js"
     val mainFunction = "zipline.ziplineMain()"
-    ZiplineCompiler.compile(inputDir, outputDir, mainFunction, mainModuleId)
+    ZiplineCompiler.compile(
+      inputDir = inputDir,
+      outputDir = outputDir,
+      mainFunction = mainFunction,
+      mainModuleId = mainModuleId
+    )
 
     val expectedNumberFiles = if (dirHasSourceMaps) inputDir.listFiles()!!.size / 2 else inputDir.listFiles()!!.size
     // Don't include Zipline manifest

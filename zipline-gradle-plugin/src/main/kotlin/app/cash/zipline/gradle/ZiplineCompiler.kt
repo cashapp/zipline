@@ -85,7 +85,9 @@ object ZiplineCompiler {
       }
     }
     val unsignedManifest = ZiplineManifest.create(
-      modules = modules, mainFunction = mainFunction, mainModuleId = mainModuleId
+      modules = modules,
+      mainFunction = mainFunction,
+      mainModuleId = mainModuleId
     )
 
     val manifest = manifestSigner?.sign(unsignedManifest) ?: unsignedManifest

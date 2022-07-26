@@ -368,7 +368,7 @@ actual class QuickJs private constructor(
     val hasProperty = JS_HasProperty(context, globalThis, inboundChannelAtom) != 0
     JS_FreeValue(context, globalThis)
     JS_FreeAtom(context, inboundChannelAtom)
-    check(hasProperty) { "A global JavaScript object called $inboundChannelName was not found. Try confirming that Zipline.get() has been called." }
+    check(hasProperty) { "A global JavaScript object called $inboundChannelName was not found. Try confirming that Zipline.get() has been called to initialize $inboundChannelName." }
 
     return InboundCallChannel(this)
   }

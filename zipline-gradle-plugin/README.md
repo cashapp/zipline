@@ -15,7 +15,7 @@ The plugin offers setting the following variables which are used in compilation.
 import app.cash.zipline.gradle.ZiplineCompileTask
 
 tasks.withType(ZiplineCompileTask::class) {
-  mainFunction.set("my.path.prepareFunction()")
+  mainFunction.set("my.application.package.path.prepareFunction()")
 }
 ```
 

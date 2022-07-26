@@ -88,7 +88,13 @@ abstract class ZiplineCompileTask @Inject constructor(
       else -> null
     }
 
-    ZiplineCompiler.compile(inputDirFile, outputDirFile, mainFunction, mainModuleId, manifestSigner)
+    ZiplineCompiler.compile(
+      inputDir = inputDirFile,
+      outputDir = outputDirFile,
+      mainFunction = mainFunction,
+      mainModuleId = mainModuleId,
+      manifestSigner = manifestSigner
+    )
 
     val webpackHome = project.rootProject.buildDir.resolve("js/packages/placeholder-name")
     val directory = outputDirFile.relativeTo(webpackHome)
