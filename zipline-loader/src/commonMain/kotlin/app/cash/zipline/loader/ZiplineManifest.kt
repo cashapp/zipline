@@ -30,7 +30,7 @@ data class ZiplineManifest private constructor(
    * JS module ID for the application (ie. "./alpha-app.js").
    * This will usually be the last module in the manifest once it is topologically sorted.
    */
-  val mainModuleId: String?,
+  val mainModuleId: String,
   /** Fully qualified main function to start the application (ie. "zipline.main()"). */
   val mainFunction: String?,
 
@@ -49,23 +49,25 @@ data class ZiplineManifest private constructor(
   companion object {
     fun create(
       modules: Map<String, ZiplineModule>,
-      mainModuleId: String? = null,
       mainFunction: String? = null,
+      mainModuleId: String? = null,
       signatures: Map<String, String> = mapOf(),
-    ): ZiplineManifest = ZiplineManifest(
-      modules = modules.keys
+    ): ZiplineManifest {
+      val sortedModuleIds = modules.keys
         .toList()
         .topologicalSort { id ->
           modules[id]?.dependsOnIds
             ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
         }
-        .associateWith { id ->
+      return ZiplineManifest(
+        modules = sortedModuleIds.associateWith { id ->
           modules[id]
             ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
         },
-      mainModuleId = mainModuleId,
-      mainFunction = mainFunction,
-      signatures = signatures,
-    )
+        mainModuleId = mainModuleId ?: sortedModuleIds.last(),
+        mainFunction = mainFunction,
+        signatures = signatures,
+      )
+    }
   }
 }

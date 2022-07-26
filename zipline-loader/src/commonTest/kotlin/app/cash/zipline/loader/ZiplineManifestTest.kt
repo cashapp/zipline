@@ -40,6 +40,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf(),
         ),
       ),
+      mainFunction = "zipline.ziplineMain()"
     )
     val sorted = ZiplineManifest.create(
       modules = mapOf(
@@ -54,6 +55,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf("alpha"),
         ),
       ),
+      mainFunction = "zipline.ziplineMain()"
     )
     assertEquals(sorted, unsorted)
   }
@@ -61,7 +63,14 @@ class ZiplineManifestTest {
   @Test
   fun manifestChecksThatModulesAreSortedIfClassIsCopied() {
     val empty = ZiplineManifest.create(
-      modules = mapOf()
+      modules = mapOf(
+        "alpha" to ZiplineModule(
+          url = "/alpha.zipline",
+          sha256 = "abc123".encodeUtf8(),
+          dependsOnIds = listOf(),
+        )
+      ),
+      mainFunction = "zipline.ziplineMain()"
     )
     val unsortedException = assertFailsWith<IllegalArgumentException> {
       empty.copy(
@@ -75,9 +84,8 @@ class ZiplineManifestTest {
             url = "/alpha.zipline",
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf(),
-          ),
-
           )
+        )
       )
     }
     assertEquals(
@@ -96,7 +104,8 @@ class ZiplineManifestTest {
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf("alpha"),
           ),
-        )
+        ),
+        mainFunction = "zipline.ziplineMain()",
       )
     }
     assertEquals(
@@ -127,6 +136,26 @@ class ZiplineManifestTest {
   }
 
   @Test
+  fun usesLastSortedModuleAsMainModuleId() {
+    val manifest = ZiplineManifest.create(
+      modules = mapOf(
+        "alpha" to ZiplineModule(
+          url = "/alpha.zipline",
+          sha256 = "abc123".encodeUtf8(),
+          dependsOnIds = listOf(),
+        ),
+        "bravo" to ZiplineModule(
+          url = "/bravo.zipline",
+          sha256 = "abc123".encodeUtf8(),
+          dependsOnIds = listOf("alpha"),
+        ),
+      ),
+      mainFunction = "zipline.ziplineMain()"
+    )
+    assertEquals("bravo", manifest.mainModuleId)
+  }
+
+  @Test
   fun serializesToJson() {
     val original = ZiplineManifest.create(
       modules = mapOf(
@@ -141,7 +170,6 @@ class ZiplineManifestTest {
           dependsOnIds = listOf("alpha"),
         ),
       ),
-      mainModuleId = "./app.js",
       mainFunction = "zipline.ziplineMain()",
     )
 
@@ -162,7 +190,7 @@ class ZiplineManifestTest {
         |            ]
         |        }
         |    },
-        |    "mainModuleId": "./app.js",
+        |    "mainModuleId": "bravo",
         |    "mainFunction": "zipline.ziplineMain()",
         |    "signatures": {
         |    }

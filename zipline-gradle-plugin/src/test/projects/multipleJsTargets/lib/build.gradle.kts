@@ -26,6 +26,5 @@ kotlin {
 }
 
 tasks.withType(ZiplineCompileTask::class) {
-  mainModuleId.set("")
   mainFunction.set("")
 }

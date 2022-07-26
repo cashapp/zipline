@@ -56,6 +56,5 @@ val TEST_MANIFEST_PRODUCTION = ZiplineManifest.create(
       dependsOnIds = listOf("kotlin"),
     ),
   ),
-  mainModuleId = "./app.js",
-  mainFunction = "zipline.ziplineMain()",
+  mainFunction = "zipline.ziplineMain()"
 )

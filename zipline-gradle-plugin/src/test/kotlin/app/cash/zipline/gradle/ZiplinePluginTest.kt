@@ -24,7 +24,7 @@ import org.junit.Test
 
 class ZiplinePluginTest {
   @Test
-  fun `production builds`() {
+  fun productionBuilds() {
     val projectDir = File("src/test/projects/basic")
 
     val taskName = ":lib:compileProductionExecutableKotlinJsZipline"
@@ -50,7 +50,7 @@ class ZiplinePluginTest {
    * and the corresponding directories.
    */
   @Test
-  fun `development builds`() {
+  fun developmentBuilds() {
     val projectDir = File("src/test/projects/basic")
 
     val taskName = ":lib:compileDevelopmentExecutableKotlinJsZipline"
@@ -72,7 +72,7 @@ class ZiplinePluginTest {
   }
 
   @Test
-  fun `webpack config file is cleaned`() {
+  fun webpackConfigFileIsCleaned() {
     val projectDir = File("src/test/projects/basic")
     val webpackConfig = projectDir.resolve(
       "lib/webpack.config.d/generated-zipline-webpack-config.js"
@@ -93,7 +93,7 @@ class ZiplinePluginTest {
    *  - Compiling to .zipline files and producing a manifest
    */
   @Test
-  fun `end to end`() {
+  fun endToEnd() {
     val projectDir = File("src/test/projects/basic")
 
     val taskName = ":lib:launchGreetService"
@@ -104,7 +104,7 @@ class ZiplinePluginTest {
   }
 
   @Test
-  fun `jvm only project`() {
+  fun jvmOnlyProject() {
     val projectDir = File("src/test/projects/jvmOnly")
 
     val taskName = ":lib:bindAndTakeJvm"
@@ -123,7 +123,7 @@ class ZiplinePluginTest {
    * fragile.
    */
   @Test
-  fun `multiple js targets`() {
+  fun multipleJsTargets() {
     val projectDir = File("src/test/projects/multipleJsTargets")
 
     val taskName = ":lib:compileDevelopmentExecutableKotlinBlueZipline"

@@ -65,8 +65,7 @@ class ZiplineGradleDownloaderTest {
           patchUrl = null,
         )
       ),
-      mainModuleId = "./app.js",
-      mainFunction = "zipline.ziplineMain()",
+      mainFunction = "zipline.ziplineMain()"
     )
     val manifestJsonString = Json.encodeToString(manifest)
 

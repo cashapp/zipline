@@ -25,6 +25,5 @@ val bindAndTakeJvm by tasks.creating(JavaExec::class) {
 }
 
 tasks.withType(ZiplineCompileTask::class) {
-  mainModuleId.set("")
   mainFunction.set("")
 }
