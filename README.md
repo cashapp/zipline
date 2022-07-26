@@ -151,8 +151,8 @@ components.
 
 | Component            | Supported Version | Notes                                                                                                 |
 | :------------------- | :---------------- | :---------------------------------------------------------------------------------------------------- |
-| Kotlin Compiler      | 1.6.21            | Kotlin compiler plugins do not yet have a stable API.                                                 |
-| Kotlin Coroutines    | 1.6.1-native-mt   | For `invokeOnClose()`.                                                                                |
+| Kotlin Compiler      | 1.7.10            | Kotlin compiler plugins do not yet have a stable API.                                                 |
+| Kotlin Coroutines    | 1.6.3-native-mt   | For `invokeOnClose()`.                                                                                |
 | Kotlin Serialization | 1.3.3             | For `decodeFromDynamic()`, `encodeToDynamic()`, `EmptySerializersModule`, and `ContextualSerializer`. |
 
 We intend to use stable APIs as soon as they are available.

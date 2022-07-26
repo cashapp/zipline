@@ -28,12 +28,10 @@ dependencies {
 
 buildConfig {
   val compilerPlugin = projects.ziplineKotlinPlugin
-  val compilerPluginHosted = projects.ziplineKotlinPluginHosted
   packageName("app.cash.zipline.gradle")
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${libs.plugins.zipline.kotlin.get()}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_GROUP", "\"${compilerPlugin.group}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_NAME", "\"${compilerPlugin.name}\"")
-  buildConfigField("String", "KOTLIN_PLUGIN_HOSTED_NAME", "\"${compilerPluginHosted.name}\"")
   buildConfigField("String", "KOTLIN_PLUGIN_VERSION", "\"${compilerPlugin.version}\"")
 }
 
