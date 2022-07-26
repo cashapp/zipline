@@ -39,8 +39,6 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     version = BuildConfig.KOTLIN_PLUGIN_VERSION,
   )
 
-  override fun getPluginArtifactForNative() = getPluginArtifact()
-
   override fun apply(target: Project) {
     super.apply(target)
 
