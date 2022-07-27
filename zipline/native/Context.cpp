@@ -294,7 +294,7 @@ InboundCallChannel* Context::getInboundCallChannel(JNIEnv* env, jstring name) {
     throwJsException(env, obj);
   } else {
     const char* msg = JS_IsUndefined(obj)
-                      ? "A global JavaScript object called %s was not found"
+                      ? "A global JavaScript object called %s was not found. Try confirming that Zipline.get() has been called."
                       : "JavaScript global called %s is not an object";
     throwJavaException(env, "java/lang/IllegalStateException", msg, nameStr);
   }
