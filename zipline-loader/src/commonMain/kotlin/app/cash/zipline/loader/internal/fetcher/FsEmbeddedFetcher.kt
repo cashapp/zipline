@@ -15,10 +15,11 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
-import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
+import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
+
 /**
  * Fetch from embedded fileSystem that ships with the app.
  */

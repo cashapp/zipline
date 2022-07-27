@@ -20,7 +20,6 @@ import app.cash.zipline.QuickJs
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
-import app.cash.zipline.loader.ZiplineModule
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -46,12 +45,12 @@ class LoaderTestFixtures {
 
   val manifestWithRelativeUrls = ZiplineManifest.create(
     modules = mapOf(
-      "bravo" to ZiplineModule(
+      "bravo" to ZiplineManifest.Module(
         url = bravoRelativeUrl,
         sha256 = bravoByteString.sha256(),
         dependsOnIds = listOf("alpha"),
       ),
-      "alpha" to ZiplineModule(
+      "alpha" to ZiplineManifest.Module(
         url = alphaRelativeUrl,
         sha256 = alphaByteString.sha256(),
         dependsOnIds = listOf(),
@@ -109,7 +108,7 @@ class LoaderTestFixtures {
     ): LoadedManifest {
       val manifest = ZiplineManifest.create(
         modules = mapOf(
-          seed to ZiplineModule(
+          seed to ZiplineManifest.Module(
             url = "$seed.zipline",
             sha256 = seedFileSha256,
           )
