@@ -60,8 +60,6 @@ class ZiplineGradleDownloaderTest {
           url = webServer.url("/latest/app/alpha.zipline").toString(),
           sha256 = testFixtures.alphaSha256,
           dependsOnIds = listOf(),
-          patchFrom = null,
-          patchUrl = null,
         )
       ),
       mainFunction = "zipline.ziplineMain()"
