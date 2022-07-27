@@ -18,26 +18,27 @@ package app.cash.zipline.loader
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
-import okio.Path.Companion.toPath
-import okio.fakefilesystem.FakeFileSystem
-import org.junit.Test
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import okio.FileSystem
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class DownloadOnlyFetcherReceiverTest {
   private val testFixtures = LoaderTestFixtures()
 
-  private val dispatcher = TestCoroutineDispatcher()
+  private val dispatcher = UnconfinedTestDispatcher()
   private val httpClient = FakeZiplineHttpClient()
-  private val loader = ZiplineLoader(
+  private val loader = testZiplineLoader(
     dispatcher = dispatcher,
     httpClient = httpClient,
   )
 
-  private val fileSystem = FakeFileSystem()
-  private val downloadDir = "/zipline/downloads".toPath()
+  private val fileSystem = systemFileSystem
+  private val downloadDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "okio-${randomToken().hex()}"
 
   @Test
   fun getFileFromNetworkSaveToFs() = runBlocking {

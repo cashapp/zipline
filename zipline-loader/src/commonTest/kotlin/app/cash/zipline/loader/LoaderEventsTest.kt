@@ -16,19 +16,30 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.testing.LoggingEventListener
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.junit.Rule
-import org.junit.Test
+import okio.IOException
 
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class LoaderEventsTest {
   private val eventListener = LoggingEventListener()
 
-  @JvmField @Rule
-  val tester = LoaderTester(eventListener)
+  private val tester = LoaderTester(eventListener)
+
+  @BeforeTest
+  fun setUp() {
+    tester.beforeTest()
+  }
+
+  @AfterTest
+  fun tearDown() {
+    tester.afterTest()
+  }
 
   @Test
   fun happyPathEvents() = runBlocking {
@@ -73,9 +84,9 @@ class LoaderEventsTest {
         "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadFailed red https://example.com/files/red/red.manifest.zipline.json " +
-          "java.io.IOException: 404: https://example.com/files/red/red.manifest.zipline.json not found",
+          "${IOException::class.qualifiedName}: 404: https://example.com/files/red/red.manifest.zipline.json not found",
         "applicationLoadFailed red " +
-          "java.io.IOException: 404: https://example.com/files/red/red.manifest.zipline.json not found",
+          "${IOException::class.qualifiedName}: 404: https://example.com/files/red/red.manifest.zipline.json not found",
         "applicationLoadStart red null",
         "applicationLoadEnd red null",
       ),
@@ -94,9 +105,9 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/unreachable.zipline",
         "downloadFailed red https://example.com/files/red/unreachable.zipline " +
-          "java.io.IOException: 404: https://example.com/files/red/unreachable.zipline not found",
+          "${IOException::class.qualifiedName}: 404: https://example.com/files/red/unreachable.zipline not found",
         "applicationLoadFailed red " +
-          "java.io.IOException: 404: https://example.com/files/red/unreachable.zipline not found",
+          "${IOException::class.qualifiedName}: 404: https://example.com/files/red/unreachable.zipline not found",
         "applicationLoadStart red null",
         "applicationLoadEnd red null",
       ),
@@ -134,7 +145,7 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/crashes.zipline",
         "downloadEnd red https://example.com/files/red/crashes.zipline",
-        "applicationLoadFailed red java.lang.IllegalArgumentException: Zipline code run failed",
+        "applicationLoadFailed red ${IllegalArgumentException::class.qualifiedName}: Zipline code run failed",
         "applicationLoadStart red null",
         "applicationLoadEnd red null",
       ),
