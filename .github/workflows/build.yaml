@@ -121,6 +121,12 @@ jobs:
           path: zipline/build/outputs/aar/*-release.aar
           if-no-files-found: error
 
+      - uses: actions/upload-artifact@v3
+        with:
+          name: zipline-cli.zip
+          path: zipline-cli/build/distributions/zipline-cli-*.zip
+          if-no-files-found: error
+
       - run: ./gradlew publish
         if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/zipline' }}
         env:

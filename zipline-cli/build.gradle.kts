@@ -5,16 +5,27 @@ import com.vanniktech.maven.publish.KotlinJvm
 plugins {
   kotlin("jvm")
   kotlin("kapt")
+  application
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
-  id("com.github.johnrengelman.shadow")
 }
 
-tasks.jar {
-  manifest {
-    attributes("Automatic-Module-Name" to "app.cash.zipline.cli")
-    attributes("Main-Class" to "app.cash.zipline.cli.Main")
-  }
+application {
+  mainClass.set("app.cash.zipline.cli.Main")
+}
+
+// Disable .tar that no one wants.
+tasks.named("distTar").configure {
+  enabled = false
+}
+
+// Remove default .jar output artifact.
+configurations.archives.configure {
+  artifacts.clear()
+}
+// Add the distribution .zip as an output artifact.
+artifacts {
+  archives(tasks.named("distZip"))
 }
 
 // resources-templates.
@@ -45,10 +56,6 @@ dependencies {
   testImplementation(libs.kotlin.test)
   testImplementation(libs.okio.core)
   testImplementation(libs.okHttp.mockWebServer)
-}
-
-tasks.shadowJar {
-  mergeServiceFiles()
 }
 
 mavenPublishing {

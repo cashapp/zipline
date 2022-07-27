@@ -106,18 +106,6 @@ jobs:
 
       - run: ./gradlew assemble dokkaHtml
 
-      - uses: actions/upload-artifact@v3
-        with:
-          name: zipline-jvm.jar
-          path: zipline/build/libs/zipline-jvm-*.jar
-          if-no-files-found: error
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: zipline-android.aar
-          path: zipline/build/outputs/aar/*-release.aar
-          if-no-files-found: error
-
       - run: ./gradlew publish
         if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/zipline' }}
         env:
@@ -131,6 +119,8 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           body: ${{ steps.release_notes.outputs.release_notes }}
+          files: |
+            zipline-cli/build/distributions/zipline-cli-*.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
