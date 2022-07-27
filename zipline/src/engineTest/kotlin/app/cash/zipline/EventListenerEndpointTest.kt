@@ -174,7 +174,7 @@ internal class EventListenerEndpointTest {
       |{
       |  "service": "echoService",
       |  "function": "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-      |  "callback": "service/1",
+      |  "callback": "zipline/host-1",
       |  "args": [
       |    {
       |      "message": "ping"
@@ -184,7 +184,7 @@ internal class EventListenerEndpointTest {
       """.trimMargin(),
       prettyPrint(clientCall.encodedCall),
     )
-    assertEquals(listOf("service/1"), clientCall.serviceNames) // This is the callback.
+    assertEquals(listOf("zipline/host-1"), clientCall.serviceNames) // This is the callback.
 
     val serviceCall = serviceListener.calls.removeFirst()
     assertEquals("echoService", serviceCall.serviceName)
@@ -199,7 +199,7 @@ internal class EventListenerEndpointTest {
       |{
       |  "service": "echoService",
       |  "function": "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-      |  "callback": "service/1",
+      |  "callback": "zipline/host-1",
       |  "args": [
       |    {
       |      "message": "ping"
@@ -209,14 +209,14 @@ internal class EventListenerEndpointTest {
       """.trimMargin(),
       prettyPrint(serviceCall.encodedCall),
     )
-    assertEquals(listOf("service/1"), serviceCall.serviceNames)
+    assertEquals(listOf("zipline/host-1"), serviceCall.serviceNames)
 
     val clientResult = clientListener.results.removeFirst()
     assertEquals(EchoResponse("pong"), clientResult.result.getOrNull())
     assertEquals(
       """
       |{
-      |  "service": "service/1",
+      |  "service": "zipline/host-1",
       |  "function": "fun success(T): kotlin.Unit",
       |  "args": [
       |    {
@@ -234,7 +234,7 @@ internal class EventListenerEndpointTest {
     assertEquals(
       """
       |{
-      |  "service": "service/1",
+      |  "service": "zipline/host-1",
       |  "function": "fun success(T): kotlin.Unit",
       |  "args": [
       |    {
@@ -294,13 +294,13 @@ internal class EventListenerEndpointTest {
       |  "function": "fun transform(kotlin.String, app.cash.zipline.testing.EchoService): app.cash.zipline.testing.EchoService",
       |  "args": [
       |    "hello",
-      |    "service/1"
+      |    "zipline/host-1"
       |  ]
       |}
       """.trimMargin(),
       prettyPrint(clientCall.encodedCall),
     )
-    assertEquals(listOf("service/1"), clientCall.serviceNames) // This is the callback.
+    assertEquals(listOf("zipline/host-1"), clientCall.serviceNames) // This is the callback.
 
     val serviceCall = serviceListener.calls.removeFirst()
     assertEquals("echoTransformer", serviceCall.serviceName)
@@ -319,25 +319,25 @@ internal class EventListenerEndpointTest {
       |  "function": "fun transform(kotlin.String, app.cash.zipline.testing.EchoService): app.cash.zipline.testing.EchoService",
       |  "args": [
       |    "hello",
-      |    "service/1"
+      |    "zipline/host-1"
       |  ]
       |}
       """.trimMargin(),
       prettyPrint(serviceCall.encodedCall),
     )
-    assertEquals(listOf("service/1"), serviceCall.serviceNames)
+    assertEquals(listOf("zipline/host-1"), serviceCall.serviceNames)
 
     val clientResult = clientListener.results.removeFirst()
     assertEquals(transformedService, clientResult.result.getOrNull()) // This is a stub.
     assertEquals(
       """
       |{
-      |  "success": "service/1"
+      |  "success": "zipline/host-1"
       |}
       """.trimMargin(),
       prettyPrint(clientResult.encodedResult),
     )
-    assertEquals(listOf("service/1"), clientResult.serviceNames)
+    assertEquals(listOf("zipline/host-1"), clientResult.serviceNames)
 
     val serviceResult = serviceListener.results.removeFirst()
     assertTrue(serviceResult.result.getOrNull() is EchoService)
@@ -345,12 +345,12 @@ internal class EventListenerEndpointTest {
     assertEquals(
       """
       |{
-      |  "success": "service/1"
+      |  "success": "zipline/host-1"
       |}
       """.trimMargin(),
       prettyPrint(serviceResult.encodedResult),
     )
-    assertEquals(listOf("service/1"), serviceResult.serviceNames)
+    assertEquals(listOf("zipline/host-1"), serviceResult.serviceNames)
   }
 
   private fun prettyPrint(jsonString: String): String {

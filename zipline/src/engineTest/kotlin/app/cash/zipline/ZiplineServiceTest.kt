@@ -118,7 +118,7 @@ internal class ZiplineServiceTest {
     assertEquals(setOf("factory"), endpointA.serviceNames)
 
     val helloService = factoryClient.create("hello")
-    assertEquals(setOf("factory", "service/1"), endpointA.serviceNames)
+    assertEquals(setOf("factory", "zipline/host-1"), endpointA.serviceNames)
 
     assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
     helloService.close()
