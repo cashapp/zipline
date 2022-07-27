@@ -18,7 +18,7 @@ package app.cash.zipline.internal
 import app.cash.zipline.ZiplineService
 
 const val ziplineInternalPrefix = "zipline/"
-internal const val passByReferencePrefix = "service/"
+internal expect val passByReferencePrefix: String
 internal const val eventLoopName = "${ziplineInternalPrefix}event_loop"
 internal const val consoleName = "${ziplineInternalPrefix}console"
 internal const val eventListenerName = "${ziplineInternalPrefix}event_listener"
