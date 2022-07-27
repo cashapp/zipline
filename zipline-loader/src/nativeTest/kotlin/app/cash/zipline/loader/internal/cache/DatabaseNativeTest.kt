@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.zipline.loader.internal.cache.testing.Produce
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

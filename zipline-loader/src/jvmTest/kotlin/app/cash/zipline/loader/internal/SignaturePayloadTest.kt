@@ -71,6 +71,7 @@ class SignaturePayloadTest {
       ),
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
+    ).copy(
       signatures = mapOf(
         "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
         "sigB" to "55a3605081f20817859d494103bc43d7",
@@ -102,6 +103,7 @@ class SignaturePayloadTest {
       ),
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
+    ).copy(
       signatures = mapOf(
         "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
         "sigB" to "55a3605081f20817859d494103bc43d7",
@@ -133,6 +135,7 @@ class SignaturePayloadTest {
       ),
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
+    ).copy(
       signatures = mapOf(
         "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
         "sigB" to "55a3605081f20817859d494103bc43d7",

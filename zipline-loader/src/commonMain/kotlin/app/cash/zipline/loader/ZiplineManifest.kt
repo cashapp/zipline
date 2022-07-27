@@ -53,7 +53,6 @@ data class ZiplineManifest private constructor(
       modules: Map<String, ZiplineModule>,
       mainFunction: String? = null,
       mainModuleId: String? = null,
-      signatures: Map<String, String> = mapOf(),
     ): ZiplineManifest {
       val sortedModuleIds = modules.keys
         .toList()
@@ -68,7 +67,7 @@ data class ZiplineManifest private constructor(
         },
         mainModuleId = mainModuleId ?: sortedModuleIds.last(),
         mainFunction = mainFunction,
-        signatures = signatures,
+        signatures = mapOf(),
       )
     }
   }
