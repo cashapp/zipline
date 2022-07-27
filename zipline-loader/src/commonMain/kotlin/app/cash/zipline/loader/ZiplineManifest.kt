@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.isTopologicallySorted
+import app.cash.zipline.loader.internal.topologicalSort
 import kotlinx.serialization.Serializable
 
 /**

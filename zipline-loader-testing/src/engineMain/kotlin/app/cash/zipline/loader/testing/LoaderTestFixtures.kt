@@ -21,7 +21,7 @@ import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.ZiplineModule
-import app.cash.zipline.loader.fetcher.LoadedManifest
+import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject

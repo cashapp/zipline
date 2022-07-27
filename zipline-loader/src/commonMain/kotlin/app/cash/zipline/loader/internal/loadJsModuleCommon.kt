@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2022 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline.loader.internal
 
-import app.cash.zipline.loader.internal.ByteStringAsHexSerializer
-import kotlinx.serialization.Serializable
-import okio.ByteString
+import app.cash.zipline.Zipline
 
-@Serializable
-data class ZiplineModule(
-  /** This may be an absolute URL, or relative to an enclosing manifest. */
-  val url: String,
-  @Serializable(with = ByteStringAsHexSerializer::class)
-  val sha256: ByteString,
-  val dependsOnIds: List<String> = listOf(),
-)
+// TODO: drop this once we adopt Kotlin Hierarchical Multiplatform projects
+internal expect fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String)

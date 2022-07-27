@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline.loader.internal
 
 import android.content.Context
 import app.cash.zipline.EventListener
@@ -25,24 +25,5 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 
-@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
-fun ZiplineLoader(
-  context: Context,
-  dispatcher: CoroutineDispatcher,
-  httpClient: OkHttpClient,
-  eventListener: EventListener = EventListener.NONE,
-  serializersModule: SerializersModule = EmptySerializersModule,
-  manifestVerifier: ManifestVerifier? = null,
-): ZiplineLoader {
-  return ZiplineLoader(
-    sqlDriverFactory = SqlDriverFactory(context),
-    dispatcher = dispatcher,
-    httpClient = OkHttpZiplineHttpClient(okHttpClient = httpClient),
-    eventListener = eventListener,
-    serializersModule = serializersModule,
-    manifestVerifier = manifestVerifier,
-    embeddedDir = null,
-    embeddedFileSystem = null,
-    cache = null,
-  )
-}
+internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
+  loadJsModule(bytecode, id)

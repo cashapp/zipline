@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2022 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline.loader.internal.cache
 
-import app.cash.zipline.loader.internal.ByteStringAsHexSerializer
-import kotlinx.serialization.Serializable
-import okio.ByteString
+import com.squareup.sqldelight.db.SqlDriver
+import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
+import java.sql.SQLException
+import okio.Path
 
-@Serializable
-data class ZiplineModule(
-  /** This may be an absolute URL, or relative to an enclosing manifest. */
-  val url: String,
-  @Serializable(with = ByteStringAsHexSerializer::class)
-  val sha256: ByteString,
-  val dependsOnIds: List<String> = listOf(),
-)
+internal actual class SqlDriverFactory {
+  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
+    validateDbPath(path)
+    val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:$path")
+    schema.create(driver)
+    return driver
+  }
+}
+
+internal actual fun isSqlException(e: Exception) = e is SQLException

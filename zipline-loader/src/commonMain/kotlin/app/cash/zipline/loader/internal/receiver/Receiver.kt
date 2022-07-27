@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2022 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,17 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline.loader.internal.receiver
 
-import app.cash.zipline.loader.internal.ByteStringAsHexSerializer
-import kotlinx.serialization.Serializable
 import okio.ByteString
 
-@Serializable
-data class ZiplineModule(
-  /** This may be an absolute URL, or relative to an enclosing manifest. */
-  val url: String,
-  @Serializable(with = ByteStringAsHexSerializer::class)
-  val sha256: ByteString,
-  val dependsOnIds: List<String> = listOf(),
-)
+/**
+ * After getting a [ByteString], [Receiver]s are iteratively called in order to handle.
+ */
+internal interface Receiver {
+  /**
+   * Handle a [ByteString] which can include loading it into a [Zipline] runtime
+   *  or saving to fileSystem.
+   */
+  suspend fun receive(
+    byteString: ByteString,
+    id: String,
+    sha256: ByteString
+  )
+}
+
