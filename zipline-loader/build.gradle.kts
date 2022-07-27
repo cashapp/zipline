@@ -1,3 +1,4 @@
+import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
@@ -135,16 +136,9 @@ android {
       manifest.srcFile("src/androidMain/AndroidManifest.xml")
     }
     getByName("androidTest") {
-      java.srcDirs("src/jniTest/kotlin/")
+      java.srcDirs("src/androidTest/kotlin/")
     }
   }
-}
-
-dependencies {
-  androidTestImplementation(libs.androidx.test.runner)
-  androidTestImplementation(libs.junit)
-  androidTestImplementation(libs.kotlinx.coroutines.test)
-  androidTestImplementation(libs.okio.fakeFileSystem)
 }
 
 sqldelight {
@@ -176,6 +170,10 @@ val fetchWycheproofJson by tasks.creating(Download::class) {
 
 tasks.withType<Test> {
   dependsOn(fetchWycheproofJson)
+}
+
+tasks.withType<AndroidUnitTest> {
+  enabled = false
 }
 
 configure<MavenPublishBaseExtension> {
