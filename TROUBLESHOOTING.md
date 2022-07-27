@@ -2,6 +2,12 @@
 
 For contributors to Zipline, the following can be exceptions encountered which don't have obvious fixes (yet).
 
+## Build Native Libraries Locally
+
+Zipline requires architecture specific built artifacts of native code.
+
+On macOS, run from Zipline root directory `$ ./.github/workflows/build-mac.sh`.
+
 ## Missing JNI Libraries
 
 ```
@@ -21,7 +27,7 @@ For tests like `app.cash.zipline.ConsoleTest`, failures with the above stacktrac
 
 To fix, download the latest published JVM JAR (name should be like `zipline-jvm-0.1.0-square.47.jar`) and extract the files (change the file extension to `.zip` and unzip) in the `jni` directory into `/zipline/zipline/src/jvmMain/resources/jni` in your local Zipline repo on disk.
 
-### Java Architecture Mismatch
+## Java Architecture Mismatch
 
 Note in the above stacktrace the architecture present in the read path `/jni/x86_64/libquickjs.dylib`. If this architecture doesn't match your computer, then you are using a Java architecture version that doesn't match your computer.
 
