@@ -16,11 +16,14 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.internal.cache.ZiplineCache
+import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
@@ -28,14 +31,9 @@ import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
 
 class ProductionFetcherReceiverTest {
-  @JvmField @Rule
-  val tester = LoaderTester()
+  private val tester = LoaderTester()
 
   private lateinit var loader: ZiplineLoader
   private lateinit var cache: ZiplineCache
@@ -45,16 +43,18 @@ class ProductionFetcherReceiverTest {
 
   private lateinit var zipline: Zipline
 
-  @Before
+  @BeforeTest
   fun setUp() {
+    tester.beforeTest()
     loader = tester.loader
     cache = tester.cache
     embeddedFileSystem = tester.embeddedFileSystem
     embeddedDir = tester.embeddedDir
   }
 
-  @After
+  @AfterTest
   fun tearDown() {
+    tester.afterTest()
     loader.close()
   }
 

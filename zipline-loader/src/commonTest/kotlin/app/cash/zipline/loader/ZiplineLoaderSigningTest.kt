@@ -20,6 +20,9 @@ import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
 import app.cash.zipline.loader.testing.SampleKeys
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -27,8 +30,6 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
-import org.junit.Rule
-import org.junit.Test
 
 /**
  * This test just confirms we actually use the [ManifestVerifier] when it is configured. It assumes
@@ -37,14 +38,23 @@ import org.junit.Test
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class ZiplineLoaderSigningTest {
-  @JvmField @Rule
-  val tester = LoaderTester(
+  private val tester = LoaderTester(
     manifestVerifier = ManifestVerifier.Builder()
       .addEd25519("key1", SampleKeys.key1Public)
       .build()
   )
 
   private val testFixtures = LoaderTestFixtures()
+
+  @BeforeTest
+  fun setUp() {
+    tester.beforeTest()
+  }
+
+  @AfterTest
+  fun tearDown() {
+    tester.afterTest()
+  }
 
   @Test
   fun signatureVerifiesAndChecksumsMatch(): Unit = runBlocking {

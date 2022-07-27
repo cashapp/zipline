@@ -81,6 +81,9 @@ kotlin {
       dependencies {
         implementation(kotlin("test"))
         implementation(projects.ziplineLoaderTesting)
+        implementation(projects.zipline.testing)
+        implementation(libs.kotlinx.coroutines.test)
+        implementation(libs.turbine)
       }
     }
     val engineTest by creating {
@@ -93,17 +96,14 @@ kotlin {
       dependsOn(engineTest)
       dependencies {
         implementation(libs.junit)
-        implementation(libs.kotlinx.coroutines.test)
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(libs.sqlite.jdbc)
-        implementation(libs.turbine)
       }
     }
     val jvmTest by getting {
       dependsOn(jniTest)
       dependencies {
-        implementation(projects.zipline.testing)
         implementation(projects.ziplineLoaderTesting)
       }
     }

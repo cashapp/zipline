@@ -25,11 +25,13 @@ import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlin.time.DurationUnit
-import kotlin.time.ExperimentalTime
 import kotlin.time.toDuration
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
@@ -37,18 +39,11 @@ import kotlinx.coroutines.runBlocking
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
-import okio.Path.Companion.toPath
-import okio.fakefilesystem.FakeFileSystem
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
 
-@OptIn(ExperimentalTime::class)
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class ZiplineLoaderTest {
-  @JvmField @Rule
-  val tester = LoaderTester()
+  private val tester = LoaderTester()
 
   private lateinit var loader: ZiplineLoader
   private lateinit var httpClient: FakeZiplineHttpClient
@@ -57,12 +52,18 @@ class ZiplineLoaderTest {
 
   private val testFixtures = LoaderTestFixtures()
 
-  @Before
+  @BeforeTest
   fun setUp() {
+    tester.beforeTest()
     loader = tester.loader
     httpClient = tester.httpClient
     embeddedFileSystem = tester.embeddedFileSystem
     embeddedDir = tester.embeddedDir
+  }
+
+  @AfterTest
+  fun tearDown() {
+    tester.afterTest()
   }
 
   @Test
@@ -163,8 +164,8 @@ class ZiplineLoaderTest {
 
   @Test
   fun downloadToDirectoryThenLoadFromAsEmbedded() = runBlocking {
-    val downloadFileSystem = FakeFileSystem()
-    val downloadDir = "/downloads/latest".toPath()
+    val downloadFileSystem = systemFileSystem
+    val downloadDir = tester.tempDir / "downloads"
 
     assertFalse(downloadFileSystem.exists(downloadDir / getApplicationManifestFileName("test")))
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
@@ -205,8 +206,8 @@ class ZiplineLoaderTest {
 
   @Test
   fun downloadToDirectory() = runBlocking {
-    val fileSystem = FakeFileSystem()
-    val downloadDir = "/zipline/download".toPath()
+    val fileSystem = systemFileSystem
+    val downloadDir = tester.tempDir / "downloads"
 
     assertFalse(fileSystem.exists(downloadDir / getApplicationManifestFileName("test")))
     assertFalse(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))

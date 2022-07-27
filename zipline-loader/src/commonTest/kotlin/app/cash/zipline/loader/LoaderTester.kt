@@ -20,33 +20,29 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.loader.internal.cache.ZiplineCache
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import kotlinx.coroutines.test.TestCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import okio.FileSystem
-import okio.Path.Companion.toOkioPath
-import okio.Path.Companion.toPath
-import okio.fakefilesystem.FakeFileSystem
-import org.junit.rules.TemporaryFolder
-import org.junit.rules.TestRule
-import org.junit.runner.Description
-import org.junit.runners.model.Statement
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class LoaderTester(
   private val eventListener: EventListener = EventListener.NONE,
   private val manifestVerifier: ManifestVerifier? = null,
-): TestRule {
-  /** Delegate to JUnit's temporary folder rule. */
-  private val temporaryFolder = TemporaryFolder()
+) {
+  val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "okio-${randomToken().hex()}"
 
   val httpClient = FakeZiplineHttpClient()
-  private val dispatcher = TestCoroutineDispatcher()
+  private val dispatcher = UnconfinedTestDispatcher()
   private val cacheMaxSizeInBytes = 100 * 1024 * 1024
   private var nowMillis = 1_000L
 
   private var zipline = Zipline.create(dispatcher)
 
-  val embeddedFileSystem = FakeFileSystem()
-  val embeddedDir = "/zipline".toPath()
+  val embeddedFileSystem = systemFileSystem
+  val embeddedDir = tempDir / "embedded"
   private var testFixtures = LoaderTestFixtures()
+
+  private val cacheDir = tempDir / "cache"
 
   private val baseUrl = "https://example.com/files"
 
@@ -56,29 +52,28 @@ class LoaderTester(
   internal lateinit var loader: ZiplineLoader
   internal lateinit var cache: ZiplineCache
 
-  override fun apply(base: Statement, description: Description): Statement {
-    val statement = object : Statement() {
-      override fun evaluate() {
-        loader = ZiplineLoader(
-          dispatcher = dispatcher,
-          httpClient = httpClient,
-          eventListener = eventListener,
-          manifestVerifier = manifestVerifier,
-        ).withEmbedded(
-          embeddedDir = embeddedDir,
-          embeddedFileSystem = embeddedFileSystem,
-        ).withCache(
-          directory = temporaryFolder.root.toOkioPath(),
-          fileSystem = FileSystem.SYSTEM,
-          maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
-          nowMs = { nowMillis },
-        )
-        cache = loader.cache!!
-        base.evaluate()
-        loader.close()
-      }
-    }
-    return temporaryFolder.apply(statement, description)
+  fun beforeTest() {
+    systemFileSystem.createDirectories(cacheDir, mustCreate = true)
+    systemFileSystem.createDirectories(embeddedDir, mustCreate = true)
+    loader = testZiplineLoader(
+      dispatcher = dispatcher,
+      httpClient = httpClient,
+      eventListener = eventListener,
+      manifestVerifier = manifestVerifier,
+    ).withEmbedded(
+      embeddedDir = embeddedDir,
+      embeddedFileSystem = embeddedFileSystem,
+    ).withCache(
+      directory = cacheDir,
+      fileSystem = systemFileSystem,
+      maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
+      nowMs = { nowMillis },
+    )
+    cache = loader.cache!!
+  }
+
+  fun afterTest() {
+    loader.close()
   }
 
   fun seedEmbedded(applicationName: String, seed: String) {
