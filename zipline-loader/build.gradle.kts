@@ -149,7 +149,7 @@ dependencies {
 
 sqldelight {
   database("Database") {
-    packageName = "app.cash.zipline.loader"
+    packageName = "app.cash.zipline.loader.internal.cache"
   }
 }
 

@@ -15,9 +15,8 @@
  */
 package app.cash.zipline.cli
 
-import app.cash.zipline.loader.ZiplineLoader.Companion.getApplicationManifestFileName
 import app.cash.zipline.loader.ZiplineManifest
-import app.cash.zipline.loader.ZiplineModule
+import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -75,12 +74,10 @@ class DownloadTest {
     val applicationName = "app1"
     val manifest = ZiplineManifest.create(
       modules = mapOf(
-        "id" to ZiplineModule(
+        "id" to ZiplineManifest.Module(
           url = webServer.url("/latest/app/alpha.zipline").toString(),
           sha256 = testFixtures.alphaSha256,
           dependsOnIds = listOf(),
-          patchFrom = null,
-          patchUrl = null,
         )
       ),
       mainFunction = "zipline.ziplineMain()"

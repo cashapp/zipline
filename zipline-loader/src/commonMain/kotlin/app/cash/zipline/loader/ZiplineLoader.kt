@@ -17,19 +17,24 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.fetcher.Fetcher
-import app.cash.zipline.loader.fetcher.FsCachingFetcher
-import app.cash.zipline.loader.fetcher.FsEmbeddedFetcher
-import app.cash.zipline.loader.fetcher.HttpFetcher
-import app.cash.zipline.loader.fetcher.LoadedManifest
-import app.cash.zipline.loader.fetcher.fetch
-import app.cash.zipline.loader.fetcher.fetchManifest
-import app.cash.zipline.loader.fetcher.pin
-import app.cash.zipline.loader.fetcher.unpin
-import app.cash.zipline.loader.internal.database.SqlDriverFactory
-import app.cash.zipline.loader.receiver.FsSaveReceiver
-import app.cash.zipline.loader.receiver.Receiver
-import app.cash.zipline.loader.receiver.ZiplineLoadReceiver
+import app.cash.zipline.loader.internal.cache.Database
+import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.cache.ZiplineCache
+import app.cash.zipline.loader.internal.cache.createDatabase
+import app.cash.zipline.loader.internal.fetcher.Fetcher
+import app.cash.zipline.loader.internal.fetcher.FsCachingFetcher
+import app.cash.zipline.loader.internal.fetcher.FsEmbeddedFetcher
+import app.cash.zipline.loader.internal.fetcher.HttpFetcher
+import app.cash.zipline.loader.internal.fetcher.LoadedManifest
+import app.cash.zipline.loader.internal.fetcher.fetch
+import app.cash.zipline.loader.internal.fetcher.fetchManifest
+import app.cash.zipline.loader.internal.fetcher.pin
+import app.cash.zipline.loader.internal.fetcher.unpin
+import app.cash.zipline.loader.internal.getApplicationManifestFileName
+import app.cash.zipline.loader.internal.rebounce
+import app.cash.zipline.loader.internal.receiver.FsSaveReceiver
+import app.cash.zipline.loader.internal.receiver.Receiver
+import app.cash.zipline.loader.internal.receiver.ZiplineLoadReceiver
 import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -101,7 +106,6 @@ class ZiplineLoader internal constructor(
     }
     val database = createDatabase(driver = driver)
     val cache = ZiplineCache(
-      eventListener = eventListener,
       databaseCloseable = databaseCloseable,
       database = database,
       fileSystem = fileSystem,
@@ -139,7 +143,6 @@ class ZiplineLoader internal constructor(
     val httpFetcher = HttpFetcher(httpClient, eventListener)
     if (embeddedDir != null && embeddedFileSystem != null) {
       result += FsEmbeddedFetcher(
-        eventListener = eventListener,
         embeddedDir = embeddedDir,
         embeddedFileSystem = embeddedFileSystem,
       )
@@ -171,7 +174,7 @@ class ZiplineLoader internal constructor(
    * Creates a Zipline for [applicationName] by fetching the manifest, fetching the modules, loading
    * the code, and running the initializer.
    *
-   * Pass either a [manifestUrl] or a [manifest]. There's no need to pass both.
+   * Pass either a [manifestUrl] or a [providedManifest]. There's no need to pass both.
    */
   internal suspend fun createZiplineAndLoad(
     applicationName: String,
@@ -192,7 +195,10 @@ class ZiplineLoader internal constructor(
 
       // Run the application after initializer has been run on Zipline engine.
       manifest.manifest.mainFunction?.let { mainFunction ->
-        zipline.runMainFunction(manifest.manifest.mainModuleId, mainFunction)
+        zipline.quickJs.evaluate(
+          script = "require('${manifest.manifest.mainModuleId}').$mainFunction",
+          fileName = "ZiplineLoader.kt",
+        )
       }
 
       // Pin stable application manifest after a successful load, and unpin all others.
@@ -292,7 +298,7 @@ class ZiplineLoader internal constructor(
   private inner class ModuleJob(
     val applicationName: String,
     val id: String,
-    val module: ZiplineModule,
+    val module: ZiplineManifest.Module,
     val receiver: Receiver,
   ) {
     val upstreams = mutableListOf<Job>()
@@ -338,25 +344,5 @@ class ZiplineLoader internal constructor(
     val manifest = loaded.manifest
     manifestVerifier?.verify(manifestBytes, manifest)
     return loaded
-  }
-
-  companion object {
-    private const val APPLICATION_MANIFEST_FILE_NAME_SUFFIX = "manifest.zipline.json"
-    fun getApplicationManifestFileName(applicationName: String) =
-      "$applicationName.$APPLICATION_MANIFEST_FILE_NAME_SUFFIX"
-
-
-    /** Runs the entrypoint to launch the application. */
-    fun Zipline.runMainFunction(mainModuleId: String, mainFunction: String) {
-      quickJs.evaluate("require('$mainModuleId').$mainFunction", "zipline-main.js")
-    }
-
-
-    /** Runs the entrypoint to launch the application. */
-    fun Zipline.runMainFunction(manifest: ZiplineManifest) {
-      manifest.mainFunction?.let { mainFunction ->
-        runMainFunction(manifest.mainModuleId, mainFunction)
-      }
-    }
   }
 }

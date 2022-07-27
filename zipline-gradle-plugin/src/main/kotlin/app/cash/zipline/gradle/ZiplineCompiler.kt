@@ -22,7 +22,6 @@ import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
-import app.cash.zipline.loader.ZiplineModule
 import java.io.File
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -40,7 +39,7 @@ object ZiplineCompiler {
     mainModuleId: String? = null,
     manifestSigner: ManifestSigner? = null,
   ) {
-    val modules = mutableMapOf<String, ZiplineModule>()
+    val modules = mutableMapOf<String, ZiplineManifest.Module>()
     val files = inputDir.listFiles()
     for (jsFile in files!!) {
       if (!jsFile.path.endsWith(".js")) continue
@@ -77,7 +76,7 @@ object ZiplineCompiler {
             ?: "[]"
         )
 
-        modules["./${jsFile.name}"] = ZiplineModule(
+        modules["./${jsFile.name}"] = ZiplineManifest.Module(
           url = outputZiplineFilePath,
           sha256 = sha256,
           dependsOnIds = dependencies

@@ -17,7 +17,6 @@
 package app.cash.zipline.loader.internal
 
 import app.cash.zipline.loader.ZiplineManifest
-import app.cash.zipline.loader.ZiplineModule
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -31,7 +30,7 @@ class SignaturePayloadTest {
   fun differentUrlsHaveTheSamePayloads() {
     val manifestA = ZiplineManifest.create(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "kotlin_kotlin.zipline",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),
@@ -43,7 +42,7 @@ class SignaturePayloadTest {
 
     val manifestB = ZiplineManifest.create(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "this is a completely different URL",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),
@@ -63,7 +62,7 @@ class SignaturePayloadTest {
   fun differentSignatureValuesHaveTheSamePayload() {
     val manifestA = ZiplineManifest.create(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "kotlin_kotlin.zipline",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),
@@ -71,6 +70,7 @@ class SignaturePayloadTest {
       ),
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
+    ).copy(
       signatures = mapOf(
         "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
         "sigB" to "55a3605081f20817859d494103bc43d7",
@@ -94,7 +94,7 @@ class SignaturePayloadTest {
   fun signaturePresenceIsSignificant() {
     val manifestA = ZiplineManifest.create(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "kotlin_kotlin.zipline",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),
@@ -102,6 +102,7 @@ class SignaturePayloadTest {
       ),
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
+    ).copy(
       signatures = mapOf(
         "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
         "sigB" to "55a3605081f20817859d494103bc43d7",
@@ -125,7 +126,7 @@ class SignaturePayloadTest {
   fun signatureOrderIsSignificant() {
     val manifestA = ZiplineManifest.create(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "kotlin_kotlin.zipline",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),
@@ -133,6 +134,7 @@ class SignaturePayloadTest {
       ),
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
+    ).copy(
       signatures = mapOf(
         "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
         "sigB" to "55a3605081f20817859d494103bc43d7",
@@ -156,7 +158,7 @@ class SignaturePayloadTest {
   fun moduleHashIsSignificant() {
     val manifestA = ZiplineManifest.create(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "kotlin_kotlin.zipline",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),
@@ -168,7 +170,7 @@ class SignaturePayloadTest {
 
     val manifestB = manifestA.copy(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "kotlin_kotlin.zipline",
           // Last character is changed:
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6aa".decodeHex(),
@@ -187,7 +189,7 @@ class SignaturePayloadTest {
   fun mainModuleIdIsSignificant() {
     val manifestA = ZiplineManifest.create(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "kotlin_kotlin.zipline",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),
@@ -211,7 +213,7 @@ class SignaturePayloadTest {
   fun mainFunctionIsSignificant() {
     val manifestA = ZiplineManifest.create(
       modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineModule(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
           url = "kotlin_kotlin.zipline",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),

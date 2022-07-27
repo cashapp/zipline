@@ -15,7 +15,11 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.ByteStringAsHexSerializer
+import app.cash.zipline.loader.internal.isTopologicallySorted
+import app.cash.zipline.loader.internal.topologicalSort
 import kotlinx.serialization.Serializable
+import okio.ByteString
 
 /**
  * Preferred construction is via [ZiplineManifest.create]
@@ -25,7 +29,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ZiplineManifest private constructor(
   /** This is an ordered map; its modules are always topologically sorted. */
-  val modules: Map<String, ZiplineModule>,
+  val modules: Map<String, Module>,
   /**
    * JS module ID for the application (ie. "./alpha-app.js").
    * This will usually be the last module in the manifest once it is topologically sorted.
@@ -46,12 +50,20 @@ data class ZiplineManifest private constructor(
     }
   }
 
+  @Serializable
+  data class Module(
+    /** This may be an absolute URL, or relative to an enclosing manifest. */
+    val url: String,
+    @Serializable(with = ByteStringAsHexSerializer::class)
+    val sha256: ByteString,
+    val dependsOnIds: List<String> = listOf(),
+  )
+
   companion object {
     fun create(
-      modules: Map<String, ZiplineModule>,
+      modules: Map<String, Module>,
       mainFunction: String? = null,
       mainModuleId: String? = null,
-      signatures: Map<String, String> = mapOf(),
     ): ZiplineManifest {
       val sortedModuleIds = modules.keys
         .toList()
@@ -66,7 +78,7 @@ data class ZiplineManifest private constructor(
         },
         mainModuleId = mainModuleId ?: sortedModuleIds.last(),
         mainFunction = mainFunction,
-        signatures = signatures,
+        signatures = mapOf(),
       )
     }
   }

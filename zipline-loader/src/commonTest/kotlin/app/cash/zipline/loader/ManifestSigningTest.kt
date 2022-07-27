@@ -60,7 +60,7 @@ class ManifestSigningTest {
 
   private val manifest = ZiplineManifest.create(
     modules = mapOf(
-      "bravo" to ZiplineModule(
+      "bravo" to ZiplineManifest.Module(
         url = "/bravo.zipline",
         sha256 = "abc123".encodeUtf8(),
       ),

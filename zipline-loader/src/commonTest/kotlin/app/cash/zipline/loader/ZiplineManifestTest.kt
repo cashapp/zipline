@@ -29,12 +29,12 @@ class ZiplineManifestTest {
   fun manifestSortsModulesOnCreate() {
     val unsorted = ZiplineManifest.create(
       modules = mapOf(
-        "bravo" to ZiplineModule(
+        "bravo" to ZiplineManifest.Module(
           url = "/bravo.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf("alpha"),
         ),
-        "alpha" to ZiplineModule(
+        "alpha" to ZiplineManifest.Module(
           url = "/alpha.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf(),
@@ -44,12 +44,12 @@ class ZiplineManifestTest {
     )
     val sorted = ZiplineManifest.create(
       modules = mapOf(
-        "alpha" to ZiplineModule(
+        "alpha" to ZiplineManifest.Module(
           url = "/alpha.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf(),
         ),
-        "bravo" to ZiplineModule(
+        "bravo" to ZiplineManifest.Module(
           url = "/bravo.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf("alpha"),
@@ -64,7 +64,7 @@ class ZiplineManifestTest {
   fun manifestChecksThatModulesAreSortedIfClassIsCopied() {
     val empty = ZiplineManifest.create(
       modules = mapOf(
-        "alpha" to ZiplineModule(
+        "alpha" to ZiplineManifest.Module(
           url = "/alpha.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf(),
@@ -75,12 +75,12 @@ class ZiplineManifestTest {
     val unsortedException = assertFailsWith<IllegalArgumentException> {
       empty.copy(
         modules = mapOf(
-          "bravo" to ZiplineModule(
+          "bravo" to ZiplineManifest.Module(
             url = "/bravo.zipline",
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf("alpha"),
           ),
-          "alpha" to ZiplineModule(
+          "alpha" to ZiplineManifest.Module(
             url = "/alpha.zipline",
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf(),
@@ -99,7 +99,7 @@ class ZiplineManifestTest {
     val selfDependencyException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
         modules = mapOf(
-          "alpha" to ZiplineModule(
+          "alpha" to ZiplineManifest.Module(
             url = "/alpha.zipline",
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf("alpha"),
@@ -116,12 +116,12 @@ class ZiplineManifestTest {
     val cyclicalException = assertFailsWith<IllegalArgumentException> {
       ZiplineManifest.create(
         modules = mapOf(
-          "alpha" to ZiplineModule(
+          "alpha" to ZiplineManifest.Module(
             url = "/alpha.zipline",
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf("bravo"),
           ),
-          "bravo" to ZiplineModule(
+          "bravo" to ZiplineManifest.Module(
             url = "/bravo.zipline",
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf("alpha"),
@@ -139,12 +139,12 @@ class ZiplineManifestTest {
   fun usesLastSortedModuleAsMainModuleId() {
     val manifest = ZiplineManifest.create(
       modules = mapOf(
-        "alpha" to ZiplineModule(
+        "alpha" to ZiplineManifest.Module(
           url = "/alpha.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf(),
         ),
-        "bravo" to ZiplineModule(
+        "bravo" to ZiplineManifest.Module(
           url = "/bravo.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf("alpha"),
@@ -159,12 +159,12 @@ class ZiplineManifestTest {
   fun serializesToJson() {
     val original = ZiplineManifest.create(
       modules = mapOf(
-        "alpha" to ZiplineModule(
+        "alpha" to ZiplineManifest.Module(
           url = "/alpha.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf(),
         ),
-        "bravo" to ZiplineModule(
+        "bravo" to ZiplineManifest.Module(
           url = "/bravo.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf("alpha"),
