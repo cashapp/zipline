@@ -17,7 +17,6 @@
 package app.cash.zipline.cli
 
 import app.cash.zipline.cli.Main.Companion.NAME
-import java.util.Properties
 import kotlin.system.exitProcess
 import picocli.CommandLine
 import picocli.CommandLine.Command
@@ -53,7 +52,7 @@ class Main : Runnable {
   class VersionProvider : IVersionProvider {
     override fun getVersion(): Array<String> {
       return arrayOf(
-        "$NAME ${versionString()}",
+        "$NAME ${BuildConfig.VERSION}",
       )
     }
   }
@@ -68,14 +67,6 @@ class Main : Runnable {
       }
 
       exitProcess(CommandLine(Main()).execute(*args))
-    }
-
-    private fun versionString(): String? {
-      val prop = Properties()
-      Main::class.java.getResourceAsStream("/zipline-cli-version.properties").use {
-        prop.load(it)
-      }
-      return prop.getProperty("version", "dev")
     }
   }
 }
