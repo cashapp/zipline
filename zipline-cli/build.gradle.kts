@@ -1,14 +1,12 @@
 import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinJvm
-import org.apache.tools.ant.taskdefs.condition.Os
 
 plugins {
   kotlin("jvm")
   kotlin("kapt")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
-  id("com.palantir.graal")
   id("com.github.johnrengelman.shadow")
 }
 
@@ -51,23 +49,6 @@ dependencies {
 
 tasks.shadowJar {
   mergeServiceFiles()
-}
-
-graal {
-  mainClass("app.cash.zipline.cli.Main")
-  outputName("zipline-cli")
-  graalVersion(libs.versions.graalvm.get())
-  javaVersion("11")
-
-  option("--no-fallback")
-  option("--allow-incomplete-classpath")
-
-  if (Os.isFamily(Os.FAMILY_WINDOWS)) {
-    // May be possible without, but autodetection is problematic on Windows 10
-    // see https://github.com/palantir/gradle-graal
-    // see https://www.graalvm.org/docs/reference-manual/native-image/#prerequisites
-    windowsVsVarsPath("C:\\Program Files (x86)\\Microsoft Visual Studio\\2019\\BuildTools\\VC\\Auxiliary\\Build\\vcvars64.bat")
-  }
 }
 
 mavenPublishing {
