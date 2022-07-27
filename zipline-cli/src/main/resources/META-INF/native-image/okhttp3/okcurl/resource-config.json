@@ -1,7 +1,0 @@
-{
-  "resources": [
-    {
-      "pattern": "zipline-cli-version.properties"
-    }
-  ]
-}
