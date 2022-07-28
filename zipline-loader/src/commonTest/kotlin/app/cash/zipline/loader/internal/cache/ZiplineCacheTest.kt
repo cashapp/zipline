@@ -61,7 +61,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `read opens file that has been downloaded or null if not ready`(): Unit = runBlocking {
+  fun readOpensFileThatHasBeenDownloadedOrNullIfNotReady(): Unit = runBlocking {
     withCache { ziplineCache ->
       val fileSha = "abc123".encodeUtf8().sha256()
       val fileContents = "abc123".encodeUtf8().sha256()
@@ -80,7 +80,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `read triggers download for file that is not on filesystem yet`(): Unit = runBlocking {
+  fun readTriggersDownloadForFileThatIsNotOnFilesystemYet(): Unit = runBlocking {
     withCache { ziplineCache ->
       val fileSha = "abc123".encodeUtf8().sha256()
       val fileContents = "abc123".encodeUtf8().sha256()
@@ -98,7 +98,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `cache prunes when capacity exceeded`(): Unit = runBlocking {
+  fun cachePrunesWhenCapacityExceeded(): Unit = runBlocking {
     withCache { ziplineCache ->
       val a32 = "a".repeat(cacheSize / 2).encodeUtf8()
       val b32 = "b".repeat(cacheSize / 2).encodeUtf8()
@@ -128,7 +128,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `cache prunes by least recently accessed`(): Unit = runBlocking {
+  fun cachePrunesByLeastRecentlyAccessed(): Unit = runBlocking {
     withCache { ziplineCache ->
       val a32 = "a".repeat(cacheSize / 2).encodeUtf8()
       val b32 = "b".repeat(cacheSize / 2).encodeUtf8()
@@ -156,7 +156,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `cache element exceeds cache max size`(): Unit = runBlocking {
+  fun cacheElementExceedsCacheMaxSize(): Unit = runBlocking {
     withCache { ziplineCache ->
       val a65 = "a".repeat(cacheSize + 1).encodeUtf8()
       val a65Hash = a65.sha256()
@@ -169,7 +169,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `cache on open prunes any files in excess of limit`(): Unit = runBlocking {
+  fun cacheOnOpenPrunesAnyFilesInExcessOfLimit(): Unit = runBlocking {
     val a32 = "a".repeat(cacheSize / 2).encodeUtf8()
     val a32Hash = a32.sha256()
 
@@ -189,7 +189,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `new files are optimistically pinned`(): Unit = runBlocking {
+  fun newFilesAreOptimisticallyPinned(): Unit = runBlocking {
     withCache {
       assertEquals(0, it.countFiles())
       assertEquals(0, it.countPins())
@@ -200,7 +200,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `pin removes existing pins so only one manifest is pinned per application name`(): Unit = runBlocking {
+  fun pinRemovesExistingPinsSoOnlyOneManifestIsPinnedPerApplicationName(): Unit = runBlocking {
     withCache {
       assertEquals(0, it.countFiles())
       assertEquals(0, it.countPins())
@@ -228,7 +228,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `unpin removes all pins for the manifest`(): Unit = runBlocking {
+  fun unpinRemovesAllPinsForTheManifest(): Unit = runBlocking {
     withCache {
       assertEquals(0, it.countFiles())
       assertEquals(0, it.countPins())
@@ -256,7 +256,7 @@ class ZiplineCacheTest {
   }
 
   @Test
-  fun `select pinned manifest returns newest by file_id`(): Unit = runBlocking {
+  fun selectPinnedManifestReturnsNewestByFileId(): Unit = runBlocking {
     withCache {
       val fileApple = testFixtures.createZiplineFile(createJs("apple"), "apple.js")
       it.write("red", fileApple.sha256(), fileApple)
