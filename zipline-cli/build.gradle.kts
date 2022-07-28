@@ -1,27 +1,36 @@
-import com.android.build.gradle.internal.tasks.factory.dependsOn
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinJvm
 
 plugins {
   kotlin("jvm")
   kotlin("kapt")
+  application
+  id("com.github.gmazzo.buildconfig")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
-  id("com.github.johnrengelman.shadow")
 }
 
-tasks.jar {
-  manifest {
-    attributes("Automatic-Module-Name" to "app.cash.zipline.cli")
-    attributes("Main-Class" to "app.cash.zipline.cli.Main")
-  }
+application {
+  mainClass.set("app.cash.zipline.cli.Main")
 }
 
-// resources-templates.
-sourceSets {
-  main {
-    resources.srcDirs("$buildDir/generated/resources-templates")
-  }
+buildConfig {
+  packageName("app.cash.zipline.cli")
+  buildConfigField("String", "VERSION", "\"${version}\"")
+}
+
+// Disable .tar that no one wants.
+tasks.named("distTar").configure {
+  enabled = false
+}
+
+// Remove default .jar output artifact.
+configurations.archives.configure {
+  artifacts.clear()
+}
+// Add the distribution .zip as an output artifact.
+artifacts {
+  archives(tasks.named("distZip"))
 }
 
 kotlin {
@@ -47,20 +56,6 @@ dependencies {
   testImplementation(libs.okHttp.mockWebServer)
 }
 
-tasks.shadowJar {
-  mergeServiceFiles()
-}
-
 mavenPublishing {
   configure(KotlinJvm(javadocJar = JavadocJar.Dokka("dokkaGfm")))
-}
-
-tasks.register<Copy>("copyResourcesTemplates") {
-  from("src/main/resources-templates")
-  into("$buildDir/generated/resources-templates")
-  expand("projectVersion" to "${project.version}")
-  filteringCharset = Charsets.UTF_8.toString()
-}.let {
-  tasks.processResources.dependsOn(it)
-  tasks["javaSourcesJar"].dependsOn(it)
 }
