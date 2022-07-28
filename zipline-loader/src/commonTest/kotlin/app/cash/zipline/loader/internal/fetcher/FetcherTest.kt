@@ -16,13 +16,13 @@
 package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.loader.testing.LoaderTestFixtures
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
-import org.junit.Before
-import org.junit.Test
 
 class FetcherTest {
   private var concurrentDownloadsSemaphore = Semaphore(3)
@@ -89,13 +89,8 @@ class FetcherTest {
     }
   }
 
-  private var alphaReceiverIds: MutableList<String> = mutableListOf()
-
-  @Before
+  @BeforeTest
   fun setUp() {
-    alphaFetcherIds.clear()
-    bravoFetcherIds.clear()
-    alphaReceiverIds.clear()
     testFixtures = LoaderTestFixtures()
     bravoByteString = "test".encodeUtf8()
   }

@@ -16,7 +16,11 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
+import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import java.security.SecureRandom
 import kotlinx.coroutines.CoroutineDispatcher
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
 import okio.FileSystem
 
 actual val systemFileSystem = FileSystem.SYSTEM
@@ -32,3 +36,16 @@ actual fun testZiplineLoader(
   eventListener = eventListener,
   manifestVerifier = manifestVerifier,
 )
+
+internal actual fun testSqlDriverFactory() = SqlDriverFactory()
+
+actual fun randomByteString(size: Int): ByteString {
+  val byteArray = ByteArray(size)
+  testSecureRandom().nextBytes(byteArray)
+  return byteArray.toByteString()
+}
+
+private fun testSecureRandom() = SecureRandom()
+  .also {
+    it.nextLong() // Force seeding.
+  }

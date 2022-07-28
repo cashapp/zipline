@@ -14,10 +14,10 @@
 
 package app.cash.zipline.loader.internal.tink.subtle
 
+import app.cash.zipline.loader.systemFileSystem
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
-import okio.FileSystem
 import okio.Path.Companion.toPath
 
 @Serializable
@@ -69,7 +69,7 @@ class Key(
 )
 
 fun loadEddsaTestJson(): EddsaTestJson {
-  val eddsaTestJson = FileSystem.SYSTEM.read("build/wycheproof/eddsa_test.json".toPath()) {
+  val eddsaTestJson = systemFileSystem.read("build/wycheproof/eddsa_test.json".toPath()) {
     readUtf8()
   }
 

@@ -15,11 +15,11 @@
 ////////////////////////////////////////////////////////////////////////////////
 package app.cash.zipline.loader.internal.tink.subtle
 
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.toByteString
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
-import org.junit.Test
 
 /**
  * Tink's unit tests for [Ed25519Verify].
@@ -27,10 +27,10 @@ import org.junit.Test
 class Ed25519VerifyTest {
   @Test
   fun testVerificationWithPublicKeyLengthDifferentFrom32Byte() {
-    assertThrows(IllegalArgumentException::class.java) {
+    assertFailsWith<IllegalArgumentException> {
       Ed25519Verify(ByteArray(31).toByteString())
     }
-    assertThrows(IllegalArgumentException::class.java) {
+    assertFailsWith<IllegalArgumentException> {
       Ed25519Verify(ByteArray(33).toByteString())
     }
   }

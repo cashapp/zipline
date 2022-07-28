@@ -15,10 +15,16 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.zipline.loader.randomToken
+import app.cash.zipline.loader.systemFileSystem
+import app.cash.zipline.loader.testSqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
 import com.squareup.sqldelight.db.SqlDriver
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
@@ -26,40 +32,30 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import okio.ByteString.Companion.encodeUtf8
+import okio.Closeable
 import okio.FileSystem
-import okio.Path.Companion.toOkioPath
-import okio.Path.Companion.toPath
-import okio.fakefilesystem.FakeFileSystem
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
-import org.junit.rules.TemporaryFolder
 
 class ZiplineCacheTest {
-  @JvmField @Rule
-  val temporaryFolder = TemporaryFolder()
-
   private lateinit var driver: SqlDriver
   private lateinit var database: Database
-  private lateinit var fileSystem: FileSystem
-  private val directory = "/zipline/cache".toPath()
+  private val fileSystem = systemFileSystem
+  private val directory = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "okio-${randomToken().hex()}"
   private val cacheSize = 64
   private var nowMillis = 1_000L
   private lateinit var testFixtures: LoaderTestFixtures
 
-  @Before
+  @BeforeTest
   fun setUp() {
-    fileSystem = FakeFileSystem()
-    driver = SqlDriverFactory().create(
-      path = temporaryFolder.root.toOkioPath() / "zipline.db",
+    fileSystem.createDirectories(directory)
+    driver = testSqlDriverFactory().create(
+      path = directory / "zipline.db",
       schema = Database.Schema,
     )
     database = createDatabase(driver)
     testFixtures = LoaderTestFixtures()
   }
 
-  @After
+  @AfterTest
   fun tearDown() {
     driver.close()
   }
@@ -294,10 +290,14 @@ class ZiplineCacheTest {
     block: suspend (ZiplineCache) -> T,
   ): T {
     val cache = ZiplineCache(
-      databaseCloseable = driver,
+      databaseCloseable = object: Closeable {
+        override fun close() {
+          driver.close()
+        }
+      },
       database = database,
       fileSystem = fileSystem,
-      directory = directory,
+      directory = this.directory,
       maxSizeInBytes = cacheSize.toLong(),
     ) { nowMillis }
     cache.prune()

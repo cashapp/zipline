@@ -15,7 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 package app.cash.zipline.loader.internal.tink.subtle
 
-import app.cash.zipline.loader.internal.tink.subtle.Random.randBytes
+import app.cash.zipline.loader.randomByteString
 import okio.ByteString
 
 /** Defines the KeyPair consisting of a private key and its corresponding public key.  */
@@ -26,7 +26,7 @@ class KeyPair private constructor(
   companion object {
     /** Returns a new `<publicKey / privateKey>` KeyPair.  */
     internal fun newKeyPair(): KeyPair {
-      return newKeyPairFromSeed(randBytes(Field25519.FIELD_LEN))
+      return newKeyPairFromSeed(randomByteString(Field25519.FIELD_LEN))
     }
 
     /** Returns a new `<publicKey / privateKey>` KeyPair generated from a seed. */

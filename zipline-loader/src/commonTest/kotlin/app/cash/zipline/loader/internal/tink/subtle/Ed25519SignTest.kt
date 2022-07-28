@@ -15,13 +15,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 package app.cash.zipline.loader.internal.tink.subtle
 
-import java.util.TreeSet
+import app.cash.zipline.loader.randomByteString
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.fail
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.toByteString
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertThrows
-import org.junit.Assert.fail
-import org.junit.Test
 
 /**
  * Tink's unit tests for [Ed25519Sign].
@@ -33,7 +33,7 @@ class Ed25519SignTest {
     val signer = Ed25519Sign(keyPair.privateKey)
     val verifier = Ed25519Verify(keyPair.publicKey)
     for (i in 0..99) {
-      val msg = Random.randBytes(20)
+      val msg = randomByteString(20)
       val sig = signer.sign(msg)
       if (!verifier.verify(sig, msg)) {
         fail(
@@ -53,8 +53,8 @@ class Ed25519SignTest {
     val keyPair = KeyPair.newKeyPair()
     val signer = Ed25519Sign(keyPair.privateKey)
     val verifier = Ed25519Verify(keyPair.publicKey)
-    val msg = Random.randBytes(20)
-    val allSignatures = TreeSet<String>()
+    val msg = randomByteString(20)
+    val allSignatures = mutableSetOf<String>()
     for (i in 0..99) {
       val sig = signer.sign(msg)
       allSignatures.add(sig.hex())
@@ -75,10 +75,10 @@ class Ed25519SignTest {
 
   @Test
   fun testSignWithPrivateKeyLengthDifferentFrom32Byte() {
-    assertThrows(IllegalArgumentException::class.java) {
+    assertFailsWith<IllegalArgumentException> {
       Ed25519Sign(ByteArray(31).toByteString())
     }
-    assertThrows(IllegalArgumentException::class.java) {
+    assertFailsWith<IllegalArgumentException> {
       Ed25519Sign(ByteArray(33).toByteString())
     }
   }
@@ -89,7 +89,7 @@ class Ed25519SignTest {
       val keyPair = KeyPair.newKeyPair()
       val signer = Ed25519Sign(keyPair.privateKey)
       val verifier = Ed25519Verify(keyPair.publicKey)
-      val msg = Random.randBytes(20)
+      val msg = randomByteString(20)
       val sig = signer.sign(msg)
       if (!verifier.verify(sig, msg)) {
         fail(
@@ -122,7 +122,7 @@ class Ed25519SignTest {
         }
         val signer = Ed25519Sign(privateKey)
         val computedSig = signer.sign(msg)
-        assertEquals(tcId, sig, computedSig)
+        assertEquals(sig, computedSig, tcId)
       }
     }
     assertEquals(0, errors.toLong())
@@ -130,8 +130,8 @@ class Ed25519SignTest {
 
   @Test
   fun testKeyPairFromSeedTooShort() {
-    val keyMaterial = Random.randBytes(10)
-    assertThrows(IllegalArgumentException::class.java) {
+    val keyMaterial = randomByteString(10)
+    assertFailsWith<IllegalArgumentException> {
       KeyPair.newKeyPairFromSeed(keyMaterial)
     }
   }
