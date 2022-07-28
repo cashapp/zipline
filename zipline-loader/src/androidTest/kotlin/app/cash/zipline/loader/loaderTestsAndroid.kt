@@ -18,6 +18,10 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import kotlinx.coroutines.CoroutineDispatcher
 import okio.FileSystem
+import java.security.SecureRandom
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
+import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 
 // This file is necessary to get Android tests to build.
 //
@@ -32,3 +36,17 @@ actual fun testZiplineLoader(
   eventListener: EventListener,
   manifestVerifier: ManifestVerifier?,
 ): ZiplineLoader = error("testZiplineLoader not available for Android")
+
+internal actual fun testSqlDriverFactory(): SqlDriverFactory =
+  error("testSqlDriverFactory not available for Android")
+
+actual fun randomByteString(size: Int): ByteString {
+  val byteArray = ByteArray(size)
+  testSecureRandom().nextBytes(byteArray)
+  return byteArray.toByteString()
+}
+
+private fun testSecureRandom() = SecureRandom()
+  .also {
+    it.nextLong() // Force seeding.
+  }
