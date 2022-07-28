@@ -16,9 +16,9 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import kotlin.random.Random
+import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import kotlinx.coroutines.CoroutineDispatcher
-import okio.ByteString.Companion.toByteString
+import okio.ByteString
 import okio.FileSystem
 
 expect val systemFileSystem: FileSystem
@@ -30,4 +30,15 @@ expect fun testZiplineLoader(
   manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader
 
-fun randomToken() = Random.nextBytes(8).toByteString()
+internal expect fun testSqlDriverFactory(): SqlDriverFactory
+
+fun randomToken() = randomByteString(8)
+
+/** Returns a random byte string of size [size]. */
+expect fun randomByteString(size: Int): ByteString
+
+/**
+ * Returns true if this test can load resources. (We don't currently have a mechanism to find test
+ * resources like the wycheproof JSON files in the iOS simulator.)
+ */
+internal expect fun canLoadTestResources(): Boolean

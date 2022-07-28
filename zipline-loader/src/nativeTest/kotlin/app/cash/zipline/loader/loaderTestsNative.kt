@@ -16,8 +16,13 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
+import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import kotlin.random.Random
 import kotlinx.coroutines.CoroutineDispatcher
+import okio.ByteString
+import okio.ByteString.Companion.toByteString
 import okio.FileSystem
+import okio.Path.Companion.toPath
 
 actual val systemFileSystem = FileSystem.SYSTEM
 
@@ -32,3 +37,14 @@ actual fun testZiplineLoader(
   eventListener = eventListener,
   manifestVerifier = manifestVerifier,
 )
+
+internal actual fun testSqlDriverFactory() = SqlDriverFactory()
+
+actual fun randomByteString(size: Int): ByteString {
+  return Random.nextBytes(size).toByteString()
+}
+
+internal actual fun canLoadTestResources(): Boolean {
+  // If the current working directory contains CoreSimulator, don't try to load test resources.
+  return "CoreSimulator" !in systemFileSystem.canonicalize(".".toPath()).segments
+}

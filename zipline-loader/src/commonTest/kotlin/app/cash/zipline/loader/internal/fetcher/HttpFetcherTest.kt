@@ -16,10 +16,10 @@
 package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.loader.FakeZiplineHttpClient
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
-import org.junit.Test
 
 class HttpFetcherTest {
   private val httpFetcher = HttpFetcher(FakeZiplineHttpClient())
