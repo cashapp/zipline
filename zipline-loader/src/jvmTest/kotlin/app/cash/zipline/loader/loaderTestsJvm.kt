@@ -49,3 +49,5 @@ private fun testSecureRandom() = SecureRandom()
   .also {
     it.nextLong() // Force seeding.
   }
+
+internal actual fun canLoadTestResources() = true

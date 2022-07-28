@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 package app.cash.zipline.loader.internal.tink.subtle
 
+import app.cash.zipline.loader.canLoadTestResources
 import app.cash.zipline.loader.randomByteString
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -106,6 +107,8 @@ class Ed25519SignTest {
 
   @Test
   fun testSigningWithWycheproofVectors() {
+    if (!canLoadTestResources()) return
+
     val errors = 0
     val testGroups = loadEddsaTestJson().testGroups
     for (group in testGroups) {

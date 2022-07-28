@@ -36,3 +36,9 @@ fun randomToken() = randomByteString(8)
 
 /** Returns a random byte string of size [size]. */
 expect fun randomByteString(size: Int): ByteString
+
+/**
+ * Returns true if this test can load resources. (We don't currently have a mechanism to find test
+ * resources like the wycheproof JSON files in the iOS simulator.)
+ */
+internal expect fun canLoadTestResources(): Boolean

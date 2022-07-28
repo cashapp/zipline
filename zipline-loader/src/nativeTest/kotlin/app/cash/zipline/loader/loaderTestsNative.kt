@@ -22,6 +22,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import okio.FileSystem
+import okio.Path.Companion.toPath
 
 actual val systemFileSystem = FileSystem.SYSTEM
 
@@ -41,4 +42,9 @@ internal actual fun testSqlDriverFactory() = SqlDriverFactory()
 
 actual fun randomByteString(size: Int): ByteString {
   return Random.nextBytes(size).toByteString()
+}
+
+internal actual fun canLoadTestResources(): Boolean {
+  // If the current working directory contains CoreSimulator, don't try to load test resources.
+  return "CoreSimulator" !in systemFileSystem.canonicalize(".".toPath()).segments
 }
