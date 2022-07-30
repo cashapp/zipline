@@ -16,6 +16,7 @@
 package app.cash.zipline.loader.internal.cache
 
 import co.touchlab.sqliter.DatabaseConfiguration
+import co.touchlab.sqliter.interop.SQLiteException
 import com.squareup.sqldelight.db.SqlDriver
 import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
 import com.squareup.sqldelight.drivers.native.wrapConnection
@@ -42,5 +43,4 @@ internal actual class SqlDriverFactory {
   }
 }
 
-// TODO find the native exception class
-internal actual fun isSqlException(e: Exception): Boolean = TODO()
+internal actual fun isSqlException(e: Exception) = e is SQLiteException
