@@ -113,7 +113,7 @@ class ZiplineLoader internal constructor(
       maxSizeInBytes = maxSizeInBytes,
       nowMs = nowMs,
     )
-    cache.prune()
+    cache.initialize()
     return ZiplineLoader(
       sqlDriverFactory = sqlDriverFactory,
       dispatcher = dispatcher,
