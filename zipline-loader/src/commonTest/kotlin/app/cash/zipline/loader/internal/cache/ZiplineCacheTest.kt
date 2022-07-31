@@ -24,7 +24,6 @@ import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelati
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -261,7 +260,7 @@ class ZiplineCacheTest {
       assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(3, it.countPins())
 
-      it.writeManifest("red", manifestFiretruck.manifestBytes)
+      it.getOrPutManifest("red", manifestFiretruck.manifestBytes)
       assertEquals(4, it.countPins())
 
       assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
@@ -273,12 +272,10 @@ class ZiplineCacheTest {
     val fileContents = "abc123".encodeUtf8().sha256()
     val fileSha = fileContents.sha256()
 
-    assertFailsWith<IOException> {
-      // Synthesize a failure writing to the cache.
-      withCache { ziplineCache ->
-        fileSystem.beforeNextWrite = { throw IOException() }
-        ziplineCache.write("red", fileSha, fileContents)
-      }
+    // Synthesize a failure writing to the cache.
+    withCache { ziplineCache ->
+      fileSystem.beforeNextWrite = { throw IOException() }
+      ziplineCache.write("red", fileSha, fileContents)
     }
 
     withCache { ziplineCache ->
@@ -296,12 +293,10 @@ class ZiplineCacheTest {
     val fileContents = "abc123".encodeUtf8().sha256()
     val fileSha = fileContents.sha256()
 
-    assertFailsWith<IOException> {
-      // Synthesize a failure writing to the cache.
-      withCache { ziplineCache ->
-        fileSystem.afterNextWrite = { throw IOException() }
-        ziplineCache.write("red", fileSha, fileContents)
-      }
+    // Synthesize a failure writing to the cache.
+    withCache { ziplineCache ->
+      fileSystem.afterNextWrite = { throw IOException() }
+      ziplineCache.write("red", fileSha, fileContents)
     }
 
     withCache { ziplineCache ->

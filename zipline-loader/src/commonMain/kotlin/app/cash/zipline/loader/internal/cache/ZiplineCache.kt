@@ -66,9 +66,19 @@ internal class ZiplineCache internal constructor(
   private val maxSizeInBytes: Long,
   private val nowMs: () -> Long,
 ) : Closeable by databaseCloseable {
-  fun write(applicationName: String, sha256: ByteString, content: ByteString) {
-    val metadata = openForWrite(applicationName, sha256, false) ?: return
-    write(metadata, content)
+  fun write(
+    applicationName: String,
+    sha256: ByteString,
+    content: ByteString,
+    isManifest: Boolean = false,
+  ): Files? {
+    try {
+      val metadata = openForWrite(applicationName, sha256, isManifest) ?: return null
+      write(metadata, content)
+      return metadata
+    } catch (ignored: IOException) {
+      return null // Silently ignore write failures; the disk might be full?
+    }
   }
 
   private fun write(metadata: Files, content: ByteString) {
@@ -89,21 +99,33 @@ internal class ZiplineCache internal constructor(
   suspend fun getOrPut(
     applicationName: String,
     sha256: ByteString,
-    download: suspend () -> ByteString?
+    download: suspend () -> ByteString?,
   ): ByteString? {
     val read = read(sha256)
     if (read != null) return read
 
-    val contents = download() ?: return null
-    write(applicationName, sha256, contents)
-    return contents
+    val content = download() ?: return null
+    write(applicationName, sha256, content, isManifest = false)
+    return content
   }
 
-  fun read(
-    sha256: ByteString
-  ): ByteString? {
+  internal fun getOrPutManifest(
+    applicationName: String,
+    content: ByteString,
+  ): Files? {
+    val sha256 = content.sha256()
+    val metadata = getOrNull(sha256)
+    return metadata ?: write(applicationName, sha256, content, isManifest = true)
+  }
+
+  fun read(sha256: ByteString): ByteString? {
     val metadata = database.filesQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
+    return read(metadata)
+  }
+
+  private fun read(metadata: Files): ByteString? {
     if (metadata.file_state != FileState.READY) return null
+
     // Update the used at timestamp
     database.filesQueries.update(
       id = metadata.id,
@@ -120,7 +142,7 @@ internal class ZiplineCache internal constructor(
       null // Might have been pruned while we were trying to read?
     }
 
-    if (result == null || result.sha256() != sha256) {
+    if (result == null || result.sha256() != metadata.sha256_hex.decodeHex()) {
       // File is absent or corrupt. Delete quietly.
       try {
         fileSystem.delete(path)
@@ -148,7 +170,7 @@ internal class ZiplineCache internal constructor(
     val manifestFile = database.filesQueries
       .selectPinnedManifest(applicationName)
       .executeAsOneOrNull() ?: return null
-    val manifestBytes = read(manifestFile.sha256_hex.decodeHex())
+    val manifestBytes = read(manifestFile)
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
       )
@@ -158,7 +180,7 @@ internal class ZiplineCache internal constructor(
   /** Pins manifest and unpins all other files and manifests */
   fun pinManifest(applicationName: String, loadedManifest: LoadedManifest) {
     val manifestBytes = loadedManifest.manifestBytes
-    val manifestMetadata = writeManifest(applicationName, manifestBytes) ?: return
+    val manifestMetadata = getOrPutManifest(applicationName, manifestBytes) ?: return
 
     database.transaction {
       database.pinsQueries.delete_application_pins(applicationName)
@@ -194,30 +216,19 @@ internal class ZiplineCache internal constructor(
       .selectPinnedManifest(applicationName)
       .executeAsOneOrNull()
 
+    // There is no fallback manifest, delete all pins and return.
     if (fallbackManifestFile == null) {
-      // There is no fallback manifest, delete all pins and return.
       database.pinsQueries.delete_application_pins(applicationName)
-    } else {
-      // Pin the fallback manifest, which removes all pins prior to pinning.
-      val fallbackManifestBytes = read(fallbackManifestFile.sha256_hex.decodeHex())
-        ?: throw FileNotFoundException(
-          "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
-        )
-      val fallbackManifest = LoadedManifest(fallbackManifestBytes)
-      pinManifest(applicationName, fallbackManifest)
+      return
     }
-  }
 
-  fun writeManifest(
-    applicationName: String,
-    content: ByteString,
-  ): Files? {
-    val sha256 = content.sha256()
-    return getOrNull(sha256)
-      ?: openForWrite(applicationName, sha256, true)?.let { metadata ->
-        write(metadata, content)
-        database.filesQueries.get(metadata.sha256_hex).executeAsOne()
-      }
+    // Pin the fallback manifest, which removes all pins prior to pinning.
+    val fallbackManifestBytes = read(fallbackManifestFile)
+      ?: throw FileNotFoundException(
+        "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
+      )
+    val fallbackManifest = LoadedManifest(fallbackManifestBytes)
+    pinManifest(applicationName, fallbackManifest)
   }
 
   /**
