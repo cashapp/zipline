@@ -216,7 +216,7 @@ class ZiplineTest {
     assertThat(assertFailsWith<Exception> {
       zipline.take<PotatoService>("helloService").echo()
     }).hasMessageThat().startsWith("""
-      ZiplineApiMismatchException: no such method (incompatible API versions?)
+      no such method (incompatible API versions?)
       	called function:
       		fun echo(): app.cash.zipline.testing.EchoResponse
       	available functions:
@@ -233,7 +233,7 @@ class ZiplineTest {
     assertThat(assertFailsWith<Exception> {
       zipline.take<SuspendingPotatoService>("helloService").echo()
     }).hasMessageThat().startsWith("""
-      ZiplineApiMismatchException: no such method (incompatible API versions?)
+      no such method (incompatible API versions?)
       	called function:
       		suspend fun echo(): app.cash.zipline.testing.EchoResponse
       	available functions:
@@ -269,7 +269,7 @@ class ZiplineTest {
 
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingPotatoException") as String?)
       .startsWith("""
-        Exception: app.cash.zipline.ZiplineApiMismatchException: no such method (incompatible API versions?)
+        ZiplineApiMismatchException: app.cash.zipline.ZiplineApiMismatchException: no such method (incompatible API versions?)
         	called function:
         		suspend fun echo(): app.cash.zipline.testing.EchoResponse
         	available functions:
@@ -287,7 +287,7 @@ class ZiplineTest {
     assertThat(assertFailsWith<Exception> {
       noSuchService.echo(EchoRequest("hello"))
     }).hasMessageThat().startsWith("""
-      ZiplineApiMismatchException: no such service (service closed?)
+      no such service (service closed?)
       	called service:
       		noSuchService
       	available services:
@@ -303,7 +303,7 @@ class ZiplineTest {
     assertThat(assertFailsWith<Exception> {
       noSuchService.suspendingEcho(EchoRequest("hello"))
     }).hasMessageThat().startsWith("""
-      ZiplineApiMismatchException: no such service (service closed?)
+      no such service (service closed?)
       	called service:
       		noSuchService
       	available services:
@@ -334,7 +334,7 @@ class ZiplineTest {
 
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingPotatoException") as String?)
       .startsWith("""
-        Exception: app.cash.zipline.ZiplineApiMismatchException: no such service (service closed?)
+        ZiplineApiMismatchException: app.cash.zipline.ZiplineApiMismatchException: no such service (service closed?)
         	called service:
         		jvmSuspendingPotatoService
         	available services:

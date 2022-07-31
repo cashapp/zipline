@@ -15,6 +15,9 @@
  */
 package app.cash.zipline.internal.bridge
 
-internal actual fun toOutboundString(throwable: Throwable): String = throwable.stackTraceToString()
+internal actual fun stacktraceString(throwable: Throwable): String = throwable.stackTraceToString()
 
-internal actual fun toInboundThrowable(string: String): Throwable = Exception(string)
+internal actual fun toInboundThrowable(
+  stacktraceString: String,
+  constructor: (String) -> Throwable,
+): Throwable = constructor(stacktraceString)
