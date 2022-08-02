@@ -68,7 +68,7 @@ object ZiplineCompiler {
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestFile.readText())
     modules.putAll(manifest.modules.filter { (k, _) ->
       val moduleFileName = k.removePrefix(MODULE_PATH_PREFIX)
-      !removedFileNames.contains(moduleFileName) && !modifiedFileNames.contains(moduleFileName)
+      moduleFileName !in removedFileNames && moduleFileName !in modifiedFileNames
     })
 
     // Delete Zipline files for any removed JS files
