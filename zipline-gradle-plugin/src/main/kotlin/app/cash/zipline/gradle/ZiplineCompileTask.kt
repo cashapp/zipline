@@ -90,8 +90,8 @@ abstract class ZiplineCompileTask @Inject constructor(
     }
 
     if (inputChanges.isIncremental) {
-      val filterByChangeType: ((ChangeType) -> Boolean) -> List<File>  = { filter ->
-        inputChanges.getFileChanges(inputDir)
+      fun filterByChangeType(filter: (ChangeType) -> Boolean): List<File> {
+        return inputChanges.getFileChanges(inputDir)
           .filter { filter(it.changeType) }
           .map { outputDir.file(it.normalizedPath).get().asFile }
       }
