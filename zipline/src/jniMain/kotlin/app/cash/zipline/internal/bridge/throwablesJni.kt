@@ -16,7 +16,7 @@
 package app.cash.zipline.internal.bridge
 
 /** When encoding a stacktrace, chop Zipline frames off below the inbound call. */
-internal actual fun toOutboundString(throwable: Throwable): String {
+internal actual fun stacktraceString(throwable: Throwable): String {
   for ((index, element) in throwable.stackTrace.withIndex()) {
     if (element.className.startsWith(Endpoint::class.qualifiedName!!)) {
       throwable.stackTrace = throwable.stackTrace.sliceArray(0 until index)
@@ -28,13 +28,16 @@ internal actual fun toOutboundString(throwable: Throwable): String {
 }
 
 /** When decoding a stacktrace, chop Zipline frames off above the outbound call. */
-internal actual fun toInboundThrowable(string: String): Throwable {
+internal actual fun toInboundThrowable(
+  stacktraceString: String,
+  constructor: (String) -> Throwable,
+): Throwable {
   // Strip empty lines and format 'at' to match java.lang.Throwable.
-  val canonicalString = string
+  val canonicalString = stacktraceString
     .replace(Regex("\n[ ]+at "), "\n\tat ")
     .replace(Regex("\n+"), "\n")
     .trim()
-  val result = Exception(canonicalString)
+  val result = constructor(canonicalString)
 
   val stackTrace = result.stackTrace
   for (i in stackTrace.size - 1 downTo 0) {

@@ -16,11 +16,6 @@
 package app.cash.zipline.internal.bridge
 
 import kotlin.js.JsName
-import kotlinx.serialization.KSerializer
-import kotlinx.serialization.descriptors.PrimitiveKind
-import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.encoding.Decoder
-import kotlinx.serialization.encoding.Encoder
 
 internal const val inboundChannelName = "app_cash_zipline_inboundChannel"
 internal const val outboundChannelName = "app_cash_zipline_outboundChannel"
@@ -46,16 +41,4 @@ internal interface CallChannel {
    */
   @JsName("disconnect")
   fun disconnect(instanceName: String): Boolean
-}
-
-internal object ThrowableSerializer : KSerializer<Throwable> {
-  override val descriptor = PrimitiveSerialDescriptor("ZiplineThrowable", PrimitiveKind.STRING)
-
-  override fun serialize(encoder: Encoder, value: Throwable) {
-    encoder.encodeString(toOutboundString(value))
-  }
-
-  override fun deserialize(decoder: Decoder): Throwable {
-    return toInboundThrowable(decoder.decodeString())
-  }
 }
