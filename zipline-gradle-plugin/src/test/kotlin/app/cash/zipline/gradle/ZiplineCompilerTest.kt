@@ -24,6 +24,7 @@ import com.google.common.truth.Truth.assertThat
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.buffer
@@ -85,6 +86,53 @@ class ZiplineCompilerTest {
     }
   }
 
+  @Test
+  fun `incremental compile`() {
+    val rootProject = "src/test/resources/incremental"
+    val outputDir = File("$rootProject/base/build/zipline")
+
+    // Clean up dir from previous runs
+    if (outputDir.exists()) {
+      outputDir.deleteRecursively()
+    }
+
+    // Start with base compile to generate manifest and starting files
+    assertZiplineCompile("$rootProject/base", false) {
+      quickJs.execute(it.source().buffer().use { source ->
+        ZiplineFile.read(source)
+      }.quickjsBytecode.toByteArray())
+    }
+
+    assertZiplineIncrementalCompile("$rootProject/base",
+      addedFiles = File("$rootProject/added").listFiles()!!.asList(),
+      modifiedFiles = File("$rootProject/modified").listFiles()!!.asList(),
+      removedFiles = File("$rootProject/removed").listFiles()!!.asList()){
+      quickJs.execute(it.source().buffer().use { source ->
+        ZiplineFile.read(source)
+      }.quickjsBytecode.toByteArray())
+    }
+
+    // Jello file was removed
+    assertFalse(File("$outputDir/jello.zipline").exists())
+    // Bello file was added
+    quickJs.execute(readZiplineFile(File("$outputDir/bello.zipline")).quickjsBytecode.toByteArray())
+    assertEquals("Bello!", quickJs.evaluate("bello()", "test.js"))
+    // Hello file was replaced with bonjour
+    quickJs.execute(readZiplineFile(File("$outputDir/hello.zipline")).quickjsBytecode.toByteArray())
+    assertEquals("Bonjour, guy!", quickJs.evaluate("greet('guy')", "test.js"))
+    // Yello file remains untouched
+    quickJs.execute(readZiplineFile(File("$outputDir/yello.zipline")).quickjsBytecode.toByteArray())
+    assertEquals("HELLO", quickJs.evaluate("greet()", "test.js"))
+  }
+
+  private fun readZiplineFile(file: File): ZiplineFile {
+    val readZiplineFile = file.source().buffer().use { source ->
+      ZiplineFile.read(source)
+    }
+    assertEquals(CURRENT_ZIPLINE_VERSION, readZiplineFile.ziplineVersion)
+    return readZiplineFile
+  }
+
   private fun assertZiplineCompile(
     rootProject: String,
     dirHasSourceMaps: Boolean,
@@ -108,6 +156,45 @@ class ZiplineCompilerTest {
     val actualNumberFiles = (outputDir.listFiles()?.size ?: 0) - 1
     assertEquals(expectedNumberFiles, actualNumberFiles)
 
+    assertCompileResult(outputDir, mainModuleId, mainFunction, nonManifestFileAssertions)
+  }
+
+  private fun assertZiplineIncrementalCompile(
+    rootProject: String,
+    modifiedFiles: List<File>,
+    addedFiles: List<File>,
+    removedFiles: List<File>,
+    nonManifestFileAssertions: (ziplineFile: File) -> Unit
+  ) {
+    val inputDir = File("$rootProject/jsBuild")
+    val outputDir = File("$rootProject/build/zipline")
+    outputDir.mkdirs()
+
+    val mainModuleId = "./app.js"
+    val mainFunction = "zipline.ziplineMain()"
+    ZiplineCompiler.incrementalCompile(
+      outputDir = outputDir,
+      mainFunction = mainFunction,
+      mainModuleId = mainModuleId,
+      modifiedFiles = modifiedFiles,
+      addedFiles = addedFiles,
+      removedFiles = removedFiles
+    )
+
+    val expectedNumberFiles = inputDir.listFiles()!!.size + addedFiles.size - removedFiles.size
+    // Don't include Zipline manifest
+    val actualNumberFiles = (outputDir.listFiles()?.size ?: 0) - 1
+    assertEquals(expectedNumberFiles, actualNumberFiles)
+
+    assertCompileResult(outputDir, mainModuleId, mainFunction, nonManifestFileAssertions)
+  }
+
+  private fun assertCompileResult(
+    outputDir: File,
+    mainModuleId: String,
+    mainFunction: String,
+    nonManifestFileAssertions: (ziplineFile: File) -> Unit
+  ) {
     // Load and parse manifest
     val manifestFile = File(outputDir, "manifest.zipline.json")
     val manifestString = manifestFile.readText()
@@ -127,8 +214,8 @@ class ZiplineCompilerTest {
       // Ignore the Zipline Manifest JSON file
       if (!ziplineFilePath.endsWith(".zipline.json")) nonManifestFileAssertions(
         File(outputDir, ziplineFilePath
-            .removePrefix("./")
-            .replace(".js", ".zipline")
+          .removePrefix("./")
+          .replace(".js", ".zipline")
         )
       )
     }

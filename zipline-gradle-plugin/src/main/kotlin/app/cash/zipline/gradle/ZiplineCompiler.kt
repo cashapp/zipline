@@ -32,6 +32,10 @@ import okio.buffer
 import okio.sink
 
 object ZiplineCompiler {
+  private const val MODULE_PATH_PREFIX = "./"
+  private const val ZIPLINE_EXTENSION = ".zipline"
+  private const val MANIFEST_FILE_NAME = "manifest.zipline.json"
+
   fun compile(
     inputDir: File,
     outputDir: File,
@@ -40,49 +44,95 @@ object ZiplineCompiler {
     manifestSigner: ManifestSigner? = null,
   ) {
     val modules = mutableMapOf<String, ZiplineManifest.Module>()
-    val files = inputDir.listFiles()
-    for (jsFile in files!!) {
-      if (!jsFile.path.endsWith(".js")) continue
+    val jsFiles = getJsFiles(inputDir.listFiles()!!.asList())
+    jsFiles.forEach { jsFile -> compileSingleFile(jsFile, outputDir, modules) }
+    writeManifest(outputDir, mainFunction, mainModuleId, manifestSigner, modules)
+  }
 
-      val jsSourceMapFile = files.singleOrNull { sourceMap -> sourceMap.path == "${jsFile.path}.map" }
-      // TODO name the zipline as the SHA of the source code, only compile a new file when the SHA changes
-      val outputZiplineFilePath = jsFile.nameWithoutExtension + ".zipline"
-      val outputZiplineFile = File(outputDir.path, outputZiplineFilePath)
+  fun incrementalCompile(
+    outputDir: File,
+    modifiedFiles: List<File>,
+    addedFiles: List<File>,
+    removedFiles: List<File>,
+    mainFunction: String? = null,
+    mainModuleId: String? = null,
+    manifestSigner: ManifestSigner? = null,
+  ) {
+    val modifiedFileNames = getJsFiles(modifiedFiles).map { it.name }.toSet()
+    val removedFileNames = getJsFiles(removedFiles).map { it.name }.toSet()
 
-      val quickJs = QuickJs.create()
-      quickJs.use {
-        var bytecode = quickJs.compile(jsFile.readText(), jsFile.name)
+    val modules = mutableMapOf<String, ZiplineManifest.Module>()
 
-        if (jsSourceMapFile != null) {
-          // rewrite the bytecode with source line numbers
-          bytecode = applySourceMapToBytecode(bytecode, jsSourceMapFile.readText())
-        }
-        val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode.toByteString())
-        val sha256 = outputZiplineFile.sink().use { fileSink ->
-          val hashingSink = HashingSink.sha256(fileSink)
-          hashingSink.buffer().use {
-            ziplineFile.writeTo(it)
-          }
-          hashingSink.hash
-        }
+    // Get the current manifest and remove any removed or modified modules
+    val manifestFile = File(outputDir.path, MANIFEST_FILE_NAME)
+    val manifest = Json.decodeFromString<ZiplineManifest>(manifestFile.readText())
+    modules.putAll(manifest.modules.filter { (k, _) ->
+      val moduleFileName = k.removePrefix(MODULE_PATH_PREFIX)
+      !removedFileNames.contains(moduleFileName) && !modifiedFileNames.contains(moduleFileName)
+    })
 
-        quickJs.evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
-        quickJs.execute(bytecode)
-        val dependenciesString = quickJs
-          .evaluate("globalThis.$CURRENT_MODULE_DEPENDENCIES", "getDependencies.js") as String?
-        val dependencies = Json.decodeFromString<List<String>>(
-          dependenciesString
-          // If define is never called, dependencies is returned as null
-            ?: "[]"
-        )
+    // Delete Zipline files for any removed JS files
+    removedFileNames.forEach { File(outputDir.path + "/" + it.removeSuffix(".js") + ZIPLINE_EXTENSION).delete()}
 
-        modules["./${jsFile.name}"] = ZiplineManifest.Module(
-          url = outputZiplineFilePath,
-          sha256 = sha256,
-          dependsOnIds = dependencies
-        )
+    // Compile the newly added or modified files and add them into the module list
+    val addedOrModifiedFiles = getJsFiles(addedFiles) + getJsFiles(modifiedFiles)
+    addedOrModifiedFiles.forEach { file -> compileSingleFile(file, outputDir, modules) }
+
+    // Write back a new up-to-date manifest
+    writeManifest(outputDir, mainFunction, mainModuleId, manifestSigner, modules)
+  }
+
+  private fun compileSingleFile(
+    jsFile: File,
+    outputDir: File,
+    modules: MutableMap<String, ZiplineManifest.Module>
+  ) {
+    val jsSourceMapFile = File("${jsFile.path}.map")
+    val outputZiplineFilePath = jsFile.nameWithoutExtension + ZIPLINE_EXTENSION
+    val outputZiplineFile = File(outputDir.path, outputZiplineFilePath)
+
+    val quickJs = QuickJs.create()
+    quickJs.use {
+      var bytecode = quickJs.compile(jsFile.readText(), jsFile.name)
+
+      if (jsSourceMapFile.exists()) {
+        // rewrite the bytecode with source line numbers
+        bytecode = applySourceMapToBytecode(bytecode, jsSourceMapFile.readText())
       }
+      val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode.toByteString())
+      val sha256 = outputZiplineFile.sink().use { fileSink ->
+        val hashingSink = HashingSink.sha256(fileSink)
+        hashingSink.buffer().use {
+          ziplineFile.writeTo(it)
+        }
+        hashingSink.hash
+      }
+
+      quickJs.evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
+      quickJs.execute(bytecode)
+      val dependenciesString = quickJs
+        .evaluate("globalThis.$CURRENT_MODULE_DEPENDENCIES", "getDependencies.js") as String?
+      val dependencies = Json.decodeFromString<List<String>>(
+        dependenciesString
+        // If define is never called, dependencies is returned as null
+          ?: "[]"
+      )
+
+      modules["$MODULE_PATH_PREFIX${jsFile.name}"] = ZiplineManifest.Module(
+        url = outputZiplineFilePath,
+        sha256 = sha256,
+        dependsOnIds = dependencies
+      )
     }
+  }
+
+  private fun writeManifest(
+    outputDir: File,
+    mainFunction: String? = null,
+    mainModuleId: String? = null,
+    manifestSigner: ManifestSigner? = null,
+    modules: MutableMap<String, ZiplineManifest.Module>,
+  ) {
     val unsignedManifest = ZiplineManifest.create(
       modules = modules,
       mainFunction = mainFunction,
@@ -91,9 +141,11 @@ object ZiplineCompiler {
 
     val manifest = manifestSigner?.sign(unsignedManifest) ?: unsignedManifest
 
-    val manifestFile = File(outputDir.path, "manifest.zipline.json")
+    val manifestFile = File(outputDir.path, MANIFEST_FILE_NAME)
     manifestFile.writeText(Json.encodeToString(manifest))
   }
+
+  private fun getJsFiles(files: List<File>) = files.filter { it.path.endsWith(".js") }
 }
 
 /**
