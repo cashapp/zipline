@@ -193,7 +193,8 @@ class ZiplineManifestTest {
         |    "mainModuleId": "bravo",
         |    "mainFunction": "zipline.ziplineMain()",
         |    "signatures": {
-        |    }
+        |    },
+        |    "version": null
         |}
       """.trimMargin(),
       serialized

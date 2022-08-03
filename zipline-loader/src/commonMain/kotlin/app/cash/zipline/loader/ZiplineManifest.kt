@@ -45,7 +45,7 @@ data class ZiplineManifest private constructor(
   val signatures: Map<String, String>,
 
   /** Version to represent the code as defined in this manifest, by default it will be Git commit SHA. */
-  val version: String
+  val version: String?,
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
@@ -83,9 +83,7 @@ data class ZiplineManifest private constructor(
         mainModuleId = mainModuleId ?: sortedModuleIds.last(),
         mainFunction = mainFunction,
         signatures = mapOf(),
-        version = version
-          // TODO replace this with Git SHA or something else
-          ?: "SNAPSHOT-1.0.0",
+        version = version,
       )
     }
   }

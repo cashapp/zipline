@@ -9,8 +9,8 @@ The plugin compiles JavaScript files into `.zipline` files. These binary files a
 The plugin offers setting the following variables which are used in compilation.
 
 - `mainModuleId`: This is the JS module that your application's entrypoint function is in. If unset, fallback will be to the last key in the topologically sorted `modules` map in the generated ZiplineManifest.
-- `mainFunction`: This is the fully qualified function call to start your application, note it does include the trailing `()` to initiate the call.
-- `version`: This string is included in the manifest to identify the version of included code. If unset, the Git SHA of the repo will be used.
+- `mainFunction`: This is the fully qualified function call to start your application, note it does not include the trailing `()` to initiate the call.
+- `version`: This string is included in the manifest to identify the version of included code. A reasonable value is the Git SHA of the repo.
 
 ```kts
 import app.cash.zipline.gradle.ZiplineCompileTask
