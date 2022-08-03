@@ -70,7 +70,6 @@ internal class ZiplineCache internal constructor(
   }
 
   private fun write(metadata: Files, content: ByteString) {
-    fileSystem.createDirectories(directory)
     fileSystem.write(path(metadata)) {
       write(content)
     }
