@@ -90,6 +90,7 @@ class LoggingEventListener : EventListener() {
   ) {
     log(
       applicationName = applicationName,
+      exception = exception,
       log = "applicationLoadFailed $applicationName $exception"
     )
   }
@@ -111,6 +112,7 @@ class LoggingEventListener : EventListener() {
   override fun downloadFailed(applicationName: String, url: String, exception: Exception) {
     log(
       applicationName = applicationName,
+      exception = exception,
       log = "downloadFailed $applicationName $url $exception"
     )
   }
@@ -118,6 +120,7 @@ class LoggingEventListener : EventListener() {
   override fun manifestParseFailed(applicationName: String, url: String?, exception: Exception) {
     log(
       applicationName = applicationName,
+      exception = exception,
       log = "manifestParseFailed $applicationName $url"
     )
   }
@@ -131,6 +134,15 @@ class LoggingEventListener : EventListener() {
       val entry = log.removeFirst()
       if (entry.matches(skipServiceEvents, skipApplicationEvents, skipInternalServices)) {
         return entry.log
+      }
+    }
+  }
+
+  fun takeException(): Exception {
+    while (true) {
+      val entry = log.removeFirst()
+      if (entry.exception != null) {
+        return entry.exception
       }
     }
   }
@@ -153,19 +165,21 @@ class LoggingEventListener : EventListener() {
     service: ZiplineService? = null,
     serviceName: String? = null,
     applicationName: String? = null,
-    log: String
+    exception: Exception? = null,
+    log: String,
   ) {
     val isInternalService = service is CancelCallback ||
       service is SuspendCallback<*> ||
       serviceName?.startsWith(ziplineInternalPrefix) == true
-    this.log += LogEntry(serviceName, applicationName, isInternalService, log)
+    this.log += LogEntry(serviceName, applicationName, isInternalService, exception, log)
   }
 
   data class LogEntry(
     val serviceName: String?,
     val applicationName: String?,
     val isInternalService: Boolean,
-    val log: String
+    val exception: Exception?,
+    val log: String,
   ) {
     fun matches(
       skipServiceEvents: Boolean,

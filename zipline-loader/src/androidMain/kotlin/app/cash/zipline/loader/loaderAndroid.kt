@@ -24,6 +24,7 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
+import app.cash.zipline.loader.internal.fetcher.HttpFetcher
 
 @OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
 fun ZiplineLoader(
@@ -37,7 +38,7 @@ fun ZiplineLoader(
   return ZiplineLoader(
     sqlDriverFactory = SqlDriverFactory(context),
     dispatcher = dispatcher,
-    httpClient = OkHttpZiplineHttpClient(okHttpClient = httpClient),
+    httpFetcher = HttpFetcher(OkHttpZiplineHttpClient(okHttpClient = httpClient), eventListener),
     eventListener = eventListener,
     serializersModule = serializersModule,
     manifestVerifier = manifestVerifier,

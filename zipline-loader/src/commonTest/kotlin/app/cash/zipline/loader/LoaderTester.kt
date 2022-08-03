@@ -111,7 +111,7 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOrFallBack(applicationName, manifestUrl)
+    zipline = loader.loadOnce(applicationName, manifestUrl)
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -141,7 +141,7 @@ class LoaderTester(
     httpClient.filePathToByteString = mapOf(
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOrFallBack(applicationName, manifestUrl)
+    zipline = loader.loadOnce(applicationName, manifestUrl)
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -162,7 +162,7 @@ class LoaderTester(
     httpClient.filePathToByteString = mapOf(
       manifestUrl to loadedManifest.manifestBytes,
     )
-    zipline = loader.loadOrFallBack(applicationName, manifestUrl)
+    zipline = loader.loadOnce(applicationName, manifestUrl)
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -187,7 +187,7 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOrFallBack(applicationName, manifestUrl)
+    zipline = loader.loadOnce(applicationName, manifestUrl)
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -209,7 +209,7 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOrFallBack(applicationName, manifestUrl) {
+    zipline = loader.loadOnce(applicationName, manifestUrl) {
       val loadedSeed = (it.quickJs.evaluate("globalThis.log", "assert.js") as String)
         .removeSuffix(" loaded\n")
       if (loadedSeed == seed) throw IllegalArgumentException("Zipline code run failed")

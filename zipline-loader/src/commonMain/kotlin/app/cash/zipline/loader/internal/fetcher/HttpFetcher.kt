@@ -17,7 +17,6 @@ package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineHttpClient
-import app.cash.zipline.loader.ZiplineManifest
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -42,12 +41,7 @@ internal class HttpFetcher(
     url: String,
   ) = fetchByteString(applicationName, url)
 
-  override suspend fun fetchManifest(
-    applicationName: String,
-    id: String,
-    url: String?,
-  ): LoadedManifest? {
-    if (url == null) return null // This fetcher requires URLs.
+  suspend fun fetchManifest(applicationName: String, url: String): LoadedManifest {
     val manifestBytesWithRelativeUrls = fetchByteString(applicationName, url)
 
     try {
@@ -57,7 +51,7 @@ internal class HttpFetcher(
       val manifestJson = json.encodeToString(JsonElement.serializer(), manifestJsonElement)
       return LoadedManifest(
         manifestBytes = manifestJson.encodeUtf8(),
-        manifest = json.decodeFromJsonElement<ZiplineManifest>(manifestJsonElement)
+        manifest = json.decodeFromJsonElement(manifestJsonElement)
       )
     } catch (e: Exception) {
       eventListener.manifestParseFailed(applicationName, url, e)
@@ -92,18 +86,6 @@ internal class HttpFetcher(
     }
 
     return JsonObject(newContent)
-  }
-
-  override suspend fun pin(
-    applicationName: String,
-    loadedManifest: LoadedManifest,
-  ) {
-  }
-
-  override suspend fun unpin(
-    applicationName: String,
-    loadedManifest: LoadedManifest,
-  ) {
   }
 
   private suspend fun fetchByteString(

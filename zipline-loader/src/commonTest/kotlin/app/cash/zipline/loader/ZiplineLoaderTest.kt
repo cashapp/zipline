@@ -31,8 +31,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
@@ -90,7 +88,7 @@ class ZiplineLoaderTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    val zipline = loader.loadOrFail("test", manifestUrl)
+    val zipline = loader.loadOnce("test", manifestUrl)
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -109,7 +107,7 @@ class ZiplineLoaderTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    val ziplineColdCache = loader.loadOrFail("test", manifestUrl)
+    val ziplineColdCache = loader.loadOnce("test", manifestUrl)
     assertEquals(
       ziplineColdCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -124,7 +122,7 @@ class ZiplineLoaderTest {
       manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
       // Note no actual alpha/bravo files are available on the network
     )
-    val ziplineWarmedCache = loader.loadOrFail("test", manifestUrl)
+    val ziplineWarmedCache = loader.loadOnce("test", manifestUrl)
     assertEquals(
       ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -151,7 +149,7 @@ class ZiplineLoaderTest {
       manifestUrl to testFixtures.manifestByteString,
       // Note no actual alpha/bravo files are available on the cache / network
     )
-    val zipline = loader.loadOrFail("test", manifestUrl)
+    val zipline = loader.loadOnce("test", manifestUrl)
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -258,10 +256,10 @@ class ZiplineLoaderTest {
     )
 
     val manifestUrlFlow = flowOf(appleManifestUrl, firetruckManifestUrl)
-    loader.loadContinuously(
+    loader.load(
       applicationName = "red",
       manifestUrlFlow = manifestUrlFlow,
-      pollingInterval = 1000.toDuration(DurationUnit.MILLISECONDS),
+      initializer = {},
     ).test {
       assertEquals(
         "apple",
@@ -275,7 +273,7 @@ class ZiplineLoaderTest {
           " loaded\n"
         )
       )
-      cancel()
+      awaitComplete()
     }
   }
 
@@ -284,10 +282,9 @@ class ZiplineLoaderTest {
     manifest: ZiplineManifest,
     initializer: (Zipline) -> Unit = {},
   ): Zipline {
-    return createZiplineAndLoad(
+    return loadFromManifest(
       applicationName = applicationName,
-      manifestUrl = null,
-      providedManifest = LoadedManifest(ByteString.EMPTY, manifest),
+      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest),
       initializer = initializer,
     )
   }
