@@ -17,9 +17,11 @@ package app.cash.zipline.loader.internal.cache
 
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import okio.ByteString
+import okio.ByteString.Companion.decodeHex
 import okio.Closeable
 import okio.FileNotFoundException
 import okio.FileSystem
+import okio.IOException
 import okio.Path
 
 /**
@@ -64,9 +66,19 @@ internal class ZiplineCache internal constructor(
   private val maxSizeInBytes: Long,
   private val nowMs: () -> Long,
 ) : Closeable by databaseCloseable {
-  fun write(applicationName: String, sha256: ByteString, content: ByteString) {
-    val metadata = openForWrite(applicationName, sha256, false) ?: return
-    write(metadata, content)
+  fun write(
+    applicationName: String,
+    sha256: ByteString,
+    content: ByteString,
+    isManifest: Boolean = false,
+  ): Files? {
+    try {
+      val metadata = openForWrite(applicationName, sha256, isManifest) ?: return null
+      write(metadata, content)
+      return metadata
+    } catch (ignored: IOException) {
+      return null // Silently ignore write failures; the disk might be full?
+    }
   }
 
   private fun write(metadata: Files, content: ByteString) {
@@ -87,25 +99,33 @@ internal class ZiplineCache internal constructor(
   suspend fun getOrPut(
     applicationName: String,
     sha256: ByteString,
-    download: suspend () -> ByteString?
+    download: suspend () -> ByteString?,
   ): ByteString? {
     val read = read(sha256)
     if (read != null) return read
 
-    val contents = download() ?: return null
-    write(applicationName, sha256, contents)
-    return contents
+    val content = download() ?: return null
+    write(applicationName, sha256, content, isManifest = false)
+    return content
   }
 
-  fun read(
-    sha256: ByteString
-  ) = read(sha256.hex())
+  internal fun getOrPutManifest(
+    applicationName: String,
+    content: ByteString,
+  ): Files? {
+    val sha256 = content.sha256()
+    val metadata = getOrNull(sha256)
+    return metadata ?: write(applicationName, sha256, content, isManifest = true)
+  }
 
-  fun read(
-    sha256hex: String
-  ): ByteString? {
-    val metadata = database.filesQueries.get(sha256hex).executeAsOneOrNull() ?: return null
+  fun read(sha256: ByteString): ByteString? {
+    val metadata = database.filesQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
+    return read(metadata)
+  }
+
+  private fun read(metadata: Files): ByteString? {
     if (metadata.file_state != FileState.READY) return null
+
     // Update the used at timestamp
     database.filesQueries.update(
       id = metadata.id,
@@ -113,21 +133,34 @@ internal class ZiplineCache internal constructor(
       size_bytes = metadata.size_bytes,
       last_used_at_epoch_ms = nowMs(),
     )
-    return try {
-      fileSystem.read(path(metadata)) {
+    val path = path(metadata)
+    val result = try {
+      fileSystem.read(path) {
         readByteString()
       }
     } catch (e: FileNotFoundException) {
-      null // Might have been pruned while we were trying to read.
+      null // Might have been pruned while we were trying to read?
     }
+
+    if (result == null || result.sha256() != metadata.sha256_hex.decodeHex()) {
+      // File is absent or corrupt. Delete quietly.
+      try {
+        fileSystem.delete(path)
+        database.filesQueries.delete(metadata.id)
+      } catch (ignored: IOException) {
+      }
+      return null
+    }
+
+    return result
   }
 
-  internal fun pin(applicationName: String, sha256: ByteString) {
+  fun pin(applicationName: String, sha256: ByteString) {
     val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
     createPinIfNotExists(applicationName, fileId)
   }
 
-  internal fun unpin(applicationName: String, sha256: ByteString) {
+  fun unpin(applicationName: String, sha256: ByteString) {
     val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
     database.pinsQueries.delete_pin(applicationName, fileId)
   }
@@ -137,7 +170,7 @@ internal class ZiplineCache internal constructor(
     val manifestFile = database.filesQueries
       .selectPinnedManifest(applicationName)
       .executeAsOneOrNull() ?: return null
-    val manifestBytes = read(manifestFile.sha256_hex)
+    val manifestBytes = read(manifestFile)
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
       )
@@ -147,9 +180,7 @@ internal class ZiplineCache internal constructor(
   /** Pins manifest and unpins all other files and manifests */
   fun pinManifest(applicationName: String, loadedManifest: LoadedManifest) {
     val manifestBytes = loadedManifest.manifestBytes
-    val manifestMetadata =
-      writeManifest(applicationName, manifestBytes.sha256(), manifestBytes)
-        ?: return
+    val manifestMetadata = getOrPutManifest(applicationName, manifestBytes) ?: return
 
     database.transaction {
       database.pinsQueries.delete_application_pins(applicationName)
@@ -185,29 +216,20 @@ internal class ZiplineCache internal constructor(
       .selectPinnedManifest(applicationName)
       .executeAsOneOrNull()
 
+    // There is no fallback manifest, delete all pins and return.
     if (fallbackManifestFile == null) {
-      // There is no fallback manifest, delete all pins and return.
       database.pinsQueries.delete_application_pins(applicationName)
-    } else {
-      // Pin the fallback manifest, which removes all pins prior to pinning.
-      val fallbackManifestBytes = read(fallbackManifestFile.sha256_hex)
-        ?: throw FileNotFoundException(
-          "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
-        )
-      val fallbackManifest = LoadedManifest(fallbackManifestBytes)
-      pinManifest(applicationName, fallbackManifest)
+      return
     }
-  }
 
-  internal fun writeManifest(
-    applicationName: String,
-    sha256: ByteString,
-    content: ByteString,
-  ): Files? = getOrNull(sha256)
-    ?: openForWrite(applicationName, sha256, true)?.let { metadata ->
-      write(metadata, content)
-      database.filesQueries.get(metadata.sha256_hex).executeAsOne()
-    }
+    // Pin the fallback manifest, which removes all pins prior to pinning.
+    val fallbackManifestBytes = read(fallbackManifestFile)
+      ?: throw FileNotFoundException(
+        "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
+      )
+    val fallbackManifest = LoadedManifest(fallbackManifestBytes)
+    pinManifest(applicationName, fallbackManifest)
+  }
 
   /**
    * Returns file metadata if the file was absent and is now `DIRTY`. The caller is now the
@@ -281,20 +303,6 @@ internal class ZiplineCache internal constructor(
     prune()
   }
 
-  /** Deletes the file from the file system and the metadata DB. */
-  private fun deleteDirty(
-    metadata: Files
-  ) {
-    // Go from DIRTY to absent.
-    fileSystem.delete(path(metadata))
-    database.transaction {
-      require(getOrNull(metadata.id)?.file_state == FileState.DIRTY) {
-        "file ${metadata.id} was not DIRTY ... multiple processes sharing a cache?"
-      }
-      database.filesQueries.delete(metadata.id)
-    }
-  }
-
   private fun getOrNull(
     sha256: ByteString
   ): Files? = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()
@@ -304,8 +312,31 @@ internal class ZiplineCache internal constructor(
   ): Files? = database.filesQueries.getById(id).executeAsOneOrNull()
 
   /**
-   * Call this when opening the cache app to handle in-flight failed downloads and limit changes.
+   * Call this when opening the cache to clean up anything left behind by the previous run.
    *
+   * This will prune the cache, necessary if this run's [maxSizeInBytes] is lower than the previous
+   * runs value for that parameter.
+   *
+   * It will also delete dirty files that were open when the previous run completed.
+   */
+  fun initialize() {
+    deleteDirtyFiles()
+    prune()
+  }
+
+  private fun deleteDirtyFiles() {
+    while (true) {
+      val dirtyFile = database.filesQueries.selectAnyDirtyFile().executeAsOneOrNull() ?: return
+      try {
+        fileSystem.delete(path(dirtyFile))
+      } catch (e: IOException) {
+        return // If we can't delete files, give up quietly.
+      }
+      database.filesQueries.delete(dirtyFile.id)
+    }
+  }
+
+  /**
    * Prune is also called when any file transitions from `DIRTY` to `READY` since that file is now
    * included in limit calculations.
    *
@@ -314,7 +345,7 @@ internal class ZiplineCache internal constructor(
    * assuming UNIX filesystem semantics where open files are not deleted from under processes that
    * have opened them.
    */
-  internal fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
+  fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
     while (true) {
       val currentSize = database.filesQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
       if (currentSize <= maxSizeInBytes) return
@@ -327,10 +358,10 @@ internal class ZiplineCache internal constructor(
   }
 
   /** Returns the number of files in the cache DB. */
-  internal fun countFiles() = database.filesQueries.count().executeAsOne().toInt()
+  fun countFiles() = database.filesQueries.count().executeAsOne().toInt()
 
   /** Returns the number of pins in the cache DB. */
-  internal fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
+  fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
 
   private fun path(metadata: Files): Path {
     return directory / "entry-${metadata.id}.bin"

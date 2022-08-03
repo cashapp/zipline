@@ -21,8 +21,6 @@ import app.cash.zipline.loader.testSqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
-import com.squareup.sqldelight.db.SqlDriver
-import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -34,11 +32,13 @@ import kotlinx.coroutines.runBlocking
 import okio.ByteString.Companion.encodeUtf8
 import okio.Closeable
 import okio.FileSystem
+import okio.ForwardingFileSystem
+import okio.IOException
+import okio.Path
+import okio.Sink
 
 class ZiplineCacheTest {
-  private lateinit var driver: SqlDriver
-  private lateinit var database: Database
-  private val fileSystem = systemFileSystem
+  private val fileSystem = FaultInjectingFileSystem(systemFileSystem)
   private val directory = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "okio-${randomToken().hex()}"
   private val cacheSize = 64
   private var nowMillis = 1_000L
@@ -47,24 +47,14 @@ class ZiplineCacheTest {
   @BeforeTest
   fun setUp() {
     fileSystem.createDirectories(directory)
-    driver = testSqlDriverFactory().create(
-      path = directory / "zipline.db",
-      schema = Database.Schema,
-    )
-    database = createDatabase(driver)
     testFixtures = LoaderTestFixtures()
-  }
-
-  @AfterTest
-  fun tearDown() {
-    driver.close()
   }
 
   @Test
   fun readOpensFileThatHasBeenDownloadedOrNullIfNotReady(): Unit = runBlocking {
     withCache { ziplineCache ->
-      val fileSha = "abc123".encodeUtf8().sha256()
-      val fileContents = "abc123".encodeUtf8().sha256()
+      val fileContents = "abc123".encodeUtf8()
+      val fileSha = fileContents.sha256()
 
       // File not READY
       assertNull(ziplineCache.read(fileSha))
@@ -82,8 +72,8 @@ class ZiplineCacheTest {
   @Test
   fun readTriggersDownloadForFileThatIsNotOnFilesystemYet(): Unit = runBlocking {
     withCache { ziplineCache ->
-      val fileSha = "abc123".encodeUtf8().sha256()
       val fileContents = "abc123".encodeUtf8().sha256()
+      val fileSha = fileContents.sha256()
 
       // File not READY
       assertNull(ziplineCache.read(fileSha))
@@ -270,14 +260,76 @@ class ZiplineCacheTest {
       assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(3, it.countPins())
 
-      it.writeManifest(
-        "red",
-        manifestFiretruck.manifestBytes.sha256(),
-        manifestFiretruck.manifestBytes
-      )
+      it.getOrPutManifest("red", manifestFiretruck.manifestBytes)
       assertEquals(4, it.countPins())
 
       assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
+    }
+  }
+
+  @Test
+  fun recoverAfterDiskWriteFailsBeforeCreatingTheFile(): Unit = runBlocking {
+    val fileContents = "abc123".encodeUtf8().sha256()
+    val fileSha = fileContents.sha256()
+
+    // Synthesize a failure writing to the cache.
+    withCache { ziplineCache ->
+      fileSystem.beforeNextWrite = { throw IOException() }
+      ziplineCache.write("red", fileSha, fileContents)
+    }
+
+    withCache { ziplineCache ->
+      // Confirm reading returns no such file.
+      assertNull(ziplineCache.read(fileSha))
+
+      // Confirm writing works.
+      ziplineCache.write("red", fileSha, fileContents)
+      assertEquals(fileContents, ziplineCache.read(fileSha))
+    }
+  }
+
+  @Test
+  fun recoverAfterDiskWriteFailsAfterCreatingTheFile(): Unit = runBlocking {
+    val fileContents = "abc123".encodeUtf8().sha256()
+    val fileSha = fileContents.sha256()
+
+    // Synthesize a failure writing to the cache.
+    withCache { ziplineCache ->
+      fileSystem.afterNextWrite = { throw IOException() }
+      ziplineCache.write("red", fileSha, fileContents)
+    }
+
+    withCache { ziplineCache ->
+      // Confirm reading returns no such file. (We don't know that writing completed!)
+      assertNull(ziplineCache.read(fileSha))
+
+      // Confirm writing works.
+      ziplineCache.write("red", fileSha, fileContents)
+      assertEquals(fileContents, ziplineCache.read(fileSha))
+    }
+  }
+
+  @Test
+  fun recoverAfterDiskWriteFailsWhileWritingTheFile(): Unit = runBlocking {
+    val fileContents = "abc123".encodeUtf8().sha256()
+    val fileSha = fileContents.sha256()
+
+    withCache { ziplineCache ->
+      // Synthesize a partial failure where a file is truncated on disk.
+      fileSystem.afterNextWrite = { file ->
+        val handle = fileSystem.openReadWrite(file)
+        handle.resize(handle.size() - 1L)
+      }
+      ziplineCache.write("red", fileSha, fileContents)
+    }
+
+    withCache { ziplineCache ->
+      // Confirm reading returns no such file.
+      assertNull(ziplineCache.read(fileSha))
+
+      // Confirm writing works.
+      ziplineCache.write("red", fileSha, fileContents)
+      assertEquals(fileContents, ziplineCache.read(fileSha))
     }
   }
 
@@ -289,6 +341,12 @@ class ZiplineCacheTest {
     cacheSize: Int = this.cacheSize,
     block: suspend (ZiplineCache) -> T,
   ): T {
+    val driver = testSqlDriverFactory().create(
+      path = directory / "zipline.db",
+      schema = Database.Schema,
+    )
+    val database = createDatabase(driver)
+
     val cache = ZiplineCache(
       databaseCloseable = object: Closeable {
         override fun close() {
@@ -297,10 +355,37 @@ class ZiplineCacheTest {
       },
       database = database,
       fileSystem = fileSystem,
-      directory = this.directory,
+      directory = directory,
       maxSizeInBytes = cacheSize.toLong(),
-    ) { nowMillis }
-    cache.prune()
-    return block(cache)
+      nowMs = { nowMillis },
+    )
+    cache.initialize()
+    try {
+      return block(cache)
+    } finally {
+      cache.close()
+    }
+  }
+
+  private class FaultInjectingFileSystem(delegate: FileSystem) : ForwardingFileSystem(delegate) {
+    var beforeNextWrite: ((Path) -> Unit) = {}
+    var afterNextWrite: ((Path) -> Unit) = {}
+
+    override fun sink(file: Path, mustCreate: Boolean): Sink {
+      val beforeWriteCallback = beforeNextWrite
+      beforeNextWrite = {}
+      beforeWriteCallback(file)
+
+      val sink = super.sink(file, mustCreate)
+      return object : Sink by sink {
+        override fun close() {
+          sink.close()
+
+          val afterWriteCallback = afterNextWrite
+          afterNextWrite = {}
+          afterWriteCallback(file)
+        }
+      }
+    }
   }
 }

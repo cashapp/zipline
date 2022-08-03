@@ -24,7 +24,11 @@ internal actual class SqlDriverFactory {
   actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
     validateDbPath(path)
     val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:$path")
-    schema.create(driver)
+    try {
+      schema.create(driver)
+    } catch (ignored: Exception) {
+      // Schema already created? (Android and iOS have more robust migration mechanisms).
+    }
     return driver
   }
 }
