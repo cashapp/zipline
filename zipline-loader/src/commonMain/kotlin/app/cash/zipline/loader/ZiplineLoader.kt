@@ -98,6 +98,7 @@ class ZiplineLoader internal constructor(
     maxSizeInBytes: Long,
     nowMs: () -> Long
   ): ZiplineLoader {
+    fileSystem.createDirectories(directory, mustCreate = false)
     val driver = sqlDriverFactory.create(directory / "zipline.db", Database.Schema)
     val databaseCloseable = object : Closeable {
       override fun close() {

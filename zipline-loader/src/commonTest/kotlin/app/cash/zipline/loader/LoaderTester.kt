@@ -53,7 +53,7 @@ class LoaderTester(
   internal lateinit var cache: ZiplineCache
 
   fun beforeTest() {
-    systemFileSystem.createDirectories(cacheDir, mustCreate = true)
+    systemFileSystem.createDirectories(tempDir, mustCreate = true)
     systemFileSystem.createDirectories(embeddedDir, mustCreate = true)
     loader = testZiplineLoader(
       dispatcher = dispatcher,
