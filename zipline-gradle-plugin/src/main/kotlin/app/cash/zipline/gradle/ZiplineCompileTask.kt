@@ -67,6 +67,10 @@ abstract class ZiplineCompileTask @Inject constructor(
   val signingKeys: NamedDomainObjectContainer<ManifestSigningKey> =
     objectFactory.domainObjectContainer(ManifestSigningKey::class.java)
 
+  @Optional
+  @get:Input
+  val version: Property<String> = objectFactory.property(String::class.java)
+
   @get:OutputFile
   val webpackConfigFile: File by lazy {
     project.projectDir.resolve(configFilePath)
@@ -88,6 +92,7 @@ abstract class ZiplineCompileTask @Inject constructor(
       }
       else -> null
     }
+    val version = version.orNull
 
     if (inputChanges.isIncremental) {
       fun filterByChangeType(filter: (ChangeType) -> Boolean): List<File> {
@@ -108,7 +113,8 @@ abstract class ZiplineCompileTask @Inject constructor(
         outputDir = outputDirFile,
         mainFunction = mainFunction,
         mainModuleId = mainModuleId,
-        manifestSigner = manifestSigner
+        manifestSigner = manifestSigner,
+        version = version
       )
 
       val webpackHome = project.rootProject.buildDir.resolve("js/packages/placeholder-name")

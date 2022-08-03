@@ -18,6 +18,7 @@ package app.cash.zipline.gradle
 
 import com.google.common.truth.Truth.assertThat
 import java.io.File
+import kotlin.test.assertEquals
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -134,7 +135,10 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
-    assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
+    val manifest = ziplineOut.resolve("manifest.zipline.json")
+    assertThat(manifest.exists()).isTrue()
+    assertThat(manifest.readText())
+      .containsMatch(""""version":"1.2.3"""")
     assertThat(ziplineOut.resolve("multipleJsTargets-lib-blue.zipline").exists()).isTrue()
   }
 

@@ -42,11 +42,19 @@ object ZiplineCompiler {
     mainFunction: String? = null,
     mainModuleId: String? = null,
     manifestSigner: ManifestSigner? = null,
+    version: String? = null,
   ) {
     val modules = mutableMapOf<String, ZiplineManifest.Module>()
     val jsFiles = getJsFiles(inputDir.listFiles()!!.asList())
     jsFiles.forEach { jsFile -> compileSingleFile(jsFile, outputDir, modules) }
-    writeManifest(outputDir, mainFunction, mainModuleId, manifestSigner, modules)
+    writeManifest(
+      outputDir = outputDir,
+      mainFunction = mainFunction,
+      mainModuleId = mainModuleId,
+      manifestSigner = manifestSigner,
+      modules = modules,
+      version = version
+    )
   }
 
   fun incrementalCompile(
@@ -79,7 +87,13 @@ object ZiplineCompiler {
     addedOrModifiedFiles.forEach { file -> compileSingleFile(file, outputDir, modules) }
 
     // Write back a new up-to-date manifest
-    writeManifest(outputDir, mainFunction, mainModuleId, manifestSigner, modules)
+    writeManifest(
+      outputDir = outputDir,
+      mainFunction = mainFunction,
+      mainModuleId = mainModuleId,
+      manifestSigner = manifestSigner,
+      modules = modules
+    )
   }
 
   private fun compileSingleFile(
@@ -132,11 +146,13 @@ object ZiplineCompiler {
     mainModuleId: String? = null,
     manifestSigner: ManifestSigner? = null,
     modules: MutableMap<String, ZiplineManifest.Module>,
+    version: String? = null,
   ) {
     val unsignedManifest = ZiplineManifest.create(
       modules = modules,
       mainFunction = mainFunction,
-      mainModuleId = mainModuleId
+      mainModuleId = mainModuleId,
+      version = version,
     )
 
     val manifest = manifestSigner?.sign(unsignedManifest) ?: unsignedManifest
@@ -163,5 +179,6 @@ fun main(vararg args: String) {
     outputDir = outputDir,
     mainFunction = argsList.removeFirstOrNull(),
     mainModuleId = argsList.removeFirstOrNull(),
+    version = argsList.removeFirstOrNull(),
   )
 }
