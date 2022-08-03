@@ -40,7 +40,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf(),
         ),
       ),
-      mainFunction = "zipline.ziplineMain()"
+      mainFunction = "zipline.ziplineMain"
     )
     val sorted = ZiplineManifest.create(
       modules = mapOf(
@@ -55,7 +55,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf("alpha"),
         ),
       ),
-      mainFunction = "zipline.ziplineMain()"
+      mainFunction = "zipline.ziplineMain"
     )
     assertEquals(sorted, unsorted)
   }
@@ -70,7 +70,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf(),
         )
       ),
-      mainFunction = "zipline.ziplineMain()"
+      mainFunction = "zipline.ziplineMain"
     )
     val unsortedException = assertFailsWith<IllegalArgumentException> {
       empty.copy(
@@ -105,7 +105,7 @@ class ZiplineManifestTest {
             dependsOnIds = listOf("alpha"),
           ),
         ),
-        mainFunction = "zipline.ziplineMain()",
+        mainFunction = "zipline.ziplineMain",
       )
     }
     assertEquals(
@@ -150,7 +150,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf("alpha"),
         ),
       ),
-      mainFunction = "zipline.ziplineMain()"
+      mainFunction = "zipline.ziplineMain"
     )
     assertEquals("bravo", manifest.mainModuleId)
   }
@@ -170,7 +170,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf("alpha"),
         ),
       ),
-      mainFunction = "zipline.ziplineMain()",
+      mainFunction = "zipline.ziplineMain",
     )
 
     val serialized = Json { prettyPrint = true }.encodeToString(original)
@@ -191,7 +191,7 @@ class ZiplineManifestTest {
         |        }
         |    },
         |    "mainModuleId": "bravo",
-        |    "mainFunction": "zipline.ziplineMain()",
+        |    "mainFunction": "zipline.ziplineMain",
         |    "signatures": {
         |    }
         |}

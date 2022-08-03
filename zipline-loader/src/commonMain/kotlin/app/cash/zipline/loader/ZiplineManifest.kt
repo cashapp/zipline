@@ -35,7 +35,7 @@ data class ZiplineManifest private constructor(
    * This will usually be the last module in the manifest once it is topologically sorted.
    */
   val mainModuleId: String,
-  /** Fully qualified main function to start the application (ie. "zipline.main()"). */
+  /** Fully qualified main function to start the application (ie. "zipline.ziplineMain"). */
   val mainFunction: String?,
 
   /**

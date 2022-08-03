@@ -196,7 +196,7 @@ class ZiplineLoader internal constructor(
       // Run the application after initializer has been run on Zipline engine.
       manifest.manifest.mainFunction?.let { mainFunction ->
         zipline.quickJs.evaluate(
-          script = "require('${manifest.manifest.mainModuleId}').$mainFunction",
+          script = "require('${manifest.manifest.mainModuleId}').$mainFunction()",
           fileName = "ZiplineLoader.kt",
         )
       }
