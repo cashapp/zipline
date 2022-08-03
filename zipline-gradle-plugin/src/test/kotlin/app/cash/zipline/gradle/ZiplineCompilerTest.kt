@@ -143,7 +143,7 @@ class ZiplineCompilerTest {
     outputDir.mkdirs()
 
     val mainModuleId = "./app.js"
-    val mainFunction = "zipline.ziplineMain()"
+    val mainFunction = "zipline.ziplineMain"
     ZiplineCompiler.compile(
       inputDir = inputDir,
       outputDir = outputDir,
@@ -171,7 +171,7 @@ class ZiplineCompilerTest {
     outputDir.mkdirs()
 
     val mainModuleId = "./app.js"
-    val mainFunction = "zipline.ziplineMain()"
+    val mainFunction = "zipline.ziplineMain"
     ZiplineCompiler.incrementalCompile(
       outputDir = outputDir,
       mainFunction = mainFunction,

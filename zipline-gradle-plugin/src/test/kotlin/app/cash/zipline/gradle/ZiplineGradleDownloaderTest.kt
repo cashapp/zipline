@@ -62,7 +62,7 @@ class ZiplineGradleDownloaderTest {
           dependsOnIds = listOf(),
         )
       ),
-      mainFunction = "zipline.ziplineMain()"
+      mainFunction = "zipline.ziplineMain"
     )
     val manifestJsonString = Json.encodeToString(manifest)
 

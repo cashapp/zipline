@@ -56,7 +56,7 @@ class LoaderTestFixtures {
         dependsOnIds = listOf(),
       ),
     ),
-    mainFunction = "zipline.ziplineMain()"
+    mainFunction = "zipline.ziplineMain"
   )
 
   val manifestWithRelativeUrlsJsonString = Json.encodeToString(manifestWithRelativeUrls)
@@ -113,7 +113,7 @@ class LoaderTestFixtures {
             sha256 = seedFileSha256,
           )
         ),
-        mainFunction = "zipline.ziplineMain()",
+        mainFunction = "zipline.ziplineMain",
       )
 
       // Synthesize an unknown field to test forward-compatibility.

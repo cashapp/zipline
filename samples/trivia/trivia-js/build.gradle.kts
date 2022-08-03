@@ -37,7 +37,7 @@ val compileZipline by tasks.creating(JavaExec::class) {
   args = listOf(
     "$buildDir/compileSync/main/productionExecutable/kotlin",
     "$buildDir/zipline",
-    "app.cash.zipline.samples.trivia.launchZipline()"
+    "app.cash.zipline.samples.trivia.launchZipline"
   )
 }
 
