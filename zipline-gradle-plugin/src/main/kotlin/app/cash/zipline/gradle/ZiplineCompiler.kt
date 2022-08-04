@@ -39,10 +39,10 @@ object ZiplineCompiler {
   fun compile(
     inputDir: File,
     outputDir: File,
-    mainFunction: String? = null,
-    mainModuleId: String? = null,
-    manifestSigner: ManifestSigner? = null,
-    version: String? = null,
+    mainFunction: String?,
+    mainModuleId: String?,
+    manifestSigner: ManifestSigner?,
+    version: String?,
   ) {
     val modules = mutableMapOf<String, ZiplineManifest.Module>()
     val jsFiles = getJsFiles(inputDir.listFiles()!!.asList())
@@ -53,7 +53,7 @@ object ZiplineCompiler {
       mainModuleId = mainModuleId,
       manifestSigner = manifestSigner,
       modules = modules,
-      version = version
+      version = version,
     )
   }
 
@@ -62,9 +62,10 @@ object ZiplineCompiler {
     modifiedFiles: List<File>,
     addedFiles: List<File>,
     removedFiles: List<File>,
-    mainFunction: String? = null,
-    mainModuleId: String? = null,
-    manifestSigner: ManifestSigner? = null,
+    mainFunction: String?,
+    mainModuleId: String?,
+    manifestSigner: ManifestSigner?,
+    version: String?,
   ) {
     val modifiedFileNames = getJsFiles(modifiedFiles).map { it.name }.toSet()
     val removedFileNames = getJsFiles(removedFiles).map { it.name }.toSet()
@@ -92,7 +93,8 @@ object ZiplineCompiler {
       mainFunction = mainFunction,
       mainModuleId = mainModuleId,
       manifestSigner = manifestSigner,
-      modules = modules
+      modules = modules,
+      version = version,
     )
   }
 
@@ -179,6 +181,7 @@ fun main(vararg args: String) {
     outputDir = outputDir,
     mainFunction = argsList.removeFirstOrNull(),
     mainModuleId = argsList.removeFirstOrNull(),
+    manifestSigner = null,
     version = argsList.removeFirstOrNull(),
   )
 }
