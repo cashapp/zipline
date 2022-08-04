@@ -22,7 +22,7 @@ import org.jetbrains.kotlin.ir.types.IrType
  * Use [BridgedInterface.adapterConstructorArguments] to create an instance.
  */
 class AdapterConstructorArguments(
-  /** Types that may use of type variables. These vary with the class generic parameters. */
+  /** Types that use type variables. These vary with the class generic parameters. */
   val reifiedTypes: List<IrType>,
 
   /** Types that implement `ZiplineService`. */

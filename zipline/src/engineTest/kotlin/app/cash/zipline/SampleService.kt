@@ -20,8 +20,10 @@ import app.cash.zipline.internal.bridge.ReturningZiplineFunction
 import app.cash.zipline.internal.bridge.SuspendCallback
 import app.cash.zipline.internal.bridge.SuspendingZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
+import app.cash.zipline.internal.bridge.contextualSerializerForType
 import kotlin.reflect.KType
 import kotlin.reflect.typeOf
+import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
@@ -45,6 +47,8 @@ interface SampleService<T> : ZiplineService {
   fun ping(request: SampleRequest): SampleResponse
 
   suspend fun reduce(request: List<T>): T
+
+  fun print(request: @Contextual SampleRequest): @Contextual SampleResponse
 
   companion object {
     /** This function's body is what callers use to create a properly-typed adapter. */
@@ -116,6 +120,7 @@ interface SampleService<T> : ZiplineService {
         val sampleResponseSerializer = serializersModule.serializer(types[1])
         val listOfTSerializer = serializersModule.serializer(types[2])
         val unitSerializer = serializersModule.serializer(types[3])
+        val unitSerializer2 = serializersModule.contextualSerializerForType(types[3])
         val serializers = serializers
         val suspendCallbackTSerializer = serializers[0]
         return listOf(
