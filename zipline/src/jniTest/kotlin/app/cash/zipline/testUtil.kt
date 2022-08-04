@@ -16,7 +16,6 @@
 package app.cash.zipline
 
 import java.io.BufferedReader
-import kotlin.reflect.KClass
 
 /** Load our testing libraries into QuickJS. */
 fun Zipline.loadTestingJs() {
@@ -47,12 +46,4 @@ fun awaitGarbageCollection() {
   Runtime.getRuntime().gc()
   Thread.sleep(100)
   System.runFinalization()
-}
-
-operator fun <T : Any> QuickJs.set(name: String, type: KClass<T>, instance: T) {
-  error("no longer supported")
-}
-
-operator fun <T : Any> QuickJs.get(name: String, type: KClass<T>): T {
-  error("no longer supported")
 }
