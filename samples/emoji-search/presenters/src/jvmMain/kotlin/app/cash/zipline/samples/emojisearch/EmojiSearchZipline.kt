@@ -50,7 +50,7 @@ class EmojiSearchZipline {
     modelsStateFlow: MutableStateFlow<EmojiSearchViewModel>
   ) {
     coroutineScope.launch(dispatcher) {
-      val zipline = ziplineLoader.loadOrFallBack("emojiSearch", manifestUrl) {
+      val zipline = ziplineLoader.loadOnce("emojiSearch", manifestUrl) {
         it.bind<HostApi>("hostApi", hostApi)
       }
       this@EmojiSearchZipline.zipline = zipline

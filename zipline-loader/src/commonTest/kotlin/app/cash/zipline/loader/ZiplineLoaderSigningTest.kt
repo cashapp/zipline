@@ -20,6 +20,7 @@ import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
 import app.cash.zipline.loader.testing.SampleKeys
+import app.cash.zipline.testing.LoggingEventListener
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -38,7 +39,9 @@ import okio.ByteString.Companion.encodeUtf8
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
 class ZiplineLoaderSigningTest {
+  private val eventListener = LoggingEventListener()
   private val tester = LoaderTester(
+    eventListener = eventListener,
     manifestVerifier = ManifestVerifier.Builder()
       .addEd25519("key1", SampleKeys.key1Public)
       .build()
@@ -68,7 +71,7 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
-    val zipline = tester.loader.loadOrFail("test", manifestUrl)
+    val zipline = tester.loader.loadOnce("test", manifestUrl)
     zipline.close()
   }
 
@@ -96,10 +99,13 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.alphaByteString,
     )
-    val exception = assertFailsWith<IllegalStateException> {
-      tester.loader.loadOrFail("test", manifestUrl)
+    assertFailsWith<NoSuchElementException> {
+      tester.loader.loadOnce("test", manifestUrl)
     }
-    assertEquals("checksum mismatch for bravo", exception.message)
+    assertEquals(
+      "checksum mismatch for bravo",
+      eventListener.takeException().message,
+    )
   }
 
   @Test
@@ -114,9 +120,12 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
-    val exception = assertFailsWith<IllegalStateException> {
-      tester.loader.loadOrFail("test", manifestUrl)
+    assertFailsWith<NoSuchElementException> {
+      tester.loader.loadOnce("test", manifestUrl)
     }
-    assertEquals("manifest signature for key key1 did not verify!", exception.message)
+    assertEquals(
+      "manifest signature for key key1 did not verify!",
+      eventListener.takeException().message,
+    )
   }
 }

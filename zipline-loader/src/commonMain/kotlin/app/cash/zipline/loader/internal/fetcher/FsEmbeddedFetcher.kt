@@ -34,27 +34,11 @@ internal class FsEmbeddedFetcher(
     url: String,
   ): ByteString? = fetchByteString(embeddedDir / sha256.hex())
 
-  override suspend fun fetchManifest(
-    applicationName: String,
-    id: String,
-    url: String?,
-  ): LoadedManifest? {
+  fun loadEmbeddedManifest(applicationName: String): LoadedManifest? {
     val manifestBytes = fetchByteString(
       embeddedDir / getApplicationManifestFileName(applicationName)
     ) ?: return null
     return LoadedManifest(manifestBytes)
-  }
-
-  override suspend fun pin(
-    applicationName: String,
-    loadedManifest: LoadedManifest,
-  ) {
-  }
-
-  override suspend fun unpin(
-    applicationName: String,
-    loadedManifest: LoadedManifest,
-  ) {
   }
 
   private fun fetchByteString(filePath: Path) = when {

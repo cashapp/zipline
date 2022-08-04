@@ -43,22 +43,6 @@ class FetcherTest {
       alphaFetcherIds.add(id)
       return null
     }
-
-    override suspend fun fetchManifest(
-      applicationName: String,
-      id: String,
-      url: String?,
-    ): LoadedManifest? {
-      error("unexpected call")
-    }
-
-    override suspend fun pin(applicationName: String, loadedManifest: LoadedManifest) {
-      error("unexpected call")
-    }
-
-    override suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest) {
-      error("unexpected call")
-    }
   }
 
   private val fetcherBravo = object : Fetcher {
@@ -70,22 +54,6 @@ class FetcherTest {
     ): ByteString? {
       bravoFetcherIds.add(id)
       return bravoByteString
-    }
-
-    override suspend fun fetchManifest(
-      applicationName: String,
-      id: String,
-      url: String?,
-    ): LoadedManifest? {
-      error("unexpected call")
-    }
-
-    override suspend fun pin(applicationName: String, loadedManifest: LoadedManifest) {
-      error("unexpected call")
-    }
-
-    override suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest) {
-      error("unexpected call")
     }
   }
 

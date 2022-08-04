@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.fetcher.HttpFetcher
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -33,7 +34,7 @@ fun ZiplineLoader(
   return ZiplineLoader(
     sqlDriverFactory = SqlDriverFactory(),
     dispatcher = dispatcher,
-    httpClient = httpClient,
+    httpFetcher = HttpFetcher(httpClient, eventListener),
     eventListener = eventListener,
     serializersModule = serializersModule,
     manifestVerifier = manifestVerifier,

@@ -36,23 +36,22 @@ internal class FsCachingFetcher(
     }
   }
 
-  override suspend fun fetchManifest(
-    applicationName: String,
-    id: String,
-    url: String?,
-  ): LoadedManifest? {
-    // Prefer the network for the freshest manifest. Fallback to the cache if that fails.
-    return try {
-      delegate.fetchManifest(applicationName, id, url)
-        ?: cache.getPinnedManifest(applicationName)
-    } catch (e: Exception) {
-      cache.getPinnedManifest(applicationName) ?: throw e
-    }
+  fun loadPinnedManifest(applicationName: String): LoadedManifest? {
+    return cache.getPinnedManifest(applicationName)
   }
 
-  override suspend fun pin(applicationName: String, loadedManifest: LoadedManifest) =
+  /**
+   * Permits all downloads for [applicationName] not in [loadedManifest] to be pruned.
+   *
+   * This assumes that all artifacts in [loadedManifest] are currently pinned. Fetchers do not
+   * necessarily enforce this assumption.
+   */
+  fun pin(applicationName: String, loadedManifest: LoadedManifest) =
     cache.pinManifest(applicationName, loadedManifest)
 
-  override suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest) =
+  /**
+   * Removes the pins for [applicationName] in [loadedManifest] so they may be pruned.
+   */
+  fun unpin(applicationName: String, loadedManifest: LoadedManifest) =
     cache.unpinManifest(applicationName, loadedManifest)
 }

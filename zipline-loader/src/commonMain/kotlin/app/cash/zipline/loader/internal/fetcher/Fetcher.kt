@@ -39,40 +39,6 @@ internal interface Fetcher {
     sha256: ByteString,
     url: String,
   ): ByteString?
-
-  /**
-   * Returns the manifest for [applicationName], or null if not found.
-   *
-   * If a fetcher cannot get a file, it returns null. The next [Fetcher] should be called.
-   */
-  suspend fun fetchManifest(
-    applicationName: String,
-    id: String,
-    url: String?,
-  ): LoadedManifest?
-
-  /**
-   * Permits all downloads for [applicationName] not in [manifest] to be pruned.
-   *
-   * This assumes that all artifacts in [manifest] are currently pinned. Fetchers do not necessarily
-   * enforce this assumption.
-   *
-   * This function is called on all fetchers once a load succeeds.
-   */
-  suspend fun pin(
-    applicationName: String,
-    loadedManifest: LoadedManifest,
-  )
-
-  /**
-   * Removes the pins for [applicationName] in [manifest] so they may be pruned.
-   *
-   * This function is called on all fetchers once a load fails.
-   */
-  suspend fun unpin(
-    applicationName: String,
-    loadedManifest: LoadedManifest,
-  )
 }
 
 /**
@@ -97,33 +63,4 @@ internal suspend fun List<Fetcher>.fetch(
   }
   if (firstException != null) throw firstException
   return@withPermit null
-}
-
-/**
- * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
- */
-internal suspend fun List<Fetcher>.fetchManifest(
-  concurrentDownloadsSemaphore: Semaphore,
-  applicationName: String,
-  id: String,
-  url: String?,
-): LoadedManifest? = concurrentDownloadsSemaphore.withPermit {
-  for (fetcher in this) {
-    return@withPermit fetcher.fetchManifest(applicationName, id, url) ?: continue
-  }
-  return@withPermit null
-}
-
-internal suspend fun List<Fetcher>.pin(
-  applicationName: String,
-  loadedManifest: LoadedManifest,
-) = this.forEach { fetcher ->
-  fetcher.pin(applicationName, loadedManifest)
-}
-
-internal suspend fun List<Fetcher>.unpin(
-  applicationName: String,
-  loadedManifest: LoadedManifest,
-) = this.forEach { fetcher ->
-  fetcher.unpin(applicationName, loadedManifest)
 }

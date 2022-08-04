@@ -136,10 +136,9 @@ class ProductionFetcherReceiverTest {
     manifest: ZiplineManifest,
     initializer: (Zipline) -> Unit = {},
   ): Zipline {
-    return createZiplineAndLoad(
+    return loadFromManifest(
       applicationName = applicationName,
-      manifestUrl = null,
-      providedManifest = LoadedManifest(ByteString.EMPTY, manifest),
+      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest),
       initializer = initializer,
     )
   }
