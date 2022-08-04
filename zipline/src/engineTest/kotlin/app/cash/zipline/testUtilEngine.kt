@@ -15,7 +15,10 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.encodeToStringFast
 import kotlinx.coroutines.yield
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Yields until [condition] returns true.
@@ -29,4 +32,13 @@ suspend fun awaitCondition(condition: () -> Boolean) {
     if (condition()) return
   }
   throw AssertionError("gave up waiting for condition")
+}
+
+fun prettyPrint(jsonString: String): String {
+  val json = Json {
+    prettyPrint = true
+    prettyPrintIndent = "  "
+  }
+  val jsonTree = json.decodeFromString(JsonElement.serializer(), jsonString)
+  return json.encodeToStringFast(JsonElement.serializer(), jsonTree)
 }

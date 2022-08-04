@@ -47,6 +47,16 @@ class Endpoint internal constructor(
   /** This uses both Zipline-provided serializers and user-provided serializers. */
   internal val json: Json = Json {
     useArrayPolymorphism = true
+
+    // For backwards-compatibility, allow new fields to be introduced.
+    ignoreUnknownKeys = true
+
+    // Because host and JS may disagree on default values, it's best to encode them.
+    encodeDefaults = true
+
+    // Support map keys whose values are arrays or objects.
+    allowStructuredMapKeys = true
+
     serializersModule = SerializersModule {
       contextual(PassByReference::class, PassByReferenceSerializer(this@Endpoint))
       contextual(Throwable::class, ThrowableSerializer)
