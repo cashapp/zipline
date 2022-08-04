@@ -99,7 +99,7 @@ class ZiplineLoader internal constructor(
     nowMs: () -> Long
   ): ZiplineLoader {
     fileSystem.createDirectories(directory, mustCreate = false)
-    val driver = sqlDriverFactory.create(directory / "zipline.db", Database.Schema)
+    val driver = sqlDriverFactory.create(directory / "zipline-2022-08-04.db", Database.Schema)
     val databaseCloseable = object : Closeable {
       override fun close() {
         driver.close()
