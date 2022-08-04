@@ -99,7 +99,7 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.alphaByteString,
     )
-    assertFailsWith<NoSuchElementException> {
+    assertFailsWith<IllegalStateException> {
       tester.loader.loadOnce("test", manifestUrl)
     }
     assertEquals(
@@ -120,7 +120,7 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
-    assertFailsWith<NoSuchElementException> {
+    assertFailsWith<IllegalStateException> {
       tester.loader.loadOnce("test", manifestUrl)
     }
     assertEquals(

@@ -36,7 +36,7 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.joinAll
@@ -171,7 +171,7 @@ class ZiplineLoader internal constructor(
     initializer: (Zipline) -> Unit,
   ): Flow<Zipline> {
     return flow {
-      var first = true
+      var isFirstLoad = true
       var previousManifest: ZiplineManifest? = null
 
       manifestUrlFlow.collect { manifestUrl ->
@@ -195,8 +195,8 @@ class ZiplineLoader internal constructor(
 
         // If network loading failed (due to network error, or bad code), attempt to load from the
         // cache or embedded file system. This doesn't update pins!
-        if (previousManifest == null && first) {
-          first = false
+        if (previousManifest == null && isFirstLoad) {
+          isFirstLoad = false
           val localManifest = loadCachedOrEmbeddedManifest(applicationName) ?: return@collect
           withLifecycleEvents(applicationName, manifestUrl = null) {
             val localZipline = loadFromManifest(applicationName, localManifest, initializer)
@@ -214,8 +214,8 @@ class ZiplineLoader internal constructor(
     oldestCodeToLoad: Duration = Duration.INFINITE,
     initializer: (Zipline) -> Unit = {},
   ): Zipline {
-    return load(applicationName, flowOf(manifestUrl), oldestCodeToLoad, initializer)
-      .first()
+    return load(applicationName, flowOf(manifestUrl), oldestCodeToLoad, initializer).firstOrNull()
+      ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
   }
 
   /**
