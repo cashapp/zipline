@@ -26,6 +26,7 @@ kotlin {
     val commonMain by getting {
       dependencies {
         api(libs.okio.core)
+        api(libs.kotlin.test)
       }
     }
 

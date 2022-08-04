@@ -194,7 +194,8 @@ class ZiplineManifestTest {
         |    "mainFunction": "zipline.ziplineMain",
         |    "signatures": {
         |    },
-        |    "version": null
+        |    "version": null,
+        |    "builtAtEpochMs": null
         |}
       """.trimMargin(),
       serialized

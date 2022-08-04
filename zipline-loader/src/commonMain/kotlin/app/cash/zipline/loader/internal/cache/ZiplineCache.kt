@@ -175,7 +175,7 @@ internal class ZiplineCache internal constructor(
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
       )
-    return LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms)
+    return LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms!!)
   }
 
   /** Pins manifest and unpins all other files and manifests */
@@ -184,9 +184,7 @@ internal class ZiplineCache internal constructor(
     val manifestMetadata = getOrPutManifest(
       applicationName = applicationName,
       content = manifestBytes,
-      putFreshAtMs = loadedManifest.freshAtMs ?: throw IllegalArgumentException(
-        "Loaded manifest is missing freshtAtMs timestamp."
-      )
+      putFreshAtMs = loadedManifest.freshAtEpochMs
     ) ?: return
 
     database.transaction {
@@ -234,7 +232,7 @@ internal class ZiplineCache internal constructor(
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
       )
-    val fallbackManifest = LoadedManifest(fallbackManifestBytes, fallbackManifestFile.fresh_at_epoch_ms)
+    val fallbackManifest = LoadedManifest(fallbackManifestBytes, fallbackManifestFile.fresh_at_epoch_ms!!)
     pinManifest(applicationName, fallbackManifest)
   }
 
@@ -386,11 +384,9 @@ internal class ZiplineCache internal constructor(
    * Update file record freshAt timestamp to reflect that the manifest is still seen as fresh
    */
   fun updateManifestFreshAt(applicationName: String, loadedManifest: LoadedManifest) {
-    val freshAtMs = loadedManifest.freshAtMs ?: throw IllegalArgumentException(
-      "Loaded manifest is missing freshtAtMs timestamp."
-    )
-    val manifestMetadata =
-      getOrPutManifest(applicationName, loadedManifest.manifestBytes, freshAtMs) ?: return
+    val freshAtMs = loadedManifest.freshAtEpochMs
+    val manifestMetadata = getOrPutManifest(applicationName, loadedManifest.manifestBytes, freshAtMs)
+      ?: return // Pruned.
     database.filesQueries.updateFresh(
       id = manifestMetadata.id,
       fresh_at_epoch_ms = freshAtMs

@@ -71,7 +71,7 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
-    val zipline = tester.loader.loadOnce("test", manifestUrl)
+    val zipline = tester.loader.loadOnce("test", manifestUrl).zipline
     zipline.close()
   }
 

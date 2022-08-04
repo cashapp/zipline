@@ -342,13 +342,13 @@ class ZiplineCacheTest {
       ziplineCache.pinManifest("red", LoadedManifest(fileContents, 5))
       val get1 = assertNotNull(ziplineCache.getPinnedManifest("red"))
       assertEquals(fileContents, get1.manifestBytes)
-      assertEquals(5, get1.freshAtMs)
+      assertEquals(5, get1.freshAtEpochMs)
 
       // Update the freshAt timestamp
       ziplineCache.updateManifestFreshAt("red", LoadedManifest(fileContents, 10))
       val get2 = assertNotNull(ziplineCache.getPinnedManifest("red"))
       assertEquals(fileContents, get2.manifestBytes)
-      assertEquals(10, get2.freshAtMs)
+      assertEquals(10, get2.freshAtEpochMs)
     }
   }
 

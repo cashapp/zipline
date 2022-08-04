@@ -54,7 +54,7 @@ internal class HttpFetcher(
       return LoadedManifest(
         manifestBytes = manifestJson.encodeUtf8(),
         manifest = json.decodeFromJsonElement(manifestJsonElement),
-        freshAtMs = fetchStartMs,
+        freshAtEpochMs = fetchStartMs,
       )
     } catch (e: Exception) {
       eventListener.manifestParseFailed(applicationName, url, e)

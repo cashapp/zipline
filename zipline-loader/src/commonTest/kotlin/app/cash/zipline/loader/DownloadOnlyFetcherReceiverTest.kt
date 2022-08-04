@@ -48,7 +48,7 @@ class DownloadOnlyFetcherReceiverTest {
       bravoUrl to testFixtures.bravoByteString,
     )
 
-    loader.download("test", downloadDir, fileSystem, testFixtures.loadedManifest)
+    loader.download("test", downloadDir, fileSystem, testFixtures.embeddedLoadedManifest)
 
     assertTrue(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertEquals(

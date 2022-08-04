@@ -40,7 +40,7 @@ class EmojiSearchZipline {
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = client,
-    nowMs = { Instant.now().epochSecond }
+    nowMs = { Instant.now().toEpochMilli() }
   )
 
   var zipline: Zipline? = null
@@ -53,7 +53,7 @@ class EmojiSearchZipline {
     coroutineScope.launch(dispatcher) {
       val zipline = ziplineLoader.loadOnce("emojiSearch", manifestUrl) {
         it.bind<HostApi>("hostApi", hostApi)
-      }
+      }.zipline
       this@EmojiSearchZipline.zipline = zipline
       val presenter = zipline.take<EmojiSearchPresenter>("emojiSearchPresenter")
 

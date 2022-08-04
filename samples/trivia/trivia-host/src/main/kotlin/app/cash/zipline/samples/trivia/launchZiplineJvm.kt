@@ -30,7 +30,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = OkHttpClient(),
-    nowMs = { Instant.now().epochSecond }
+    nowMs = { Instant.now().toEpochMilli() }
   )
-  return loader.loadOnce("trivia", manifestUrl)
+  return loader.loadOnce("trivia", manifestUrl).zipline
 }
