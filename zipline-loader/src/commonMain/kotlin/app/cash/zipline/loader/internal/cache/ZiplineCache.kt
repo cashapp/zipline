@@ -251,7 +251,9 @@ internal class ZiplineCache internal constructor(
       manifest_for_application_name = manifestForApplicationName,
       file_state = FileState.DIRTY,
       size_bytes = 0L,
-      last_used_at_epoch_ms = nowMs()
+      last_used_at_epoch_ms = nowMs(),
+      // TODO pass this in from http client
+      fresh_at_epoch_ms = nowMs()
     )
     val metadata = getOrNull(sha256)!!
 

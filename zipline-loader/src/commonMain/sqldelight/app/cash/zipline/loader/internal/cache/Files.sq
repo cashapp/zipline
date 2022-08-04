@@ -6,7 +6,8 @@ CREATE TABLE files (
   manifest_for_application_name TEXT, -- LIKE 'red' or maybe 'red.manifest.json', null for all files except manifest
   file_state TEXT AS FileState NOT NULL,
   size_bytes INTEGER NOT NULL,
-  last_used_at_epoch_ms INTEGER NOT NULL
+  last_used_at_epoch_ms INTEGER NOT NULL,
+  fresh_at_epoch_ms INTEGER NOT NULL
 );
 
 CREATE UNIQUE INDEX files_sha256_hex ON files(sha256_hex);
@@ -31,8 +32,8 @@ WHERE id = :id
 LIMIT 1;
 
 insert:
-INSERT INTO files(sha256_hex, manifest_for_application_name, file_state, size_bytes, last_used_at_epoch_ms)
-VALUES (?, ?, ?, ?, ?);
+INSERT INTO files(sha256_hex, manifest_for_application_name, file_state, size_bytes, last_used_at_epoch_ms, fresh_at_epoch_ms)
+VALUES (?, ?, ?, ?, ?, ?);
 
 update:
 UPDATE files
@@ -40,7 +41,14 @@ SET file_state = :file_state, size_bytes = :size_bytes, last_used_at_epoch_ms = 
 WHERE id = :id;
 
 selectOldestReady:
-SELECT id, sha256_hex, manifest_for_application_name, file_state, size_bytes, last_used_at_epoch_ms
+SELECT
+id,
+sha256_hex,
+manifest_for_application_name,
+file_state,
+size_bytes,
+last_used_at_epoch_ms,
+fresh_at_epoch_ms
 FROM files f
 LEFT JOIN pins p ON (f.id = p.file_id)
 WHERE
@@ -56,7 +64,8 @@ sha256_hex,
 manifest_for_application_name,
 file_state,
 size_bytes,
-last_used_at_epoch_ms
+last_used_at_epoch_ms,
+fresh_at_epoch_ms
 FROM files f
 LEFT JOIN pins p ON (
   f.id = p.file_id AND
@@ -73,7 +82,8 @@ sha256_hex,
 manifest_for_application_name,
 file_state,
 size_bytes,
-last_used_at_epoch_ms
+last_used_at_epoch_ms,
+fresh_at_epoch_ms
 FROM files f
 LEFT JOIN pins p ON (
   f.id = p.file_id AND
