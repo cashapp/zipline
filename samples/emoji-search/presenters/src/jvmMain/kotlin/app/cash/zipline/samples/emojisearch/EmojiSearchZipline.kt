@@ -17,6 +17,7 @@ package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader
+import java.time.Instant
 import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
@@ -35,11 +36,11 @@ class EmojiSearchZipline {
   private val hostApi = RealHostApi(client)
 
   private val manifestUrl = "http://10.0.2.2:8080/manifest.zipline.json"
-  private val moduleName = "./zipline-root-presenters.js"
 
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = client,
+    nowMs = { Instant.now().epochSecond }
   )
 
   var zipline: Zipline? = null

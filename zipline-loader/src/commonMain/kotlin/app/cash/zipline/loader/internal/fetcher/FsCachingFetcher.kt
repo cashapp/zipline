@@ -54,4 +54,10 @@ internal class FsCachingFetcher(
    */
   fun unpin(applicationName: String, loadedManifest: LoadedManifest) =
     cache.unpinManifest(applicationName, loadedManifest)
+
+  /**
+   * Updates freshAt timestamp for manifests that in later network fetch is still the freshest.
+   */
+  fun updateFreshAt(applicationName: String, loadedManifest: LoadedManifest) = cache
+    .updateManifestFreshAt(applicationName, loadedManifest)
 }

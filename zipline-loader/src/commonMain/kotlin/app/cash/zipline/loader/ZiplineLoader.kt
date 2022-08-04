@@ -180,7 +180,11 @@ class ZiplineLoader internal constructor(
         //  - pin the application if the load succeeded; unpin if it failed.
         withLifecycleEvents(applicationName, manifestUrl) {
           val networkManifest = fetchManifestFromNetwork(applicationName, manifestUrl)
-          if (networkManifest.manifest == previousManifest) return@withLifecycleEvents // Unchanged.
+          if (networkManifest.manifest == previousManifest) {
+            // Unchanged. Update freshness timestamp in cache DB.
+            cachingFetcher?.updateFreshAt(applicationName, networkManifest)
+            return@withLifecycleEvents
+          }
 
           try {
             val networkZipline = loadFromManifest(applicationName, networkManifest, initializer)

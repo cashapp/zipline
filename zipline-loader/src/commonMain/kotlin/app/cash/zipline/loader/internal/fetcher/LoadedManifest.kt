@@ -23,17 +23,20 @@ import okio.ByteString
 /**
  * A manifest plus the original bytes we loaded for it. We need the original bytes for signature
  * verification.
+ *
+ * @param freshAtMs is only set by the [HttpFetcher]
  */
 data class LoadedManifest(
   val manifestBytes: ByteString,
   val manifest: ZiplineManifest,
+  val freshAtMs: Long? = null,
 )
 
 internal val json = Json {
   ignoreUnknownKeys = true
 }
 
-internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
+internal fun LoadedManifest(manifestBytes: ByteString, freshAtMs: Long? = null): LoadedManifest {
   val manifest = json.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
-  return LoadedManifest(manifestBytes, manifest)
+  return LoadedManifest(manifestBytes, manifest, freshAtMs)
 }

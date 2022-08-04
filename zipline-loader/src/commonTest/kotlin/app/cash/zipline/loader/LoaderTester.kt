@@ -58,6 +58,7 @@ class LoaderTester(
     loader = testZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
+      nowMs = { nowMillis },
       eventListener = eventListener,
       manifestVerifier = manifestVerifier,
     ).withEmbedded(

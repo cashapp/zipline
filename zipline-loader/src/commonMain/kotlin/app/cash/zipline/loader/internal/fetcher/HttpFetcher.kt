@@ -32,6 +32,7 @@ import okio.ByteString.Companion.encodeUtf8
  */
 internal class HttpFetcher(
   private val httpClient: ZiplineHttpClient,
+  private val nowMs: () -> Long,
   private val eventListener: EventListener = EventListener.NONE,
 ) : Fetcher {
   override suspend fun fetch(
@@ -42,6 +43,7 @@ internal class HttpFetcher(
   ) = fetchByteString(applicationName, url)
 
   suspend fun fetchManifest(applicationName: String, url: String): LoadedManifest {
+    val fetchStartMs = nowMs()
     val manifestBytesWithRelativeUrls = fetchByteString(applicationName, url)
 
     try {
@@ -51,7 +53,8 @@ internal class HttpFetcher(
       val manifestJson = json.encodeToString(JsonElement.serializer(), manifestJsonElement)
       return LoadedManifest(
         manifestBytes = manifestJson.encodeUtf8(),
-        manifest = json.decodeFromJsonElement(manifestJsonElement)
+        manifest = json.decodeFromJsonElement(manifestJsonElement),
+        freshAtMs = fetchStartMs,
       )
     } catch (e: Exception) {
       eventListener.manifestParseFailed(applicationName, url, e)
