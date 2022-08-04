@@ -16,7 +16,6 @@
 
 package app.cash.zipline
 
-import app.cash.zipline.internal.encodeToStringFast
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -29,8 +28,6 @@ import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.ExperimentalSerializationApi
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
 
 /**
  * This test exercises EventListeners where both endpoints are on the same platform.
@@ -351,15 +348,6 @@ internal class EventListenerEndpointTest {
       prettyPrint(serviceResult.encodedResult),
     )
     assertEquals(listOf("zipline/host-1"), serviceResult.serviceNames)
-  }
-
-  private fun prettyPrint(jsonString: String): String {
-    val json = Json {
-      prettyPrint = true
-      prettyPrintIndent = "  "
-    }
-    val jsonTree = json.decodeFromString(JsonElement.serializer(), jsonString)
-    return json.encodeToStringFast(JsonElement.serializer(), jsonTree)
   }
 
   interface EchoTransformer : ZiplineService {
