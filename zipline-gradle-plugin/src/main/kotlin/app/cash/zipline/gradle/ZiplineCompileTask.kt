@@ -105,7 +105,11 @@ abstract class ZiplineCompileTask @Inject constructor(
         outputDir = outputDirFile,
         modifiedFiles = filterByChangeType { changeType ->  changeType == ChangeType.MODIFIED },
         addedFiles = filterByChangeType { changeType ->  changeType == ChangeType.ADDED },
-        removedFiles = filterByChangeType { changeType ->  changeType == ChangeType.REMOVED }
+        removedFiles = filterByChangeType { changeType ->  changeType == ChangeType.REMOVED },
+        mainFunction = mainFunction,
+        mainModuleId = mainModuleId,
+        manifestSigner = manifestSigner,
+        version = version,
       )
     } else {
       ZiplineCompiler.compile(
@@ -114,7 +118,7 @@ abstract class ZiplineCompileTask @Inject constructor(
         mainFunction = mainFunction,
         mainModuleId = mainModuleId,
         manifestSigner = manifestSigner,
-        version = version
+        version = version,
       )
 
       val webpackHome = project.rootProject.buildDir.resolve("js/packages/placeholder-name")
