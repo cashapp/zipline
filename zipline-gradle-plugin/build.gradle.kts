@@ -19,6 +19,7 @@ dependencies {
   implementation(libs.kotlinx.serialization.json)
   implementation(libs.okHttp.core)
   implementation(libs.okio.core)
+  implementation("org.http4k:http4k-core:4.27.4.0")
   testImplementation(projects.ziplineLoaderTesting)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)

@@ -18,7 +18,8 @@ package app.cash.zipline.gradle
 
 import com.google.common.truth.Truth.assertThat
 import java.io.File
-import kotlin.test.assertEquals
+import okhttp3.OkHttpClient
+import okhttp3.Request
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -38,12 +39,6 @@ class ZiplinePluginTest {
     )
     assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
-
-    val webpackConfig = File(projectDir, "lib/webpack.config.d/generated-zipline-webpack-config.js")
-    assertThat(webpackConfig.readText()).contains(
-      "config.devServer.static.push(" +
-        "'../../../../lib/build/compileSync/main/productionExecutable/kotlinZipline');"
-    )
   }
 
   /**
@@ -64,27 +59,6 @@ class ZiplinePluginTest {
     )
     assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
-
-    val webpackConfig = File(projectDir, "lib/webpack.config.d/generated-zipline-webpack-config.js")
-    assertThat(webpackConfig.readText()).contains(
-      "config.devServer.static.push(" +
-        "'../../../../lib/build/compileSync/main/developmentExecutable/kotlinZipline');"
-    )
-  }
-
-  @Test
-  fun webpackConfigFileIsCleaned() {
-    val projectDir = File("src/test/projects/basic")
-    val webpackConfig = projectDir.resolve(
-      "lib/webpack.config.d/generated-zipline-webpack-config.js"
-    )
-    webpackConfig.writeText("Hello, I'm about to be deleted")
-
-    val result = createRunner(projectDir, "clean").build()
-    assertThat(SUCCESS_OUTCOMES)
-      .contains(result.task(":lib:clean")!!.outcome)
-
-    assertThat(webpackConfig.exists()).isFalse()
   }
 
   /**
