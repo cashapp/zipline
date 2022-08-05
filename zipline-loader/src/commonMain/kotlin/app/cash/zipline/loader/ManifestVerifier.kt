@@ -43,7 +43,7 @@ class ManifestVerifier private constructor(
     val signaturePayload = signaturePayload(manifestBytes.utf8())
     val signaturePayloadBytes = signaturePayload.encodeUtf8()
 
-    for ((keyName, signature) in manifest.signatures) {
+    for ((keyName, signature) in manifest.unsigned.signatures) {
       val trustedKey = trustedKeys[keyName] ?: continue
 
       check(trustedKey.verify(signature.decodeHex(), signaturePayloadBytes)) {
@@ -57,7 +57,7 @@ class ManifestVerifier private constructor(
       """
       |no keys in the manifest were recognized for signature verification!
       |  trusted keys: ${trustedKeys.keys}
-      |  manifest keys: ${manifest.signatures.keys}
+      |  manifest keys: ${manifest.unsigned.signatures.keys}
       """.trimMargin()
     )
   }

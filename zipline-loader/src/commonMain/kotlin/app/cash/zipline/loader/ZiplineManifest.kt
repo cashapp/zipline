@@ -28,6 +28,9 @@ import okio.ByteString
  */
 @Serializable
 data class ZiplineManifest private constructor(
+  /** Metadata on this manifest that isn't authenticated by a signature. */
+  val unsigned: Unsigned = Unsigned(),
+
   /** This is an ordered map; its modules are always topologically sorted. */
   val modules: Map<String, Module>,
 
@@ -40,33 +43,48 @@ data class ZiplineManifest private constructor(
   /** Fully qualified main function to start the application (ie. "zipline.ziplineMain"). */
   val mainFunction: String? = null,
 
-  /**
-   * A manifest may include many signatures, in order of preference. The keys of the map are the
-   * signing key names. The values of the map are hex-encoded signatures.
-   */
-  val signatures: Map<String, String> = mapOf(),
-
   /** Version to represent the code as defined in this manifest, by default it will be Git commit SHA. */
   val version: String? = null,
-
-  /**
-   * The newest timestamp that this manifest is known to be fresh. Typically, a manifest is fresh at
-   * the moment it is downloaded. If this field is null the caller should determine freshness
-   * independently.
-   */
-  val freshAtEpochMs: Long? = null,
-
-  /**
-   * Optional URL to resolve module URLs against when downloading. If null, module URLs are relative
-   * to the URL that this manifest was loaded from.
-   */
-  val baseUrl: String? = null,
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
       "Modules are not topologically sorted and can not be loaded"
     }
   }
+
+  /**
+   * Properties of this manifest not authenticated by a signature. We prefer to define properties
+   * in the top-level manifest wherever possible.
+   */
+  @Serializable
+  data class Unsigned(
+    /**
+     * A manifest may include many signatures, in order of preference. The keys of the map are the
+     * signing key names. The values of the map are hex-encoded signatures.
+     *
+     * This is unsigned to solve a chicken-egg problem: we can't sign the output of the signature.
+     */
+    val signatures: Map<String, String> = mapOf(),
+
+    /**
+     * The newest timestamp that this manifest is known to be fresh. Typically, a manifest is fresh
+     * at the moment it is downloaded. If this field is null the caller should determine freshness
+     * independently.
+     *
+     * This is unsigned so that embedded manifests may be updated to track the time they were
+     * downloaded at.
+     */
+    val freshAtEpochMs: Long? = null,
+
+    /**
+     * Optional URL to resolve module URLs against when downloading. If null, module URLs are
+     * relative to the URL that this manifest was loaded from.
+     *
+     * This is unsigned so that cached manifests may be updated to track the URL that they were
+     * originally fetched from.
+     */
+    val baseUrl: String? = null,
+  )
 
   @Serializable
   data class Module(
@@ -93,16 +111,18 @@ data class ZiplineManifest private constructor(
             ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
         }
       return ZiplineManifest(
+        unsigned = Unsigned(
+          signatures = mapOf(),
+          freshAtEpochMs = builtAtEpochMs,
+          baseUrl = baseUrl,
+        ),
         modules = sortedModuleIds.associateWith { id ->
           modules[id]
             ?: throw IllegalArgumentException("Unexpected [id=$id] is not found in modules keys")
         },
         mainModuleId = mainModuleId ?: sortedModuleIds.last(),
         mainFunction = mainFunction,
-        signatures = mapOf(),
         version = version,
-        freshAtEpochMs = builtAtEpochMs,
-        baseUrl = baseUrl,
       )
     }
   }

@@ -177,6 +177,12 @@ class ZiplineManifestTest {
     assertEquals(
         """
         |{
+        |  "unsigned": {
+        |    "signatures": {
+        |    },
+        |    "freshAtEpochMs": null,
+        |    "baseUrl": null
+        |  },
         |  "modules": {
         |    "alpha": {
         |      "url": "/alpha.zipline",
@@ -194,11 +200,7 @@ class ZiplineManifestTest {
         |  },
         |  "mainModuleId": "bravo",
         |  "mainFunction": "zipline.ziplineMain",
-        |  "signatures": {
-        |  },
-        |  "version": null,
-        |  "freshAtEpochMs": null,
-        |  "baseUrl": null
+        |  "version": null
         |}
       """.trimMargin(),
       prettyPrint(serialized)

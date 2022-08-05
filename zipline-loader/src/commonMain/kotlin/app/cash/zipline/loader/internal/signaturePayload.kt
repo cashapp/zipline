@@ -18,7 +18,6 @@ package app.cash.zipline.loader.internal
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonObject
 
 /**
@@ -34,32 +33,23 @@ import kotlinx.serialization.json.jsonObject
  *  1. Create a JSON document that is a copy of the manifest. This operates on the JSON model and
  *     not the decoded model to ensure that unknown fields are covered by signatures.
  *
- *  2. For each element in `modules`:
+ *  2. Remove the `unsigned` property.
  *
- *      * Change the `url` property to `""` (empty string). This is necessary because the `url`
- *        attribute is a relative URL, and the may be rewritten by both serving tools and the
- *        client-side downloader. This is safe because the ultimate URL of the module is
- *        insignificant; we rely on checksum verification to confirm we got the right resource.
- *
- *  3. For each element in `signatures`:
- *
- *     *  Change the string value to `""` (empty string). This is necessary because we don’t know
- *        the signature value yet when we are signing the file.
- *
- *  4. Encode this new document as JSON with no unnecessary whitespace.
+ *  3. Encode this new document as JSON with no unnecessary whitespace.
  *
  * The UTF-8 bytes of the JSON are the input to the signing function.
- *
- * Note that this mechanism replaces values with `""` rather than omitting them completely. This way
- * the signature payload covers which fields were present, and the order of the field declarations.
  *
  * Example
  * -------
  *
  * ```
  * {
- *   "moduleId": "./sample-app.js",
- *   "prepareFunction": "com.squareup.cash.prepareSample",
+ *   "unsigned": {
+ *     "signatures": {
+ *       "kochiku20220705": "304502204b9ea1b30b065afcc38ce238a58a63c7ea341a37",
+ *     },
+ *     "baseUrl": "https://example.com/cdn/59044aae339f8356/"
+ *   }
  *   "modules": {
  *     "./kotlin_kotlin.js": {
  *       "url": "kotlin_kotlin.zipline",
@@ -73,67 +63,41 @@ import kotlinx.serialization.json.jsonObject
  *       ]
  *     }
  *   },
- *   "signatures": {
- *     "kochiku20220705": "304502204b9ea1b30b065afcc38ce238a58a63c7ea341a37",
- *   }
+ *   "moduleId": "./sample-app.js",
+ *   "mainFunction": "com.squareup.cash.prepareSample"
  * }
  * ```
  *
- * Steps 1–3 produce this intermediate JSON:
+ * Steps 1–2 produce this intermediate JSON:
  *
  * ```
  * {
- *   "moduleId": "./sample-app.js",
- *   "prepareFunction": "com.squareup.cash.prepareSample",
  *   "modules": {
  *     "./kotlin_kotlin.js": {
- *       "url": "",
+ *       "url": "kotlin_kotlin.zipline",
  *       "sha256": "44e6b8c5ad603fca0f38e2d45fbd610ced3315fa96756fb4df361a2a7fa6edb7"
  *     },
  *     "./sample-app.js": {
- *       "url": "",
+ *       "url": "cash-sample-app.zipline",
  *       "sha256": "e460f2bd8787f06f2db09aa9dd4e75de3d12961e1df1f77da16ff323007abad1",
  *       "dependsOnIds": [
  *         "./kotlin_kotlin.js"
  *       ]
  *     }
  *   },
- *   "signatures": {
- *     "kochiku20220705": "",
- *   }
+ *   "moduleId": "./sample-app.js",
+ *   "mainFunction": "com.squareup.cash.prepareSample"
  * }
  * ```
  *
- * Before signing we must perform step 4 (strip whitespace) and encode as UTF-8.
+ * Before signing we must perform step 3 (strip whitespace) and encode as UTF-8.
  *
  * Note that if the manifest contains fields unknown to the signer, these fields must be copied to
  * the signature payload.
  */
 internal fun signaturePayload(manifest: JsonElement): JsonElement {
   val newContent = manifest.jsonObject.toMutableMap()
-
-  val modules = newContent["modules"]
-  if (modules != null) {
-    val newModules = mutableMapOf<String, JsonElement>()
-    for ((key, module) in modules.jsonObject) {
-      val newModule = module.jsonObject.toMutableMap()
-      if (newModule.containsKey("url")) {
-        newModule["url"] = JsonPrimitive("")
-      }
-      newModules[key] = JsonObject(newModule)
-    }
-    newContent["modules"] = JsonObject(newModules)
-  }
-
-  val signatures = newContent["signatures"]
-  if (signatures != null) {
-    val newSignatures = mutableMapOf<String, JsonElement>()
-    for (key in signatures.jsonObject.keys) {
-      newSignatures[key] = JsonPrimitive("")
-    }
-    newContent["signatures"] = JsonObject(newSignatures)
-  }
-
+  newContent.remove("unsigned")
   return JsonObject(newContent)
 }
 

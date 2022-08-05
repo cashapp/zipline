@@ -66,19 +66,21 @@ class LoaderTestFixtures {
   val manifestJsonString = Json.encodeToString(manifest)
   val manifestByteString = manifestJsonString.encodeUtf8()
 
-  val manifestNoBaseUrl = manifest.copy(baseUrl = null)
+  val manifestNoBaseUrl = manifest.copy(
+    unsigned = manifest.unsigned.copy(baseUrl = null),
+  )
   val manifestNoBaseUrlJsonString = Json.encodeToString(manifestNoBaseUrl)
   val manifestNoBaseUrlByteString = manifestNoBaseUrlJsonString.encodeUtf8()
 
   val embeddedManifest = manifest.copy(
-    freshAtEpochMs = 123L
+    unsigned = manifest.unsigned.copy(freshAtEpochMs = 123L),
   )
   val embeddedManifestJsonString = Json.encodeToString(embeddedManifest)
   val embeddedManifestByteString = embeddedManifestJsonString.encodeUtf8()
   val embeddedLoadedManifest = LoadedManifest(
     manifestBytes = embeddedManifestByteString,
     manifest = embeddedManifest,
-    freshAtEpochMs = embeddedManifest.freshAtEpochMs!!
+    freshAtEpochMs = embeddedManifest.unsigned.freshAtEpochMs!!
   )
 
   fun createZiplineFile(javaScript: String, fileName: String): ByteString {
@@ -154,10 +156,15 @@ class LoaderTestFixtures {
       expectedManifest: ZiplineManifest,
       actualManifestBytes: ByteString,
     ) {
-      val expectedManifestWithoutBuiltAtEpochMs = expectedManifest.copy(freshAtEpochMs = null)
+      val expectedManifestWithoutBuiltAtEpochMs = expectedManifest.copy(
+        unsigned = expectedManifest.unsigned.copy(freshAtEpochMs = null),
+      )
       val actualManifest = Json.decodeFromString<ZiplineManifest>(actualManifestBytes.utf8())
-      assertNotNull(actualManifest.freshAtEpochMs) // freshAtEpochMs has been filled out on download
-      val actualManifestWithoutFreshAtEpochMs = actualManifest.copy(freshAtEpochMs = null)
+      // freshAtEpochMs has been filled out on download.
+      assertNotNull(actualManifest.unsigned.freshAtEpochMs)
+      val actualManifestWithoutFreshAtEpochMs = actualManifest.copy(
+        unsigned = actualManifest.unsigned.copy(freshAtEpochMs = null),
+      )
       assertEquals(expectedManifestWithoutBuiltAtEpochMs, actualManifestWithoutFreshAtEpochMs)
     }
 

@@ -33,7 +33,9 @@ data class LoadedManifest(
 ) {
   fun encodeFreshAtMs(): LoadedManifest {
     val freshManifest = manifest.copy(
-      freshAtEpochMs = freshAtEpochMs,
+      unsigned = manifest.unsigned.copy(
+        freshAtEpochMs = freshAtEpochMs,
+      )
     )
     val freshManifestBytes = jsonForManifest.encodeToString(freshManifest).encodeUtf8()
     return LoadedManifest(freshManifestBytes, freshManifest, freshAtEpochMs)
@@ -55,5 +57,5 @@ internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): Lo
 
 internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
   val manifest = jsonForManifest.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
-  return LoadedManifest(manifestBytes, manifest, manifest.freshAtEpochMs!!)
+  return LoadedManifest(manifestBytes, manifest, manifest.unsigned.freshAtEpochMs!!)
 }

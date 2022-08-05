@@ -53,6 +53,9 @@ class HttpFetcherTest {
     assertEquals(
       """
       |{
+      |    "unsigned": {
+      |        "baseUrl": "https://example.com/path/"
+      |    },
       |    "modules": {
       |        "./hello.js": {
       |            "url": "hello.zipline",
@@ -62,8 +65,7 @@ class HttpFetcherTest {
       |            "url": "jello.zipline",
       |            "sha256": "7af37185091e22463ff627686aedfec3528376eb745026fae1d6153688885e73"
       |        }
-      |    },
-      |    "baseUrl": "https://example.com/path/"
+      |    }
       |}
       """.trimMargin(),
       json.encodeToString(JsonElement.serializer(), manifestWithBaseUrl),
@@ -93,14 +95,16 @@ class HttpFetcherTest {
     assertEquals(
       """
       |{
+      |    "unsigned": {
+      |        "baseUrl": "https://example.com/path/"
+      |    },
       |    "unknown string": "hello",
       |    "modules": {
       |        "./hello.js": {
       |            "url": "hello.zipline",
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        }
-      |    },
-      |    "baseUrl": "https://example.com/path/"
+      |    }
       |}
       """.trimMargin(),
       json.encodeToString(JsonElement.serializer(), manifestWithResolvedUrls),

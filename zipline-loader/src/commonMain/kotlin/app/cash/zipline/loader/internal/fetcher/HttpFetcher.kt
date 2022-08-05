@@ -50,11 +50,11 @@ internal class HttpFetcher(
     url: String,
     freshAtEpochMs: Long,
   ): LoadedManifest {
-    val manifestBytesWithRelativeUrls = fetchByteString(applicationName, null, url)
+    val manifestBytesWithoutBaseUrl = fetchByteString(applicationName, null, url)
 
     try {
       val manifestJsonElementWithoutBaseUrl =
-        jsonForManifest.parseToJsonElement(manifestBytesWithRelativeUrls.utf8())
+        jsonForManifest.parseToJsonElement(manifestBytesWithoutBaseUrl.utf8())
       val manifestJsonElement = withBaseUrl(manifestJsonElementWithoutBaseUrl, url)
       val manifestJson = jsonForManifest.encodeToString(
         JsonElement.serializer(),
@@ -79,8 +79,19 @@ internal class HttpFetcher(
    * the updated JSON is written to disk.
    */
   internal fun withBaseUrl(manifest: JsonElement, baseUrl: String): JsonElement {
-    val newContent = manifest.jsonObject.toMutableMap()
-    newContent["baseUrl"] = JsonPrimitive(baseUrl)
+    val content = manifest.jsonObject.toMutableMap()
+
+    val unsigned = content.remove("unsigned")?.jsonObject?.toMutableMap() ?: mutableMapOf()
+    unsigned.remove("baseUrl")
+
+    val newUnsigned = mutableMapOf<String, JsonElement>()
+    newUnsigned["baseUrl"] = JsonPrimitive(baseUrl)
+    newUnsigned.putAll(unsigned)
+
+    val newContent = mutableMapOf<String, JsonElement>()
+    newContent["unsigned"] = JsonObject(newUnsigned)
+    newContent.putAll(content)
+
     return JsonObject(newContent)
   }
 

@@ -291,7 +291,13 @@ class ZiplineLoader internal constructor(
   ) {
     coroutineScope {
       val loads = loadedManifest.manifest.modules.map {
-        ModuleJob(applicationName, it.key, loadedManifest.manifest.baseUrl, it.value, receiver)
+        ModuleJob(
+          applicationName = applicationName,
+          id = it.key,
+          baseUrl = loadedManifest.manifest.unsigned.baseUrl,
+          module = it.value,
+          receiver = receiver
+        )
       }
       for (load in loads) {
         val loadJob = launch { load.run() }

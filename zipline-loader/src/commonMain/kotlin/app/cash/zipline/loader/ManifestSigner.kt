@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.ZiplineManifest.Unsigned
 import app.cash.zipline.loader.internal.signaturePayload
 import app.cash.zipline.loader.internal.tink.subtle.Ed25519Sign
 import kotlinx.serialization.encodeToString
@@ -33,13 +34,8 @@ class ManifestSigner private constructor(
 
   /** Returns a copy of [manifest] that is signed with all private keys held by this signer. */
   fun sign(manifest: ZiplineManifest): ZiplineManifest {
-    // Add placeholders for the signatures we're signing with.
-    val manifestToSign = manifest.copy(
-      signatures = privateKeys.mapValues { "" }
-    )
-
     // Sign with each signing key.
-    val signaturePayload = signaturePayload(Json.encodeToString(manifestToSign))
+    val signaturePayload = signaturePayload(Json.encodeToString(manifest))
     val signaturePayloadBytes = signaturePayload.encodeUtf8()
     val signatures = privateKeys.mapValues { (_, signer) ->
       val signatureBytes = signer.sign(signaturePayloadBytes)
@@ -47,7 +43,7 @@ class ManifestSigner private constructor(
     }
 
     // Return the updated manifest!
-    return manifest.copy(signatures = signatures)
+    return manifest.copy(unsigned = Unsigned(signatures = signatures))
   }
 
   class Builder {
