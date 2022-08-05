@@ -17,6 +17,7 @@
 package app.cash.zipline.loader.internal
 
 import app.cash.zipline.loader.ZiplineManifest
+import app.cash.zipline.loader.ZiplineManifest.Unsigned
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -27,7 +28,7 @@ import okio.ByteString.Companion.decodeHex
 /** Make sure the content covered by the signature is what we expect. */
 class SignaturePayloadTest {
   @Test
-  fun differentUrlsHaveTheSamePayloads() {
+  fun differentBaseUrlsHaveTheSamePayloads() {
     val manifestA = ZiplineManifest.create(
       modules = mapOf(
         "./kotlin_kotlin.js" to ZiplineManifest.Module(
@@ -43,13 +44,17 @@ class SignaturePayloadTest {
     val manifestB = ZiplineManifest.create(
       modules = mapOf(
         "./kotlin_kotlin.js" to ZiplineManifest.Module(
-          url = "this is a completely different URL",
+          url = "kotlin_kotlin.zipline",
           sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
           dependsOnIds = listOf(),
         )
       ),
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
+    ).copy(
+      unsigned = Unsigned(
+        baseUrl = "https://example.com/base-url/"
+      )
     )
 
     assertEquals(
@@ -71,84 +76,24 @@ class SignaturePayloadTest {
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
     ).copy(
-      signatures = mapOf(
-        "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
-        "sigB" to "55a3605081f20817859d494103bc43d7",
+      unsigned = Unsigned(
+        signatures = mapOf(
+          "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
+          "sigB" to "55a3605081f20817859d494103bc43d7",
+        )
       )
     )
 
     val manifestB = manifestA.copy(
-      signatures = mapOf(
-        "sigA" to "0f91508b8451a8ed4eedf723f22613ff", // Last character is changed.
-        "sigB" to "55a3605081f20817859d494103bc43d8", // Last character is changed.
+      unsigned = Unsigned(
+        signatures = mapOf(
+          "sigA" to "0f91508b8451a8ed4eedf723f22613ff", // Last character is changed.
+          "sigB" to "55a3605081f20817859d494103bc43d8", // Last character is changed.
+        )
       )
     )
 
     assertEquals(
-      signaturePayload(manifestA.toJson()),
-      signaturePayload(manifestB.toJson()),
-    )
-  }
-
-  @Test
-  fun signaturePresenceIsSignificant() {
-    val manifestA = ZiplineManifest.create(
-      modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineManifest.Module(
-          url = "kotlin_kotlin.zipline",
-          sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
-          dependsOnIds = listOf(),
-        )
-      ),
-      mainModuleId = "./kotlin_kotlin.js",
-      mainFunction = "app.cash.prepareApp",
-    ).copy(
-      signatures = mapOf(
-        "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
-        "sigB" to "55a3605081f20817859d494103bc43d7",
-      )
-    )
-
-    val manifestB = manifestA.copy(
-      signatures = mapOf(
-        "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
-        // sigB is absent.
-      )
-    )
-
-    assertNotEquals(
-      signaturePayload(manifestA.toJson()),
-      signaturePayload(manifestB.toJson()),
-    )
-  }
-
-  @Test
-  fun signatureOrderIsSignificant() {
-    val manifestA = ZiplineManifest.create(
-      modules = mapOf(
-        "./kotlin_kotlin.js" to ZiplineManifest.Module(
-          url = "kotlin_kotlin.zipline",
-          sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
-          dependsOnIds = listOf(),
-        )
-      ),
-      mainModuleId = "./kotlin_kotlin.js",
-      mainFunction = "app.cash.prepareApp",
-    ).copy(
-      signatures = mapOf(
-        "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
-        "sigB" to "55a3605081f20817859d494103bc43d7",
-      )
-    )
-
-    val manifestB = manifestA.copy(
-      signatures = mapOf(
-        "sigB" to "55a3605081f20817859d494103bc43d7", // sigB is first here, last above.
-        "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
-      )
-    )
-
-    assertNotEquals(
       signaturePayload(manifestA.toJson()),
       signaturePayload(manifestB.toJson()),
     )
@@ -234,8 +179,34 @@ class SignaturePayloadTest {
   }
 
   @Test
-  fun signaturePayloadStripsRelativeUrlsAndSignatureContents() {
+  fun signaturePayloadStripsBaseUrlsAndSignatures() {
     val manifestJson = """
+      |{
+      |    "unsigned": {
+      |        "signatures": {
+      |            "sigA": "0f91508b8451a8ed4eedf723f22613fe",
+      |            "sigB": "55a3605081f20817859d494103bc43d7"
+      |        },
+      |        "baseUrl": "https://example.com/base-url/"
+      |    },
+      |    "modules": {
+      |        "./kotlin_kotlin.js": {
+      |            "url": "kotlin_kotlin.zipline",
+      |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
+      |        },
+      |        "./kotlin_org_jetbrains_kotlinx_atomicfu.js": {
+      |            "url": "kotlin_org_jetbrains_kotlinx_atomicfu.zipline",
+      |            "sha256": "b6b4acab7610cb7589b86e4037b3a777107c5cd61eb5c473f1071a9cbe430d7f",
+      |            "dependsOnIds": [
+      |                "./kotlin_kotlin.js"
+      |            ]
+      |        }
+      |    }
+      |}
+      """.trimMargin()
+
+    assertEquals(
+      """
       |{
       |    "modules": {
       |        "./kotlin_kotlin.js": {
@@ -249,33 +220,6 @@ class SignaturePayloadTest {
       |                "./kotlin_kotlin.js"
       |            ]
       |        }
-      |    },
-      |    "signatures": {
-      |        "sigA": "0f91508b8451a8ed4eedf723f22613fe",
-      |        "sigB": "55a3605081f20817859d494103bc43d7"
-      |    }
-      |}
-      """.trimMargin()
-
-    assertEquals(
-      """
-      |{
-      |    "modules": {
-      |        "./kotlin_kotlin.js": {
-      |            "url": "",
-      |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
-      |        },
-      |        "./kotlin_org_jetbrains_kotlinx_atomicfu.js": {
-      |            "url": "",
-      |            "sha256": "b6b4acab7610cb7589b86e4037b3a777107c5cd61eb5c473f1071a9cbe430d7f",
-      |            "dependsOnIds": [
-      |                "./kotlin_kotlin.js"
-      |            ]
-      |        }
-      |    },
-      |    "signatures": {
-      |        "sigA": "",
-      |        "sigB": ""
       |    }
       |}
       """.trimMargin(),
@@ -287,34 +231,38 @@ class SignaturePayloadTest {
   fun signaturePayloadCompact() {
     val manifestJson = """
       |{
+      |    "unsigned": {
+      |        "signatures": {
+      |            "sigA": "0f91508b8451a8ed4eedf723f22613fe"
+      |        }
+      |    },
       |    "modules": {
       |        "./kotlin_kotlin.js": {
       |            "url": "kotlin_kotlin.zipline",
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        }
-      |    },
-      |    "signatures": {
-      |        "sigA": "0f91508b8451a8ed4eedf723f22613fe"
       |    }
       |}
       """.trimMargin()
 
     assertEquals(
-      """{"modules":{"./kotlin_kotlin.js":{"url":"","sha256":"6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"}},"signatures":{"sigA":""}}""",
+      """{"modules":{"./kotlin_kotlin.js":{"url":"kotlin_kotlin.zipline","sha256":"6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"}}}""",
       signaturePayload(manifestJson),
     )
   }
 
   @Test
-  fun signaturePayloadHandlesMissingUrl() {
+  fun signaturePayloadHandlesMissingModuleData() {
     val manifestJson = """
       |{
+      |    "unsigned": {
+      |        "signatures": {
+      |        }
+      |    },
       |    "modules": {
       |        "./kotlin_kotlin.js": {
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        }
-      |    },
-      |    "signatures": {
       |    }
       |}
       """.trimMargin()
@@ -326,8 +274,6 @@ class SignaturePayloadTest {
       |        "./kotlin_kotlin.js": {
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        }
-      |    },
-      |    "signatures": {
       |    }
       |}
       """.trimMargin(),
@@ -339,7 +285,9 @@ class SignaturePayloadTest {
   fun signaturePayloadHandlesMissingModules() {
     val manifestJson = """
       |{
-      |    "signatures": {
+      |    "unsigned": {
+      |        "signatures": {
+      |        }
       |    }
       |}
       """.trimMargin()
@@ -347,8 +295,6 @@ class SignaturePayloadTest {
     assertEquals(
       """
       |{
-      |    "signatures": {
-      |    }
       |}
       """.trimMargin(),
       signaturePayloadPretty(manifestJson),
@@ -356,7 +302,7 @@ class SignaturePayloadTest {
   }
 
   @Test
-  fun signaturePayloadHandlesMissingSignatures() {
+  fun signaturePayloadHandlesMissingUnsignedData() {
     val manifestJson = """
       |{
       |    "modules": {
@@ -373,7 +319,7 @@ class SignaturePayloadTest {
       |{
       |    "modules": {
       |        "./kotlin_kotlin.js": {
-      |            "url": "",
+      |            "url": "kotlin_kotlin.zipline",
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        }
       |    }
@@ -392,14 +338,16 @@ class SignaturePayloadTest {
       |    "unknown float": 5.0,
       |    "unknown string": "five",
       |    "unknown null": null,
+      |    "unsigned": {
+      |        "signatures": {
+      |            "sigA": "0f91508b8451a8ed4eedf723f22613fe"
+      |        }
+      |    },
       |    "modules": {
       |        "./kotlin_kotlin.js": {
       |            "url": "kotlin_kotlin.zipline",
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        }
-      |    },
-      |    "signatures": {
-      |        "sigA": "0f91508b8451a8ed4eedf723f22613fe"
       |    }
       |}
       """.trimMargin()
@@ -414,12 +362,9 @@ class SignaturePayloadTest {
       |    "unknown null": null,
       |    "modules": {
       |        "./kotlin_kotlin.js": {
-      |            "url": "",
+      |            "url": "kotlin_kotlin.zipline",
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        }
-      |    },
-      |    "signatures": {
-      |        "sigA": ""
       |    }
       |}
       """.trimMargin(),
