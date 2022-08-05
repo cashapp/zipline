@@ -286,7 +286,7 @@ class ZiplineLoader internal constructor(
         ModuleJob(
           applicationName = applicationName,
           id = it.key,
-          baseUrl = loadedManifest.manifest.unsigned.baseUrl,
+          baseUrl = loadedManifest.manifest.baseUrl,
           module = it.value,
           receiver = receiver
         )

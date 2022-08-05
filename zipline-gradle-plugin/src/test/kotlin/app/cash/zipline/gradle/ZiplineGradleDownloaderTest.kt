@@ -94,9 +94,7 @@ class ZiplineGradleDownloaderTest {
       downloadDirPath / getApplicationManifestFileName(applicationName)
     ) { readByteString() }
     assertDownloadedToEmbeddedManifest(
-      manifest.copy(
-        unsigned = manifest.unsigned.copy(baseUrl = manifestUrl),
-      ),
+      manifest.copy(baseUrl = manifestUrl),
       actualManifestByteString,
     )
     assertTrue(fileSystem.exists(downloadDirPath / testFixtures.alphaSha256Hex))

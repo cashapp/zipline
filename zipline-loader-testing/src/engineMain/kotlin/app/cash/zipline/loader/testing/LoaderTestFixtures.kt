@@ -67,20 +67,20 @@ class LoaderTestFixtures {
   val manifestByteString = manifestJsonString.encodeUtf8()
 
   val manifestNoBaseUrl = manifest.copy(
-    unsigned = manifest.unsigned.copy(baseUrl = null),
+    baseUrl = null,
   )
   val manifestNoBaseUrlJsonString = Json.encodeToString(manifestNoBaseUrl)
   val manifestNoBaseUrlByteString = manifestNoBaseUrlJsonString.encodeUtf8()
 
   val embeddedManifest = manifest.copy(
-    unsigned = manifest.unsigned.copy(freshAtEpochMs = 123L),
+    freshAtEpochMs = 123L,
   )
   val embeddedManifestJsonString = Json.encodeToString(embeddedManifest)
   val embeddedManifestByteString = embeddedManifestJsonString.encodeUtf8()
   val embeddedLoadedManifest = LoadedManifest(
     manifestBytes = embeddedManifestByteString,
     manifest = embeddedManifest,
-    freshAtEpochMs = embeddedManifest.unsigned.freshAtEpochMs!!,
+    freshAtEpochMs = embeddedManifest.freshAtEpochMs!!,
   )
 
   fun createZiplineFile(javaScript: String, fileName: String): ByteString {
@@ -157,13 +157,13 @@ class LoaderTestFixtures {
       actualManifestBytes: ByteString,
     ) {
       val expectedManifestWithoutBuiltAtEpochMs = expectedManifest.copy(
-        unsigned = expectedManifest.unsigned.copy(freshAtEpochMs = null),
+        freshAtEpochMs = null,
       )
       val actualManifest = Json.decodeFromString<ZiplineManifest>(actualManifestBytes.utf8())
       // freshAtEpochMs has been filled out on download.
-      assertNotNull(actualManifest.unsigned.freshAtEpochMs)
+      assertNotNull(actualManifest.freshAtEpochMs)
       val actualManifestWithoutFreshAtEpochMs = actualManifest.copy(
-        unsigned = actualManifest.unsigned.copy(freshAtEpochMs = null),
+        freshAtEpochMs = null,
       )
       assertEquals(expectedManifestWithoutBuiltAtEpochMs, actualManifestWithoutFreshAtEpochMs)
     }
