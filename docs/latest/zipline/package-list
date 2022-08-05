@@ -96,13 +96,11 @@ $dokka.location:app.cash.zipline/Zipline.Companion/create/#kotlinx.coroutines.Co
 $dokka.location:app.cash.zipline/Zipline.Companion/get/#kotlinx.serialization.modules.SerializersModule/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/get.html
 $dokka.location:app.cash.zipline/Zipline///PointingToDeclaration/zipline/app.cash.zipline/-zipline/index.html
 $dokka.location:app.cash.zipline/Zipline/bind/#kotlin.String#TypeParam(bounds=[app.cash.zipline.ZiplineService])/PointingToDeclaration/zipline/app.cash.zipline/-zipline/bind.html
-$dokka.location:app.cash.zipline/Zipline/clientNames/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/client-names.html
 $dokka.location:app.cash.zipline/Zipline/close/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/close.html
 $dokka.location:app.cash.zipline/Zipline/json/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/json.html
 $dokka.location:app.cash.zipline/Zipline/loadJsModule/#kotlin.ByteArray#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-zipline/load-js-module.html
 $dokka.location:app.cash.zipline/Zipline/loadJsModule/#kotlin.String#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-zipline/load-js-module.html
 $dokka.location:app.cash.zipline/Zipline/quickJs/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/quick-js.html
-$dokka.location:app.cash.zipline/Zipline/serviceNames/#/PointingToDeclaration/zipline/app.cash.zipline/-zipline/service-names.html
 $dokka.location:app.cash.zipline/Zipline/take/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-zipline/take.html
 $dokka.location:app.cash.zipline/ZiplineApiMismatchException///PointingToDeclaration/zipline/app.cash.zipline/-zipline-api-mismatch-exception/index.html
 $dokka.location:app.cash.zipline/ZiplineApiMismatchException/ZiplineApiMismatchException/#kotlin.String/PointingToDeclaration/zipline/app.cash.zipline/-zipline-api-mismatch-exception/-zipline-api-mismatch-exception.html
