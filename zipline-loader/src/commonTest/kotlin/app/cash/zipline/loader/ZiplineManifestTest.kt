@@ -16,12 +16,12 @@
 
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.fetcher.jsonForManifest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 
 class ZiplineManifestTest {
@@ -173,35 +173,101 @@ class ZiplineManifestTest {
       mainFunction = "zipline.ziplineMain",
     )
 
-    val serialized = Json { prettyPrint = true }.encodeToString(original)
+    val serialized = jsonForManifest.encodeToString(original)
     assertEquals(
         """
         |{
-        |    "modules": {
-        |        "alpha": {
-        |            "url": "/alpha.zipline",
-        |            "sha256": "616263313233"
-        |        },
-        |        "bravo": {
-        |            "url": "/bravo.zipline",
-        |            "sha256": "616263313233",
-        |            "dependsOnIds": [
-        |                "alpha"
-        |            ]
-        |        }
+        |  "modules": {
+        |    "alpha": {
+        |      "url": "/alpha.zipline",
+        |      "sha256": "616263313233",
+        |      "dependsOnIds": [
+        |      ]
         |    },
-        |    "mainModuleId": "bravo",
-        |    "mainFunction": "zipline.ziplineMain",
-        |    "signatures": {
-        |    },
-        |    "version": null,
-        |    "builtAtEpochMs": null
+        |    "bravo": {
+        |      "url": "/bravo.zipline",
+        |      "sha256": "616263313233",
+        |      "dependsOnIds": [
+        |        "alpha"
+        |      ]
+        |    }
+        |  },
+        |  "mainModuleId": "bravo",
+        |  "mainFunction": "zipline.ziplineMain",
+        |  "signatures": {
+        |  },
+        |  "version": null,
+        |  "builtAtEpochMs": null
         |}
       """.trimMargin(),
-      serialized
+      prettyPrint(serialized)
     )
 
-    val parsed = Json.decodeFromString<ZiplineManifest>(serialized)
+    val parsed = jsonForManifest.decodeFromString<ZiplineManifest>(serialized)
     assertEquals(original, parsed)
+  }
+
+  /** Omit all but the mandatory fields and confirm that the manifest can still parse. */
+  @Test
+  fun absentFieldsDefaultedWhenParsing() {
+    val serialized = """
+      |{
+      |    "modules": {
+      |        "alpha": {
+      |            "url": "/alpha.zipline",
+      |            "sha256": "616263313233"
+      |        }
+      |    },
+      |    "mainModuleId": "/alpha.zipline"
+      |}
+      """.trimMargin()
+
+    val manifest = ZiplineManifest.create(
+      modules = mapOf(
+        "alpha" to ZiplineManifest.Module(
+          url = "/alpha.zipline",
+          sha256 = "abc123".encodeUtf8(),
+          dependsOnIds = listOf(),
+        ),
+      ),
+      mainModuleId = "/alpha.zipline",
+    )
+
+    assertEquals(
+      manifest,
+      jsonForManifest.decodeFromString(serialized),
+    )
+  }
+
+  @Test
+  fun unknownFieldsIgnoredWhenParsing() {
+    val serialized = """
+      |{
+      |    "unknownField": 5,
+      |    "modules": {
+      |        "alpha": {
+      |            "url": "/alpha.zipline",
+      |            "sha256": "616263313233"
+      |        }
+      |    },
+      |    "mainModuleId": "/alpha.zipline"
+      |}
+      """.trimMargin()
+
+    val manifest = ZiplineManifest.create(
+      modules = mapOf(
+        "alpha" to ZiplineManifest.Module(
+          url = "/alpha.zipline",
+          sha256 = "abc123".encodeUtf8(),
+          dependsOnIds = listOf(),
+        )
+      ),
+      mainModuleId = "/alpha.zipline",
+    )
+
+    assertEquals(
+      manifest,
+      jsonForManifest.decodeFromString(serialized),
+    )
   }
 }

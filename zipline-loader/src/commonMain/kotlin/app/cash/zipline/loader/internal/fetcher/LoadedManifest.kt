@@ -33,23 +33,27 @@ data class LoadedManifest(
 ) {
   fun encodeBuiltAtMs(): LoadedManifest {
     val builtManifest = manifest.copy(
-      builtAtEpochMs = freshAtEpochMs
+      builtAtEpochMs = freshAtEpochMs,
     )
-    val builtManifestBytes = json.encodeToString(builtManifest).encodeUtf8()
+    val builtManifestBytes = jsonForManifest.encodeToString(builtManifest).encodeUtf8()
     return LoadedManifest(builtManifestBytes, builtManifest, freshAtEpochMs)
   }
 }
 
-internal val json = Json {
+internal val jsonForManifest = Json {
+  // For backwards-compatibility, allow new fields to be introduced.
   ignoreUnknownKeys = true
+
+  // Because new releases may change default values, it's best to encode them.
+  encodeDefaults = true
 }
 
 internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): LoadedManifest {
-  val manifest = json.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
+  val manifest = jsonForManifest.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
   return LoadedManifest(manifestBytes, manifest, freshAtEpochMs)
 }
 
 internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
-  val manifest = json.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
+  val manifest = jsonForManifest.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
   return LoadedManifest(manifestBytes, manifest, manifest.builtAtEpochMs!!)
 }

@@ -18,6 +18,8 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import okio.ByteString
 import okio.FileSystem
 
@@ -43,3 +45,12 @@ expect fun randomByteString(size: Int): ByteString
  * resources like the wycheproof JSON files in the iOS simulator.)
  */
 internal expect fun canLoadTestResources(): Boolean
+
+fun prettyPrint(jsonString: String): String {
+  val json = Json {
+    prettyPrint = true
+    prettyPrintIndent = "  "
+  }
+  val jsonTree = json.decodeFromString(JsonElement.serializer(), jsonString)
+  return json.encodeToString(JsonElement.serializer(), jsonTree)
+}
