@@ -22,7 +22,6 @@ import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
-import kotlinx.serialization.json.jsonPrimitive
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 
@@ -38,20 +37,25 @@ internal class HttpFetcher(
     applicationName: String,
     id: String,
     sha256: ByteString,
+    baseUrl: String?,
     url: String,
-  ) = fetchByteString(applicationName, url)
+  ) = fetchByteString(
+    applicationName = applicationName,
+    baseUrl = baseUrl,
+    url = url,
+  )
 
   suspend fun fetchManifest(
     applicationName: String,
     url: String,
     freshAtEpochMs: Long,
   ): LoadedManifest {
-    val manifestBytesWithRelativeUrls = fetchByteString(applicationName, url)
+    val manifestBytesWithRelativeUrls = fetchByteString(applicationName, null, url)
 
     try {
-      val manifestJsonElementWithRelativeUrls =
+      val manifestJsonElementWithoutBaseUrl =
         jsonForManifest.parseToJsonElement(manifestBytesWithRelativeUrls.utf8())
-      val manifestJsonElement = resolveUrls(manifestJsonElementWithRelativeUrls, url)
+      val manifestJsonElement = withBaseUrl(manifestJsonElementWithoutBaseUrl, url)
       val manifestJson = jsonForManifest.encodeToString(
         JsonElement.serializer(),
         manifestJsonElement
@@ -68,46 +72,36 @@ internal class HttpFetcher(
   }
 
   /**
-   * Returns a manifest equivalent to [manifest], but with module URLs resolved against [baseUrl].
-   * This way consumers of the manifest don't need to know the URL that the manifest was downloaded
-   * from.
+   * Returns a manifest equivalent to [manifest], but with a baseUrl property set. This way
+   * consumers of the manifest don't need to know the URL that the manifest was downloaded from.
    *
    * This operates on the JSON model and not the decoded model so unknown values are not lost when
    * the updated JSON is written to disk.
    */
-  internal fun resolveUrls(manifest: JsonElement, baseUrl: String): JsonElement {
+  internal fun withBaseUrl(manifest: JsonElement, baseUrl: String): JsonElement {
     val newContent = manifest.jsonObject.toMutableMap()
-
-    val modules = newContent["modules"]
-    if (modules != null) {
-      val newModules = mutableMapOf<String, JsonElement>()
-      for ((key, module) in modules.jsonObject) {
-        val newModule = module.jsonObject.toMutableMap()
-        val url = newModule["url"]
-        if (url != null) {
-          val urlString = url.jsonPrimitive.content
-          newModule["url"] = JsonPrimitive(httpClient.resolve(baseUrl, urlString))
-        }
-        newModules[key] = JsonObject(newModule)
-      }
-      newContent["modules"] = JsonObject(newModules)
-    }
-
+    newContent["baseUrl"] = JsonPrimitive(baseUrl)
     return JsonObject(newContent)
   }
 
   private suspend fun fetchByteString(
     applicationName: String,
+    baseUrl: String?,
     url: String,
   ): ByteString {
-    eventListener.downloadStart(applicationName, url)
+    val fullUrl = when {
+      baseUrl != null -> httpClient.resolve(baseUrl, url)
+      else -> url
+    }
+
+    eventListener.downloadStart(applicationName, fullUrl)
     val result = try {
-      httpClient.download(url)
+      httpClient.download(fullUrl)
     } catch (e: Exception) {
-      eventListener.downloadFailed(applicationName, url, e)
+      eventListener.downloadFailed(applicationName, fullUrl, e)
       throw e
     }
-    eventListener.downloadEnd(applicationName, url)
+    eventListener.downloadEnd(applicationName, fullUrl)
     return result
   }
 }

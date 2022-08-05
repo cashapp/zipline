@@ -197,7 +197,8 @@ class ZiplineManifestTest {
         |  "signatures": {
         |  },
         |  "version": null,
-        |  "builtAtEpochMs": null
+        |  "freshAtEpochMs": null,
+        |  "baseUrl": null
         |}
       """.trimMargin(),
       prettyPrint(serialized)

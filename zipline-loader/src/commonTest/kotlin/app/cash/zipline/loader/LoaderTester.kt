@@ -58,7 +58,7 @@ class LoaderTester(
     loader = testZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
-      nowMs = { nowMillis },
+      nowEpochMs = { nowMillis },
       eventListener = eventListener,
       manifestVerifier = manifestVerifier,
     ).withEmbedded(
@@ -68,7 +68,6 @@ class LoaderTester(
       directory = cacheDir,
       fileSystem = systemFileSystem,
       maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
-      nowMs = { nowMillis },
     )
     cache = loader.cache!!
   }

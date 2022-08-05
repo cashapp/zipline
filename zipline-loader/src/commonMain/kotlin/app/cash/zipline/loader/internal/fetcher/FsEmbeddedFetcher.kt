@@ -31,6 +31,7 @@ internal class FsEmbeddedFetcher(
     applicationName: String,
     id: String,
     sha256: ByteString,
+    baseUrl: String?,
     url: String,
   ): ByteString? = fetchByteString(embeddedDir / sha256.hex())
 

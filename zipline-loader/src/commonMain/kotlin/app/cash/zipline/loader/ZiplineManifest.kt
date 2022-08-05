@@ -30,11 +30,13 @@ import okio.ByteString
 data class ZiplineManifest private constructor(
   /** This is an ordered map; its modules are always topologically sorted. */
   val modules: Map<String, Module>,
+
   /**
    * JS module ID for the application (ie. "./alpha-app.js").
    * This will usually be the last module in the manifest once it is topologically sorted.
    */
   val mainModuleId: String,
+
   /** Fully qualified main function to start the application (ie. "zipline.ziplineMain"). */
   val mainFunction: String? = null,
 
@@ -53,6 +55,12 @@ data class ZiplineManifest private constructor(
    * independently.
    */
   val freshAtEpochMs: Long? = null,
+
+  /**
+   * Optional URL to resolve module URLs against when downloading. If null, module URLs are relative
+   * to the URL that this manifest was loaded from.
+   */
+  val baseUrl: String? = null,
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
@@ -76,6 +84,7 @@ data class ZiplineManifest private constructor(
       mainModuleId: String? = null,
       version: String? = null,
       builtAtEpochMs: Long? = null,
+      baseUrl: String? = null,
     ): ZiplineManifest {
       val sortedModuleIds = modules.keys
         .toList()
@@ -93,6 +102,7 @@ data class ZiplineManifest private constructor(
         signatures = mapOf(),
         version = version,
         freshAtEpochMs = builtAtEpochMs,
+        baseUrl = baseUrl,
       )
     }
   }

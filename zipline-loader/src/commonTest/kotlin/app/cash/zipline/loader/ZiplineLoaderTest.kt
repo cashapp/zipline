@@ -85,7 +85,7 @@ class ZiplineLoaderTest {
   @Test
   fun loadManifestFromUrl() = runBlocking {
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
+      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
@@ -104,7 +104,7 @@ class ZiplineLoaderTest {
   fun loaderUsesCache() = runBlocking {
     // load, no cache hit, download
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
+      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
@@ -120,7 +120,7 @@ class ZiplineLoaderTest {
 
     // load, cache hit, no download
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
+      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       // Note no actual alpha/bravo files are available on the network
     )
     val ziplineWarmedCache = loader.loadOnce("test", manifestUrl).zipline
@@ -171,7 +171,7 @@ class ZiplineLoaderTest {
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
 
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
+      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )

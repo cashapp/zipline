@@ -28,7 +28,7 @@ expect val systemFileSystem: FileSystem
 expect fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,
-  nowMs: () -> Long,
+  nowEpochMs: () -> Long,
   eventListener: EventListener = EventListener.NONE,
   manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader

@@ -35,7 +35,7 @@ class DownloadOnlyFetcherReceiverTest {
   private val loader = testZiplineLoader(
     dispatcher = dispatcher,
     httpClient = httpClient,
-    nowMs = { 1 }
+    nowEpochMs = { 1 }
   )
 
   private val fileSystem = systemFileSystem

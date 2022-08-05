@@ -40,7 +40,7 @@ class EmojiSearchZipline {
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = client,
-    nowMs = { Instant.now().toEpochMilli() }
+    nowEpochMs = { Instant.now().toEpochMilli() }
   )
 
   var zipline: Zipline? = null

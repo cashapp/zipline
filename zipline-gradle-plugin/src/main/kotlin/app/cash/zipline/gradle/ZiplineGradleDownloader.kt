@@ -35,7 +35,7 @@ class ZiplineGradleDownloader {
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = client,
-      nowMs = { Instant.now().toEpochMilli() }
+      nowEpochMs = { Instant.now().toEpochMilli() }
     )
     runBlocking {
       ziplineLoader.download(

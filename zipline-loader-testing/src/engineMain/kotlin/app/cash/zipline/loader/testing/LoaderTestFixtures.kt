@@ -46,7 +46,7 @@ class LoaderTestFixtures {
   val bravoSha256 = bravoByteString.sha256()
   val bravoSha256Hex = bravoSha256.hex()
 
-  val manifestWithRelativeUrls = ZiplineManifest.create(
+  val manifest = ZiplineManifest.create(
     modules = mapOf(
       "bravo" to ZiplineManifest.Module(
         url = bravoRelativeUrl,
@@ -59,25 +59,16 @@ class LoaderTestFixtures {
         dependsOnIds = listOf(),
       ),
     ),
-    mainFunction = "zipline.ziplineMain"
+    mainFunction = "zipline.ziplineMain",
+    baseUrl = manifestUrl
   )
 
-  val manifestWithRelativeUrlsJsonString = Json.encodeToString(manifestWithRelativeUrls)
-  val manifestWithRelativeUrlsByteString = manifestWithRelativeUrlsJsonString.encodeUtf8()
-
-  val manifest = manifestWithRelativeUrls.copy(
-    modules = manifestWithRelativeUrls.modules.mapValues { (_, module) ->
-      module.copy(
-        url = when (module.url) {
-          bravoRelativeUrl -> bravoUrl
-          alphaRelativeUrl -> alphaUrl
-          else -> error("unexpected URL: ${module.url}")
-        }
-      )
-    }
-  )
   val manifestJsonString = Json.encodeToString(manifest)
   val manifestByteString = manifestJsonString.encodeUtf8()
+
+  val manifestNoBaseUrl = manifest.copy(baseUrl = null)
+  val manifestNoBaseUrlJsonString = Json.encodeToString(manifestNoBaseUrl)
+  val manifestNoBaseUrlByteString = manifestNoBaseUrlJsonString.encodeUtf8()
 
   val embeddedManifest = manifest.copy(
     freshAtEpochMs = 123L

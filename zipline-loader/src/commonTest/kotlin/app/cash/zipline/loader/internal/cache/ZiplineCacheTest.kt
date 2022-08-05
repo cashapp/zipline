@@ -376,7 +376,7 @@ class ZiplineCacheTest {
       fileSystem = fileSystem,
       directory = directory,
       maxSizeInBytes = cacheSize.toLong(),
-      nowMs = { nowMillis },
+      nowEpochMs = { nowMillis },
     )
     cache.initialize()
     try {
