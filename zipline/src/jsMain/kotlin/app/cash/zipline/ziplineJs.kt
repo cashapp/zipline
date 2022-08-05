@@ -67,10 +67,10 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
 
   actual val json = endpoint.json
 
-  actual val serviceNames: Set<String>
+  internal actual val serviceNames: Set<String>
     get() = endpoint.serviceNames
 
-  actual val clientNames: Set<String>
+  internal actual val clientNames: Set<String>
     get() = endpoint.clientNames
 
   internal val eventLoop: EventLoop = endpoint.take(eventLoopName)
