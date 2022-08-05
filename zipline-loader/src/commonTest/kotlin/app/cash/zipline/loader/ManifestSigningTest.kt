@@ -168,7 +168,7 @@ class ManifestSigningTest {
 
   /**
    * We normally expect to be verifying bytes, since that's the only reliable way to guarantee that
-   * unknown fields are preserved. For tests we can encode directly.
+   * unknown fields are preserved. For tests, we can encode directly.
    */
   private fun ManifestVerifier.verify(manifest: ZiplineManifest) {
     val manifestBytes = Json.encodeToString(manifest).encodeUtf8()
