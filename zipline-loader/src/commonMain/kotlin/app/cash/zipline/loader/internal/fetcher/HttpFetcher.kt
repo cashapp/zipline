@@ -48,12 +48,12 @@ internal class HttpFetcher(
 
     try {
       val manifestJsonElementWithRelativeUrls =
-        json.parseToJsonElement(manifestBytesWithRelativeUrls.utf8())
+        jsonForManifest.parseToJsonElement(manifestBytesWithRelativeUrls.utf8())
       val manifestJsonElement = resolveUrls(manifestJsonElementWithRelativeUrls, url)
-      val manifestJson = json.encodeToString(JsonElement.serializer(), manifestJsonElement)
+      val manifestJson = jsonForManifest.encodeToString(JsonElement.serializer(), manifestJsonElement)
       return LoadedManifest(
         manifestBytes = manifestJson.encodeUtf8(),
-        manifest = json.decodeFromJsonElement(manifestJsonElement),
+        manifest = jsonForManifest.decodeFromJsonElement(manifestJsonElement),
         freshAtEpochMs = fetchStartMs,
       )
     } catch (e: Exception) {

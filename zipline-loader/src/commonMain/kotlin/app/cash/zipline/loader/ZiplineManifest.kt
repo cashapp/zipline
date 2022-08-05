@@ -36,22 +36,22 @@ data class ZiplineManifest private constructor(
    */
   val mainModuleId: String,
   /** Fully qualified main function to start the application (ie. "zipline.ziplineMain"). */
-  val mainFunction: String?,
+  val mainFunction: String? = null,
 
   /**
    * A manifest may include many signatures, in order of preference. The keys of the map are the
    * signing key names. The values of the map are hex-encoded signatures.
    */
-  val signatures: Map<String, String>,
+  val signatures: Map<String, String> = mapOf(),
 
   /** Version to represent the code as defined in this manifest, by default it will be Git commit SHA. */
-  val version: String?,
+  val version: String? = null,
 
   /**
    * For embedded manifests only, this field is set to capture when the code in the manifest has been built.
    * For all other builds, this is set as null to allow for hermetic builds.
    */
-  val builtAtEpochMs: Long?
+  val builtAtEpochMs: Long? = null,
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
