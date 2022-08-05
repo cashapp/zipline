@@ -64,7 +64,7 @@ internal class ZiplineCache internal constructor(
   private val fileSystem: FileSystem,
   private val directory: Path,
   private val maxSizeInBytes: Long,
-  private val nowMs: () -> Long,
+  private val nowEpochMs: () -> Long,
 ) : Closeable by databaseCloseable {
   fun write(
     applicationName: String,
@@ -132,7 +132,7 @@ internal class ZiplineCache internal constructor(
       id = metadata.id,
       file_state = metadata.file_state,
       size_bytes = metadata.size_bytes,
-      last_used_at_epoch_ms = nowMs(),
+      last_used_at_epoch_ms = nowEpochMs(),
     )
     val path = path(metadata)
     val result = try {
@@ -232,7 +232,10 @@ internal class ZiplineCache internal constructor(
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
       )
-    val fallbackManifest = LoadedManifest(fallbackManifestBytes, fallbackManifestFile.fresh_at_epoch_ms!!)
+    val fallbackManifest = LoadedManifest(
+      fallbackManifestBytes,
+      fallbackManifestFile.fresh_at_epoch_ms!!
+    )
     pinManifest(applicationName, fallbackManifest)
   }
 
@@ -264,7 +267,7 @@ internal class ZiplineCache internal constructor(
       manifest_for_application_name = manifestForApplicationName,
       file_state = FileState.DIRTY,
       size_bytes = 0L,
-      last_used_at_epoch_ms = nowMs(),
+      last_used_at_epoch_ms = nowEpochMs(),
       fresh_at_epoch_ms = freshAtEpochMs,
     )
     val metadata = getOrNull(sha256)!!
@@ -309,7 +312,7 @@ internal class ZiplineCache internal constructor(
         id = metadata.id,
         file_state = FileState.READY,
         size_bytes = fileSizeBytes,
-        last_used_at_epoch_ms = nowMs(),
+        last_used_at_epoch_ms = nowEpochMs(),
       )
     }
 

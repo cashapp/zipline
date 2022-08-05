@@ -61,7 +61,7 @@ class Download : Runnable {
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = client,
-      nowMs = { Instant.now().toEpochMilli() }
+      nowEpochMs = { Instant.now().toEpochMilli() }
     )
     runBlocking {
       ziplineLoader.download(

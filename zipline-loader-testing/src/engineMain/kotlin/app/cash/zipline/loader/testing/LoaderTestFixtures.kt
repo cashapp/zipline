@@ -46,7 +46,7 @@ class LoaderTestFixtures {
   val bravoSha256 = bravoByteString.sha256()
   val bravoSha256Hex = bravoSha256.hex()
 
-  val manifestWithRelativeUrls = ZiplineManifest.create(
+  val manifest = ZiplineManifest.create(
     modules = mapOf(
       "bravo" to ZiplineManifest.Module(
         url = bravoRelativeUrl,
@@ -59,35 +59,26 @@ class LoaderTestFixtures {
         dependsOnIds = listOf(),
       ),
     ),
-    mainFunction = "zipline.ziplineMain"
+    mainFunction = "zipline.ziplineMain",
+    baseUrl = manifestUrl
   )
 
-  val manifestWithRelativeUrlsJsonString = Json.encodeToString(manifestWithRelativeUrls)
-  val manifestWithRelativeUrlsByteString = manifestWithRelativeUrlsJsonString.encodeUtf8()
-
-  val manifest = manifestWithRelativeUrls.copy(
-    modules = manifestWithRelativeUrls.modules.mapValues { (_, module) ->
-      module.copy(
-        url = when (module.url) {
-          bravoRelativeUrl -> bravoUrl
-          alphaRelativeUrl -> alphaUrl
-          else -> error("unexpected URL: ${module.url}")
-        }
-      )
-    }
-  )
   val manifestJsonString = Json.encodeToString(manifest)
   val manifestByteString = manifestJsonString.encodeUtf8()
 
+  val manifestNoBaseUrl = manifest.copy(baseUrl = null)
+  val manifestNoBaseUrlJsonString = Json.encodeToString(manifestNoBaseUrl)
+  val manifestNoBaseUrlByteString = manifestNoBaseUrlJsonString.encodeUtf8()
+
   val embeddedManifest = manifest.copy(
-    builtAtEpochMs = 123L
+    freshAtEpochMs = 123L
   )
   val embeddedManifestJsonString = Json.encodeToString(embeddedManifest)
   val embeddedManifestByteString = embeddedManifestJsonString.encodeUtf8()
   val embeddedLoadedManifest = LoadedManifest(
     manifestBytes = embeddedManifestByteString,
     manifest = embeddedManifest,
-    freshAtEpochMs = embeddedManifest.builtAtEpochMs!!
+    freshAtEpochMs = embeddedManifest.freshAtEpochMs!!
   )
 
   fun createZiplineFile(javaScript: String, fileName: String): ByteString {
@@ -152,19 +143,22 @@ class LoaderTestFixtures {
     fun createRelativeEmbeddedManifest(
       seed: String,
       seedFileSha256: ByteString,
-      seedBuiltAtEpochMs: Long,
+      seedFreshAtEpochMs: Long,
       includeUnknownFieldInJson: Boolean = false,
     ): LoadedManifest {
       val loadedManifest = createRelativeManifest(seed, seedFileSha256, includeUnknownFieldInJson)
-      return loadedManifest.copy(freshAtEpochMs = seedBuiltAtEpochMs).encodeBuiltAtMs()
+      return loadedManifest.copy(freshAtEpochMs = seedFreshAtEpochMs).encodeFreshAtMs()
     }
 
-    fun assertDownloadedToEmbeddedManifest(expectedManifest: ZiplineManifest, actualManifestBytes: ByteString) {
-      val expectedManifestWithoutBuiltAtEpochMs = expectedManifest.copy(builtAtEpochMs = null)
+    fun assertDownloadedToEmbeddedManifest(
+      expectedManifest: ZiplineManifest,
+      actualManifestBytes: ByteString,
+    ) {
+      val expectedManifestWithoutBuiltAtEpochMs = expectedManifest.copy(freshAtEpochMs = null)
       val actualManifest = Json.decodeFromString<ZiplineManifest>(actualManifestBytes.utf8())
-      assertNotNull(actualManifest.builtAtEpochMs) // builtAtEpochMs has been filled out on download
-      val actualManifestWithoutBuiltAtEpochMs = actualManifest.copy(builtAtEpochMs = null)
-      assertEquals(expectedManifestWithoutBuiltAtEpochMs, actualManifestWithoutBuiltAtEpochMs)
+      assertNotNull(actualManifest.freshAtEpochMs) // freshAtEpochMs has been filled out on download
+      val actualManifestWithoutFreshAtEpochMs = actualManifest.copy(freshAtEpochMs = null)
+      assertEquals(expectedManifestWithoutBuiltAtEpochMs, actualManifestWithoutFreshAtEpochMs)
     }
 
     fun createJs(seed: String) = jsBoilerplate(

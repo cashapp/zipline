@@ -93,7 +93,10 @@ class ZiplineGradleDownloaderTest {
     val actualManifestByteString = fileSystem.read(
       downloadDirPath / getApplicationManifestFileName(applicationName)
     ) { readByteString() }
-    assertDownloadedToEmbeddedManifest(manifest, actualManifestByteString)
+    assertDownloadedToEmbeddedManifest(
+      manifest.copy(baseUrl = manifestUrl),
+      actualManifestByteString,
+    )
     assertTrue(fileSystem.exists(downloadDirPath / testFixtures.alphaSha256Hex))
     assertEquals(
       testFixtures.alphaByteString,

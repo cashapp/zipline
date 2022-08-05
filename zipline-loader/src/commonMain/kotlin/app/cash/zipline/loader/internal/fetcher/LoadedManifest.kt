@@ -31,12 +31,12 @@ data class LoadedManifest(
   val manifest: ZiplineManifest,
   val freshAtEpochMs: Long,
 ) {
-  fun encodeBuiltAtMs(): LoadedManifest {
-    val builtManifest = manifest.copy(
-      builtAtEpochMs = freshAtEpochMs,
+  fun encodeFreshAtMs(): LoadedManifest {
+    val freshManifest = manifest.copy(
+      freshAtEpochMs = freshAtEpochMs,
     )
-    val builtManifestBytes = jsonForManifest.encodeToString(builtManifest).encodeUtf8()
-    return LoadedManifest(builtManifestBytes, builtManifest, freshAtEpochMs)
+    val freshManifestBytes = jsonForManifest.encodeToString(freshManifest).encodeUtf8()
+    return LoadedManifest(freshManifestBytes, freshManifest, freshAtEpochMs)
   }
 }
 
@@ -55,5 +55,5 @@ internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): Lo
 
 internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
   val manifest = jsonForManifest.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
-  return LoadedManifest(manifestBytes, manifest, manifest.builtAtEpochMs!!)
+  return LoadedManifest(manifestBytes, manifest, manifest.freshAtEpochMs!!)
 }

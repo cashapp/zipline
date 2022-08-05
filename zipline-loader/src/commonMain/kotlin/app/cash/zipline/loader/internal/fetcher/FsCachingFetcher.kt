@@ -29,10 +29,11 @@ internal class FsCachingFetcher(
     applicationName: String,
     id: String,
     sha256: ByteString,
+    baseUrl: String?,
     url: String,
   ): ByteString? {
     return cache.getOrPut(applicationName, sha256) {
-      delegate.fetch(applicationName, id, sha256, url)
+      delegate.fetch(applicationName, id, sha256, baseUrl, url)
     }
   }
 
