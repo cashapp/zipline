@@ -30,11 +30,12 @@ fun ZiplineLoader(
   eventListener: EventListener = EventListener.NONE,
   serializersModule: SerializersModule = EmptySerializersModule,
   manifestVerifier: ManifestVerifier? = null,
+  nowMs: () -> Long,
 ): ZiplineLoader {
   return ZiplineLoader(
     sqlDriverFactory = SqlDriverFactory(),
     dispatcher = dispatcher,
-    httpFetcher = HttpFetcher(httpClient, eventListener),
+    httpFetcher = HttpFetcher(httpClient, nowMs, eventListener),
     eventListener = eventListener,
     serializersModule = serializersModule,
     manifestVerifier = manifestVerifier,

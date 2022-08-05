@@ -21,6 +21,9 @@ import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -73,10 +76,19 @@ class LoaderTestFixtures {
       )
     }
   )
-
   val manifestJsonString = Json.encodeToString(manifest)
   val manifestByteString = manifestJsonString.encodeUtf8()
-  val loadedManifest = LoadedManifest(manifestByteString, manifest)
+
+  val embeddedManifest = manifest.copy(
+    builtAtEpochMs = 123L
+  )
+  val embeddedManifestJsonString = Json.encodeToString(embeddedManifest)
+  val embeddedManifestByteString = embeddedManifestJsonString.encodeUtf8()
+  val embeddedLoadedManifest = LoadedManifest(
+    manifestBytes = embeddedManifestByteString,
+    manifest = embeddedManifest,
+    freshAtEpochMs = embeddedManifest.builtAtEpochMs!!
+  )
 
   fun createZiplineFile(javaScript: String, fileName: String): ByteString {
     val quickJs = QuickJs.create()
@@ -124,6 +136,7 @@ class LoaderTestFixtures {
           map["unknownKey"] = JsonPrimitive("unknownValue")
           Json.encodeToString(JsonObject(map))
         }
+
         else -> {
           Json.encodeToString(manifest)
         }
@@ -132,7 +145,26 @@ class LoaderTestFixtures {
       return LoadedManifest(
         manifestJson.encodeUtf8(),
         manifest,
+        1L
       )
+    }
+
+    fun createRelativeEmbeddedManifest(
+      seed: String,
+      seedFileSha256: ByteString,
+      seedBuiltAtEpochMs: Long,
+      includeUnknownFieldInJson: Boolean = false,
+    ): LoadedManifest {
+      val loadedManifest = createRelativeManifest(seed, seedFileSha256, includeUnknownFieldInJson)
+      return loadedManifest.copy(freshAtEpochMs = seedBuiltAtEpochMs).encodeBuiltAtMs()
+    }
+
+    fun assertDownloadedToEmbeddedManifest(expectedManifest: ZiplineManifest, actualManifestBytes: ByteString) {
+      val expectedManifestWithoutBuiltAtEpochMs = expectedManifest.copy(builtAtEpochMs = null)
+      val actualManifest = Json.decodeFromString<ZiplineManifest>(actualManifestBytes.utf8())
+      assertNotNull(actualManifest.builtAtEpochMs) // builtAtEpochMs has been filled out on download
+      val actualManifestWithoutBuiltAtEpochMs = actualManifest.copy(builtAtEpochMs = null)
+      assertEquals(expectedManifestWithoutBuiltAtEpochMs, actualManifestWithoutBuiltAtEpochMs)
     }
 
     fun createJs(seed: String) = jsBoilerplate(

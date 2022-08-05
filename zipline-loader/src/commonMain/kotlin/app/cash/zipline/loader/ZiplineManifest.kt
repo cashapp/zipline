@@ -46,6 +46,12 @@ data class ZiplineManifest private constructor(
 
   /** Version to represent the code as defined in this manifest, by default it will be Git commit SHA. */
   val version: String?,
+
+  /**
+   * For embedded manifests only, this field is set to capture when the code in the manifest has been built.
+   * For all other builds, this is set as null to allow for hermetic builds.
+   */
+  val builtAtEpochMs: Long?
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
@@ -68,6 +74,7 @@ data class ZiplineManifest private constructor(
       mainFunction: String? = null,
       mainModuleId: String? = null,
       version: String? = null,
+      builtAtEpochMs: Long? = null,
     ): ZiplineManifest {
       val sortedModuleIds = modules.keys
         .toList()
@@ -84,6 +91,7 @@ data class ZiplineManifest private constructor(
         mainFunction = mainFunction,
         signatures = mapOf(),
         version = version,
+        builtAtEpochMs = builtAtEpochMs,
       )
     }
   }

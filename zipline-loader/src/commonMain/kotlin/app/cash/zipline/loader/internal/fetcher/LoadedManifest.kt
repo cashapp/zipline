@@ -17,8 +17,10 @@ package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.loader.ZiplineManifest
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.ByteString
+import okio.ByteString.Companion.encodeUtf8
 
 /**
  * A manifest plus the original bytes we loaded for it. We need the original bytes for signature
@@ -27,13 +29,27 @@ import okio.ByteString
 data class LoadedManifest(
   val manifestBytes: ByteString,
   val manifest: ZiplineManifest,
-)
+  val freshAtEpochMs: Long,
+) {
+  fun encodeBuiltAtMs(): LoadedManifest {
+    val builtManifest = manifest.copy(
+      builtAtEpochMs = freshAtEpochMs
+    )
+    val builtManifestBytes = json.encodeToString(builtManifest).encodeUtf8()
+    return LoadedManifest(builtManifestBytes, builtManifest, freshAtEpochMs)
+  }
+}
 
 internal val json = Json {
   ignoreUnknownKeys = true
 }
 
+internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): LoadedManifest {
+  val manifest = json.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
+  return LoadedManifest(manifestBytes, manifest, freshAtEpochMs)
+}
+
 internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
   val manifest = json.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
-  return LoadedManifest(manifestBytes, manifest)
+  return LoadedManifest(manifestBytes, manifest, manifest.builtAtEpochMs!!)
 }

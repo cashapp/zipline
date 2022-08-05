@@ -71,9 +71,10 @@ internal class ZiplineCache internal constructor(
     sha256: ByteString,
     content: ByteString,
     isManifest: Boolean = false,
+    manifestFreshAtMs: Long? = null,
   ): Files? {
     try {
-      val metadata = openForWrite(applicationName, sha256, isManifest) ?: return null
+      val metadata = openForWrite(applicationName, sha256, isManifest, manifestFreshAtMs) ?: return null
       write(metadata, content)
       return metadata
     } catch (ignored: IOException) {
@@ -111,10 +112,11 @@ internal class ZiplineCache internal constructor(
   internal fun getOrPutManifest(
     applicationName: String,
     content: ByteString,
+    putFreshAtMs: Long,
   ): Files? {
     val sha256 = content.sha256()
     val metadata = getOrNull(sha256)
-    return metadata ?: write(applicationName, sha256, content, isManifest = true)
+    return metadata ?: write(applicationName, sha256, content, isManifest = true, manifestFreshAtMs = putFreshAtMs)
   }
 
   fun read(sha256: ByteString): ByteString? {
@@ -173,13 +175,17 @@ internal class ZiplineCache internal constructor(
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
       )
-    return LoadedManifest(manifestBytes)
+    return LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms!!)
   }
 
   /** Pins manifest and unpins all other files and manifests */
   fun pinManifest(applicationName: String, loadedManifest: LoadedManifest) {
     val manifestBytes = loadedManifest.manifestBytes
-    val manifestMetadata = getOrPutManifest(applicationName, manifestBytes) ?: return
+    val manifestMetadata = getOrPutManifest(
+      applicationName = applicationName,
+      content = manifestBytes,
+      putFreshAtMs = loadedManifest.freshAtEpochMs
+    ) ?: return
 
     database.transaction {
       database.pinsQueries.delete_application_pins(applicationName)
@@ -226,7 +232,7 @@ internal class ZiplineCache internal constructor(
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
       )
-    val fallbackManifest = LoadedManifest(fallbackManifestBytes)
+    val fallbackManifest = LoadedManifest(fallbackManifestBytes, fallbackManifestFile.fresh_at_epoch_ms!!)
     pinManifest(applicationName, fallbackManifest)
   }
 
@@ -238,9 +244,16 @@ internal class ZiplineCache internal constructor(
     applicationName: String,
     sha256: ByteString,
     isManifest: Boolean,
+    manifestFreshAtMs: Long? = null
   ): Files? = try {
     val manifestForApplicationName = if (isManifest) {
       applicationName
+    } else {
+      null
+    }
+
+    val freshAtEpochMs = if (isManifest) {
+      manifestFreshAtMs
     } else {
       null
     }
@@ -252,8 +265,7 @@ internal class ZiplineCache internal constructor(
       file_state = FileState.DIRTY,
       size_bytes = 0L,
       last_used_at_epoch_ms = nowMs(),
-      // TODO pass this in from http client
-      fresh_at_epoch_ms = nowMs()
+      fresh_at_epoch_ms = freshAtEpochMs,
     )
     val metadata = getOrNull(sha256)!!
 
@@ -366,5 +378,18 @@ internal class ZiplineCache internal constructor(
 
   private fun path(metadata: Files): Path {
     return directory / "entry-${metadata.id}.bin"
+  }
+
+  /**
+   * Update file record freshAt timestamp to reflect that the manifest is still seen as fresh
+   */
+  fun updateManifestFreshAt(applicationName: String, loadedManifest: LoadedManifest) {
+    val freshAtMs = loadedManifest.freshAtEpochMs
+    val manifestMetadata = getOrPutManifest(applicationName, loadedManifest.manifestBytes, freshAtMs)
+      ?: return // Pruned.
+    database.filesQueries.updateFresh(
+      id = manifestMetadata.id,
+      fresh_at_epoch_ms = freshAtMs
+    )
   }
 }

@@ -22,7 +22,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
 class HttpFetcherTest {
-  private val httpFetcher = HttpFetcher(FakeZiplineHttpClient())
+  private val httpFetcher = HttpFetcher(FakeZiplineHttpClient(), { 1 })
   private val json = Json {
     prettyPrint = true
   }

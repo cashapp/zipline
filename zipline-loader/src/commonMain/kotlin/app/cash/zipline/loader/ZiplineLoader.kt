@@ -169,7 +169,7 @@ class ZiplineLoader internal constructor(
     manifestUrlFlow: Flow<String>,
     oldestCodeToLoad: Duration = Duration.INFINITE,
     initializer: (Zipline) -> Unit,
-  ): Flow<Zipline> {
+  ): Flow<LoadedZipline> {
     return flow {
       var isFirstLoad = true
       var previousManifest: ZiplineManifest? = null
@@ -180,12 +180,16 @@ class ZiplineLoader internal constructor(
         //  - pin the application if the load succeeded; unpin if it failed.
         withLifecycleEvents(applicationName, manifestUrl) {
           val networkManifest = fetchManifestFromNetwork(applicationName, manifestUrl)
-          if (networkManifest.manifest == previousManifest) return@withLifecycleEvents // Unchanged.
+          if (networkManifest.manifest == previousManifest) {
+            // Unchanged. Update freshness timestamp in cache DB.
+            cachingFetcher?.updateFreshAt(applicationName, networkManifest)
+            return@withLifecycleEvents
+          }
 
           try {
             val networkZipline = loadFromManifest(applicationName, networkManifest, initializer)
             cachingFetcher?.pin(applicationName, networkManifest) // Pin after successful loads.
-            emit(networkZipline)
+            emit(LoadedZipline(networkZipline, networkManifest.freshAtEpochMs!!))
             previousManifest = networkManifest.manifest
           } catch (e: Exception) {
             cachingFetcher?.unpin(applicationName, networkManifest) // Unpin after failed loads.
@@ -200,7 +204,7 @@ class ZiplineLoader internal constructor(
           val localManifest = loadCachedOrEmbeddedManifest(applicationName) ?: return@collect
           withLifecycleEvents(applicationName, manifestUrl = null) {
             val localZipline = loadFromManifest(applicationName, localManifest, initializer)
-            emit(localZipline)
+            emit(LoadedZipline(localZipline, localManifest.freshAtEpochMs))
             previousManifest = localManifest.manifest
           }
         }
@@ -213,7 +217,7 @@ class ZiplineLoader internal constructor(
     manifestUrl: String,
     oldestCodeToLoad: Duration = Duration.INFINITE,
     initializer: (Zipline) -> Unit = {},
-  ): Zipline {
+  ): LoadedZipline {
     return load(applicationName, flowOf(manifestUrl), oldestCodeToLoad, initializer).firstOrNull()
       ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
   }
@@ -259,7 +263,7 @@ class ZiplineLoader internal constructor(
       applicationName = applicationName,
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
-      loadedManifest = fetchManifestFromNetwork(applicationName, manifestUrl),
+      loadedManifest = fetchManifestFromNetwork(applicationName, manifestUrl).encodeBuiltAtMs(),
     )
   }
 

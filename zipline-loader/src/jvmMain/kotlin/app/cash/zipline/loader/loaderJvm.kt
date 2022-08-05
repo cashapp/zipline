@@ -28,6 +28,7 @@ import okhttp3.OkHttpClient
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,
+  nowMs: () -> Long,
   eventListener: EventListener = EventListener.NONE,
   serializersModule: SerializersModule = EmptySerializersModule,
   manifestVerifier: ManifestVerifier? = null,
@@ -35,7 +36,7 @@ fun ZiplineLoader(
   return ZiplineLoader(
     sqlDriverFactory = SqlDriverFactory(),
     dispatcher = dispatcher,
-    httpFetcher = HttpFetcher(httpClient, eventListener),
+    httpFetcher = HttpFetcher(httpClient, nowMs, eventListener),
     eventListener = eventListener,
     serializersModule = serializersModule,
     manifestVerifier = manifestVerifier,
@@ -49,13 +50,15 @@ fun ZiplineLoader(
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: OkHttpClient,
+  nowMs: () -> Long,
   eventListener: EventListener = EventListener.NONE,
-  serializersModule: SerializersModule = EmptySerializersModule,
+  serializersModule: SerializersModule = EmptySerializersModule
 ): ZiplineLoader {
   return ZiplineLoader(
     dispatcher = dispatcher,
-    httpClient = OkHttpZiplineHttpClient(okHttpClient = httpClient),
+    httpClient = OkHttpZiplineHttpClient(httpClient),
+    nowMs = nowMs,
     eventListener = eventListener,
-    serializersModule = serializersModule,
+    serializersModule = serializersModule
   )
 }

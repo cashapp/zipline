@@ -138,7 +138,7 @@ class ProductionFetcherReceiverTest {
   ): Zipline {
     return loadFromManifest(
       applicationName = applicationName,
-      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest),
+      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
       initializer = initializer,
     )
   }

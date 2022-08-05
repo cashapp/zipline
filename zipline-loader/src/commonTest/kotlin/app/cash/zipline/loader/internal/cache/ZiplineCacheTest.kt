@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.randomToken
 import app.cash.zipline.loader.systemFileSystem
 import app.cash.zipline.loader.testSqlDriverFactory
@@ -260,7 +261,7 @@ class ZiplineCacheTest {
       assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(3, it.countPins())
 
-      it.getOrPutManifest("red", manifestFiretruck.manifestBytes)
+      it.getOrPutManifest("red", manifestFiretruck.manifestBytes, 1)
       assertEquals(4, it.countPins())
 
       assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
@@ -330,6 +331,24 @@ class ZiplineCacheTest {
       // Confirm writing works.
       ziplineCache.write("red", fileSha, fileContents)
       assertEquals(fileContents, ziplineCache.read(fileSha))
+    }
+  }
+
+  @Test
+  fun manifestFreshAtMs(): Unit = runBlocking {
+    val fileContents = testFixtures.manifestByteString
+
+    withCache { ziplineCache ->
+      ziplineCache.pinManifest("red", LoadedManifest(fileContents, 5))
+      val get1 = assertNotNull(ziplineCache.getPinnedManifest("red"))
+      assertEquals(fileContents, get1.manifestBytes)
+      assertEquals(5, get1.freshAtEpochMs)
+
+      // Update the freshAt timestamp
+      ziplineCache.updateManifestFreshAt("red", LoadedManifest(fileContents, 10))
+      val get2 = assertNotNull(ziplineCache.getPinnedManifest("red"))
+      assertEquals(fileContents, get2.manifestBytes)
+      assertEquals(10, get2.freshAtEpochMs)
     }
   }
 
