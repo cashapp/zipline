@@ -232,7 +232,10 @@ internal class ZiplineCache internal constructor(
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
       )
-    val fallbackManifest = LoadedManifest(fallbackManifestBytes, fallbackManifestFile.fresh_at_epoch_ms!!)
+    val fallbackManifest = LoadedManifest(
+      fallbackManifestBytes,
+      fallbackManifestFile.fresh_at_epoch_ms!!
+    )
     pinManifest(applicationName, fallbackManifest)
   }
 

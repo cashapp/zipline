@@ -85,7 +85,7 @@ class LoaderTester(
     val embeddedManifest = LoaderTestFixtures.createRelativeEmbeddedManifest(
       seed = seed,
       seedFileSha256 = sha256,
-      seedBuiltAtEpochMs = 5L,
+      seedFreshAtEpochMs = 5L,
       includeUnknownFieldInJson = includeUnknownFieldInJson,
     )
     embeddedFileSystem.write(embeddedDir / sha256.hex()) {

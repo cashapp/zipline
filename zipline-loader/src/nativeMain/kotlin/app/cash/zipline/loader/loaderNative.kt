@@ -28,15 +28,16 @@ fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,
   eventListener: EventListener = EventListener.NONE,
+  nowEpochMs: () -> Long,
   serializersModule: SerializersModule = EmptySerializersModule,
   manifestVerifier: ManifestVerifier? = null,
-  nowMs: () -> Long,
 ): ZiplineLoader {
   return ZiplineLoader(
     sqlDriverFactory = SqlDriverFactory(),
     dispatcher = dispatcher,
-    httpFetcher = HttpFetcher(httpClient, nowMs, eventListener),
+    httpFetcher = HttpFetcher(httpClient, eventListener),
     eventListener = eventListener,
+    nowEpochMs = nowEpochMs,
     serializersModule = serializersModule,
     manifestVerifier = manifestVerifier,
     embeddedDir = null,

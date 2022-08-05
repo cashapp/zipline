@@ -48,10 +48,11 @@ data class ZiplineManifest private constructor(
   val version: String? = null,
 
   /**
-   * For embedded manifests only, this field is set to capture when the code in the manifest has been built.
-   * For all other builds, this is set as null to allow for hermetic builds.
+   * The newest timestamp that this manifest is known to be fresh. Typically, a manifest is fresh at
+   * the moment it is downloaded. If this field is null the caller should determine freshness
+   * independently.
    */
-  val builtAtEpochMs: Long? = null,
+  val freshAtEpochMs: Long? = null,
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
@@ -91,7 +92,7 @@ data class ZiplineManifest private constructor(
         mainFunction = mainFunction,
         signatures = mapOf(),
         version = version,
-        builtAtEpochMs = builtAtEpochMs,
+        freshAtEpochMs = builtAtEpochMs,
       )
     }
   }

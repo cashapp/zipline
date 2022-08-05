@@ -62,6 +62,7 @@ class ZiplineLoader internal constructor(
   private val dispatcher: CoroutineDispatcher,
   private val httpFetcher: HttpFetcher,
   private val eventListener: EventListener,
+  private val nowEpochMs: () -> Long,
   private val serializersModule: SerializersModule,
   private val manifestVerifier: ManifestVerifier?,
   private val embeddedDir: Path?,
@@ -91,7 +92,6 @@ class ZiplineLoader internal constructor(
     fileSystem: FileSystem,
     directory: Path,
     maxSizeInBytes: Long,
-    nowMs: () -> Long
   ): ZiplineLoader {
     fileSystem.createDirectories(directory, mustCreate = false)
     val driver = sqlDriverFactory.create(directory / "zipline-2022-08-04.db", Database.Schema)
@@ -259,11 +259,13 @@ class ZiplineLoader internal constructor(
     downloadFileSystem: FileSystem,
     manifestUrl: String,
   ) {
+    val manifest = fetchManifestFromNetwork(applicationName, manifestUrl)
+    val manifestWithFreshAt = manifest.encodeFreshAtMs()
     download(
       applicationName = applicationName,
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
-      loadedManifest = fetchManifestFromNetwork(applicationName, manifestUrl).encodeBuiltAtMs(),
+      loadedManifest = manifestWithFreshAt,
     )
   }
 
@@ -368,7 +370,8 @@ class ZiplineLoader internal constructor(
     val result = concurrentDownloadsSemaphore.withPermit {
       httpFetcher.fetchManifest(
         applicationName = applicationName,
-        url = manifestUrl
+        url = manifestUrl,
+        freshAtEpochMs = nowEpochMs(),
       )
     }
 
