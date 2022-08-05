@@ -80,7 +80,7 @@ class LoaderTestFixtures {
   val embeddedLoadedManifest = LoadedManifest(
     manifestBytes = embeddedManifestByteString,
     manifest = embeddedManifest,
-    freshAtEpochMs = embeddedManifest.unsigned.freshAtEpochMs!!
+    freshAtEpochMs = embeddedManifest.unsigned.freshAtEpochMs!!,
   )
 
   fun createZiplineFile(javaScript: String, fileName: String): ByteString {

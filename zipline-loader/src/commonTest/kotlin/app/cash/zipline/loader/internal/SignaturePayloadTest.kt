@@ -17,7 +17,6 @@
 package app.cash.zipline.loader.internal
 
 import app.cash.zipline.loader.ZiplineManifest
-import app.cash.zipline.loader.ZiplineManifest.Unsigned
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -52,9 +51,7 @@ class SignaturePayloadTest {
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
     ).copy(
-      unsigned = Unsigned(
-        baseUrl = "https://example.com/base-url/"
-      )
+      baseUrl = "https://example.com/base-url/"
     )
 
     assertEquals(
@@ -76,20 +73,16 @@ class SignaturePayloadTest {
       mainModuleId = "./kotlin_kotlin.js",
       mainFunction = "app.cash.prepareApp",
     ).copy(
-      unsigned = Unsigned(
-        signatures = mapOf(
+      signatures = mapOf(
           "sigA" to "0f91508b8451a8ed4eedf723f22613fe",
           "sigB" to "55a3605081f20817859d494103bc43d7",
-        )
       )
     )
 
     val manifestB = manifestA.copy(
-      unsigned = Unsigned(
-        signatures = mapOf(
-          "sigA" to "0f91508b8451a8ed4eedf723f22613ff", // Last character is changed.
-          "sigB" to "55a3605081f20817859d494103bc43d8", // Last character is changed.
-        )
+      signatures = mapOf(
+        "sigA" to "0f91508b8451a8ed4eedf723f22613ff", // Last character is changed.
+        "sigB" to "55a3605081f20817859d494103bc43d8", // Last character is changed.
       )
     )
 

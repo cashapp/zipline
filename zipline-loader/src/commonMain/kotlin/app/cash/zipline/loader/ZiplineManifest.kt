@@ -32,7 +32,7 @@ data class ZiplineManifest private constructor(
   val unsigned: Unsigned = Unsigned(),
 
   /** This is an ordered map; its modules are always topologically sorted. */
-  val modules: Map<String, Module>,
+  val modules: Map<String, Module> = mapOf(),
 
   /**
    * JS module ID for the application (ie. "./alpha-app.js").
@@ -93,6 +93,33 @@ data class ZiplineManifest private constructor(
     @Serializable(with = ByteStringAsHexSerializer::class)
     val sha256: ByteString,
     val dependsOnIds: List<String> = listOf(),
+  )
+
+  val signatures: Map<String, String>
+    get() = unsigned.signatures
+  val freshAtEpochMs: Long?
+    get() = unsigned.freshAtEpochMs
+  val baseUrl: String?
+    get() = unsigned.baseUrl
+
+  fun copy(
+    signatures: Map<String, String> = this.signatures,
+    freshAtEpochMs: Long? = this.freshAtEpochMs,
+    baseUrl: String? = this.baseUrl,
+    modules: Map<String, Module> = this.modules,
+    mainModuleId: String = this.mainModuleId,
+    mainFunction: String? = this.mainFunction,
+    version: String? = this.version,
+  ) = copy(
+    unsigned = unsigned.copy(
+      freshAtEpochMs = freshAtEpochMs,
+      signatures = signatures,
+      baseUrl = baseUrl,
+    ),
+    modules = modules,
+    mainModuleId = mainModuleId,
+    mainFunction = mainFunction,
+    version = version,
   )
 
   companion object {
