@@ -19,10 +19,10 @@ import kotlinx.serialization.json.Json
 
 expect class Zipline {
   /** Name of services that have been published with [bind]. */
-  val serviceNames: Set<String>
+  internal val serviceNames: Set<String>
 
   /** Names of services that can be consumed with [take]. */
-  val clientNames: Set<String>
+  internal val clientNames: Set<String>
 
   /**
    * The JSON codec for exchanging messages with the other endpoint.
