@@ -31,7 +31,6 @@ import app.cash.zipline.loader.internal.receiver.FsSaveReceiver
 import app.cash.zipline.loader.internal.receiver.Receiver
 import app.cash.zipline.loader.internal.receiver.ZiplineLoadReceiver
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -151,25 +150,19 @@ class ZiplineLoader internal constructor(
   private val moduleFetchers = listOfNotNull(embeddedFetcher, cachingFetcher ?: httpFetcher)
 
   /**
-   * Loads code from [manifestUrlFlow] each time it emits, skipping loads if either:
+   * Loads code from [manifestUrlFlow] each time it emits, skipping loads if the code to load is
+   *    the same as what's already loaded.
    *
-   *  * the code to load is older than [oldestCodeToLoad]
-   *  * the code to load is the same as what's already loaded
-   *
-   * If the network is unreachable and there is local code newer than [oldestCodeToLoad], then this
-   * will load local code, either from the embedded directory or the cache.
+   * If the network is unreachable and there is local code newer, then this
+   *   will load local code, either from the embedded directory or the cache.
    *
    * @param manifestUrlFlow a flow that should emit each time a load should be attempted. This
    *     may emit periodically to trigger polling. It should also emit for loading triggers like
    *     app launch, app foregrounding, and network connectivity changed.
-   * @param oldestCodeToLoad the age of the oldest code that this function should load. Use this to
-   *     avoid loading stale code from the cache or embedded file system after a network failure. If
-   *     no code is eligible to load the returned flow will not emit.
    */
   suspend fun load(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
-    oldestCodeToLoad: Duration = Duration.INFINITE,
     initializer: (Zipline) -> Unit,
   ): Flow<LoadedZipline> {
     return flow {
@@ -191,7 +184,7 @@ class ZiplineLoader internal constructor(
           try {
             val networkZipline = loadFromManifest(applicationName, networkManifest, initializer)
             cachingFetcher?.pin(applicationName, networkManifest) // Pin after successful loads.
-            emit(LoadedZipline(networkZipline, networkManifest.freshAtEpochMs!!))
+            emit(LoadedZipline(networkZipline, networkManifest.freshAtEpochMs))
             previousManifest = networkManifest.manifest
           } catch (e: Exception) {
             cachingFetcher?.unpin(applicationName, networkManifest) // Unpin after failed loads.
@@ -217,10 +210,9 @@ class ZiplineLoader internal constructor(
   suspend fun loadOnce(
     applicationName: String,
     manifestUrl: String,
-    oldestCodeToLoad: Duration = Duration.INFINITE,
     initializer: (Zipline) -> Unit = {},
   ): LoadedZipline {
-    return load(applicationName, flowOf(manifestUrl), oldestCodeToLoad, initializer).firstOrNull()
+    return load(applicationName, flowOf(manifestUrl), initializer).firstOrNull()
       ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
   }
 
@@ -294,7 +286,7 @@ class ZiplineLoader internal constructor(
         ModuleJob(
           applicationName = applicationName,
           id = it.key,
-          baseUrl = loadedManifest.manifest.unsigned.baseUrl,
+          baseUrl = loadedManifest.manifest.baseUrl,
           module = it.value,
           receiver = receiver
         )
