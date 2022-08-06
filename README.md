@@ -93,7 +93,7 @@ the host platform and call it from Kotlin/JS.
 Bridged interfaces must extend `ZiplineService`, which defines a single `close()` method to release
 held resources.
 
-By default, arguments and return values are pass-by-value. Zipline uses kotlinx.serialization to
+By default, arguments and return values are pass-by-value. Zipline uses [kotlinx.serialization] to
 encode and decode values passed across the boundary.
 
 Interface types that extend from `ZiplineService` are pass-by-reference: the receiver may call
@@ -186,6 +186,7 @@ in this repo as are the release tags. Available versions are listed on
 
 [Kotlin/Native]: https://kotlinlang.org/docs/multiplatform-dsl-reference.html#targets
 [LeakCanary]: https://square.github.io/leakcanary/
+[kotlinx.serialization]: https://github.com/Kotlin/kotlinx.serialization
 [launchZiplineJs.kt]: samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/launchZiplineJs.kt
 [launchZiplineJvm.kt]: samples/trivia/trivia-host/src/main/kotlin/app/cash/zipline/samples/trivia/launchZiplineJvm.kt
 [qjs]: https://bellard.org/quickjs/
