@@ -19,7 +19,6 @@ package app.cash.zipline.cli
 import app.cash.zipline.cli.Download.Companion.NAME
 import app.cash.zipline.loader.ZiplineLoader
 import java.io.File
-import java.time.Instant
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.runBlocking
@@ -61,7 +60,6 @@ class Download : Runnable {
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
       httpClient = client,
-      nowEpochMs = { Instant.now().toEpochMilli() }
     )
     runBlocking {
       ziplineLoader.download(

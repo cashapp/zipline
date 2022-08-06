@@ -17,7 +17,6 @@ package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader
-import java.time.Instant
 import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
 import kotlinx.coroutines.CoroutineScope
@@ -40,7 +39,6 @@ class EmojiSearchZipline {
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = client,
-    nowEpochMs = { Instant.now().toEpochMilli() }
   )
 
   var zipline: Zipline? = null

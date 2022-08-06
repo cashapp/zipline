@@ -17,7 +17,6 @@ package app.cash.zipline.samples.trivia
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineLoader
-import java.time.Instant
 import kotlinx.coroutines.CoroutineDispatcher
 import okhttp3.OkHttpClient
 
@@ -30,7 +29,6 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = OkHttpClient(),
-    nowEpochMs = { Instant.now().toEpochMilli() }
   )
   return loader.loadOnce("trivia", manifestUrl).zipline
 }
