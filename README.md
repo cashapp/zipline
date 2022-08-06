@@ -71,7 +71,7 @@ must be confined to a single thread.
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val manifestUrl = "http://localhost:8080/manifest.zipline.json"
   val loader = ZiplineLoader(dispatcher, OkHttpClient())
-  return loader.loadOrFail("trivia", manifestUrl)
+  return loader.loadOnce("trivia", manifestUrl)
 }
 ```
 
@@ -136,6 +136,41 @@ is difficult to get right, so Zipline borrows ideas from [LeakCanary] and aggres
 when a `close()` call is missed.
 
 
+### Secure
+
+Zipline uses [EdDSA] signatures to authenticate downloaded libraries.
+
+Set up is straightforward. Generate an EdDSA key pair and put the private key on your build server
+and the public key in each host application.
+
+Configure the build server to sign:
+
+```kotlin
+tasks.withType(ZiplineCompileTask::class) {
+  signingKeys.create("key1") {
+    privateKeyHex = ...
+  }
+}
+```
+
+And the host application to verify:
+
+```kotlin
+val manifestVerifier = ManifestVerifier.Builder()
+  .addEd25519("key1", ...)
+  .build()
+val loader = ZiplineLoader(
+  manifestVerifier = manifestVerifier,
+  ...
+)
+```
+
+Both signing and verifying accept multiple keys to support key rotation.
+
+Zipline is designed to run code your organization's code when and where you want it. It does not
+offer a sandbox or process-isolation and should not be used to execute untrusted code.
+
+
 ### Requirements
 
 Zipline works on Android 4.3+ (API level 18+), Java 8+, and [Kotlin/Native].
@@ -184,6 +219,7 @@ This project was previously known as Duktape-Android and packaged the
 in this repo as are the release tags. Available versions are listed on
 [Maven central](https://search.maven.org/artifact/com.squareup.duktape/duktape-android).
 
+[EdDSA]: https://en.wikipedia.org/wiki/EdDSA
 [Kotlin/Native]: https://kotlinlang.org/docs/multiplatform-dsl-reference.html#targets
 [LeakCanary]: https://square.github.io/leakcanary/
 [kotlinx.serialization]: https://github.com/Kotlin/kotlinx.serialization
