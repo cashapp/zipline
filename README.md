@@ -167,7 +167,7 @@ val loader = ZiplineLoader(
 
 Both signing and verifying accept multiple keys to support key rotation.
 
-Zipline is designed to run code your organization's code when and where you want it. It does not
+Zipline is designed to run your organization's code when and where you want it. It does not
 offer a sandbox or process-isolation and should not be used to execute untrusted code.
 
 
