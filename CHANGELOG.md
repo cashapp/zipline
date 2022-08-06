@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 
-## [0.1.0] - 2021-09-30
+## [0.9.0] - 2022-08-05
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -13,6 +13,14 @@ until June 2021), those projects remain as git branches but will not receive fur
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
 
+ * New: `ZiplineLoader` is a new module to launch Zipline applications quickly. It supports caching
+   including offline launching, code signing, and launching from a flow.
+ * New: Zipline's Gradle plugin makes it fast and easy to use build Zipline applications.
+ * New: `EventListener` makes it easy to observe with Zipline performance and problems.
+ * Upgrade: [Kotlin 1.7.10][kotlin_1_7_10].
+
+
+## [0.1.0] - 2021-09-30
 
 ### Added
 
@@ -140,3 +148,6 @@ The API and behavior should otherwise be unchanged.
 ## Version 0.9.0 *(2015-09-08)*
 
 Initial release.
+
+
+[kotlin_1_7_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.7.10
