@@ -31,7 +31,7 @@ fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: OkHttpClient,
   eventListener: EventListener = EventListener.NONE,
-  nowEpochMs: () -> Long,
+  nowEpochMs: () -> Long = { System.currentTimeMillis() },
   serializersModule: SerializersModule = EmptySerializersModule,
   manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader {

@@ -42,7 +42,6 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
     httpClient = localDirectoryHttpClient,
-    nowEpochMs = { Instant.now().toEpochMilli() },
   )
 
   val zipline = loader.loadOnce("test", "http://localhost:99999/manifest.zipline.json").zipline
