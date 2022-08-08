@@ -92,6 +92,12 @@ allprojects {
     }
   }
 
+  // Don't attempt to sign anything if we don't have an in-memory key. Otherwise, the 'build' task
+  // triggers 'signJsPublication' even when we aren't publishing (and so don't have signing keys).
+  tasks.withType<Sign>().configureEach {
+    enabled = project.findProperty("signingInMemoryKey") != null
+  }
+
   plugins.withId("com.vanniktech.maven.publish.base") {
     configure<PublishingExtension> {
       repositories {
