@@ -1,4 +1,5 @@
 import com.android.build.gradle.BaseExtension
+import com.diffplug.gradle.spotless.SpotlessExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import java.net.URI
@@ -30,6 +31,7 @@ buildscript {
 
 plugins {
   id("com.github.gmazzo.buildconfig") version "3.1.0" apply false
+  alias(libs.plugins.spotless)
 }
 
 apply(plugin = "org.jetbrains.dokka")
@@ -39,6 +41,20 @@ tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure 
 }
 
 apply(plugin = "com.vanniktech.maven.publish.base")
+
+configure<SpotlessExtension> {
+  kotlin {
+    target("**/*.kt")
+    ktlint()
+      .editorConfigOverride(
+        mapOf(
+          "ktlint_standard_comment-spacing" to "disabled", // TODO Re-enable
+          "ktlint_standard_filename" to "disabled",
+          "ktlint_standard_indent" to "disabled", // TODO Re-enable
+        )
+      )
+  }
+}
 
 allprojects {
   group = "app.cash.zipline"
