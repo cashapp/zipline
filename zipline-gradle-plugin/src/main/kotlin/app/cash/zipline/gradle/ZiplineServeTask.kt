@@ -21,11 +21,10 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import org.gradle.deployment.internal.DefaultDeploymentRegistry
 import org.gradle.deployment.internal.Deployment
 import org.gradle.deployment.internal.DeploymentHandle
 import org.gradle.deployment.internal.DeploymentRegistry
@@ -39,12 +38,11 @@ import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 
 abstract class ZiplineServeTask @Inject constructor(
-  objectFactory: ObjectFactory,
-  private val deploymentRegistry: DefaultDeploymentRegistry
+  objectFactory: ObjectFactory
 ) : DefaultTask() {
 
-  @get:InputDirectory
-  val inputDir: DirectoryProperty = objectFactory.directoryProperty()
+  @get:Input
+  lateinit var inputDir: Provider<DirectoryProperty>
 
   @Optional
   @get:Input
@@ -53,10 +51,11 @@ abstract class ZiplineServeTask @Inject constructor(
   @TaskAction
   fun task() {
     val deploymentId = "serveZipline"
+    val deploymentRegistry = services.get(DeploymentRegistry::class.java)
     val deploymentHandle = deploymentRegistry.get(deploymentId, ZiplineServerDeploymentHandle::class.java)
     if (deploymentHandle == null) {
       val server = routes(
-        "/" bind static(Directory(inputDir.get().asFile.absolutePath), Pair("zipline", ContentType.TEXT_PLAIN))
+        "/" bind static(Directory(inputDir.get().asFile.get().absolutePath), Pair("zipline", ContentType.TEXT_PLAIN))
       ).asServer(SunHttp(port.orElse(8080).get()))
 
       deploymentRegistry.start(

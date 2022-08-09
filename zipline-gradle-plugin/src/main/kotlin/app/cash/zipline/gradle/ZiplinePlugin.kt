@@ -15,10 +15,9 @@
  */
 package app.cash.zipline.gradle
 
+import java.util.Locale
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Delete
-import org.gradle.configurationcache.extensions.capitalized
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -57,7 +56,6 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     val linkTaskName = kotlinBinary.linkTaskName
     val compileZiplineTaskName = "${linkTaskName}Zipline"
 
-    fun getZiplineOutputDir() {}
     // For every JS executable, create a task that compiles its .js to .zipline.
     //    input: build/compileSync/main/productionExecutable/kotlin
     //   output: build/compileSync/main/productionExecutable/kotlinZipline
@@ -70,11 +68,14 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       createdTask.outputDir.set(linkOutputDir.parentFile.resolve("${linkOutputDir.name}Zipline"))
     }
 
-    val serveTaskName = "serve${kotlinBinary.mode.toString().lowercase().capitalized()}Zipline"
+    val target = if (kotlinBinary.target.name == "js") "" else kotlinBinary.target.name
+    val capitalizedMode = kotlinBinary.mode.name
+      .lowercase(locale = Locale.US)
+      .replaceFirstChar { it.titlecase(locale = Locale.US) }
+    val serveTaskName = "serve${target}${capitalizedMode}Zipline"
     project.tasks.register(serveTaskName, ZiplineServeTask::class.java) { createdTask ->
       createdTask.description = "Serves Zipline files"
-      createdTask.dependsOn(compileZiplineTaskName)
-      createdTask.inputDir.set(ziplineCompileTask.get().outputDir)
+      createdTask.inputDir = ziplineCompileTask.map { it.outputDir }
     }
   }
 

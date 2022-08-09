@@ -52,7 +52,7 @@ Now we can start a development server to serve our JavaScript to any running app
 request it.
 
 ```console
-$ ./gradlew samples:trivia:trivia-js:jsBrowserProductionRun --info --continuous
+$ ./gradlew samples:trivia:trivia-js:serveDevelopmentZipline --info --continuous
 ```
 
 Note that this Gradle won't ever reach 100%. That's expected; we want the development server to stay
