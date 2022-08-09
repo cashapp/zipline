@@ -16,9 +16,9 @@
 
 package app.cash.zipline.gradle
 
+import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 import com.google.common.truth.Truth.assertThat
 import java.io.File
-import kotlin.test.assertEquals
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -36,7 +36,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/productionExecutable/kotlinZipline"
     )
-    assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
+    assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
 
     val webpackConfig = File(projectDir, "lib/webpack.config.d/generated-zipline-webpack-config.js")
@@ -62,7 +62,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
-    assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
+    assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
 
     val webpackConfig = File(projectDir, "lib/webpack.config.d/generated-zipline-webpack-config.js")
@@ -135,7 +135,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
-    val manifest = ziplineOut.resolve("manifest.zipline.json")
+    val manifest = ziplineOut.resolve(MANIFEST_FILE_NAME)
     assertThat(manifest.exists()).isTrue()
     assertThat(manifest.readText())
       .containsMatch(""""version":"1.2.3"""")
@@ -154,7 +154,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
-    val manifest = ziplineOut.resolve("manifest.zipline.json")
+    val manifest = ziplineOut.resolve(MANIFEST_FILE_NAME)
     assertThat(manifest.readText())
       .containsMatch(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}""")
   }

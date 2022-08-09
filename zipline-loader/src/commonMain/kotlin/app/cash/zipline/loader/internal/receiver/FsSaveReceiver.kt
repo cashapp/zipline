@@ -21,7 +21,7 @@ import okio.FileSystem
 import okio.Path
 
 /**
- * Save [ZiplineFile] to fileSystem.
+ * Save [ZiplineFile] to file system.
  */
 internal class FsSaveReceiver(
   private val downloadFileSystem: FileSystem,

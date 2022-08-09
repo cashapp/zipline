@@ -23,8 +23,9 @@ import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 
 /**
- * A manifest plus the original bytes we loaded for it. We need the original bytes for signature
- * verification.
+ * A manifest plus the original bytes we loaded for it.
+ *
+ * @param manifestBytes: the original bytes are necessary for signature verification.
  */
 data class LoadedManifest(
   val manifestBytes: ByteString,

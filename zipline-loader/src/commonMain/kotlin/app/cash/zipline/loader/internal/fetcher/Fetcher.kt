@@ -27,11 +27,7 @@ internal interface Fetcher {
    * Returns the desired [ByteString], or null if this fetcher doesn't know how to fetch this
    * resource.
    *
-   * If this fetcher supports pinning, the returned value will be pinned for [applicationName] until
-   * [pin] is called.
-   *
-   * @throws Exception if this fetcher knows how to fetch this resource but was unsuccessful in
-   *     doing so.
+   * @throws Exception if this fetcher knows how to fetch this resource but was unsuccessful.
    */
   suspend fun fetch(
     applicationName: String,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2022 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -94,6 +94,7 @@ class ZiplineLoader internal constructor(
     maxSizeInBytes: Long,
   ): ZiplineLoader {
     fileSystem.createDirectories(directory, mustCreate = false)
+    // TODO rename DB name to zipline.db once schema is stable
     val driver = sqlDriverFactory.create(directory / "zipline-2022-08-04.db", Database.Schema)
     val databaseCloseable = object : Closeable {
       override fun close() {
@@ -125,6 +126,8 @@ class ZiplineLoader internal constructor(
   }
 
   private var concurrentDownloadsSemaphore = Semaphore(3)
+
+  /** Callers can modify this as desired to change the default network download concurrency level. */
   var concurrentDownloads = 3
     set(value) {
       require(value > 0)
@@ -171,7 +174,7 @@ class ZiplineLoader internal constructor(
 
       manifestUrlFlow.collect { manifestUrl ->
         // Each time a manifest URL is emitted, download and initialize a Zipline for that URL.
-        //  - skip if the manifest hasn't changed from the previous load
+        //  - skip if the manifest hasn't changed from the previous load.
         //  - pin the application if the load succeeded; unpin if it failed.
         withLifecycleEvents(applicationName, manifestUrl) {
           val networkManifest = fetchManifestFromNetwork(applicationName, manifestUrl)
@@ -211,10 +214,8 @@ class ZiplineLoader internal constructor(
     applicationName: String,
     manifestUrl: String,
     initializer: (Zipline) -> Unit = {},
-  ): LoadedZipline {
-    return load(applicationName, flowOf(manifestUrl), initializer).firstOrNull()
-      ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
-  }
+  ): LoadedZipline = load(applicationName, flowOf(manifestUrl), initializer).firstOrNull()
+    ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
 
   /**
    * After identifying a manifest to load this fetches all the code, loads it into a JS runtime,
@@ -311,7 +312,7 @@ class ZiplineLoader internal constructor(
     val upstreams = mutableListOf<Job>()
 
     /**
-     * Fetch and receive ZiplineFile module
+     * Fetch and receive ZiplineFile module.
      */
     suspend fun run() {
       val byteString = moduleFetchers.fetch(
@@ -343,8 +344,8 @@ class ZiplineLoader internal constructor(
       block()
       eventListener.applicationLoadEnd(applicationName, manifestUrl)
     } catch (e: CancellationException) {
-      // If emit() threw a CancellationException, consider that emit to be successful. That's 'cause
-      // loadOnce() accepts an element and then immediately cancels the flow.
+      // If emit() threw a CancellationException, consider that emit to be successful.
+      // That's 'cause loadOnce() accepts an element and then immediately cancels the flow.
       eventListener.applicationLoadEnd(applicationName, manifestUrl)
       throw e
     } catch (e: Exception) {

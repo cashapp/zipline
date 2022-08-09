@@ -113,6 +113,7 @@ internal class HttpFetcher(
       throw e
     }
     eventListener.downloadEnd(applicationName, fullUrl)
+
     return result
   }
 }
