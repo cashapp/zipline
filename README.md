@@ -52,7 +52,7 @@ Now we can start a development server to serve our JavaScript to any running app
 request it.
 
 ```console
-$ ./gradlew samples:trivia:trivia-js:jsBrowserProductionRun --info --continuous
+$ ./gradlew -p samples trivia:trivia-js:jsBrowserProductionRun --info --continuous
 ```
 
 Note that this Gradle won't ever reach 100%. That's expected; we want the development server to stay
@@ -79,7 +79,7 @@ Now we build and run the JVM program to put it all together. Do this in a separa
 development server!
 
 ```console
-$ ./gradlew samples:trivia:trivia-host:shadowJar
+$ ./gradlew -p samples trivia:trivia-host:shadowJar
 java -jar samples/trivia/trivia-host/build/libs/trivia-host-1.0.0-SNAPSHOT-all.jar
 ```
 
