@@ -16,6 +16,7 @@
 package app.cash.zipline.loader.internal.tink.subtle
 
 import app.cash.zipline.loader.canLoadTestResources
+import app.cash.zipline.loader.generateKeyPairForTest
 import app.cash.zipline.loader.randomByteString
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -30,7 +31,7 @@ import okio.ByteString.Companion.toByteString
 class Ed25519SignTest {
   @Test
   fun testSigningOneKeyWithMultipleMessages() {
-    val keyPair = KeyPair.newKeyPair()
+    val keyPair = generateKeyPairForTest()
     val signer = Ed25519Sign(keyPair.privateKey)
     val verifier = Ed25519Verify(keyPair.publicKey)
     for (i in 0..99) {
@@ -51,7 +52,7 @@ class Ed25519SignTest {
 
   @Test
   fun testSigningOneKeyWithTheSameMessage() {
-    val keyPair = KeyPair.newKeyPair()
+    val keyPair = generateKeyPairForTest()
     val signer = Ed25519Sign(keyPair.privateKey)
     val verifier = Ed25519Verify(keyPair.publicKey)
     val msg = randomByteString(20)
@@ -87,7 +88,7 @@ class Ed25519SignTest {
   @Test
   fun testSigningWithMultipleRandomKeysAndMessages() {
     for (i in 0..99) {
-      val keyPair = KeyPair.newKeyPair()
+      val keyPair = generateKeyPairForTest()
       val signer = Ed25519Sign(keyPair.privateKey)
       val verifier = Ed25519Verify(keyPair.publicKey)
       val msg = randomByteString(20)
@@ -135,7 +136,7 @@ class Ed25519SignTest {
   fun testKeyPairFromSeedTooShort() {
     val keyMaterial = randomByteString(10)
     assertFailsWith<IllegalArgumentException> {
-      KeyPair.newKeyPairFromSeed(keyMaterial)
+      newKeyPairFromSeed(keyMaterial)
     }
   }
 }

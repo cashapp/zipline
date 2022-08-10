@@ -18,7 +18,6 @@ package app.cash.zipline.gradle
 
 import com.google.common.truth.Truth.assertThat
 import java.io.File
-import kotlin.test.assertEquals
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -157,6 +156,22 @@ class ZiplinePluginTest {
     val manifest = ziplineOut.resolve("manifest.zipline.json")
     assertThat(manifest.readText())
       .containsMatch(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}""")
+  }
+
+  @Test
+  fun generateZiplineManifestKeyPair() {
+    val projectDir = File("src/test/projects/basic")
+
+    val taskName = ":generateZiplineManifestKeyPair"
+    val result = createRunner(projectDir, taskName).build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(taskName)!!.outcome)
+    assertThat(result.output).containsMatch(
+      """
+      |     PUBLIC KEY: [\da-f]{64}
+      |    PRIVATE KEY: [\da-f]{64}
+      |""".trimMargin()
+    )
   }
 
   private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {

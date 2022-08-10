@@ -140,10 +140,20 @@ when a `close()` call is missed.
 
 Zipline uses [EdDSA] signatures to authenticate downloaded libraries.
 
-Set up is straightforward. Generate an EdDSA key pair and put the private key on your build server
-and the public key in each host application.
+Set up is straightforward. Generate an EdDSA key pair. A task for this is installed with the Zipline
+Gradle plugin.
 
-Configure the build server to sign:
+```
+$ ./gradlew :generateZiplineManifestKeyPair
+...
+---------------- ----------------------------------------------------------------
+     PUBLIC KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    PRIVATE KEY: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+---------------- ----------------------------------------------------------------
+...
+```
+
+Put the private key on the build server and configure it to sign builds:
 
 ```kotlin
 tasks.withType(ZiplineCompileTask::class) {
@@ -153,7 +163,7 @@ tasks.withType(ZiplineCompileTask::class) {
 }
 ```
 
-And the host application to verify:
+Put the public key in each host application and configure it to verify signatures:
 
 ```kotlin
 val manifestVerifier = ManifestVerifier.Builder()

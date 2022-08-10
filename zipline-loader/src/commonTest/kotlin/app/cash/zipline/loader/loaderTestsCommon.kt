@@ -17,6 +17,9 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.tink.subtle.Field25519
+import app.cash.zipline.loader.internal.tink.subtle.KeyPair
+import app.cash.zipline.loader.internal.tink.subtle.newKeyPairFromSeed
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -53,4 +56,12 @@ fun prettyPrint(jsonString: String): String {
   }
   val jsonTree = json.decodeFromString(JsonElement.serializer(), jsonString)
   return json.encodeToString(JsonElement.serializer(), jsonTree)
+}
+
+/**
+ * Returns a new `<publicKey / privateKey>` KeyPair. The PRNG for this function is not secure on all
+ * platforms and should not be used for production code.
+ */
+internal fun generateKeyPairForTest(): KeyPair {
+  return newKeyPairFromSeed(randomByteString(Field25519.FIELD_LEN))
 }
