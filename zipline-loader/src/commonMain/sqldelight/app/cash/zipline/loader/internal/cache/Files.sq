@@ -7,7 +7,7 @@ CREATE TABLE files (
   file_state TEXT AS FileState NOT NULL,
   size_bytes INTEGER NOT NULL,
   last_used_at_epoch_ms INTEGER NOT NULL,
-  fresh_at_epoch_ms INTEGER NOT NULL
+  fresh_at_epoch_ms INTEGER -- null for all files except manifest
 );
 
 CREATE UNIQUE INDEX files_sha256_hex ON files(sha256_hex);
@@ -38,6 +38,11 @@ VALUES (?, ?, ?, ?, ?, ?);
 update:
 UPDATE files
 SET file_state = :file_state, size_bytes = :size_bytes, last_used_at_epoch_ms = :last_used_at_epoch_ms
+WHERE id = :id;
+
+updateFresh:
+UPDATE files
+SET fresh_at_epoch_ms = :fresh_at_epoch_ms
 WHERE id = :id;
 
 selectOldestReady:

@@ -27,16 +27,13 @@ internal interface Fetcher {
    * Returns the desired [ByteString], or null if this fetcher doesn't know how to fetch this
    * resource.
    *
-   * If this fetcher supports pinning, the returned value will be pinned for [applicationName] until
-   * [pin] is called.
-   *
-   * @throws Exception if this fetcher knows how to fetch this resource but was unsuccessful in
-   *     doing so.
+   * @throws Exception if this fetcher knows how to fetch this resource but was unsuccessful.
    */
   suspend fun fetch(
     applicationName: String,
     id: String,
     sha256: ByteString,
+    baseUrl: String?,
     url: String,
   ): ByteString?
 }
@@ -49,12 +46,13 @@ internal suspend fun List<Fetcher>.fetch(
   applicationName: String,
   id: String,
   sha256: ByteString,
+  baseUrl: String?,
   url: String,
 ): ByteString? = concurrentDownloadsSemaphore.withPermit {
   var firstException: Exception? = null
   for (fetcher in this) {
     try {
-      return@withPermit fetcher.fetch(applicationName, id, sha256, url) ?: continue
+      return@withPermit fetcher.fetch(applicationName, id, sha256, baseUrl, url) ?: continue
     } catch (e: Exception) {
       if (firstException == null) {
         firstException = e

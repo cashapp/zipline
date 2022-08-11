@@ -16,6 +16,7 @@
 
 package app.cash.zipline.gradle
 
+import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import okhttp3.OkHttpClient
@@ -37,7 +38,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/productionExecutable/kotlinZipline"
     )
-    assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
+    assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
   }
 
@@ -57,7 +58,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
-    assertThat(ziplineOut.resolve("manifest.zipline.json").exists()).isTrue()
+    assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
   }
 
@@ -109,7 +110,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
-    val manifest = ziplineOut.resolve("manifest.zipline.json")
+    val manifest = ziplineOut.resolve(MANIFEST_FILE_NAME)
     assertThat(manifest.exists()).isTrue()
     assertThat(manifest.readText())
       .containsMatch(""""version":"1.2.3"""")
@@ -128,9 +129,24 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
-    val manifest = ziplineOut.resolve("manifest.zipline.json")
+    val manifest = ziplineOut.resolve(MANIFEST_FILE_NAME)
     assertThat(manifest.readText())
       .containsMatch(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}""")
+  }
+
+  @Test
+  fun generateZiplineManifestKeyPair() {
+    val projectDir = File("src/test/projects/basic")
+
+    val result = createRunner(projectDir, "generateZiplineManifestKeyPair").build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(":lib:generateZiplineManifestKeyPair")!!.outcome)
+    assertThat(result.output).containsMatch(
+      """
+      |     PUBLIC KEY: [\da-f]{64}
+      |    PRIVATE KEY: [\da-f]{64}
+      |""".trimMargin()
+    )
   }
 
   private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {

@@ -1,0 +1,28 @@
+include(":emoji-search:android")
+include(":emoji-search:presenters")
+include(":trivia:trivia-host")
+include(":trivia:trivia-js")
+include(":trivia:trivia-shared")
+
+dependencyResolutionManagement {
+  versionCatalogs {
+    libs {
+      from(files("../gradle/libs.versions.toml"))
+    }
+  }
+}
+
+includeBuild('..') {
+  dependencySubstitution {
+    substitute module("app.cash.zipline:zipline") using project(
+      ":zipline")
+    substitute module("app.cash.zipline:zipline-gradle-plugin") using project(
+      ":zipline-gradle-plugin")
+    substitute module("app.cash.zipline:zipline-kotlin-plugin") using project(
+      ":zipline-kotlin-plugin")
+    substitute module("app.cash.zipline:zipline-loader") using project(
+      ":zipline-loader")
+    substitute module("app.cash.zipline:zipline-profiler") using project(
+      ":zipline-profiler")
+  }
+}

@@ -26,6 +26,9 @@ fun getTriviaService(zipline: Zipline): TriviaService {
 
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val manifestUrl = "http://localhost:8080/manifest.zipline.json"
-  val loader = ZiplineLoader(dispatcher, OkHttpClient())
-  return loader.loadOnce("trivia", manifestUrl)
+  val loader = ZiplineLoader(
+    dispatcher = dispatcher,
+    httpClient = OkHttpClient(),
+  )
+  return loader.loadOnce("trivia", manifestUrl).zipline
 }

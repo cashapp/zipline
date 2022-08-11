@@ -35,7 +35,6 @@ class EmojiSearchZipline {
   private val hostApi = RealHostApi(client)
 
   private val manifestUrl = "http://10.0.2.2:8080/manifest.zipline.json"
-  private val moduleName = "./zipline-root-presenters.js"
 
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
@@ -52,7 +51,7 @@ class EmojiSearchZipline {
     coroutineScope.launch(dispatcher) {
       val zipline = ziplineLoader.loadOnce("emojiSearch", manifestUrl) {
         it.bind<HostApi>("hostApi", hostApi)
-      }
+      }.zipline
       this@EmojiSearchZipline.zipline = zipline
       val presenter = zipline.take<EmojiSearchPresenter>("emojiSearchPresenter")
 

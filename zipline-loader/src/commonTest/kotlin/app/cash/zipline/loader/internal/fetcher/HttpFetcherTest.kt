@@ -45,7 +45,7 @@ class HttpFetcherTest {
       |}
       """.trimMargin()
 
-    val manifestWithResolvedUrls = httpFetcher.resolveUrls(
+    val manifestWithBaseUrl = httpFetcher.withBaseUrl(
       manifest = json.parseToJsonElement(manifestWithRelativeUrls),
       baseUrl = "https://example.com/path/",
     )
@@ -53,24 +53,27 @@ class HttpFetcherTest {
     assertEquals(
       """
       |{
+      |    "unsigned": {
+      |        "baseUrl": "https://example.com/path/"
+      |    },
       |    "modules": {
       |        "./hello.js": {
-      |            "url": "https://example.com/path/hello.zipline",
+      |            "url": "hello.zipline",
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        },
       |        "./jello.js": {
-      |            "url": "https://example.com/path/jello.zipline",
+      |            "url": "jello.zipline",
       |            "sha256": "7af37185091e22463ff627686aedfec3528376eb745026fae1d6153688885e73"
       |        }
       |    }
       |}
       """.trimMargin(),
-      json.encodeToString(JsonElement.serializer(), manifestWithResolvedUrls),
+      json.encodeToString(JsonElement.serializer(), manifestWithBaseUrl),
     )
   }
 
   @Test
-  fun resolvedUrlsRetainsUnknownFields() {
+  fun withBaseUrlRetainsUnknownFields() {
     val manifestWithRelativeUrls =
       """
       |{
@@ -84,7 +87,7 @@ class HttpFetcherTest {
       |}
       """.trimMargin()
 
-    val manifestWithResolvedUrls = httpFetcher.resolveUrls(
+    val manifestWithResolvedUrls = httpFetcher.withBaseUrl(
       manifest = json.parseToJsonElement(manifestWithRelativeUrls),
       baseUrl = "https://example.com/path/",
     )
@@ -92,10 +95,13 @@ class HttpFetcherTest {
     assertEquals(
       """
       |{
+      |    "unsigned": {
+      |        "baseUrl": "https://example.com/path/"
+      |    },
       |    "unknown string": "hello",
       |    "modules": {
       |        "./hello.js": {
-      |            "url": "https://example.com/path/hello.zipline",
+      |            "url": "hello.zipline",
       |            "sha256": "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab"
       |        }
       |    }

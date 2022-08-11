@@ -52,7 +52,7 @@ Now we can start a development server to serve our JavaScript to any running app
 request it.
 
 ```console
-$ ./gradlew samples:trivia:trivia-js:serveDevelopmentZipline --info --continuous
+$ ./gradlew -p samples trivia:trivia-js:serveDevelopmentZipline --info --continuous
 ```
 
 Note that this Gradle won't ever reach 100%. That's expected; we want the development server to stay
@@ -71,7 +71,7 @@ must be confined to a single thread.
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val manifestUrl = "http://localhost:8080/manifest.zipline.json"
   val loader = ZiplineLoader(dispatcher, OkHttpClient())
-  return loader.loadOrFail("trivia", manifestUrl)
+  return loader.loadOnce("trivia", manifestUrl)
 }
 ```
 
@@ -79,7 +79,7 @@ Now we build and run the JVM program to put it all together. Do this in a separa
 development server!
 
 ```console
-$ ./gradlew samples:trivia:trivia-host:shadowJar
+$ ./gradlew -p samples trivia:trivia-host:shadowJar
 java -jar samples/trivia/trivia-host/build/libs/trivia-host-1.0.0-SNAPSHOT-all.jar
 ```
 
@@ -93,7 +93,7 @@ the host platform and call it from Kotlin/JS.
 Bridged interfaces must extend `ZiplineService`, which defines a single `close()` method to release
 held resources.
 
-By default, arguments and return values are pass-by-value. Zipline uses kotlinx.serialization to
+By default, arguments and return values are pass-by-value. Zipline uses [kotlinx.serialization] to
 encode and decode values passed across the boundary.
 
 Interface types that extend from `ZiplineService` are pass-by-reference: the receiver may call
@@ -134,6 +134,51 @@ need to interface with `.js` files.
 After using a bridged interface it must be closed so the peer object can be garbage collected. This
 is difficult to get right, so Zipline borrows ideas from [LeakCanary] and aggressively detects
 when a `close()` call is missed.
+
+
+### Secure
+
+Zipline uses [EdDSA] signatures to authenticate downloaded libraries.
+
+Set up is straightforward. Generate an EdDSA key pair. A task for this is installed with the Zipline
+Gradle plugin.
+
+```
+$ ./gradlew :generateZiplineManifestKeyPair
+...
+---------------- ----------------------------------------------------------------
+     PUBLIC KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
+    PRIVATE KEY: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
+---------------- ----------------------------------------------------------------
+...
+```
+
+Put the private key on the build server and configure it to sign builds:
+
+```kotlin
+tasks.withType(ZiplineCompileTask::class) {
+  signingKeys.create("key1") {
+    privateKeyHex = ...
+  }
+}
+```
+
+Put the public key in each host application and configure it to verify signatures:
+
+```kotlin
+val manifestVerifier = ManifestVerifier.Builder()
+  .addEd25519("key1", ...)
+  .build()
+val loader = ZiplineLoader(
+  manifestVerifier = manifestVerifier,
+  ...
+)
+```
+
+Both signing and verifying accept multiple keys to support key rotation.
+
+Zipline is designed to run your organization's code when and where you want it. It does not
+offer a sandbox or process-isolation and should not be used to execute untrusted code.
 
 
 ### Requirements
@@ -184,8 +229,10 @@ This project was previously known as Duktape-Android and packaged the
 in this repo as are the release tags. Available versions are listed on
 [Maven central](https://search.maven.org/artifact/com.squareup.duktape/duktape-android).
 
+[EdDSA]: https://en.wikipedia.org/wiki/EdDSA
 [Kotlin/Native]: https://kotlinlang.org/docs/multiplatform-dsl-reference.html#targets
 [LeakCanary]: https://square.github.io/leakcanary/
+[kotlinx.serialization]: https://github.com/Kotlin/kotlinx.serialization
 [launchZiplineJs.kt]: samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/launchZiplineJs.kt
 [launchZiplineJvm.kt]: samples/trivia/trivia-host/src/main/kotlin/app/cash/zipline/samples/trivia/launchZiplineJvm.kt
 [qjs]: https://bellard.org/quickjs/

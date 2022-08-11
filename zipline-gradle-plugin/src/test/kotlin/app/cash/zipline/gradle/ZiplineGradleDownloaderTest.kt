@@ -19,6 +19,7 @@ package app.cash.zipline.gradle
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.assertDownloadedToEmbeddedManifest
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -27,7 +28,6 @@ import kotlinx.serialization.json.Json
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
-import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import org.junit.After
@@ -89,9 +89,14 @@ class ZiplineGradleDownloaderTest {
     val fileSystem = FileSystem.SYSTEM
     val downloadDirPath = downloadDir.toOkioPath()
     assertTrue(fileSystem.exists(downloadDirPath / getApplicationManifestFileName(applicationName)))
-    assertEquals(
-      manifestJsonString.encodeUtf8(),
-      fileSystem.read(downloadDirPath / getApplicationManifestFileName(applicationName)) { readByteString() })
+
+    val actualManifestByteString = fileSystem.read(
+      downloadDirPath / getApplicationManifestFileName(applicationName)
+    ) { readByteString() }
+    assertDownloadedToEmbeddedManifest(
+      manifest.copy(baseUrl = manifestUrl),
+      actualManifestByteString,
+    )
     assertTrue(fileSystem.exists(downloadDirPath / testFixtures.alphaSha256Hex))
     assertEquals(
       testFixtures.alphaByteString,

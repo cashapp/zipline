@@ -22,6 +22,7 @@ import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
+import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 import java.io.File
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
@@ -34,7 +35,6 @@ import okio.sink
 object ZiplineCompiler {
   private const val MODULE_PATH_PREFIX = "./"
   private const val ZIPLINE_EXTENSION = ".zipline"
-  private const val MANIFEST_FILE_NAME = "manifest.zipline.json"
 
   fun compile(
     inputDir: File,

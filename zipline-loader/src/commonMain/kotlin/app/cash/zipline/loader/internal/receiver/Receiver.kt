@@ -23,7 +23,7 @@ import okio.ByteString
 internal interface Receiver {
   /**
    * Handle a [ByteString] which can include loading it into a [Zipline] runtime
-   *  or saving to fileSystem.
+   *  or saving to file system.
    */
   suspend fun receive(
     byteString: ByteString,

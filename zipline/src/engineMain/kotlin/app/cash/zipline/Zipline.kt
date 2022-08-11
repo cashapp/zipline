@@ -78,10 +78,10 @@ actual class Zipline private constructor(
   actual val json: Json
     get() = endpoint.json
 
-  actual val serviceNames: Set<String>
+  internal actual val serviceNames: Set<String>
     get() = endpoint.serviceNames
 
-  actual val clientNames: Set<String>
+  internal actual val clientNames: Set<String>
     get() = endpoint.clientNames
 
   init {

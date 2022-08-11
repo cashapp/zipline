@@ -28,6 +28,7 @@ fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,
   eventListener: EventListener = EventListener.NONE,
+  nowEpochMs: () -> Long,
   serializersModule: SerializersModule = EmptySerializersModule,
   manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader {
@@ -36,6 +37,7 @@ fun ZiplineLoader(
     dispatcher = dispatcher,
     httpFetcher = HttpFetcher(httpClient, eventListener),
     eventListener = eventListener,
+    nowEpochMs = nowEpochMs,
     serializersModule = serializersModule,
     manifestVerifier = manifestVerifier,
     embeddedDir = null,

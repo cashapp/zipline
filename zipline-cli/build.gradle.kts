@@ -54,6 +54,7 @@ dependencies {
   testImplementation(libs.kotlin.test)
   testImplementation(libs.okio.core)
   testImplementation(libs.okHttp.mockWebServer)
+  testImplementation(libs.truth)
 }
 
 mavenPublishing {

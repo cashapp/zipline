@@ -17,23 +17,44 @@ package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.loader.ZiplineManifest
 import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.ByteString
+import okio.ByteString.Companion.encodeUtf8
 
 /**
- * A manifest plus the original bytes we loaded for it. We need the original bytes for signature
- * verification.
+ * A manifest plus the original bytes we loaded for it.
+ *
+ * @param manifestBytes: the original bytes are necessary for signature verification.
  */
 data class LoadedManifest(
   val manifestBytes: ByteString,
   val manifest: ZiplineManifest,
-)
+  val freshAtEpochMs: Long,
+) {
+  fun encodeFreshAtMs(): LoadedManifest {
+    val freshManifest = manifest.copy(
+      freshAtEpochMs = freshAtEpochMs,
+    )
+    val freshManifestBytes = jsonForManifest.encodeToString(freshManifest).encodeUtf8()
+    return LoadedManifest(freshManifestBytes, freshManifest, freshAtEpochMs)
+  }
+}
 
-internal val json = Json {
+internal val jsonForManifest = Json {
+  // For backwards-compatibility, allow new fields to be introduced.
   ignoreUnknownKeys = true
+
+  // Because new releases may change default values, it's best to encode them.
+  encodeDefaults = true
+}
+
+internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): LoadedManifest {
+  val manifest = jsonForManifest.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
+  return LoadedManifest(manifestBytes, manifest, freshAtEpochMs)
 }
 
 internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
-  val manifest = json.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
-  return LoadedManifest(manifestBytes, manifest)
+  val manifest = jsonForManifest.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
+  return LoadedManifest(manifestBytes, manifest, manifest.freshAtEpochMs!!)
 }

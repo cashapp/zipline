@@ -31,7 +31,6 @@ import app.cash.zipline.loader.internal.receiver.FsSaveReceiver
 import app.cash.zipline.loader.internal.receiver.Receiver
 import app.cash.zipline.loader.internal.receiver.ZiplineLoadReceiver
 import kotlin.coroutines.cancellation.CancellationException
-import kotlin.time.Duration
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
@@ -62,6 +61,7 @@ class ZiplineLoader internal constructor(
   private val dispatcher: CoroutineDispatcher,
   private val httpFetcher: HttpFetcher,
   private val eventListener: EventListener,
+  private val nowEpochMs: () -> Long,
   private val serializersModule: SerializersModule,
   private val manifestVerifier: ManifestVerifier?,
   private val embeddedDir: Path?,
@@ -80,6 +80,7 @@ class ZiplineLoader internal constructor(
     dispatcher = dispatcher,
     httpFetcher = httpFetcher,
     eventListener = eventListener,
+    nowEpochMs = nowEpochMs,
     serializersModule = serializersModule,
     manifestVerifier = manifestVerifier,
     embeddedDir = embeddedDir,
@@ -91,10 +92,9 @@ class ZiplineLoader internal constructor(
     fileSystem: FileSystem,
     directory: Path,
     maxSizeInBytes: Long,
-    nowMs: () -> Long
   ): ZiplineLoader {
     fileSystem.createDirectories(directory, mustCreate = false)
-    val driver = sqlDriverFactory.create(directory / "zipline-2022-08-04.db", Database.Schema)
+    val driver = sqlDriverFactory.create(directory / "zipline.db", Database.Schema)
     val databaseCloseable = object : Closeable {
       override fun close() {
         driver.close()
@@ -107,7 +107,7 @@ class ZiplineLoader internal constructor(
       fileSystem = fileSystem,
       directory = directory,
       maxSizeInBytes = maxSizeInBytes,
-      nowMs = nowMs,
+      nowEpochMs = nowEpochMs,
     )
     cache.initialize()
     return ZiplineLoader(
@@ -115,6 +115,7 @@ class ZiplineLoader internal constructor(
       dispatcher = dispatcher,
       httpFetcher = httpFetcher,
       eventListener = eventListener,
+      nowEpochMs = nowEpochMs,
       serializersModule = serializersModule,
       manifestVerifier = manifestVerifier,
       embeddedDir = embeddedDir,
@@ -124,6 +125,8 @@ class ZiplineLoader internal constructor(
   }
 
   private var concurrentDownloadsSemaphore = Semaphore(3)
+
+  /** Callers can modify this as desired to change the default network download concurrency level. */
   var concurrentDownloads = 3
     set(value) {
       require(value > 0)
@@ -149,43 +152,41 @@ class ZiplineLoader internal constructor(
   private val moduleFetchers = listOfNotNull(embeddedFetcher, cachingFetcher ?: httpFetcher)
 
   /**
-   * Loads code from [manifestUrlFlow] each time it emits, skipping loads if either:
+   * Loads code from [manifestUrlFlow] each time it emits, skipping loads if the code to load is
+   *    the same as what's already loaded.
    *
-   *  * the code to load is older than [oldestCodeToLoad]
-   *  * the code to load is the same as what's already loaded
-   *
-   * If the network is unreachable and there is local code newer than [oldestCodeToLoad], then this
-   * will load local code, either from the embedded directory or the cache.
+   * If the network is unreachable and there is local code newer, then this
+   *   will load local code, either from the embedded directory or the cache.
    *
    * @param manifestUrlFlow a flow that should emit each time a load should be attempted. This
    *     may emit periodically to trigger polling. It should also emit for loading triggers like
    *     app launch, app foregrounding, and network connectivity changed.
-   * @param oldestCodeToLoad the age of the oldest code that this function should load. Use this to
-   *     avoid loading stale code from the cache or embedded file system after a network failure. If
-   *     no code is eligible to load the returned flow will not emit.
    */
   suspend fun load(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
-    oldestCodeToLoad: Duration = Duration.INFINITE,
     initializer: (Zipline) -> Unit,
-  ): Flow<Zipline> {
+  ): Flow<LoadedZipline> {
     return flow {
       var isFirstLoad = true
       var previousManifest: ZiplineManifest? = null
 
       manifestUrlFlow.collect { manifestUrl ->
         // Each time a manifest URL is emitted, download and initialize a Zipline for that URL.
-        //  - skip if the manifest hasn't changed from the previous load
+        //  - skip if the manifest hasn't changed from the previous load.
         //  - pin the application if the load succeeded; unpin if it failed.
         withLifecycleEvents(applicationName, manifestUrl) {
           val networkManifest = fetchManifestFromNetwork(applicationName, manifestUrl)
-          if (networkManifest.manifest == previousManifest) return@withLifecycleEvents // Unchanged.
+          if (networkManifest.manifest == previousManifest) {
+            // Unchanged. Update freshness timestamp in cache DB.
+            cachingFetcher?.updateFreshAt(applicationName, networkManifest)
+            return@withLifecycleEvents
+          }
 
           try {
             val networkZipline = loadFromManifest(applicationName, networkManifest, initializer)
             cachingFetcher?.pin(applicationName, networkManifest) // Pin after successful loads.
-            emit(networkZipline)
+            emit(LoadedZipline(networkZipline, networkManifest.freshAtEpochMs))
             previousManifest = networkManifest.manifest
           } catch (e: Exception) {
             cachingFetcher?.unpin(applicationName, networkManifest) // Unpin after failed loads.
@@ -200,7 +201,7 @@ class ZiplineLoader internal constructor(
           val localManifest = loadCachedOrEmbeddedManifest(applicationName) ?: return@collect
           withLifecycleEvents(applicationName, manifestUrl = null) {
             val localZipline = loadFromManifest(applicationName, localManifest, initializer)
-            emit(localZipline)
+            emit(LoadedZipline(localZipline, localManifest.freshAtEpochMs))
             previousManifest = localManifest.manifest
           }
         }
@@ -211,12 +212,9 @@ class ZiplineLoader internal constructor(
   suspend fun loadOnce(
     applicationName: String,
     manifestUrl: String,
-    oldestCodeToLoad: Duration = Duration.INFINITE,
     initializer: (Zipline) -> Unit = {},
-  ): Zipline {
-    return load(applicationName, flowOf(manifestUrl), oldestCodeToLoad, initializer).firstOrNull()
-      ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
-  }
+  ): LoadedZipline = load(applicationName, flowOf(manifestUrl), initializer).firstOrNull()
+    ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
 
   /**
    * After identifying a manifest to load this fetches all the code, loads it into a JS runtime,
@@ -255,11 +253,13 @@ class ZiplineLoader internal constructor(
     downloadFileSystem: FileSystem,
     manifestUrl: String,
   ) {
+    val manifest = fetchManifestFromNetwork(applicationName, manifestUrl)
+    val manifestWithFreshAt = manifest.encodeFreshAtMs()
     download(
       applicationName = applicationName,
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
-      loadedManifest = fetchManifestFromNetwork(applicationName, manifestUrl),
+      loadedManifest = manifestWithFreshAt,
     )
   }
 
@@ -283,7 +283,13 @@ class ZiplineLoader internal constructor(
   ) {
     coroutineScope {
       val loads = loadedManifest.manifest.modules.map {
-        ModuleJob(applicationName, it.key, it.value, receiver)
+        ModuleJob(
+          applicationName = applicationName,
+          id = it.key,
+          baseUrl = loadedManifest.manifest.baseUrl,
+          module = it.value,
+          receiver = receiver
+        )
       }
       for (load in loads) {
         val loadJob = launch { load.run() }
@@ -298,13 +304,14 @@ class ZiplineLoader internal constructor(
   private inner class ModuleJob(
     val applicationName: String,
     val id: String,
+    val baseUrl: String?,
     val module: ZiplineManifest.Module,
     val receiver: Receiver,
   ) {
     val upstreams = mutableListOf<Job>()
 
     /**
-     * Fetch and receive ZiplineFile module
+     * Fetch and receive ZiplineFile module.
      */
     suspend fun run() {
       val byteString = moduleFetchers.fetch(
@@ -312,6 +319,7 @@ class ZiplineLoader internal constructor(
         applicationName = applicationName,
         id = id,
         sha256 = module.sha256,
+        baseUrl = baseUrl,
         url = module.url,
       )!!
       check(byteString.sha256() == module.sha256) {
@@ -335,8 +343,8 @@ class ZiplineLoader internal constructor(
       block()
       eventListener.applicationLoadEnd(applicationName, manifestUrl)
     } catch (e: CancellationException) {
-      // If emit() threw a CancellationException, consider that emit to be successful. That's 'cause
-      // loadOnce() accepts an element and then immediately cancels the flow.
+      // If emit() threw a CancellationException, consider that emit to be successful.
+      // That's 'cause loadOnce() accepts an element and then immediately cancels the flow.
       eventListener.applicationLoadEnd(applicationName, manifestUrl)
       throw e
     } catch (e: Exception) {
@@ -364,7 +372,8 @@ class ZiplineLoader internal constructor(
     val result = concurrentDownloadsSemaphore.withPermit {
       httpFetcher.fetchManifest(
         applicationName = applicationName,
-        url = manifestUrl
+        url = manifestUrl,
+        freshAtEpochMs = nowEpochMs(),
       )
     }
 

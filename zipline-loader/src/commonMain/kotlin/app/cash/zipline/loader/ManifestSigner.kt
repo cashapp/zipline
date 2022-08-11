@@ -33,13 +33,8 @@ class ManifestSigner private constructor(
 
   /** Returns a copy of [manifest] that is signed with all private keys held by this signer. */
   fun sign(manifest: ZiplineManifest): ZiplineManifest {
-    // Add placeholders for the signatures we're signing with.
-    val manifestToSign = manifest.copy(
-      signatures = privateKeys.mapValues { "" }
-    )
-
     // Sign with each signing key.
-    val signaturePayload = signaturePayload(Json.encodeToString(manifestToSign))
+    val signaturePayload = signaturePayload(Json.encodeToString(manifest))
     val signaturePayloadBytes = signaturePayload.encodeUtf8()
     val signatures = privateKeys.mapValues { (_, signer) ->
       val signatureBytes = signer.sign(signaturePayloadBytes)
@@ -61,6 +56,6 @@ class ManifestSigner private constructor(
       privateKeys[name] = Ed25519Sign(privateKey)
     }
 
-    fun build()= ManifestSigner(privateKeys.toMap())
+    fun build() = ManifestSigner(privateKeys.toMap())
   }
 }

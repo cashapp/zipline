@@ -33,6 +33,7 @@ actual val systemFileSystem = FileSystem.SYSTEM
 actual fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,
+  nowEpochMs: () -> Long,
   eventListener: EventListener,
   manifestVerifier: ManifestVerifier?,
 ): ZiplineLoader = error("testZiplineLoader not available for Android")

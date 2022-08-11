@@ -58,6 +58,7 @@ class LoaderTester(
     loader = testZiplineLoader(
       dispatcher = dispatcher,
       httpClient = httpClient,
+      nowEpochMs = { nowMillis },
       eventListener = eventListener,
       manifestVerifier = manifestVerifier,
     ).withEmbedded(
@@ -67,7 +68,6 @@ class LoaderTester(
       directory = cacheDir,
       fileSystem = systemFileSystem,
       maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
-      nowMs = { nowMillis },
     )
     cache = loader.cache!!
   }
@@ -81,10 +81,11 @@ class LoaderTester(
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
     val sha256 = ziplineFileByteString.sha256()
-    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
-      seed,
-      sha256,
-      includeUnknownFieldInJson,
+    val embeddedManifest = LoaderTestFixtures.createRelativeEmbeddedManifest(
+      seed = seed,
+      seedFileSha256 = sha256,
+      seedFreshAtEpochMs = 5L,
+      includeUnknownFieldInJson = includeUnknownFieldInJson,
     )
     embeddedFileSystem.write(embeddedDir / sha256.hex()) {
       write(ziplineFileByteString)
@@ -94,7 +95,7 @@ class LoaderTester(
         applicationName
       )
     ) {
-      write(loadedManifest.manifestBytes)
+      write(embeddedManifest.manifestBytes)
     }
   }
 
@@ -111,7 +112,7 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl)
+    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -141,7 +142,7 @@ class LoaderTester(
     httpClient.filePathToByteString = mapOf(
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl)
+    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -162,7 +163,7 @@ class LoaderTester(
     httpClient.filePathToByteString = mapOf(
       manifestUrl to loadedManifest.manifestBytes,
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl)
+    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -187,7 +188,7 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl)
+    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -213,7 +214,7 @@ class LoaderTester(
       val loadedSeed = (it.quickJs.evaluate("globalThis.log", "assert.js") as String)
         .removeSuffix(" loaded\n")
       if (loadedSeed == seed) throw IllegalArgumentException("Zipline code run failed")
-    }
+    }.zipline
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String)
       .removeSuffix(" loaded\n")
   }

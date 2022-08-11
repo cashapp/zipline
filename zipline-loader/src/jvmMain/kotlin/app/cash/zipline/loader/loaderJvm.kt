@@ -29,6 +29,7 @@ fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,
   eventListener: EventListener = EventListener.NONE,
+  nowEpochMs: () -> Long = { System.currentTimeMillis() },
   serializersModule: SerializersModule = EmptySerializersModule,
   manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader {
@@ -37,6 +38,7 @@ fun ZiplineLoader(
     dispatcher = dispatcher,
     httpFetcher = HttpFetcher(httpClient, eventListener),
     eventListener = eventListener,
+    nowEpochMs = nowEpochMs,
     serializersModule = serializersModule,
     manifestVerifier = manifestVerifier,
     embeddedDir = null,
@@ -50,12 +52,14 @@ fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: OkHttpClient,
   eventListener: EventListener = EventListener.NONE,
-  serializersModule: SerializersModule = EmptySerializersModule,
+  nowEpochMs: () -> Long = { System.currentTimeMillis() },
+  serializersModule: SerializersModule = EmptySerializersModule
 ): ZiplineLoader {
   return ZiplineLoader(
     dispatcher = dispatcher,
-    httpClient = OkHttpZiplineHttpClient(okHttpClient = httpClient),
+    httpClient = OkHttpZiplineHttpClient(httpClient),
+    nowEpochMs = nowEpochMs,
     eventListener = eventListener,
-    serializersModule = serializersModule,
+    serializersModule = serializersModule
   )
 }

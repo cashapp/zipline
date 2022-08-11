@@ -30,7 +30,7 @@ import picocli.CommandLine.Spec
 @Command(name = NAME, description = ["Use Zipline without Gradle."],
   mixinStandardHelpOptions = true,
   synopsisSubcommandLabel = "COMMAND",
-  subcommands = [Download::class, HelpCommand::class],
+  subcommands = [Download::class, GenerateKeyPair::class, HelpCommand::class],
   versionProvider = Main.VersionProvider::class,
 )
 class Main : Runnable {

@@ -29,7 +29,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
 @Command(
-  name = NAME, description = ["Recursively download Zipline code to a directory from a URL."],
+  name = NAME, description = ["Recursively download Zipline code to a directory from a URL"],
   mixinStandardHelpOptions = true, versionProvider = Main.VersionProvider::class
 )
 class Download : Runnable {
@@ -57,7 +57,10 @@ class Download : Runnable {
 
   private fun download(applicationName: String, manifestUrl: String, downloadDir: File) {
     println("Zipline Download [manifestUrl=$manifestUrl][downloadDir=$downloadDir]...")
-    val ziplineLoader = ZiplineLoader(dispatcher, client)
+    val ziplineLoader = ZiplineLoader(
+      dispatcher = dispatcher,
+      httpClient = client,
+    )
     runBlocking {
       ziplineLoader.download(
         applicationName = applicationName,

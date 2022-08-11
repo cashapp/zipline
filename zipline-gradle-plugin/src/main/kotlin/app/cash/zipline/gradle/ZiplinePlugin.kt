@@ -16,6 +16,7 @@
 package app.cash.zipline.gradle
 
 import java.util.Locale
+import app.cash.zipline.loader.internal.generateKeyPair
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
@@ -26,6 +27,7 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
+import org.slf4j.LoggerFactory
 
 class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   override fun isApplicable(kotlinCompilation: KotlinCompilation<*>): Boolean = true
@@ -40,6 +42,8 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
   override fun apply(target: Project) {
     super.apply(target)
+
+    createGenerateKeyPairTask(target)
 
     val extension = target.extensions.findByType(KotlinMultiplatformExtension::class.java)
       ?: return
@@ -92,6 +96,19 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
     return project.provider {
       listOf() // No options.
+    }
+  }
+
+  private fun createGenerateKeyPairTask(project: Project) {
+    project.tasks.register("generateZiplineManifestKeyPair") { task ->
+      task.doLast {
+        val logger = LoggerFactory.getLogger(ZiplinePlugin::class.java)
+        val keyPair = generateKeyPair()
+        logger.warn("---------------- ----------------------------------------------------------------")
+        logger.warn("     PUBLIC KEY: ${keyPair.publicKey.hex()}")
+        logger.warn("    PRIVATE KEY: ${keyPair.privateKey.hex()}")
+        logger.warn("---------------- ----------------------------------------------------------------")
+      }
     }
   }
 }

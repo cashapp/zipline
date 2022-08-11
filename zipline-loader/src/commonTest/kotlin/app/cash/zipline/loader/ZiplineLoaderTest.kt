@@ -21,6 +21,7 @@ import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.assertDownloadedToEmbeddedManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
@@ -84,11 +85,11 @@ class ZiplineLoaderTest {
   @Test
   fun loadManifestFromUrl() = runBlocking {
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
+      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    val zipline = loader.loadOnce("test", manifestUrl)
+    val zipline = loader.loadOnce("test", manifestUrl).zipline
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -103,11 +104,11 @@ class ZiplineLoaderTest {
   fun loaderUsesCache() = runBlocking {
     // load, no cache hit, download
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
+      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    val ziplineColdCache = loader.loadOnce("test", manifestUrl)
+    val ziplineColdCache = loader.loadOnce("test", manifestUrl).zipline
     assertEquals(
       ziplineColdCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -119,10 +120,10 @@ class ZiplineLoaderTest {
 
     // load, cache hit, no download
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
+      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       // Note no actual alpha/bravo files are available on the network
     )
-    val ziplineWarmedCache = loader.loadOnce("test", manifestUrl)
+    val ziplineWarmedCache = loader.loadOnce("test", manifestUrl).zipline
     assertEquals(
       ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -149,7 +150,7 @@ class ZiplineLoaderTest {
       manifestUrl to testFixtures.manifestByteString,
       // Note no actual alpha/bravo files are available on the cache / network
     )
-    val zipline = loader.loadOnce("test", manifestUrl)
+    val zipline = loader.loadOnce("test", manifestUrl).zipline
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -170,14 +171,14 @@ class ZiplineLoaderTest {
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
 
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestWithRelativeUrlsByteString,
+      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
     loader.download("test", downloadDir, downloadFileSystem, manifestUrl)
 
-    assertEquals(
-      testFixtures.manifestByteString,
+    assertDownloadedToEmbeddedManifest(
+      testFixtures.manifest,
       downloadFileSystem.read(downloadDir / getApplicationManifestFileName("test")) {
         readByteString()
       })
@@ -216,12 +217,12 @@ class ZiplineLoaderTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    loader.download("test", downloadDir, fileSystem, testFixtures.loadedManifest)
+    loader.download("test", downloadDir, fileSystem, testFixtures.embeddedLoadedManifest)
 
     // check that files have been downloaded to downloadDir as expected
     assertTrue(fileSystem.exists(downloadDir / getApplicationManifestFileName("test")))
-    assertEquals(
-      testFixtures.manifestByteString,
+    assertDownloadedToEmbeddedManifest(
+      testFixtures.manifest,
       fileSystem.read(downloadDir / getApplicationManifestFileName("test")) { readByteString() })
     assertTrue(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertEquals(
@@ -263,13 +264,17 @@ class ZiplineLoaderTest {
     ).test {
       assertEquals(
         "apple",
-        (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
+        (awaitItem().zipline.quickJs.evaluate(
+          "globalThis.log", "assert.js"
+        ) as String).removeSuffix(
           " loaded\n"
         )
       )
       assertEquals(
         "firetruck",
-        (awaitItem().quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
+        (awaitItem().zipline.quickJs.evaluate(
+          "globalThis.log", "assert.js"
+        ) as String).removeSuffix(
           " loaded\n"
         )
       )
@@ -284,7 +289,7 @@ class ZiplineLoaderTest {
   ): Zipline {
     return loadFromManifest(
       applicationName = applicationName,
-      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest),
+      loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
       initializer = initializer,
     )
   }
