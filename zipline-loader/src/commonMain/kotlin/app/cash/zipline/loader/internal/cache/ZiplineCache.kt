@@ -25,13 +25,15 @@ import okio.IOException
 import okio.Path
 
 /**
- * Stores downloaded files. Files are named by their SHA-256 hashes. We use a SQLite database for file metadata: which
- * files are currently being downloaded, when they were most recently accessed, and what the total on-disk cost is.
+ * Stores downloaded files. Files are named by their SHA-256 hashes. We use a SQLite database for
+ * file metadata: which files are currently being downloaded, when they were most recently accessed,
+ * and what the total on-disk usage is.
  *
  * ### Cache Size
  *
- * The [maxSizeInBytes] limit applies to the content of the files in the `READY` state. It doesn't account for the size
- * of the metadata DB, or any in-flight downloads. Use a smaller [maxSizeInBytes] if you have a strict on-disk limit.
+ * The [maxSizeInBytes] limit applies to the content of the files in the `READY` state. It doesn't
+ * account for the size of the metadata DB, or any in-flight downloads.
+ * Use a smaller [maxSizeInBytes] if you have a strict on-disk limit.
  *
  *
  * ### State Machine
@@ -42,9 +44,9 @@ import okio.Path
  *         --------------->
  *  (absent)                 DIRTY
  *         <---------------
- *    ^       download       | download
+ *    ^                      |
+ *    |       download       | download
  *    |        failed        | success
- *    |                      |
  *    |                      v
  *    '------------------ READY
  *           pruned
@@ -52,11 +54,11 @@ import okio.Path
  *
  * Note that absent entries are not present in SQLite.
  *
- * This cache is safe for concurrent use within a single process. If multiple callers attempt to mark the same absent
- * file as `DIRTY` simultaneously, all but one will fail and return false.
+ * This cache is safe for concurrent use within a single process. If multiple callers attempt to
+ * mark the same absent file as `DIRTY` simultaneously, all but one will fail and return false.
  *
- * This cache does not prevent multiple processes from accessing the cache simultaneously. Don't do this; it'll corrupt
- * the cache and behavior is undefined.
+ * This cache does not prevent multiple processes from accessing the cache simultaneously.
+ * Don't do this; it'll corrupt the cache and behavior is undefined.
  */
 internal class ZiplineCache internal constructor(
   databaseCloseable: Closeable,
@@ -74,7 +76,8 @@ internal class ZiplineCache internal constructor(
     manifestFreshAtMs: Long? = null,
   ): Files? {
     try {
-      val metadata = openForWrite(applicationName, sha256, isManifest, manifestFreshAtMs) ?: return null
+      val metadata = openForWrite(applicationName, sha256, isManifest, manifestFreshAtMs)
+        ?: return null
       write(metadata, content)
       return metadata
     } catch (ignored: IOException) {
@@ -105,7 +108,12 @@ internal class ZiplineCache internal constructor(
     if (read != null) return read
 
     val content = download() ?: return null
-    write(applicationName, sha256, content, isManifest = false)
+    write(
+      applicationName = applicationName,
+      sha256 = sha256,
+      content = content,
+      isManifest = false
+    )
     return content
   }
 
@@ -116,7 +124,13 @@ internal class ZiplineCache internal constructor(
   ): Files? {
     val sha256 = content.sha256()
     val metadata = getOrNull(sha256)
-    return metadata ?: write(applicationName, sha256, content, isManifest = true, manifestFreshAtMs = putFreshAtMs)
+    return metadata ?: write(
+      applicationName = applicationName,
+      sha256 = sha256,
+      content = content,
+      isManifest = true,
+      manifestFreshAtMs = putFreshAtMs
+    )
   }
 
   fun read(sha256: ByteString): ByteString? {
@@ -127,7 +141,7 @@ internal class ZiplineCache internal constructor(
   private fun read(metadata: Files): ByteString? {
     if (metadata.file_state != FileState.READY) return null
 
-    // Update the used at timestamp
+    // Update the used at timestamp.
     database.filesQueries.update(
       id = metadata.id,
       file_state = metadata.file_state,
@@ -285,9 +299,8 @@ internal class ZiplineCache internal constructor(
     application_name: String,
     file_id: Long,
   ) {
-    if (database.pinsQueries.get_pin(file_id, application_name).executeAsOneOrNull() == null) {
-      database.pinsQueries.create_pin(file_id, application_name)
-    }
+    database.pinsQueries.get_pin(file_id, application_name).executeAsOneOrNull()
+      ?: database.pinsQueries.create_pin(file_id, application_name)
   }
 
   /**
@@ -305,7 +318,7 @@ internal class ZiplineCache internal constructor(
     database.transaction {
       // Go from DIRTY to READY.
       require(getOrNull(metadata.id)?.file_state == FileState.DIRTY) {
-        "file ${metadata.sha256_hex} was not DIRTY ... multiple processes sharing a cache?"
+        "[fileName=${metadata.sha256_hex}] can not be set to READY, it is not DIRTY. Could multiple processes be sharing a cache?"
       }
 
       database.filesQueries.update(
@@ -384,12 +397,15 @@ internal class ZiplineCache internal constructor(
   }
 
   /**
-   * Update file record freshAt timestamp to reflect that the manifest is still seen as fresh
+   * Update file record freshAt timestamp to reflect that the manifest is still seen as fresh.
    */
   fun updateManifestFreshAt(applicationName: String, loadedManifest: LoadedManifest) {
     val freshAtMs = loadedManifest.freshAtEpochMs
-    val manifestMetadata = getOrPutManifest(applicationName, loadedManifest.manifestBytes, freshAtMs)
-      ?: return // Pruned.
+    val manifestMetadata = getOrPutManifest(
+      applicationName = applicationName,
+      content = loadedManifest.manifestBytes,
+      putFreshAtMs = freshAtMs
+    ) ?: return // Pruned.
     database.filesQueries.updateFresh(
       id = manifestMetadata.id,
       fresh_at_epoch_ms = freshAtMs

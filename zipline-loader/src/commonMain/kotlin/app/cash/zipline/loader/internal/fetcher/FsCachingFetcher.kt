@@ -59,6 +59,6 @@ internal class FsCachingFetcher(
   /**
    * Updates freshAt timestamp for manifests that in later network fetch is still the freshest.
    */
-  fun updateFreshAt(applicationName: String, loadedManifest: LoadedManifest) = cache
-    .updateManifestFreshAt(applicationName, loadedManifest)
+  fun updateFreshAt(applicationName: String, loadedManifest: LoadedManifest) =
+    cache.updateManifestFreshAt(applicationName, loadedManifest)
 }

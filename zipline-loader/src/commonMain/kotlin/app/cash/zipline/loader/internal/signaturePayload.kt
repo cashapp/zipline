@@ -25,7 +25,7 @@ import kotlinx.serialization.json.jsonObject
  * -----------------
  *
  * We’d like to embed the signature in the manifest itself. But we can’t sign the manifest if it
- * contains the signature; that’s circular. Instead we create a file with equivalent content and
+ * contains the signature; that’s circular. Instead, we create a file with equivalent content and
  * sign that.
  *
  * To create a signature payload:
@@ -90,7 +90,7 @@ import kotlinx.serialization.json.jsonObject
  * }
  * ```
  *
- * Before signing we must perform step 3 (strip whitespace) and encode as UTF-8.
+ * Before signing, we must perform step 3 (strip whitespace) and encode as UTF-8.
  *
  * Note that if the manifest contains fields unknown to the signer, these fields must be copied to
  * the signature payload.

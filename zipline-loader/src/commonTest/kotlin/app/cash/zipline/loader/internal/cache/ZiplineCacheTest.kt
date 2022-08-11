@@ -57,15 +57,15 @@ class ZiplineCacheTest {
       val fileContents = "abc123".encodeUtf8()
       val fileSha = fileContents.sha256()
 
-      // File not READY
+      // File not READY.
       assertNull(ziplineCache.read(fileSha))
       assertFalse(fileSystem.exists(directory / fileSha.hex()))
 
-      // File downloaded
+      // File downloaded.
       ziplineCache.write("red", fileSha, fileContents)
       assertTrue(fileSystem.exists(directory / "entry-1.bin"))
 
-      // File can be read
+      // File can be read.
       assertEquals(fileContents, ziplineCache.read(fileSha))
     }
   }
@@ -76,7 +76,7 @@ class ZiplineCacheTest {
       val fileContents = "abc123".encodeUtf8().sha256()
       val fileSha = fileContents.sha256()
 
-      // File not READY
+      // File not READY.
       assertNull(ziplineCache.read(fileSha))
       assertFalse(fileSystem.exists(directory / fileSha.hex()))
 
@@ -344,7 +344,7 @@ class ZiplineCacheTest {
       assertEquals(fileContents, get1.manifestBytes)
       assertEquals(5, get1.freshAtEpochMs)
 
-      // Update the freshAt timestamp
+      // Update the freshAt timestamp.
       ziplineCache.updateManifestFreshAt("red", LoadedManifest(fileContents, 10))
       val get2 = assertNotNull(ziplineCache.getPinnedManifest("red"))
       assertEquals(fileContents, get2.manifestBytes)

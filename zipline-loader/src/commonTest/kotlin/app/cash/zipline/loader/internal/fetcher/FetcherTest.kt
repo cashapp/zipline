@@ -53,7 +53,7 @@ class FetcherTest {
       sha256: ByteString,
       baseUrl: String?,
       url: String,
-    ): ByteString? {
+    ): ByteString {
       bravoFetcherIds.add(id)
       return bravoByteString
     }
@@ -86,8 +86,8 @@ class FetcherTest {
     )
     assertEquals(bravoByteString, actualByteString)
 
-    // Both fetchers have been called, which means that alpha ran first and returned null
-    // Receiver ran and alpha ran before bravo
+    // Both fetchers have been called, which means that alpha ran first and returned null.
+    // Receiver ran and alpha ran before bravo.
     assertEquals("alpha", alphaFetcherIds.first())
     assertEquals("bravo", alphaFetcherIds.last())
 
