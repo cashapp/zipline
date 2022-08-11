@@ -24,13 +24,14 @@ import picocli.CommandLine
 import picocli.CommandLine.UnmatchedArgumentException
 
 class GenerateKeyPairTest {
+  private val systemOut = Buffer()
+
   @Test fun happyPath() {
-    val buffer = Buffer()
     val generateKeyPair = fromArgs()
-    generateKeyPair.run(PrintStream(buffer.outputStream()))
-    assertThat(buffer.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{64}")
-    assertThat(buffer.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{64}")
-    assertThat(buffer.readUtf8Line()).isNull()
+    generateKeyPair.run()
+    assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{64}")
+    assertThat(systemOut.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{64}")
+    assertThat(systemOut.readUtf8Line()).isNull()
   }
 
   @Test fun unmatchedArgument() {
@@ -39,9 +40,10 @@ class GenerateKeyPairTest {
     }
   }
 
-  companion object {
-    fun fromArgs(vararg args: String?): GenerateKeyPair {
-      return CommandLine.populateCommand(GenerateKeyPair(), *args)
-    }
+  private fun fromArgs(vararg args: String?): GenerateKeyPair {
+    return CommandLine.populateCommand(
+      GenerateKeyPair(PrintStream(systemOut.outputStream())),
+      *args,
+    )
   }
 }

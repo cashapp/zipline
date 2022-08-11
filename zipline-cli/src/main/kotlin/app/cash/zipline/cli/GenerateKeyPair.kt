@@ -29,12 +29,10 @@ import picocli.CommandLine.Command
   mixinStandardHelpOptions = true,
   versionProvider = Main.VersionProvider::class,
 )
-class GenerateKeyPair : Runnable {
+class GenerateKeyPair(
+  private val out: PrintStream = System.out,
+) : Runnable {
   override fun run() {
-    run(System.out)
-  }
-
-  internal fun run(out: PrintStream) {
     val keyPair = generateKeyPair()
     out.println(" PUBLIC KEY: ${keyPair.publicKey.hex()}")
     out.println("PRIVATE KEY: ${keyPair.privateKey.hex()}")
