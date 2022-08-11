@@ -162,10 +162,9 @@ class ZiplinePluginTest {
   fun generateZiplineManifestKeyPair() {
     val projectDir = File("src/test/projects/basic")
 
-    val taskName = ":generateZiplineManifestKeyPair"
-    val result = createRunner(projectDir, taskName).build()
+    val result = createRunner(projectDir, "generateZiplineManifestKeyPair").build()
     assertThat(SUCCESS_OUTCOMES)
-      .contains(result.task(taskName)!!.outcome)
+      .contains(result.task(":lib:generateZiplineManifestKeyPair")!!.outcome)
     assertThat(result.output).containsMatch(
       """
       |     PUBLIC KEY: [\da-f]{64}

@@ -101,18 +101,14 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   }
 
   private fun createGenerateKeyPairTask(project: Project) {
-    val name = "generateZiplineManifestKeyPair"
-    val rootProjectTasks = project.rootProject.tasks
-    if (rootProjectTasks.findByName(name) == null) {
-      rootProjectTasks.create(name) { task ->
-        task.doLast {
-          val logger = LoggerFactory.getLogger(ZiplinePlugin::class.java)
-          val keyPair = generateKeyPair()
-          logger.warn("---------------- ----------------------------------------------------------------")
-          logger.warn("     PUBLIC KEY: ${keyPair.publicKey.hex()}")
-          logger.warn("    PRIVATE KEY: ${keyPair.privateKey.hex()}")
-          logger.warn("---------------- ----------------------------------------------------------------")
-        }
+    project.tasks.register("generateZiplineManifestKeyPair") { task ->
+      task.doLast {
+        val logger = LoggerFactory.getLogger(ZiplinePlugin::class.java)
+        val keyPair = generateKeyPair()
+        logger.warn("---------------- ----------------------------------------------------------------")
+        logger.warn("     PUBLIC KEY: ${keyPair.publicKey.hex()}")
+        logger.warn("    PRIVATE KEY: ${keyPair.privateKey.hex()}")
+        logger.warn("---------------- ----------------------------------------------------------------")
       }
     }
   }
