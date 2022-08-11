@@ -14,7 +14,7 @@ Serving presenters.js
 Run this:
 
 ```
-../gradlew emoji-search:presenters:jsBrowserProductionRun --info
+./gradlew -p samples emoji-search:presenters:jsBrowserProductionRun --info
 ```
 
 This will compile Kotlin/JS and serve it at [[http://localhost:8080/presenters.js]]. The server will
@@ -27,7 +27,7 @@ Running Emoji-Search
 Run this:
 
 ```
-../gradlew emoji-search:android:installDebug
+./gradlew -p samples emoji-search:android:installDebug
 ```
 
 This Android app assumes it's running in an emulator and will attempt to fetch JavaScript from the
