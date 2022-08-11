@@ -29,7 +29,7 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
 @Command(
-  name = NAME, description = ["Recursively download Zipline code to a directory from a URL."],
+  name = NAME, description = ["Recursively download Zipline code to a directory from a URL"],
   mixinStandardHelpOptions = true, versionProvider = Main.VersionProvider::class
 )
 class Download : Runnable {

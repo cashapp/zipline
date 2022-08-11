@@ -15,27 +15,19 @@
 ////////////////////////////////////////////////////////////////////////////////
 package app.cash.zipline.loader.internal.tink.subtle
 
-import app.cash.zipline.loader.randomByteString
 import okio.ByteString
 
 /** Defines the KeyPair consisting of a private key and its corresponding public key.  */
-class KeyPair private constructor(
+class KeyPair internal constructor(
   val publicKey: ByteString,
   val privateKey: ByteString,
-) {
-  companion object {
-    /** Returns a new `<publicKey / privateKey>` KeyPair.  */
-    internal fun newKeyPair(): KeyPair {
-      return newKeyPairFromSeed(randomByteString(Field25519.FIELD_LEN))
-    }
+)
 
-    /** Returns a new `<publicKey / privateKey>` KeyPair generated from a seed. */
-    fun newKeyPairFromSeed(secretSeed: ByteString): KeyPair {
-      require(secretSeed.size == Field25519.FIELD_LEN) {
-        "Given secret seed length is not ${Field25519.FIELD_LEN}"
-      }
-      val publicKey = Ed25519.scalarMultWithBaseToBytes(Ed25519.getHashedScalar(secretSeed))
-      return KeyPair(publicKey, secretSeed)
-    }
+/** Returns a new `<publicKey / privateKey>` KeyPair generated from a seed. */
+fun newKeyPairFromSeed(secretSeed: ByteString): KeyPair {
+  require(secretSeed.size == Field25519.FIELD_LEN) {
+    "Given secret seed length is not ${Field25519.FIELD_LEN}"
   }
+  val publicKey = Ed25519.scalarMultWithBaseToBytes(Ed25519.getHashedScalar(secretSeed))
+  return KeyPair(publicKey, secretSeed)
 }

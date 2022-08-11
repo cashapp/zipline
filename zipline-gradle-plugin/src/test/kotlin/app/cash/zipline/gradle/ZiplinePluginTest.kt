@@ -159,6 +159,21 @@ class ZiplinePluginTest {
       .containsMatch(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}""")
   }
 
+  @Test
+  fun generateZiplineManifestKeyPair() {
+    val projectDir = File("src/test/projects/basic")
+
+    val result = createRunner(projectDir, "generateZiplineManifestKeyPair").build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(":lib:generateZiplineManifestKeyPair")!!.outcome)
+    assertThat(result.output).containsMatch(
+      """
+      |     PUBLIC KEY: [\da-f]{64}
+      |    PRIVATE KEY: [\da-f]{64}
+      |""".trimMargin()
+    )
+  }
+
   private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {
     val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
     File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)

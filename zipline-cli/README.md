@@ -34,6 +34,7 @@ Use Zipline without Gradle.
   -h, --help      Show this help message and exit.
   -V, --version   Print version information and exit.
 Commands:
-  download  Recursively download Zipline code to a directory from a URL.
-  help      Displays help information about the specified command
+  download           Recursively download Zipline code to a directory from a URL
+  generate-key-pair  Generate an Ed25519 key pair for ManifestSigner and ManifestVerifier
+  help               Displays help information about the specified command
 ```
