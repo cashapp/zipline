@@ -105,9 +105,15 @@ class ApplySourceMapToBytecodeTest {
     // Use QuickJS to compile a script into bytecode.
     val bytecode = quickJs.compile(js, "demo.js")
     val updatedBytecode = applySourceMapToBytecode(bytecode, sourceMap)
+    quickJs.evaluate(
+      """
+      |var exports = {};
+      |var module = { exports: exports };
+      |""".trimMargin()
+    )
     quickJs.execute(updatedBytecode)
     val exception = assertFailsWith<Exception> {
-      quickJs.evaluate("demo.sayHello()")
+      quickJs.evaluate("module.exports.sayHello()")
     }
     assertThat(exception.stackTraceToString()).startsWith("""
       |app.cash.zipline.QuickJsException: boom!
