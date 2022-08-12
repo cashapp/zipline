@@ -174,7 +174,7 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   const auto sourceCode = env->GetStringUTFChars(source, 0);
   const auto fileName = env->GetStringUTFChars(file, 0);
 
-  auto compiled = JS_Eval(jsContext, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY);
+  auto compiled = JS_Eval(jsContext, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_FLAG_STRICT);
 
   env->ReleaseStringUTFChars(file, fileName);
   env->ReleaseStringUTFChars(source, sourceCode);
@@ -422,7 +422,7 @@ jobject Context::eval(JNIEnv* env, jstring source, jstring file) {
 
   const char* fileName = env->GetStringUTFChars(file, 0);
 
-  JSValue evalValue = JS_Eval(jsContext, sourceCodeString.c_str(), sourceCodeString.length(), fileName, 0);
+  JSValue evalValue = JS_Eval(jsContext, sourceCodeString.c_str(), sourceCodeString.length(), fileName, JS_EVAL_FLAG_STRICT);
 
   env->ReleaseStringUTFChars(file, fileName);
 
