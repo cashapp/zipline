@@ -14,7 +14,7 @@ Serving presenters.js
 Run this:
 
 ```
-./gradlew -p samples emoji-search:presenters:jsBrowserProductionRun --info
+./gradlew -p samples emoji-search:presenters:serveDevelopmentZipline --info --continuous
 ```
 
 This will compile Kotlin/JS and serve it at [[http://localhost:8080/presenters.js]]. The server will
@@ -37,6 +37,6 @@ devserver running on the host machine (10.0.2.2). It will crash if that server i
 Live Edits
 ----------
 
-Make changes to `RealEmojiSearchPresenter`, then CTRL+C the devserver and start it again. When it's
-ready, relaunch the Android application.
+Make changes to `RealEmojiSearchPresenter` - this will trigger a recompilation of the Zipline code.
+When it's ready, relaunch the Android application.
 

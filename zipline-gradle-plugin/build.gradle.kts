@@ -15,6 +15,7 @@ dependencies {
   implementation(projects.zipline)
   implementation(projects.ziplineBytecode)
   implementation(projects.ziplineLoader)
+  implementation(libs.http4k.core)
   implementation(libs.kotlin.gradle.plugin)
   implementation(libs.kotlinx.serialization.json)
   implementation(libs.okHttp.core)

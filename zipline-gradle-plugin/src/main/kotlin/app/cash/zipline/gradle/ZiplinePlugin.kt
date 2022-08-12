@@ -15,10 +15,10 @@
  */
 package app.cash.zipline.gradle
 
+import java.util.Locale
 import app.cash.zipline.loader.internal.generateKeyPair
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
-import org.gradle.api.tasks.Delete
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -27,7 +27,6 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
-import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 import org.slf4j.LoggerFactory
 
 class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
@@ -54,10 +53,6 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
         registerCompileZiplineTask(target, kotlinBinary)
       }
     }
-
-    target.tasks.named("clean", Delete::class.java).configure { clean ->
-      clean.delete.add(target.projectDir.resolve(ZiplineCompileTask.configFilePath))
-    }
   }
 
   private fun registerCompileZiplineTask(project: Project, kotlinBinary: JsIrBinary) {
@@ -68,7 +63,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     // For every JS executable, create a task that compiles its .js to .zipline.
     //    input: build/compileSync/main/productionExecutable/kotlin
     //   output: build/compileSync/main/productionExecutable/kotlinZipline
-    project.tasks.register(compileZiplineTaskName, ZiplineCompileTask::class.java) { createdTask ->
+    val ziplineCompileTask = project.tasks.register(compileZiplineTaskName, ZiplineCompileTask::class.java) { createdTask ->
       createdTask.description = "Compile .js to .zipline"
       createdTask.dependsOn(kotlinBinary.linkTaskName)
       val linkTask = kotlinBinary.linkTask.get()
@@ -77,10 +72,14 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       createdTask.outputDir.set(linkOutputDir.parentFile.resolve("${linkOutputDir.name}Zipline"))
     }
 
-    project.tasks.withType(KotlinWebpack::class.java).configureEach { kotlinWebpack ->
-      if (kotlinBinary.mode.toString().equals(kotlinWebpack.mode.toString(), ignoreCase = true)) {
-        kotlinWebpack.dependsOn(compileZiplineTaskName)
-      }
+    val target = if (kotlinBinary.target.name == "js") "" else kotlinBinary.target.name
+    val capitalizedMode = kotlinBinary.mode.name
+      .lowercase(locale = Locale.US)
+      .replaceFirstChar { it.titlecase(locale = Locale.US) }
+    val serveTaskName = "serve${target}${capitalizedMode}Zipline"
+    project.tasks.register(serveTaskName, ZiplineServeTask::class.java) { createdTask ->
+      createdTask.description = "Serves Zipline files"
+      createdTask.inputDir = ziplineCompileTask.map { it.outputDir }
     }
   }
 
