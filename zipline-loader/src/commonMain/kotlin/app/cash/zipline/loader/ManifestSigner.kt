@@ -15,12 +15,8 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.loader.internal.signaturePayload
 import app.cash.zipline.loader.internal.tink.subtle.Ed25519Sign
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okio.ByteString
-import okio.ByteString.Companion.encodeUtf8
 
 class ManifestSigner private constructor(
   private val privateKeys: Map<String, Ed25519Sign>,
@@ -34,10 +30,9 @@ class ManifestSigner private constructor(
   /** Returns a copy of [manifest] that is signed with all private keys held by this signer. */
   fun sign(manifest: ZiplineManifest): ZiplineManifest {
     // Sign with each signing key.
-    val signaturePayload = signaturePayload(Json.encodeToString(manifest))
-    val signaturePayloadBytes = signaturePayload.encodeUtf8()
+    val signaturePayload = manifest.signaturePayload
     val signatures = privateKeys.mapValues { (_, signer) ->
-      val signatureBytes = signer.sign(signaturePayloadBytes)
+      val signatureBytes = signer.sign(signaturePayload)
       return@mapValues signatureBytes.hex()
     }
 
