@@ -186,6 +186,8 @@ There are a few things you can do to make sure that hot-reload is running as fas
    files).
 1. In your app's gradle.properties add `kotlin.incremental.js.ir=true` to enable Kotlin/JS
    incremental compile.
+1. In your app's gradle.properties add `org.gradle.unsafe.configuration-cache=true` to enable the
+   Gradle configuration cache.
 1. In your app's build.gradle.kts add `tasks.withType(DukatTask::class) { enabled = false }`
    to turn off the Dukat task if you are not using TypeScript type declarations.
 
