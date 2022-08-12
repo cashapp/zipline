@@ -180,6 +180,16 @@ Both signing and verifying accept multiple keys to support key rotation.
 Zipline is designed to run your organization's code when and where you want it. It does not
 offer a sandbox or process-isolation and should not be used to execute untrusted code.
 
+### Speeding Up Hot-Reload
+There are a few things you can do to make sure that hot-reload is running as fast as it can:
+1. Ensure you are running Gradle 7.5 or later (previous versions had a delay in picking up changed
+   files).
+2. In your app's gradle.properties add `kotlin.incremental.js.ir=true` to enable Kotlin/JS
+   incremental compile.
+3. In your app's gradle.properties add `org.gradle.unsafe.configuration-cache=true` to enable the
+   Gradle configuration cache.
+4. In your app's build.gradle.kts add `tasks.withType(DukatTask::class) { enabled = false }`
+   to turn off the Dukat task if you are not using TypeScript type declarations.
 
 ### Requirements
 
