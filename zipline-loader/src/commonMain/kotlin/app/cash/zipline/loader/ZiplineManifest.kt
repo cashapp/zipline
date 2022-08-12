@@ -17,9 +17,13 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.loader.internal.ByteStringAsHexSerializer
 import app.cash.zipline.loader.internal.isTopologicallySorted
+import app.cash.zipline.loader.internal.signaturePayload
 import app.cash.zipline.loader.internal.topologicalSort
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
 import okio.ByteString
+import okio.ByteString.Companion.encodeUtf8
 
 /**
  * Preferred construction is via [ZiplineManifest.create]
@@ -121,6 +125,20 @@ data class ZiplineManifest private constructor(
     mainFunction = mainFunction,
     version = version,
   )
+
+  /**
+   * Returns a byte string representation of this manifest appropriate for signing and signature
+   * verification. The encoding omits [data not covered by signing][unsigned] and is
+   * deterministically-encoded.
+   *
+   * Use this to sign a manifest without [ManifestSigner], such as when signing with a hardware
+   * security module. Create a manifest from those externally-generated signatures with [copy].
+   */
+  val signaturePayload: ByteString
+    get() {
+      val signaturePayloadString = signaturePayload(Json.encodeToString(this))
+      return signaturePayloadString.encodeUtf8()
+    }
 
   companion object {
     fun create(

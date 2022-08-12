@@ -55,8 +55,8 @@ class SignaturePayloadTest {
     )
 
     assertEquals(
-      signaturePayload(manifestA.toJson()),
-      signaturePayload(manifestB.toJson()),
+      manifestA.signaturePayload,
+      manifestB.signaturePayload,
     )
   }
 
@@ -87,8 +87,8 @@ class SignaturePayloadTest {
     )
 
     assertEquals(
-      signaturePayload(manifestA.toJson()),
-      signaturePayload(manifestB.toJson()),
+      manifestA.signaturePayload,
+      manifestB.signaturePayload,
     )
   }
 
@@ -118,8 +118,8 @@ class SignaturePayloadTest {
     )
 
     assertNotEquals(
-      signaturePayload(manifestA.toJson()),
-      signaturePayload(manifestB.toJson()),
+      manifestA.signaturePayload,
+      manifestB.signaturePayload,
     )
   }
 
@@ -142,8 +142,8 @@ class SignaturePayloadTest {
     )
 
     assertNotEquals(
-      signaturePayload(manifestA.toJson()),
-      signaturePayload(manifestB.toJson()),
+      manifestA.signaturePayload,
+      manifestB.signaturePayload,
     )
   }
 
@@ -166,8 +166,8 @@ class SignaturePayloadTest {
     )
 
     assertNotEquals(
-      signaturePayload(manifestA.toJson()),
-      signaturePayload(manifestB.toJson()),
+      manifestA.signaturePayload,
+      manifestB.signaturePayload,
     )
   }
 
