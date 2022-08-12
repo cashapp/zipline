@@ -17,6 +17,8 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.internal.DEFINE_JS
+import app.cash.zipline.internal.loadJsModule
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
@@ -30,10 +32,17 @@ import kotlinx.serialization.json.Json
 import okio.buffer
 import okio.source
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class ZiplineCompilerTest {
   private val quickJs = QuickJs.create()
+
+  @Before
+  fun setUp() {
+    // Configure QuickJS to support module loading.
+    quickJs.evaluate(DEFINE_JS)
+  }
 
   @After
   fun after() {
@@ -42,47 +51,41 @@ class ZiplineCompilerTest {
 
   @Test
   fun `write to and read from zipline`() {
-    assertZiplineCompile("src/test/resources/happyPath/", true) {
-      val readZiplineFile = it.source().buffer().use { source ->
-        ZiplineFile.read(source)
-      }
-      assertEquals(CURRENT_ZIPLINE_VERSION, readZiplineFile.ziplineVersion)
-      quickJs.execute(readZiplineFile.quickjsBytecode.toByteArray())
-      val exception = assertFailsWith<Exception> {
-        quickJs.evaluate("demo.sayHello()", "test.js")
-      }
-      // .kt files in the stacktrace means that the sourcemap was applied correctly.
-      assertThat(exception.stackTraceToString()).startsWith(
-        """
-          |app.cash.zipline.QuickJsException: boom!
-          |	at JavaScript.goBoom1(throwException.kt)
-          |	at JavaScript.goBoom2(throwException.kt:9)
-          |	at JavaScript.goBoom3(throwException.kt:6)
-          |	at JavaScript.sayHello(throwException.kt:3)
-          |	at JavaScript.<eval>(test.js)
-          |""".trimMargin()
-      )
+    val moduleNameToFile = compile("src/test/resources/happyPath/", true)
+    for ((moduleName, ziplineFile) in moduleNameToFile) {
+      quickJs.loadJsModule(moduleName, ziplineFile.quickjsBytecode.toByteArray())
     }
+
+    val exception = assertFailsWith<Exception> {
+      quickJs.evaluate("require('./hello.js').sayHello()", "test.js")
+    }
+    // .kt files in the stacktrace means that the sourcemap was applied correctly.
+    assertThat(exception.stackTraceToString()).startsWith(
+      """
+      |app.cash.zipline.QuickJsException: boom!
+      |	at JavaScript.goBoom1(throwException.kt)
+      |	at JavaScript.goBoom2(throwException.kt:9)
+      |	at JavaScript.goBoom3(throwException.kt:6)
+      |	at JavaScript.sayHello(throwException.kt:3)
+      |	at JavaScript.<eval>(test.js)
+      |""".trimMargin()
+    )
   }
 
   @Test
   fun `no source map`() {
-    assertZiplineCompile("src/test/resources/happyPathNoSourceMap/", false) {
-      val readZiplineFile = it.source().buffer().use { source ->
-        ZiplineFile.read(source)
-      }
-      assertEquals(CURRENT_ZIPLINE_VERSION, readZiplineFile.ziplineVersion)
-      quickJs.execute(readZiplineFile.quickjsBytecode.toByteArray())
-      assertEquals("Hello, guy!", quickJs.evaluate("greet('guy')", "test.js"))
+    val moduleNameToFile = compile("src/test/resources/happyPathNoSourceMap/", false)
+    for ((_, ziplineFile) in moduleNameToFile) {
+      quickJs.execute(ziplineFile.quickjsBytecode.toByteArray())
     }
+    assertEquals("Hello, guy!", quickJs.evaluate("greet('guy')", "test.js"))
   }
 
   @Test
   fun `js with imports and exports`() {
-    assertZiplineCompile("src/test/resources/jsWithImportsExports/", false) {
-      quickJs.execute(it.source().buffer().use { source ->
-        ZiplineFile.read(source)
-      }.quickjsBytecode.toByteArray())
+    val moduleNameToFile = compile("src/test/resources/jsWithImportsExports/", false)
+    for ((name, ziplineFile) in moduleNameToFile) {
+      quickJs.loadJsModule(name, ziplineFile.quickjsBytecode.toByteArray())
     }
   }
 
@@ -97,19 +100,15 @@ class ZiplineCompilerTest {
     }
 
     // Start with base compile to generate manifest and starting files
-    assertZiplineCompile("$rootProject/base", false) {
-      quickJs.execute(it.source().buffer().use { source ->
-        ZiplineFile.read(source)
-      }.quickjsBytecode.toByteArray())
-    }
+    compile("$rootProject/base", false)
 
-    assertZiplineIncrementalCompile("$rootProject/base",
+    val moduleNameToFile = assertZiplineIncrementalCompile("$rootProject/base",
       addedFiles = File("$rootProject/added").listFiles()!!.asList(),
       modifiedFiles = File("$rootProject/modified").listFiles()!!.asList(),
-      removedFiles = File("$rootProject/removed").listFiles()!!.asList()){
-      quickJs.execute(it.source().buffer().use { source ->
-        ZiplineFile.read(source)
-      }.quickjsBytecode.toByteArray())
+      removedFiles = File("$rootProject/removed").listFiles()!!.asList()
+    )
+    for ((_, ziplineFile) in moduleNameToFile) {
+      quickJs.execute(ziplineFile.quickjsBytecode.toByteArray())
     }
 
     // Jello file was removed
@@ -126,18 +125,17 @@ class ZiplineCompilerTest {
   }
 
   private fun readZiplineFile(file: File): ZiplineFile {
-    val readZiplineFile = file.source().buffer().use { source ->
+    val result = file.source().buffer().use { source ->
       ZiplineFile.read(source)
     }
-    assertEquals(CURRENT_ZIPLINE_VERSION, readZiplineFile.ziplineVersion)
-    return readZiplineFile
+    assertEquals(CURRENT_ZIPLINE_VERSION, result.ziplineVersion)
+    return result
   }
 
-  private fun assertZiplineCompile(
+  private fun compile(
     rootProject: String,
     dirHasSourceMaps: Boolean,
-    nonManifestFileAssertions: (ziplineFile: File) -> Unit
-  ) {
+  ): Map<String, ZiplineFile> {
     val inputDir = File("$rootProject/jsBuild")
     val outputDir = File("$rootProject/build/zipline")
     outputDir.mkdirs()
@@ -158,7 +156,7 @@ class ZiplineCompilerTest {
     val actualNumberFiles = (outputDir.listFiles()?.size ?: 0) - 1
     assertEquals(expectedNumberFiles, actualNumberFiles)
 
-    assertCompileResult(outputDir, mainModuleId, mainFunction, nonManifestFileAssertions)
+    return getCompileResult(outputDir, mainModuleId, mainFunction)
   }
 
   private fun assertZiplineIncrementalCompile(
@@ -166,8 +164,7 @@ class ZiplineCompilerTest {
     modifiedFiles: List<File>,
     addedFiles: List<File>,
     removedFiles: List<File>,
-    nonManifestFileAssertions: (ziplineFile: File) -> Unit
-  ) {
+  ): Map<String, ZiplineFile> {
     val inputDir = File("$rootProject/jsBuild")
     val outputDir = File("$rootProject/build/zipline")
     outputDir.mkdirs()
@@ -190,15 +187,14 @@ class ZiplineCompilerTest {
     val actualNumberFiles = (outputDir.listFiles()?.size ?: 0) - 1
     assertEquals(expectedNumberFiles, actualNumberFiles)
 
-    assertCompileResult(outputDir, mainModuleId, mainFunction, nonManifestFileAssertions)
+    return getCompileResult(outputDir, mainModuleId, mainFunction)
   }
 
-  private fun assertCompileResult(
+  private fun getCompileResult(
     outputDir: File,
     mainModuleId: String,
     mainFunction: String,
-    nonManifestFileAssertions: (ziplineFile: File) -> Unit
-  ) {
+  ): Map<String, ZiplineFile> {
     // Load and parse manifest
     val manifestFile = File(outputDir, "manifest.zipline.json")
     val manifestString = manifestFile.readText()
@@ -214,14 +210,10 @@ class ZiplineCompilerTest {
     }
 
     // Iterate over files by Manifest order
-    manifest.modules.keys.forEach { ziplineFilePath ->
-      // Ignore the Zipline Manifest JSON file
-      if (!ziplineFilePath.endsWith(".zipline.json")) nonManifestFileAssertions(
-        File(outputDir, ziplineFilePath
-          .removePrefix("./")
-          .replace(".js", ".zipline")
-        )
-      )
+    val result = mutableMapOf<String, ZiplineFile>()
+    for ((key, module) in manifest.modules) {
+      result[key] = readZiplineFile(File(outputDir, module.url))
     }
+    return result
   }
 }

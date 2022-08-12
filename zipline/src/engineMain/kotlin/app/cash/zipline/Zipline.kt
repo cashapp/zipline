@@ -16,7 +16,6 @@
 
 package app.cash.zipline
 
-import app.cash.zipline.internal.CURRENT_MODULE_ID
 import app.cash.zipline.internal.Console
 import app.cash.zipline.internal.CoroutineEventLoop
 import app.cash.zipline.internal.DEFINE_JS
@@ -32,6 +31,7 @@ import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventListenerName
 import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
+import app.cash.zipline.internal.loadJsModule
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -154,15 +154,11 @@ actual class Zipline private constructor(
   }
 
   fun loadJsModule(script: String, id: String) {
-    quickJs.evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
-    quickJs.evaluate(script, id)
-    quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
+    quickJs.loadJsModule(script, id)
   }
 
   fun loadJsModule(bytecode: ByteArray, id: String) {
-    quickJs.evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
-    quickJs.execute(bytecode)
-    quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
+    quickJs.loadJsModule(id, bytecode)
   }
 
   companion object {

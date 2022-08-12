@@ -16,9 +16,12 @@
 package app.cash.zipline.bytecode
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.internal.DEFINE_JS
+import app.cash.zipline.internal.loadJsModule
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import org.junit.After
+import org.junit.Before
 import org.junit.Test
 
 class ApplySourceMapToBytecodeTest {
@@ -34,6 +37,11 @@ class ApplySourceMapToBytecodeTest {
     |}
     """.trimMargin()
 
+  @Before
+  fun setUp() {
+    // Configure QuickJS to support module loading.
+    quickJs.evaluate(DEFINE_JS)
+  }
 
   @After fun tearDown() {
     quickJs.close()
@@ -105,15 +113,9 @@ class ApplySourceMapToBytecodeTest {
     // Use QuickJS to compile a script into bytecode.
     val bytecode = quickJs.compile(js, "demo.js")
     val updatedBytecode = applySourceMapToBytecode(bytecode, sourceMap)
-    quickJs.evaluate(
-      """
-      |var exports = {};
-      |var module = { exports: exports };
-      |""".trimMargin()
-    )
-    quickJs.execute(updatedBytecode)
+    quickJs.loadJsModule("demo", updatedBytecode)
     val exception = assertFailsWith<Exception> {
-      quickJs.evaluate("module.exports.sayHello()")
+      quickJs.evaluate("require('demo').sayHello()")
     }
     assertThat(exception.stackTraceToString()).startsWith("""
       |app.cash.zipline.QuickJsException: boom!
