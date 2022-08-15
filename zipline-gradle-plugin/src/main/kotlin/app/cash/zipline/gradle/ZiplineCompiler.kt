@@ -24,6 +24,10 @@ import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 import java.io.File
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -45,7 +49,7 @@ object ZiplineCompiler {
     version: String?,
   ) {
     val jsFiles = getJsFiles(inputDir.listFiles()!!.asList())
-    val modules = jsFiles.associate { jsFile -> compileSingleFile(jsFile, outputDir) }
+    val modules = compileFilesInParallel(jsFiles, outputDir)
     writeManifest(
       outputDir = outputDir,
       mainFunction = mainFunction,
@@ -82,7 +86,7 @@ object ZiplineCompiler {
 
     // Compile the newly added or modified files and add them into the module list
     val addedOrModifiedFiles = getJsFiles(addedFiles) + getJsFiles(modifiedFiles)
-    val compiledModules = addedOrModifiedFiles.associate { file -> compileSingleFile(file, outputDir) }
+    val compiledModules = compileFilesInParallel(addedOrModifiedFiles, outputDir)
 
     // Write back a new up-to-date manifest
     writeManifest(
@@ -93,6 +97,20 @@ object ZiplineCompiler {
       modules = unchangedModules + compiledModules,
       version = version,
     )
+  }
+
+  private fun compileFilesInParallel(
+    files: List<File>,
+    outputDir: File,
+  ) = runBlocking {
+    files
+      .map { file ->
+        async(Dispatchers.Default) {
+          compileSingleFile(file, outputDir)
+        }
+      }
+      .awaitAll()
+      .toMap()
   }
 
   private fun compileSingleFile(
