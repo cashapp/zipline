@@ -55,7 +55,7 @@ class EmojiSearchActivity : ComponentActivity() {
     val events = MutableSharedFlow<EmojiSearchEvent>(extraBufferCapacity = Int.MAX_VALUE)
     val models = MutableStateFlow(initialViewModel)
 
-    val emojiSearchZipline = EmojiSearchZipline()
+    val emojiSearchZipline = EmojiSearchZipline(applicationContext)
     emojiSearchZipline.produceModelsIn(scope, events, models)
 
     val profilerToggle = ProfilerToggle(
