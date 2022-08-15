@@ -44,9 +44,8 @@ object ZiplineCompiler {
     manifestSigner: ManifestSigner?,
     version: String?,
   ) {
-    val modules = mutableMapOf<String, ZiplineManifest.Module>()
     val jsFiles = getJsFiles(inputDir.listFiles()!!.asList())
-    jsFiles.forEach { jsFile -> compileSingleFile(jsFile, outputDir, modules) }
+    val modules = jsFiles.associate { jsFile -> compileSingleFile(jsFile, outputDir) }
     writeManifest(
       outputDir = outputDir,
       mainFunction = mainFunction,
@@ -70,22 +69,20 @@ object ZiplineCompiler {
     val modifiedFileNames = getJsFiles(modifiedFiles).map { it.name }.toSet()
     val removedFileNames = getJsFiles(removedFiles).map { it.name }.toSet()
 
-    val modules = mutableMapOf<String, ZiplineManifest.Module>()
-
     // Get the current manifest and remove any removed or modified modules
     val manifestFile = File(outputDir.path, MANIFEST_FILE_NAME)
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestFile.readText())
-    modules.putAll(manifest.modules.filter { (k, _) ->
+    val unchangedModules = manifest.modules.filter { (k, _) ->
       val moduleFileName = k.removePrefix(MODULE_PATH_PREFIX)
       moduleFileName !in removedFileNames && moduleFileName !in modifiedFileNames
-    })
+    }
 
     // Delete Zipline files for any removed JS files
     removedFileNames.forEach { File(outputDir.path + "/" + it.removeSuffix(".js") + ZIPLINE_EXTENSION).delete()}
 
     // Compile the newly added or modified files and add them into the module list
     val addedOrModifiedFiles = getJsFiles(addedFiles) + getJsFiles(modifiedFiles)
-    addedOrModifiedFiles.forEach { file -> compileSingleFile(file, outputDir, modules) }
+    val compiledModules = addedOrModifiedFiles.associate { file -> compileSingleFile(file, outputDir) }
 
     // Write back a new up-to-date manifest
     writeManifest(
@@ -93,7 +90,7 @@ object ZiplineCompiler {
       mainFunction = mainFunction,
       mainModuleId = mainModuleId,
       manifestSigner = manifestSigner,
-      modules = modules,
+      modules = unchangedModules + compiledModules,
       version = version,
     )
   }
@@ -101,8 +98,7 @@ object ZiplineCompiler {
   private fun compileSingleFile(
     jsFile: File,
     outputDir: File,
-    modules: MutableMap<String, ZiplineManifest.Module>
-  ) {
+  ): Pair<String, ZiplineManifest.Module> {
     val jsSourceMapFile = File("${jsFile.path}.map")
     val outputZiplineFilePath = jsFile.nameWithoutExtension + ZIPLINE_EXTENSION
     val outputZiplineFile = File(outputDir.path, outputZiplineFilePath)
@@ -134,7 +130,7 @@ object ZiplineCompiler {
           ?: "[]"
       )
 
-      modules["$MODULE_PATH_PREFIX${jsFile.name}"] = ZiplineManifest.Module(
+      return "$MODULE_PATH_PREFIX${jsFile.name}" to ZiplineManifest.Module(
         url = outputZiplineFilePath,
         sha256 = sha256,
         dependsOnIds = dependencies
@@ -147,7 +143,7 @@ object ZiplineCompiler {
     mainFunction: String? = null,
     mainModuleId: String? = null,
     manifestSigner: ManifestSigner? = null,
-    modules: MutableMap<String, ZiplineManifest.Module>,
+    modules: Map<String, ZiplineManifest.Module>,
     version: String? = null,
   ) {
     val unsignedManifest = ZiplineManifest.create(
