@@ -28,7 +28,9 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
 
-class EmojiSearchZipline {
+class EmojiSearchZipline(
+  val context: android.content.Context,
+) {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
@@ -37,6 +39,7 @@ class EmojiSearchZipline {
   private val manifestUrl = "http://10.0.2.2:8080/manifest.zipline.json"
 
   private val ziplineLoader = ZiplineLoader(
+    context = context,
     dispatcher = dispatcher,
     httpClient = client,
   )

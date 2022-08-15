@@ -4,11 +4,14 @@ apply(plugin = "app.cash.zipline")
 
 plugins {
   kotlin("multiplatform")
+  id("com.android.library")
   kotlin("plugin.serialization")
 }
 
 kotlin {
-  jvm()
+  android {
+    publishAllLibraryVariants()
+  }
 
   js {
     browser()
@@ -21,7 +24,7 @@ kotlin {
         implementation("app.cash.zipline:zipline")
       }
     }
-    val jvmMain by getting {
+    val androidMain by getting {
       dependencies {
         implementation(libs.okHttp.core)
         implementation(libs.sqldelight.driver.android)
@@ -29,6 +32,11 @@ kotlin {
       }
     }
   }
+}
+
+android {
+  compileSdk = libs.versions.compileSdk.get().toInt()
+  namespace = "app.cash.zipline.samples.emojisearch.presenters"
 }
 
 tasks.withType(ZiplineCompileTask::class) {

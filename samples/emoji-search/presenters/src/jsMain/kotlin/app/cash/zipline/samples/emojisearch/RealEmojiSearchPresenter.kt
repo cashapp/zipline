@@ -20,22 +20,20 @@ class RealEmojiSearchPresenter(
     "https://github.githubassets.com/images/icons/emoji/unicode/231a.png?v8"
   )
 
-  override suspend fun produceModels(
+  override fun produceModels(
     events: Flow<EmojiSearchEvent>
   ): Flow<EmojiSearchViewModel> {
-    return coroutineScope {
-      channelFlow {
-        send(EmojiSearchViewModel("", listOf(loadingImage)))
+    return channelFlow {
+      send(EmojiSearchViewModel("", listOf(loadingImage)))
 
-        loadImageIndex()
-        send(produceModel())
+      loadImageIndex()
+      send(produceModel())
 
-        events.collectLatest { event ->
-          when (event) {
-            is EmojiSearchEvent.SearchTermEvent -> {
-              latestSearchTerm = event.searchTerm
-              send(produceModel())
-            }
+      events.collectLatest { event ->
+        when (event) {
+          is EmojiSearchEvent.SearchTermEvent -> {
+            latestSearchTerm = event.searchTerm
+            send(produceModel())
           }
         }
       }

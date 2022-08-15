@@ -19,7 +19,7 @@ import app.cash.zipline.ZiplineService
 import kotlinx.coroutines.flow.Flow
 
 interface EmojiSearchPresenter : ZiplineService {
-  suspend fun produceModels(
+  fun produceModels(
     events: Flow<EmojiSearchEvent>
   ): Flow<EmojiSearchViewModel>
 }
