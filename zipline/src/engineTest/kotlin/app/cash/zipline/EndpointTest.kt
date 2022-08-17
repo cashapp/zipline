@@ -355,6 +355,27 @@ internal class EndpointTest {
     )
   }
 
+  @Test
+  fun extendInterface() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val service = object : ExtendsEchoService {
+      override fun echo(request: EchoRequest) = EchoResponse("ack ${request.message}")
+    }
+
+    endpointA.bind<ExtendsEchoService>("helloService", service)
+    val client = endpointB.take<ExtendsEchoService>("helloService")
+
+    val response = client.echo(EchoRequest("hello"))
+    assertEquals("ack hello", response.message)
+  }
+
+  interface ExtendsEchoService : ZiplineService, ExtendableInterface
+
+  interface ExtendableInterface {
+    fun echo(request: EchoRequest): EchoResponse
+  }
+
   @OptIn(ExperimentalStdlibApi::class)
   private val CoroutineScope.dispatcher: CoroutineDispatcher
     get() = coroutineContext[CoroutineDispatcher.Key]!!
