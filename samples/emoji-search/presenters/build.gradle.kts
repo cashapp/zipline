@@ -13,6 +13,8 @@ kotlin {
   iosArm64()
   iosX64()
   iosSimulatorArm64()
+  macosArm64()
+  macosX64()
 
   android()
 
@@ -43,12 +45,12 @@ kotlin {
       }
     }
 
-    val iosMain by creating {
+    val darwinMain by creating {
       dependsOn(hostMain)
     }
     targets.withType<KotlinNativeTarget> {
       val main by compilations.getting
-      main.defaultSourceSet.dependsOn(iosMain)
+      main.defaultSourceSet.dependsOn(darwinMain)
     }
   }
 }
