@@ -6,8 +6,9 @@ plugins {
 }
 
 kotlin {
-  ios()
-  iosSimulatorArm64("ios")
+  iosArm64()
+  iosX64()
+  iosSimulatorArm64()
 
   cocoapods {
     noPodspec()
