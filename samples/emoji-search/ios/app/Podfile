@@ -1,6 +1,11 @@
-platform :ios, '14.0'
 use_frameworks!
 
-target 'EmojiSearchApp' do
+target 'EmojiSearch-iOS' do
+  platform :ios, '14.0'
+  pod 'shared', :path => '../shared'
+end
+
+target 'EmojiSearch-macOS' do
+  platform :osx, '12.0'
   pod 'shared', :path => '../shared'
 end

@@ -15,6 +15,9 @@ Pod::Spec.new do |spec|
     # We're setting to 14.0 here to squash a warning since our demo app
     # uses 14.0+ UIKit features.
     spec.ios.deployment_target  = '14.0'
+    spec.osx.deployment_target = '12.0'
+
+    spec.osx.libraries = 'sqlite3'
 
     spec.pod_target_xcconfig = {
         'KOTLIN_PROJECT_PATH' => ':emoji-search:ios:shared',
