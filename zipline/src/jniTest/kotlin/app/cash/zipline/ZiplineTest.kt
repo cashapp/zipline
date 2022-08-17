@@ -25,8 +25,6 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.SuspendingPotatoService
-import app.cash.zipline.testing.helloService
-import app.cash.zipline.testing.yoService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
@@ -70,7 +68,7 @@ class ZiplineTest {
 
   @Test fun callServiceAfterCloseFailsGracefully() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
-    val service = zipline.helloService
+    val service = zipline.take<EchoService>("helloService")
 
     zipline.close()
     assertThat(assertFailsWith<IllegalStateException> {
@@ -81,9 +79,11 @@ class ZiplineTest {
   @Test fun jvmCallJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
-    assertThat(zipline.helloService.echo(EchoRequest("Jake")))
+    val helloService = zipline.take<EchoService>("helloService")
+    val yoService = zipline.take<EchoService>("yoService")
+    assertThat(helloService.echo(EchoRequest("Jake")))
       .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
-    assertThat(zipline.yoService.echo(EchoRequest("Kevin")))
+    assertThat(yoService.echo(EchoRequest("Kevin")))
       .isEqualTo(EchoResponse("yo from JavaScript, Kevin"))
   }
 

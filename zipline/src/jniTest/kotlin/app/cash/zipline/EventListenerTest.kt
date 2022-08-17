@@ -21,7 +21,6 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.LoggingEventListener
 import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
-import app.cash.zipline.testing.helloService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -54,7 +53,8 @@ class EventListenerTest {
   @Test fun jvmCallJsService() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
-    assertThat(zipline.helloService.echo(EchoRequest("Jake")))
+    val helloService = zipline.take<EchoService>("helloService")
+    assertThat(helloService.echo(EchoRequest("Jake")))
       .isEqualTo(EchoResponse("hello from JavaScript, Jake"))
 
     val name = "helloService"
