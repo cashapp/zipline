@@ -15,8 +15,9 @@
  */
 package app.cash.zipline.gradle
 
-import java.util.Locale
 import app.cash.zipline.loader.internal.generateKeyPair
+import java.io.File
+import java.util.Locale
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
@@ -65,11 +66,10 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     //   output: build/compileSync/main/productionExecutable/kotlinZipline
     val ziplineCompileTask = project.tasks.register(compileZiplineTaskName, ZiplineCompileTask::class.java) { createdTask ->
       createdTask.description = "Compile .js to .zipline"
-      createdTask.dependsOn(kotlinBinary.linkTaskName)
-      val linkTask = kotlinBinary.linkTask.get()
-      val linkOutputDir = project.file(linkTask.kotlinOptions.outputFile!!).parentFile
-      createdTask.inputDir.set(linkOutputDir)
-      createdTask.outputDir.set(linkOutputDir.parentFile.resolve("${linkOutputDir.name}Zipline"))
+
+      val linkOutputFolderProvider = kotlinBinary.linkTask.map { File(it.kotlinOptions.outputFile!!).parentFile }
+      createdTask.inputDir.fileProvider(linkOutputFolderProvider)
+      createdTask.outputDir.fileProvider(linkOutputFolderProvider.map { it.parentFile.resolve("${it.name}Zipline") })
     }
 
     val target = if (kotlinBinary.target.name == "js") "" else kotlinBinary.target.name
