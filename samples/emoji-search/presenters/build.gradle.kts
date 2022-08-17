@@ -1,4 +1,5 @@
 import app.cash.zipline.gradle.ZiplineCompileTask
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 apply(plugin = "app.cash.zipline")
 
@@ -9,6 +10,10 @@ plugins {
 }
 
 kotlin {
+  iosArm64()
+  iosX64()
+  iosSimulatorArm64()
+
   android()
 
   js {
@@ -22,12 +27,28 @@ kotlin {
         implementation("app.cash.zipline:zipline")
       }
     }
+    val hostMain by creating {
+      dependsOn(commonMain)
+      dependencies {
+        implementation("app.cash.zipline:zipline-loader")
+        api(libs.okio.core)
+      }
+    }
+
     val androidMain by getting {
+      dependsOn(hostMain)
       dependencies {
         implementation(libs.okHttp.core)
         implementation(libs.sqldelight.driver.android)
-        implementation("app.cash.zipline:zipline-loader")
       }
+    }
+
+    val iosMain by creating {
+      dependsOn(hostMain)
+    }
+    targets.withType<KotlinNativeTarget> {
+      val main by compilations.getting
+      main.defaultSourceSet.dependsOn(iosMain)
     }
   }
 }

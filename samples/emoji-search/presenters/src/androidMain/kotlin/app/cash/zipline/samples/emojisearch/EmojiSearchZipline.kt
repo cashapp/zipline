@@ -27,10 +27,9 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
+import android.content.Context
 
-class EmojiSearchZipline(
-  val context: android.content.Context,
-) {
+class EmojiSearchZipline(context: Context) {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
