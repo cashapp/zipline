@@ -48,7 +48,6 @@ kotlin {
       dependsOn(engineMain)
       dependencies {
         implementation(libs.okHttp.core)
-        implementation(libs.okHttp.mockWebServer)
       }
     }
     val jvmMain by getting {
@@ -98,6 +97,7 @@ kotlin {
       dependsOn(engineTest)
       dependencies {
         implementation(libs.junit)
+        implementation(libs.okHttp.mockWebServer)
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(libs.sqlite.jdbc)
