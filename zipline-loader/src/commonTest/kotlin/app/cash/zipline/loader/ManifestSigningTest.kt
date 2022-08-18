@@ -15,11 +15,10 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.fetcher.encodeToString
 import app.cash.zipline.loader.testing.SampleKeys
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 
 class ManifestSigningTest {
@@ -171,7 +170,7 @@ class ManifestSigningTest {
    * unknown fields are preserved. For tests, we can encode directly.
    */
   private fun ManifestVerifier.verify(manifest: ZiplineManifest) {
-    val manifestBytes = Json.encodeToString(manifest).encodeUtf8()
+    val manifestBytes = manifest.encodeToString().encodeUtf8()
     return verify(manifestBytes, manifest)
   }
 }

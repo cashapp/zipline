@@ -132,4 +132,10 @@ class LoadOrFallbackTest {
     assertEquals("firetruck", tester.success("red", "firetruck"))
     assertEquals("firetruck", tester.failureCodeFetchFails("red"))
   }
+
+  @Test
+  fun fallBackBecauseManifestIsTooLarge() = runBlocking {
+    tester.seedEmbedded("red", "firetruck")
+    assertEquals("firetruck", tester.failureManifestTooLarge("red"))
+  }
 }

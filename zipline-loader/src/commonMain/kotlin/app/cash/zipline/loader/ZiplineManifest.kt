@@ -16,12 +16,11 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.loader.internal.ByteStringAsHexSerializer
+import app.cash.zipline.loader.internal.fetcher.encodeToString
 import app.cash.zipline.loader.internal.isTopologicallySorted
 import app.cash.zipline.loader.internal.signaturePayload
 import app.cash.zipline.loader.internal.topologicalSort
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 
@@ -136,7 +135,7 @@ data class ZiplineManifest private constructor(
    */
   val signaturePayload: ByteString
     get() {
-      val signaturePayloadString = signaturePayload(Json.encodeToString(this))
+      val signaturePayloadString = signaturePayload(encodeToString())
       return signaturePayloadString.encodeUtf8()
     }
 

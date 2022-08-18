@@ -23,13 +23,13 @@ import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
+import app.cash.zipline.loader.internal.fetcher.encodeToString
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.toByteString
 import okio.HashingSink
@@ -174,7 +174,7 @@ object ZiplineCompiler {
     val manifest = manifestSigner?.sign(unsignedManifest) ?: unsignedManifest
 
     val manifestFile = File(outputDir.path, MANIFEST_FILE_NAME)
-    manifestFile.writeText(Json.encodeToString(manifest))
+    manifestFile.writeText(manifest.encodeToString())
   }
 
   private fun getJsFiles(files: List<File>) = files.filter { it.path.endsWith(".js") }

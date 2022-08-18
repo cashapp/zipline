@@ -17,10 +17,10 @@ package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineHttpClient
+import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonObject
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
@@ -50,19 +50,22 @@ internal class HttpFetcher(
     url: String,
     freshAtEpochMs: Long,
   ): LoadedManifest {
-    val manifestBytesWithoutBaseUrl = fetchByteString(applicationName, null, url)
+    val manifestBytesWithoutBaseUrlUtf8 = fetchByteString(applicationName, null, url)
+    val manifestBytesWithoutBaseUrl = manifestBytesWithoutBaseUrlUtf8.utf8()
+    check(manifestBytesWithoutBaseUrl.length <= MANIFEST_MAX_SIZE) {
+      "manifest larger than $MANIFEST_MAX_SIZE: ${manifestBytesWithoutBaseUrl.length}"
+    }
 
     try {
-      val manifestJsonElementWithoutBaseUrl =
-        jsonForManifest.parseToJsonElement(manifestBytesWithoutBaseUrl.utf8())
+      val manifestJsonElementWithoutBaseUrl = Json.parseToJsonElement(manifestBytesWithoutBaseUrl)
       val manifestJsonElement = withBaseUrl(manifestJsonElementWithoutBaseUrl, url)
-      val manifestJson = jsonForManifest.encodeToString(
+      val manifestJson = Json.encodeToString(
         JsonElement.serializer(),
         manifestJsonElement
       )
       return LoadedManifest(
         manifestBytes = manifestJson.encodeUtf8(),
-        manifest = jsonForManifest.decodeFromJsonElement(manifestJsonElement),
+        manifest = manifestJsonElement.decodeToManifest(),
         freshAtEpochMs = freshAtEpochMs,
       )
     } catch (e: Exception) {

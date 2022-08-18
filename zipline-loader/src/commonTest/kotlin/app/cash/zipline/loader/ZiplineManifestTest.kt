@@ -16,12 +16,11 @@
 
 package app.cash.zipline.loader
 
-import app.cash.zipline.loader.internal.fetcher.jsonForManifest
+import app.cash.zipline.loader.internal.fetcher.decodeToManifest
+import app.cash.zipline.loader.internal.fetcher.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
 import okio.ByteString.Companion.encodeUtf8
 
 class ZiplineManifestTest {
@@ -173,7 +172,7 @@ class ZiplineManifestTest {
       mainFunction = "zipline.ziplineMain",
     )
 
-    val serialized = jsonForManifest.encodeToString(original)
+    val serialized = original.encodeToString()
     assertEquals(
         """
         |{
@@ -206,7 +205,7 @@ class ZiplineManifestTest {
       prettyPrint(serialized)
     )
 
-    val parsed = jsonForManifest.decodeFromString<ZiplineManifest>(serialized)
+    val parsed = serialized.decodeToManifest()
     assertEquals(original, parsed)
   }
 
@@ -238,7 +237,7 @@ class ZiplineManifestTest {
 
     assertEquals(
       manifest,
-      jsonForManifest.decodeFromString(serialized),
+      serialized.decodeToManifest(),
     )
   }
 
@@ -270,7 +269,7 @@ class ZiplineManifestTest {
 
     assertEquals(
       manifest,
-      jsonForManifest.decodeFromString(serialized),
+      serialized.decodeToManifest(),
     )
   }
 }

@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.fetcher.encodeToString
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
@@ -28,8 +29,6 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.encodeUtf8
 
 /**
@@ -67,7 +66,7 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(testFixtures.manifest)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to Json.encodeToString(manifest).encodeUtf8(),
+      manifestUrl to manifest.encodeToString().encodeUtf8(),
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
@@ -95,7 +94,7 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(manifestWithBadChecksum)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to Json.encodeToString(manifest).encodeUtf8(),
+      manifestUrl to manifest.encodeToString().encodeUtf8(),
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.alphaByteString,
     )
@@ -116,7 +115,7 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(testFixtures.manifest)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to Json.encodeToString(manifest).encodeUtf8(),
+      manifestUrl to manifest.encodeToString().encodeUtf8(),
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
