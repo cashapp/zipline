@@ -198,11 +198,11 @@ Zipline works on Android 4.3+ (API level 18+), Java 8+, and [Kotlin/Native].
 Zipline uses unstable APIs in its implementation and is sensitive to version updates for these
 components.
 
-| Component            | Supported Version | Notes                                                                                                 |
-| :------------------- | :---------------- | :---------------------------------------------------------------------------------------------------- |
-| Kotlin Compiler      | 1.7.10            | Kotlin compiler plugins do not yet have a stable API.                                                 |
-| Kotlin Coroutines    | 1.6.3-native-mt   | For `invokeOnClose()`.                                                                                |
-| Kotlin Serialization | 1.3.3             | For `decodeFromDynamic()`, `encodeToDynamic()`, `EmptySerializersModule`, and `ContextualSerializer`. |
+| Component            | Supported Version | Notes                                                                       |
+| :------------------- | :---------------- | :-------------------------------------------------------------------------- |
+| Kotlin Compiler      | 1.7.10            | Kotlin compiler plugins do not yet have a stable API.                       |
+| Kotlin Coroutines    | 1.6.3-native-mt   | For `invokeOnClose()`.                                                      |
+| Kotlin Serialization | 1.4.0             | For `decodeFromDynamic()`, `encodeToDynamic()`, and `ContextualSerializer`. |
 
 We intend to use stable APIs as soon as they are available.
 
