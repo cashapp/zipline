@@ -49,14 +49,20 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     val extension = target.extensions.findByType(KotlinMultiplatformExtension::class.java)
       ?: return
 
+    val configuration = target.extensions.create("zipline", ZiplineExtension::class.java)
+
     extension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
       kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
-        registerCompileZiplineTask(target, kotlinBinary)
+        registerCompileZiplineTask(target, kotlinBinary, configuration)
       }
     }
   }
 
-  private fun registerCompileZiplineTask(project: Project, kotlinBinary: JsIrBinary) {
+  private fun registerCompileZiplineTask(
+    project: Project,
+    kotlinBinary: JsIrBinary,
+    configuration: ZiplineExtension,
+  ) {
     // Like 'compileDevelopmentExecutableKotlinJsZipline'.
     val linkTaskName = kotlinBinary.linkTaskName
     val compileZiplineTaskName = "${linkTaskName}Zipline"
@@ -70,6 +76,10 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       val linkOutputFolderProvider = kotlinBinary.linkTask.map { File(it.kotlinOptions.outputFile!!).parentFile }
       createdTask.inputDir.fileProvider(linkOutputFolderProvider)
       createdTask.outputDir.fileProvider(linkOutputFolderProvider.map { it.parentFile.resolve("${it.name}Zipline") })
+
+      createdTask.mainModuleId.set(configuration.mainModuleId)
+      createdTask.mainFunction.set(configuration.mainFunction)
+      createdTask.version.set(configuration.version)
     }
 
     val target = if (kotlinBinary.target.name == "js") "" else kotlinBinary.target.name

@@ -38,6 +38,6 @@ val launchGreetService by tasks.creating(JavaExec::class) {
   mainClass.set("app.cash.zipline.tests.LaunchGreetServiceJvmKt")
 }
 
-tasks.withType(ZiplineCompileTask::class) {
+zipline {
   mainFunction.set("app.cash.zipline.tests.launchGreetService")
 }

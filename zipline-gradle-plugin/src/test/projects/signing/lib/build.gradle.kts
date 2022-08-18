@@ -20,9 +20,12 @@ kotlin {
   }
 }
 
-tasks.withType(ZiplineCompileTask::class) {
+zipline {
   mainModuleId.set("")
   mainFunction.set("")
+}
+
+tasks.withType(ZiplineCompileTask::class) {
   signingKeys.create("key1") {
     privateKeyHex = "ae4737d95df505eac2424000559d072d91db00192756b265a9792007d743cdf7"
   }

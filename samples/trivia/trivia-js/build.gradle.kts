@@ -1,10 +1,9 @@
 import app.cash.zipline.gradle.ZiplineCompileTask
 
-apply(plugin = "app.cash.zipline")
-
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
+  id("app.cash.zipline")
 }
 
 kotlin {
@@ -24,7 +23,7 @@ kotlin {
 }
 
 
-tasks.withType(ZiplineCompileTask::class) {
+zipline {
   mainFunction.set("app.cash.zipline.samples.trivia.launchZipline")
 }
 

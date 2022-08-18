@@ -1,5 +1,4 @@
 
-import org.jetbrains.kotlin.gradle.dsl.KotlinCompile
 buildscript {
   dependencies {
     classpath(libs.android.gradle.plugin)
