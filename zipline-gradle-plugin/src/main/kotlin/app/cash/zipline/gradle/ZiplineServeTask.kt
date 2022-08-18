@@ -19,9 +19,7 @@ package app.cash.zipline.gradle
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
@@ -37,16 +35,14 @@ import org.http4k.server.Http4kServer
 import org.http4k.server.SunHttp
 import org.http4k.server.asServer
 
-abstract class ZiplineServeTask @Inject constructor(
-  objectFactory: ObjectFactory
-) : DefaultTask() {
+abstract class ZiplineServeTask : DefaultTask() {
 
   @get:Input
-  lateinit var inputDir: Provider<DirectoryProperty>
+  abstract val inputDir: DirectoryProperty
 
-  @Optional
+  @get:Optional
   @get:Input
-  val port: Property<Int> = objectFactory.property(Int::class.java)
+  abstract val port: Property<Int>
 
   @TaskAction
   fun task() {
@@ -55,7 +51,7 @@ abstract class ZiplineServeTask @Inject constructor(
     val deploymentHandle = deploymentRegistry.get(deploymentId, ZiplineServerDeploymentHandle::class.java)
     if (deploymentHandle == null) {
       val server = routes(
-        "/" bind static(Directory(inputDir.get().asFile.get().absolutePath), Pair("zipline", ContentType.TEXT_PLAIN))
+        "/" bind static(Directory(inputDir.get().asFile.absolutePath), Pair("zipline", ContentType.TEXT_PLAIN))
       ).asServer(SunHttp(port.orElse(8080).get()))
 
       deploymentRegistry.start(

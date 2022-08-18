@@ -79,7 +79,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     val serveTaskName = "serve${target}${capitalizedMode}Zipline"
     project.tasks.register(serveTaskName, ZiplineServeTask::class.java) { createdTask ->
       createdTask.description = "Serves Zipline files"
-      createdTask.inputDir = ziplineCompileTask.map { it.outputDir }
+      createdTask.inputDir.set(ziplineCompileTask.flatMap { it.outputDir })
     }
   }
 

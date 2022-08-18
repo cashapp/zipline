@@ -18,12 +18,10 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.loader.ManifestSigner
 import java.io.File
-import javax.inject.Inject
 import okio.ByteString.Companion.decodeHex
 import org.gradle.api.DefaultTask
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.DirectoryProperty
-import org.gradle.api.model.ObjectFactory
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -43,32 +41,29 @@ import org.gradle.work.InputChanges
  * https://kotlinlang.org/docs/js-project-setup.html#webpack-configuration-file
  * https://webpack.js.org/concepts/configuration/
  */
-abstract class ZiplineCompileTask @Inject constructor(
-  objectFactory: ObjectFactory
-) : DefaultTask() {
+abstract class ZiplineCompileTask : DefaultTask() {
 
   @get:Incremental
   @get:InputDirectory
-  val inputDir: DirectoryProperty = objectFactory.directoryProperty()
+  abstract val inputDir: DirectoryProperty
 
   @get:OutputDirectory
-  val outputDir: DirectoryProperty = objectFactory.directoryProperty()
+  abstract val outputDir: DirectoryProperty
 
-  @Optional
+  @get:Optional
   @get:Input
-  val mainModuleId: Property<String> = objectFactory.property(String::class.java)
+  abstract val mainModuleId: Property<String>
 
-  @Optional
+  @get:Optional
   @get:Input
-  val mainFunction: Property<String> = objectFactory.property(String::class.java)
+  abstract val mainFunction: Property<String>
 
   @get:Input
-  val signingKeys: NamedDomainObjectContainer<ManifestSigningKey> =
-    objectFactory.domainObjectContainer(ManifestSigningKey::class.java)
+  abstract val signingKeys: NamedDomainObjectContainer<ManifestSigningKey>
 
-  @Optional
+  @get:Optional
   @get:Input
-  val version: Property<String> = objectFactory.property(String::class.java)
+  abstract val version: Property<String>
 
   @TaskAction
   fun task(inputChanges: InputChanges) {
