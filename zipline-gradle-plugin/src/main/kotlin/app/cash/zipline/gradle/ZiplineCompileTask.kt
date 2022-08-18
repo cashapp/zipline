@@ -18,10 +18,11 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.loader.ManifestSigner
 import java.io.File
-import okio.ByteString.Companion.decodeHex
+import java.io.Serializable
+import okio.ByteString
 import org.gradle.api.DefaultTask
-import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -59,7 +60,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
   abstract val mainFunction: Property<String>
 
   @get:Input
-  abstract val signingKeys: NamedDomainObjectContainer<ManifestSigningKey>
+  abstract val signingKeys: ListProperty<ManifestSigningKey>
 
   @get:Optional
   @get:Input
@@ -71,11 +72,12 @@ abstract class ZiplineCompileTask : DefaultTask() {
     val outputDirFile = outputDir.get().asFile
     val mainModuleId = mainModuleId.orNull
     val mainFunction = mainFunction.orNull
+    val signingKeys = signingKeys.get()
     val manifestSigner = when {
       signingKeys.isNotEmpty() -> {
         val builder = ManifestSigner.Builder()
-        for ((name, manifestSigningKey) in signingKeys.asMap) {
-          builder.addEd25519(name, manifestSigningKey.privateKeyHex.decodeHex())
+        for (signingKey in signingKeys) {
+          builder.addEd25519(signingKey.name, signingKey.privateKey)
         }
         builder.build()
       }
@@ -111,4 +113,9 @@ abstract class ZiplineCompileTask : DefaultTask() {
       )
     }
   }
+
+  data class ManifestSigningKey(
+    val name: String,
+    val privateKey: ByteString,
+  ): Serializable
 }

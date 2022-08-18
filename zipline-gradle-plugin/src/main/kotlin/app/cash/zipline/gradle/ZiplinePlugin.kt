@@ -15,9 +15,11 @@
  */
 package app.cash.zipline.gradle
 
+import app.cash.zipline.gradle.ZiplineCompileTask.ManifestSigningKey
 import app.cash.zipline.loader.internal.generateKeyPair
 import java.io.File
 import java.util.Locale
+import okio.ByteString.Companion.decodeHex
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
@@ -80,6 +82,23 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       createdTask.mainModuleId.set(configuration.mainModuleId)
       createdTask.mainFunction.set(configuration.mainFunction)
       createdTask.version.set(configuration.version)
+
+      fun <T> Iterable<Provider<T>>.flatten(): Provider<List<T>> {
+        val empty = project.provider { emptyList<T>() }
+        return fold(empty) { listProvider, elementProvider ->
+          listProvider.zip(elementProvider, Collection<T>::plus)
+        }
+      }
+
+      createdTask.signingKeys.set(project.provider {
+        configuration.signingKeys.asMap.values
+      }.flatMap {
+        it.map { dslKey ->
+          dslKey.privateKeyHex.map { privateKeyHex ->
+            ManifestSigningKey(dslKey.name, privateKeyHex.decodeHex())
+          }
+        }.flatten()
+      })
     }
 
     val target = if (kotlinBinary.target.name == "js") "" else kotlinBinary.target.name
