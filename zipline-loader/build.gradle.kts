@@ -48,6 +48,7 @@ kotlin {
       dependsOn(engineMain)
       dependencies {
         implementation(libs.okHttp.core)
+        implementation(libs.okHttp.mockWebServer)
       }
     }
     val jvmMain by getting {
