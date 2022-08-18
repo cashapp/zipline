@@ -16,6 +16,10 @@
 package app.cash.zipline.loader.internal
 
 import app.cash.zipline.Zipline
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
 internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
   loadJsModule(bytecode, id)
+
+actual val ioDispatcher: CoroutineContext = EmptyCoroutineContext

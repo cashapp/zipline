@@ -16,6 +16,7 @@
 package app.cash.zipline.loader.internal
 
 import app.cash.zipline.Zipline
+import kotlin.coroutines.CoroutineContext
 
 // TODO: drop this once we adopt Kotlin Hierarchical Multiplatform projects
 internal expect fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String)
@@ -23,3 +24,5 @@ internal expect fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: S
 const val MANIFEST_FILE_NAME = "manifest.zipline.json"
 fun getApplicationManifestFileName(applicationName: String) =
   "$applicationName.$MANIFEST_FILE_NAME"
+
+expect val ioDispatcher: CoroutineContext

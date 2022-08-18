@@ -16,6 +16,8 @@
 package app.cash.zipline.loader.internal.cache
 
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
+import app.cash.zipline.loader.internal.ioDispatcher
+import kotlinx.coroutines.withContext
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.Closeable
@@ -68,7 +70,7 @@ internal class ZiplineCache internal constructor(
   private val maxSizeInBytes: Long,
   private val nowEpochMs: () -> Long,
 ) : Closeable by databaseCloseable {
-  fun write(
+  suspend fun write(
     applicationName: String,
     sha256: ByteString,
     content: ByteString,
@@ -85,9 +87,11 @@ internal class ZiplineCache internal constructor(
     }
   }
 
-  private fun write(metadata: Files, content: ByteString) {
-    fileSystem.write(path(metadata)) {
-      write(content)
+  private suspend fun write(metadata: Files, content: ByteString) {
+    withContext(ioDispatcher) {
+      fileSystem.write(path(metadata)) {
+        write(content)
+      }
     }
     setReady(metadata, content.size.toLong())
   }
@@ -117,7 +121,7 @@ internal class ZiplineCache internal constructor(
     return content
   }
 
-  internal fun getOrPutManifest(
+  internal suspend fun getOrPutManifest(
     applicationName: String,
     content: ByteString,
     putFreshAtMs: Long,
@@ -133,12 +137,12 @@ internal class ZiplineCache internal constructor(
     )
   }
 
-  fun read(sha256: ByteString): ByteString? {
+  suspend fun read(sha256: ByteString): ByteString? {
     val metadata = database.filesQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
     return read(metadata)
   }
 
-  private fun read(metadata: Files): ByteString? {
+  private suspend fun read(metadata: Files): ByteString? {
     if (metadata.file_state != FileState.READY) return null
 
     // Update the used at timestamp.
@@ -150,8 +154,10 @@ internal class ZiplineCache internal constructor(
     )
     val path = path(metadata)
     val result = try {
-      fileSystem.read(path) {
-        readByteString()
+      withContext(ioDispatcher) {
+        fileSystem.read(path) {
+          readByteString()
+        }
       }
     } catch (e: FileNotFoundException) {
       null // Might have been pruned while we were trying to read?
@@ -160,7 +166,9 @@ internal class ZiplineCache internal constructor(
     if (result == null || result.sha256() != metadata.sha256_hex.decodeHex()) {
       // File is absent or corrupt. Delete quietly.
       try {
-        fileSystem.delete(path)
+        withContext(ioDispatcher) {
+          fileSystem.delete(path)
+        }
         database.filesQueries.delete(metadata.id)
       } catch (ignored: IOException) {
       }
@@ -181,7 +189,7 @@ internal class ZiplineCache internal constructor(
   }
 
   /** Returns null if there is no pinned manifest. */
-  fun getPinnedManifest(applicationName: String): LoadedManifest? {
+  suspend fun getPinnedManifest(applicationName: String): LoadedManifest? {
     val manifestFile = database.filesQueries
       .selectPinnedManifest(applicationName)
       .executeAsOneOrNull() ?: return null
@@ -193,7 +201,7 @@ internal class ZiplineCache internal constructor(
   }
 
   /** Pins manifest and unpins all other files and manifests */
-  fun pinManifest(applicationName: String, loadedManifest: LoadedManifest) {
+  suspend fun pinManifest(applicationName: String, loadedManifest: LoadedManifest) {
     val manifestBytes = loadedManifest.manifestBytes
     val manifestMetadata = getOrPutManifest(
       applicationName = applicationName,
@@ -220,7 +228,7 @@ internal class ZiplineCache internal constructor(
    * Unpin manifest and make all files open to pruning, except those included
    * in another pinned manifest.
    */
-  fun unpinManifest(applicationName: String, loadedManifest: LoadedManifest) {
+  suspend fun unpinManifest(applicationName: String, loadedManifest: LoadedManifest) {
     val unpinManifestBytes = loadedManifest.manifestBytes
     val unpinManifestFile = database.filesQueries
       .get(unpinManifestBytes.sha256().hex())
@@ -311,7 +319,7 @@ internal class ZiplineCache internal constructor(
    * particular, a file that exceeds the cache [maxSizeInBytes] will be deleted before this function
    * returns. Load the file before calling this method if that's problematic.
    */
-  private fun setReady(
+  private suspend fun setReady(
     metadata: Files,
     fileSizeBytes: Long,
   ) {
@@ -348,16 +356,18 @@ internal class ZiplineCache internal constructor(
    *
    * It will also delete dirty files that were open when the previous run completed.
    */
-  fun initialize() {
+  suspend fun initialize() {
     deleteDirtyFiles()
     prune()
   }
 
-  private fun deleteDirtyFiles() {
+  private suspend fun deleteDirtyFiles() {
     while (true) {
       val dirtyFile = database.filesQueries.selectAnyDirtyFile().executeAsOneOrNull() ?: return
       try {
-        fileSystem.delete(path(dirtyFile))
+        withContext(ioDispatcher) {
+          fileSystem.delete(path(dirtyFile))
+        }
       } catch (e: IOException) {
         return // If we can't delete files, give up quietly.
       }
@@ -374,14 +384,16 @@ internal class ZiplineCache internal constructor(
    * assuming UNIX filesystem semantics where open files are not deleted from under processes that
    * have opened them.
    */
-  fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
+  suspend fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
     while (true) {
       val currentSize = database.filesQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
       if (currentSize <= maxSizeInBytes) return
 
       val toDelete = database.filesQueries.selectOldestReady().executeAsOneOrNull() ?: return
 
-      fileSystem.delete(path(toDelete))
+      withContext(ioDispatcher) {
+        fileSystem.delete(path(toDelete))
+      }
       database.filesQueries.delete(toDelete.id)
     }
   }
@@ -399,7 +411,7 @@ internal class ZiplineCache internal constructor(
   /**
    * Update file record freshAt timestamp to reflect that the manifest is still seen as fresh.
    */
-  fun updateManifestFreshAt(applicationName: String, loadedManifest: LoadedManifest) {
+  suspend fun updateManifestFreshAt(applicationName: String, loadedManifest: LoadedManifest) {
     val freshAtMs = loadedManifest.freshAtEpochMs
     val manifestMetadata = getOrPutManifest(
       applicationName = applicationName,

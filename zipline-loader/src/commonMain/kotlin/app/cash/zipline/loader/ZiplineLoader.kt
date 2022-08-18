@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.withContext
@@ -109,7 +110,10 @@ class ZiplineLoader internal constructor(
       maxSizeInBytes = maxSizeInBytes,
       nowEpochMs = nowEpochMs,
     )
-    cache.initialize()
+    // TODO: make ZiplineLoader.withCache() defer initialization or launch it
+    runBlocking {
+      cache.initialize()
+    }
     return ZiplineLoader(
       sqlDriverFactory = sqlDriverFactory,
       dispatcher = dispatcher,
@@ -352,7 +356,7 @@ class ZiplineLoader internal constructor(
     }
   }
 
-  private fun loadCachedOrEmbeddedManifest(
+  private suspend fun loadCachedOrEmbeddedManifest(
     applicationName: String,
   ): LoadedManifest? {
     val result = cachingFetcher?.loadPinnedManifest(applicationName)

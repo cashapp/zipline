@@ -37,7 +37,7 @@ internal class FsCachingFetcher(
     }
   }
 
-  fun loadPinnedManifest(applicationName: String): LoadedManifest? {
+  suspend fun loadPinnedManifest(applicationName: String): LoadedManifest? {
     return cache.getPinnedManifest(applicationName)
   }
 
@@ -47,18 +47,18 @@ internal class FsCachingFetcher(
    * This assumes that all artifacts in [loadedManifest] are currently pinned. Fetchers do not
    * necessarily enforce this assumption.
    */
-  fun pin(applicationName: String, loadedManifest: LoadedManifest) =
+  suspend fun pin(applicationName: String, loadedManifest: LoadedManifest) =
     cache.pinManifest(applicationName, loadedManifest)
 
   /**
    * Removes the pins for [applicationName] in [loadedManifest] so they may be pruned.
    */
-  fun unpin(applicationName: String, loadedManifest: LoadedManifest) =
+  suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest) =
     cache.unpinManifest(applicationName, loadedManifest)
 
   /**
    * Updates freshAt timestamp for manifests that in later network fetch is still the freshest.
    */
-  fun updateFreshAt(applicationName: String, loadedManifest: LoadedManifest) =
+  suspend fun updateFreshAt(applicationName: String, loadedManifest: LoadedManifest) =
     cache.updateManifestFreshAt(applicationName, loadedManifest)
 }

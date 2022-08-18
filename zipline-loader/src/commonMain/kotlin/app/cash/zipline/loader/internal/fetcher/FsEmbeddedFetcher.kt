@@ -16,6 +16,8 @@
 package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
+import app.cash.zipline.loader.internal.ioDispatcher
+import kotlinx.coroutines.withContext
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
@@ -35,18 +37,22 @@ internal class FsEmbeddedFetcher(
     url: String,
   ): ByteString? = fetchByteString(embeddedDir / sha256.hex())
 
-  fun loadEmbeddedManifest(applicationName: String): LoadedManifest? {
+  suspend fun loadEmbeddedManifest(applicationName: String): LoadedManifest? {
     val manifestBytes = fetchByteString(
       filePath = embeddedDir / getApplicationManifestFileName(applicationName)
     ) ?: return null
     return LoadedManifest(manifestBytes)
   }
 
-  private fun fetchByteString(filePath: Path) = when {
-    embeddedFileSystem.exists(filePath) -> embeddedFileSystem.read(filePath) {
-      readByteString()
+  private suspend fun fetchByteString(filePath: Path): ByteString? {
+    return withContext(ioDispatcher) {
+      when {
+        embeddedFileSystem.exists(filePath) -> embeddedFileSystem.read(filePath) {
+          readByteString()
+        }
+        else -> null
+      }
     }
-    else -> null
   }
 }
 

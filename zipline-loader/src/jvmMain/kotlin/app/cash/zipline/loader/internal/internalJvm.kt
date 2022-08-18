@@ -20,6 +20,8 @@ import app.cash.zipline.loader.internal.tink.subtle.Field25519
 import app.cash.zipline.loader.internal.tink.subtle.KeyPair
 import app.cash.zipline.loader.internal.tink.subtle.newKeyPairFromSeed
 import java.security.SecureRandom
+import kotlin.coroutines.CoroutineContext
+import kotlinx.coroutines.Dispatchers
 import okio.ByteString.Companion.toByteString
 
 internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
@@ -37,3 +39,5 @@ fun generateKeyPair(): KeyPair {
 
   return newKeyPairFromSeed(secretSeed.toByteString())
 }
+
+actual val ioDispatcher: CoroutineContext = Dispatchers.IO
