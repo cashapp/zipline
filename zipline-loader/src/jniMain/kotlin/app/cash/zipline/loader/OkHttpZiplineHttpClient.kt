@@ -56,6 +56,9 @@ internal class OkHttpZiplineHttpClient(
         ) {
           val byteString = response.use {
             try {
+              if (!response.isSuccessful) {
+                throw IOException("failed to fetch $url: ${response.code}")
+              }
               response.body!!.byteString()
             } catch (e: IOException) {
               continuation.resumeWithException(e)

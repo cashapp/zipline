@@ -97,6 +97,7 @@ kotlin {
       dependsOn(engineTest)
       dependencies {
         implementation(libs.junit)
+        implementation(libs.okHttp.mockWebServer)
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(libs.sqlite.jdbc)
