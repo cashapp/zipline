@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 
-## [0.9.0] - 2022-08-05
+## [0.9.1] - 2022-08-18
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -12,6 +12,16 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * New: Gradle extension `zipline {}` block.
+ * New: Compile files in parallel.
+ * New: Replace webpack with a dedicated static file server. Use `serveDevelopmentZipline` or
+   `serveProductionZipline` to serve an application locally.
+ * Fix: Always run Kotlin/JS in strict mode.
+ * Upgrade: [Kotlin Serialization 1.4.0][kotlin_serialization_1_4_0].
+
+
+## [0.9.0] - 2022-08-05
 
  * New: `ZiplineLoader` is a new module to launch Zipline applications quickly. It supports caching
    including offline launching, code signing, and launching from a flow.
@@ -151,3 +161,4 @@ Initial release.
 
 
 [kotlin_1_7_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.7.10
+[kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0
