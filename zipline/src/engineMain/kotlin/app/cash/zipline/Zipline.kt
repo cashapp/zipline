@@ -38,7 +38,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.isActive
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
@@ -162,10 +161,9 @@ actual class Zipline private constructor(
   }
 
   companion object {
-    @OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
     fun create(
       dispatcher: CoroutineDispatcher,
-      serializersModule: SerializersModule = EmptySerializersModule,
+      serializersModule: SerializersModule = EmptySerializersModule(),
       eventListener: EventListener = EventListener.NONE,
     ): Zipline {
       val quickJs = QuickJs.create()

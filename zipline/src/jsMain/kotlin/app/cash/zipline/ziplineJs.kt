@@ -29,7 +29,6 @@ import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.jsPlatformName
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
@@ -100,8 +99,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
   }
 
   companion object {
-    @OptIn(ExperimentalSerializationApi::class) // Zipline must track EmptySerializersModule.
-    fun get(serializersModule: SerializersModule = EmptySerializersModule): Zipline {
+    fun get(serializersModule: SerializersModule = EmptySerializersModule()): Zipline {
       val theOnlyZipline = THE_ONLY_ZIPLINE
       if (theOnlyZipline != null) {
         require(serializersModule == theOnlyZipline.endpoint.userSerializersModule) {

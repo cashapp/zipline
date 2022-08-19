@@ -18,21 +18,19 @@ package app.cash.zipline.loader
 import android.content.Context
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.fetcher.HttpFetcher
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
-import app.cash.zipline.loader.internal.fetcher.HttpFetcher
 
-@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
 fun ZiplineLoader(
   context: Context,
   dispatcher: CoroutineDispatcher,
   httpClient: OkHttpClient,
   eventListener: EventListener = EventListener.NONE,
   nowEpochMs: () -> Long = { System.currentTimeMillis() },
-  serializersModule: SerializersModule = EmptySerializersModule,
+  serializersModule: SerializersModule = EmptySerializersModule(),
   manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader {
   return ZiplineLoader(

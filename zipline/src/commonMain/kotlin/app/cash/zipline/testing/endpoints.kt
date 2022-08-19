@@ -20,16 +20,14 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import kotlin.jvm.JvmOverloads
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 /** Returns a pair of endpoints connected to each other for testing. */
 @JvmOverloads
-@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
 internal fun newEndpointPair(
   scope: CoroutineScope,
-  serializersModule: SerializersModule = EmptySerializersModule,
+  serializersModule: SerializersModule = EmptySerializersModule(),
   listenerA: EventListener = EventListener.NONE,
   listenerB: EventListener = EventListener.NONE,
 ): Pair<Endpoint, Endpoint> {

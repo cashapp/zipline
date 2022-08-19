@@ -19,18 +19,16 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import app.cash.zipline.loader.internal.fetcher.HttpFetcher
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 
-@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: ZiplineHttpClient,
   eventListener: EventListener = EventListener.NONE,
   nowEpochMs: () -> Long = { System.currentTimeMillis() },
-  serializersModule: SerializersModule = EmptySerializersModule,
+  serializersModule: SerializersModule = EmptySerializersModule(),
   manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader {
   return ZiplineLoader(
@@ -47,13 +45,12 @@ fun ZiplineLoader(
   )
 }
 
-@OptIn(ExperimentalSerializationApi::class) // Zipline must track changes to EmptySerializersModule.
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
   httpClient: OkHttpClient,
   eventListener: EventListener = EventListener.NONE,
   nowEpochMs: () -> Long = { System.currentTimeMillis() },
-  serializersModule: SerializersModule = EmptySerializersModule
+  serializersModule: SerializersModule = EmptySerializersModule()
 ): ZiplineLoader {
   return ZiplineLoader(
     dispatcher = dispatcher,
