@@ -26,14 +26,22 @@ internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: S
   loadJsModule(bytecode, id)
 
 /** Returns a new `<publicKey / privateKey>` KeyPair. */
-fun generateKeyPair(): KeyPair {
-  val secureRandom = SecureRandom()
-    .also {
-      it.nextLong() // Force seeding.
-    }
-
+fun generateEd25519KeyPair(): KeyPair {
   val secretSeed = ByteArray(Field25519.FIELD_LEN)
-  secureRandom.nextBytes(secretSeed)
+  secureRandom().nextBytes(secretSeed)
 
   return newKeyPairFromSeed(secretSeed.toByteString())
+}
+
+actual val ecdsa: SignatureAlgorithm = Ecdsa(secureRandom())
+
+internal fun secureRandom(): SecureRandom {
+  return SecureRandom().also { it.nextLong() } // Force seeding.
+}
+
+fun SignatureAlgorithmId.generateKeyPair(): KeyPair {
+  return when (this) {
+    SignatureAlgorithmId.Ed25519 -> generateEd25519KeyPair()
+    SignatureAlgorithmId.Ecdsa -> Ecdsa(secureRandom()).generateP256KeyPair()
+  }
 }

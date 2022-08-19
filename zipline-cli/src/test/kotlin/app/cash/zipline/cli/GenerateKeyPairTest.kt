@@ -26,11 +26,31 @@ import picocli.CommandLine.UnmatchedArgumentException
 class GenerateKeyPairTest {
   private val systemOut = Buffer()
 
-  @Test fun happyPath() {
+  @Test fun happyPathDefault() {
     val generateKeyPair = fromArgs()
     generateKeyPair.run()
+    assertThat(systemOut.readUtf8Line()).matches("  ALGORITHM: Ed25519")
     assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{64}")
     assertThat(systemOut.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{64}")
+    assertThat(systemOut.readUtf8Line()).isNull()
+  }
+
+  @Test fun happyPathEd25519() {
+    val generateKeyPair = fromArgs("-a", "Ed25519")
+    generateKeyPair.run()
+    assertThat(systemOut.readUtf8Line()).matches("  ALGORITHM: Ed25519")
+    assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{64}")
+    assertThat(systemOut.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{64}")
+    assertThat(systemOut.readUtf8Line()).isNull()
+  }
+
+  @Test fun happyPathEcdsa() {
+    val generateKeyPair = fromArgs("-a", "Ecdsa")
+    generateKeyPair.run()
+    assertThat(systemOut.readUtf8Line()).matches("  ALGORITHM: Ecdsa")
+    // Expected lengths were determined experimentally!
+    assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{182}")
+    assertThat(systemOut.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{134}")
     assertThat(systemOut.readUtf8Line()).isNull()
   }
 

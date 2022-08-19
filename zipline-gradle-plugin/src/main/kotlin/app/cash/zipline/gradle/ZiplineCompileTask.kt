@@ -16,6 +16,7 @@
 
 package app.cash.zipline.gradle
 
+import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.loader.ManifestSigner
 import java.io.File
 import java.io.Serializable
@@ -77,7 +78,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
       signingKeys.isNotEmpty() -> {
         val builder = ManifestSigner.Builder()
         for (signingKey in signingKeys) {
-          builder.addEd25519(signingKey.name, signingKey.privateKey)
+          builder.add(signingKey.algorithm, signingKey.name, signingKey.privateKey)
         }
         builder.build()
       }
@@ -116,6 +117,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
 
   data class ManifestSigningKey(
     val name: String,
+    val algorithm: SignatureAlgorithmId,
     val privateKey: ByteString,
   ): Serializable
 }

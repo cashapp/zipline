@@ -15,6 +15,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 package app.cash.zipline.loader.internal.tink.subtle
 
+import app.cash.zipline.loader.internal.SignatureAlgorithm
 import app.cash.zipline.loader.internal.tink.subtle.Curve25519.copyConditional
 import okio.Buffer
 import okio.ByteString
@@ -34,7 +35,7 @@ import okio.ByteString.Companion.toByteString
  * @see [Hisil H., Wong K.KH., Carter G., Dawson E. (2008) Twisted Edwards Curves
  *     Revisited](https://eprint.iacr.org/2008/522.pdf)
  */
-internal object Ed25519 {
+internal object Ed25519 : SignatureAlgorithm {
   private const val SIGNATURE_LEN = Field25519.FIELD_LEN * 2
 
   // (x = 0, y = 1) point
@@ -1512,11 +1513,13 @@ internal object Ed25519 {
     return false
   }
 
-  /**
-   * Returns true if the EdDSA [signature] with [message], can be verified with
-   * [publicKey].
-   */
-  fun verify(
+  override fun sign(message: ByteString, privateKey: ByteString): ByteString {
+    val hashedPrivateKey = getHashedScalar(privateKey)
+    val publicKey = scalarMultWithBaseToBytes(hashedPrivateKey)
+    return sign(message, publicKey, hashedPrivateKey)
+  }
+
+  override fun verify(
     message: ByteString,
     signature: ByteString,
     publicKey: ByteString,

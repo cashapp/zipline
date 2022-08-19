@@ -15,14 +15,16 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.loader.internal.tink.subtle.Ed25519Sign
+import app.cash.zipline.SignatureAlgorithmId
+import app.cash.zipline.loader.internal.SignatureAlgorithm
+import app.cash.zipline.loader.internal.get
 import okio.ByteString
 
 class ManifestSigner private constructor(
-  private val privateKeys: Map<String, Ed25519Sign>,
+  private val signers: Map<String, Signer>,
 ) {
   init {
-    require(privateKeys.isNotEmpty()) {
+    require(signers.isNotEmpty()) {
       "signer requires at least one private key"
     }
   }
@@ -31,8 +33,8 @@ class ManifestSigner private constructor(
   fun sign(manifest: ZiplineManifest): ZiplineManifest {
     // Sign with each signing key.
     val signaturePayload = manifest.signaturePayload
-    val signatures = privateKeys.mapValues { (_, signer) ->
-      val signatureBytes = signer.sign(signaturePayload)
+    val signatures = signers.mapValues { (_, signer) ->
+      val signatureBytes = signer.algorithm.sign(signaturePayload, signer.privateKey)
       return@mapValues signatureBytes.hex()
     }
 
@@ -41,16 +43,33 @@ class ManifestSigner private constructor(
   }
 
   class Builder {
-    private val privateKeys = mutableMapOf<String, Ed25519Sign>()
+    private val signers = mutableMapOf<String, Signer>()
 
     /** Adds an EdDSA Ed25519 public key that will be used to sign manifests. */
     fun addEd25519(
       name: String,
       privateKey: ByteString,
+    ) = add(SignatureAlgorithmId.Ed25519, name, privateKey)
+
+    /** Adds an Ecdsa public key that will be used to sign manifests. */
+    fun addEcdsa(
+      name: String,
+      privateKey: ByteString,
+    ) = add(SignatureAlgorithmId.Ecdsa, name, privateKey)
+
+    fun add(
+      algorithm: SignatureAlgorithmId,
+      name: String,
+      privateKey: ByteString,
     ) = apply {
-      privateKeys[name] = Ed25519Sign(privateKey)
+      signers[name] = Signer(algorithm.get(), privateKey)
     }
 
-    fun build() = ManifestSigner(privateKeys.toMap())
+    fun build() = ManifestSigner(signers.toMap())
   }
+
+  private class Signer(
+    val algorithm: SignatureAlgorithm,
+    val privateKey: ByteString,
+  )
 }
