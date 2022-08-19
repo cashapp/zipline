@@ -16,8 +16,8 @@
 
 package app.cash.zipline.cli
 
+import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.cli.GenerateKeyPair.Companion.NAME
-import app.cash.zipline.loader.internal.SignatureAlgorithmId
 import app.cash.zipline.loader.internal.generateKeyPair
 import java.io.PrintStream
 import picocli.CommandLine.Command

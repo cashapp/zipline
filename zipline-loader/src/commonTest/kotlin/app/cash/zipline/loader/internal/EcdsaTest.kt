@@ -17,7 +17,8 @@ package app.cash.zipline.loader.internal
 
 import app.cash.zipline.loader.testing.SampleKeys
 import kotlin.test.Test
-import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import okio.ByteString.Companion.encodeUtf8
 
 /**
@@ -28,20 +29,37 @@ class EcdsaTest {
   @Test
   fun happyPath() {
     val data = "hello world".encodeUtf8()
-    val signature = ecdsa.sign(SampleKeys.key4Private, data)
+    val signature = ecdsa.sign(data, SampleKeys.key4Private)
 
     // Valid signature verifies.
-    ecdsa.verify(SampleKeys.key4Public, signature, data)
+    assertTrue(ecdsa.verify(data, signature, SampleKeys.key4Public))
 
     // If the data changes, it doesn't verify.
-    assertFailsWith<IllegalStateException> {
-      ecdsa.verify(SampleKeys.key4Public, signature, "hello World".encodeUtf8())
-    }
+    assertFalse(ecdsa.verify("hello World".encodeUtf8(), signature, SampleKeys.key4Public))
 
     // If the key changes, it doesn't verify.
-    assertFailsWith<IllegalStateException> {
-      ecdsa.verify(SampleKeys.key5Public, signature, data)
-    }
+    assertFalse(ecdsa.verify(data, signature, SampleKeys.key5Public))
+  }
+
+  @Test
+  fun goldenValues() {
+    val data = "hello world".encodeUtf8()
+    assertTrue(ecdsa.verify(data, SampleKeys.key4HelloWorldsignatureA, SampleKeys.key4Public))
+    assertTrue(ecdsa.verify(data, SampleKeys.key4HelloWorldsignatureB, SampleKeys.key4Public))
+
+    // If the data changes, it doesn't verify.
+    assertFalse(ecdsa.verify(
+      message = "hello World".encodeUtf8(),
+      signature = SampleKeys.key4HelloWorldsignatureA,
+      publicKey = SampleKeys.key4Public
+    ))
+
+    // If the key changes, it doesn't verify.
+    assertFalse(ecdsa.verify(
+      message = data,
+      signature = SampleKeys.key4HelloWorldsignatureA,
+      publicKey = SampleKeys.key5Public
+    ))
   }
 }
 
