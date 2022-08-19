@@ -15,10 +15,16 @@
  */
 package app.cash.zipline.gradle
 
+import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.provider.Property
 
 abstract class ZiplineExtension {
   abstract val mainModuleId: Property<String>
   abstract val mainFunction: Property<String>
   abstract val version: Property<String>
+  abstract val signingKeys: NamedDomainObjectContainer<SigningKey>
+
+  abstract class SigningKey(val name: String) {
+    abstract val privateKeyHex: Property<String>
+  }
 }

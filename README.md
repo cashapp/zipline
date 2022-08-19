@@ -156,9 +156,11 @@ $ ./gradlew :generateZiplineManifestKeyPair
 Put the private key on the build server and configure it to sign builds:
 
 ```kotlin
-tasks.withType(ZiplineCompileTask::class) {
-  signingKeys.create("key1") {
-    privateKeyHex = ...
+zipline {
+  signingKeys {
+    create("key1") {
+      privateKeyHex.set(...)
+    }
   }
 }
 ```
