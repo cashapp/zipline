@@ -58,12 +58,12 @@ class ZiplineTest {
 
   @Test fun cannotTakeOrBindServiceAfterClose(): Unit = runBlocking(dispatcher) {
     zipline.close()
-    assertThat(assertFailsWith<IllegalStateException> {
+    assertFailsWith<IllegalStateException> {
       zipline.take<EchoService>("helloService")
-    })
-    assertThat(assertFailsWith<IllegalStateException> {
+    }
+    assertFailsWith<IllegalStateException> {
       zipline.bind<EchoService>("supService", JvmEchoService("sup"))
-    })
+    }
   }
 
   @Test fun callServiceAfterCloseFailsGracefully() = runBlocking(dispatcher) {
