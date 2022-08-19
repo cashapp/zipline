@@ -24,6 +24,6 @@ val bindAndTakeJvm by tasks.creating(JavaExec::class) {
   mainClass.set("app.cash.zipline.tests.BindAndTakeJvmKt")
 }
 
-tasks.withType(ZiplineCompileTask::class) {
+zipline {
   mainFunction.set("")
 }

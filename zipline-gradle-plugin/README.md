@@ -13,9 +13,7 @@ The plugin offers setting the following variables which are used in compilation.
 - `version`: This string is included in the manifest to identify the version of included code. A reasonable value is the Git SHA of the repo.
 
 ```kts
-import app.cash.zipline.gradle.ZiplineCompileTask
-
-tasks.withType(ZiplineCompileTask::class) {
+zipline {
   mainFunction.set("my.application.package.path.prepareFunction")
 }
 ```

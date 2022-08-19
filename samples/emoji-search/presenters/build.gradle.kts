@@ -1,12 +1,11 @@
 import app.cash.zipline.gradle.ZiplineCompileTask
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
-apply(plugin = "app.cash.zipline")
-
 plugins {
   kotlin("multiplatform")
   id("com.android.library")
   kotlin("plugin.serialization")
+  id("app.cash.zipline")
 }
 
 kotlin {
@@ -58,6 +57,6 @@ android {
   namespace = "app.cash.zipline.samples.emojisearch.presenters"
 }
 
-tasks.withType(ZiplineCompileTask::class) {
+zipline {
   mainFunction.set("app.cash.zipline.samples.emojisearch.preparePresenters")
 }

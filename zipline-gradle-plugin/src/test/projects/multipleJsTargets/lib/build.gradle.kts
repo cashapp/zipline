@@ -25,7 +25,7 @@ kotlin {
   }
 }
 
-tasks.withType(ZiplineCompileTask::class) {
+zipline {
   mainFunction.set("")
   version.set("1.2.3")
 }
