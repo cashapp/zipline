@@ -375,8 +375,4 @@ class SignaturePayloadTest {
     val signaturePayload = signaturePayload(jsonElement)
     return json.encodeToString(JsonElement.serializer(), signaturePayload)
   }
-
-  private fun ZiplineManifest.toJson(): String {
-    return Json.encodeToString(ZiplineManifest.serializer(), this)
-  }
 }

@@ -19,6 +19,8 @@ import app.cash.zipline.loader.ZiplineManifest
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.decodeFromJsonElement
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 
@@ -36,12 +38,12 @@ data class LoadedManifest(
     val freshManifest = manifest.copy(
       freshAtEpochMs = freshAtEpochMs,
     )
-    val freshManifestBytes = jsonForManifest.encodeToString(freshManifest).encodeUtf8()
+    val freshManifestBytes = freshManifest.encodeToString().encodeUtf8()
     return LoadedManifest(freshManifestBytes, freshManifest, freshAtEpochMs)
   }
 }
 
-internal val jsonForManifest = Json {
+private val jsonForManifest = Json {
   // For backwards-compatibility, allow new fields to be introduced.
   ignoreUnknownKeys = true
 
@@ -49,12 +51,35 @@ internal val jsonForManifest = Json {
   encodeDefaults = true
 }
 
+/**
+ * Confirm the manifest is of a reasonable size before proceeding to operate on it. 10 KiB is a
+ * typical size for our test applications. 640K ought to be enough for anybody.
+ */
+const val MANIFEST_MAX_SIZE = 640 * 1024
+
+fun ZiplineManifest.encodeToString(): String {
+  val result = jsonForManifest.encodeToString(this)
+  check(result.length <= MANIFEST_MAX_SIZE) {
+    "manifest larger than $MANIFEST_MAX_SIZE: ${result.length}"
+  }
+  return result
+}
+
+fun String.decodeToManifest(): ZiplineManifest {
+  check(length <= MANIFEST_MAX_SIZE) {
+    "manifest larger than $MANIFEST_MAX_SIZE: $length"
+  }
+  return jsonForManifest.decodeFromString(this)
+}
+
+fun JsonElement.decodeToManifest(): ZiplineManifest = jsonForManifest.decodeFromJsonElement(this)
+
 internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): LoadedManifest {
-  val manifest = jsonForManifest.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
+  val manifest = manifestBytes.utf8().decodeToManifest()
   return LoadedManifest(manifestBytes, manifest, freshAtEpochMs)
 }
 
 internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
-  val manifest = jsonForManifest.decodeFromString<ZiplineManifest>(manifestBytes.utf8())
+  val manifest = manifestBytes.utf8().decodeToManifest()
   return LoadedManifest(manifestBytes, manifest, manifest.freshAtEpochMs!!)
 }

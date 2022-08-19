@@ -17,14 +17,13 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.loader.ZiplineManifest
+import app.cash.zipline.loader.internal.fetcher.encodeToString
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.assertDownloadedToEmbeddedManifest
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
@@ -64,7 +63,7 @@ class ZiplineGradleDownloaderTest {
       ),
       mainFunction = "zipline.ziplineMain"
     )
-    val manifestJsonString = Json.encodeToString(manifest)
+    val manifestJsonString = manifest.encodeToString()
 
     // Enqueue the manifest
     webServer.enqueue(

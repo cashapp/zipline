@@ -21,6 +21,7 @@ import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
+import app.cash.zipline.loader.internal.fetcher.encodeToString
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlinx.serialization.decodeFromString
@@ -63,13 +64,13 @@ class LoaderTestFixtures {
     baseUrl = manifestUrl
   )
 
-  val manifestJsonString = Json.encodeToString(manifest)
+  val manifestJsonString = manifest.encodeToString()
   val manifestByteString = manifestJsonString.encodeUtf8()
 
   val manifestNoBaseUrl = manifest.copy(
     baseUrl = null,
   )
-  val manifestNoBaseUrlJsonString = Json.encodeToString(manifestNoBaseUrl)
+  val manifestNoBaseUrlJsonString = manifest.encodeToString()
   val manifestNoBaseUrlByteString = manifestNoBaseUrlJsonString.encodeUtf8()
 
   val embeddedManifest = manifest.copy(

@@ -18,10 +18,12 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.internal.cache.ZiplineCache
+import app.cash.zipline.loader.internal.fetcher.MANIFEST_MAX_SIZE
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import okio.Buffer
 import okio.FileSystem
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -141,6 +143,32 @@ class LoaderTester(
     )
     httpClient.filePathToByteString = mapOf(
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
+    )
+    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
+    return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
+      " loaded\n"
+    )
+  }
+
+  suspend fun failureManifestTooLarge(applicationName: String): String {
+    val seed = "too large"
+    val ziplineFileByteString =
+      testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
+    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
+      seed,
+      ziplineFileByteString.sha256(),
+      includeUnknownFieldInJson,
+    )
+
+    val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+
+    val tooLargeManifest = Buffer()
+      .writeUtf8(" ".repeat(MANIFEST_MAX_SIZE - loadedManifest.manifestBytes.size + 1))
+      .write(loadedManifest.manifestBytes)
+      .readByteString()
+    httpClient.filePathToByteString = mapOf(
+      manifestUrl to tooLargeManifest,
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
     )
     zipline = loader.loadOnce(applicationName, manifestUrl).zipline
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
