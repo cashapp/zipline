@@ -118,7 +118,7 @@ jobs:
           mkdir -p zipline/src/jvmMain/resources/
           cp -av jvm-native-libraries/* zipline/src/jvmMain/resources/
 
-      - run: ./gradlew assemble dokkaHtml
+      - run: ./gradlew assemble :dokkaHtmlMultiModule
 
       - uses: actions/upload-artifact@v3
         with:
@@ -151,6 +151,6 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
-          FOLDER: zipline/build/dokka/html
+          FOLDER: build/dokka/htmlMultiModule/
           TARGET_FOLDER: docs/latest/
           CLEAN: true
