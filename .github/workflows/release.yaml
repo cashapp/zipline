@@ -104,7 +104,7 @@ jobs:
           mkdir -p zipline/src/jvmMain/resources/
           cp -av jvm-native-libraries/* zipline/src/jvmMain/resources/
 
-      - run: ./gradlew assemble dokkaHtml
+      - run: ./gradlew assemble :dokkaHtmlMultiModule
 
       - run: ./gradlew publish
         if: ${{ github.repository == 'cashapp/zipline' }}
@@ -130,6 +130,6 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
-          FOLDER: zipline/build/dokka/html
+          FOLDER: build/dokka/htmlMultiModule/
           TARGET_FOLDER: docs/0.x/
           CLEAN: true
