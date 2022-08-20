@@ -16,8 +16,13 @@
 package app.cash.zipline.loader.internal
 
 import app.cash.zipline.Zipline
+import java.security.SecureRandom
 
 internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
   loadJsModule(bytecode, id)
 
-actual val ecdsa: SignatureAlgorithm = Ecdsa(secureRandom())
+actual val ecdsaP256: SignatureAlgorithm = EcdsaP256(secureRandom())
+
+internal fun secureRandom(): SecureRandom {
+  return SecureRandom().also { it.nextLong() } // Force seeding.
+}

@@ -16,15 +16,10 @@
 package app.cash.zipline.loader.internal
 
 import app.cash.zipline.SignatureAlgorithmId
-import app.cash.zipline.Zipline
 import app.cash.zipline.loader.internal.tink.subtle.Field25519
 import app.cash.zipline.loader.internal.tink.subtle.KeyPair
 import app.cash.zipline.loader.internal.tink.subtle.newKeyPairFromSeed
-import java.security.SecureRandom
 import okio.ByteString.Companion.toByteString
-
-internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
 
 /** Returns a new `<publicKey / privateKey>` KeyPair. */
 fun generateEd25519KeyPair(): KeyPair {
@@ -32,12 +27,6 @@ fun generateEd25519KeyPair(): KeyPair {
   secureRandom().nextBytes(secretSeed)
 
   return newKeyPairFromSeed(secretSeed.toByteString())
-}
-
-actual val ecdsaP256: SignatureAlgorithm = EcdsaP256(secureRandom())
-
-internal fun secureRandom(): SecureRandom {
-  return SecureRandom().also { it.nextLong() } // Force seeding.
 }
 
 fun SignatureAlgorithmId.generateKeyPair(): KeyPair {
