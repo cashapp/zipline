@@ -65,7 +65,6 @@ class EcdsaP256 : SignatureAlgorithm {
     )
 
     memScoped {
-      // TODO(jwilson): do I need to free this?
       val errorRef = alloc<CFErrorRefVar>()
 
       val publicKeyAsSecKey = publicKey.useDataRef { publicKeyDataRef ->
