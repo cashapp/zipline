@@ -138,15 +138,16 @@ when a `close()` call is missed.
 
 ### Secure
 
-Zipline uses [EdDSA] signatures to authenticate downloaded libraries.
+Zipline supports [EdDSA Ed25519] and [ECDSA P-256] signatures to authenticate downloaded libraries.
 
 Set up is straightforward. Generate an EdDSA key pair. A task for this is installed with the Zipline
 Gradle plugin.
 
 ```
-$ ./gradlew :generateZiplineManifestKeyPair
+$ ./gradlew :generateZiplineManifestKeyPairEd25519
 ...
 ---------------- ----------------------------------------------------------------
+      ALGORITHM: Ed25519
      PUBLIC KEY: XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     PRIVATE KEY: YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY
 ---------------- ----------------------------------------------------------------
@@ -160,6 +161,7 @@ zipline {
   signingKeys {
     create("key1") {
       privateKeyHex.set(...)
+      algorithmId.set(app.cash.zipline.SignatureAlgorithmId.Ed25519)
     }
   }
 }
@@ -241,7 +243,8 @@ This project was previously known as Duktape-Android and packaged the
 in this repo as are the release tags. Available versions are listed on
 [Maven central](https://search.maven.org/artifact/com.squareup.duktape/duktape-android).
 
-[EdDSA]: https://en.wikipedia.org/wiki/EdDSA
+[ECDSA P-256]: https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
+[EdDSA Ed25519]: https://en.wikipedia.org/wiki/EdDSA
 [Kotlin/Native]: https://kotlinlang.org/docs/multiplatform-dsl-reference.html#targets
 [LeakCanary]: https://square.github.io/leakcanary/
 [kotlinx.serialization]: https://github.com/Kotlin/kotlinx.serialization
