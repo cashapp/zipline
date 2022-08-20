@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <title>DIRTY</title>
+    <title>EcdsaP256</title>
 <link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../../../";</script>    <script>const storage = localStorage.getItem("dokka-dark-mode")
 const savedDarkMode = storage ? JSON.parse(storage) : false
 if(savedDarkMode === true){
@@ -40,13 +40,13 @@ if(savedDarkMode === true){
         <div id="sideMenu"></div>
     </div>
     <div id="main">
-<div class="main-content" id="content" pageids="zipline-loader::app.cash.zipline.loader.internal.cache/FileState.DIRTY///PointingToDeclaration/{&quot;org.jetbrains.dokka.links.EnumEntryDRIExtra&quot;:{&quot;key&quot;:&quot;org.jetbrains.dokka.links.EnumEntryDRIExtra&quot;}}/-412860760">
-  <div class="breadcrumbs"><a href="../../../index.html">zipline-loader</a><span class="delimiter">/</span><a href="../../index.html">app.cash.zipline.loader.internal.cache</a><span class="delimiter">/</span><a href="../index.html">FileState</a><span class="delimiter">/</span><a href="index.html">DIRTY</a></div>
+<div class="main-content" id="content" pageids="zipline-loader::app.cash.zipline/SignatureAlgorithmId.EcdsaP256///PointingToDeclaration/{&quot;org.jetbrains.dokka.links.EnumEntryDRIExtra&quot;:{&quot;key&quot;:&quot;org.jetbrains.dokka.links.EnumEntryDRIExtra&quot;}}/-412860760">
+  <div class="breadcrumbs"><a href="../../../index.html">zipline-loader</a><span class="delimiter">/</span><a href="../../index.html">app.cash.zipline</a><span class="delimiter">/</span><a href="../index.html">SignatureAlgorithmId</a><span class="delimiter">/</span><a href="index.html">EcdsaP256</a></div>
   <div class="cover ">
-    <h1 class="cover"><span><span>DIRTY</span></span></h1>
+    <h1 class="cover"><span>Ecdsa</span><wbr><span><span>P256</span></span></h1>
     <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
       <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline-loader:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain" data-active="" data-toggle=":zipline-loader:dokkaHtmlPartial/commonMain">common</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline-loader:dokkaHtmlPartial/commonMain"><div class="symbol monospace"><div class="block"><a href="index.html">DIRTY</a></div><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">The file is either currently downloading, or left over from a previous process.</p><p class="paragraph">If it's currently downloading, it'll transition to <code class="lang-kotlin">READY</code> when the download completes. Or the file will be removed if the download fails.</p><p class="paragraph">If it's left over from a previous process, that's the same as a failed download. Such files should be deleted when the cache is opened.</p></div>    </div>
+<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline-loader:dokkaHtmlPartial/commonMain"><div class="symbol monospace"><div class="block"><a href="index.html">EcdsaP256</a></div><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">ECDSA using the P-256 (secp256r1) curve.</p><p class="paragraph">We've got (at least) two choices for encoding public keys as bytes:</p><ul><li><p class="paragraph">Java's format. This is the ASN.1 of the <code class="lang-kotlin">SubjectPublicKeyInfo</code> from X.509, encoded with the     <code class="lang-kotlin">X509EncodedKeySpec</code> class.</p></li><li><p class="paragraph">Apple's format. This is ANSI X9.62, encoded as 3 fixed-width values concatenated together,     <code class="lang-kotlin">0x04 || X || Y</code>. The encoded key is always 1 + 32 + 32 = 65 bytes.</p></li></ul><p class="paragraph">We use Apple's format because it's more compact, and because it's easy enough to support on both platforms.</p><p class="paragraph">Private keys are encoded using PKCS8.</p><p class="paragraph">https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm https://developer.apple.com/documentation/security/certificate_key_and_trust_services/keys/storing_keys_as_data</p></div>    </div>
   </div>
   <div class="tabbedcontent">
     <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Properties">Properties</button></div>
@@ -56,7 +56,7 @@ if(savedDarkMode === true){
         <div class="table-row" data-filterable-current=":zipline-loader:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain">
           <div class="main-subrow keyValue ">
             <div class=""><span class="inline-flex">
-                <div><a href="../../../app.cash.zipline/-signature-algorithm-id/-ecdsa-p256/index.html#-372974862%2FProperties%2F-412860760"><span><span>name</span></span></a></div>
+                <div><a href="index.html#-372974862%2FProperties%2F-412860760"><span><span>name</span></span></a></div>
 <span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-372974862%2FProperties%2F-412860760"></span>
                   <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                 </span></span></div>
@@ -64,7 +64,7 @@ if(savedDarkMode === true){
               <div class="title">
                 <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
                   <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline-loader:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain" data-active="" data-toggle=":zipline-loader:dokkaHtmlPartial/commonMain">common</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline-loader:dokkaHtmlPartial/commonMain"><a data-name="-372974862%2FProperties%2F-412860760" anchor-label="name" id="-372974862%2FProperties%2F-412860760" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="../../../app.cash.zipline/-signature-algorithm-id/-ecdsa-p256/index.html#-372974862%2FProperties%2F-412860760">name</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                </div>
+<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline-loader:dokkaHtmlPartial/commonMain"><a data-name="-372974862%2FProperties%2F-412860760" anchor-label="name" id="-372974862%2FProperties%2F-412860760" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="index.html#-372974862%2FProperties%2F-412860760">name</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                </div>
               </div>
             </div>
           </div>
@@ -73,7 +73,7 @@ if(savedDarkMode === true){
         <div class="table-row" data-filterable-current=":zipline-loader:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain">
           <div class="main-subrow keyValue ">
             <div class=""><span class="inline-flex">
-                <div><a href="../../../app.cash.zipline/-signature-algorithm-id/-ecdsa-p256/index.html#-739389684%2FProperties%2F-412860760"><span><span>ordinal</span></span></a></div>
+                <div><a href="index.html#-739389684%2FProperties%2F-412860760"><span><span>ordinal</span></span></a></div>
 <span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-739389684%2FProperties%2F-412860760"></span>
                   <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
                 </span></span></div>
@@ -81,7 +81,7 @@ if(savedDarkMode === true){
               <div class="title">
                 <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted" data-togglable="Properties">
                   <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark common-like" data-filterable-current=":zipline-loader:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain" data-active="" data-toggle=":zipline-loader:dokkaHtmlPartial/commonMain">common</button></div>
-<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline-loader:dokkaHtmlPartial/commonMain"><a data-name="-739389684%2FProperties%2F-412860760" anchor-label="ordinal" id="-739389684%2FProperties%2F-412860760" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="../../../app.cash.zipline/-signature-algorithm-id/-ecdsa-p256/index.html#-739389684%2FProperties%2F-412860760">ordinal</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                </div>
+<div class="content sourceset-depenent-content" data-active="" data-togglable=":zipline-loader:dokkaHtmlPartial/commonMain"><a data-name="-739389684%2FProperties%2F-412860760" anchor-label="ordinal" id="-739389684%2FProperties%2F-412860760" data-filterable-set=":zipline-loader:dokkaHtmlPartial/commonMain"></a><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">val </span><a href="index.html#-739389684%2FProperties%2F-412860760">ordinal</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-int/index.html">Int</a><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div></div>                </div>
               </div>
             </div>
           </div>
