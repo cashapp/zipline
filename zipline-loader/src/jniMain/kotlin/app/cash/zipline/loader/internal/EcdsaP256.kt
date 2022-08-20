@@ -39,7 +39,7 @@ class EcdsaP256(
 ) : SignatureAlgorithm {
 
   /** Generate a key pair using the P-256 curve. */
-  fun generateP256KeyPair(): KeyPair {
+  fun generateKeyPair(): KeyPair {
     val keyPairGenerator = KeyPairGenerator.getInstance("EC")
     keyPairGenerator.initialize(ECGenParameterSpec("secp256r1"), random)
     val keyPair = keyPairGenerator.generateKeyPair()
@@ -106,6 +106,17 @@ internal fun ByteString.decodeAnsiX963(): ECPublicKey {
   return keyFactory.generatePublic(keySpec) as ECPublicKey
 }
 
+/**
+ * Assuming [this] is a non-negative integer, encode it as a big-endian byte array of length
+ * [byteCount]. This function assumes the encoded value will fit.
+ *
+ * This makes two adjustments to the result of [BigInteger.toByteArray]:
+ *
+ *  * It is padded at the start if that value doesn't need [byteCount] bytes.
+ *  * It drops a possible leading 0 byte. Because `BigInteger` is signed its encoding always
+ *    includes a leading sign bit, which will always be zero. An unsigned 32-bit integer may require
+ *    33 bits to encode!
+ */
 internal fun BigInteger.toUnsignedFixedWidth(byteCount: Int): ByteArray {
   val result = ByteArray(byteCount)
   val signedBytes = toByteArray()

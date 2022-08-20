@@ -43,6 +43,6 @@ internal fun secureRandom(): SecureRandom {
 fun SignatureAlgorithmId.generateKeyPair(): KeyPair {
   return when (this) {
     SignatureAlgorithmId.Ed25519 -> generateEd25519KeyPair()
-    SignatureAlgorithmId.EcdsaP256 -> EcdsaP256(secureRandom()).generateP256KeyPair()
+    SignatureAlgorithmId.EcdsaP256 -> EcdsaP256(secureRandom()).generateKeyPair()
   }
 }
