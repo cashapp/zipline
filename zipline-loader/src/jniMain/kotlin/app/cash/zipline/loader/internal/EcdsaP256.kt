@@ -34,22 +34,6 @@ import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 
-/**
- * ECDSA using the P-256 (secp256r1) curve.
- *
- * We've got (at least) two choices for encoding public keys as bytes:
- *
- *  * Java's format. This is the ASN.1 of the `SubjectPublicKeyInfo` from X.509, encoded with the
- *    `X509EncodedKeySpec` class.
- *  * Apple's format. This is ANSI X9.62, encoded as 3 fixed-width values concatenated together.
- *
- * We use Apple's format because it's more compact, and because it's easy enough to support on both
- * platforms.
- *
- * Private keys are encoded using PKCS8.
- *
- * https://developer.apple.com/documentation/security/certificate_key_and_trust_services/keys/storing_keys_as_data
- */
 class EcdsaP256(
   private val random: SecureRandom,
 ) : SignatureAlgorithm {
@@ -94,7 +78,6 @@ internal fun decodePkcs8EcPrivateKey(privateKey: ByteString): PrivateKey {
   return keyFactory.generatePrivate(keySpec)
 }
 
-/** ANSI X9.63 standard concatenates `0x04 || X || Y`. */
 internal fun ECPublicKey.encodeAnsiX963(): ByteString {
   return Buffer()
     .writeByte(4)
