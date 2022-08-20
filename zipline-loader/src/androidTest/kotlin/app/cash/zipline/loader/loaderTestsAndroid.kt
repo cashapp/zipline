@@ -53,3 +53,5 @@ private fun testSecureRandom() = SecureRandom()
   }
 
 internal actual fun canLoadTestResources() = true
+
+internal actual fun canSignEcdsaP256() = true

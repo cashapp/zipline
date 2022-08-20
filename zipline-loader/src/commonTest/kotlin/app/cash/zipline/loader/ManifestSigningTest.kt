@@ -43,15 +43,15 @@ class ManifestSigningTest {
     .build()
 
   private val signer4 = ManifestSigner.Builder()
-    .addEcdsa("key4", SampleKeys.key4Private)
+    .addEcdsaP256("key4", SampleKeys.key4Private)
     .build()
 
   private val verifier4 = ManifestVerifier.Builder()
-    .addEcdsa("key4", SampleKeys.key4Public)
+    .addEcdsaP256("key4", SampleKeys.key4Public)
     .build()
 
   private val verifier5 = ManifestVerifier.Builder()
-    .addEcdsa("key5", SampleKeys.key5Public)
+    .addEcdsaP256("key5", SampleKeys.key5Public)
     .build()
 
   private val signer12 = ManifestSigner.Builder()
@@ -61,7 +61,7 @@ class ManifestSigningTest {
 
   private val signer14 = ManifestSigner.Builder()
     .addEd25519("key1", SampleKeys.key1Private)
-    .addEcdsa("key4", SampleKeys.key4Private)
+    .addEcdsaP256("key4", SampleKeys.key4Private)
     .build()
 
   private val verifier12 = ManifestVerifier.Builder()
@@ -71,7 +71,7 @@ class ManifestSigningTest {
 
   private val verifier14 = ManifestVerifier.Builder()
     .addEd25519("key1", SampleKeys.key1Public)
-    .addEcdsa("key4", SampleKeys.key4Public)
+    .addEcdsaP256("key4", SampleKeys.key4Public)
     .build()
 
   private val verifier23 = ManifestVerifier.Builder()
@@ -81,7 +81,7 @@ class ManifestSigningTest {
 
   private val verifier25 = ManifestVerifier.Builder()
     .addEd25519("key2", SampleKeys.key2Public)
-    .addEcdsa("key5", SampleKeys.key5Public)
+    .addEcdsaP256("key5", SampleKeys.key5Public)
     .build()
 
   private val manifest = ZiplineManifest.create(
@@ -101,6 +101,8 @@ class ManifestSigningTest {
 
   @Test
   fun happyPathEcdsa() {
+    if (!canSignEcdsaP256()) return
+
     val signedManifest = signer4.sign(manifest)
     verifier4.verify(signedManifest)
   }
@@ -161,6 +163,8 @@ class ManifestSigningTest {
 
   @Test
   fun manifestWithMultipleSignaturesWithDifferentAlgorithms() {
+    if (!canSignEcdsaP256()) return
+
     val signedManifest = signer14.sign(manifest)
     verifier1.verify(signedManifest)
     verifier4.verify(signedManifest)

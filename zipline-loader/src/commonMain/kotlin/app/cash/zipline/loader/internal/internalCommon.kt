@@ -26,12 +26,12 @@ const val MANIFEST_FILE_NAME = "manifest.zipline.json"
 fun getApplicationManifestFileName(applicationName: String) =
   "$applicationName.$MANIFEST_FILE_NAME"
 
-/** ECDSA. https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm */
-expect val ecdsa: SignatureAlgorithm
+/** ECDSA P-256. https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm */
+expect val ecdsaP256: SignatureAlgorithm
 
 fun SignatureAlgorithmId.get(): SignatureAlgorithm {
   return when (this) {
     SignatureAlgorithmId.Ed25519 -> Ed25519
-    SignatureAlgorithmId.Ecdsa -> ecdsa
+    SignatureAlgorithmId.EcdsaP256 -> ecdsaP256
   }
 }

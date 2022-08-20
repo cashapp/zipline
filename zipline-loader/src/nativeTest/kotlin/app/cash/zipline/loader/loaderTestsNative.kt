@@ -50,3 +50,5 @@ internal actual fun canLoadTestResources(): Boolean {
   // If the current working directory contains CoreSimulator, don't try to load test resources.
   return "CoreSimulator" !in systemFileSystem.canonicalize(".".toPath()).segments
 }
+
+internal actual fun canSignEcdsaP256() = false

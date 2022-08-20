@@ -77,11 +77,11 @@ class ManifestVerifier private constructor(
       trustedKey: ByteString,
     ) = add(SignatureAlgorithmId.Ed25519, name, trustedKey)
 
-    /** Adds an ECDSA public key that will be used to verify manifests. */
-    fun addEcdsa(
+    /** Adds an ECDSA P-256 public key that will be used to verify manifests. */
+    fun addEcdsaP256(
       name: String,
       trustedKey: ByteString,
-    ) = add(SignatureAlgorithmId.Ecdsa, name, trustedKey)
+    ) = add(SignatureAlgorithmId.EcdsaP256, name, trustedKey)
 
     fun add(
       algorithm: SignatureAlgorithmId,

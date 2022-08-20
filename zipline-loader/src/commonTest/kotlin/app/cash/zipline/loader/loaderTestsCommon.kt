@@ -49,6 +49,9 @@ expect fun randomByteString(size: Int): ByteString
  */
 internal expect fun canLoadTestResources(): Boolean
 
+/** We don't implement ECDSA P-256 signing on non-JNI platforms. */
+internal expect fun canSignEcdsaP256(): Boolean
+
 fun prettyPrint(jsonString: String): String {
   val json = Json {
     prettyPrint = true

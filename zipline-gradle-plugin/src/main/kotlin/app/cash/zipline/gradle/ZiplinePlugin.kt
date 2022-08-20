@@ -135,9 +135,9 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
         generateKeyPair(SignatureAlgorithmId.Ed25519)
       }
     }
-    project.tasks.register("generateZiplineManifestKeyPairEcdsa") { task ->
+    project.tasks.register("generateZiplineManifestKeyPairEcdsaP256") { task ->
       task.doLast {
-        generateKeyPair(SignatureAlgorithmId.Ecdsa)
+        generateKeyPair(SignatureAlgorithmId.EcdsaP256)
       }
     }
   }

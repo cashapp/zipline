@@ -51,11 +51,11 @@ class ManifestSigner private constructor(
       privateKey: ByteString,
     ) = add(SignatureAlgorithmId.Ed25519, name, privateKey)
 
-    /** Adds an Ecdsa public key that will be used to sign manifests. */
-    fun addEcdsa(
+    /** Adds an ECDSA P-256 public key that will be used to sign manifests. */
+    fun addEcdsaP256(
       name: String,
       privateKey: ByteString,
-    ) = add(SignatureAlgorithmId.Ecdsa, name, privateKey)
+    ) = add(SignatureAlgorithmId.EcdsaP256, name, privateKey)
 
     fun add(
       algorithm: SignatureAlgorithmId,

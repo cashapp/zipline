@@ -44,12 +44,12 @@ class GenerateKeyPairTest {
     assertThat(systemOut.readUtf8Line()).isNull()
   }
 
-  @Test fun happyPathEcdsa() {
-    val generateKeyPair = fromArgs("-a", "Ecdsa")
+  @Test fun happyPathEcdsaP256() {
+    val generateKeyPair = fromArgs("-a", "EcdsaP256")
     generateKeyPair.run()
-    assertThat(systemOut.readUtf8Line()).matches("  ALGORITHM: Ecdsa")
+    assertThat(systemOut.readUtf8Line()).matches("  ALGORITHM: EcdsaP256")
+    assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{130}")
     // Expected lengths were determined experimentally!
-    assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{182}")
     assertThat(systemOut.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{134}")
     assertThat(systemOut.readUtf8Line()).isNull()
   }

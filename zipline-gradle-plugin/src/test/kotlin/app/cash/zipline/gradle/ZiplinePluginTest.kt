@@ -19,8 +19,6 @@ package app.cash.zipline.gradle
 import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 import com.google.common.truth.Truth.assertThat
 import java.io.File
-import okhttp3.OkHttpClient
-import okhttp3.Request
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
@@ -151,17 +149,17 @@ class ZiplinePluginTest {
   }
 
   @Test
-  fun generateZiplineManifestKeyPairEcdsa() {
+  fun generateZiplineManifestKeyPairEcdsaP256() {
     val projectDir = File("src/test/projects/basic")
 
-    val result = createRunner(projectDir, "generateZiplineManifestKeyPairEcdsa").build()
+    val result = createRunner(projectDir, "generateZiplineManifestKeyPairEcdsaP256").build()
     assertThat(SUCCESS_OUTCOMES)
-      .contains(result.task(":lib:generateZiplineManifestKeyPairEcdsa")!!.outcome)
+      .contains(result.task(":lib:generateZiplineManifestKeyPairEcdsaP256")!!.outcome)
     // Expected lengths were determined experimentally!
     assertThat(result.output).containsMatch(
       """
-      |      ALGORITHM: Ecdsa
-      |     PUBLIC KEY: [\da-f]{182}
+      |      ALGORITHM: EcdsaP256
+      |     PUBLIC KEY: [\da-f]{130}
       |    PRIVATE KEY: [\da-f]{134}
       |""".trimMargin()
     )

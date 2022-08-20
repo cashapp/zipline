@@ -16,5 +16,32 @@
 package app.cash.zipline
 
 enum class SignatureAlgorithmId {
-  Ed25519, Ecdsa,
+  /**
+   * Edwards-curve Digital Signature Algorithm (EdDSA) using the Ed25519 curve.
+   *
+   * Both public and private keys are 32 bytes. Signatures are 64 bytes.
+   *
+   * https://en.wikipedia.org/wiki/EdDSA
+   */
+  Ed25519,
+
+  /**
+   * ECDSA using the P-256 (secp256r1) curve.
+   *
+   * We've got (at least) two choices for encoding public keys as bytes:
+   *
+   *  * Java's format. This is the ASN.1 of the `SubjectPublicKeyInfo` from X.509, encoded with the
+   *    `X509EncodedKeySpec` class.
+   *  * Apple's format. This is ANSI X9.62, encoded as 3 fixed-width values concatenated together,
+   *    `0x04 || X || Y`. The encoded key is always 1 + 32 + 32 = 65 bytes.
+   *
+   * We use Apple's format because it's more compact, and because it's easy enough to support on
+   * both platforms.
+   *
+   * Private keys are encoded using PKCS8.
+   *
+   * https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm
+   * https://developer.apple.com/documentation/security/certificate_key_and_trust_services/keys/storing_keys_as_data
+   */
+  EcdsaP256,
 }
