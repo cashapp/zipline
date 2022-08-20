@@ -23,6 +23,11 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 
+/**
+ * Download a Zipline application as part of your build process, such as for embedding into
+ * an Android or iOS app to support offline, first-launch, and/or other usage.
+ */
+@Suppress("unused") // Public API for Gradle plugin users.
 abstract class ZiplineDownloadTask : DefaultTask() {
   @get:Input
   abstract val applicationName: Property<String>
@@ -33,10 +38,9 @@ abstract class ZiplineDownloadTask : DefaultTask() {
   @get:OutputDirectory
   abstract val downloadDir: DirectoryProperty
 
-  private val ziplineDownloader = ZiplineGradleDownloader()
-
   @TaskAction
   fun task() {
+    val ziplineDownloader = ZiplineGradleDownloader()
     ziplineDownloader.download(downloadDir.get().asFile, applicationName.get(), manifestUrl.get())
   }
 }

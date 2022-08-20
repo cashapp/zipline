@@ -36,12 +36,6 @@ import org.gradle.work.InputChanges
 
 /**
  * Compiles `.js` files to `.zipline` files.
- *
- * This also writes a Webpack configuration file `webpack.config.d/zipline.js`. in the directory
- * required by the Kotlin Gradle plugin.
- *
- * https://kotlinlang.org/docs/js-project-setup.html#webpack-configuration-file
- * https://webpack.js.org/concepts/configuration/
  */
 abstract class ZiplineCompileTask : DefaultTask() {
 
