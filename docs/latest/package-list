@@ -1,0 +1,24 @@
+$dokka.format:html-v1
+$dokka.linkExtension:html
+$dokka.location:app.cash.zipline.loader//ZiplineLoader/#kotlinx.coroutines.CoroutineDispatcher#app.cash.zipline.loader.ZiplineHttpClient#app.cash.zipline.EventListener#kotlin.Function0[kotlin.Long]#kotlinx.serialization.modules.SerializersModule#app.cash.zipline.loader.ManifestVerifier?/PointingToDeclaration/zipline-loader/app.cash.zipline.loader/[native]-zipline-loader.html
+$dokka.location:app.cash.zipline/Zipline.Companion///PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/index.html
+$dokka.location:app.cash.zipline/Zipline.Companion/create/#kotlinx.coroutines.CoroutineDispatcher#kotlinx.serialization.modules.SerializersModule#app.cash.zipline.EventListener/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[engine]-companion/create.html
+$dokka.location:app.cash.zipline/Zipline.Companion/get/#kotlinx.serialization.modules.SerializersModule/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/get.html
+module:zipline
+app.cash.zipline
+app.cash.zipline.internal
+app.cash.zipline.internal.bridge
+module:zipline-cli
+app.cash.zipline.cli
+module:zipline-gradle-plugin
+app.cash.zipline.gradle
+module:zipline-kotlin-plugin
+app.cash.zipline.kotlin
+module:zipline-loader
+app.cash.zipline.loader
+app.cash.zipline.loader.internal
+app.cash.zipline.loader.internal.cache
+app.cash.zipline.loader.internal.fetcher
+app.cash.zipline.loader.internal.tink.subtle
+module:zipline-profiler
+app.cash.zipline.profiler
