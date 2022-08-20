@@ -106,8 +106,12 @@ class EcdsaP256 : SignatureAlgorithm {
   private fun <T> ByteString.useDataRef(block: (CFDataRef) -> T): T {
     val byteArray = toByteArray()
     val pin = byteArray.pin()
+    val bytesPointer = when {
+      byteArray.isNotEmpty() -> pin.addressOf(0)
+      else -> null
+    }
     val nsData = NSData.dataWithBytes(
-      bytes = pin.addressOf(0),
+      bytes = bytesPointer,
       length = byteArray.size.convert()
     )
     val typeRef = CFBridgingRetain(nsData) as CFDataRef

@@ -44,7 +44,7 @@ class Ed25519VerifyTest {
     val testGroups = loadEddsaTestJson().testGroups
     for (group in testGroups) {
       val key = group.key
-      val publicKey = key.pk.decodeHex()
+      val publicKey = key.pk!!.decodeHex()
       val tests = group.tests
       for (testcase in tests) {
         val tcId = "testcase ${testcase.tcId} (${testcase.comment})"
