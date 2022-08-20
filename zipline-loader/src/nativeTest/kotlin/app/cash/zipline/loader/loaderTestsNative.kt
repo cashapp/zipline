@@ -28,16 +28,16 @@ actual val systemFileSystem = FileSystem.SYSTEM
 
 actual fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
+  manifestVerifier: ManifestVerifier,
   httpClient: ZiplineHttpClient,
   nowEpochMs: () -> Long,
   eventListener: EventListener,
-  manifestVerifier: ManifestVerifier?,
 ) = ZiplineLoader(
   dispatcher = dispatcher,
+  manifestVerifier = manifestVerifier,
   httpClient = httpClient,
   nowEpochMs = nowEpochMs,
   eventListener = eventListener,
-  manifestVerifier = manifestVerifier,
 )
 
 internal actual fun testSqlDriverFactory() = SqlDriverFactory()

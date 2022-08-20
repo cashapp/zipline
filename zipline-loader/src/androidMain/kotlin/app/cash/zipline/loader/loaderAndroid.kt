@@ -27,20 +27,20 @@ import okhttp3.OkHttpClient
 fun ZiplineLoader(
   context: Context,
   dispatcher: CoroutineDispatcher,
+  manifestVerifier: ManifestVerifier,
   httpClient: OkHttpClient,
   eventListener: EventListener = EventListener.NONE,
   nowEpochMs: () -> Long = { System.currentTimeMillis() },
   serializersModule: SerializersModule = EmptySerializersModule(),
-  manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader {
   return ZiplineLoader(
     sqlDriverFactory = SqlDriverFactory(context),
     dispatcher = dispatcher,
+    manifestVerifier = manifestVerifier,
     httpFetcher = HttpFetcher(OkHttpZiplineHttpClient(httpClient), eventListener),
     eventListener = eventListener,
     nowEpochMs = nowEpochMs,
     serializersModule = serializersModule,
-    manifestVerifier = manifestVerifier,
     embeddedDir = null,
     embeddedFileSystem = null,
     cache = null,

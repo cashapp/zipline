@@ -27,10 +27,10 @@ actual val systemFileSystem = FileSystem.SYSTEM
 
 actual fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
+  manifestVerifier: ManifestVerifier,
   httpClient: ZiplineHttpClient,
   nowEpochMs: () -> Long,
   eventListener: EventListener,
-  manifestVerifier: ManifestVerifier?,
 ) = ZiplineLoader(
   dispatcher = dispatcher,
   httpClient = httpClient,

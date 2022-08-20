@@ -59,11 +59,11 @@ import okio.Path
 class ZiplineLoader internal constructor(
   private val sqlDriverFactory: SqlDriverFactory,
   private val dispatcher: CoroutineDispatcher,
+  private val manifestVerifier: ManifestVerifier,
   private val httpFetcher: HttpFetcher,
   private val eventListener: EventListener,
   private val nowEpochMs: () -> Long,
   private val serializersModule: SerializersModule,
-  private val manifestVerifier: ManifestVerifier?,
   private val embeddedDir: Path?,
   private val embeddedFileSystem: FileSystem?,
   internal val cache: ZiplineCache?,
@@ -78,11 +78,11 @@ class ZiplineLoader internal constructor(
   ): ZiplineLoader = ZiplineLoader(
     sqlDriverFactory = sqlDriverFactory,
     dispatcher = dispatcher,
+    manifestVerifier = manifestVerifier,
     httpFetcher = httpFetcher,
     eventListener = eventListener,
     nowEpochMs = nowEpochMs,
     serializersModule = serializersModule,
-    manifestVerifier = manifestVerifier,
     embeddedDir = embeddedDir,
     embeddedFileSystem = embeddedFileSystem,
     cache = cache,
@@ -113,11 +113,11 @@ class ZiplineLoader internal constructor(
     return ZiplineLoader(
       sqlDriverFactory = sqlDriverFactory,
       dispatcher = dispatcher,
+      manifestVerifier = manifestVerifier,
       httpFetcher = httpFetcher,
       eventListener = eventListener,
       nowEpochMs = nowEpochMs,
       serializersModule = serializersModule,
-      manifestVerifier = manifestVerifier,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
       cache = cache,
@@ -360,7 +360,7 @@ class ZiplineLoader internal constructor(
       ?: return null
 
     // Defend against changes to the locally-cached copy.
-    manifestVerifier?.verify(result.manifestBytes, result.manifest)
+    manifestVerifier.verify(result.manifestBytes, result.manifest)
 
     return result
   }
@@ -378,7 +378,7 @@ class ZiplineLoader internal constructor(
     }
 
     // Defend against unauthorized changes in the supply chain.
-    manifestVerifier?.verify(result.manifestBytes, result.manifest)
+    manifestVerifier.verify(result.manifestBytes, result.manifest)
 
     return result
   }

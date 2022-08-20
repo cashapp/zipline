@@ -16,6 +16,7 @@
 package app.cash.zipline.samples.emojisearch
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
 import kotlinx.coroutines.*
@@ -40,6 +41,7 @@ class EmojiSearchZipline(
 
   private val ziplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
+    manifestVerifier = NO_SIGNATURE_CHECKS,
     httpClient = httpClient,
     nowEpochMs = { NSDate().timeIntervalSince1970().toLong() * 1000 },
   )

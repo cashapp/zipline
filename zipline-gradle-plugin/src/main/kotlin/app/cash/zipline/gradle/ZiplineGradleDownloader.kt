@@ -16,6 +16,7 @@
 
 package app.cash.zipline.gradle
 
+import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineLoader
 import java.io.File
 import java.util.concurrent.Executors
@@ -33,6 +34,7 @@ class ZiplineGradleDownloader {
   fun download(downloadDir: File, applicationName: String, manifestUrl: String) {
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
+      manifestVerifier = NO_SIGNATURE_CHECKS,
       httpClient = client,
     )
     runBlocking {

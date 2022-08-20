@@ -27,10 +27,11 @@ import okio.ByteString.Companion.encodeUtf8
  * Confirms the manifest is cryptographically signed by a trusted key.
  */
 class ManifestVerifier private constructor(
+  private val doSignatureChecks: Boolean,
   private val verifiers: Map<String, Verifier>,
 ) {
   init {
-    require(verifiers.isNotEmpty()) {
+    require(!doSignatureChecks || verifiers.isNotEmpty()) {
       "verifier requires at least one trusted key"
     }
   }
@@ -42,6 +43,8 @@ class ManifestVerifier private constructor(
    * This throws an exception if no trusted signature is found, or if a signature doesn't verify.
    */
   fun verify(manifestBytes: ByteString, manifest: ZiplineManifest) {
+    if (!doSignatureChecks) return
+
     val signaturePayload = signaturePayload(manifestBytes.utf8())
     val signaturePayloadBytes = signaturePayload.encodeUtf8()
 
@@ -91,11 +94,25 @@ class ManifestVerifier private constructor(
       verifiers[name] = Verifier(algorithm.get(), trustedKey)
     }
 
-    fun build() = ManifestVerifier(verifiers.toMap())
+    fun build() = ManifestVerifier(
+      doSignatureChecks = true,
+      verifiers = verifiers.toMap(),
+    )
   }
 
   private class Verifier(
     val algorithm: SignatureAlgorithm,
     val trustedKey: ByteString,
   )
+
+  companion object {
+    /**
+     * A special instance of [ManifestVerifier] that doesn't do any signature checks. Use this in
+     * development and tests to skip code signing.
+     */
+    val NO_SIGNATURE_CHECKS = ManifestVerifier(
+      doSignatureChecks = false,
+      verifiers = mapOf(),
+    )
+  }
 }

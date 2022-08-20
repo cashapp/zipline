@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.internal.cache.ZiplineCache
 import app.cash.zipline.loader.internal.fetcher.MANIFEST_MAX_SIZE
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
@@ -29,7 +30,7 @@ import okio.FileSystem
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoaderTester(
   private val eventListener: EventListener = EventListener.NONE,
-  private val manifestVerifier: ManifestVerifier? = null,
+  private val manifestVerifier: ManifestVerifier = NO_SIGNATURE_CHECKS
 ) {
   val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "okio-${randomToken().hex()}"
 
@@ -59,10 +60,10 @@ class LoaderTester(
     systemFileSystem.createDirectories(embeddedDir, mustCreate = true)
     loader = testZiplineLoader(
       dispatcher = dispatcher,
+      manifestVerifier = manifestVerifier,
       httpClient = httpClient,
       nowEpochMs = { nowMillis },
       eventListener = eventListener,
-      manifestVerifier = manifestVerifier,
     ).withEmbedded(
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,

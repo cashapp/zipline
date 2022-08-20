@@ -70,7 +70,11 @@ must be confined to a single thread.
 ```kotlin
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val manifestUrl = "http://localhost:8080/manifest.zipline.json"
-  val loader = ZiplineLoader(dispatcher, OkHttpClient())
+  val loader = ZiplineLoader(
+    dispatcher,
+    ManifestVerifier.NO_SIGNATURE_CHECKS,
+    OkHttpClient(),
+  )
   return loader.loadOnce("trivia", manifestUrl)
 }
 ```

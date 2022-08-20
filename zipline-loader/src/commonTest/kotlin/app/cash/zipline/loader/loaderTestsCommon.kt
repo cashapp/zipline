@@ -16,6 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
+import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import app.cash.zipline.loader.internal.tink.subtle.Field25519
 import app.cash.zipline.loader.internal.tink.subtle.KeyPair
@@ -30,10 +31,10 @@ expect val systemFileSystem: FileSystem
 
 expect fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
+  manifestVerifier: ManifestVerifier = NO_SIGNATURE_CHECKS,
   httpClient: ZiplineHttpClient,
   nowEpochMs: () -> Long,
   eventListener: EventListener = EventListener.NONE,
-  manifestVerifier: ManifestVerifier? = null,
 ): ZiplineLoader
 
 internal expect fun testSqlDriverFactory(): SqlDriverFactory
