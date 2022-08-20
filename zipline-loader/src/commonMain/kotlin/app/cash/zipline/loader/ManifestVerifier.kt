@@ -15,8 +15,10 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.SignatureAlgorithmId
+import app.cash.zipline.loader.internal.SignatureAlgorithm
+import app.cash.zipline.loader.internal.get
 import app.cash.zipline.loader.internal.signaturePayload
-import app.cash.zipline.loader.internal.tink.subtle.Ed25519Verify
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
@@ -25,16 +27,16 @@ import okio.ByteString.Companion.encodeUtf8
  * Confirms the manifest is cryptographically signed by a trusted key.
  */
 class ManifestVerifier private constructor(
-  private val trustedKeys: Map<String, Ed25519Verify>,
+  private val verifiers: Map<String, Verifier>,
 ) {
   init {
-    require(trustedKeys.isNotEmpty()) {
+    require(verifiers.isNotEmpty()) {
       "verifier requires at least one trusted key"
     }
   }
 
   /**
-   * Returns normally if [manifest] is signed by a trusted key in [trustedKeys]. This will check the
+   * Returns normally if [manifest] is signed by a trusted key in [verifiers]. This will check the
    * first key in [ZiplineManifest.signatures] that is recognized.
    *
    * This throws an exception if no trusted signature is found, or if a signature doesn't verify.
@@ -44,9 +46,13 @@ class ManifestVerifier private constructor(
     val signaturePayloadBytes = signaturePayload.encodeUtf8()
 
     for ((keyName, signature) in manifest.signatures) {
-      val trustedKey = trustedKeys[keyName] ?: continue
+      val verifier = verifiers[keyName] ?: continue
 
-      check(trustedKey.verify(signature.decodeHex(), signaturePayloadBytes)) {
+      check(verifier.algorithm.verify(
+        message = signaturePayloadBytes,
+        signature = signature.decodeHex(),
+        publicKey = verifier.trustedKey,
+      )) {
         "manifest signature for key $keyName did not verify!"
       }
 
@@ -56,23 +62,40 @@ class ManifestVerifier private constructor(
     throw IllegalStateException(
       """
       |no keys in the manifest were recognized for signature verification!
-      |  trusted keys: ${trustedKeys.keys}
+      |  trusted keys: ${verifiers.keys}
       |  manifest keys: ${manifest.signatures.keys}
       """.trimMargin()
     )
   }
 
   class Builder {
-    private val trustedKeys = mutableMapOf<String, Ed25519Verify>()
+    private val verifiers = mutableMapOf<String, Verifier>()
 
     /** Adds an EdDSA Ed25519 public key that will be used to verify manifests. */
     fun addEd25519(
       name: String,
       trustedKey: ByteString,
+    ) = add(SignatureAlgorithmId.Ed25519, name, trustedKey)
+
+    /** Adds an ECDSA public key that will be used to verify manifests. */
+    fun addEcdsa(
+      name: String,
+      trustedKey: ByteString,
+    ) = add(SignatureAlgorithmId.Ecdsa, name, trustedKey)
+
+    fun add(
+      algorithm: SignatureAlgorithmId,
+      name: String,
+      trustedKey: ByteString,
     ) = apply {
-      trustedKeys[name] = Ed25519Verify(trustedKey)
+      verifiers[name] = Verifier(algorithm.get(), trustedKey)
     }
 
-    fun build()= ManifestVerifier(trustedKeys.toMap())
+    fun build() = ManifestVerifier(verifiers.toMap())
   }
+
+  private class Verifier(
+    val algorithm: SignatureAlgorithm,
+    val trustedKey: ByteString,
+  )
 }

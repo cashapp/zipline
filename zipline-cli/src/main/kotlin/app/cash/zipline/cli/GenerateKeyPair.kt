@@ -16,10 +16,12 @@
 
 package app.cash.zipline.cli
 
+import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.cli.GenerateKeyPair.Companion.NAME
 import app.cash.zipline.loader.internal.generateKeyPair
 import java.io.PrintStream
 import picocli.CommandLine.Command
+import picocli.CommandLine.Option
 
 @Command(
   name = NAME,
@@ -32,8 +34,15 @@ import picocli.CommandLine.Command
 class GenerateKeyPair(
   private val out: PrintStream = System.out,
 ) : Runnable {
+  @Option(
+    names = ["-a", "--algorithm"],
+    description = ["Signing algorithm to use."],
+  )
+  var algorithm: SignatureAlgorithmId = SignatureAlgorithmId.Ed25519
+
   override fun run() {
-    val keyPair = generateKeyPair()
+    val keyPair = algorithm.generateKeyPair()
+    out.println("  ALGORITHM: $algorithm")
     out.println(" PUBLIC KEY: ${keyPair.publicKey.hex()}")
     out.println("PRIVATE KEY: ${keyPair.privateKey.hex()}")
   }

@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.gradle
 
+import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.gradle.ZiplineCompileTask.ManifestSigningKey
 import app.cash.zipline.loader.internal.generateKeyPair
 import java.io.File
@@ -46,7 +47,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   override fun apply(target: Project) {
     super.apply(target)
 
-    createGenerateKeyPairTask(target)
+    createGenerateKeyPairTasks(target)
 
     val extension = target.extensions.findByType(KotlinMultiplatformExtension::class.java)
       ?: return
@@ -95,7 +96,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       }.flatMap {
         it.map { dslKey ->
           dslKey.privateKeyHex.map { privateKeyHex ->
-            ManifestSigningKey(dslKey.name, privateKeyHex.decodeHex())
+            ManifestSigningKey(dslKey.name, dslKey.algorithmId.get(), privateKeyHex.decodeHex())
           }
         }.flatten()
       })
@@ -128,16 +129,26 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
   }
 
-  private fun createGenerateKeyPairTask(project: Project) {
-    project.tasks.register("generateZiplineManifestKeyPair") { task ->
+  private fun createGenerateKeyPairTasks(project: Project) {
+    project.tasks.register("generateZiplineManifestKeyPairEd25519") { task ->
       task.doLast {
-        val logger = LoggerFactory.getLogger(ZiplinePlugin::class.java)
-        val keyPair = generateKeyPair()
-        logger.warn("---------------- ----------------------------------------------------------------")
-        logger.warn("     PUBLIC KEY: ${keyPair.publicKey.hex()}")
-        logger.warn("    PRIVATE KEY: ${keyPair.privateKey.hex()}")
-        logger.warn("---------------- ----------------------------------------------------------------")
+        generateKeyPair(SignatureAlgorithmId.Ed25519)
       }
     }
+    project.tasks.register("generateZiplineManifestKeyPairEcdsa") { task ->
+      task.doLast {
+        generateKeyPair(SignatureAlgorithmId.Ecdsa)
+      }
+    }
+  }
+
+  private fun generateKeyPair(algorithm: SignatureAlgorithmId) {
+    val logger = LoggerFactory.getLogger(ZiplinePlugin::class.java)
+    val keyPair = algorithm.generateKeyPair()
+    logger.warn("---------------- ----------------------------------------------------------------")
+    logger.warn("      ALGORITHM: $algorithm")
+    logger.warn("     PUBLIC KEY: ${keyPair.publicKey.hex()}")
+    logger.warn("    PRIVATE KEY: ${keyPair.privateKey.hex()}")
+    logger.warn("---------------- ----------------------------------------------------------------")
   }
 }

@@ -135,16 +135,34 @@ class ZiplinePluginTest {
   }
 
   @Test
-  fun generateZiplineManifestKeyPair() {
+  fun generateZiplineManifestKeyPairEd25519() {
     val projectDir = File("src/test/projects/basic")
 
-    val result = createRunner(projectDir, "generateZiplineManifestKeyPair").build()
+    val result = createRunner(projectDir, "generateZiplineManifestKeyPairEd25519").build()
     assertThat(SUCCESS_OUTCOMES)
-      .contains(result.task(":lib:generateZiplineManifestKeyPair")!!.outcome)
+      .contains(result.task(":lib:generateZiplineManifestKeyPairEd25519")!!.outcome)
     assertThat(result.output).containsMatch(
       """
+      |      ALGORITHM: Ed25519
       |     PUBLIC KEY: [\da-f]{64}
       |    PRIVATE KEY: [\da-f]{64}
+      |""".trimMargin()
+    )
+  }
+
+  @Test
+  fun generateZiplineManifestKeyPairEcdsa() {
+    val projectDir = File("src/test/projects/basic")
+
+    val result = createRunner(projectDir, "generateZiplineManifestKeyPairEcdsa").build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(":lib:generateZiplineManifestKeyPairEcdsa")!!.outcome)
+    // Expected lengths were determined experimentally!
+    assertThat(result.output).containsMatch(
+      """
+      |      ALGORITHM: Ecdsa
+      |     PUBLIC KEY: [\da-f]{182}
+      |    PRIVATE KEY: [\da-f]{134}
       |""".trimMargin()
     )
   }

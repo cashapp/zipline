@@ -42,9 +42,26 @@ class ManifestSigningTest {
     .addEd25519("key3", SampleKeys.key3Public)
     .build()
 
+  private val signer4 = ManifestSigner.Builder()
+    .addEcdsa("key4", SampleKeys.key4Private)
+    .build()
+
+  private val verifier4 = ManifestVerifier.Builder()
+    .addEcdsa("key4", SampleKeys.key4Public)
+    .build()
+
+  private val verifier5 = ManifestVerifier.Builder()
+    .addEcdsa("key5", SampleKeys.key5Public)
+    .build()
+
   private val signer12 = ManifestSigner.Builder()
     .addEd25519("key1", SampleKeys.key1Private)
     .addEd25519("key2", SampleKeys.key2Private)
+    .build()
+
+  private val signer14 = ManifestSigner.Builder()
+    .addEd25519("key1", SampleKeys.key1Private)
+    .addEcdsa("key4", SampleKeys.key4Private)
     .build()
 
   private val verifier12 = ManifestVerifier.Builder()
@@ -52,9 +69,19 @@ class ManifestSigningTest {
     .addEd25519("key2", SampleKeys.key2Public)
     .build()
 
+  private val verifier14 = ManifestVerifier.Builder()
+    .addEd25519("key1", SampleKeys.key1Public)
+    .addEcdsa("key4", SampleKeys.key4Public)
+    .build()
+
   private val verifier23 = ManifestVerifier.Builder()
     .addEd25519("key2", SampleKeys.key2Public)
     .addEd25519("key3", SampleKeys.key3Public)
+    .build()
+
+  private val verifier25 = ManifestVerifier.Builder()
+    .addEd25519("key2", SampleKeys.key2Public)
+    .addEcdsa("key5", SampleKeys.key5Public)
     .build()
 
   private val manifest = ZiplineManifest.create(
@@ -67,9 +94,15 @@ class ManifestSigningTest {
   )
 
   @Test
-  fun happyPath() {
+  fun happyPathEd25519() {
     val signedManifest = signer1.sign(manifest)
     verifier1.verify(signedManifest)
+  }
+
+  @Test
+  fun happyPathEcdsa() {
+    val signedManifest = signer4.sign(manifest)
+    verifier4.verify(signedManifest)
   }
 
   @Test
@@ -127,11 +160,33 @@ class ManifestSigningTest {
   }
 
   @Test
+  fun manifestWithMultipleSignaturesWithDifferentAlgorithms() {
+    val signedManifest = signer14.sign(manifest)
+    verifier1.verify(signedManifest)
+    verifier4.verify(signedManifest)
+    assertFailsWith<IllegalStateException> {
+      verifier3.verify(signedManifest)
+    }
+    assertFailsWith<IllegalStateException> {
+      verifier5.verify(signedManifest)
+    }
+  }
+
+  @Test
   fun verifierWithMultipleKeys() {
     val signedManifest = signer1.sign(manifest)
     verifier12.verify(signedManifest)
     assertFailsWith<IllegalStateException> {
       verifier23.verify(signedManifest)
+    }
+  }
+
+  @Test
+  fun verifierWithMultipleKeysWithDifferentAlgorithms() {
+    val signedManifest = signer1.sign(manifest)
+    verifier14.verify(signedManifest)
+    assertFailsWith<IllegalStateException> {
+      verifier25.verify(signedManifest)
     }
   }
 

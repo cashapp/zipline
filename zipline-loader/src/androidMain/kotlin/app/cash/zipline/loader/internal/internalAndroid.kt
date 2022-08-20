@@ -19,3 +19,5 @@ import app.cash.zipline.Zipline
 
 internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
   loadJsModule(bytecode, id)
+
+actual val ecdsa: SignatureAlgorithm = Ecdsa(secureRandom())

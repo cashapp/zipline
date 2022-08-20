@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader.internal
+package app.cash.zipline
 
-import app.cash.zipline.Zipline
-import okio.ByteString
-
-internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
-
-actual val ecdsa = object : SignatureAlgorithm {
-  override fun sign(message: ByteString, privateKey: ByteString): ByteString {
-    error("not implemented")
-  }
-
-  override fun verify(message: ByteString, signature: ByteString, publicKey: ByteString): Boolean {
-    error("not implemented")
-  }
+enum class SignatureAlgorithmId {
+  Ed25519, Ecdsa,
 }

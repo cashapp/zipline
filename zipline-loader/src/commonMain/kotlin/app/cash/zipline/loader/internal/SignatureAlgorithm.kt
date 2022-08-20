@@ -15,18 +15,11 @@
  */
 package app.cash.zipline.loader.internal
 
-import app.cash.zipline.Zipline
 import okio.ByteString
 
-internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
+interface SignatureAlgorithm {
+  fun sign(message: ByteString, privateKey: ByteString): ByteString
 
-actual val ecdsa = object : SignatureAlgorithm {
-  override fun sign(message: ByteString, privateKey: ByteString): ByteString {
-    error("not implemented")
-  }
-
-  override fun verify(message: ByteString, signature: ByteString, publicKey: ByteString): Boolean {
-    error("not implemented")
-  }
+  /** Returns true if [signature] with [message], can be verified with [publicKey]. */
+  fun verify(message: ByteString, signature: ByteString, publicKey: ByteString): Boolean
 }
