@@ -16,5 +16,5 @@
 package app.cash.zipline
 
 enum class SignatureAlgorithmId {
-  Ed25519, Ecdsa,
+  Ed25519, EcdsaP256,
 }

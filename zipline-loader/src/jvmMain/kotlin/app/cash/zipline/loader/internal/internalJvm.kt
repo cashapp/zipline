@@ -34,7 +34,7 @@ fun generateEd25519KeyPair(): KeyPair {
   return newKeyPairFromSeed(secretSeed.toByteString())
 }
 
-actual val ecdsa: SignatureAlgorithm = Ecdsa(secureRandom())
+actual val ecdsaP256: SignatureAlgorithm = EcdsaP256(secureRandom())
 
 internal fun secureRandom(): SecureRandom {
   return SecureRandom().also { it.nextLong() } // Force seeding.
@@ -43,6 +43,6 @@ internal fun secureRandom(): SecureRandom {
 fun SignatureAlgorithmId.generateKeyPair(): KeyPair {
   return when (this) {
     SignatureAlgorithmId.Ed25519 -> generateEd25519KeyPair()
-    SignatureAlgorithmId.Ecdsa -> Ecdsa(secureRandom()).generateP256KeyPair()
+    SignatureAlgorithmId.EcdsaP256 -> EcdsaP256(secureRandom()).generateP256KeyPair()
   }
 }
