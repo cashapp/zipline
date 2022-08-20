@@ -138,4 +138,10 @@ class LoadOrFallbackTest {
     tester.seedEmbedded("red", "firetruck")
     assertEquals("firetruck", tester.failureManifestTooLarge("red"))
   }
+
+  @Test
+  fun fallBackBecauseManifestIsMalformedJson() = runBlocking {
+    tester.seedEmbedded("red", "firetruck")
+    assertEquals("firetruck", tester.failureManifestMalformedJson("red"))
+  }
 }
