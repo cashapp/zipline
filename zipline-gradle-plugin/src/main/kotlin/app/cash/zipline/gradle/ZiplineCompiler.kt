@@ -36,7 +36,7 @@ import okio.HashingSink
 import okio.buffer
 import okio.sink
 
-object ZiplineCompiler {
+internal object ZiplineCompiler {
   private const val MODULE_PATH_PREFIX = "./"
   private const val ZIPLINE_EXTENSION = ".zipline"
 

@@ -3,6 +3,7 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTask
 
 buildscript {
@@ -28,6 +29,10 @@ plugins {
 }
 
 apply(plugin = "org.jetbrains.dokka")
+tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
+  removeChildTask(":zipline-cli")
+  removeChildTask(":zipline-kotlin-plugin")
+}
 
 apply(plugin = "com.vanniktech.maven.publish.base")
 

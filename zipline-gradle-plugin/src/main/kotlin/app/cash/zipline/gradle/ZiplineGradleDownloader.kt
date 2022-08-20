@@ -25,7 +25,7 @@ import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 
-class ZiplineGradleDownloader {
+internal class ZiplineGradleDownloader {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
   private val client = OkHttpClient()
