@@ -101,6 +101,8 @@ class ManifestSigningTest {
 
   @Test
   fun happyPathEcdsa() {
+    if (!canSignEcdsaP256()) return
+
     val signedManifest = signer4.sign(manifest)
     verifier4.verify(signedManifest)
   }
@@ -161,6 +163,8 @@ class ManifestSigningTest {
 
   @Test
   fun manifestWithMultipleSignaturesWithDifferentAlgorithms() {
+    if (!canSignEcdsaP256()) return
+
     val signedManifest = signer14.sign(manifest)
     verifier1.verify(signedManifest)
     verifier4.verify(signedManifest)
