@@ -177,6 +177,33 @@ class LoaderTester(
     )
   }
 
+  suspend fun failureManifestMalformedJson(applicationName: String): String {
+    val seed = "malformed json"
+    val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+    val ziplineFileByteString =
+      testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
+    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
+      seed,
+      ziplineFileByteString.sha256(),
+      includeUnknownFieldInJson,
+    )
+    val malformedManifest = Buffer()
+      .write(
+        byteString = loadedManifest.manifestBytes,
+        offset = 0,
+        byteCount = loadedManifest.manifestBytes.size - 1, // Drop trailing '}'.
+      )
+      .readByteString()
+    httpClient.filePathToByteString = mapOf(
+      manifestUrl to malformedManifest,
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
+    )
+    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
+    return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
+      " loaded\n"
+    )
+  }
+
   suspend fun failureCodeFetchFails(applicationName: String): String {
     val seed = "unreachable"
     val ziplineFileByteString =
