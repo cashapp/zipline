@@ -1,4 +1,3 @@
-
 buildscript {
   dependencies {
     classpath(libs.android.gradle.plugin)
