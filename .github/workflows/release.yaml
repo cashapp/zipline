@@ -48,14 +48,7 @@ jobs:
 
       - name: Build native library (macOS)
         if: matrix.os == 'macOS-latest'
-        run: |
-          mkdir -p build/jni/${{ matrix.arch }}/
-          mkdir -p zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
-          cmake -S zipline/src/jvmMain/ -B build/jni/${{ matrix.arch }}/ \
-            -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)" \
-            -DCMAKE_SYSTEM_PROCESSOR=${{ matrix.cmake-arch }}
-          cmake --build build/jni/${{ matrix.arch }}/ --verbose
-          cp -v build/jni/${{ matrix.arch }}/libquickjs.* zipline/src/jvmMain/resources/jni/${{ matrix.arch }}/
+        run: ./.github/workflows/build-mac.sh -a ${{ matrix.arch }} -c ${{ matrix.cmake-arch }}
 
       # Build unless this is a cross-compile.
       - run: ./gradlew build --stacktrace

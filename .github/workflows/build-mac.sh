@@ -56,7 +56,7 @@ function build() {
   echoRun mkdir -p zipline/src/jvmMain/resources/jni/$MACOS_ARCH/
   echoRun cmake -S zipline/src/jvmMain/ -B build/jni/$MACOS_ARCH/ \
     -DQUICKJS_VERSION="$(cat zipline/native/quickjs/VERSION)" \
-    -DCMAKE_SYSTEM_PROCESSOR=$CMAKE_ARCH
+    -DCMAKE_OSX_ARCHITECTURES=$CMAKE_ARCH
   echoRun cmake --build build/jni/$MACOS_ARCH/ --verbose
   echoRun cp -v build/jni/$MACOS_ARCH/libquickjs.* zipline/src/jvmMain/resources/jni/$MACOS_ARCH/
 
