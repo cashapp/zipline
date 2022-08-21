@@ -35,3 +35,5 @@ fun SignatureAlgorithmId.get(): SignatureAlgorithm {
     SignatureAlgorithmId.EcdsaP256 -> ecdsaP256
   }
 }
+
+internal expect val systemEpochMsClock: () -> Long
