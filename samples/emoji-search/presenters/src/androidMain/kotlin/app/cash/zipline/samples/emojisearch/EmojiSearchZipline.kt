@@ -15,7 +15,9 @@
  */
 package app.cash.zipline.samples.emojisearch
 
+import android.content.Context
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineLoader
 import java.util.concurrent.Executors
 import kotlin.coroutines.EmptyCoroutineContext
@@ -27,7 +29,6 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import okhttp3.OkHttpClient
-import android.content.Context
 
 class EmojiSearchZipline(context: Context) {
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
@@ -40,6 +41,7 @@ class EmojiSearchZipline(context: Context) {
   private val ziplineLoader = ZiplineLoader(
     context = context,
     dispatcher = dispatcher,
+    manifestVerifier = NO_SIGNATURE_CHECKS,
     httpClient = client,
   )
 

@@ -16,10 +16,11 @@
 package app.cash.zipline.tests
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
-import java.util.concurrent.Executors
 import java.time.Instant
+import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -41,6 +42,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   }
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
+    manifestVerifier = NO_SIGNATURE_CHECKS,
     httpClient = localDirectoryHttpClient,
   )
 

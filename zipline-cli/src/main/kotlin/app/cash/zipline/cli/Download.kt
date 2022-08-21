@@ -17,6 +17,7 @@
 package app.cash.zipline.cli
 
 import app.cash.zipline.cli.Download.Companion.NAME
+import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineLoader
 import java.io.File
 import java.util.concurrent.Executors
@@ -59,6 +60,7 @@ class Download : Runnable {
     println("Zipline Download [manifestUrl=$manifestUrl][downloadDir=$downloadDir]...")
     val ziplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
+      manifestVerifier = NO_SIGNATURE_CHECKS,
       httpClient = client,
     )
     runBlocking {
@@ -72,7 +74,11 @@ class Download : Runnable {
   }
 
   override fun run() {
-    download(applicationName = applicationName, manifestUrl = manifestUrl, downloadDir = downloadDir)
+    download(
+      applicationName = applicationName,
+      manifestUrl = manifestUrl,
+      downloadDir = downloadDir,
+    )
   }
 
   companion object {
