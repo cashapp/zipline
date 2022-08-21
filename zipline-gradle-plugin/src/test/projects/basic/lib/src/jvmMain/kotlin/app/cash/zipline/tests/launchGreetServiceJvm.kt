@@ -44,7 +44,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
     httpClient = localDirectoryHttpClient,
   )
 
-  val zipline = loader.loadOnce("test", "http://localhost:99999/manifest.zipline.json").zipline
+  val zipline = loader.loadOnce("test", "https://localhost/manifest.zipline.json").zipline
 
   return zipline
 }
