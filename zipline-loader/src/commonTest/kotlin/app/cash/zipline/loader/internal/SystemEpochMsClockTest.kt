@@ -16,7 +16,7 @@
 package app.cash.zipline.loader.internal
 
 import kotlin.test.Test
-import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -24,12 +24,8 @@ class SystemEpochMsClockTest {
   @Test
   fun clockTicks(): Unit = runBlocking {
     val timestampA = systemEpochMsClock()
-    delay(100)
+    delay(1)
     val timestampB = systemEpochMsClock()
-    assertEquals(
-      timestampA + 100.0,
-      timestampB + 0.0,
-      absoluteTolerance = 50.0
-    )
+    assertTrue(timestampB > timestampA)
   }
 }
