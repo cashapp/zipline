@@ -162,7 +162,7 @@ class ZiplineLoader internal constructor(
    *     may emit periodically to trigger polling. It should also emit for loading triggers like
    *     app launch, app foregrounding, and network connectivity changed.
    */
-  suspend fun load(
+  fun load(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
     initializer: (Zipline) -> Unit,
