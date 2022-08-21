@@ -17,6 +17,7 @@ package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineHttpClient
+import app.cash.zipline.loader.internal.resolveUrl
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
@@ -104,7 +105,7 @@ internal class HttpFetcher(
     url: String,
   ): ByteString {
     val fullUrl = when {
-      baseUrl != null -> httpClient.resolve(baseUrl, url)
+      baseUrl != null -> resolveUrl(baseUrl, url)
       else -> url
     }
 

@@ -25,14 +25,4 @@ class FakeZiplineHttpClient: ZiplineHttpClient {
   override suspend fun download(url: String): ByteString {
     return filePathToByteString[url] ?: throw IOException("404: $url not found")
   }
-
-  /** Note: this naive resolve() that doesn't support `../` etc. */
-  override fun resolve(baseUrl: String, link: String): String {
-    val calculatedBaseUrl = baseUrl.substringBeforeLast("/")
-    return if (link.startsWith(calculatedBaseUrl)) {
-      link
-    } else {
-      "$calculatedBaseUrl/$link"
-    }
-  }
 }

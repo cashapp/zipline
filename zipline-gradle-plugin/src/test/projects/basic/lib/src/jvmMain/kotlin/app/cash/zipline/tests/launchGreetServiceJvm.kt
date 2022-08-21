@@ -37,8 +37,6 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
       val file = url.substringAfterLast("/")
       return FileSystem.SYSTEM.read(base / file) { readByteString() }
     }
-
-    override fun resolve(baseUrl: String, link: String) = "http://localhost:99999/$link"
   }
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
@@ -46,7 +44,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
     httpClient = localDirectoryHttpClient,
   )
 
-  val zipline = loader.loadOnce("test", "http://localhost:99999/manifest.zipline.json").zipline
+  val zipline = loader.loadOnce("test", "https://localhost/manifest.zipline.json").zipline
 
   return zipline
 }
