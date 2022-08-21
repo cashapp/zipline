@@ -165,7 +165,7 @@ zipline {
   signingKeys {
     create("key1") {
       privateKeyHex.set(...)
-      algorithmId.set(app.cash.zipline.SignatureAlgorithmId.Ed25519)
+      algorithmId.set(app.cash.zipline.loader.SignatureAlgorithmId.Ed25519)
     }
   }
 }

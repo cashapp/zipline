@@ -15,8 +15,8 @@
  */
 package app.cash.zipline.gradle
 
-import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.gradle.ZiplineCompileTask.ManifestSigningKey
+import app.cash.zipline.loader.SignatureAlgorithmId
 import app.cash.zipline.loader.internal.generateKeyPair
 import java.io.File
 import java.util.Locale

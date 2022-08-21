@@ -1,4 +1,4 @@
-import app.cash.zipline.SignatureAlgorithmId.Ed25519
+import app.cash.zipline.loader.SignatureAlgorithmId.Ed25519
 
 plugins {
   kotlin("multiplatform")

@@ -16,8 +16,8 @@
 
 package app.cash.zipline.gradle
 
-import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.loader.ManifestSigner
+import app.cash.zipline.loader.SignatureAlgorithmId
 import java.io.File
 import java.io.Serializable
 import okio.ByteString
@@ -89,9 +89,9 @@ abstract class ZiplineCompileTask : DefaultTask() {
 
       ZiplineCompiler.incrementalCompile(
         outputDir = outputDirFile,
-        modifiedFiles = filterByChangeType { changeType ->  changeType == ChangeType.MODIFIED },
-        addedFiles = filterByChangeType { changeType ->  changeType == ChangeType.ADDED },
-        removedFiles = filterByChangeType { changeType ->  changeType == ChangeType.REMOVED },
+        modifiedFiles = filterByChangeType { changeType -> changeType == ChangeType.MODIFIED },
+        addedFiles = filterByChangeType { changeType -> changeType == ChangeType.ADDED },
+        removedFiles = filterByChangeType { changeType -> changeType == ChangeType.REMOVED },
         mainFunction = mainFunction,
         mainModuleId = mainModuleId,
         manifestSigner = manifestSigner,
@@ -113,5 +113,5 @@ abstract class ZiplineCompileTask : DefaultTask() {
     val name: String,
     val algorithm: SignatureAlgorithmId,
     val privateKey: ByteString,
-  ): Serializable
+  ) : Serializable
 }

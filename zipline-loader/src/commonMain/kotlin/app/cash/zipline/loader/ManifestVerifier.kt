@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.loader.internal.SignatureAlgorithm
 import app.cash.zipline.loader.internal.get
 import app.cash.zipline.loader.internal.signaturePayload

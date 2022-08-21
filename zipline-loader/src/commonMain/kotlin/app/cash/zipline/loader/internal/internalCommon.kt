@@ -15,8 +15,8 @@
  */
 package app.cash.zipline.loader.internal
 
-import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.SignatureAlgorithmId
 import app.cash.zipline.loader.internal.tink.subtle.Ed25519
 
 // TODO: drop this once we adopt Kotlin Hierarchical Multiplatform projects
