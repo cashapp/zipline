@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.loader.internal
 
-import app.cash.zipline.SignatureAlgorithmId
+import app.cash.zipline.loader.SignatureAlgorithmId
 import app.cash.zipline.loader.internal.tink.subtle.Field25519
 import app.cash.zipline.loader.internal.tink.subtle.KeyPair
 import app.cash.zipline.loader.internal.tink.subtle.newKeyPairFromSeed

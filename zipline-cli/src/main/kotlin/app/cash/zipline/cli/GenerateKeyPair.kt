@@ -16,8 +16,9 @@
 
 package app.cash.zipline.cli
 
-import app.cash.zipline.SignatureAlgorithmId
 import app.cash.zipline.cli.GenerateKeyPair.Companion.NAME
+import app.cash.zipline.loader.SignatureAlgorithmId
+import app.cash.zipline.loader.SignatureAlgorithmId.Ed25519
 import app.cash.zipline.loader.internal.generateKeyPair
 import java.io.PrintStream
 import picocli.CommandLine.Command
@@ -38,7 +39,7 @@ class GenerateKeyPair(
     names = ["-a", "--algorithm"],
     description = ["Signing algorithm to use."],
   )
-  var algorithm: SignatureAlgorithmId = SignatureAlgorithmId.Ed25519
+  var algorithm: SignatureAlgorithmId = Ed25519
 
   override fun run() {
     val keyPair = algorithm.generateKeyPair()

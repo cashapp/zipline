@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.gradle
 
-import app.cash.zipline.SignatureAlgorithmId
+import app.cash.zipline.loader.SignatureAlgorithmId
 import org.gradle.api.NamedDomainObjectContainer
 import org.gradle.api.provider.Property
 
