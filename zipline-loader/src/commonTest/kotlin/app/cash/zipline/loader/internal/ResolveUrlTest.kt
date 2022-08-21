@@ -15,19 +15,29 @@
  */
 package app.cash.zipline.loader.internal
 
-import app.cash.zipline.Zipline
-import platform.Foundation.NSDate
-import platform.Foundation.NSURL
-import platform.Foundation.timeIntervalSince1970
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
-internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
+/** Just confirm our [resolveUrl] code is wired up correctly. */
+class ResolveUrlTest {
+  @Test fun fullUrl() {
+    assertEquals(
+      "https://two.example.com/abc",
+      resolveUrl("https://one.example.com/def", "https://two.example.com/abc"),
+    )
+  }
 
-actual val ecdsaP256: SignatureAlgorithm = EcdsaP256()
+  @Test fun relativePath() {
+    assertEquals(
+      "https://example.com/abc",
+      resolveUrl("https://example.com/", "abc"),
+    )
+  }
 
-internal actual val systemEpochMsClock: () -> Long =
-  { (NSDate().timeIntervalSince1970() * 1000).toLong() }
-
-actual fun resolveUrl(baseUrl: String, link: String): String {
-  return NSURL(string = link, relativeToURL = NSURL(string = baseUrl)).absoluteString!!
+  @Test fun absolutePath() {
+    assertEquals(
+      "https://example.com/ghi",
+      resolveUrl("https://example.com/abc/def", "/ghi"),
+    )
+  }
 }
