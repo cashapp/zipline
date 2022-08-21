@@ -24,6 +24,7 @@ import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.SecureRandom
 import java.security.Signature
+import java.security.SignatureException
 import java.security.interfaces.ECPublicKey
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECParameterSpec
@@ -68,7 +69,12 @@ class EcdsaP256(
   }
 
   override fun verify(message: ByteString, signature: ByteString, publicKey: ByteString): Boolean {
-    return verify(publicKey.decodeAnsiX963(), signature, message)
+    val ecPublicKey = publicKey.decodeAnsiX963()
+    return try {
+      verify(ecPublicKey, signature, message)
+    } catch (e: SignatureException) {
+      false // Malformed signature.
+    }
   }
 }
 

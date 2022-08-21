@@ -114,7 +114,7 @@ class Ed25519SignTest {
     val testGroups = loadEddsaTestJson().testGroups
     for (group in testGroups) {
       val key = group.key
-      val privateKey = key.sk.decodeHex()
+      val privateKey = key.sk!!.decodeHex()
       val tests = group.tests
       for (testcase in tests) {
         val tcId = "testcase ${testcase.tcId} (${testcase.comment})"

@@ -15,10 +15,14 @@
  */
 package app.cash.zipline.loader.internal
 
+import app.cash.zipline.loader.canLoadTestResources
+import app.cash.zipline.loader.internal.tink.subtle.loadEcdsaP256TestJson
 import app.cash.zipline.loader.testing.SampleKeys
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8
 
 /**
@@ -48,5 +52,45 @@ class EcdsaP256Test {
       publicKey = SampleKeys.key5Public
     ))
   }
-}
 
+  @Test
+  fun testVerificationWithWycheproofVectors() {
+    if (!canLoadTestResources()) return
+
+    // SecKeyVerifySignature is not strict about BER vs. DER encoding, and so some signatures are
+    // accepted even though they are not in canonical form. This is not a cryptographic weakness,
+    // just an overly lenient ASN.1 decoder. These are bugs in the underlying Apple crypto code.
+    val knownFailures = setOf(
+      "testcase 4 (long form encoding of length of sequence)",
+      "testcase 5 (length of sequence contains leading 0)",
+      "testcase 68 (long form encoding of length of integer)",
+      "testcase 69 (long form encoding of length of integer)",
+      "testcase 70 (length of integer contains leading 0)",
+      "testcase 71 (length of integer contains leading 0)",
+    )
+
+    var unexpectedErrors = 0
+    for (group in loadEcdsaP256TestJson().testGroups) {
+      val key = group.key
+      val publicKey = key.uncompressed!!.decodeHex()
+      val tests = group.tests
+      for (testcase in tests) {
+        val testcaseId = "testcase ${testcase.tcId} (${testcase.comment})"
+        val message = testcase.msg.decodeHex()
+        val signature = testcase.sig.decodeHex()
+        if (ecdsaP256.verify(message, signature, publicKey)) {
+          if (testcase.result == "invalid") {
+            println("FAIL ${testcaseId}: accepting invalid signature")
+            if (testcaseId !in knownFailures) unexpectedErrors++
+          }
+        } else {
+          if (testcase.result == "valid") {
+            println("FAIL ${testcaseId}: rejecting valid signature")
+            if (testcaseId !in knownFailures) unexpectedErrors++
+          }
+        }
+      }
+    }
+    assertEquals(0, unexpectedErrors.toLong())
+  }
+}

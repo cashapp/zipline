@@ -152,9 +152,10 @@ sqldelight {
 val fetchWycheproofJson by tasks.creating(Download::class) {
   val wycheproof = file("$buildDir/wycheproof")
   val wycheproofZip = file("$wycheproof/wycheproof.zip")
-  val wycheproofJson = file("$wycheproof/eddsa_test.json")
+  val eddsaTestJson = file("$wycheproof/eddsa_test.json")
+  val ecdsaP256Json = file("$wycheproof/ecdsa_secp256r1_sha256_test.json")
 
-  onlyIf { !wycheproofJson.exists() }
+  onlyIf { !eddsaTestJson.exists() || !ecdsaP256Json.exists() }
   tempAndMove(true)
   src("https://github.com/google/wycheproof/archive/d8ed1ba95ac4c551db67f410c06131c3bc00a97c.zip")
   dest(wycheproofZip)
@@ -162,8 +163,10 @@ val fetchWycheproofJson by tasks.creating(Download::class) {
   doLast {
     copy {
       from(zipTree(wycheproofZip)
-        .matching { include("**/testvectors/eddsa_test.json") }
-        .singleFile)
+        .matching {
+          include("**/testvectors/eddsa_test.json")
+          include("**/testvectors/ecdsa_secp256r1_sha256_test.json")
+        }.files)
       into(wycheproof)
     }
   }

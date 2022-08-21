@@ -18,10 +18,11 @@ import app.cash.zipline.loader.systemFileSystem
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import okio.Path
 import okio.Path.Companion.toPath
 
 @Serializable
-class EddsaTestJson(
+class WycheproofTestJson(
   val algorithm: String,
   val generatorVersion: String,
   val numberOfTests: Int,
@@ -33,7 +34,7 @@ class EddsaTestJson(
 
 @Serializable
 class TestGroup(
-  val jwk: Jwk,
+  val jwk: Jwk? = null,
   val key: Key,
   val keyDer: String,
   val keyPem: String,
@@ -63,13 +64,24 @@ class Jwk(
 class Key(
   val curve: String,
   val keySize: Int,
-  val pk: String,
-  val sk: String,
   val type: String,
+  val pk: String? = null,
+  val sk: String? = null,
+  val uncompressed: String? = null,
+  val wx: String? = null,
+  val wy: String? = null,
 )
 
-fun loadEddsaTestJson(): EddsaTestJson {
-  val eddsaTestJson = systemFileSystem.read("build/wycheproof/eddsa_test.json".toPath()) {
+fun loadEddsaTestJson(): WycheproofTestJson {
+  return loadWycheproofTestJson("build/wycheproof/eddsa_test.json".toPath())
+}
+
+fun loadEcdsaP256TestJson(): WycheproofTestJson {
+  return loadWycheproofTestJson("build/wycheproof/ecdsa_secp256r1_sha256_test.json".toPath())
+}
+
+fun loadWycheproofTestJson(path: Path): WycheproofTestJson {
+  val wycheproofTestJson = systemFileSystem.read(path) {
     readUtf8()
   }
 
@@ -77,5 +89,5 @@ fun loadEddsaTestJson(): EddsaTestJson {
     ignoreUnknownKeys = true
   }
 
-  return json.decodeFromString(eddsaTestJson)
+  return json.decodeFromString(wycheproofTestJson)
 }

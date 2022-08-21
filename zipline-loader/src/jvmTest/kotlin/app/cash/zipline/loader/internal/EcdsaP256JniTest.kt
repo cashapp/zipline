@@ -79,15 +79,15 @@ class EcdsaP256JniTest {
   @Test
   fun encodeAndDecodeAnsiX963() {
     val derBytes = "3059301306072a8648ce3d020106082a8648ce3d030107034200042927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e".decodeHex()
-    val asnX963Bytes = "042927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e".decodeHex()
+    val ansiX963Bytes = "042927b10512bae3eddcfe467828128bad2903269919f7086069c8c4df6c732838c7787964eaac00e5921fb1498a60f4606766b3d9685001558d1a974e7341513e".decodeHex()
     val decodedDerPublicKey = decodeEcPublicKey(derBytes)
     assertEquals(
-      asnX963Bytes,
+      ansiX963Bytes,
       decodedDerPublicKey.encodeAnsiX963(),
     )
     assertEquals(
       decodedDerPublicKey,
-      asnX963Bytes.decodeAnsiX963(),
+      ansiX963Bytes.decodeAnsiX963(),
     )
   }
 
