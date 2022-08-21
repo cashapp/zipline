@@ -16,8 +16,13 @@
 package app.cash.zipline.loader.internal
 
 import app.cash.zipline.Zipline
+import platform.Foundation.NSDate
+import platform.Foundation.timeIntervalSince1970
 
 internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
   loadJsModule(bytecode, id)
 
 actual val ecdsaP256: SignatureAlgorithm = EcdsaP256()
+
+internal actual val systemEpochMsClock: () -> Long =
+  { (NSDate().timeIntervalSince1970() * 1000).toLong() }

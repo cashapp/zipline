@@ -15,16 +15,21 @@
  */
 package app.cash.zipline.loader.internal
 
-import app.cash.zipline.Zipline
-import java.security.SecureRandom
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.runBlocking
 
-internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
-
-actual val ecdsaP256: SignatureAlgorithm = EcdsaP256(secureRandom())
-
-internal fun secureRandom(): SecureRandom {
-  return SecureRandom().also { it.nextLong() } // Force seeding.
+class SystemEpochMsClockTest {
+  @Test
+  fun clockTicks(): Unit = runBlocking {
+    val timestampA = systemEpochMsClock()
+    delay(100)
+    val timestampB = systemEpochMsClock()
+    assertEquals(
+      timestampA + 100.0,
+      timestampB + 0.0,
+      absoluteTolerance = 50.0
+    )
+  }
 }
-
-internal actual val systemEpochMsClock: () -> Long = System::currentTimeMillis

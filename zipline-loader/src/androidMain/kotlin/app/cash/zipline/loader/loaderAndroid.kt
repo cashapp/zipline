@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.systemEpochMsClock
 import android.content.Context
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
@@ -30,7 +31,7 @@ fun ZiplineLoader(
   manifestVerifier: ManifestVerifier,
   httpClient: OkHttpClient,
   eventListener: EventListener = EventListener.NONE,
-  nowEpochMs: () -> Long = { System.currentTimeMillis() },
+  nowEpochMs: () -> Long = systemEpochMsClock,
   serializersModule: SerializersModule = EmptySerializersModule(),
 ): ZiplineLoader {
   return ZiplineLoader(
