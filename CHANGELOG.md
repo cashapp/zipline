@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 
-## [0.9.1] - 2022-08-18
+## [0.9.2] - 2022-08-22
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -12,6 +12,17 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * Breaking change: `ZiplineLoader.load(...)` is no longer suspending.
+ * Breaking change: Don't require implementors of `ZiplineHttpClient` to implement URL resolution.
+ * Breaking change: Include a default clock implementation on iOS.
+ * Breaking change: Require callers to explicitly opt out of signature checks. Pass
+   `ManifestVerifier.Companion.NO_SIGNATURE_CHECKS` to use `ZiplineLoader` without code signature
+   verification.
+ * New: Support ECDSA P-256 for signatures.
+
+
+## [0.9.1] - 2022-08-18
 
  * New: Gradle extension `zipline {}` block.
  * New: Compile files in parallel.
