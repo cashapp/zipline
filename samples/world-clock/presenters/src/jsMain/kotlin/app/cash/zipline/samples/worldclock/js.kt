@@ -16,7 +16,6 @@
 package app.cash.zipline.samples.worldclock
 
 import app.cash.zipline.Zipline
-import kotlin.js.Date
 import kotlin.js.ExperimentalJsExport
 import kotlin.js.JsExport
 import kotlinx.coroutines.delay
@@ -43,13 +42,13 @@ class RealWorldClockPresenter(
   ): Flow<WorldClockModel> {
     return flow {
       while (true) {
-        emit(WorldClockModel(label = viewModel()))
+        emit(
+          WorldClockModel(
+            label = TimeFormatter().formatLocalTime()
+          )
+        )
         delay(16)
       }
     }
-  }
-
-  private fun viewModel(): String {
-    return "The time is:\n${Date()}"
   }
 }

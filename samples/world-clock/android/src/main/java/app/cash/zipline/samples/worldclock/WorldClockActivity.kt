@@ -42,15 +42,15 @@ class WorldClockActivity : ComponentActivity() {
       val model = worldClockAndroid.models.collectAsState()
       Column(
         modifier = Modifier
-          .padding(horizontal = 8.dp)
+          .padding(horizontal = 12.dp)
           .fillMaxWidth()
           .fillMaxHeight(),
         verticalArrangement = Arrangement.Center,
       ) {
         Text(
           text = model.value.label,
-          fontSize = 40.sp,
-          textAlign = TextAlign.Center,
+          fontSize = 38.sp,
+          textAlign = TextAlign.Left,
         )
       }
     }

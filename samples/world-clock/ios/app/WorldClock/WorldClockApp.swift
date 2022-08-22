@@ -18,7 +18,10 @@ struct ContentView: View {
 
     var body: some View {
         Text(label)
-            .padding()
+            .font(.system(size: 36))
+            .multilineTextAlignment(.leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(12)
 
         .onAppear {
             let worldClockIos = PresentersWorldClockIos(httpClient: HTTPClient())
