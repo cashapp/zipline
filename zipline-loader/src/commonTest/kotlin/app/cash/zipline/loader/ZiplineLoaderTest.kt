@@ -36,6 +36,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.modules.EmptySerializersModule
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
@@ -291,6 +292,7 @@ class ZiplineLoaderTest {
     return loadFromManifest(
       applicationName = applicationName,
       loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
+      serializersModule = EmptySerializersModule(),
       initializer = initializer,
       nowEpochMs = systemEpochMsClock(),
     )
