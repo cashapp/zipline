@@ -18,8 +18,6 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.systemEpochMsClock
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
 
 fun ZiplineLoader(
@@ -28,7 +26,6 @@ fun ZiplineLoader(
   httpClient: OkHttpClient,
   eventListener: EventListener = EventListener.NONE,
   nowEpochMs: () -> Long = systemEpochMsClock,
-  serializersModule: SerializersModule = EmptySerializersModule(),
 ): ZiplineLoader {
   return ZiplineLoader(
     dispatcher = dispatcher,
@@ -36,6 +33,5 @@ fun ZiplineLoader(
     httpClient = OkHttpZiplineHttpClient(httpClient),
     eventListener = eventListener,
     nowEpochMs = nowEpochMs,
-    serializersModule = serializersModule,
   )
 }

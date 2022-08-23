@@ -58,10 +58,9 @@ class ZiplineLoader internal constructor(
   private val httpFetcher: HttpFetcher,
   private val eventListener: EventListener,
   private val nowEpochMs: () -> Long,
-  private val serializersModule: SerializersModule,
   private val embeddedDir: Path?,
   private val embeddedFileSystem: FileSystem?,
-  internal val cache: ZiplineCache?,
+  private val cache: ZiplineCache?,
 ) {
   constructor(
     dispatcher: CoroutineDispatcher,
@@ -69,14 +68,12 @@ class ZiplineLoader internal constructor(
     httpClient: ZiplineHttpClient,
     eventListener: EventListener = EventListener.NONE,
     nowEpochMs: () -> Long = systemEpochMsClock,
-    serializersModule: SerializersModule = EmptySerializersModule(),
   ) : this(
     dispatcher = dispatcher,
     manifestVerifier = manifestVerifier,
     httpFetcher = HttpFetcher(httpClient, eventListener),
     eventListener = eventListener,
     nowEpochMs = nowEpochMs,
-    serializersModule = serializersModule,
     embeddedDir = null,
     embeddedFileSystem = null,
     cache = null,
@@ -85,20 +82,21 @@ class ZiplineLoader internal constructor(
   fun withEmbedded(
     embeddedDir: Path,
     embeddedFileSystem: FileSystem
-  ): ZiplineLoader = ZiplineLoader(
-    dispatcher = dispatcher,
-    manifestVerifier = manifestVerifier,
-    httpFetcher = httpFetcher,
-    eventListener = eventListener,
-    nowEpochMs = nowEpochMs,
-    serializersModule = serializersModule,
+  ): ZiplineLoader = copy(
     embeddedDir = embeddedDir,
     embeddedFileSystem = embeddedFileSystem,
-    cache = cache,
   )
 
   fun withCache(
     cache: ZiplineCache,
+  ): ZiplineLoader = copy(
+    cache = cache
+  )
+
+  private fun copy(
+    embeddedDir: Path? = this.embeddedDir,
+    embeddedFileSystem: FileSystem? = this.embeddedFileSystem,
+    cache: ZiplineCache? = this.cache,
   ): ZiplineLoader {
     return ZiplineLoader(
       dispatcher = dispatcher,
@@ -106,7 +104,6 @@ class ZiplineLoader internal constructor(
       httpFetcher = httpFetcher,
       eventListener = eventListener,
       nowEpochMs = nowEpochMs,
-      serializersModule = serializersModule,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
       cache = cache,
@@ -154,6 +151,7 @@ class ZiplineLoader internal constructor(
   fun load(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
+    serializersModule: SerializersModule = EmptySerializersModule(),
     initializer: (Zipline) -> Unit,
   ): Flow<LoadedZipline> {
     return flow {
@@ -177,6 +175,7 @@ class ZiplineLoader internal constructor(
             val networkZipline = loadFromManifest(
               applicationName,
               networkManifest,
+              serializersModule,
               now,
               initializer,
             )
@@ -198,6 +197,7 @@ class ZiplineLoader internal constructor(
             val localZipline = loadFromManifest(
               applicationName,
               localManifest,
+              serializersModule,
               now,
               initializer,
             )
@@ -212,9 +212,14 @@ class ZiplineLoader internal constructor(
   suspend fun loadOnce(
     applicationName: String,
     manifestUrl: String,
+    serializersModule: SerializersModule = EmptySerializersModule(),
     initializer: (Zipline) -> Unit = {},
-  ): LoadedZipline = load(applicationName, flowOf(manifestUrl), initializer).firstOrNull()
-    ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
+  ): LoadedZipline = load(
+    applicationName,
+    flowOf(manifestUrl),
+    serializersModule,
+    initializer
+  ).firstOrNull() ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
 
   /**
    * After identifying a manifest to load this fetches all the code, loads it into a JS runtime,
@@ -223,6 +228,7 @@ class ZiplineLoader internal constructor(
   internal suspend fun loadFromManifest(
     applicationName: String,
     loadedManifest: LoadedManifest,
+    serializersModule: SerializersModule,
     nowEpochMs: Long,
     initializer: (Zipline) -> Unit,
   ): Zipline {

@@ -18,12 +18,6 @@ package app.cash.zipline.loader
 import android.content.Context
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
-import app.cash.zipline.loader.internal.fetcher.HttpFetcher
-import app.cash.zipline.loader.internal.systemEpochMsClock
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
-import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path
 
