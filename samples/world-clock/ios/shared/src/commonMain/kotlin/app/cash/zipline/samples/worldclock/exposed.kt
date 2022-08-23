@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.samples.worldclock
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
 import okio.ByteString
 import okio.toByteString
 import platform.Foundation.NSData
@@ -29,3 +31,5 @@ fun exposedTypes(
 }
 
 fun byteStringOf(data: NSData): ByteString = data.toByteString()
+
+fun mainScope(): CoroutineScope = MainScope()
