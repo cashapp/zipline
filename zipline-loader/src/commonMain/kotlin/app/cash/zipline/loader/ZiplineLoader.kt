@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
+import app.cash.zipline.internal.systemEpochMsClock
 import app.cash.zipline.loader.internal.fetcher.FsCachingFetcher
 import app.cash.zipline.loader.internal.fetcher.FsEmbeddedFetcher
 import app.cash.zipline.loader.internal.fetcher.HttpFetcher
@@ -26,7 +27,6 @@ import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.internal.receiver.FsSaveReceiver
 import app.cash.zipline.loader.internal.receiver.Receiver
 import app.cash.zipline.loader.internal.receiver.ZiplineLoadReceiver
-import app.cash.zipline.loader.internal.systemEpochMsClock
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
@@ -325,6 +325,7 @@ class ZiplineLoader internal constructor(
      * Fetch and receive ZiplineFile module.
      */
     suspend fun run() {
+      eventListener.moduleLoadStart(applicationName, id)
       val byteString = moduleFetchers.fetch(
         concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
         applicationName = applicationName,
@@ -333,14 +334,23 @@ class ZiplineLoader internal constructor(
         nowEpochMs = nowEpochMs,
         baseUrl = baseUrl,
         url = module.url,
+        eventListener,
       )!!
       check(byteString.sha256() == module.sha256) {
         "checksum mismatch for $id"
       }
+
+      eventListener.moduleUpstreamFetchStart(applicationName, id)
       upstreams.joinAll()
+      eventListener.moduleUpstreamFetchEnd(applicationName, id)
+
+      eventListener.moduleReceiveStart(applicationName, id)
       withContext(dispatcher) {
         receiver.receive(byteString, id, module.sha256)
       }
+      eventListener.moduleReceiveEnd(applicationName, id)
+
+      eventListener.moduleLoadEnd(applicationName, id)
     }
   }
 

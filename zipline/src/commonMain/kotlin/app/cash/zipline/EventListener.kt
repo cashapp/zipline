@@ -95,6 +95,88 @@ abstract class EventListener {
   ) {
   }
 
+  /** Invoked when a module load starts */
+  open fun moduleLoadStart(
+    applicationName: String,
+    moduleId: String,
+  ) {
+  }
+
+  /** Invoked when a module load succeeds */
+  open fun moduleLoadEnd(
+    applicationName: String,
+    moduleId: String,
+  ) {
+  }
+
+
+  /** Invoked when a module requests a fetch permit */
+  open fun moduleFetchPermitAcquireStart(
+    applicationName: String,
+    moduleId: String,
+  ) {
+  }
+
+  /** Invoked when a module receives a fetch permit */
+  open fun moduleFetchPermitAcquireEnd(
+    applicationName: String,
+    moduleId: String,
+  ) {
+  }
+
+  /** Invoked when a module fetch attempt starts */
+  open fun moduleFetchStart(
+    applicationName: String,
+    moduleId: String,
+    moduleFetcher: String,
+  ) {
+  }
+
+  /** Invoked when a module fetch succeeds */
+  open fun moduleFetchEnd(
+    applicationName: String,
+    moduleId: String,
+    moduleFetcher: String,
+    fetched: Boolean,
+  ) {
+  }
+
+  /** Invoked when a module fetch fails */
+  open fun moduleFetchFailed(
+    applicationName: String,
+    moduleId: String,
+    moduleFetcher: String,
+  ) {
+  }
+
+  /** Invoked when a module starts waiting on upstream fetches */
+  open fun moduleUpstreamFetchStart(
+    applicationName: String,
+    moduleId: String,
+  ) {
+  }
+
+  /** Invoked when a module finishes all upstream fetches */
+  open fun moduleUpstreamFetchEnd(
+    applicationName: String,
+    moduleId: String,
+  ) {
+  }
+
+  /** Invoked when a module receive starts */
+  open fun moduleReceiveStart(
+    applicationName: String,
+    moduleId: String,
+  ) {
+  }
+
+  /** Invoked when a module receive starts */
+  open fun moduleReceiveEnd(
+    applicationName: String,
+    moduleId: String,
+  ) {
+  }
+
   /** Invoked when a network download starts */
   open fun downloadStart(
     applicationName: String,

@@ -52,7 +52,9 @@ kotlin {
     nodejs()
   }
 
-  linuxX64()
+  if (false) {
+    linuxX64()
+  }
   macosX64()
   macosArm64()
   iosArm64()
@@ -67,12 +69,14 @@ kotlin {
       dependencies {
         api(libs.kotlinx.coroutines.core)
         api(libs.kotlinx.serialization.core)
+        api(libs.okio.core)
         implementation(libs.kotlinx.serialization.json)
       }
     }
     val commonTest by getting {
       dependencies {
         implementation(kotlin("test"))
+        implementation(libs.kotlinx.coroutines.test)
       }
     }
 

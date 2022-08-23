@@ -36,7 +36,5 @@ fun SignatureAlgorithmId.get(): SignatureAlgorithm {
   }
 }
 
-internal expect val systemEpochMsClock: () -> Long
-
 /** Returns the URL of [link] relative to [baseUrl]. */
 expect fun resolveUrl(baseUrl: String, link: String): String

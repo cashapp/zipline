@@ -28,8 +28,6 @@ internal fun secureRandom(): SecureRandom {
   return SecureRandom().also { it.nextLong() } // Force seeding.
 }
 
-internal actual val systemEpochMsClock: () -> Long = System::currentTimeMillis
-
 actual fun resolveUrl(baseUrl: String, link: String): String {
   return baseUrl.toHttpUrl().resolve(link)!!.toString()
 }

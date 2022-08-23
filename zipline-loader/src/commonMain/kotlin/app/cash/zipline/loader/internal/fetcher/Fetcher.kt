@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
+import app.cash.zipline.EventListener
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import okio.ByteString
@@ -50,24 +51,41 @@ internal suspend fun List<Fetcher>.fetch(
   nowEpochMs: Long,
   baseUrl: String?,
   url: String,
-): ByteString? = concurrentDownloadsSemaphore.withPermit {
-  var firstException: Exception? = null
-  for (fetcher in this) {
-    try {
-      return@withPermit fetcher.fetch(
-        applicationName = applicationName,
-        id = id,
-        sha256 = sha256,
-        nowEpochMs = nowEpochMs,
-        baseUrl = baseUrl,
-        url = url
-      ) ?: continue
-    } catch (e: Exception) {
-      if (firstException == null) {
-        firstException = e
+  eventListener: EventListener
+): ByteString? {
+  eventListener.moduleFetchPermitAcquireStart(applicationName, id)
+  return concurrentDownloadsSemaphore.withPermit {
+    eventListener.moduleFetchPermitAcquireEnd(applicationName, id)
+    var firstException: Exception? = null
+    var failedFetcherName = "unknown"
+    for (fetcher in this) {
+      try {
+        eventListener.moduleFetchStart(applicationName, id, fetcher::class.simpleName ?: "unknown")
+        val fetchedByteString = fetcher.fetch(
+          applicationName = applicationName,
+          id = id,
+          sha256 = sha256,
+          nowEpochMs = nowEpochMs,
+          baseUrl = baseUrl,
+          url = url
+        )
+        eventListener.moduleFetchEnd(
+          applicationName,
+          id,
+          fetcher::class.simpleName ?: "unknown",
+          fetchedByteString != null
+        )
+        return@withPermit fetchedByteString ?: continue
+      } catch (e: Exception) {
+        if (firstException == null) {
+          firstException = e
+        }
       }
     }
+    if (firstException != null) {
+      eventListener.moduleFetchFailed(applicationName, id, failedFetcherName)
+      throw firstException
+    }
+    return@withPermit null
   }
-  if (firstException != null) throw firstException
-  return@withPermit null
 }

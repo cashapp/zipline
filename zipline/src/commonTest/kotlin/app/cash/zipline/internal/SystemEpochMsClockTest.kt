@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader.internal
+package app.cash.zipline.internal
 
 import kotlin.test.Test
 import kotlin.test.assertTrue

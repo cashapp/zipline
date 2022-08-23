@@ -16,7 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import app.cash.zipline.loader.internal.systemEpochMsClock
+import app.cash.zipline.internal.systemEpochMsClock
 import kotlinx.coroutines.CoroutineDispatcher
 import okhttp3.OkHttpClient
 

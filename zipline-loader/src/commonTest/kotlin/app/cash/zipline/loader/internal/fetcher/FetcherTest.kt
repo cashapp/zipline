@@ -16,6 +16,7 @@
 package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.loader.testing.LoaderTestFixtures
+import app.cash.zipline.testing.LoggingEventListener
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -26,6 +27,7 @@ import okio.ByteString.Companion.encodeUtf8
 
 class FetcherTest {
   private var concurrentDownloadsSemaphore = Semaphore(3)
+  private val eventListener = LoggingEventListener()
 
   private lateinit var testFixtures: LoaderTestFixtures
 
@@ -78,6 +80,7 @@ class FetcherTest {
       nowEpochMs = 1_000L,
       baseUrl = null,
       url = "alpha",
+      eventListener,
     )
     fetchers.fetch(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
@@ -87,6 +90,7 @@ class FetcherTest {
       nowEpochMs = 1_000L,
       baseUrl = null,
       url = "bravo",
+      eventListener
     )
     assertEquals(bravoByteString, actualByteString)
 
