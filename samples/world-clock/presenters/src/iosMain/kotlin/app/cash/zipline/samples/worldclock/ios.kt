@@ -18,18 +18,17 @@ package app.cash.zipline.samples.worldclock
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.MainScope
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 
 class WorldClockIos(
   private val httpClient: ZiplineHttpClient,
+  private val scope: CoroutineScope,
 ) {
   private val ziplineDispatcher = Dispatchers.Main
-  private val scope = MainScope()
 
   val events = flowOf<WorldClockEvent>()
   val models = MutableStateFlow(WorldClockModel(label = "..."))
@@ -53,9 +52,5 @@ class WorldClockIos(
         modelsCallback(model)
       }
     }
-  }
-
-  fun close() {
-    scope.cancel()
   }
 }

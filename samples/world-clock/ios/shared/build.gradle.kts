@@ -16,6 +16,7 @@ kotlin {
     commonMain {
       dependencies {
         implementation("app.cash.zipline:zipline")
+        implementation(libs.kotlinx.coroutines.core)
         implementation(projects.worldClock.presenters)
       }
     }

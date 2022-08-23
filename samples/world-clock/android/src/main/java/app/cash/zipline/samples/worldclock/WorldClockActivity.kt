@@ -30,9 +30,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
 
 @NoLiveLiterals
 class WorldClockActivity : ComponentActivity() {
+  private val scope = MainScope()
   private lateinit var worldClockAndroid: WorldClockAndroid
 
   override fun onCreate(savedInstanceState: Bundle?) {
@@ -55,12 +58,13 @@ class WorldClockActivity : ComponentActivity() {
       }
     }
 
-    worldClockAndroid = WorldClockAndroid(applicationContext)
+    worldClockAndroid = WorldClockAndroid(applicationContext, scope)
     worldClockAndroid.start()
   }
 
   override fun onDestroy() {
     worldClockAndroid.close()
+    scope.cancel()
     super.onDestroy()
   }
 }
