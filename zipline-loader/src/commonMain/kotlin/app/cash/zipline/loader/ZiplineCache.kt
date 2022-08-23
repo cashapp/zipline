@@ -13,9 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader.internal.cache
+package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.cache.Database
+import app.cash.zipline.loader.internal.cache.FileState
+import app.cash.zipline.loader.internal.cache.Files
+import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.cache.createDatabase
+import app.cash.zipline.loader.internal.cache.isSqlException
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
+import com.squareup.sqldelight.db.SqlDriver
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.Closeable
@@ -25,71 +32,82 @@ import okio.IOException
 import okio.Path
 
 /**
- * Stores downloaded files. Files are named by their SHA-256 hashes. We use a SQLite database for
- * file metadata: which files are currently being downloaded, when they were most recently accessed,
- * and what the total on-disk usage is.
+ * Stores downloaded files.
  *
- * ### Cache Size
+ * The `maxSizeInBytes` limit applies to the content of all files. It doesn't account for the size
+ * of the metadata database, or any in-flight downloads. Use a smaller value if you have a strict
+ * on-disk limit.
  *
- * The [maxSizeInBytes] limit applies to the content of the files in the `READY` state. It doesn't
- * account for the size of the metadata DB, or any in-flight downloads.
- * Use a smaller [maxSizeInBytes] if you have a strict on-disk limit.
+ * This cache is safe for concurrent use within a single process. This cache does not prevent
+ * multiple processes from accessing the cache files simultaneously. Don't do this; it'll corrupt
+ * the cache and behavior is undefined.
  *
- *
- * ### State Machine
- *
- * ```
- *            download
- *              start
- *         --------------->
- *  (absent)                 DIRTY
- *         <---------------
- *    ^                      |
- *    |       download       | download
- *    |        failed        | success
- *    |                      v
- *    '------------------ READY
- *           pruned
- * ```
- *
- * Note that absent entries are not present in SQLite.
- *
- * This cache is safe for concurrent use within a single process. If multiple callers attempt to
- * mark the same absent file as `DIRTY` simultaneously, all but one will fail and return false.
- *
- * This cache does not prevent multiple processes from accessing the cache simultaneously.
- * Don't do this; it'll corrupt the cache and behavior is undefined.
+ * If multiple threads in a single process operate on a cache instance simultaneously, downloads may
+ * be repeated but no thread will be blocked.
  */
-internal class ZiplineCache internal constructor(
-  databaseCloseable: Closeable,
+class ZiplineCache internal constructor(
+  private val driver: SqlDriver,
   private val database: Database,
   private val fileSystem: FileSystem,
   private val directory: Path,
   private val maxSizeInBytes: Long,
-  private val nowEpochMs: () -> Long,
-) : Closeable by databaseCloseable {
-  fun write(
+) : Closeable {
+
+  /*
+   * Files are named by their SHA-256 hashes. We use a SQLite database for file metadata: which
+   * files are currently being downloaded, when they were most recently accessed, and what the total
+   * on-disk usage is.
+   *
+   * State Machine
+   * -------------
+   *
+   *            download
+   *              start
+   *         --------------->
+   *  (absent)                 DIRTY
+   *         <---------------
+   *    ^                      |
+   *    |       download       | download
+   *    |        failed        | success
+   *    |                      v
+   *    '------------------ READY
+   *           pruned
+   *
+   * Note that absent entries are not present in SQLite.
+   */
+
+  override fun close() {
+    driver.close()
+  }
+
+  internal fun write(
     applicationName: String,
     sha256: ByteString,
     content: ByteString,
+    nowEpochMs: Long,
     isManifest: Boolean = false,
     manifestFreshAtMs: Long? = null,
   ): Files? {
     try {
-      val metadata = openForWrite(applicationName, sha256, isManifest, manifestFreshAtMs)
-        ?: return null
-      write(metadata, content)
+      val metadata = openForWrite(
+        applicationName = applicationName,
+        sha256 = sha256,
+        nowEpochMs = nowEpochMs,
+        isManifest = isManifest,
+        manifestFreshAtMs = manifestFreshAtMs,
+      ) ?: return null
+      write(metadata, content, nowEpochMs)
       return metadata
     } catch (ignored: IOException) {
       return null // Silently ignore write failures; the disk might be full?
     }
   }
 
-  private fun write(metadata: Files, content: ByteString) {
+  private fun write(metadata: Files, content: ByteString, nowEpochMs: Long) {
     fileSystem.write(path(metadata)) {
       write(content)
     }
-    setReady(metadata, content.size.toLong())
+    setReady(metadata, content.size.toLong(), nowEpochMs)
   }
 
   /**
@@ -99,12 +117,13 @@ internal class ZiplineCache internal constructor(
    *
    * Concurrent downloads on the same [sha256] are not ever done. One thread loses and suspends.
    */
-  suspend fun getOrPut(
+  internal suspend fun getOrPut(
     applicationName: String,
     sha256: ByteString,
+    nowEpochMs: Long,
     download: suspend () -> ByteString?,
   ): ByteString? {
-    val read = read(sha256)
+    val read = read(sha256, nowEpochMs)
     if (read != null) return read
 
     val content = download() ?: return null
@@ -112,7 +131,8 @@ internal class ZiplineCache internal constructor(
       applicationName = applicationName,
       sha256 = sha256,
       content = content,
-      isManifest = false
+      isManifest = false,
+      nowEpochMs = nowEpochMs,
     )
     return content
   }
@@ -121,6 +141,7 @@ internal class ZiplineCache internal constructor(
     applicationName: String,
     content: ByteString,
     putFreshAtMs: Long,
+    nowEpochMs: Long,
   ): Files? {
     val sha256 = content.sha256()
     val metadata = getOrNull(sha256)
@@ -129,16 +150,23 @@ internal class ZiplineCache internal constructor(
       sha256 = sha256,
       content = content,
       isManifest = true,
-      manifestFreshAtMs = putFreshAtMs
+      manifestFreshAtMs = putFreshAtMs,
+      nowEpochMs = nowEpochMs,
     )
   }
 
-  fun read(sha256: ByteString): ByteString? {
+  internal fun read(
+    sha256: ByteString,
+    nowEpochMs: Long,
+  ): ByteString? {
     val metadata = database.filesQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
-    return read(metadata)
+    return read(metadata, nowEpochMs)
   }
 
-  private fun read(metadata: Files): ByteString? {
+  private fun read(
+    metadata: Files,
+    nowEpochMs: Long,
+  ): ByteString? {
     if (metadata.file_state != FileState.READY) return null
 
     // Update the used at timestamp.
@@ -146,7 +174,7 @@ internal class ZiplineCache internal constructor(
       id = metadata.id,
       file_state = metadata.file_state,
       size_bytes = metadata.size_bytes,
-      last_used_at_epoch_ms = nowEpochMs(),
+      last_used_at_epoch_ms = nowEpochMs,
     )
     val path = path(metadata)
     val result = try {
@@ -170,22 +198,22 @@ internal class ZiplineCache internal constructor(
     return result
   }
 
-  fun pin(applicationName: String, sha256: ByteString) {
+  internal fun pin(applicationName: String, sha256: ByteString) {
     val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
     createPinIfNotExists(applicationName, fileId)
   }
 
-  fun unpin(applicationName: String, sha256: ByteString) {
+  internal fun unpin(applicationName: String, sha256: ByteString) {
     val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
     database.pinsQueries.delete_pin(applicationName, fileId)
   }
 
   /** Returns null if there is no pinned manifest. */
-  fun getPinnedManifest(applicationName: String): LoadedManifest? {
+  internal fun getPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? {
     val manifestFile = database.filesQueries
       .selectPinnedManifest(applicationName)
       .executeAsOneOrNull() ?: return null
-    val manifestBytes = read(manifestFile)
+    val manifestBytes = read(manifestFile, nowEpochMs)
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
       )
@@ -193,12 +221,17 @@ internal class ZiplineCache internal constructor(
   }
 
   /** Pins manifest and unpins all other files and manifests */
-  fun pinManifest(applicationName: String, loadedManifest: LoadedManifest) {
+  internal fun pinManifest(
+    applicationName: String,
+    loadedManifest: LoadedManifest,
+    nowEpochMs: Long,
+  ) {
     val manifestBytes = loadedManifest.manifestBytes
     val manifestMetadata = getOrPutManifest(
       applicationName = applicationName,
       content = manifestBytes,
-      putFreshAtMs = loadedManifest.freshAtEpochMs
+      putFreshAtMs = loadedManifest.freshAtEpochMs,
+      nowEpochMs = nowEpochMs,
     ) ?: return
 
     database.transaction {
@@ -220,7 +253,11 @@ internal class ZiplineCache internal constructor(
    * Unpin manifest and make all files open to pruning, except those included
    * in another pinned manifest.
    */
-  fun unpinManifest(applicationName: String, loadedManifest: LoadedManifest) {
+  internal fun unpinManifest(
+    applicationName: String,
+    loadedManifest: LoadedManifest,
+    nowEpochMs: Long,
+  ) {
     val unpinManifestBytes = loadedManifest.manifestBytes
     val unpinManifestFile = database.filesQueries
       .get(unpinManifestBytes.sha256().hex())
@@ -242,7 +279,7 @@ internal class ZiplineCache internal constructor(
     }
 
     // Pin the fallback manifest, which removes all pins prior to pinning.
-    val fallbackManifestBytes = read(fallbackManifestFile)
+    val fallbackManifestBytes = read(fallbackManifestFile, nowEpochMs)
       ?: throw FileNotFoundException(
         "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
       )
@@ -250,7 +287,7 @@ internal class ZiplineCache internal constructor(
       fallbackManifestBytes,
       fallbackManifestFile.fresh_at_epoch_ms!!
     )
-    pinManifest(applicationName, fallbackManifest)
+    pinManifest(applicationName, fallbackManifest, nowEpochMs)
   }
 
   /**
@@ -260,8 +297,9 @@ internal class ZiplineCache internal constructor(
   private fun openForWrite(
     applicationName: String,
     sha256: ByteString,
+    nowEpochMs: Long,
     isManifest: Boolean,
-    manifestFreshAtMs: Long? = null
+    manifestFreshAtMs: Long? = null,
   ): Files? = try {
     val manifestForApplicationName = if (isManifest) {
       applicationName
@@ -281,7 +319,7 @@ internal class ZiplineCache internal constructor(
       manifest_for_application_name = manifestForApplicationName,
       file_state = FileState.DIRTY,
       size_bytes = 0L,
-      last_used_at_epoch_ms = nowEpochMs(),
+      last_used_at_epoch_ms = nowEpochMs,
       fresh_at_epoch_ms = freshAtEpochMs,
     )
     val metadata = getOrNull(sha256)!!
@@ -314,6 +352,7 @@ internal class ZiplineCache internal constructor(
   private fun setReady(
     metadata: Files,
     fileSizeBytes: Long,
+    nowEpochMs: Long,
   ) {
     database.transaction {
       // Go from DIRTY to READY.
@@ -325,7 +364,7 @@ internal class ZiplineCache internal constructor(
         id = metadata.id,
         file_state = FileState.READY,
         size_bytes = fileSizeBytes,
-        last_used_at_epoch_ms = nowEpochMs(),
+        last_used_at_epoch_ms = nowEpochMs,
       )
     }
 
@@ -348,7 +387,7 @@ internal class ZiplineCache internal constructor(
    *
    * It will also delete dirty files that were open when the previous run completed.
    */
-  fun initialize() {
+  internal fun initialize() {
     deleteDirtyFiles()
     prune()
   }
@@ -374,7 +413,7 @@ internal class ZiplineCache internal constructor(
    * assuming UNIX filesystem semantics where open files are not deleted from under processes that
    * have opened them.
    */
-  fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
+  internal fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
     while (true) {
       val currentSize = database.filesQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
       if (currentSize <= maxSizeInBytes) return
@@ -387,10 +426,10 @@ internal class ZiplineCache internal constructor(
   }
 
   /** Returns the number of files in the cache DB. */
-  fun countFiles() = database.filesQueries.count().executeAsOne().toInt()
+  internal fun countFiles() = database.filesQueries.count().executeAsOne().toInt()
 
   /** Returns the number of pins in the cache DB. */
-  fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
+  internal fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
 
   private fun path(metadata: Files): Path {
     return directory / "entry-${metadata.id}.bin"
@@ -399,16 +438,41 @@ internal class ZiplineCache internal constructor(
   /**
    * Update file record freshAt timestamp to reflect that the manifest is still seen as fresh.
    */
-  fun updateManifestFreshAt(applicationName: String, loadedManifest: LoadedManifest) {
+  internal fun updateManifestFreshAt(
+    applicationName: String,
+    loadedManifest: LoadedManifest,
+    nowEpochMs: Long,
+  ) {
     val freshAtMs = loadedManifest.freshAtEpochMs
     val manifestMetadata = getOrPutManifest(
       applicationName = applicationName,
       content = loadedManifest.manifestBytes,
-      putFreshAtMs = freshAtMs
+      putFreshAtMs = freshAtMs,
+      nowEpochMs = nowEpochMs,
     ) ?: return // Pruned.
     database.filesQueries.updateFresh(
       id = manifestMetadata.id,
       fresh_at_epoch_ms = freshAtMs
     )
   }
+}
+
+internal fun ZiplineCache(
+  sqlDriverFactory: SqlDriverFactory,
+  fileSystem: FileSystem,
+  directory: Path,
+  maxSizeInBytes: Long,
+): ZiplineCache {
+  fileSystem.createDirectories(directory, mustCreate = false)
+  val driver: SqlDriver = sqlDriverFactory.create(directory / "zipline.db", Database.Schema)
+  val database = createDatabase(driver = driver)
+  val cache = ZiplineCache(
+    driver = driver,
+    database = database,
+    fileSystem = fileSystem,
+    directory = directory,
+    maxSizeInBytes = maxSizeInBytes,
+  )
+  cache.initialize()
+  return cache
 }

@@ -16,7 +16,6 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
-import app.cash.zipline.loader.internal.cache.ZiplineCache
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
@@ -40,6 +39,7 @@ class ProductionFetcherReceiverTest {
   private lateinit var embeddedFileSystem: FileSystem
   private lateinit var embeddedDir: Path
   private val testFixtures = LoaderTestFixtures()
+  private var nowMillis = 1_000L
 
   private lateinit var zipline: Zipline
 
@@ -55,7 +55,7 @@ class ProductionFetcherReceiverTest {
   @AfterTest
   fun tearDown() {
     tester.afterTest()
-    loader.close()
+    cache.close()
   }
 
   @Test
@@ -83,14 +83,14 @@ class ProductionFetcherReceiverTest {
 
   @Test
   fun getFromWarmCacheNoNetworkCall() = runBlocking {
-    cache.getOrPut("app1", testFixtures.alphaSha256) {
+    cache.getOrPut("app1", testFixtures.alphaSha256, nowMillis) {
       testFixtures.alphaByteString
     }
-    assertEquals(testFixtures.alphaByteString, cache.read(testFixtures.alphaSha256))
-    cache.getOrPut("app1", testFixtures.bravoSha256) {
+    assertEquals(testFixtures.alphaByteString, cache.read(testFixtures.alphaSha256, nowMillis))
+    cache.getOrPut("app1", testFixtures.bravoSha256, nowMillis) {
       testFixtures.bravoByteString
     }
-    assertEquals(testFixtures.bravoByteString, cache.read(testFixtures.bravoSha256))
+    assertEquals(testFixtures.bravoByteString, cache.read(testFixtures.bravoSha256, nowMillis))
 
     tester.httpClient.filePathToByteString = mapOf()
 
@@ -107,8 +107,8 @@ class ProductionFetcherReceiverTest {
 
   @Test
   fun getFromNetworkPutInCache() = runBlocking {
-    assertNull(cache.read(testFixtures.alphaSha256))
-    assertNull(cache.read(testFixtures.bravoSha256))
+    assertNull(cache.read(testFixtures.alphaSha256, nowMillis))
+    assertNull(cache.read(testFixtures.bravoSha256, nowMillis))
 
     tester.httpClient.filePathToByteString = mapOf(
       alphaUrl to testFixtures.alphaByteString,
@@ -125,7 +125,7 @@ class ProductionFetcherReceiverTest {
       zipline.quickJs.evaluate("globalThis.log", "assert.js")
     )
 
-    val ziplineFileFromCache = cache.getOrPut("app1", testFixtures.alphaSha256) {
+    val ziplineFileFromCache = cache.getOrPut("app1", testFixtures.alphaSha256, nowMillis) {
       "fake".encodeUtf8()
     }
     assertEquals(testFixtures.alphaByteString, ziplineFileFromCache)
@@ -140,6 +140,7 @@ class ProductionFetcherReceiverTest {
       applicationName = applicationName,
       loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
       initializer = initializer,
+      nowEpochMs = nowMillis,
     )
   }
 }

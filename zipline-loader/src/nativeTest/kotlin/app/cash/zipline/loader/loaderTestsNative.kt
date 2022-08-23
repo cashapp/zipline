@@ -15,30 +15,14 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import kotlin.random.Random
-import kotlinx.coroutines.CoroutineDispatcher
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import okio.FileSystem
 import okio.Path.Companion.toPath
 
 actual val systemFileSystem = FileSystem.SYSTEM
-
-actual fun testZiplineLoader(
-  dispatcher: CoroutineDispatcher,
-  manifestVerifier: ManifestVerifier,
-  httpClient: ZiplineHttpClient,
-  nowEpochMs: () -> Long,
-  eventListener: EventListener,
-) = ZiplineLoader(
-  dispatcher = dispatcher,
-  manifestVerifier = manifestVerifier,
-  httpClient = httpClient,
-  nowEpochMs = nowEpochMs,
-  eventListener = eventListener,
-)
 
 internal actual fun testSqlDriverFactory() = SqlDriverFactory()
 

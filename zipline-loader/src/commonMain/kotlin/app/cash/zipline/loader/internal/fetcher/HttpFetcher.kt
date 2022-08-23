@@ -32,12 +32,13 @@ import okio.ByteString.Companion.encodeUtf8
  */
 internal class HttpFetcher(
   private val httpClient: ZiplineHttpClient,
-  private val eventListener: EventListener = EventListener.NONE,
+  private val eventListener: EventListener,
 ) : Fetcher {
   override suspend fun fetch(
     applicationName: String,
     id: String,
     sha256: ByteString,
+    nowEpochMs: Long,
     baseUrl: String?,
     url: String,
   ) = fetchByteString(

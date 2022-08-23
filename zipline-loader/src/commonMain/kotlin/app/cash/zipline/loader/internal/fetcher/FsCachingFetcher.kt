@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
-import app.cash.zipline.loader.internal.cache.ZiplineCache
+import app.cash.zipline.loader.ZiplineCache
 import okio.ByteString
 
 /**
@@ -29,16 +29,17 @@ internal class FsCachingFetcher(
     applicationName: String,
     id: String,
     sha256: ByteString,
+    nowEpochMs: Long,
     baseUrl: String?,
     url: String,
   ): ByteString? {
-    return cache.getOrPut(applicationName, sha256) {
-      delegate.fetch(applicationName, id, sha256, baseUrl, url)
+    return cache.getOrPut(applicationName, sha256, nowEpochMs) {
+      delegate.fetch(applicationName, id, sha256, nowEpochMs, baseUrl, url)
     }
   }
 
-  fun loadPinnedManifest(applicationName: String): LoadedManifest? {
-    return cache.getPinnedManifest(applicationName)
+  fun loadPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? {
+    return cache.getPinnedManifest(applicationName, nowEpochMs)
   }
 
   /**
@@ -47,18 +48,18 @@ internal class FsCachingFetcher(
    * This assumes that all artifacts in [loadedManifest] are currently pinned. Fetchers do not
    * necessarily enforce this assumption.
    */
-  fun pin(applicationName: String, loadedManifest: LoadedManifest) =
-    cache.pinManifest(applicationName, loadedManifest)
+  fun pin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) =
+    cache.pinManifest(applicationName, loadedManifest, nowEpochMs)
 
   /**
    * Removes the pins for [applicationName] in [loadedManifest] so they may be pruned.
    */
-  fun unpin(applicationName: String, loadedManifest: LoadedManifest) =
-    cache.unpinManifest(applicationName, loadedManifest)
+  fun unpin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) =
+    cache.unpinManifest(applicationName, loadedManifest, nowEpochMs)
 
   /**
    * Updates freshAt timestamp for manifests that in later network fetch is still the freshest.
    */
-  fun updateFreshAt(applicationName: String, loadedManifest: LoadedManifest) =
-    cache.updateManifestFreshAt(applicationName, loadedManifest)
+  fun updateFreshAt(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) =
+    cache.updateManifestFreshAt(applicationName, loadedManifest, nowEpochMs)
 }

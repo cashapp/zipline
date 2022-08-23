@@ -26,16 +26,25 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import okio.ByteString
 import okio.FileSystem
+import okio.Path
 
 expect val systemFileSystem: FileSystem
 
-expect fun testZiplineLoader(
+fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
   manifestVerifier: ManifestVerifier = NO_SIGNATURE_CHECKS,
   httpClient: ZiplineHttpClient,
   nowEpochMs: () -> Long,
   eventListener: EventListener = EventListener.NONE,
-): ZiplineLoader
+) = ZiplineLoader(
+  dispatcher, manifestVerifier, httpClient, eventListener, nowEpochMs
+)
+
+fun testZiplineCache(
+  fileSystem: FileSystem,
+  directory: Path,
+  maxSizeInBytes: Long,
+): ZiplineCache = ZiplineCache(testSqlDriverFactory(), fileSystem, directory, maxSizeInBytes)
 
 internal expect fun testSqlDriverFactory(): SqlDriverFactory
 

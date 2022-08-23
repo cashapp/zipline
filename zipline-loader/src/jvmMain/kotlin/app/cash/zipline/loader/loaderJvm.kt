@@ -15,51 +15,19 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
-import app.cash.zipline.loader.internal.fetcher.HttpFetcher
-import app.cash.zipline.loader.internal.systemEpochMsClock
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.serialization.modules.EmptySerializersModule
-import kotlinx.serialization.modules.SerializersModule
-import okhttp3.OkHttpClient
+import okio.FileSystem
+import okio.Path
 
-fun ZiplineLoader(
-  dispatcher: CoroutineDispatcher,
-  manifestVerifier: ManifestVerifier,
-  httpClient: ZiplineHttpClient,
-  eventListener: EventListener = EventListener.NONE,
-  nowEpochMs: () -> Long = systemEpochMsClock,
-  serializersModule: SerializersModule = EmptySerializersModule(),
-): ZiplineLoader {
-  return ZiplineLoader(
+fun ZiplineCache(
+  fileSystem: FileSystem,
+  directory: Path,
+  maxSizeInBytes: Long,
+): ZiplineCache {
+  return ZiplineCache(
     sqlDriverFactory = SqlDriverFactory(),
-    dispatcher = dispatcher,
-    manifestVerifier = manifestVerifier,
-    httpFetcher = HttpFetcher(httpClient, eventListener),
-    eventListener = eventListener,
-    nowEpochMs = nowEpochMs,
-    serializersModule = serializersModule,
-    embeddedDir = null,
-    embeddedFileSystem = null,
-    cache = null,
-  )
-}
-
-fun ZiplineLoader(
-  dispatcher: CoroutineDispatcher,
-  manifestVerifier: ManifestVerifier,
-  httpClient: OkHttpClient,
-  eventListener: EventListener = EventListener.NONE,
-  nowEpochMs: () -> Long = systemEpochMsClock,
-  serializersModule: SerializersModule = EmptySerializersModule()
-): ZiplineLoader {
-  return ZiplineLoader(
-    dispatcher = dispatcher,
-    manifestVerifier = manifestVerifier,
-    httpClient = OkHttpZiplineHttpClient(httpClient),
-    nowEpochMs = nowEpochMs,
-    eventListener = eventListener,
-    serializersModule = serializersModule
+    fileSystem = fileSystem,
+    directory = directory,
+    maxSizeInBytes = maxSizeInBytes,
   )
 }
