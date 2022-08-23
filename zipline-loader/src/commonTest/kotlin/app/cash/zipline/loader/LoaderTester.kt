@@ -18,7 +18,6 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
-import app.cash.zipline.loader.internal.cache.ZiplineCache
 import app.cash.zipline.loader.internal.fetcher.MANIFEST_MAX_SIZE
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -58,6 +57,11 @@ class LoaderTester(
   fun beforeTest() {
     systemFileSystem.createDirectories(tempDir, mustCreate = true)
     systemFileSystem.createDirectories(embeddedDir, mustCreate = true)
+    cache = testZiplineCache(
+      systemFileSystem,
+      cacheDir,
+      cacheMaxSizeInBytes.toLong()
+    )
     loader = testZiplineLoader(
       dispatcher = dispatcher,
       manifestVerifier = manifestVerifier,
@@ -68,15 +72,12 @@ class LoaderTester(
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
     ).withCache(
-      directory = cacheDir,
-      fileSystem = systemFileSystem,
-      maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
+      cache
     )
-    cache = loader.cache!!
   }
 
   fun afterTest() {
-    loader.close()
+    cache.close()
   }
 
   fun seedEmbedded(applicationName: String, seed: String) {

@@ -15,28 +15,27 @@
  */
 package app.cash.zipline.loader
 
-import android.content.Context
 import app.cash.zipline.EventListener
-import app.cash.zipline.loader.internal.cache.SqlDriverFactory
-import app.cash.zipline.loader.internal.fetcher.HttpFetcher
 import app.cash.zipline.loader.internal.systemEpochMsClock
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okhttp3.OkHttpClient
-import okio.FileSystem
-import okio.Path
 
-fun ZiplineCache(
-  context: Context,
-  fileSystem: FileSystem,
-  directory: Path,
-  maxSizeInBytes: Long,
-): ZiplineCache {
-  return ZiplineCache(
-    sqlDriverFactory = SqlDriverFactory(context),
-    fileSystem = fileSystem,
-    directory = directory,
-    maxSizeInBytes = maxSizeInBytes,
+fun ZiplineLoader(
+  dispatcher: CoroutineDispatcher,
+  manifestVerifier: ManifestVerifier,
+  httpClient: OkHttpClient,
+  eventListener: EventListener = EventListener.NONE,
+  nowEpochMs: () -> Long = systemEpochMsClock,
+  serializersModule: SerializersModule = EmptySerializersModule(),
+): ZiplineLoader {
+  return ZiplineLoader(
+    dispatcher = dispatcher,
+    manifestVerifier = manifestVerifier,
+    httpClient = OkHttpZiplineHttpClient(httpClient),
+    eventListener = eventListener,
+    nowEpochMs = nowEpochMs,
+    serializersModule = serializersModule,
   )
 }

@@ -19,6 +19,7 @@ import app.cash.turbine.test
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
+import app.cash.zipline.loader.internal.systemEpochMsClock
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.assertDownloadedToEmbeddedManifest
@@ -291,6 +292,7 @@ class ZiplineLoaderTest {
       applicationName = applicationName,
       loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
       initializer = initializer,
+      nowEpochMs = systemEpochMsClock(),
     )
   }
 }

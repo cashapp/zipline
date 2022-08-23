@@ -30,14 +30,6 @@ import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 
 actual val systemFileSystem = FileSystem.SYSTEM
 
-actual fun testZiplineLoader(
-  dispatcher: CoroutineDispatcher,
-  manifestVerifier: ManifestVerifier,
-  httpClient: ZiplineHttpClient,
-  nowEpochMs: () -> Long,
-  eventListener: EventListener,
-): ZiplineLoader = error("testZiplineLoader not available for Android")
-
 internal actual fun testSqlDriverFactory(): SqlDriverFactory =
   error("testSqlDriverFactory not available for Android")
 

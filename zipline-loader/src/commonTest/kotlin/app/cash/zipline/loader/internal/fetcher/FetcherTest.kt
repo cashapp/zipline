@@ -38,8 +38,9 @@ class FetcherTest {
       applicationName: String,
       id: String,
       sha256: ByteString,
+      nowEpochMs: Long,
       baseUrl: String?,
-      url: String
+      url: String,
     ): ByteString? {
       alphaFetcherIds.add(id)
       return null
@@ -51,9 +52,10 @@ class FetcherTest {
       applicationName: String,
       id: String,
       sha256: ByteString,
+      nowEpochMs: Long,
       baseUrl: String?,
       url: String,
-    ): ByteString {
+    ): ByteString? {
       bravoFetcherIds.add(id)
       return bravoByteString
     }
@@ -73,6 +75,7 @@ class FetcherTest {
       applicationName = "foxtrot",
       id = "alpha",
       sha256 = "alpha".encodeUtf8().sha256(),
+      nowEpochMs = 1_000L,
       baseUrl = null,
       url = "alpha",
     )
@@ -81,6 +84,7 @@ class FetcherTest {
       applicationName = "foxtrot",
       id = "bravo",
       sha256 = "bravo".encodeUtf8().sha256(),
+      nowEpochMs = 1_000L,
       baseUrl = null,
       url = "bravo",
     )

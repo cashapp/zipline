@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.randomToken
 import app.cash.zipline.loader.systemFileSystem
@@ -30,8 +31,8 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
-import okio.Closeable
 import okio.FileSystem
 import okio.ForwardingFileSystem
 import okio.IOException
@@ -261,7 +262,7 @@ class ZiplineCacheTest {
       assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(3, it.countPins())
 
-      it.getOrPutManifest("red", manifestFiretruck.manifestBytes, 1)
+      it.getOrPutManifest("red", manifestFiretruck.manifestBytes, 1, nowMillis)
       assertEquals(4, it.countPins())
 
       assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
@@ -345,7 +346,7 @@ class ZiplineCacheTest {
       assertEquals(5, get1.freshAtEpochMs)
 
       // Update the freshAt timestamp.
-      ziplineCache.updateManifestFreshAt("red", LoadedManifest(fileContents, 10))
+      ziplineCache.updateManifestFreshAt("red", LoadedManifest(fileContents, 10), nowMillis)
       val get2 = assertNotNull(ziplineCache.getPinnedManifest("red"))
       assertEquals(fileContents, get2.manifestBytes)
       assertEquals(10, get2.freshAtEpochMs)
@@ -367,16 +368,11 @@ class ZiplineCacheTest {
     val database = createDatabase(driver)
 
     val cache = ZiplineCache(
-      databaseCloseable = object: Closeable {
-        override fun close() {
-          driver.close()
-        }
-      },
+      driver = driver,
       database = database,
       fileSystem = fileSystem,
       directory = directory,
       maxSizeInBytes = cacheSize.toLong(),
-      nowEpochMs = { nowMillis },
     )
     cache.initialize()
     try {
@@ -407,4 +403,33 @@ class ZiplineCacheTest {
       }
     }
   }
+
+  private fun ZiplineCache.read(sha256: ByteString) = read(sha256, nowMillis)
+
+  private fun ZiplineCache.write(
+    applicationName: String,
+    sha256: ByteString,
+    content: ByteString,
+    isManifest: Boolean = false,
+    manifestFreshAtMs: Long? = null,
+  ) = write(applicationName, sha256, content, nowMillis, isManifest, manifestFreshAtMs)
+
+  private suspend fun ZiplineCache.getOrPut(
+    applicationName: String,
+    sha256: ByteString,
+    download: suspend () -> ByteString?,
+  ) = getOrPut(applicationName, sha256, nowMillis, download)
+
+  private fun ZiplineCache.getPinnedManifest(applicationName: String) =
+    getPinnedManifest(applicationName, nowMillis)
+
+  private fun ZiplineCache.pinManifest(
+    applicationName: String,
+    loadedManifest: LoadedManifest,
+  ) = pinManifest(applicationName, loadedManifest, nowMillis)
+
+  private fun ZiplineCache.unpinManifest(
+    applicationName: String,
+    loadedManifest: LoadedManifest,
+  ) = unpinManifest(applicationName, loadedManifest, nowMillis)
 }
