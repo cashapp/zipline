@@ -18,9 +18,21 @@ package app.cash.zipline.loader
 import app.cash.zipline.Zipline
 
 /**
- * Zipline engine loaded with code and related metadata on the load attempt.
+ * Final result state from a ZiplineLoader attempt.
  */
-data class LoadedZipline(
-  val zipline: Zipline,
-  val freshAtEpochMs: Long,
-)
+sealed class LoadResult {
+  /**
+   * [Zipline] engine successfully loaded with code and corresponding metadata.
+   */
+  data class Success(
+    val zipline: Zipline,
+    val freshAtEpochMs: Long,
+  ): LoadResult()
+
+  /**
+   * [Exception] from the Zipline code load failure and corresponding metadata.
+   */
+  data class Failure(
+    val exception: Exception,
+  ): LoadResult()
+}

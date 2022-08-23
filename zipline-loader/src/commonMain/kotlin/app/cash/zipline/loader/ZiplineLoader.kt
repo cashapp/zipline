@@ -152,8 +152,8 @@ class ZiplineLoader internal constructor(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
     serializersModule: SerializersModule = EmptySerializersModule(),
-    initializer: (Zipline) -> Unit,
-  ): Flow<LoadedZipline> {
+    initializer: (Zipline) -> Unit = {},
+  ): Flow<LoadResult> {
     return flow {
       var isFirstLoad = true
       var previousManifest: ZiplineManifest? = null
@@ -180,11 +180,12 @@ class ZiplineLoader internal constructor(
               initializer,
             )
             cachingFetcher?.pin(applicationName, networkManifest, now) // Pin after success.
-            emit(LoadedZipline(networkZipline, networkManifest.freshAtEpochMs))
+            emit(LoadResult.Success(networkZipline, networkManifest.freshAtEpochMs))
             previousManifest = networkManifest.manifest
           } catch (e: Exception) {
             cachingFetcher?.unpin(applicationName, networkManifest, now) // Unpin after failure.
-            throw e
+            // Don't rethrow, allow the flow consumer to handle LoadResult events
+            emit(LoadResult.Failure(e))
           }
         }
 
@@ -201,7 +202,7 @@ class ZiplineLoader internal constructor(
               now,
               initializer,
             )
-            emit(LoadedZipline(localZipline, localManifest.freshAtEpochMs))
+            emit(LoadResult.Success(localZipline, localManifest.freshAtEpochMs))
             previousManifest = localManifest.manifest
           }
         }
@@ -214,7 +215,7 @@ class ZiplineLoader internal constructor(
     manifestUrl: String,
     serializersModule: SerializersModule = EmptySerializersModule(),
     initializer: (Zipline) -> Unit = {},
-  ): LoadedZipline = load(
+  ): LoadResult = load(
     applicationName,
     flowOf(manifestUrl),
     serializersModule,

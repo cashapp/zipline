@@ -91,7 +91,7 @@ class ZiplineLoaderTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    val zipline = loader.loadOnce("test", manifestUrl).zipline
+    val zipline = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -110,7 +110,7 @@ class ZiplineLoaderTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString
     )
-    val ziplineColdCache = loader.loadOnce("test", manifestUrl).zipline
+    val ziplineColdCache = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
     assertEquals(
       ziplineColdCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -125,7 +125,7 @@ class ZiplineLoaderTest {
       manifestUrl to testFixtures.manifestNoBaseUrlByteString,
       // Note no actual alpha/bravo files are available on the network
     )
-    val ziplineWarmedCache = loader.loadOnce("test", manifestUrl).zipline
+    val ziplineWarmedCache = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
     assertEquals(
       ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -152,7 +152,7 @@ class ZiplineLoaderTest {
       manifestUrl to testFixtures.manifestByteString,
       // Note no actual alpha/bravo files are available on the cache / network
     )
-    val zipline = loader.loadOnce("test", manifestUrl).zipline
+    val zipline = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
     assertEquals(
       zipline.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -266,7 +266,7 @@ class ZiplineLoaderTest {
     ).test {
       assertEquals(
         "apple",
-        (awaitItem().zipline.quickJs.evaluate(
+        ((awaitItem() as LoadResult.Success).zipline.quickJs.evaluate(
           "globalThis.log", "assert.js"
         ) as String).removeSuffix(
           " loaded\n"
@@ -274,7 +274,7 @@ class ZiplineLoaderTest {
       )
       assertEquals(
         "firetruck",
-        (awaitItem().zipline.quickJs.evaluate(
+        ((awaitItem() as LoadResult.Success).zipline.quickJs.evaluate(
           "globalThis.log", "assert.js"
         ) as String).removeSuffix(
           " loaded\n"

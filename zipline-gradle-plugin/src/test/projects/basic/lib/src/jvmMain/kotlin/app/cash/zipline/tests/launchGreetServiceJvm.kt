@@ -19,6 +19,7 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.ZiplineLoader
+import app.cash.zipline.loader.LoadResult
 import java.time.Instant
 import java.util.concurrent.Executors
 import kotlin.system.exitProcess
@@ -44,7 +45,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
     httpClient = localDirectoryHttpClient,
   )
 
-  val zipline = loader.loadOnce("test", "https://localhost/manifest.zipline.json").zipline
+  val zipline = (loader.loadOnce("test", "https://localhost/manifest.zipline.json") as LoadResult.Success).zipline
 
   return zipline
 }
