@@ -109,14 +109,14 @@ internal class HttpFetcher(
       else -> url
     }
 
-    eventListener.downloadStart(applicationName, fullUrl)
+    val startValue = eventListener.downloadStart(applicationName, fullUrl)
     val result = try {
       httpClient.download(fullUrl)
     } catch (e: Exception) {
-      eventListener.downloadFailed(applicationName, fullUrl, e)
+      eventListener.downloadFailed(applicationName, fullUrl, e, startValue)
       throw e
     }
-    eventListener.downloadEnd(applicationName, fullUrl)
+    eventListener.downloadEnd(applicationName, fullUrl, startValue)
 
     return result
   }
