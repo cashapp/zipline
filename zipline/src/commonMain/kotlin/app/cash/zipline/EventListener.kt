@@ -36,7 +36,7 @@ abstract class EventListener {
    * non-suspending functions.
    *
    * @return any object. This value will be passed back to [callEnd] when the call is completed. The
-   *     base function always returns null.
+   *   base function always returns null.
    */
   open fun callStart(call: Call): Any? {
     return null
@@ -45,35 +45,53 @@ abstract class EventListener {
   /**
    * Invoked when a service function call completes.
    *
-   * @param callStartResult the value returned by [callStart] for the start of this call. This is
-   *     null unless [callStart] is overridden to return something else.
+   * @param startValue the value returned by [callStart] for the start of this call. This is null
+   *   unless [callStart] is overridden to return something else.
    */
-  open fun callEnd(call: Call, result: CallResult, callStartResult: Any?) {
+  open fun callEnd(call: Call, result: CallResult, startValue: Any?) {
   }
 
   /** Invoked when a service is garbage collected without being closed. */
   open fun serviceLeaked(name: String) {
   }
 
-  /** Invoked when an application load starts */
+  /**
+   * Invoked when an application load starts.
+   *
+   * @return any object. This value will be passed back to [applicationLoadEnd] or
+   *   [applicationLoadFailed] when the load is completed. The base function always returns null.
+   */
   open fun applicationLoadStart(
     applicationName: String,
     manifestUrl: String?,
-  ) {
+  ): Any? {
+    return null
   }
 
-  /** Invoked when an application load succeeds */
+  /**
+   * Invoked when an application load succeeds.
+   *
+   * @param startValue the value returned by [applicationLoadStart] for the start of this call. This
+   *   is null unless [applicationLoadStart] is overridden to return something else.
+   */
   open fun applicationLoadEnd(
     applicationName: String,
     manifestUrl: String?,
+    startValue: Any?,
   ) {
   }
 
-  /** Invoked when an application load fails */
+  /**
+   * Invoked when an application load fails.
+   *
+   * @param startValue the value returned by [applicationLoadStart] for the start of this call. This
+   *   is null unless [applicationLoadStart] is overridden to return something else.
+   */
   open fun applicationLoadFailed(
     applicationName: String,
     manifestUrl: String?,
     exception: Exception,
+    startValue: Any?,
   ) {
   }
 
@@ -81,21 +99,34 @@ abstract class EventListener {
   open fun downloadStart(
     applicationName: String,
     url: String,
-  ) {
+  ): Any? {
+    return null
   }
 
-  /** Invoked when a network download succeeds */
+  /**
+   * Invoked when a network download succeeds.
+   *
+   * @param startValue the value returned by [downloadStart] for the start of this call. This is
+   *   null unless [downloadStart] is overridden to return something else.
+   */
   open fun downloadEnd(
     applicationName: String,
     url: String,
+    startValue: Any?,
   ) {
   }
 
-  /** Invoked when a network download fails */
+  /**
+   * Invoked when a network download fails.
+   *
+   * @param startValue the value returned by [downloadStart] for the start of this call. This is
+   *   null unless [downloadStart] is overridden to return something else.
+   */
   open fun downloadFailed(
     applicationName: String,
     url: String,
     exception: Exception,
+    startValue: Any?,
   ) {
   }
 

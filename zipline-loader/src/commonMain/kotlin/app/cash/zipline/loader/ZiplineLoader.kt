@@ -338,17 +338,17 @@ class ZiplineLoader internal constructor(
     manifestUrl: String?,
     block: suspend () -> Unit,
   ) {
-    eventListener.applicationLoadStart(applicationName, manifestUrl)
+    val startValue = eventListener.applicationLoadStart(applicationName, manifestUrl)
     try {
       block()
-      eventListener.applicationLoadEnd(applicationName, manifestUrl)
+      eventListener.applicationLoadEnd(applicationName, manifestUrl, startValue)
     } catch (e: CancellationException) {
       // If emit() threw a CancellationException, consider that emit to be successful.
       // That's 'cause loadOnce() accepts an element and then immediately cancels the flow.
-      eventListener.applicationLoadEnd(applicationName, manifestUrl)
+      eventListener.applicationLoadEnd(applicationName, manifestUrl, startValue)
       throw e
     } catch (e: Exception) {
-      eventListener.applicationLoadFailed(applicationName, manifestUrl, e)
+      eventListener.applicationLoadFailed(applicationName, manifestUrl, e, startValue)
     }
   }
 

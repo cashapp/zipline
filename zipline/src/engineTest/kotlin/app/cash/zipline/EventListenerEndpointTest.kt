@@ -363,7 +363,7 @@ internal class EventListenerEndpointTest {
       return null
     }
 
-    override fun callEnd(call: Call, result: CallResult, callStartResult: Any?) {
+    override fun callEnd(call: Call, result: CallResult, startValue: Any?) {
       results += result
     }
   }

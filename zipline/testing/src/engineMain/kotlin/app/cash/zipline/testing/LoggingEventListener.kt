@@ -43,7 +43,7 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun callStart(call: Call): Any? {
+  override fun callStart(call: Call): Any {
     val callId = nextCallId++
     log(
       service = call.service,
@@ -53,11 +53,11 @@ class LoggingEventListener : EventListener() {
     return callId
   }
 
-  override fun callEnd(call: Call, result: CallResult, callStartResult: Any?) {
+  override fun callEnd(call: Call, result: CallResult, startValue: Any?) {
     log(
       service = call.service,
       serviceName = call.serviceName,
-      log = "callEnd $callStartResult " +
+      log = "callEnd $startValue " +
         "${call.serviceName} ${call.function.name} ${call.args} ${result.result}"
     )
   }
@@ -76,7 +76,7 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun applicationLoadEnd(applicationName: String, manifestUrl: String?) {
+  override fun applicationLoadEnd(applicationName: String, manifestUrl: String?, startValue: Any?) {
     log(
       applicationName = applicationName,
       log = "applicationLoadEnd $applicationName $manifestUrl"
@@ -86,7 +86,8 @@ class LoggingEventListener : EventListener() {
   override fun applicationLoadFailed(
     applicationName: String,
     manifestUrl: String?,
-    exception: Exception
+    exception: Exception,
+    startValue: Any?
   ) {
     log(
       applicationName = applicationName,
@@ -102,14 +103,19 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun downloadEnd(applicationName: String, url: String) {
+  override fun downloadEnd(applicationName: String, url: String, startValue: Any?) {
     log(
       applicationName = applicationName,
       log = "downloadEnd $applicationName $url"
     )
   }
 
-  override fun downloadFailed(applicationName: String, url: String, exception: Exception) {
+  override fun downloadFailed(
+    applicationName: String,
+    url: String,
+    exception: Exception,
+    startValue: Any?
+  ) {
     log(
       applicationName = applicationName,
       exception = exception,
