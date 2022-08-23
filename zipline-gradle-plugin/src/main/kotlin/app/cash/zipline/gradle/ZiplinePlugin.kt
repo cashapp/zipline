@@ -96,8 +96,8 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
         configuration.signingKeys.asMap.values
       }.flatMap {
         it.map { dslKey ->
-          dslKey.privateKeyHex.map { privateKeyHex ->
-            ManifestSigningKey(dslKey.name, dslKey.algorithmId.get(), privateKeyHex.decodeHex())
+          dslKey.privateKeyHex.zip(dslKey.algorithmId) { privateKeyHex, algorithmId ->
+            ManifestSigningKey(dslKey.name, algorithmId, privateKeyHex.decodeHex())
           }
         }.flatten()
       })
