@@ -26,6 +26,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.modules.EmptySerializersModule
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import okio.FileSystem
@@ -139,6 +140,7 @@ class ProductionFetcherReceiverTest {
     return loadFromManifest(
       applicationName = applicationName,
       loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
+      serializersModule = EmptySerializersModule(),
       initializer = initializer,
       nowEpochMs = nowMillis,
     )
