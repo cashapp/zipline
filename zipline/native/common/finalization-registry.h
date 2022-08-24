@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-int installFinalizationRegistry(JSContext *jsContext);
+int installFinalizationRegistry(JSContext *jsContext, JSContext *jsContextForCompiling);
 
 #ifdef __cplusplus
 } /* extern "C" { */

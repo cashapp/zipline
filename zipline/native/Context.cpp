@@ -74,12 +74,34 @@ struct JniThreadDetacher {
   }
 };
 
+JSContext *JS_NewContextNoEval(JSRuntime *rt)
+{
+    JSContext *ctx;
+
+    ctx = JS_NewContextRaw(rt);
+    if (!ctx)
+        return NULL;
+
+    JS_AddIntrinsicBaseObjects(ctx);
+    JS_AddIntrinsicDate(ctx);
+    // look ma, no eval
+    JS_AddIntrinsicStringNormalize(ctx);
+    JS_AddIntrinsicRegExp(ctx);
+    JS_AddIntrinsicJSON(ctx);
+    JS_AddIntrinsicProxy(ctx);
+    JS_AddIntrinsicMapSet(ctx);
+    JS_AddIntrinsicTypedArrays(ctx);
+    JS_AddIntrinsicPromise(ctx);
+    return ctx;
+}
+
 } // anonymous namespace
 
 Context::Context(JNIEnv* env)
     : jniVersion(env->GetVersion()),
       jsRuntime(JS_NewRuntime()),
-      jsContext(JS_NewContext(jsRuntime)),
+      jsContext(JS_NewContextNoEval(jsRuntime)),
+      jsContextForCompiling(JS_NewContext(jsRuntime)),
       outboundCallChannelClassId(0),
       lengthAtom(JS_NewAtom(jsContext, "length")),
       serviceNamesArrayAtom(JS_NewAtom(jsContext, "serviceNamesArray")),
@@ -107,7 +129,7 @@ Context::Context(JNIEnv* env)
   JS_SetRuntimeOpaque(jsRuntime, this);
   JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
 
-  if (installFinalizationRegistry(jsContext) < 0) {
+  if (installFinalizationRegistry(jsContext, jsContextForCompiling) < 0) {
     throwJavaException(env, "java/lang/IllegalStateException",
                        "Failed to install FinalizationRegistry");
   }
@@ -137,6 +159,7 @@ Context::~Context() {
   JS_FreeAtom(jsContext, callAtom);
   JS_FreeAtom(jsContext, disconnectAtom);
   JS_FreeContext(jsContext);
+  JS_FreeContext(jsContextForCompiling);
   JS_FreeRuntime(jsRuntime);
 }
 
@@ -174,7 +197,7 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   const auto sourceCode = env->GetStringUTFChars(source, 0);
   const auto fileName = env->GetStringUTFChars(file, 0);
 
-  auto compiled = JS_Eval(jsContext, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_FLAG_STRICT);
+  auto compiled = JS_Eval(jsContextForCompiling, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_FLAG_STRICT);
 
   env->ReleaseStringUTFChars(file, fileName);
   env->ReleaseStringUTFChars(source, sourceCode);
@@ -182,12 +205,12 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   if (JS_IsException(compiled)) {
     // TODO: figure out how to get the failing line number into the exception.
     throwJsException(env, compiled);
-    JS_FreeValue(jsContext, compiled);
+    JS_FreeValue(jsContextForCompiling, compiled);
     return nullptr;
   }
 
   size_t bufferLength = 0;
-  auto buffer = JS_WriteObject(jsContext, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
+  auto buffer = JS_WriteObject(jsContextForCompiling, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
 
   auto result = buffer && bufferLength > 0 ? env->NewByteArray(bufferLength) : nullptr;
   if (result) {
@@ -196,8 +219,8 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
     throwJsException(env, compiled);
   }
 
-  JS_FreeValue(jsContext, compiled);
-  js_free(jsContext, buffer);
+  JS_FreeValue(jsContextForCompiling, compiled);
+  js_free(jsContextForCompiling, buffer);
 
   return result;
 }
@@ -414,22 +437,6 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
       result = nullptr;
       break;
   }
-  return result;
-}
-
-jobject Context::eval(JNIEnv* env, jstring source, jstring file) {
-  std::string sourceCodeString = toCppString(env, source);
-
-  const char* fileName = env->GetStringUTFChars(file, 0);
-
-  JSValue evalValue = JS_Eval(jsContext, sourceCodeString.c_str(), sourceCodeString.length(), fileName, JS_EVAL_FLAG_STRICT);
-
-  env->ReleaseStringUTFChars(file, fileName);
-
-  jobject result = toJavaObject(env, evalValue, false);
-
-  JS_FreeValue(jsContext, evalValue);
-
   return result;
 }
 
