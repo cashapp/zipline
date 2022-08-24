@@ -15,6 +15,10 @@ application {
 }
 
 buildConfig {
+  useKotlinOutput {
+    internalVisibility = true
+  }
+
   packageName("app.cash.zipline.cli")
   buildConfigField("String", "VERSION", "\"${version}\"")
 }
