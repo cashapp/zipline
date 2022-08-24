@@ -27,7 +27,7 @@ import org.junit.Test
 
 class OkHttpZiplineHttpClientTest {
   private val server = MockWebServer()
-  private val client = OkHttpZiplineHttpClient(OkHttpClient())
+  private val client = OkHttpClient().asZiplineHttpClient()
 
   @Test
   fun happyPath(): Unit = runBlocking {
