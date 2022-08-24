@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 
-## [0.9.2] - 2022-08-22
+## [0.9.3] - 2022-08-23
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -12,6 +12,18 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * Breaking change: Move `SerializersModule` from a property of `ZiplineLoader` to a parameter in
+   `load()` and `loadOnce()`. This enables using a single loader for different applications that
+   have different serializers.
+ * Breaking change: Make `ZiplineCache` a top-level type. It has its own lifecycle and is best
+   managed directly.
+ * Breaking change: Pass a `startValue` parameter consistently to event listener callbacks.
+ * New: Extension `OkHttpClient.asZiplineHttpClient()` makes it easier to use general-purpose
+   Zipline APIs from multiplatform code.
+
+
+## [0.9.2] - 2022-08-22
 
  * Breaking change: `ZiplineLoader.load(...)` is no longer suspending.
  * Breaking change: Don't require implementors of `ZiplineHttpClient` to implement URL resolution.
