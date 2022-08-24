@@ -110,6 +110,47 @@ static JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int a
 }
 
 /*
+ *  Helper method for [installFinalizationRegistry]
+ */
+static int loadBootstrapJs(JSContext *jsContext, JSContext *jsContextForCompiling, char *bootstrapJs) {
+  int result = 1;
+
+  JSValue compiledBootstrapJs = JS_Eval(jsContextForCompiling, bootstrapJs, strlen(bootstrapJs),
+                                     "finalization-registry.c",
+                                     JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_FLAG_STRICT);
+
+  if (JS_IsException(compiledBootstrapJs)) {
+    result = -1;
+  } else {
+    size_t bufferLength = 0;
+    uint8_t *buffer = JS_WriteObject(jsContextForCompiling, &bufferLength, compiledBootstrapJs,
+                                     JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
+    JS_FreeValue(jsContextForCompiling, compiledBootstrapJs);
+
+    const int flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
+    JSValue obj = JS_ReadObject(jsContext, buffer, bufferLength, flags);
+    js_free(jsContextForCompiling, buffer);
+
+    if (JS_IsException(obj)) {
+      result = -1;
+    } else {
+      if (JS_ResolveModule(jsContext, obj)) {
+        result = -1;
+      } else {
+        JSValue bootstrapResult = JS_EvalFunction(jsContext, obj);
+        if (JS_IsException(bootstrapResult)) {
+          result = -1;
+        }
+        JS_FreeValue(jsContext, bootstrapResult);
+      }
+    }
+  }
+
+  return result;
+}
+
+
+/*
  * This sets up the native primitives to support finalization. It's equivalent to the following
  * pseudocode.
  *
@@ -167,37 +208,7 @@ int installFinalizationRegistry(JSContext *jsContext, JSContext *jsContextForCom
     "  const f = FinalizationRegistry.idToFunction[id];\n"
     "  f();\n"
     "}\n";
-
-  JSValue compiledBootstrapJs = JS_Eval(jsContextForCompiling, bootstrapJs, strlen(bootstrapJs),
-                                     "finalization-registry.c",
-                                     JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_FLAG_STRICT);
-
-  if (JS_IsException(compiledBootstrapJs)) {
-    result = -1;
-  } else {
-    size_t bufferLength = 0;
-    uint8_t *buffer = JS_WriteObject(jsContextForCompiling, &bufferLength, compiledBootstrapJs,
-                                     JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
-    JS_FreeValue(jsContextForCompiling, compiledBootstrapJs);
-
-    const int flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
-    JSValue obj = JS_ReadObject(jsContext, buffer, bufferLength, flags);
-    js_free(jsContextForCompiling, buffer);
-
-    if (JS_IsException(obj)) {
-      result = -1;
-    } else {
-      if (JS_ResolveModule(jsContext, obj)) {
-        result = -1;
-      } else {
-        JSValue bootstrapResult = JS_EvalFunction(jsContext, obj);
-        if (JS_IsException(bootstrapResult)) {
-          result = -1;
-        }
-        JS_FreeValue(jsContext, bootstrapResult);
-      }
-    }
-  }
+  loadBootstrapJs(jsContext, jsContextForCompiling, bootstrapJs);
 
   // Declare the Finalizer class.
   JSClassDef classDef;
