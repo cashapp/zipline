@@ -28,6 +28,10 @@ dependencies {
 }
 
 buildConfig {
+  useKotlinOutput {
+    internalVisibility = true
+  }
+
   val compilerPlugin = projects.ziplineKotlinPlugin
   packageName("app.cash.zipline.gradle")
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${libs.plugins.zipline.kotlin.get()}\"")

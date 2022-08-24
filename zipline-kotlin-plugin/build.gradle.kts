@@ -19,6 +19,10 @@ dependencies {
 }
 
 buildConfig {
+  useKotlinOutput {
+    internalVisibility = true
+  }
+
   packageName("app.cash.zipline.kotlin")
   buildConfigField("String", "KOTLIN_PLUGIN_ID", "\"${libs.plugins.zipline.kotlin.get()}\"")
 }

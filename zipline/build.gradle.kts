@@ -12,29 +12,8 @@ plugins {
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
   id("co.touchlab.cklib")
+  id("com.github.gmazzo.buildconfig")
 }
-
-abstract class VersionWriterTask : DefaultTask() {
-  @InputFile
-  val versionFile = project.file("native/quickjs/VERSION")
-
-  @OutputDirectory
-  val outputDir = project.layout.buildDirectory.file("generated/version/")
-
-  @TaskAction
-  fun stuff() {
-    val version = versionFile.readText().trim()
-
-    val outputFile = outputDir.get().asFile.resolve("app/cash/zipline/version.kt")
-    outputFile.parentFile.mkdirs()
-    outputFile.writeText("""
-      |package app.cash.zipline
-      |
-      |internal const val quickJsVersion = "$version"
-      |""".trimMargin())
-  }
-}
-val versionWriterTaskProvider = tasks.register("writeVersion", VersionWriterTask::class)
 
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
   dependsOn(":zipline:testing:compileDevelopmentLibraryKotlinJs")
@@ -78,7 +57,6 @@ kotlin {
 
     val engineMain by creating {
       dependsOn(commonMain)
-      kotlin.srcDir(versionWriterTaskProvider)
     }
     val engineTest by creating {
       dependsOn(commonTest)
@@ -142,6 +120,18 @@ kotlin {
         project.dependencies.add(pluginConfigurationName, projects.ziplineKotlinPlugin)
       }
     }
+  }
+}
+
+buildConfig {
+  useKotlinOutput {
+    internalVisibility = true
+    topLevelConstants = true
+  }
+
+  sourceSets.named("engineMain") {
+    packageName("app.cash.zipline")
+    buildConfigField("String", "quickJsVersion") { "\"${quickJsVersion()}\"" }
   }
 }
 
