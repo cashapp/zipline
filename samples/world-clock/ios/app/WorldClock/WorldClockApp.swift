@@ -14,7 +14,6 @@ struct WorldClockApp: App {
 
 struct ContentView: View {
     @State private var label = "..."
-    @State var tapCount = 0
 
     var body: some View {
         Text(label)
