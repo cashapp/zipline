@@ -15,10 +15,10 @@
  */
 package app.cash.zipline
 
+import kotlin.test.AfterTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import org.junit.After
-import org.junit.Test
 
 /**
  * Confirm our JavaScript engine doesn't allow eval.
@@ -28,7 +28,7 @@ import org.junit.Test
 class NoEvalTest {
   private val quickJs = QuickJs.create()
 
-  @After
+  @AfterTest
   fun tearDown() {
     quickJs.close()
   }

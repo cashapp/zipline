@@ -20,6 +20,7 @@
 #include "OutboundCallChannel.h"
 #include "InboundCallChannel.h"
 #include "ExceptionThrowers.h"
+#include "common/context-no-eval.h"
 #include "common/finalization-registry.h"
 #include "quickjs/quickjs.h"
 
@@ -73,32 +74,6 @@ struct JniThreadDetacher {
     javaVm.DetachCurrentThread();
   }
 };
-
-/**
- * This function is like QuickJS' JS_NewContext(...) except that it skips installing the intrinsic
- * for eval. It also omits BIGNUM which we don't include in our builds.
- *
- * We omit support for eval() as a security precaution.
- */
-JSContext *JS_NewContextNoEval(JSRuntime* jsRuntime)
-{
-  auto jsContext = JS_NewContextRaw(jsRuntime);
-  if (!jsContext) {
-    return NULL;
-  }
-
-  JS_AddIntrinsicBaseObjects(jsContext);
-  JS_AddIntrinsicDate(jsContext);
-  // Eval intrinsic NOT installed here.
-  JS_AddIntrinsicStringNormalize(jsContext);
-  JS_AddIntrinsicRegExp(jsContext);
-  JS_AddIntrinsicJSON(jsContext);
-  JS_AddIntrinsicProxy(jsContext);
-  JS_AddIntrinsicMapSet(jsContext);
-  JS_AddIntrinsicTypedArrays(jsContext);
-  JS_AddIntrinsicPromise(jsContext);
-  return jsContext;
-}
 
 } // anonymous namespace
 
