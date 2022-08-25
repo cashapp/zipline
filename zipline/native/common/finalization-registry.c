@@ -109,46 +109,48 @@ static JSValue jsNewFinalizer(JSContext* jsContext, JSValueConst this_val, int a
   return result;
 }
 
-/*
- *  Helper method for [installFinalizationRegistry]
+/**
+ * Compiles and executes [bootstrapJs] using one JSContext to compile and another to execute. We
+ * would normally just use JS_Eval but we've disabled eval on that JSContext as a security
+ * precaution.
+ *
+ * In order to compile with one JSContext and run on another, we do an encode/decode cycle on the
+ * intermediate function. That's a simple (if inefficient) way to move a function across contexts.
+ *
+ * Returns 1 on success, -1 on error.
  */
-static int loadBootstrapJs(JSContext *jsContext, JSContext *jsContextForCompiling, char *bootstrapJs) {
+static int compileAndExecuteJs(JSContext *jsContext, JSContext *jsContextForCompiling, char *sourceCode) {
   int result = 1;
 
-  JSValue compiledBootstrapJs = JS_Eval(jsContextForCompiling, bootstrapJs, strlen(bootstrapJs),
+  JSValue compiledFunction = JS_Eval(jsContextForCompiling, sourceCode, strlen(sourceCode),
                                      "finalization-registry.c",
                                      JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_FLAG_STRICT);
 
-  if (JS_IsException(compiledBootstrapJs)) {
+  if (JS_IsException(compiledFunction)) {
     result = -1;
   } else {
-    size_t bufferLength = 0;
-    uint8_t *buffer = JS_WriteObject(jsContextForCompiling, &bufferLength, compiledBootstrapJs,
-                                     JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
-    JS_FreeValue(jsContextForCompiling, compiledBootstrapJs);
+    size_t encodedFunctionLength = 0;
+    uint8_t *encodedFunction = JS_WriteObject(jsContextForCompiling, &encodedFunctionLength, compiledFunction,
+                                              JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
+    JSValue runnableFunction = JS_ReadObject(jsContext, encodedFunction, encodedFunctionLength,
+                                             JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE);
+    js_free(jsContextForCompiling, encodedFunction);
 
-    const int flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
-    JSValue obj = JS_ReadObject(jsContext, buffer, bufferLength, flags);
-    js_free(jsContextForCompiling, buffer);
-
-    if (JS_IsException(obj)) {
+    if (JS_IsException(runnableFunction) || JS_ResolveModule(jsContext, runnableFunction)) {
       result = -1;
     } else {
-      if (JS_ResolveModule(jsContext, obj)) {
+      JSValue bootstrapResult = JS_EvalFunction(jsContext, runnableFunction);
+      if (JS_IsException(bootstrapResult)) {
         result = -1;
-      } else {
-        JSValue bootstrapResult = JS_EvalFunction(jsContext, obj);
-        if (JS_IsException(bootstrapResult)) {
-          result = -1;
-        }
-        JS_FreeValue(jsContext, bootstrapResult);
       }
+      JS_FreeValue(jsContext, bootstrapResult);
     }
   }
 
+  JS_FreeValue(jsContextForCompiling, compiledFunction);
+
   return result;
 }
-
 
 /*
  * This sets up the native primitives to support finalization. It's equivalent to the following
@@ -208,7 +210,9 @@ int installFinalizationRegistry(JSContext *jsContext, JSContext *jsContextForCom
     "  const f = FinalizationRegistry.idToFunction[id];\n"
     "  f();\n"
     "}\n";
-  loadBootstrapJs(jsContext, jsContextForCompiling, bootstrapJs);
+  if (compileAndExecuteJs(jsContext, jsContextForCompiling, bootstrapJs) < 0) {
+    result = -1;
+  }
 
   // Declare the Finalizer class.
   JSClassDef classDef;

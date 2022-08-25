@@ -13,9 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.bytecode
+package app.cash.zipline
 
-import app.cash.zipline.QuickJs
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import org.junit.After
@@ -23,6 +22,8 @@ import org.junit.Test
 
 /**
  * Confirm our JavaScript engine doesn't allow eval.
+ *
+ * TODO(adrw): promote this to engineTest after it's supported in native.
  */
 class NoEvalTest {
   private val quickJs = QuickJs.create()

@@ -75,9 +75,9 @@ import app.cash.zipline.quickjs.JS_ToCString
 import app.cash.zipline.quickjs.JS_WRITE_OBJ_BYTECODE
 import app.cash.zipline.quickjs.JS_WRITE_OBJ_REFERENCE
 import app.cash.zipline.quickjs.JS_WriteObject
+import app.cash.zipline.quickjs.JsCallFunction
 import app.cash.zipline.quickjs.JsDisconnectFunction
 import app.cash.zipline.quickjs.JsFalse
-import app.cash.zipline.quickjs.JsCallFunction
 import app.cash.zipline.quickjs.JsServiceNamesFunction
 import app.cash.zipline.quickjs.JsTrue
 import app.cash.zipline.quickjs.JsValueArrayToInstanceRef
@@ -128,7 +128,8 @@ actual class QuickJs private constructor(
           memoryLimit = -1L
           gcThreshold = 256L * 1024L
           maxStackSize = 512L * 1024L // Override the QuickJS default which is 256 KiB
-          installFinalizationRegistry(context)
+          // TODO(adrw): pass different contexts for execution vs. compile.
+          installFinalizationRegistry(context, context)
         }
     }
 
