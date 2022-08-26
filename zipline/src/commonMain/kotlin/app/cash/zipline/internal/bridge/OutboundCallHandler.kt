@@ -33,10 +33,9 @@ internal class OutboundCallHandler(
   private val endpoint: Endpoint,
   private val functionsList: List<ZiplineFunction<*>>,
 ) {
-  /** Used by generated code when closing a service. */
   var closed = false
+    private set
 
-  /** Used by generated code to call a function. */
   fun call(
     service: ZiplineService,
     functionIndex: Int,
@@ -60,6 +59,12 @@ internal class OutboundCallHandler(
       !is SuspendCallback<*> -> endpoint.eventListener.callEnd(externalCall, callResult, callStart)
       else -> Unit // Don't call callEnd() for suspend callbacks.
     }
+
+    if (function.isClose && !closed) {
+      closed = true
+      endpoint.outboundServiceClosed()
+    }
+
     return callResult.result.getOrThrow()
   }
 
@@ -130,6 +135,7 @@ internal class OutboundCallHandler(
       endpoint.remove(this@RealSuspendCallback)
       endpoint.incompleteContinuations -= continuation
       endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+      endpoint.outboundServiceClosed() // Fake a call to CancelCallback.close().
       continuation.resumeWith(result)
     }
   }

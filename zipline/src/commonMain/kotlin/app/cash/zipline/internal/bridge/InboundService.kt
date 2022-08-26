@@ -92,6 +92,7 @@ internal class InboundService<T : ZiplineService>(
         result.isSuccess -> suspendCallback.success(result.getOrNull())
         else -> suspendCallback.failure(result.exceptionOrNull()!!)
       }
+      endpoint.outboundServiceClosed() // Fake a call to SuspendCallback.close()
     }
 
     val cancelCallback = object : CancelCallback {

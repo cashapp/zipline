@@ -144,7 +144,6 @@ interface SampleService<T> : ZiplineService {
 
         override fun close() {
           val callHandler = callHandler
-          callHandler.closed = true
           return callHandler.call(this, 2) as Unit
         }
       }

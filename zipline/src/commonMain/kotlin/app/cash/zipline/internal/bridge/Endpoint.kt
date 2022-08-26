@@ -18,6 +18,7 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.passByReferencePrefix
+import app.cash.zipline.internal.ziplineInternalPrefix
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.json.Json
@@ -34,7 +35,9 @@ class Endpoint internal constructor(
   internal val outboundChannel: CallChannel,
 ) {
   internal val inboundServices = mutableMapOf<String, InboundService<*>>()
+  private var outboundServiceCount = 0
   private var nextId = 1
+  internal var state = State.READY
 
   internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
 
@@ -105,6 +108,8 @@ class Endpoint internal constructor(
     service: T,
     adapter: ZiplineServiceAdapter<T>
   ) {
+    checkReady(name)
+
     eventListener.bindService(name, service)
 
     val functions = adapter.ziplineFunctions(json.serializersModule)
@@ -118,23 +123,20 @@ class Endpoint internal constructor(
 
   @PublishedApi
   internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
+    checkReady(name)
+
     // Detect leaked old services when creating new services.
     detectLeaks()
 
     val functions = adapter.ziplineFunctions(json.serializersModule)
     val callHandler = OutboundCallHandler(name, this, functions)
     val result = adapter.outboundService(callHandler)
+    outboundServiceCount++
     eventListener.takeService(name, result)
     trackLeaks(eventListener, name, callHandler, result)
     return result
   }
 
-  @PublishedApi
-  internal fun remove(name: String): InboundService<*>? {
-    return inboundServices.remove(name)
-  }
-
-  @PublishedApi
   internal fun remove(service: ZiplineService) {
     val i = inboundServices.values.iterator()
     while (i.hasNext()) {
@@ -146,7 +148,56 @@ class Endpoint internal constructor(
     }
   }
 
+  @PublishedApi
+  internal fun outboundServiceClosed() {
+    outboundServiceCount--
+    if (outboundServiceCount == 0 && state == State.SHUTTING_DOWN) {
+      state = State.CLOSED
+    }
+  }
+
   internal fun generatePassByReferenceName(): String {
     return "$passByReferencePrefix${nextId++}"
+  }
+
+  private fun checkReady(name: String) {
+    // Internal binds and takes are always allowed. Otherwise, suspend functions and
+    // pass-by-reference would break after shutdown().
+    if (name.startsWith(ziplineInternalPrefix)) return
+
+    when (state) {
+      State.SHUTTING_DOWN -> throw IllegalStateException("shutting down")
+      State.CLOSED -> throw IllegalStateException("closed")
+      else -> return
+    }
+  }
+
+  fun shutdown() {
+    state = when {
+      outboundServiceCount > 0 -> State.SHUTTING_DOWN
+      else -> State.CLOSED
+    }
+  }
+
+  /**
+   * Endpoints have a lifecycle so that the mechanism that powers them (ie. QuickJS) can be cleaned
+   * up when it is no longer needed.
+   *
+   * READY: the endpoint is new and available for calls to bind() and take(), and functions on those
+   *     services to be invoked.
+   *
+   * SHUTDOWN: the endpoint expects no further calls to bind() or take(), but the services already
+   *     taken may be used indefinitely. This includes passing services by reference, which will
+   *     implicitly bind and take new services. When the last of all services is closed, the
+   *     endpoint is automatically closed.
+   *
+   * CLOSED: the endpoint expects no further calls to bind() or take(), and no further calls to the
+   *     functions on the services that have been taken. This state is reached when all such
+   *     services are closed.
+   */
+  internal enum class State {
+    READY,
+    SHUTTING_DOWN,
+    CLOSED,
   }
 }

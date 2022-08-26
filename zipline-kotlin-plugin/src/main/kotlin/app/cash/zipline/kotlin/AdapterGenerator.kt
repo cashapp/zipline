@@ -39,7 +39,6 @@ import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
-import org.jetbrains.kotlin.ir.builders.irTrue
 import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
@@ -783,15 +782,6 @@ internal class AdapterGenerator(
         origin = IrDeclarationOrigin.DEFINED
       }
 
-      // If this is the close() function, tell the OutboundCallHandler that this instance is closed.
-      //   callHandler.close = true
-      if (bridgedFunction.isZiplineClose()) {
-        +irCall(ziplineApis.outboundCallHandlerClosed.owner.setter!!).apply {
-          dispatchReceiver = irGet(callHandlerLocal)
-          putValueArgument(0, irTrue())
-        }
-      }
-
       // One of:
       //   return callHandler.call(service, index, arg0, arg1, arg2)
       //   return callHandler.callSuspending(service, index, arg0, arg1, arg2)
@@ -838,7 +828,4 @@ internal class AdapterGenerator(
 
   private val IrClass.defaultDispatchReceiver
     get() = typeWith(typeParameters.map { it.defaultType })
-
-  private fun IrSimpleFunction.isZiplineClose() =
-    name.asString() == "close" && valueParameters.isEmpty()
 }
