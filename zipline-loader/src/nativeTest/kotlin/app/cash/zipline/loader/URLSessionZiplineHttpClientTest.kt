@@ -16,14 +16,51 @@
 package app.cash.zipline.loader
 
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
+import okio.IOException
 import platform.Foundation.NSURLSession
 
+/**
+ * This tests our Kotlin/Native URLSessionZiplineHttpClient. Unfortunately this test is not enabled
+ * by default as we don't have an equivalent to MockWebServer for Kotlin/Native.
+ */
 class URLSessionZiplineHttpClientTest {
+  var enabled = false
+
   @Test
-  fun makeRequests(): Unit = runBlocking {
+  fun happyPath(): Unit = runBlocking {
+    if (!enabled) return@runBlocking
+
     val httpClient = URLSessionZiplineHttpClient(NSURLSession.sharedSession)
     val download = httpClient.download("https://squareup.com/robots.txt")
-    println(download)
+    println(download.utf8())
+  }
+
+  @Test
+  fun connectivityFailure(): Unit = runBlocking {
+    if (!enabled) return@runBlocking
+
+    val httpClient = URLSessionZiplineHttpClient(NSURLSession.sharedSession)
+    val exception = assertFailsWith<IOException> {
+      httpClient.download("https://198.51.100.1/robots.txt") // Unreachable IP address.
+    }
+    assertTrue("The request timed out." in exception.message!!, exception.message)
+  }
+
+  @Test
+  fun nonSuccessfulResponseCode(): Unit = runBlocking {
+    if (!enabled) return@runBlocking
+
+    val httpClient = URLSessionZiplineHttpClient(NSURLSession.sharedSession)
+    val exception = assertFailsWith<IOException> {
+      httpClient.download("https://squareup.com/.well-known/404")
+    }
+    assertEquals(
+      "failed to fetch https://squareup.com/.well-known/404: 404",
+      exception.message,
+    )
   }
 }

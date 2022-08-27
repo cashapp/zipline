@@ -32,6 +32,7 @@ class WorldClockAndroid(
 ) {
   private val ziplineExecutorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val ziplineDispatcher = ziplineExecutorService.asCoroutineDispatcher()
+  private val okHttpClient = OkHttpClient()
 
   val events = flowOf<WorldClockEvent>()
   val models = MutableStateFlow(WorldClockModel(label = "..."))
@@ -41,10 +42,9 @@ class WorldClockAndroid(
       scope = scope,
       ziplineDispatcher = ziplineDispatcher,
       ziplineLoader = ZiplineLoader(
-        context = applicationContext,
         dispatcher = ziplineDispatcher,
         manifestVerifier = NO_SIGNATURE_CHECKS,
-        httpClient = OkHttpClient(),
+        httpClient = okHttpClient,
       ),
       manifestUrl = "http://10.0.2.2:8080/manifest.zipline.json",
       host = RealWorldClockHost(),

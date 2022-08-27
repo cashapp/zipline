@@ -17,6 +17,8 @@ package app.cash.zipline.loader
 
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.native.concurrent.freeze
+import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okio.ByteString
 import okio.IOException
@@ -32,31 +34,19 @@ import platform.Foundation.dataTaskWithURL
 internal class URLSessionZiplineHttpClient(
   private val urlSession: NSURLSession,
 ) : ZiplineHttpClient {
+  init {
+    maybeFreeze()
+  }
+
   override suspend fun download(url: String): ByteString {
     val nsUrl = NSURL(string = url)
-    return suspendCancellableCoroutine { continuation ->
+    return suspendCancellableCoroutine { continuation: CancellableContinuation<ByteString> ->
+      val completionHandler = CompletionHandler(url, continuation)
+
       val task = urlSession.dataTaskWithURL(
         url = nsUrl,
-      ) { data: NSData?, response: NSURLResponse?, error: NSError? ->
-        if (error != null) {
-          continuation.resumeWithException(IOException(error.description))
-          return@dataTaskWithURL
-        }
-
-        if (response !is NSHTTPURLResponse || data == null) {
-          continuation.resumeWithException(IOException("unexpected response: $response"))
-          return@dataTaskWithURL
-        }
-
-        if (response.statusCode !in 200 until 300) {
-          continuation.resumeWithException(
-            IOException("failed to fetch $url: ${response.statusCode}")
-          )
-          return@dataTaskWithURL
-        }
-
-        continuation.resume(data.toByteString())
-      }
+        completionHandler = completionHandler::invoke.maybeFreeze()
+      )
 
       continuation.invokeOnCancellation {
         task.cancel()
@@ -64,5 +54,40 @@ internal class URLSessionZiplineHttpClient(
 
       task.resume()
     }
+  }
+}
+
+private class CompletionHandler(
+  private val url: String,
+  private val continuation: CancellableContinuation<ByteString>,
+) {
+  fun invoke(data: NSData?, response: NSURLResponse?, error: NSError?) {
+    if (error != null) {
+      continuation.resumeWithException(IOException(error.description))
+      return
+    }
+
+    if (response !is NSHTTPURLResponse || data == null) {
+      continuation.resumeWithException(IOException("unexpected response: $response"))
+      return
+    }
+
+    if (response.statusCode !in 200 until 300) {
+      continuation.resumeWithException(
+        IOException("failed to fetch $url: ${response.statusCode}")
+      )
+      return
+    }
+
+    continuation.resume(data.toByteString())
+  }
+}
+
+/** Freeze this when executing on Kotlin/Native's strict memory model. */
+private fun <T> T.maybeFreeze(): T {
+  return if (Platform.memoryModel == MemoryModel.STRICT) {
+    this.freeze()
+  } else {
+    this
   }
 }
