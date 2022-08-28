@@ -1,6 +1,3 @@
-include(":emoji-search:android")
-include(":emoji-search:ios:shared")
-include(":emoji-search:presenters")
 include(":trivia:trivia-host")
 include(":trivia:trivia-js")
 include(":trivia:trivia-shared")

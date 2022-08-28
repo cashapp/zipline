@@ -81,30 +81,11 @@ jobs:
         with:
           api-level: 29
           script: ./gradlew connectedCheck
-
-  ios:
-    runs-on: macos-latest
-
-    steps:
-      - uses: actions/checkout@v3
-      - uses: gradle/wrapper-validation-action@v1
-      - uses: actions/setup-java@v3
-        with:
-          distribution: 'zulu'
-          java-version: 11
-
-      - name: Build Xcode samples
-        run: |
-          cd samples/emoji-search/ios/app
-          pod install
-          xcodebuild -workspace EmojiSearchApp.xcworkspace -scheme EmojiSearchApp -destination 'platform=iOS Simulator,name=iPhone 12,OS=latest'
-
   publish:
     runs-on: macos-latest
     needs:
       - build
       - android
-      - ios
 
     steps:
       - uses: actions/checkout@v3
