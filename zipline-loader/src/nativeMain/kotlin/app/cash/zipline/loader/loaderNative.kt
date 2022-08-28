@@ -15,9 +15,13 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.systemEpochMsClock
+import kotlinx.coroutines.CoroutineDispatcher
 import okio.FileSystem
 import okio.Path
+import platform.Foundation.NSURLSession
 
 fun ZiplineCache(
   fileSystem: FileSystem,
@@ -31,3 +35,21 @@ fun ZiplineCache(
     maxSizeInBytes = maxSizeInBytes,
   )
 }
+
+fun ZiplineLoader(
+  dispatcher: CoroutineDispatcher,
+  manifestVerifier: ManifestVerifier,
+  urlSession: NSURLSession,
+  eventListener: EventListener = EventListener.NONE,
+  nowEpochMs: () -> Long = systemEpochMsClock,
+): ZiplineLoader {
+  return ZiplineLoader(
+    dispatcher = dispatcher,
+    manifestVerifier = manifestVerifier,
+    httpClient = urlSession.asZiplineHttpClient(),
+    eventListener = eventListener,
+    nowEpochMs = nowEpochMs,
+  )
+}
+
+fun NSURLSession.asZiplineHttpClient(): ZiplineHttpClient = URLSessionZiplineHttpClient(this)

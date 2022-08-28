@@ -24,7 +24,7 @@ struct ContentView: View {
 
         .onAppear {
             let scope = ExposedKt.mainScope()
-            let worldClockIos = PresentersWorldClockIos(httpClient: HTTPClient(), scope: scope)
+            let worldClockIos = PresentersWorldClockIos(scope: scope)
             worldClockIos.start { model in
                 self.label = model.label
             }
