@@ -140,7 +140,7 @@ internal class EndpointTest {
     endpointA.bind<EchoService>("helloService", service)
     val client = endpointB.take<EchoService>("helloService")
 
-    val thrownException = assertFailsWith<Exception> {
+    val thrownException = assertFailsWith<ZiplineException> {
       client.echo(EchoRequest(""))
     }
     assertTrue(thrownException.message!!.contains(".IllegalStateException: boom!"))
@@ -159,7 +159,7 @@ internal class EndpointTest {
     endpointA.bind<SuspendingEchoService>("helloService", service)
     val client = endpointB.take<SuspendingEchoService>("helloService")
 
-    val thrownException = assertFailsWith<Exception> {
+    val thrownException = assertFailsWith<ZiplineException> {
       client.suspendingEcho(EchoRequest(""))
     }
     assertTrue(thrownException.message!!.contains(".IllegalStateException: boom!"))

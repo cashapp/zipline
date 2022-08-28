@@ -132,7 +132,7 @@ internal class FlowTest {
     channel.send("C")
 
     val received = mutableListOf<String>()
-    val e = assertFailsWith<Exception> {
+    val e = assertFailsWith<ZiplineException> {
       flow.collect {
         received += it
         if (received.size == 2) channel.cancel()

@@ -49,7 +49,7 @@ class ThrowableSerializerTest {
     )
 
     val decoded = json.decodeFromString(ThrowableSerializer, exceptionJson)
-    assertEquals(Exception::class, decoded::class)
+    assertEquals(ZiplineException::class, decoded::class)
     assertEquals(
       """
       |java.lang.Exception: boom
@@ -71,7 +71,7 @@ class ThrowableSerializerTest {
       """.trimMargin()
 
     val decoded = json.decodeFromString(ThrowableSerializer, exceptionJson)
-    assertEquals(Exception::class, decoded::class)
+    assertEquals(ZiplineException::class, decoded::class)
   }
 
   @Test fun ziplineApiMismatchExceptionStripsPrefix() {

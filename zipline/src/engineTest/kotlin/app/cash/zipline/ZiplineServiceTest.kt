@@ -122,7 +122,7 @@ internal class ZiplineServiceTest {
 
     assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
     helloService.close()
-    val failure = assertFailsWith<Exception> {
+    val failure = assertFailsWith<ZiplineApiMismatchException> {
       helloService.echo(EchoRequest("Jake"))
     }
     assertTrue("no such service" in (failure.message ?: ""), failure.message)
