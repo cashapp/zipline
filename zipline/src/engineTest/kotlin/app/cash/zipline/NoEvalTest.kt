@@ -22,8 +22,6 @@ import kotlin.test.assertFailsWith
 
 /**
  * Confirm our JavaScript engine doesn't allow eval.
- *
- * TODO(adrw): promote this to engineTest after it's supported in native.
  */
 class NoEvalTest {
   private val quickJs = QuickJs.create()
