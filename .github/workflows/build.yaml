@@ -97,7 +97,7 @@ jobs:
         run: |
           cd samples/world-clock/ios/app
           pod install
-          xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=Any iOS Simulator Device,OS=latest'
+          xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
 
   publish:
     runs-on: macos-latest
