@@ -146,7 +146,7 @@ Context::~Context() {
 jobject Context::execute(JNIEnv* env, jbyteArray byteCode) {
   const auto buffer = env->GetByteArrayElements(byteCode, nullptr);
   const auto bufferLength = env->GetArrayLength(byteCode);
-  const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
+  const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE | JS_EVAL_FLAG_STRICT;
   auto obj = JS_ReadObject(jsContext, reinterpret_cast<const uint8_t*>(buffer), bufferLength, flags);
   env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
 
@@ -190,7 +190,7 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   }
 
   size_t bufferLength = 0;
-  auto buffer = JS_WriteObject(jsContextForCompiling, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
+  auto buffer = JS_WriteObject(jsContextForCompiling, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE | JS_EVAL_FLAG_STRICT);
 
   auto result = buffer && bufferLength > 0 ? env->NewByteArray(bufferLength) : nullptr;
   if (result) {
