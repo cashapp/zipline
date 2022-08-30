@@ -27,6 +27,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import okio.ByteString.Companion.encodeUtf8
@@ -98,9 +99,8 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.alphaByteString,
     )
-    assertFailsWith<IllegalStateException> {
-      tester.loader.loadOnce("test", manifestUrl)
-    }
+    val result = tester.loader.loadOnce("test", manifestUrl)
+    assertTrue(result is LoadResult.Failure)
     assertEquals(
       "checksum mismatch for bravo",
       eventListener.takeException().message,
