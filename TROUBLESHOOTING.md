@@ -2,6 +2,18 @@
 
 For contributors to Zipline, the following can be exceptions encountered which don't have obvious fixes (yet).
 
+## Configure Android SDK Location
+
+To inform your local Zipline build where to find Android SDK files, add the following in a `local.properties` file at the root of the Zipline repo directory.
+
+On macOS, you'll replace `{your username}` with your local account username. On other platforms the path will be different.
+
+```
+sdk.dir=/Users/{your username}/Library/Android/sdk
+```
+
+If you don't have Android SDK downloaded yet, the easiest way is to install Android Studio with default configuration with `brew install android-studio`. It will download the Android SDK to the above location in macOS and setup required usage terms approvals.
+
 ## Build Native Libraries Locally
 
 Zipline requires architecture specific built artifacts of native code.
