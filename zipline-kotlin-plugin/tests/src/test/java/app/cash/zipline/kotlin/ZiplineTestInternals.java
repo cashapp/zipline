@@ -15,17 +15,19 @@
  */
 package app.cash.zipline.kotlin;
 
+import app.cash.zipline.ZiplineFunction;
 import app.cash.zipline.internal.bridge.Endpoint;
 import app.cash.zipline.internal.bridge.OutboundCallHandler;
 import app.cash.zipline.internal.bridge.ReturningZiplineFunction;
-import app.cash.zipline.ZiplineFunction;
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
 import app.cash.zipline.testing.EchoRequest;
 import app.cash.zipline.testing.EchoResponse;
 import app.cash.zipline.testing.EchoService;
 import app.cash.zipline.testing.EchoZiplineService;
 import app.cash.zipline.testing.GenericEchoService;
+import app.cash.zipline.testing.KotlinSerializersKt;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import kotlin.Pair;
 import kotlin.PublishedApi;
@@ -60,7 +62,8 @@ public final class ZiplineTestInternals {
 
   public static Pair<Endpoint, Endpoint> newEndpointPair() {
     CoroutineScope scope = CoroutineScopeKt.CoroutineScope(EmptyCoroutineContext.INSTANCE);
-    return app.cash.zipline.testing.EndpointsKt.newEndpointPair(scope);
+    return app.cash.zipline.testing.EndpointsKt.newEndpointPair(
+      scope, KotlinSerializersKt.getKotlinBuiltInSerializersModule());
   }
 
   /** Simulate generated code for outbound calls. */
@@ -90,6 +93,10 @@ public final class ZiplineTestInternals {
 
     @Override public String getSerialName() {
       return "EchoService";
+    }
+
+    @Override public List<KSerializer<?>> getSerializers() {
+      return Collections.emptyList();
     }
 
     @Override public List<ZiplineFunction<EchoService>> ziplineFunctions(
@@ -139,6 +146,10 @@ public final class ZiplineTestInternals {
       return "GenericEchoService";
     }
 
+    @Override public List<KSerializer<?>> getSerializers() {
+      return Collections.emptyList();
+    }
+
     @Override
     public List<ZiplineFunction<GenericEchoService<String>>> ziplineFunctions(
         SerializersModule serializersModule) {
@@ -182,6 +193,10 @@ public final class ZiplineTestInternals {
 
     @Override public String getSerialName() {
       return "EchoZiplineService";
+    }
+
+    @Override public List<KSerializer<?>> getSerializers() {
+      return Collections.emptyList();
     }
 
     @Override

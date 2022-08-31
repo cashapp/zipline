@@ -41,6 +41,7 @@ import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.builders.irTrue
 import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
+import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
@@ -206,7 +207,7 @@ internal class AdapterGenerator(
       createImplicitParameterDeclarationWithWrappedDescriptor()
     }
 
-    adapterClass.addConstructor {
+    val constructor = adapterClass.addConstructor {
       initDefaults(original)
       visibility = DescriptorVisibilities.INTERNAL
     }.apply {
@@ -230,14 +231,11 @@ internal class AdapterGenerator(
       }
     }
 
-    // override val serializers: List<KSerializer<*>> = serializers
-    val serializersProperty = adapterClass.addPropertyFromConstructorParameter(
-      "serializers",
-      adapterClass.constructors.single().valueParameters[0]
-    )
-
     val serialNameProperty = irSerialNameProperty(adapterClass)
     adapterClass.declarations += serialNameProperty
+
+    val serializersProperty = irSerializersProperty(adapterClass, constructor)
+    adapterClass.declarations += serializersProperty
 
     var nextId = 0
     val ziplineFunctionClasses = bridgedInterface.bridgedFunctions.associateWith {
@@ -286,6 +284,7 @@ internal class AdapterGenerator(
    * like "SampleService".
    */
   private fun irSerialNameProperty(adapterClass: IrClass): IrProperty {
+    // override val serialName: String = "SampleService"
     return irVal(
       pluginContext = pluginContext,
       propertyType = pluginContext.symbols.string.defaultType,
@@ -294,6 +293,19 @@ internal class AdapterGenerator(
       overriddenProperty = ziplineApis.ziplineServiceAdapterSerialName,
     ) {
       irExprBody(irString(original.name.identifier))
+    }
+  }
+
+  private fun irSerializersProperty(adapterClass: IrClass, value: IrConstructor): IrProperty {
+    // override val serializers: List<KSerializer<*>>
+    return irVal(
+      pluginContext = pluginContext,
+      propertyType = ziplineApis.listOfKSerializerStar,
+      declaringClass = adapterClass,
+      propertyName = ziplineApis.ziplineServiceAdapterSerializers.owner.name,
+      overriddenProperty = ziplineApis.ziplineServiceAdapterSerializers,
+    ) {
+      irExprBody(irGet(value.valueParameters[0]))
     }
   }
 

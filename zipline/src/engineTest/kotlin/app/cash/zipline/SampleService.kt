@@ -59,7 +59,7 @@ interface SampleService<T> : ZiplineService {
      * `AdapterGenerator`.
      */
     internal class ManualAdapter<TX>(
-      private val serializers: List<KSerializer<*>>,
+      override val serializers: List<KSerializer<*>>,
     ) : ZiplineServiceAdapter<SampleService<TX>>() {
       override val serialName: String = "SampleService"
 
