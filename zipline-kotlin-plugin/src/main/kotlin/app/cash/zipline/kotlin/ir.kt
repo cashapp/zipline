@@ -335,10 +335,10 @@ fun irBlockBodyBuilder(
   original: IrElement
 ): IrBlockBodyBuilder {
   return IrBlockBodyBuilder(
-    irPluginContext,
-    scopeWithIr.scope,
-    original.startOffset,
-    original.endOffset
+    context = irPluginContext,
+    scope = scopeWithIr.scope,
+    startOffset = original.startOffset.toSyntheticIfUnknown(),
+    endOffset = original.endOffset.toSyntheticIfUnknown(),
   )
 }
 
