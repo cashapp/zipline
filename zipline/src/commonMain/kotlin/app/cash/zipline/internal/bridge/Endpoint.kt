@@ -18,8 +18,10 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.passByReferencePrefix
+import app.cash.zipline.ziplineServiceSerializer
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.Flow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 
@@ -60,6 +62,14 @@ class Endpoint internal constructor(
     serializersModule = SerializersModule {
       contextual(PassByReference::class, PassByReferenceSerializer(this@Endpoint))
       contextual(Throwable::class, ThrowableSerializer)
+      contextual(Flow::class) { serializers ->
+        FlowSerializer(
+          ziplineServiceSerializer<FlowZiplineService<Any?>>(
+            FlowZiplineService::class,
+            serializers
+          )
+        )
+      }
       include(userSerializersModule)
     }
   }

@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
+import kotlin.reflect.KClass
 import kotlinx.serialization.KSerializer
 
 /**
@@ -54,6 +55,17 @@ import kotlinx.serialization.KSerializer
  * release the held reference.
  */
 fun <T : ZiplineService> ziplineServiceSerializer() : KSerializer<T> {
+  error("unexpected call to ziplineServiceSerializer(): is the Zipline plugin configured?")
+}
+
+/**
+ * Returns a [KSerializer] for [T] that performs pass-by-reference instead of pass-by-value. Use
+ * this when implementing contextual serialization for a parameterized type.
+ */
+fun <T : ZiplineService> ziplineServiceSerializer(
+  kClass: KClass<*>,
+  typeArgumentsSerializers: List<KSerializer<*>> = emptyList()
+) : KSerializer<T> {
   error("unexpected call to ziplineServiceSerializer(): is the Zipline plugin configured?")
 }
 
