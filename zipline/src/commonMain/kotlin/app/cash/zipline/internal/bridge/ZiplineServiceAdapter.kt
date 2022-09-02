@@ -32,6 +32,7 @@ import kotlinx.serialization.modules.SerializersModule
 @PublishedApi
 internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
   private val contextualSerializer = ContextualSerializer(PassByReference::class)
+  abstract val serializers: List<KSerializer<*>>
   abstract val serialName: String
 
   override val descriptor = contextualSerializer.descriptor
@@ -52,6 +53,13 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
     val reference = contextualSerializer.deserialize(decoder) as ReceiveByReference
     return reference.take(this)
   }
+
+  override fun equals(other: Any?) =
+    other is ZiplineServiceAdapter<*> &&
+    this::class == other::class &&
+    serializers == other.serializers
+
+  override fun hashCode() = this::class.hashCode()
 }
 
 @PublishedApi

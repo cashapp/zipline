@@ -18,15 +18,15 @@ package app.cash.zipline.kotlin
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.isSuspend
-import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.IrStatementsBuilder
 import org.jetbrains.kotlin.ir.builders.irCall
-import org.jetbrains.kotlin.ir.builders.irCallConstructor
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irTemporary
+import org.jetbrains.kotlin.ir.builders.irVararg
+import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrExpression
@@ -39,7 +39,6 @@ import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
-import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -60,7 +59,6 @@ import org.jetbrains.kotlin.name.FqName
  */
 internal class BridgedInterface(
   private val pluginContext: IrPluginContext,
-  private val messageCollector: MessageCollector,
   private val ziplineApis: ZiplineApis,
   private val scope: ScopeWithIr,
 
@@ -90,12 +88,26 @@ internal class BridgedInterface(
   val bridgedFunctions: List<IrSimpleFunctionSymbol>
     get() = bridgedFunctionsWithOverrides.values.map { it[0] }
 
-  fun adapterConstructorArguments(): AdapterConstructorArguments {
+  /** Declares local vars for all the serializers needed to bridge this interface. */
+  fun declareSerializerTemporaries(
+    statementsBuilder: IrStatementsBuilder<*>,
+    serializersModuleParameter: IrValueParameter,
+    serializersExpression: IrVariable,
+  ): Map<IrType, IrVariable> {
+    return statementsBuilder.irDeclareSerializerTemporaries(
+      serializersModuleParameter = serializersModuleParameter,
+      serializersExpression = serializersExpression,
+    )
+  }
+
+  private fun IrStatementsBuilder<*>.irDeclareSerializerTemporaries(
+    serializersModuleParameter: IrValueParameter,
+    serializersExpression: IrVariable,
+  ): Map<IrType, IrVariable> {
     val requiredTypes = mutableSetOf<IrType>()
     for (bridgedFunction in bridgedFunctions) {
       for (valueParameter in bridgedFunction.owner.valueParameters) {
-        val resolvedParameterType = resolveTypeParameters(valueParameter.type)
-        requiredTypes += resolvedParameterType
+        requiredTypes += resolveTypeParameters(valueParameter.type)
       }
       val resolvedReturnType = resolveTypeParameters(bridgedFunction.owner.returnType)
       requiredTypes += when {
@@ -104,57 +116,16 @@ internal class BridgedInterface(
       }
     }
 
-    val allTypesSorted = requiredTypes.sortedBy { (it as IrSimpleType).asString() }
-    val (ziplineServiceTypes, reifiedTypes) = allTypesSorted.partition {
-      it.isSubtypeOfClass(ziplineApis.ziplineService)
-    }
-
-    return AdapterConstructorArguments(
-      reifiedTypes = reifiedTypes,
-      ziplineServiceTypes = ziplineServiceTypes,
-    )
-  }
-
-  /** Declares local vars for all the serializers needed to bridge this interface. */
-  fun declareSerializerTemporaries(
-    statementsBuilder: IrStatementsBuilder<*>,
-    serializersModuleParameter: IrValueParameter,
-    typesExpression: IrVariable,
-    serializersExpression: IrVariable,
-  ): Map<IrType, IrVariable> {
-    return statementsBuilder.irDeclareSerializerTemporaries(
-      arguments = adapterConstructorArguments(),
-      serializersModuleParameter = serializersModuleParameter,
-      typesExpression = typesExpression,
-      serializersExpression = serializersExpression,
-    )
-  }
-
-  private fun IrStatementsBuilder<*>.irDeclareSerializerTemporaries(
-    arguments: AdapterConstructorArguments,
-    serializersModuleParameter: IrValueParameter,
-    typesExpression: IrVariable,
-    serializersExpression: IrVariable,
-  ): Map<IrType, IrVariable> {
     val result = mutableMapOf<IrType, IrVariable>()
-    for ((typeIndex, type) in arguments.reifiedTypes.withIndex()) {
-      result[type] = irTemporary(
-        value = serializerExpression(
-          type = type,
-          serializersModuleParameter = serializersModuleParameter,
-          typeIndex = typeIndex,
-          typesExpression = typesExpression,
-        ),
-        nameHint = "serializer",
-        isMutable = false,
+    for (requiredType in requiredTypes) {
+      val serializerExpression = serializerExpression(
+        type = requiredType,
+        serializersModuleParameter = serializersModuleParameter,
+        serializersExpression = serializersExpression,
+        contextual = false,
       )
-    }
-    for ((typeIndex, type) in arguments.ziplineServiceTypes.withIndex()) {
-      result[type] = irTemporary(
-        value = irCall(ziplineApis.listGetFunction).apply {
-          dispatchReceiver = irGet(serializersExpression)
-          putValueArgument(0, irInt(typeIndex))
-        },
+      result[requiredType] = irTemporary(
+        value = serializerExpression.expression,
         nameHint = "serializer",
         isMutable = false,
       )
@@ -162,70 +133,112 @@ internal class BridgedInterface(
     return result
   }
 
+  class SerializerExpression(
+    val expression: IrExpression,
+    val hasTypeParameter: Boolean,
+  )
+
+  /**
+   * To serialize generic types that include type variables ('T'), we use [serializersExpression] to
+   * extract the corresponding serializer from the list, matching by index.
+   *
+   * Whenever serializers for type parameters are returned they must be used! Otherwise, we will try
+   * to look up a serializer for a type variable, and that will fail because the concrete type is
+   * not known.
+   */
   private fun IrBuilderWithScope.serializerExpression(
     type: IrType,
     serializersModuleParameter: IrValueParameter,
-    typeIndex: Int = -1,
-    typesExpression: IrVariable? = null,
-  ): IrExpression {
-    when {
-      type.isSubtypeOfClass(ziplineApis.ziplineService) -> {
-        // EchoService.Companion.Adapter
-        // TODO(jwilson): this could be recursive (and fail with a stackoverflow) if a service
-        //     has functions that take its own type. Fix by recursively applying the adapter
-        //     transform?
-        return AdapterGenerator(
-          pluginContext,
-          messageCollector,
-          ziplineApis,
-          this@BridgedInterface.scope,
-          type.getClass()!!,
-        ).adapterExpression(type as IrSimpleType)
-      }
+    serializersExpression: IrVariable,
+    contextual: Boolean,
+  ): SerializerExpression {
+    val originalArguments = (type as IrSimpleType).arguments
+    val resolvedArguments = originalArguments.map { resolveTypeParameters(it as IrType) }
 
-      type.classFqName == ziplineApis.flowFqName -> {
-        // FlowSerializer<T>(ziplineServiceSerializer<FlowZiplineService<T>>())
-        val flowType = (type as IrSimpleType).arguments[0] as IrType
-        val flowZiplineServiceT = ziplineApis.flowZiplineService.typeWith(flowType)
-        val flowSerializerT = ziplineApis.flowSerializer.typeWith(flowType)
-        return irCallConstructor(
-          callee = ziplineApis.flowSerializer.constructors.single(),
-          typeArguments = listOf(flowType)
+    val parameterExpressions = resolvedArguments.map { argumentType ->
+      serializerExpression(
+        type = argumentType,
+        serializersModuleParameter = serializersModuleParameter,
+        serializersExpression = serializersExpression,
+        contextual = false,
+      )
+    }
+    val parameterList = irCall(ziplineApis.listOfFunction).apply {
+      this.type = ziplineApis.listOfKSerializerStar
+      putTypeArgument(0, ziplineApis.kSerializer.starProjectedType)
+      putValueArgument(
+        0,
+        irVararg(
+          ziplineApis.kSerializer.starProjectedType,
+          parameterExpressions.map { it.expression },
+        )
+      )
+    }
+
+    val hasTypeParameter = parameterExpressions.any { it.hasTypeParameter }
+    val classifierOwner = type.classifier.owner
+    val isTypeParameter = classifierOwner is IrTypeParameter
+
+    val expression = when {
+      classifierOwner is IrTypeParameter -> {
+        // serializers.get(0)
+        irCall(
+          callee = ziplineApis.listGetFunction,
+          type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
-          this.type = flowSerializerT
-          putValueArgument(
-            0,
-            serializerExpression(flowZiplineServiceT, serializersModuleParameter),
-          )
+          dispatchReceiver = irGet(serializersExpression)
+          putValueArgument(0, irInt(classifierOwner.index))
         }
       }
 
-      typesExpression != null -> {
-        // serializersModule.serializer(types.get(typeIndex))
-        return irCall(
-          callee = ziplineApis.serializerFunctionValueParam,
+      type.isSubtypeOfClass(ziplineApis.ziplineService) -> {
+        // ServiceType.Companion.Adapter(serializers)
+        AdapterGenerator(
+          pluginContext,
+          ziplineApis,
+          this@BridgedInterface.scope,
+          pluginContext.referenceClass(type.classFqName!!)!!.owner,
+        ).adapterExpression(parameterList)
+      }
+
+      hasTypeParameter || contextual || type.isFlow -> {
+        // serializersModule.requireContextual<T>(root KClass, recurse on type args)
+        irCall(
+          callee = ziplineApis.requireContextual,
           type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
-          putValueArgument(0, irCall(ziplineApis.listGetFunction).apply {
-            dispatchReceiver = irGet(typesExpression)
-            putValueArgument(0, irInt(typeIndex))
-          })
           extensionReceiver = irGet(serializersModuleParameter)
+          // TODO: call remapTypeParameters passing typeIrClass and the AdapterClass we're making
+          putTypeArgument(0, type)
+          putValueArgument(
+            0,
+            irKClass(pluginContext.referenceClass(type.classFqName!!)!!.owner)
+          )
+          putValueArgument(1, parameterList)
         }
       }
 
       else -> {
-        // serializersModule.serializer<EchoRequest>()
-        return irCall(
+        // serializersModule.serializer<T>()
+        irCall(
           callee = ziplineApis.serializerFunctionTypeParam,
           type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
+          // TODO: call remapTypeParameters passing typeIrClass and the AdapterClass we're making
           putTypeArgument(0, type)
           extensionReceiver = irGet(serializersModuleParameter)
         }
       }
     }
+
+    return SerializerExpression(
+      expression = expression,
+      hasTypeParameter = hasTypeParameter || isTypeParameter,
+    )
   }
+
+  private val IrType.isFlow
+    get() = classFqName == ziplineApis.flowFqName
 
   /** Call this on any declaration returned by [classSymbol] to fill in the generic parameters. */
   fun resolveTypeParameters(type: IrType): IrType {
@@ -245,7 +258,6 @@ internal class BridgedInterface(
 
     fun create(
       pluginContext: IrPluginContext,
-      messageCollector: MessageCollector,
       ziplineApis: ZiplineApis,
       scope: ScopeWithIr,
       element: IrElement,
@@ -263,7 +275,6 @@ internal class BridgedInterface(
 
       return BridgedInterface(
         pluginContext,
-        messageCollector,
         ziplineApis,
         scope,
         type,
