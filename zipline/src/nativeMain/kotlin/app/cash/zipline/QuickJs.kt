@@ -136,7 +136,6 @@ actual class QuickJs private constructor(
           memoryLimit = -1L
           gcThreshold = 256L * 1024L
           maxStackSize = 512L * 1024L // Override the QuickJS default which is 256 KiB
-          // TODO(adrw): pass different contexts for execution vs. compile.
           installFinalizationRegistry(context, contextForCompiling)
         }
     }
@@ -255,14 +254,14 @@ actual class QuickJs private constructor(
     checkNotClosed()
 
     val compiled =
-      JS_Eval(contextForCompiling, sourceCode, sourceCode.length.convert(), fileName, JS_EVAL_FLAG_COMPILE_ONLY)
+      JS_Eval(contextForCompiling, sourceCode, sourceCode.length.convert(), fileName, JS_EVAL_FLAG_COMPILE_ONLY or JS_EVAL_FLAG_STRICT)
     if (JS_IsException(compiled) != 0) {
       throwJsException()
     }
     val result = memScoped {
       val bufferLengthVar = alloc<size_tVar>()
       val buffer = JS_WriteObject(contextForCompiling, bufferLengthVar.ptr, compiled,
-        JS_WRITE_OBJ_BYTECODE or JS_WRITE_OBJ_REFERENCE or JS_EVAL_FLAG_STRICT
+        JS_WRITE_OBJ_BYTECODE or JS_WRITE_OBJ_REFERENCE
       )
       val bufferLength = bufferLengthVar.value.toInt()
 
