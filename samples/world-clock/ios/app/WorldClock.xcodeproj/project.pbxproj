@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		1082E07A28B2D6F60041E651 /* HTTPClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1082E07928B2D6F60041E651 /* HTTPClient.swift */; };
 		10C63B8F28B2D5BB0063EB6A /* WorldClockApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10C63B8E28B2D5BB0063EB6A /* WorldClockApp.swift */; };
 		10C63B9328B2D5BC0063EB6A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 10C63B9228B2D5BC0063EB6A /* Assets.xcassets */; };
 		10C63B9628B2D5BC0063EB6A /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 10C63B9528B2D5BC0063EB6A /* Preview Assets.xcassets */; };
@@ -15,7 +14,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		1082E07928B2D6F60041E651 /* HTTPClient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = HTTPClient.swift; sourceTree = "<group>"; };
 		10C63B8B28B2D5BB0063EB6A /* WorldClock.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WorldClock.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		10C63B8E28B2D5BB0063EB6A /* WorldClockApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorldClockApp.swift; sourceTree = "<group>"; };
 		10C63B9228B2D5BC0063EB6A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -58,7 +56,6 @@
 		10C63B8D28B2D5BB0063EB6A /* WorldClock */ = {
 			isa = PBXGroup;
 			children = (
-				1082E07928B2D6F60041E651 /* HTTPClient.swift */,
 				10C63B8E28B2D5BB0063EB6A /* WorldClockApp.swift */,
 				10C63B9228B2D5BC0063EB6A /* Assets.xcassets */,
 				10C63B9428B2D5BC0063EB6A /* Preview Content */,
@@ -188,7 +185,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				10C63B8F28B2D5BB0063EB6A /* WorldClockApp.swift in Sources */,
-				1082E07A28B2D6F60041E651 /* HTTPClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -245,7 +241,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -299,7 +295,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.5;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;

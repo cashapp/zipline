@@ -20,8 +20,7 @@ import app.cash.zipline.internal.bridge.ReturningZiplineFunction
 import app.cash.zipline.internal.bridge.SuspendCallback
 import app.cash.zipline.internal.bridge.SuspendingZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
-import kotlin.reflect.KType
-import kotlin.reflect.typeOf
+import app.cash.zipline.internal.bridge.requireContextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
@@ -50,15 +49,7 @@ interface SampleService<T> : ZiplineService {
     /** This function's body is what callers use to create a properly-typed adapter. */
     internal inline fun <reified T> manualAdapter(): ManualAdapter<T> {
       return ManualAdapter<T>(
-        listOf<KType>(
-          typeOf<SampleRequest>(),
-          typeOf<SampleResponse>(),
-          typeOf<List<T>>(),
-          typeOf<Unit>(),
-        ),
-        listOf<KSerializer<*>>(
-          ziplineServiceSerializer<SuspendCallback<T>>()
-        )
+        listOf(serializer<T>())
       )
     }
 
@@ -68,8 +59,7 @@ interface SampleService<T> : ZiplineService {
      * `AdapterGenerator`.
      */
     internal class ManualAdapter<TX>(
-      private val types: List<KType>,
-      private val serializers: List<KSerializer<*>>,
+      override val serializers: List<KSerializer<*>>,
     ) : ZiplineServiceAdapter<SampleService<TX>>() {
       override val serialName: String = "SampleService"
 
@@ -111,13 +101,18 @@ interface SampleService<T> : ZiplineService {
       override fun ziplineFunctions(
         serializersModule: SerializersModule,
       ): List<ZiplineFunction<SampleService<TX>>> {
-        val types = types
-        val sampleRequestSerializer = serializersModule.serializer(types[0])
-        val sampleResponseSerializer = serializersModule.serializer(types[1])
-        val listOfTSerializer = serializersModule.serializer(types[2])
-        val unitSerializer = serializersModule.serializer(types[3])
         val serializers = serializers
-        val suspendCallbackTSerializer = serializers[0]
+        val sampleRequestSerializer = serializersModule.serializer<SampleRequest>()
+        val sampleResponseSerializer = serializersModule.serializer<SampleResponse>()
+        val listOfTSerializer = serializersModule.requireContextual<List<TX>>(
+          List::class,
+          listOf(serializers[0]),
+        )
+        val unitSerializer = serializersModule.serializer<Unit>()
+        val suspendCallbackTSerializer = ziplineServiceSerializer<SuspendCallback<TX>>(
+          SuspendCallback::class,
+          listOf(serializers[0]),
+        )
         return listOf(
           ZiplineFunction0(listOf(sampleRequestSerializer), sampleResponseSerializer),
           ZiplineFunction1(listOf(listOfTSerializer), suspendCallbackTSerializer),

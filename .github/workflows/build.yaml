@@ -95,9 +95,9 @@ jobs:
 
       - name: Build Xcode samples
         run: |
-          cd samples/emoji-search/ios/app
+          cd samples/world-clock/ios/app
           pod install
-          xcodebuild -workspace EmojiSearchApp.xcworkspace -scheme EmojiSearchApp -destination 'platform=iOS Simulator,name=iPhone 12,OS=latest'
+          xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
 
   publish:
     runs-on: macos-latest

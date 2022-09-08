@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2022 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,12 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.samples.emojisearch
+package app.cash.zipline
 
-import app.cash.zipline.ZiplineService
-
-interface HostApi : ZiplineService {
-  /** Decodes the response as a string and returns it. */
-  suspend fun httpCall(url: String, headers: Map<String, String>): String
-}
-
+/**
+ * Thrown by [ZiplineService] function calls when the target function threw an exception.
+ *
+ * This is similar to a wrapping exception like Java's `InvocationTargetException`, but the wrapped
+ * exception type is not generally available because its class might not exist in the catching
+ * process.
+ */
+class ZiplineException(
+  message: String? = null,
+  cause: Throwable? = null,
+) : RuntimeException(message, cause)

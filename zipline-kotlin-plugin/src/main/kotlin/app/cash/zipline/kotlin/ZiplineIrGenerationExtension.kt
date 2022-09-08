@@ -43,7 +43,6 @@ class ZiplineIrGenerationExtension(
           ) {
             AdapterGenerator(
               pluginContext,
-              messageCollector,
               ziplineApis,
               currentScope!!,
               declaration
@@ -64,12 +63,25 @@ class ZiplineIrGenerationExtension(
           if (takeOrBindFunction != null) {
             return AddAdapterArgumentRewriter(
               pluginContext,
-              messageCollector,
               ziplineApis,
               currentScope!!,
               currentDeclarationParent!!,
               expression,
               takeOrBindFunction,
+            ).rewrite()
+          }
+        } catch (e: ZiplineCompilationException) {
+          messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))
+        }
+
+        try {
+          if (expression.symbol == ziplineApis.ziplineServiceSerializerTwoArg) {
+            return CallAdapterConstructorRewriter(
+              pluginContext,
+              ziplineApis,
+              currentScope!!,
+              currentDeclarationParent!!,
+              expression,
             ).rewrite()
           }
         } catch (e: ZiplineCompilationException) {

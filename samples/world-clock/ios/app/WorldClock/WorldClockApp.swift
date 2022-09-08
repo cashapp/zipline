@@ -14,7 +14,6 @@ struct WorldClockApp: App {
 
 struct ContentView: View {
     @State private var label = "..."
-    @State var tapCount = 0
 
     var body: some View {
         Text(label)
@@ -25,7 +24,7 @@ struct ContentView: View {
 
         .onAppear {
             let scope = ExposedKt.mainScope()
-            let worldClockIos = PresentersWorldClockIos(httpClient: HTTPClient(), scope: scope)
+            let worldClockIos = PresentersWorldClockIos(scope: scope)
             worldClockIos.start { model in
                 self.label = model.label
             }

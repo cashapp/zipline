@@ -16,6 +16,7 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineApiMismatchException
+import app.cash.zipline.ZiplineException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encoding.Decoder
@@ -77,7 +78,7 @@ internal object ThrowableSerializer : KSerializer<Throwable> {
       surrogate.types.firstNotNullOfOrNull { typeName ->
         val constructor = knownTypeConstructor(typeName) ?: return@firstNotNullOfOrNull null
         typeName to constructor
-      } ?: ("Exception" to ::Exception)
+      } ?: ("ZiplineException" to { message -> ZiplineException(message) })
     val (typeName, constructor) = typeNameToConstructor
 
     // Strip off "ZiplineApiMismatchException: " prefix (or similar) so it isn't repeated.

@@ -45,7 +45,7 @@ class ExceptionsTest {
 
     val service = zipline.take<EchoService>("throwingService")
 
-    assertThat(assertFailsWith<Exception> {
+    assertThat(assertFailsWith<ZiplineException> {
       service.echo(EchoRequest("Jake"))
     }.stackTraceToString()).apply {
       matches(
@@ -81,7 +81,7 @@ class ExceptionsTest {
 
     val service = zipline.take<EchoService>("delegatingService")
 
-    assertThat(assertFailsWith<Exception> {
+    assertThat(assertFailsWith<ZiplineException> {
       service.echo(EchoRequest("Jake"))
     }.stackTraceToString()).apply {
       matches(

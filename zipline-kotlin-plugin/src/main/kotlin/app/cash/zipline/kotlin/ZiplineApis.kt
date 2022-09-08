@@ -22,7 +22,6 @@ import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.classFqName
-import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.functions
@@ -48,6 +47,7 @@ internal class ZiplineApis(
   private val suspendCallbackFqName = bridgeFqName.child("SuspendCallback")
   val flowFqName = FqName("kotlinx.coroutines.flow").child("Flow")
   private val collectionsFqName = FqName("kotlin.collections")
+  private val listFqName = collectionsFqName.child("List")
   private val reflectFqName = FqName("kotlin.reflect")
   private val ktypeFqName = reflectFqName.child("KType")
 
@@ -67,13 +67,10 @@ internal class ZiplineApis(
     get() = pluginContext.referenceClass(collectionsFqName.child("Map"))!!
 
   val list: IrClassSymbol
-    get() = pluginContext.referenceClass(collectionsFqName.child("List"))!!
+    get() = pluginContext.referenceClass(listFqName)!!
 
   val listOfKSerializerStar: IrSimpleType
     get() = list.typeWith(kSerializer.starProjectedType)
-
-  val listOfKType: IrSimpleType
-    get() = list.typeWith(kType.defaultType)
 
   val serializerFunctionTypeParam: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(serializationFqName.child("serializer"))
@@ -83,28 +80,26 @@ internal class ZiplineApis(
           it.owner.typeParameters.size == 1
       }
 
-  val serializerFunctionValueParam: IrSimpleFunctionSymbol
+  val serializerFunctionNoReceiver: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(serializationFqName.child("serializer"))
       .single {
-        it.owner.extensionReceiverParameter?.type?.classFqName == serializersModuleFqName &&
-          it.owner.valueParameters.size == 1 &&
-          it.owner.valueParameters[0].type.classFqName == ktypeFqName &&
-          it.owner.typeParameters.isEmpty()
+        it.owner.extensionReceiverParameter == null &&
+          it.owner.valueParameters.isEmpty() &&
+          it.owner.typeParameters.size == 1
       }
 
-  val flowSerializer: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("FlowSerializer"))!!
+  val requireContextual: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(bridgeFqName.child("requireContextual"))
+      .single()
 
-  val flowZiplineService: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("FlowZiplineService"))!!
+  /** This symbol for `ziplineServiceSerializer(KClass<*>, List<KSerializer<*>>)`. */
+  val ziplineServiceSerializerTwoArg: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(ziplineServiceSerializerFunctionFqName)
+      .single { it.owner.valueParameters.size == 2 }
 
   val listOfFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(collectionsFqName.child("listOf"))
       .single { it.owner.valueParameters.firstOrNull()?.isVararg == true }
-
-  val typeOfFunction: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(reflectFqName.child("typeOf"))
-      .single()
 
   val listGetFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
@@ -156,6 +151,11 @@ internal class ZiplineApis(
       ziplineServiceAdapterFqName.child("serialName")
     ).single()
 
+  val ziplineServiceAdapterSerializers: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      ziplineServiceAdapterFqName.child("serializers")
+    ).single()
+
   val ziplineServiceAdapterZiplineFunctions: IrSimpleFunctionSymbol
     get() = ziplineServiceAdapter.functions.single {
       it.owner.name.identifier == "ziplineFunctions"
@@ -185,7 +185,9 @@ internal class ZiplineApis(
     val rewriteTarget = overloads.single {
       it.owner.valueParameters.lastOrNull()?.type?.classFqName == ziplineServiceAdapterFqName
     }
-    val original = overloads.single { it != rewriteTarget }
+    val original = overloads.single {
+      it.owner.valueParameters.size + 1 == rewriteTarget.owner.valueParameters.size
+    }
     return original to rewriteTarget
   }
 }
