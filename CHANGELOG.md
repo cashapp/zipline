@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 
-## [0.9.3] - 2022-08-23
+## [0.9.4] - 2022-09-07
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -12,6 +12,13 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * New: Build in a basic HTTP client for Apple platforms.
+ * Breaking change: Wrap exceptions thrown in bridged calls with `ZiplineException`. Previously
+   these were wrapped in `Exception` which was difficult to catch generically.
+
+
+## [0.9.3] - 2022-08-23
 
  * Breaking change: Move `SerializersModule` from a property of `ZiplineLoader` to a parameter in
    `load()` and `loadOnce()`. This enables using a single loader for different applications that
