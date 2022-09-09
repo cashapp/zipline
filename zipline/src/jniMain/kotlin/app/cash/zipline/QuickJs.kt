@@ -107,7 +107,8 @@ actual class QuickJs private constructor(
    * @throws QuickJsException if there is an error evaluating the script.
    */
   actual fun evaluate(script: String, fileName: String): Any? {
-    return evaluate(context, script, fileName)
+    val bytecode = compile(script, fileName)
+    return execute(bytecode)
   }
 
   internal actual fun initOutboundChannel(outboundChannel: CallChannel) {
@@ -161,7 +162,6 @@ actual class QuickJs private constructor(
   }
 
   private external fun destroyContext(context: Long)
-  private external fun evaluate(context: Long, sourceCode: String, fileName: String): Any?
   private external fun getInboundCallChannel(context: Long, name: String): Long
   private external fun setOutboundCallChannel(context: Long, name: String, callChannel: CallChannel)
   private external fun execute(context: Long, bytecode: ByteArray): Any?

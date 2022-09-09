@@ -33,7 +33,6 @@ public:
 
   InboundCallChannel* getInboundCallChannel(JNIEnv*, jstring name);
   void setOutboundCallChannel(JNIEnv*, jstring name, jobject callChannel);
-  jobject eval(JNIEnv*, jstring source, jstring file);
   jobject execute(JNIEnv*, jbyteArray byteCode);
   jbyteArray compile(JNIEnv*, jstring source, jstring file);
   void setInterruptHandler(JNIEnv* env, jobject interruptHandler);
@@ -60,6 +59,7 @@ public:
   const jint jniVersion;
   JSRuntime *jsRuntime;
   JSContext *jsContext;
+  JSContext *jsContextForCompiling;
   JSClassID outboundCallChannelClassId;
   JSAtom lengthAtom;
   JSAtom serviceNamesArrayAtom;

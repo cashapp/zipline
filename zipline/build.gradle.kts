@@ -105,6 +105,7 @@ kotlin {
       main.cinterops {
         create("quickjs") {
           header(file("native/quickjs/quickjs.h"))
+          header(file("native/common/context-no-eval.h"))
           header(file("native/common/finalization-registry.h"))
           packageName("app.cash.zipline.quickjs")
         }

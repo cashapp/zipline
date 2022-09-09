@@ -20,6 +20,7 @@
 #include "OutboundCallChannel.h"
 #include "InboundCallChannel.h"
 #include "ExceptionThrowers.h"
+#include "common/context-no-eval.h"
 #include "common/finalization-registry.h"
 #include "quickjs/quickjs.h"
 
@@ -79,7 +80,8 @@ struct JniThreadDetacher {
 Context::Context(JNIEnv* env)
     : jniVersion(env->GetVersion()),
       jsRuntime(JS_NewRuntime()),
-      jsContext(JS_NewContext(jsRuntime)),
+      jsContext(JS_NewContextNoEval(jsRuntime)),
+      jsContextForCompiling(JS_NewContext(jsRuntime)),
       outboundCallChannelClassId(0),
       lengthAtom(JS_NewAtom(jsContext, "length")),
       serviceNamesArrayAtom(JS_NewAtom(jsContext, "serviceNamesArray")),
@@ -107,7 +109,7 @@ Context::Context(JNIEnv* env)
   JS_SetRuntimeOpaque(jsRuntime, this);
   JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
 
-  if (installFinalizationRegistry(jsContext) < 0) {
+  if (installFinalizationRegistry(jsContext, jsContextForCompiling) < 0) {
     throwJavaException(env, "java/lang/IllegalStateException",
                        "Failed to install FinalizationRegistry");
   }
@@ -137,13 +139,14 @@ Context::~Context() {
   JS_FreeAtom(jsContext, callAtom);
   JS_FreeAtom(jsContext, disconnectAtom);
   JS_FreeContext(jsContext);
+  JS_FreeContext(jsContextForCompiling);
   JS_FreeRuntime(jsRuntime);
 }
 
 jobject Context::execute(JNIEnv* env, jbyteArray byteCode) {
   const auto buffer = env->GetByteArrayElements(byteCode, nullptr);
   const auto bufferLength = env->GetArrayLength(byteCode);
-  const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE;
+  const auto flags = JS_READ_OBJ_BYTECODE | JS_READ_OBJ_REFERENCE | JS_EVAL_FLAG_STRICT;
   auto obj = JS_ReadObject(jsContext, reinterpret_cast<const uint8_t*>(buffer), bufferLength, flags);
   env->ReleaseByteArrayElements(byteCode, buffer, JNI_ABORT);
 
@@ -174,7 +177,7 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   const auto sourceCode = env->GetStringUTFChars(source, 0);
   const auto fileName = env->GetStringUTFChars(file, 0);
 
-  auto compiled = JS_Eval(jsContext, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_FLAG_STRICT);
+  auto compiled = JS_Eval(jsContextForCompiling, sourceCode, strlen(sourceCode), fileName, JS_EVAL_FLAG_COMPILE_ONLY | JS_EVAL_FLAG_STRICT);
 
   env->ReleaseStringUTFChars(file, fileName);
   env->ReleaseStringUTFChars(source, sourceCode);
@@ -182,12 +185,12 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
   if (JS_IsException(compiled)) {
     // TODO: figure out how to get the failing line number into the exception.
     throwJsException(env, compiled);
-    JS_FreeValue(jsContext, compiled);
+    JS_FreeValue(jsContextForCompiling, compiled);
     return nullptr;
   }
 
   size_t bufferLength = 0;
-  auto buffer = JS_WriteObject(jsContext, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
+  auto buffer = JS_WriteObject(jsContextForCompiling, &bufferLength, compiled, JS_WRITE_OBJ_BYTECODE | JS_WRITE_OBJ_REFERENCE);
 
   auto result = buffer && bufferLength > 0 ? env->NewByteArray(bufferLength) : nullptr;
   if (result) {
@@ -196,8 +199,8 @@ jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {
     throwJsException(env, compiled);
   }
 
-  JS_FreeValue(jsContext, compiled);
-  js_free(jsContext, buffer);
+  JS_FreeValue(jsContextForCompiling, compiled);
+  js_free(jsContextForCompiling, buffer);
 
   return result;
 }
@@ -414,22 +417,6 @@ Context::toJavaObject(JNIEnv* env, const JSValueConst& value, bool throwOnUnsupp
       result = nullptr;
       break;
   }
-  return result;
-}
-
-jobject Context::eval(JNIEnv* env, jstring source, jstring file) {
-  std::string sourceCodeString = toCppString(env, source);
-
-  const char* fileName = env->GetStringUTFChars(file, 0);
-
-  JSValue evalValue = JS_Eval(jsContext, sourceCodeString.c_str(), sourceCodeString.length(), fileName, JS_EVAL_FLAG_STRICT);
-
-  env->ReleaseStringUTFChars(file, fileName);
-
-  jobject result = toJavaObject(env, evalValue, false);
-
-  JS_FreeValue(jsContext, evalValue);
-
   return result;
 }
 

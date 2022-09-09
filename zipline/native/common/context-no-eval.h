@@ -13,8 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef QUICKJS_ANDROID_FINALIZATIONREGISTRY_H
-#define QUICKJS_ANDROID_FINALIZATIONREGISTRY_H
+#ifndef QUICKJS_ANDROID_CONTEXTNOEVAL_H
+#define QUICKJS_ANDROID_CONTEXTNOEVAL_H
 
 #include "../quickjs/quickjs.h"
 
@@ -22,10 +22,10 @@
 extern "C" {
 #endif
 
-int installFinalizationRegistry(JSContext *jsContext, JSContext *jsContextForCompiling);
+JSContext *JS_NewContextNoEval(JSRuntime *jsRuntime);
 
 #ifdef __cplusplus
 } /* extern "C" { */
 #endif
 
-#endif //QUICKJS_ANDROID_FINALIZATIONREGISTRY_H
+#endif //QUICKJS_ANDROID_CONTEXTNOEVAL_H

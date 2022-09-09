@@ -13,13 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.bytecode
+package app.cash.zipline
 
-import app.cash.zipline.QuickJs
+import kotlin.test.AfterTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import org.junit.After
-import org.junit.Test
 
 /**
  * Confirm our JavaScript engine executes in strict mode.
@@ -29,7 +28,7 @@ import org.junit.Test
 class StrictModeTest {
   private val quickJs = QuickJs.create()
 
-  @After
+  @AfterTest
   fun tearDown() {
     quickJs.close()
   }

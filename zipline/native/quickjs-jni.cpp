@@ -34,20 +34,6 @@ Java_app_cash_zipline_QuickJs_destroyContext(JNIEnv* env, jobject type, jlong co
   delete reinterpret_cast<Context*>(context);
 }
 
-extern "C" JNIEXPORT jobject JNICALL
-Java_app_cash_zipline_QuickJs_evaluate__JLjava_lang_String_2Ljava_lang_String_2(JNIEnv* env,
-                                                                                    jobject type,
-                                                                                    jlong context_,
-                                                                                    jstring sourceCode,
-                                                                                    jstring fileName) {
-  Context* context = reinterpret_cast<Context*>(context_);
-  if (!context) {
-    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
-    return nullptr;
-  }
-  return context->eval(env, sourceCode, fileName);
-}
-
 extern "C" JNIEXPORT jlong JNICALL
 Java_app_cash_zipline_QuickJs_getInboundCallChannel(JNIEnv* env, jobject thiz, jlong _context, jstring name) {
   Context* context = reinterpret_cast<Context*>(_context);
