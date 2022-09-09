@@ -2,6 +2,10 @@
 
 For contributors to Zipline, the following can be exceptions encountered which don't have obvious fixes (yet).
 
+## Missing cmake
+
+On macOS, install with `brew install cmake`.
+
 ## Build Native Libraries Locally
 
 Zipline requires architecture specific built artifacts of native code.
