@@ -157,7 +157,7 @@ class ZiplineLoader internal constructor(
     serializersModule: SerializersModule = EmptySerializersModule(),
     initializer: (Zipline) -> Unit = {},
   ): Flow<LoadResult> {
-    return channelFlow {
+    return flow {
       var isFirstLoad = true
       var previousManifest: ZiplineManifest? = null
 
@@ -183,11 +183,11 @@ class ZiplineLoader internal constructor(
               initializer,
             )
             cachingFetcher?.pin(applicationName, networkManifest, now) // Pin after success.
-            send(LoadResult.Success(networkZipline, networkManifest.freshAtEpochMs))
+            emit(LoadResult.Success(networkZipline, networkManifest.freshAtEpochMs))
             previousManifest = networkManifest.manifest
           } catch (e: Exception) {
             cachingFetcher?.unpin(applicationName, networkManifest, now) // Unpin after failure.
-            send(LoadResult.Failure(e))
+            emit(LoadResult.Failure(e))
             // This thrown exception is caught and not rethrown by withLifecycleEvents
             throw e
           }
@@ -206,7 +206,7 @@ class ZiplineLoader internal constructor(
               now,
               initializer,
             )
-            send(LoadResult.Success(localZipline, localManifest.freshAtEpochMs))
+            emit(LoadResult.Success(localZipline, localManifest.freshAtEpochMs))
             previousManifest = localManifest.manifest
           }
         }
