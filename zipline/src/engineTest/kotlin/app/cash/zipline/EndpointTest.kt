@@ -20,6 +20,7 @@ import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.GenericEchoService
 import app.cash.zipline.testing.SuspendingEchoService
+import app.cash.zipline.testing.kotlinBuiltInSerializersModule
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -284,7 +285,7 @@ internal class EndpointTest {
 
   @Test
   fun genericRequestAndResponse() = runBlocking {
-    val (endpointA, endpointB) = newEndpointPair(this)
+    val (endpointA, endpointB) = newEndpointPair(this, kotlinBuiltInSerializersModule)
 
     val stringService = object : GenericEchoService<String> {
       override fun genericEcho(request: String): List<String> {

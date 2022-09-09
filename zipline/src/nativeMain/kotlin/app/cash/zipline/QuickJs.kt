@@ -26,6 +26,7 @@ import app.cash.zipline.quickjs.JSRuntime
 import app.cash.zipline.quickjs.JSValue
 import app.cash.zipline.quickjs.JS_ComputeMemoryUsage
 import app.cash.zipline.quickjs.JS_EVAL_FLAG_COMPILE_ONLY
+import app.cash.zipline.quickjs.JS_EVAL_FLAG_STRICT
 import app.cash.zipline.quickjs.JS_Eval
 import app.cash.zipline.quickjs.JS_EvalFunction
 import app.cash.zipline.quickjs.JS_FreeAtom
@@ -47,6 +48,7 @@ import app.cash.zipline.quickjs.JS_NewAtom
 import app.cash.zipline.quickjs.JS_NewClass
 import app.cash.zipline.quickjs.JS_NewClassID
 import app.cash.zipline.quickjs.JS_NewContext
+import app.cash.zipline.quickjs.JS_NewContextNoEval
 import app.cash.zipline.quickjs.JS_NewObjectClass
 import app.cash.zipline.quickjs.JS_NewRuntime
 import app.cash.zipline.quickjs.JS_NewString
@@ -75,9 +77,9 @@ import app.cash.zipline.quickjs.JS_ToCString
 import app.cash.zipline.quickjs.JS_WRITE_OBJ_BYTECODE
 import app.cash.zipline.quickjs.JS_WRITE_OBJ_REFERENCE
 import app.cash.zipline.quickjs.JS_WriteObject
+import app.cash.zipline.quickjs.JsCallFunction
 import app.cash.zipline.quickjs.JsDisconnectFunction
 import app.cash.zipline.quickjs.JsFalse
-import app.cash.zipline.quickjs.JsCallFunction
 import app.cash.zipline.quickjs.JsServiceNamesFunction
 import app.cash.zipline.quickjs.JsTrue
 import app.cash.zipline.quickjs.JsValueArrayToInstanceRef
@@ -110,17 +112,23 @@ import platform.posix.size_tVar
 
 actual class QuickJs private constructor(
   private val runtime: CPointer<JSRuntime>,
-  internal val context: CPointer<JSContext>
+  internal val context: CPointer<JSContext>,
+  internal val contextForCompiling: CPointer<JSContext>,
 ) {
   actual companion object {
     actual fun create(): QuickJs {
       val runtime = JS_NewRuntime() ?: throw OutOfMemoryError()
-      val context = JS_NewContext(runtime)
+      val context = JS_NewContextNoEval(runtime)
       if (context == null) {
         JS_FreeRuntime(runtime)
         throw OutOfMemoryError()
       }
-      return QuickJs(runtime, context)
+      val contextForCompiling = JS_NewContext(runtime)
+      if (contextForCompiling == null) {
+        JS_FreeRuntime(runtime)
+        throw OutOfMemoryError()
+      }
+      return QuickJs(runtime, context, contextForCompiling)
         .apply {
           // Explicitly assign default values to these properties so the backing fields values
           // are consistent with their native fields. (QuickJS doesn't offer accessors for these.)
@@ -128,7 +136,7 @@ actual class QuickJs private constructor(
           memoryLimit = -1L
           gcThreshold = 256L * 1024L
           maxStackSize = 512L * 1024L // Override the QuickJS default which is 256 KiB
-          installFinalizationRegistry(context)
+          installFinalizationRegistry(context, contextForCompiling)
         }
     }
 
@@ -238,25 +246,21 @@ actual class QuickJs private constructor(
     }
 
   actual fun evaluate(script: String, fileName: String): Any? {
-    checkNotClosed()
-
-    val evalValue = JS_Eval(context, script, script.length.convert(), fileName, 0)
-    val result = evalValue.toKotlinInstanceOrNull()
-    JS_FreeValue(context, evalValue)
-    return result
+    val bytecode = compile(script, fileName)
+    return execute(bytecode)
   }
 
   actual fun compile(sourceCode: String, fileName: String): ByteArray {
     checkNotClosed()
 
     val compiled =
-      JS_Eval(context, sourceCode, sourceCode.length.convert(), fileName, JS_EVAL_FLAG_COMPILE_ONLY)
+      JS_Eval(contextForCompiling, sourceCode, sourceCode.length.convert(), fileName, JS_EVAL_FLAG_COMPILE_ONLY or JS_EVAL_FLAG_STRICT)
     if (JS_IsException(compiled) != 0) {
       throwJsException()
     }
     val result = memScoped {
       val bufferLengthVar = alloc<size_tVar>()
-      val buffer = JS_WriteObject(context, bufferLengthVar.ptr, compiled,
+      val buffer = JS_WriteObject(contextForCompiling, bufferLengthVar.ptr, compiled,
         JS_WRITE_OBJ_BYTECODE or JS_WRITE_OBJ_REFERENCE
       )
       val bufferLength = bufferLengthVar.value.toInt()
@@ -267,8 +271,8 @@ actual class QuickJs private constructor(
         null
       }
 
-      JS_FreeValue(context, compiled)
-      js_free(context, buffer)
+      JS_FreeValue(contextForCompiling, compiled)
+      js_free(contextForCompiling, buffer)
 
       result
     }
@@ -281,7 +285,7 @@ actual class QuickJs private constructor(
     @Suppress("UNCHECKED_CAST") // ByteVar and UByteVar have the same bit layout.
     val bytecodeRef = bytecode.refTo(0) as CValuesRef<UByteVar>
     val obj = JS_ReadObject(context, bytecodeRef, bytecode.size.convert(),
-      JS_READ_OBJ_BYTECODE or JS_READ_OBJ_REFERENCE
+      JS_READ_OBJ_BYTECODE or JS_READ_OBJ_REFERENCE or JS_EVAL_FLAG_STRICT
     )
     if (JS_IsException(obj) != 0) {
       throwJsException()
@@ -379,6 +383,7 @@ actual class QuickJs private constructor(
 
   actual fun close() {
     if (!closed) {
+      JS_FreeContext(contextForCompiling)
       JS_FreeContext(context)
       JS_FreeRuntime(runtime)
       thisPtr.dispose()

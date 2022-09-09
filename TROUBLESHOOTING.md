@@ -14,6 +14,10 @@ sdk.dir=/Users/{your username}/Library/Android/sdk
 
 If you don't have Android SDK downloaded yet, the easiest way is to install Android Studio with default configuration with `brew install android-studio`. It will download the Android SDK to the above location in macOS and setup required usage terms approvals.
 
+## Missing cmake
+
+On macOS, install with `brew install cmake`.
+
 ## Build Native Libraries Locally
 
 Zipline requires architecture specific built artifacts of native code.

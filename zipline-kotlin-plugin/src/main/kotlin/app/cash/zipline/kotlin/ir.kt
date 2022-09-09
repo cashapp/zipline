@@ -53,6 +53,7 @@ import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
 import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
 import org.jetbrains.kotlin.ir.expressions.IrReturn
+import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrReturnImpl
@@ -67,8 +68,10 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.constructors
+import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
@@ -314,16 +317,28 @@ fun irVal(
   return result
 }
 
+internal fun IrBuilderWithScope.irKClass(
+  containerClass: IrClass,
+): IrClassReferenceImpl {
+  return IrClassReferenceImpl(
+    startOffset = startOffset,
+    endOffset = endOffset,
+    type = context.irBuiltIns.kClassClass.typeWith(containerClass.defaultType),
+    symbol = containerClass.symbol,
+    classType = containerClass.defaultType
+  )
+}
+
 fun irBlockBodyBuilder(
   irPluginContext: IrGeneratorContext,
   scopeWithIr: ScopeWithIr,
   original: IrElement
 ): IrBlockBodyBuilder {
   return IrBlockBodyBuilder(
-    irPluginContext,
-    scopeWithIr.scope,
-    original.startOffset,
-    original.endOffset
+    context = irPluginContext,
+    scope = scopeWithIr.scope,
+    startOffset = original.startOffset.toSyntheticIfUnknown(),
+    endOffset = original.endOffset.toSyntheticIfUnknown(),
   )
 }
 

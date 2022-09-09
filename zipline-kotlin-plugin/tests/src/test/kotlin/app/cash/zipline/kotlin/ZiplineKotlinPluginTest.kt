@@ -294,6 +294,31 @@ class ZiplineKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
   }
+
+  @Test
+  fun `get service serializer with a kclass`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.zipline.testing
+
+        import kotlinx.serialization.KSerializer
+        import app.cash.zipline.ziplineServiceSerializer
+
+        fun createServiceSerializer(): KSerializer<EchoZiplineService> {
+          return ziplineServiceSerializer(EchoZiplineService::class, listOf())
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
+    val serializer = mainKt.getDeclaredMethod("createServiceSerializer")
+      .invoke(null)
+    assertThat(serializer).isInstanceOf(KSerializer::class.java)
+  }
 }
 
 fun compile(

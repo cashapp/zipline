@@ -4,6 +4,9 @@ import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
+import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
+import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
 
 plugins {
   kotlin("multiplatform")
@@ -102,6 +105,7 @@ kotlin {
       main.cinterops {
         create("quickjs") {
           header(file("native/quickjs/quickjs.h"))
+          header(file("native/common/context-no-eval.h"))
           header(file("native/common/finalization-registry.h"))
           packageName("app.cash.zipline.quickjs")
         }
@@ -109,6 +113,18 @@ kotlin {
 
       val test by compilations.getting
       test.defaultSourceSet.dependsOn(nativeTest)
+    }
+
+    targets.withType<KotlinNativeTargetWithTests<*>> {
+      binaries {
+        // Configure a separate test where code is compiled in release mode.
+        test(setOf(NativeBuildType.RELEASE))
+      }
+      testRuns {
+        create("release") {
+          setExecutionSourceFrom(binaries.getByName("releaseTest") as TestExecutable)
+        }
+      }
     }
 
     targets.all {

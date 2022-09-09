@@ -71,7 +71,7 @@ class QuickJsOutboundChannelJvmTest {
     assertThat(stackTrace).contains("JavaScript.f2(explode.js:6)")
 
     // It includes JNI bridging into JavaScript.
-    assertThat(stackTrace).contains("QuickJs.evaluate(Native Method)")
+    assertThat(stackTrace).contains("QuickJs.execute(Native Method)")
 
     // And this test method.
     assertThat(stackTrace).contains("QuickJsOutboundChannelJvmTest.jvmExceptionsWithUnifiedStackTrace")

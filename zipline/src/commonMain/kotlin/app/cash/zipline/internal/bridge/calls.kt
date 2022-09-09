@@ -221,7 +221,7 @@ internal class RealCallSerializer(
 }
 
 internal class ArgsListSerializer(
-  private val serializers: List<KSerializer<*>>,
+  internal val serializers: List<KSerializer<*>>,
 ) : KSerializer<List<*>> {
   override val descriptor = argsListDescriptor
 
@@ -250,7 +250,7 @@ internal class ArgsListSerializer(
 
 
 internal class ResultSerializer<T>(
-  private val successSerializer: KSerializer<T>,
+  internal val successSerializer: KSerializer<T>,
 ) : KSerializer<Result<T>> {
 
   override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Result") {
