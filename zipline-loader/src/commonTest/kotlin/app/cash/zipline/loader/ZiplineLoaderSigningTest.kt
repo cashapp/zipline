@@ -101,10 +101,11 @@ class ZiplineLoaderSigningTest {
     )
     val result = tester.loader.loadOnce("test", manifestUrl)
     assertTrue(result is LoadResult.Failure)
-    assertEquals(
-      "checksum mismatch for bravo",
-      eventListener.takeException().message,
-    )
+    assertTrue(result.exception is IllegalStateException)
+    assertEquals("checksum mismatch for bravo", result.exception.message)
+    val exception = eventListener.takeException()
+    assertTrue(exception is IllegalStateException)
+    assertEquals("checksum mismatch for bravo", exception.message)
   }
 
   @Test
@@ -119,12 +120,12 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
-    assertFailsWith<IllegalStateException> {
+    val exception = assertFailsWith<IllegalStateException> {
       tester.loader.loadOnce("test", manifestUrl)
     }
-    assertEquals(
-      "manifest signature for key key1 did not verify!",
-      eventListener.takeException().message,
-    )
+    assertEquals("loading failed; see EventListener for exceptions", exception.message)
+    val listenerException = eventListener.takeException()
+    assertTrue(listenerException is IllegalStateException)
+    assertEquals("manifest signature for key key1 did not verify!", listenerException.message)
   }
 }
