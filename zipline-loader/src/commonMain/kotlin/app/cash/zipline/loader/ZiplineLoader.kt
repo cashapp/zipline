@@ -29,12 +29,15 @@ import app.cash.zipline.loader.internal.receiver.ZiplineLoadReceiver
 import app.cash.zipline.loader.internal.systemEpochMsClock
 import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.InternalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.internal.ChannelFlow
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -152,9 +155,9 @@ class ZiplineLoader internal constructor(
     applicationName: String,
     manifestUrlFlow: Flow<String>,
     serializersModule: SerializersModule = EmptySerializersModule(),
-    initializer: (Zipline) -> Unit,
-  ): Flow<LoadedZipline> {
-    return flow {
+    initializer: (Zipline) -> Unit = {},
+  ): Flow<LoadResult> {
+    return channelFlow {
       var isFirstLoad = true
       var previousManifest: ZiplineManifest? = null
 
@@ -180,10 +183,12 @@ class ZiplineLoader internal constructor(
               initializer,
             )
             cachingFetcher?.pin(applicationName, networkManifest, now) // Pin after success.
-            emit(LoadedZipline(networkZipline, networkManifest.freshAtEpochMs))
+            send(LoadResult.Success(networkZipline, networkManifest.freshAtEpochMs))
             previousManifest = networkManifest.manifest
           } catch (e: Exception) {
             cachingFetcher?.unpin(applicationName, networkManifest, now) // Unpin after failure.
+            send(LoadResult.Failure(e))
+            // This thrown exception is caught and not rethrown by withLifecycleEvents
             throw e
           }
         }
@@ -201,7 +206,7 @@ class ZiplineLoader internal constructor(
               now,
               initializer,
             )
-            emit(LoadedZipline(localZipline, localManifest.freshAtEpochMs))
+            send(LoadResult.Success(localZipline, localManifest.freshAtEpochMs))
             previousManifest = localManifest.manifest
           }
         }
@@ -214,7 +219,7 @@ class ZiplineLoader internal constructor(
     manifestUrl: String,
     serializersModule: SerializersModule = EmptySerializersModule(),
     initializer: (Zipline) -> Unit = {},
-  ): LoadedZipline = load(
+  ): LoadResult = load(
     applicationName,
     flowOf(manifestUrl),
     serializersModule,

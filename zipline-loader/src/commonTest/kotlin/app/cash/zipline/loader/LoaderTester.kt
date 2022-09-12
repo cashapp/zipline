@@ -22,6 +22,8 @@ import app.cash.zipline.loader.internal.fetcher.MANIFEST_MAX_SIZE
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import okio.Buffer
 import okio.FileSystem
@@ -116,7 +118,7 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
+    zipline = (loader.loadOnce(applicationName, manifestUrl) as LoadResult.Success).zipline
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -146,7 +148,9 @@ class LoaderTester(
     httpClient.filePathToByteString = mapOf(
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
+
+    loadZiplineFromLastResult(applicationName, manifestUrl)
+
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -172,7 +176,9 @@ class LoaderTester(
       manifestUrl to tooLargeManifest,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
+
+    loadZiplineFromLastResult(applicationName, manifestUrl)
+
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -199,7 +205,9 @@ class LoaderTester(
       manifestUrl to malformedManifest,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
+
+    loadZiplineFromLastResult(applicationName, manifestUrl)
+
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -220,7 +228,9 @@ class LoaderTester(
     httpClient.filePathToByteString = mapOf(
       manifestUrl to loadedManifest.manifestBytes,
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
+
+    loadZiplineFromLastResult(applicationName, manifestUrl)
+
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n"
     )
@@ -245,10 +255,11 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl).zipline
-    return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
-      " loaded\n"
-    )
+
+    loadZiplineFromLastResult(applicationName, manifestUrl)
+
+    val loadedOutput = zipline.quickJs.evaluate("globalThis.log", "assert.js") as String
+    return loadedOutput.removeSuffix(" loaded\n")
   }
 
   suspend fun failureCodeRunFails(applicationName: String): String {
@@ -267,12 +278,20 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = loader.loadOnce(applicationName, manifestUrl) {
+
+    loadZiplineFromLastResult(applicationName, manifestUrl) {
       val loadedSeed = (it.quickJs.evaluate("globalThis.log", "assert.js") as String)
         .removeSuffix(" loaded\n")
       if (loadedSeed == seed) throw IllegalArgumentException("Zipline code run failed")
-    }.zipline
+    }
+
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String)
       .removeSuffix(" loaded\n")
+  }
+
+  /** First result is failure, second is the success from the pinned previous load */
+  private suspend fun loadZiplineFromLastResult(applicationName: String, manifestUrl: String, initializer: (Zipline) -> Unit = {}) {
+    val results = loader.load(applicationName, flowOf(manifestUrl), initializer = initializer)
+    zipline = (results.last() as LoadResult.Success).zipline
   }
 }

@@ -27,6 +27,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import okio.ByteString.Companion.encodeUtf8
@@ -70,7 +71,7 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
-    val zipline = tester.loader.loadOnce("test", manifestUrl).zipline
+    val zipline = (tester.loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
     zipline.close()
   }
 
@@ -98,13 +99,13 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.alphaByteString,
     )
-    assertFailsWith<IllegalStateException> {
-      tester.loader.loadOnce("test", manifestUrl)
-    }
-    assertEquals(
-      "checksum mismatch for bravo",
-      eventListener.takeException().message,
-    )
+    val result = tester.loader.loadOnce("test", manifestUrl)
+    assertTrue(result is LoadResult.Failure)
+    assertTrue(result.exception is IllegalStateException)
+    assertEquals("checksum mismatch for bravo", result.exception.message)
+    val exception = eventListener.takeException()
+    assertTrue(exception is IllegalStateException)
+    assertEquals("checksum mismatch for bravo", exception.message)
   }
 
   @Test
@@ -119,12 +120,12 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
-    assertFailsWith<IllegalStateException> {
+    val exception = assertFailsWith<IllegalStateException> {
       tester.loader.loadOnce("test", manifestUrl)
     }
-    assertEquals(
-      "manifest signature for key key1 did not verify!",
-      eventListener.takeException().message,
-    )
+    assertEquals("loading failed; see EventListener for exceptions", exception.message)
+    val listenerException = eventListener.takeException()
+    assertTrue(listenerException is IllegalStateException)
+    assertEquals("manifest signature for key key1 did not verify!", listenerException.message)
   }
 }
