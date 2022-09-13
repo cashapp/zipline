@@ -2,9 +2,23 @@
 
 For contributors to Zipline, the following can be exceptions encountered which don't have obvious fixes (yet).
 
+## Configure Android SDK Location for Gradle/IntelliJ
+
+To let your build resolve Android SDK files, add the following in a `local.properties` file at the root of the Zipline repo directory. If you're using Android Studio to open the Zipline project, this step may not be necessary.
+
+On macOS, you'll replace `{your username}` with your local account username. On other platforms the path will be different.
+
+```
+sdk.dir=/Users/{your username}/Library/Android/sdk
+```
+
+If you don't have Android SDK downloaded yet, the easiest way is to install Android Studio with default configuration with `brew install android-studio`. It will download the Android SDK to the above location in macOS and setup required usage terms approvals.
+
 ## Missing cmake
 
-On macOS, install with `brew install cmake`.
+You may encounter silent failure in the `$ ./.github/workflows/build-mac.sh` from missing `cmake` where this is no build output logs. 
+
+On macOS, install with `brew install cmake`. 
 
 ## Build Native Libraries Locally
 
