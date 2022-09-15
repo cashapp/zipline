@@ -122,7 +122,7 @@ internal class BridgedInterface(
         type = requiredType,
         serializersModuleParameter = serializersModuleParameter,
         serializersExpression = serializersExpression,
-        contextual = false,
+        contextual = requiredType.isContextual,
       )
       result[requiredType] = irTemporary(
         value = serializerExpression.expression,
@@ -132,6 +132,9 @@ internal class BridgedInterface(
     }
     return result
   }
+
+  private val IrType.isContextual
+    get() = annotations.any { it.type.classFqName == ziplineApis.contextualFqName }
 
   class SerializerExpression(
     val expression: IrExpression,
@@ -160,7 +163,7 @@ internal class BridgedInterface(
         type = argumentType,
         serializersModuleParameter = serializersModuleParameter,
         serializersExpression = serializersExpression,
-        contextual = false,
+        contextual = argumentType.isContextual,
       )
     }
     val parameterList = irCall(ziplineApis.listOfFunction).apply {

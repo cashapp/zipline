@@ -35,6 +35,7 @@ internal class ZiplineApis(
   private val packageFqName = FqName("app.cash.zipline")
   private val bridgeFqName = FqName("app.cash.zipline.internal.bridge")
   private val serializationFqName = FqName("kotlinx.serialization")
+  val contextualFqName = serializationFqName.child("Contextual")
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
   private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
   private val ziplineFqName = packageFqName.child("Zipline")
