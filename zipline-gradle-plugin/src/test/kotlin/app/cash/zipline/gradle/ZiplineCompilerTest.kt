@@ -18,7 +18,6 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.internal.DEFINE_JS
-import app.cash.zipline.internal.loadJsModule
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineManifest

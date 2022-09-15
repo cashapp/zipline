@@ -138,15 +138,9 @@ internal object ZiplineCompiler {
         hashingSink.hash
       }
 
-      quickJs.evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
+      quickJs.collectModuleDependencies()
       quickJs.execute(bytecode)
-      val dependenciesString = quickJs
-        .evaluate("globalThis.$CURRENT_MODULE_DEPENDENCIES", "getDependencies.js") as String?
-      val dependencies = Json.decodeFromString<List<String>>(
-        dependenciesString
-        // If define is never called, dependencies is returned as null
-          ?: "[]"
-      )
+      val dependencies = quickJs.getModuleDependencies()
 
       return "$MODULE_PATH_PREFIX${jsFile.name}" to ZiplineManifest.Module(
         url = outputZiplineFilePath,

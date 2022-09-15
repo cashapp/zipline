@@ -81,6 +81,20 @@ expect class QuickJs {
 
   internal fun getInboundChannel(): CallChannel
 
+  fun collectModuleDependencies()
+
+  internal fun initModuleLoader()
+
+  fun getGlobalThis(key: String): String?
+
+  fun getModuleDependencies(): List<String>
+
+  internal fun loadJsModule(script: String, id: String)
+
+  internal fun loadJsModule(id: String, bytecode: ByteArray)
+
+  fun runApplication(mainModuleId: String, mainFunction: String)
+
   /**
    * Manually invoke cycle removal. This is intended for testing only and is never necessary to
    * call in regular execution.
