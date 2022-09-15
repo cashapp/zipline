@@ -16,6 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.internal.getLog
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
@@ -78,7 +79,7 @@ class ProductionFetcherReceiverTest {
       |alpha loaded
       |bravo loaded
       |""".trimMargin(),
-      zipline.quickJs.evaluate("globalThis.log", "assert.js")
+      zipline.quickJs.getLog()
     )
   }
 
@@ -102,7 +103,7 @@ class ProductionFetcherReceiverTest {
       |alpha loaded
       |bravo loaded
       |""".trimMargin(),
-      zipline.quickJs.evaluate("globalThis.log", "assert.js")
+      zipline.quickJs.getLog()
     )
   }
 
@@ -123,7 +124,7 @@ class ProductionFetcherReceiverTest {
       |alpha loaded
       |bravo loaded
       |""".trimMargin(),
-      zipline.quickJs.evaluate("globalThis.log", "assert.js")
+      zipline.quickJs.getLog()
     )
 
     val ziplineFileFromCache = cache.getOrPut("app1", testFixtures.alphaSha256, nowMillis) {

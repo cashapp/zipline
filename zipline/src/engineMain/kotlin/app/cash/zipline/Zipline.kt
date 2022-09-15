@@ -29,7 +29,9 @@ import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventListenerName
 import app.cash.zipline.internal.eventLoopName
+import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.jsPlatformName
+import app.cash.zipline.internal.loadJsModule
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher

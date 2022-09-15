@@ -18,6 +18,8 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.bytecode.applySourceMapToBytecode
+import app.cash.zipline.internal.collectModuleDependencies
+import app.cash.zipline.internal.getModuleDependencies
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile

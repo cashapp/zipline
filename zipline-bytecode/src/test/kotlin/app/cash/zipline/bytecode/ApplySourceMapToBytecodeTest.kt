@@ -16,7 +16,8 @@
 package app.cash.zipline.bytecode
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.internal.DEFINE_JS
+import app.cash.zipline.internal.initModuleLoader
+import app.cash.zipline.internal.loadJsModule
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import org.junit.After
@@ -39,7 +40,7 @@ class ApplySourceMapToBytecodeTest {
   @Before
   fun setUp() {
     // Configure QuickJS to support module loading.
-    quickJs.evaluate(DEFINE_JS)
+    quickJs.initModuleLoader()
   }
 
   @After fun tearDown() {

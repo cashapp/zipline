@@ -15,10 +15,6 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.COLLECT_DEPENDENCIES_DEFINE_JS
-import app.cash.zipline.internal.CURRENT_MODULE_DEPENDENCIES
-import app.cash.zipline.internal.CURRENT_MODULE_ID
-import app.cash.zipline.internal.DEFINE_JS
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
@@ -112,8 +108,6 @@ import kotlinx.cinterop.refTo
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKStringFromUtf8
 import kotlinx.cinterop.value
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
 import platform.posix.size_tVar
 
 actual class QuickJs private constructor(
@@ -381,46 +375,6 @@ actual class QuickJs private constructor(
     check(hasProperty) { "A global JavaScript object called $inboundChannelName was not found. Try confirming that Zipline.get() has been called." }
 
     return InboundCallChannel(this)
-  }
-
-  actual fun collectModuleDependencies() {
-    evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
-  }
-
-  internal actual fun initModuleLoader() {
-    evaluate(DEFINE_JS, "define.js")
-  }
-
-  actual fun getGlobalThis(key: String): String? {
-    return evaluate("globalThis.$key", "getGlobalThis.js") as String?
-  }
-
-  actual fun getModuleDependencies(): List<String> {
-    val dependenciesString = getGlobalThis(CURRENT_MODULE_DEPENDENCIES)
-    val dependencies = Json.decodeFromString<List<String>>(
-      dependenciesString
-      // If define is never called, dependencies is returned as null
-        ?: "[]"
-    )
-    return dependencies
-  }
-
-  internal actual fun loadJsModule(script: String, id: String) {
-    evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
-    evaluate(script, id)
-    evaluate("delete globalThis.$CURRENT_MODULE_ID;")
-  }
-  internal actual fun loadJsModule(id: String, bytecode: ByteArray) {
-    evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
-    execute(bytecode)
-    evaluate("delete globalThis.$CURRENT_MODULE_ID;")
-  }
-
-  actual fun runApplication(mainModuleId: String, mainFunction: String) {
-    evaluate(
-      script = "require('${mainModuleId}').$mainFunction()",
-      fileName = "RunApplication.kt",
-    )
   }
 
   actual fun gc() {
