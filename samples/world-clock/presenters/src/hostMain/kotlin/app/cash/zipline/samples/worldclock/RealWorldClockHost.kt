@@ -15,8 +15,14 @@
  */
 package app.cash.zipline.samples.worldclock
 
+import kotlinx.datetime.TimeZone
+
 class RealWorldClockHost : WorldClockHost {
-  override fun timeZones(): List<String> {
-    TODO()
+  override fun timeZones(): List<TimeZoneModel> {
+    return listOf(
+      TimeZoneModel("Barcelona", TimeZone.of("CEST")),
+      TimeZoneModel("NYC", TimeZone.of("EST")),
+      TimeZoneModel("SF", TimeZone.of("PST")),
+    )
   }
 }

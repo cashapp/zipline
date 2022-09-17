@@ -145,6 +145,7 @@ class ZiplineCompilerTest {
     ZiplineCompiler.compile(
       inputDir = inputDir,
       outputDir = outputDir,
+      nodeModulesDir = null, // TODO add node_modules test case
       mainFunction = mainFunction,
       mainModuleId = mainModuleId,
       manifestSigner = null,

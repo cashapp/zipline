@@ -5,6 +5,7 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 plugins {
   id("java-gradle-plugin")
   kotlin("jvm")
+  kotlin("plugin.serialization")
   id("com.github.gmazzo.buildconfig")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")

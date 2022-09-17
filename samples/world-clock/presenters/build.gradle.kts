@@ -23,6 +23,7 @@ kotlin {
     val commonMain by getting {
       dependencies {
         api("app.cash.zipline:zipline")
+        api("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0") // TODO gradle/libs.versions.toml
       }
     }
     val hostMain by creating {

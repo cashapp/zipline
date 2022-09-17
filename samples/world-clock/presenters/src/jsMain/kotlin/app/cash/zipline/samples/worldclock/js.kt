@@ -44,7 +44,7 @@ class RealWorldClockPresenter(
       while (true) {
         emit(
           WorldClockModel(
-            label = TimeFormatter().formatLocalTime()
+            label = TimeFormatter().format(timeZones = host.timeZones())
           )
         )
         delay(16)

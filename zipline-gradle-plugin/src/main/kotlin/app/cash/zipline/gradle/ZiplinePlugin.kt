@@ -31,6 +31,7 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
+import org.jetbrains.kotlin.gradle.targets.js.npm.tasks.KotlinNpmInstallTask
 import org.slf4j.LoggerFactory
 
 @Suppress("unused") // Created reflectively by Gradle.
@@ -67,6 +68,9 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     kotlinBinary: JsIrBinary,
     configuration: ZiplineExtension,
   ) {
+    // TODO is this the best way to get the node_modules directory?
+    val npmInstallTask = project.rootProject.tasks.withType(KotlinNpmInstallTask::class.java).single()
+
     // Like 'compileDevelopmentExecutableKotlinJsZipline'.
     val linkTaskName = kotlinBinary.linkTaskName
     val compileZiplineTaskName = "${linkTaskName}Zipline"
@@ -81,6 +85,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       createdTask.inputDir.fileProvider(linkOutputFolderProvider)
       createdTask.outputDir.fileProvider(linkOutputFolderProvider.map { it.parentFile.resolve("${it.name}Zipline") })
 
+      createdTask.nodeModuleDir.fileValue(npmInstallTask.nodeModulesDir)
       createdTask.mainModuleId.set(configuration.mainModuleId)
       createdTask.mainFunction.set(configuration.mainFunction)
       createdTask.version.set(configuration.version)

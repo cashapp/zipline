@@ -47,6 +47,10 @@ abstract class ZiplineCompileTask : DefaultTask() {
   abstract val outputDir: DirectoryProperty
 
   @get:Optional
+  @get:InputDirectory
+  abstract val nodeModuleDir: DirectoryProperty
+
+  @get:Optional
   @get:Input
   abstract val mainModuleId: Property<String>
 
@@ -65,6 +69,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
   fun task(inputChanges: InputChanges) {
     val inputDirFile = inputDir.get().asFile
     val outputDirFile = outputDir.get().asFile
+    val nodeModuleDirFile = nodeModuleDir.orNull?.asFile
     val mainModuleId = mainModuleId.orNull
     val mainFunction = mainFunction.orNull
     val signingKeys = signingKeys.get()
@@ -101,6 +106,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
       ZiplineCompiler.compile(
         inputDir = inputDirFile,
         outputDir = outputDirFile,
+        nodeModulesDir = nodeModuleDirFile,
         mainFunction = mainFunction,
         mainModuleId = mainModuleId,
         manifestSigner = manifestSigner,
