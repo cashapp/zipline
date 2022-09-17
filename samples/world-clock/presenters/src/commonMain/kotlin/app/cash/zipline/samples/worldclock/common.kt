@@ -17,6 +17,7 @@ package app.cash.zipline.samples.worldclock
 
 import app.cash.zipline.ZiplineService
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.TimeZone
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -29,10 +30,16 @@ data class WorldClockModel(
   val label: String,
 )
 
+@Serializable
+data class TimeZoneModel(
+  val name: String,
+  val zone: TimeZone,
+)
+
 interface WorldClockPresenter : ZiplineService {
   fun models(events: Flow<WorldClockEvent>): Flow<WorldClockModel>
 }
 
 interface WorldClockHost : ZiplineService {
-  fun timeZones(): List<String>
+  fun timeZones(): List<TimeZoneModel>
 }

@@ -18,6 +18,7 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.bytecode.applySourceMapToBytecode
+import app.cash.zipline.gradle.internal.NpmPackage
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
@@ -40,16 +41,22 @@ internal object ZiplineCompiler {
   private const val MODULE_PATH_PREFIX = "./"
   private const val ZIPLINE_EXTENSION = ".zipline"
 
+  private val npmPackageJson = Json { ignoreUnknownKeys = true }
+
   fun compile(
     inputDir: File,
     outputDir: File,
+    nodeModulesDir: File?,
     mainFunction: String?,
     mainModuleId: String?,
     manifestSigner: ManifestSigner?,
     version: String?,
   ) {
     val jsFiles = getJsFiles(inputDir.listFiles()!!.asList())
-    val modules = compileFilesInParallel(jsFiles, outputDir)
+    var modules = compileFilesInParallel(jsFiles, outputDir)
+    if (nodeModulesDir != null) {
+      modules = compileNodeModules(modules, nodeModulesDir, outputDir)
+    }
     writeManifest(
       outputDir = outputDir,
       mainFunction = mainFunction,
@@ -70,6 +77,7 @@ internal object ZiplineCompiler {
     manifestSigner: ManifestSigner?,
     version: String?,
   ) {
+    // TODO support node_modules resolution
     val modifiedFileNames = getJsFiles(modifiedFiles).map { it.name }.toSet()
     val removedFileNames = getJsFiles(removedFiles).map { it.name }.toSet()
 
@@ -111,6 +119,29 @@ internal object ZiplineCompiler {
       }
       .awaitAll()
       .toMap()
+  }
+
+  private fun compileNodeModules(
+    modules: Map<String, ZiplineManifest.Module>,
+    nodeModulesDir: File,
+    outputDir: File,
+  ): Map<String, ZiplineManifest.Module> {
+    val allModules = modules.toMutableMap()
+    val dependencies = ArrayDeque(allModules.values.flatMap { it.dependsOnIds })
+    while (dependencies.isNotEmpty()) {
+      val dependency = dependencies.removeFirst()
+      if (dependency !in allModules) {
+        // TODO is `main` the right property to be reading?
+        val dependencyDir = nodeModulesDir.resolve(dependency)
+        val packageJson = dependencyDir.resolve("package.json")
+        val npmPackage = npmPackageJson.decodeFromString<NpmPackage>(packageJson.readText())
+        val jsFile = dependencyDir.resolve(npmPackage.main ?: TODO())
+        val (_, module) = compileSingleFile(jsFile, outputDir)
+        allModules[dependency] = module
+        dependencies.addAll(module.dependsOnIds)
+      }
+    }
+    return allModules
   }
 
   private fun compileSingleFile(
@@ -189,10 +220,12 @@ fun main(vararg args: String) {
 
   val inputDir = File(argsList.removeFirst())
   val outputDir = File(argsList.removeFirst())
+  val nodeModulesDir = argsList.removeFirstOrNull()?.let { File(it) } // TODO new required argument?
   outputDir.mkdirs()
   ZiplineCompiler.compile(
     inputDir = inputDir,
     outputDir = outputDir,
+    nodeModulesDir = nodeModulesDir,
     mainFunction = argsList.removeFirstOrNull(),
     mainModuleId = argsList.removeFirstOrNull(),
     manifestSigner = null,

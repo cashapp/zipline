@@ -16,8 +16,23 @@
 package app.cash.zipline.samples.worldclock
 
 import kotlin.js.Date
+import kotlinx.datetime.Clock
+import kotlinx.datetime.Instant
+import kotlinx.datetime.toLocalDateTime
 
 class TimeFormatter {
+  fun format(
+    timestamp: Instant = Clock.System.now(),
+    timeZones: List<TimeZoneModel>,
+  ): String {
+    return timeZones.joinToString("\n\n") {
+      """
+      |${it.name}
+      |${timestamp.toLocalDateTime(it.zone)}
+      """.trimMargin()
+    }
+  }
+
   fun formatLocalTime(
     now: dynamic = Date(),
     millis: Boolean = false,
