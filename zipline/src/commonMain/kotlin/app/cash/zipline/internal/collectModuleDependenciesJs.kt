@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.gradle
+package app.cash.zipline.internal
 
 internal const val CURRENT_MODULE_DEPENDENCIES = "app_cash_zipline_currentModuleDependencies"
 

@@ -18,7 +18,6 @@ package app.cash.zipline
 
 import app.cash.zipline.internal.Console
 import app.cash.zipline.internal.CoroutineEventLoop
-import app.cash.zipline.internal.DEFINE_JS
 import app.cash.zipline.internal.EventListenerService
 import app.cash.zipline.internal.EventLoop
 import app.cash.zipline.internal.HostConsole
@@ -30,6 +29,7 @@ import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventListenerName
 import app.cash.zipline.internal.eventLoopName
+import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.jsPlatformName
 import app.cash.zipline.internal.loadJsModule
 import kotlin.coroutines.resumeWithException
@@ -169,7 +169,7 @@ actual class Zipline private constructor(
       val quickJs = QuickJs.create()
       // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
       quickJs.maxStackSize = 0L
-      quickJs.evaluate(DEFINE_JS, "define.js")
+      quickJs.initModuleLoader()
 
       val scope = CoroutineScope(dispatcher)
       return Zipline(quickJs, serializersModule, dispatcher, scope, eventListener)

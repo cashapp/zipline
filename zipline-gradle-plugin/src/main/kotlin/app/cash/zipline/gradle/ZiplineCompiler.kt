@@ -18,6 +18,8 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.bytecode.applySourceMapToBytecode
+import app.cash.zipline.internal.collectModuleDependencies
+import app.cash.zipline.internal.getModuleDependencies
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
@@ -138,15 +140,9 @@ internal object ZiplineCompiler {
         hashingSink.hash
       }
 
-      quickJs.evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
+      quickJs.collectModuleDependencies()
       quickJs.execute(bytecode)
-      val dependenciesString = quickJs
-        .evaluate("globalThis.$CURRENT_MODULE_DEPENDENCIES", "getDependencies.js") as String?
-      val dependencies = Json.decodeFromString<List<String>>(
-        dependenciesString
-        // If define is never called, dependencies is returned as null
-          ?: "[]"
-      )
+      val dependencies = quickJs.getModuleDependencies()
 
       return "$MODULE_PATH_PREFIX${jsFile.name}" to ZiplineManifest.Module(
         url = outputZiplineFilePath,

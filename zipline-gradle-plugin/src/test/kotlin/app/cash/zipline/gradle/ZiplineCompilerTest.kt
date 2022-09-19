@@ -17,7 +17,7 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.internal.DEFINE_JS
+import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.loadJsModule
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
@@ -41,7 +41,7 @@ class ZiplineCompilerTest {
   @Before
   fun setUp() {
     // Configure QuickJS to support module loading.
-    quickJs.evaluate(DEFINE_JS)
+    quickJs.initModuleLoader()
   }
 
   @After
