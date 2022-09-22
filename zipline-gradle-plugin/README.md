@@ -44,8 +44,9 @@ kotlin {
 }
 
 val downloadZipline by tasks.creating(ZiplineDownloadTask::class) {
+  applicationName = "my-application"
   manifestUrl = "https://your-cdn.com/zipline/alpha-app/latest/manifest.zipline.json"
-  outputDir = file("$buildDir/resources/zipline/alpha-app/latest")
+  downloadDir = file("$buildDir/resources/zipline/alpha-app/latest")
 }
 ```
 
