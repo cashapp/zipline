@@ -34,7 +34,7 @@ import platform.CoreFoundation.kCFTypeDictionaryValueCallBacks
 import platform.Foundation.CFBridgingRelease
 import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSData
-import platform.Foundation.dataWithBytes
+import platform.Foundation.dataWithBytesNoCopy
 import platform.Security.SecKeyCreateWithData
 import platform.Security.SecKeyVerifySignature
 import platform.Security.errSecVerifyFailed
@@ -110,7 +110,7 @@ class EcdsaP256 : SignatureAlgorithm {
       byteArray.isNotEmpty() -> pin.addressOf(0)
       else -> null
     }
-    val nsData = NSData.dataWithBytes(
+    val nsData = NSData.dataWithBytesNoCopy(
       bytes = bytesPointer,
       length = byteArray.size.convert()
     )
