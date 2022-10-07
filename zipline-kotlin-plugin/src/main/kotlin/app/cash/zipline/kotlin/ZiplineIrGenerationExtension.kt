@@ -59,7 +59,7 @@ class ZiplineIrGenerationExtension(
         val expression = super.visitCall(expression) as IrCall
 
         try {
-          val takeOrBindFunction = ziplineApis.ziplineServiceAdapterFunctions[expression.symbol]
+          val takeOrBindFunction = ziplineApis.ziplineServiceAdapterFunctions[expression.symbol.toString()]
           if (takeOrBindFunction != null) {
             return AddAdapterArgumentRewriter(
               pluginContext,
