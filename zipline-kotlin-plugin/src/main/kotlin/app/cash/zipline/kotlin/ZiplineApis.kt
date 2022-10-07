@@ -175,8 +175,8 @@ internal class ZiplineApis(
   val suspendCallback: IrClassSymbol
     get() = pluginContext.referenceClass(suspendCallbackFqName)!!
 
-  /** Keys are functions like `Zipline.take()` and values are their rewrite targets. */
-  val ziplineServiceAdapterFunctions: Map<IrFunctionSymbol, IrSimpleFunctionSymbol> = listOf(
+  /** Keys are renderings of functions like `Zipline.take()` and values are their rewrite targets. */
+  val ziplineServiceAdapterFunctions: Map<String, IrSimpleFunctionSymbol> = listOf(
     rewritePair(ziplineFqName.child("take")),
     rewritePair(endpointFqName.child("take")),
     rewritePair(ziplineFqName.child("bind")),
@@ -186,7 +186,7 @@ internal class ZiplineApis(
   ).toMap()
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
-  private fun rewritePair(funName: FqName): Pair<IrSimpleFunctionSymbol, IrSimpleFunctionSymbol> {
+  private fun rewritePair(funName: FqName): Pair<String, IrSimpleFunctionSymbol> {
     val overloads = pluginContext.referenceFunctions(funName)
     val rewriteTarget = overloads.single {
       it.owner.valueParameters.lastOrNull()?.type?.classFqName == ziplineServiceAdapterFqName
@@ -194,6 +194,6 @@ internal class ZiplineApis(
     val original = overloads.single {
       it.owner.valueParameters.size + 1 == rewriteTarget.owner.valueParameters.size
     }
-    return original to rewriteTarget
+    return original.toString() to rewriteTarget
   }
 }
