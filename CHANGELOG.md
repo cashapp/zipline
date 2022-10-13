@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 
-## [0.9.5] - 2022-10-06
+## [0.9.6] - 2022-10-13
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -12,6 +12,12 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * Fix: Don't fail with `unexpected call` errors because code was not being rewritten by our Kotlin
+   compiler plugin.
+
+
+## [0.9.5] - 2022-10-06
 
  * New: Support `@Contextual` as a type annotation on `ZiplineService` parameters and return types.
    This will attempt to find a contextual serializer for the annotated type.
