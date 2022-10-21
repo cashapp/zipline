@@ -109,10 +109,10 @@ Context::Context(JNIEnv* env)
   JS_SetRuntimeOpaque(jsRuntime, this);
   JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
 
-  if (installFinalizationRegistry(jsContext, jsContextForCompiling) < 0) {
-    throwJavaException(env, "java/lang/IllegalStateException",
-                       "Failed to install FinalizationRegistry");
-  }
+//  if (installFinalizationRegistry(jsContext, jsContextForCompiling) < 0) {
+//    throwJavaException(env, "java/lang/IllegalStateException",
+//                       "Failed to install FinalizationRegistry");
+//  }
 }
 
 Context::~Context() {
