@@ -84,7 +84,7 @@ development server!
 
 ```console
 $ ./gradlew -p samples trivia:trivia-host:shadowJar
-java -jar samples/trivia/trivia-host/build/libs/trivia-host-1.0.0-SNAPSHOT-all.jar
+java -jar samples/trivia/trivia-host/build/libs/trivia-host-all.jar
 ```
 
 
