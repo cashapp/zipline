@@ -16,7 +16,9 @@
 
 package app.cash.zipline.gradle
 
+import java.util.Timer
 import javax.inject.Inject
+import kotlin.concurrent.schedule
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -31,9 +33,13 @@ import org.http4k.routing.ResourceLoader.Companion.Directory
 import org.http4k.routing.bind
 import org.http4k.routing.routes
 import org.http4k.routing.static
+import org.http4k.routing.websockets
 import org.http4k.server.Http4kServer
-import org.http4k.server.SunHttp
+import org.http4k.server.Jetty
+import org.http4k.server.PolyHandler
 import org.http4k.server.asServer
+import org.http4k.websocket.Websocket
+import org.http4k.websocket.WsMessage
 
 abstract class ZiplineServeTask : DefaultTask() {
 
@@ -50,17 +56,43 @@ abstract class ZiplineServeTask : DefaultTask() {
     val deploymentRegistry = services.get(DeploymentRegistry::class.java)
     val deploymentHandle = deploymentRegistry.get(deploymentId, ZiplineServerDeploymentHandle::class.java)
     if (deploymentHandle == null) {
-      val server = routes(
-        "/" bind static(Directory(inputDir.get().asFile.absolutePath), Pair("zipline", ContentType.TEXT_PLAIN))
-      ).asServer(SunHttp(port.orElse(8080).get()))
-
+      // First time this task is run, start the server
+      val ws = websockets(
+        "/ws" bind { ws: Websocket ->
+          websockets.add(ws)
+          ws.send(WsMessage(RELOAD_MESSAGE))
+          ws.onClose {
+            websockets.remove(ws)
+          }
+        }
+      )
+      val http = routes(
+        "/" bind static(
+          Directory(inputDir.get().asFile.absolutePath),
+          Pair("zipline", ContentType.TEXT_PLAIN)
+        )
+      )
+      val server = PolyHandler(http, ws).asServer(Jetty(8080))
       deploymentRegistry.start(
         deploymentId,
         DeploymentRegistry.ChangeBehavior.BLOCK,
         ZiplineServerDeploymentHandle::class.java,
         server
       )
+
+      // Keep the connection open by sending a message periodically
+      Timer("WebsocketHeartbeat", true).schedule(0, 10000) {
+        websockets.forEach { it.send(WsMessage("heartbeat")) }
+      }
+    } else {
+      // Subsequent task runs, just send a websocket message
+      websockets.forEach { it.send(WsMessage(RELOAD_MESSAGE)) }
     }
+  }
+
+  companion object {
+    const val RELOAD_MESSAGE = "reload"
+    val websockets: MutableList<Websocket> = mutableListOf()
   }
 }
 
