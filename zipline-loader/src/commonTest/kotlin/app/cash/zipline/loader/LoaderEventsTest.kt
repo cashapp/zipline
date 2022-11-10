@@ -21,6 +21,7 @@ import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import okio.IOException
 
@@ -51,7 +52,28 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/apple.zipline",
         "downloadEnd red https://example.com/files/red/apple.zipline",
-        "applicationLoadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "applicationLoadSuccess red https://example.com/files/red/red.manifest.zipline.json",
+      ),
+      eventListener.takeAll(skipServiceEvents = true)
+    )
+  }
+
+  @Test
+  fun loadSkippedIfManifestHasNotChanged() = runBlocking {
+    val flow = tester.load("red", "apple", count = 2)
+    assertEquals(1, flow.toList().size)
+    assertEquals(
+      listOf(
+        "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
+        "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
+        "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "downloadStart red https://example.com/files/red/apple.zipline",
+        "downloadEnd red https://example.com/files/red/apple.zipline",
+        "applicationLoadSuccess red https://example.com/files/red/red.manifest.zipline.json",
+        "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
+        "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
+        "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "applicationLoadSkipped red https://example.com/files/red/red.manifest.zipline.json",
       ),
       eventListener.takeAll(skipServiceEvents = true)
     )
@@ -69,7 +91,7 @@ class LoaderEventsTest {
         "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
-        "applicationLoadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "applicationLoadSuccess red https://example.com/files/red/red.manifest.zipline.json",
       ),
       eventListener.takeAll(skipServiceEvents = true)
     )
@@ -88,7 +110,7 @@ class LoaderEventsTest {
         "applicationLoadFailed red " +
           "${IOException::class.qualifiedName}: 404: https://example.com/files/red/red.manifest.zipline.json not found",
         "applicationLoadStart red null",
-        "applicationLoadEnd red null",
+        "applicationLoadSuccess red null",
       ),
       eventListener.takeAll(skipServiceEvents = true)
     )
@@ -109,7 +131,7 @@ class LoaderEventsTest {
         "applicationLoadFailed red " +
           "${IOException::class.qualifiedName}: 404: https://example.com/files/red/unreachable.zipline not found",
         "applicationLoadStart red null",
-        "applicationLoadEnd red null",
+        "applicationLoadSuccess red null",
       ),
       eventListener.takeAll(skipServiceEvents = true)
     )
@@ -128,7 +150,7 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/broken.zipline",
         "applicationLoadFailed red app.cash.zipline.QuickJsException: broken",
         "applicationLoadStart red null",
-        "applicationLoadEnd red null",
+        "applicationLoadSuccess red null",
       ),
       eventListener.takeAll(skipServiceEvents = true)
     )
@@ -147,7 +169,7 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/crashes.zipline",
         "applicationLoadFailed red ${IllegalArgumentException::class.qualifiedName}: Zipline code run failed",
         "applicationLoadStart red null",
-        "applicationLoadEnd red null",
+        "applicationLoadSuccess red null",
       ),
       eventListener.takeAll(skipServiceEvents = true)
     )

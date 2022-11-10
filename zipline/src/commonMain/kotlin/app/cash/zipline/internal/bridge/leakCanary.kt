@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 
 /**
@@ -23,7 +22,7 @@ import app.cash.zipline.ZiplineService
  * closed.
  */
 internal expect fun trackLeaks(
-  eventListener: EventListener,
+  eventListener: EndpointEventListener,
   serviceName: String,
   callHandler: OutboundCallHandler,
   service: ZiplineService

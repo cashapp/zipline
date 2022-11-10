@@ -358,12 +358,12 @@ internal class EventListenerEndpointTest {
     val calls = ArrayDeque<Call>()
     val results = ArrayDeque<CallResult>()
 
-    override fun callStart(call: Call): Any? {
+    override fun callStart(zipline: Zipline, call: Call): Any? {
       calls += call
       return null
     }
 
-    override fun callEnd(call: Call, result: CallResult, startValue: Any?) {
+    override fun callEnd(zipline: Zipline, call: Call, result: CallResult, startValue: Any?) {
       results += result
     }
   }

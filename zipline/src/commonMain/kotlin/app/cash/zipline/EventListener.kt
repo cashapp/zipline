@@ -24,11 +24,11 @@ package app.cash.zipline
  */
 abstract class EventListener {
   /** Invoked when something calls [Zipline.bind], or a service is sent via an API. */
-  open fun bindService(name: String, service: ZiplineService) {
+  open fun bindService(zipline: Zipline, name: String, service: ZiplineService) {
   }
 
   /** Invoked when something calls [Zipline.take], or a service is received via an API. */
-  open fun takeService(name: String, service: ZiplineService) {
+  open fun takeService(zipline: Zipline, name: String, service: ZiplineService) {
   }
 
   /**
@@ -38,7 +38,7 @@ abstract class EventListener {
    * @return any object. This value will be passed back to [callEnd] when the call is completed. The
    *   base function always returns null.
    */
-  open fun callStart(call: Call): Any? {
+  open fun callStart(zipline: Zipline, call: Call): Any? {
     return null
   }
 
@@ -48,11 +48,11 @@ abstract class EventListener {
    * @param startValue the value returned by [callStart] for the start of this call. This is null
    *   unless [callStart] is overridden to return something else.
    */
-  open fun callEnd(call: Call, result: CallResult, startValue: Any?) {
+  open fun callEnd(zipline: Zipline, call: Call, result: CallResult, startValue: Any?) {
   }
 
   /** Invoked when a service is garbage collected without being closed. */
-  open fun serviceLeaked(name: String) {
+  open fun serviceLeaked(zipline: Zipline, name: String) {
   }
 
   /**
@@ -69,14 +69,28 @@ abstract class EventListener {
   }
 
   /**
+   * Invoked when an application load was skipped because the code is unchanged.
+   *
+   * @param startValue the value returned by [applicationLoadStart] for the start of this call. This
+   *   is null unless [applicationLoadStart] is overridden to return something else.
+   */
+  open fun applicationLoadSkipped(
+    applicationName: String,
+    manifestUrl: String,
+    startValue: Any?,
+  ) {
+  }
+
+  /**
    * Invoked when an application load succeeds.
    *
    * @param startValue the value returned by [applicationLoadStart] for the start of this call. This
    *   is null unless [applicationLoadStart] is overridden to return something else.
    */
-  open fun applicationLoadEnd(
+  open fun applicationLoadSuccess(
     applicationName: String,
     manifestUrl: String?,
+    zipline: Zipline,
     startValue: Any?,
   ) {
   }
