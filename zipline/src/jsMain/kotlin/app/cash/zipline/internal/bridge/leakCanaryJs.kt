@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 
 private val referenceQueue: dynamic = js("""[]""")
@@ -33,7 +32,7 @@ internal val registry = run {
 }
 
 internal actual fun trackLeaks(
-  eventListener: EventListener,
+  eventListener: EndpointEventListener,
   serviceName: String,
   callHandler: OutboundCallHandler,
   service: ZiplineService
@@ -49,7 +48,7 @@ internal actual fun detectLeaks() {
 }
 
 private class ZiplineServiceReference(
-  private val eventListener: EventListener,
+  private val eventListener: EndpointEventListener,
   private val name: String,
   private val callHandler: OutboundCallHandler,
 ) {

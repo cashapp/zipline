@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.passByReferencePrefix
 import app.cash.zipline.ziplineServiceSerializer
@@ -32,7 +31,7 @@ import kotlinx.serialization.modules.SerializersModule
 class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val userSerializersModule: SerializersModule,
-  internal val eventListener: EventListener,
+  internal val eventListener: EndpointEventListener,
   internal val outboundChannel: CallChannel,
 ) {
   internal val inboundServices = mutableMapOf<String, InboundService<*>>()

@@ -16,11 +16,13 @@
 package app.cash.zipline.internal
 
 import app.cash.zipline.EventListener
+import app.cash.zipline.Zipline
 
 internal class HostEventListenerService(
+  private val zipline: Zipline,
   private val eventListener: EventListener,
 ) : EventListenerService {
   override fun serviceLeaked(name: String) {
-    eventListener.serviceLeaked(name)
+    eventListener.serviceLeaked(zipline, name)
   }
 }

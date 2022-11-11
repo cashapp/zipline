@@ -25,6 +25,7 @@ import app.cash.zipline.internal.HostEventListenerService
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
+import app.cash.zipline.internal.bridge.EventListenerAdapter
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventListenerName
@@ -52,7 +53,7 @@ actual class Zipline private constructor(
   private val endpoint = Endpoint(
     scope = scope,
     userSerializersModule = userSerializersModule,
-    eventListener = eventListener,
+    eventListener = EventListenerAdapter(eventListener, this),
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call into JS. */
       private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
@@ -71,7 +72,7 @@ actual class Zipline private constructor(
       override fun disconnect(instanceName: String): Boolean {
         return jsInboundBridge.disconnect(instanceName)
       }
-    }
+    },
   )
 
   actual val json: Json
@@ -101,7 +102,7 @@ actual class Zipline private constructor(
       name = eventLoopName,
       instance = eventLoop,
     )
-    val eventListenerService = HostEventListenerService(eventListener)
+    val eventListenerService = HostEventListenerService(this, eventListener)
     endpoint.bind<EventListenerService>(
       name = eventListenerName,
       instance = eventListenerService,
