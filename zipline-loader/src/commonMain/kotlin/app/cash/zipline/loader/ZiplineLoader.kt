@@ -35,7 +35,7 @@ import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
@@ -287,7 +287,7 @@ class ZiplineLoader internal constructor(
     flowOf(manifestUrl),
     serializersModule,
     initializer
-  ).firstOrNull() ?: throw IllegalStateException("loading failed; see EventListener for exceptions")
+  ).first()
 
   /**
    * After identifying a manifest to load this fetches all the code, loads it into a JS runtime,

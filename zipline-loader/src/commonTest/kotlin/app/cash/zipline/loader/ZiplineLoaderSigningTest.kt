@@ -120,12 +120,16 @@ class ZiplineLoaderSigningTest {
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
-    val exception = assertFailsWith<IllegalStateException> {
-      tester.loader.loadOnce("test", manifestUrl)
-    }
-    assertEquals("loading failed; see EventListener for exceptions", exception.message)
+    val loadResult = tester.loader.loadOnce("test", manifestUrl)
+    assertEquals(
+      "manifest signature for key key1 did not verify!",
+      (loadResult as LoadResult.Failure).exception.message
+    )
     val listenerException = eventListener.takeException()
     assertTrue(listenerException is IllegalStateException)
-    assertEquals("manifest signature for key key1 did not verify!", listenerException.message)
+    assertEquals(
+      "manifest signature for key key1 did not verify!",
+      listenerException.message,
+    )
   }
 }
