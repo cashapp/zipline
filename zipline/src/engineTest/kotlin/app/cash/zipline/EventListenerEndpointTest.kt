@@ -16,6 +16,7 @@
 
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.EndpointEventListener
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -354,7 +355,7 @@ internal class EventListenerEndpointTest {
     fun transform(prefix: String, service: EchoService): EchoService
   }
 
-  class CallListener : EventListener() {
+  class CallListener : EndpointEventListener {
     val calls = ArrayDeque<Call>()
     val results = ArrayDeque<CallResult>()
 
@@ -365,6 +366,15 @@ internal class EventListenerEndpointTest {
 
     override fun callEnd(call: Call, result: CallResult, startValue: Any?) {
       results += result
+    }
+
+    override fun bindService(name: String, service: ZiplineService) {
+    }
+
+    override fun takeService(name: String, service: ZiplineService) {
+    }
+
+    override fun serviceLeaked(name: String) {
     }
   }
 }

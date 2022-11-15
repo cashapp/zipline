@@ -18,6 +18,7 @@ package app.cash.zipline.testing
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
 import app.cash.zipline.EventListener
+import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.bridge.CancelCallback
 import app.cash.zipline.internal.bridge.SuspendCallback
@@ -27,7 +28,7 @@ class LoggingEventListener : EventListener() {
   private var nextCallId = 1
   private val log = ArrayDeque<LogEntry>()
 
-  override fun bindService(name: String, service: ZiplineService) {
+  override fun bindService(zipline: Zipline, name: String, service: ZiplineService) {
     log(
       service = service,
       serviceName = name,
@@ -35,7 +36,7 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun takeService(name: String, service: ZiplineService) {
+  override fun takeService(zipline: Zipline, name: String, service: ZiplineService) {
     log(
       service = service,
       serviceName = name,
@@ -43,7 +44,7 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun callStart(call: Call): Any {
+  override fun callStart(zipline: Zipline, call: Call): Any {
     val callId = nextCallId++
     log(
       service = call.service,
@@ -53,7 +54,7 @@ class LoggingEventListener : EventListener() {
     return callId
   }
 
-  override fun callEnd(call: Call, result: CallResult, startValue: Any?) {
+  override fun callEnd(zipline: Zipline, call: Call, result: CallResult, startValue: Any?) {
     log(
       service = call.service,
       serviceName = call.serviceName,
@@ -62,7 +63,7 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun serviceLeaked(name: String) {
+  override fun serviceLeaked(zipline: Zipline, name: String) {
     log(
       serviceName = name,
       log = "serviceLeaked $name"
@@ -76,10 +77,26 @@ class LoggingEventListener : EventListener() {
     )
   }
 
-  override fun applicationLoadEnd(applicationName: String, manifestUrl: String?, startValue: Any?) {
+  override fun applicationLoadSuccess(
+    applicationName: String,
+    manifestUrl: String?,
+    zipline: Zipline,
+    startValue: Any?
+  ) {
     log(
       applicationName = applicationName,
-      log = "applicationLoadEnd $applicationName $manifestUrl"
+      log = "applicationLoadSuccess $applicationName $manifestUrl"
+    )
+  }
+
+  override fun applicationLoadSkipped(
+    applicationName: String,
+    manifestUrl: String,
+    startValue: Any?
+  ) {
+    log(
+      applicationName = applicationName,
+      log = "applicationLoadSkipped $applicationName $manifestUrl"
     )
   }
 

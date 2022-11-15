@@ -22,6 +22,9 @@ import app.cash.zipline.loader.internal.fetcher.MANIFEST_MAX_SIZE
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
@@ -106,6 +109,12 @@ class LoaderTester(
   }
 
   suspend fun success(applicationName: String, seed: String): String {
+    val success = load(applicationName, seed, count = 1).first() as LoadResult.Success
+    val log = success.zipline.quickJs.evaluate("globalThis.log", "assert.js") as String
+    return log.removeSuffix(" loaded\n")
+  }
+
+  fun load(applicationName: String, seed: String, count: Int): Flow<LoadResult> {
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
@@ -118,9 +127,9 @@ class LoaderTester(
       manifestUrl to loadedManifest.manifestBytes,
       "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
     )
-    zipline = (loader.loadOnce(applicationName, manifestUrl) as LoadResult.Success).zipline
-    return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
-      " loaded\n"
+    return loader.load(
+      applicationName = applicationName,
+      manifestUrlFlow = List(count) { manifestUrl }.asFlow(),
     )
   }
 

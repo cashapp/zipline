@@ -16,6 +16,7 @@
 package app.cash.zipline.samples.trivia
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.LoadResult
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineLoader
 import kotlinx.coroutines.CoroutineDispatcher
@@ -32,5 +33,8 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
     NO_SIGNATURE_CHECKS,
     OkHttpClient(),
   )
-  return loader.loadOnce("trivia", manifestUrl).zipline
+  return when (val result = loader.loadOnce("trivia", manifestUrl)) {
+    is LoadResult.Success -> result.zipline
+    is LoadResult.Failure -> error(result.exception)
+  }
 }
