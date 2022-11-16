@@ -12,7 +12,7 @@ plugins {
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
   id("com.squareup.sqldelight")
-  id("de.undercouch.download") version "5.3.0"
+  id("de.undercouch.download")
 }
 
 kotlin {

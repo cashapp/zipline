@@ -58,6 +58,8 @@ sqldelight-runtime = { module = "com.squareup.sqldelight:runtime", version.ref =
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.34.0" }
 turbine = { module = "app.cash.turbine:turbine", version = "0.8.0" }
 truth = { module = "com.google.truth:truth", version = "1.0" }
+downloadTask-gradle-plugin = { module = "de.undercouch:gradle-download-task", version = "5.3.0" }
+
 
 [plugins]
 zipline-kotlin = { id = "app.cash.zipline.kotlin" }
