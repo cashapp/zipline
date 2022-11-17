@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 
-## 0.9.8 - 2022-11-16
+## [0.9.8] - 2022-11-16
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
