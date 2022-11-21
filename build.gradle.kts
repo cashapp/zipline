@@ -1,6 +1,7 @@
 import com.android.build.gradle.BaseExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
+import java.net.URI
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
@@ -103,6 +104,30 @@ allprojects {
         maven {
           name = "testMaven"
           url = file("${rootProject.buildDir}/testMaven").toURI()
+        }
+
+        /*
+         * Want to push to an internal repository for testing?
+         * Set the following properties in ~/.gradle/gradle.properties.
+         *
+         * internalUrl=YOUR_INTERNAL_URL
+         * internalUsername=YOUR_USERNAME
+         * internalPassword=YOUR_PASSWORD
+         *
+         * Then run the following command to publish a new internal release:
+         *
+         * ./gradlew publishAllPublicationsToInternalRepository -DRELEASE_SIGNING_ENABLED=false
+         */
+        val internalUrl = providers.gradleProperty("internalUrl").orNull
+        if (internalUrl != null) {
+          maven {
+            name = "internal"
+            url = URI(internalUrl)
+            credentials {
+              username = providers.gradleProperty("internalUsername").get()
+              password = providers.gradleProperty("internalPassword").get()
+            }
+          }
         }
       }
     }
