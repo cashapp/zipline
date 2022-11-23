@@ -42,8 +42,10 @@ import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
+import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.substitute
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 
 /**
  * A user-defined interface (like `EchoService` or `Callback<String>`) and support for generating
@@ -71,15 +73,27 @@ internal class BridgedInterface(
   val typeIrClass = classSymbol.owner
 
   // TODO(jwilson): support overloaded functions?
-  val bridgedFunctionsWithOverrides: Map<String, List<IrSimpleFunctionSymbol>>
+  val bridgedFunctionsWithOverrides: Map<Name, List<IrSimpleFunctionSymbol>>
     get() {
-      val result = mutableMapOf<String, MutableList<IrSimpleFunctionSymbol>>()
+      val result = mutableMapOf<Name, MutableList<IrSimpleFunctionSymbol>>()
       for (supertype in listOf(classSymbol.owner.defaultType) + classSymbol.owner.superTypes) {
         val supertypeClass = supertype.getClass() ?: continue
         for (function in supertypeClass.functions) {
           if (function.name.identifier in NON_INTERFACE_FUNCTION_NAMES) continue
-          val overrides = result.getOrPut(function.name.identifier) { mutableListOf() }
+          val overrides = result.getOrPut(function.name) { mutableListOf() }
           overrides += function.symbol
+        }
+        for (property in supertypeClass.properties) {
+          val getter = property.getter
+          if (getter != null) {
+            val overrides = result.getOrPut(getter.name) { mutableListOf() }
+            overrides += getter.symbol
+          }
+          val setter = property.setter
+          if (setter != null) {
+            val overrides = result.getOrPut(setter.name) { mutableListOf() }
+            overrides += setter.symbol
+          }
         }
       }
       return result

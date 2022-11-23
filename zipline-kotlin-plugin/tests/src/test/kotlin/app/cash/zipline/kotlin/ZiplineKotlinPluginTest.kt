@@ -28,6 +28,7 @@ import kotlinx.serialization.KSerializer
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Test
 
+// Good for early on break points in compiler, onerous to exercise
 /** Confirm bridge calls are rewritten to use `OutboundBridge` or `InboundBridge` as appropriate. */
 class ZiplineKotlinPluginTest {
   @Test
@@ -318,6 +319,32 @@ class ZiplineKotlinPluginTest {
     val serializer = mainKt.getDeclaredMethod("createServiceSerializer")
       .invoke(null)
     assertThat(serializer).isInstanceOf(KSerializer::class.java)
+  }
+
+  @Test
+  fun `service has val and var property`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "SampleService.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.ZiplineService
+
+        interface SampleService : ZiplineService {
+          val count: Int
+          var total: Int
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val adapterClass = result.classLoader.loadClass(
+      "app.cash.zipline.testing.SampleService\$Companion\$Adapter"
+    )
+    assertThat(adapterClass).isNotNull()
+    assertThat(adapterClass.interfaces).asList().containsExactly(KSerializer::class.java)
   }
 }
 

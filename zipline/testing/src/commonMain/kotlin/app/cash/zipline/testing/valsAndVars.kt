@@ -16,19 +16,9 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.ZiplineService
-import kotlinx.serialization.Serializable
 
-// probably creat a new file in this dir called varsAndVals.kt
-interface EchoService : ZiplineService {
-  fun echo(request: EchoRequest): EchoResponse
+interface ValVarService : ZiplineService {
+  val valState: Int
+  var varState: Int
 }
 
-@Serializable
-data class EchoRequest(
-  val message: String
-)
-
-@Serializable
-data class EchoResponse(
-  val message: String
-)

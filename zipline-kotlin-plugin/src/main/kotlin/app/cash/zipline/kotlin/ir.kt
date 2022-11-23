@@ -75,12 +75,31 @@ import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
+// Should produce a string like "var count: Int" or "val count: Int" or "fun echo(request: EchoRequest): EchoResponse"
 internal val IrSimpleFunction.signature: String
   get() = buildString {
-    if (isSuspend) {
-      append("suspend ")
+    val property = correspondingPropertySymbol
+    if (property != null) {
+      val name = property.owner.name.asString()
+      if (valueParameters.size == 1) {
+        // setter
+        append(
+          "var ${name}: ${(valueParameters[0].type as IrSimpleType).asString()}"
+        )
+      } else {
+        // getter
+        append(
+          "val ${name}: ${(returnType as IrSimpleType).asString()}"
+        )
+      }
+    } else {
+      if (isSuspend) {
+        append("suspend ")
+      }
+      append(
+        "fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}"
+      )
     }
-    append("fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}")
   }
 
 internal fun FqName.child(name: String) = child(Name.identifier(name))
@@ -255,6 +274,7 @@ fun irVal(
     parent = declaringClass
   }
 
+  // but our properties won't have this
   result.backingField = irFactory.createField(
     startOffset = declaringClass.startOffset,
     endOffset = declaringClass.endOffset,
@@ -278,6 +298,7 @@ fun irVal(
     this.initializer = initializerBuilder.initializer()
   }
 
+  // probably will end up writing something very similar to this, don't refactor to share code
   result.getter = irFactory.createFunction(
     startOffset = declaringClass.startOffset,
     endOffset = declaringClass.endOffset,
