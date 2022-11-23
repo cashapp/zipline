@@ -44,8 +44,6 @@ import kotlinx.serialization.modules.SerializersModule;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
-// We write half the bridge manually in Java and test that the other half from Kotlin compiler is
-// correct and they can talk to each other
 /**
  * Call these {@link PublishedApi} internal APIs from Java rather than from Kotlin to hack around
  * visibility of internal APIs.
