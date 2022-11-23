@@ -28,12 +28,10 @@ import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.ExperimentalSerializationApi
 
 /**
  * This test exercises EventListeners where both endpoints are on the same platform.
  */
-@OptIn(ExperimentalSerializationApi::class)
 internal class EventListenerEndpointTest {
   private val clientListener = CallListener()
   private val serviceListener = CallListener()
