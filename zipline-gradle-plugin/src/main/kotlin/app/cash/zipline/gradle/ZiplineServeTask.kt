@@ -23,6 +23,7 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
 import org.gradle.deployment.internal.Deployment
@@ -43,7 +44,7 @@ import org.http4k.websocket.WsMessage
 
 abstract class ZiplineServeTask : DefaultTask() {
 
-  @get:Input
+  @get:InputDirectory
   abstract val inputDir: DirectoryProperty
 
   @get:Optional
