@@ -47,6 +47,8 @@ class ZiplineIrGenerationExtension(
               currentScope!!,
               declaration
             ).generateAdapterIfAbsent()
+            // When iterating on Kotlin compiler plugin, set breakpoint here and
+            //  run `declarataion.dump()` to get current compiler parse tree.
           }
         } catch (e: ZiplineCompilationException) {
           messageCollector.report(e.severity, e.message, currentFile.locationOf(e.element))

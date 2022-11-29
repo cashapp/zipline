@@ -1,0 +1,83 @@
+/*
+ * Copyright (C) 2022 Square, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package app.cash.zipline
+
+import app.cash.zipline.testing.newEndpointPair
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlinx.coroutines.runBlocking
+
+internal class EndpointPropertiesTest {
+  @Test
+  fun valProperty() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    var countCalls = 0
+    var result = 42
+
+    val service = object : ValService {
+      override val count: Int
+        get() {
+          countCalls++
+          return result
+        }
+    }
+
+    endpointA.bind<ValService>("valService", service)
+    val client = endpointB.take<ValService>("valService")
+
+    assertEquals(42, client.count)
+    assertEquals(1, countCalls)
+
+    // Confirm every access goes to the source of truth.
+    result = 24
+    assertEquals(24, client.count)
+    assertEquals(2, countCalls)
+  }
+
+  @Test
+  fun varProperty() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    var countCalls = 0
+    var state = 42
+
+    val service = object : VarService {
+      override var count: Int
+        get() = error("unexpected call")
+        set(value) {
+          countCalls++
+          state = value
+        }
+    }
+
+    endpointA.bind<VarService>("varService", service)
+    val client = endpointB.take<VarService>("varService")
+
+    // Confirm setter changes state.
+    client.count = 24
+    assertEquals(1, countCalls)
+    assertEquals(24, state)
+  }
+
+  interface ValService : ZiplineService {
+    val count: Int
+  }
+
+  interface VarService : ZiplineService {
+    var count: Int
+  }
+}

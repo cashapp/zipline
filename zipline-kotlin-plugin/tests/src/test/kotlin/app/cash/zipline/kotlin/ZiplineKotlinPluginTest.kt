@@ -319,6 +319,32 @@ class ZiplineKotlinPluginTest {
       .invoke(null)
     assertThat(serializer).isInstanceOf(KSerializer::class.java)
   }
+
+  @Test
+  fun `service has val and var property`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "SampleService.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.ZiplineService
+
+        interface SampleService : ZiplineService {
+          val count: Int
+          var total: Int
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+
+    val adapterClass = result.classLoader.loadClass(
+      "app.cash.zipline.testing.SampleService\$Companion\$Adapter"
+    )
+    assertThat(adapterClass).isNotNull()
+    assertThat(adapterClass.interfaces).asList().containsExactly(KSerializer::class.java)
+  }
 }
 
 fun compile(

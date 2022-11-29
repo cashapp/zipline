@@ -19,12 +19,15 @@ import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.ir.addDispatchReceiver
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
+import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.addFunction
 import org.jetbrains.kotlin.ir.builders.declarations.addTypeParameter
 import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
+import org.jetbrains.kotlin.ir.builders.declarations.buildFun
+import org.jetbrains.kotlin.ir.builders.declarations.buildProperty
 import org.jetbrains.kotlin.ir.builders.irAs
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irCallConstructor
@@ -58,6 +61,7 @@ import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
+import org.jetbrains.kotlin.ir.util.isGetter
 import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 import org.jetbrains.kotlin.ir.util.remapTypeParameters
@@ -402,7 +406,8 @@ internal class AdapterGenerator(
       // )
       +irReturn(irCall(ziplineApis.listOfFunction).apply {
         putTypeArgument(0, ziplineFunctionT)
-        putValueArgument(0,
+        putValueArgument(
+          0,
           irVararg(
             ziplineFunctionT,
             expressions,
@@ -717,7 +722,8 @@ internal class AdapterGenerator(
     val bridgedFunction = overridesList[0].owner
     val functionReturnType = bridgedInterface.resolveTypeParameters(bridgedFunction.returnType)
       .remapTypeParameters(original, this@irBridgedFunction)
-    val result = addFunction {
+
+    val result = factory.buildFun {
       initDefaults(original)
       name = bridgedFunction.name
       isSuspend = bridgedFunction.isSuspend
@@ -728,6 +734,34 @@ internal class AdapterGenerator(
         initDefaults(original)
         type = defaultDispatchReceiver
       }
+    }
+
+    val bridgedPropertySymbol = bridgedFunction.correspondingPropertySymbol
+    if (bridgedPropertySymbol != null) {
+      // Get or create the property on the generated class.
+      val property = declarations.filterIsInstance<IrProperty>().firstOrNull {
+        bridgedPropertySymbol in it.overriddenSymbols
+      } ?: factory.buildProperty {
+        name = bridgedPropertySymbol.owner.name
+        visibility = bridgedFunction.visibility
+        modality = Modality.OPEN
+      }.apply {
+        overriddenSymbols = listOf(bridgedPropertySymbol)
+        this@irBridgedFunction.declarations += this
+        result.parent = this@irBridgedFunction
+      }
+
+      // Add our function as the property's getter or setter.
+      if (bridgedFunction.isGetter) {
+        property.getter = result
+      } else {
+        property.setter = result
+      }
+      result.correspondingPropertySymbol = property.symbol
+    } else {
+      // Simple function can be added directly to the class.
+      declarations += result
+      result.parent = this@irBridgedFunction
     }
 
     for (valueParameter in bridgedFunction.valueParameters) {

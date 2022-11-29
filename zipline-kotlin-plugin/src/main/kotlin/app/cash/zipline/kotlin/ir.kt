@@ -75,12 +75,31 @@ import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
+// Should produce a string like "var count: kotlin.Int" or "val count: kotlin.Int" or "fun echo(request: EchoRequest): EchoResponse"
 internal val IrSimpleFunction.signature: String
   get() = buildString {
-    if (isSuspend) {
-      append("suspend ")
+    val property = correspondingPropertySymbol
+    if (property != null) {
+      val name = property.owner.name.asString()
+      if (valueParameters.size == 1) {
+        // setter
+        append(
+          "var ${name}: ${(valueParameters[0].type as IrSimpleType).asString()}"
+        )
+      } else {
+        // getter
+        append(
+          "val ${name}: ${(returnType as IrSimpleType).asString()}"
+        )
+      }
+    } else {
+      if (isSuspend) {
+        append("suspend ")
+      }
+      append(
+        "fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}"
+      )
     }
-    append("fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}")
   }
 
 internal fun FqName.child(name: String) = child(Name.identifier(name))
