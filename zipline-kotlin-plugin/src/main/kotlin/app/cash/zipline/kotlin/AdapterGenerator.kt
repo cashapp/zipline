@@ -840,11 +840,6 @@ internal class AdapterGenerator(
       )
     }
 
-    // if this function is part of a property, box it
-    if (bridgedPropertySymbol != null) {
-      // TODO look at irclass that generates a val
-    }
-
     return result
   }
 

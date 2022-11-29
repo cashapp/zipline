@@ -75,7 +75,7 @@ import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
-// Should produce a string like "var count: Int" or "val count: Int" or "fun echo(request: EchoRequest): EchoResponse"
+// Should produce a string like "var count: kotlin.Int" or "val count: kotlin.Int" or "fun echo(request: EchoRequest): EchoResponse"
 internal val IrSimpleFunction.signature: String
   get() = buildString {
     val property = correspondingPropertySymbol

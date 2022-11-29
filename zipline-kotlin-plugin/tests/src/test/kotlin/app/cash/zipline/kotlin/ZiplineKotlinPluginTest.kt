@@ -28,7 +28,6 @@ import kotlinx.serialization.KSerializer
 import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.junit.Test
 
-// Good for early on break points in compiler, onerous to exercise
 /** Confirm bridge calls are rewritten to use `OutboundBridge` or `InboundBridge` as appropriate. */
 class ZiplineKotlinPluginTest {
   @Test
