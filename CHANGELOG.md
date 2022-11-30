@@ -3,7 +3,7 @@
 ## [Unreleased]
 
 
-## [0.9.9] - 2022-11-16
+## [0.9.10] - 2022-11-30
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -12,6 +12,12 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * New: Add support for `var` and `val` declarations in service interfaces.
+ * Fix: Update Gradle task to serve zipline files for compatibility with Gradle 7.6.
+
+
+## [0.9.9] - 2022-11-16
 
  * Changed: Roll back Kotlin 1.7.20 to ensure downstream users can still use Compose easily. The plugin remains compatible with 1.7.21.
 
