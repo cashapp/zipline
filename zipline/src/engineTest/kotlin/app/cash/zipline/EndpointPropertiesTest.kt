@@ -19,8 +19,17 @@ import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.Serializable
 
 internal class EndpointPropertiesTest {
+  interface ValService : ZiplineService {
+    val count: Int
+  }
+
+  interface VarService : ZiplineService {
+    var count: Int
+  }
+
   @Test
   fun valProperty() = runBlocking {
     val (endpointA, endpointB) = newEndpointPair(this)
@@ -73,11 +82,103 @@ internal class EndpointPropertiesTest {
     assertEquals(24, state)
   }
 
-  interface ValService : ZiplineService {
-    val count: Int
+  interface GenericValService<T> : ZiplineService {
+    val foo: T
   }
 
-  interface VarService : ZiplineService {
-    var count: Int
+  interface GenericVarService<T> : ZiplineService {
+    var foo: T
+  }
+
+  @Serializable
+  data class Bar(
+    val alpha: Boolean,
+    val bravo: String,
+    val charlie: Baz
+  )
+
+  @Serializable
+  enum class Baz {
+    BLEEP, BLOOP, BONGO, BINGO
+  }
+
+  @Test
+  fun genericValProperty() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    var fooCalls = 0
+    var result = Bar(
+      alpha = true,
+      bravo = "bingo",
+      charlie = Baz.BINGO
+    )
+
+    val service = object : GenericValService<Bar> {
+      override val foo: Bar
+        get() {
+          fooCalls++
+          return result
+        }
+    }
+
+    endpointA.bind<GenericValService<Bar>>("genericValService", service)
+    val client = endpointB.take<GenericValService<Bar>>("genericValService")
+
+    assertEquals(Bar(
+      alpha = true,
+      bravo = "bingo",
+      charlie = Baz.BINGO
+    ), client.foo)
+    assertEquals(1, fooCalls)
+
+    // Confirm every access goes to the source of truth.
+    result = Bar(
+      alpha = false,
+      bravo = "bloop",
+      charlie = Baz.BLOOP
+    )
+    assertEquals(Bar(
+      alpha = false,
+      bravo = "bloop",
+      charlie = Baz.BLOOP
+    ), client.foo)
+    assertEquals(2, fooCalls)
+  }
+
+  @Test
+  fun genericVarProperty() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    var fooCalls = 0
+    var state = Bar(
+      alpha = true,
+      bravo = "bingo",
+      charlie = Baz.BINGO
+    )
+
+    val service = object : GenericVarService<Bar> {
+      override var foo: Bar
+        get() = error("unexpected call")
+        set(value) {
+          fooCalls++
+          state = value
+        }
+    }
+
+    endpointA.bind<GenericVarService<Bar>>("genericVarService", service)
+    val client = endpointB.take<GenericVarService<Bar>>("genericVarService")
+
+    // Confirm setter changes state.
+    client.foo = Bar(
+      alpha = false,
+      bravo = "bloop",
+      charlie = Baz.BLOOP
+    )
+    assertEquals(1, fooCalls)
+    assertEquals(Bar(
+      alpha = false,
+      bravo = "bloop",
+      charlie = Baz.BLOOP
+    ), state)
   }
 }
