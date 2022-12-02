@@ -100,6 +100,8 @@ internal class InboundService<T : ZiplineService>(
       override fun cancel() {
         job.cancel()
       }
+
+      override fun toString() = "CancelCallback/$internalCall"
     }
     job.invokeOnCompletion {
       val name = cancelCallback.passbyReferenceName
@@ -108,4 +110,6 @@ internal class InboundService<T : ZiplineService>(
 
     return endpoint.json.encodeToStringFast(cancelCallbackSerializer, cancelCallback)
   }
+
+  override fun toString() = service.toString()
 }

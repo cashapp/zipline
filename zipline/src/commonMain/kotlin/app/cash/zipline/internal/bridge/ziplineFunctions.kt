@@ -34,6 +34,8 @@ internal abstract class ReturningZiplineFunction<T : ZiplineService>(
     get() = name == "fun close(): kotlin.Unit"
 
   abstract fun call(service: T, args: List<*>): Any?
+
+  override fun toString() = name
 }
 
 @PublishedApi
@@ -49,4 +51,6 @@ internal abstract class SuspendingZiplineFunction<T : ZiplineService>(
   override val isClose = false
 
   abstract suspend fun callSuspending(service: T, args: List<*>): Any?
+
+  override fun toString() = name
 }
