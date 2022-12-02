@@ -94,7 +94,7 @@ internal class InboundService<T : ZiplineService>(
       }
     }
 
-    val cancelCallback = object : CancelCallback, HasPassbyReferenceName {
+    val cancelCallback = object : CancelCallback, HasPassByReferenceName {
       override var passbyReferenceName: String? = null
 
       override fun cancel() {

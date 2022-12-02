@@ -54,7 +54,7 @@ internal class PassByReferenceSerializer(
   override fun serialize(encoder: Encoder, value: PassByReference) {
     require(value is SendByReference<*>)
     val serviceName = endpoint.generatePassByReferenceName()
-    if (value.service is HasPassbyReferenceName) {
+    if (value.service is HasPassByReferenceName) {
       value.service.passbyReferenceName = serviceName
     }
     endpoint.callCodec.encodedServiceNames += serviceName
@@ -75,6 +75,6 @@ internal class PassByReferenceSerializer(
  *
  * Not appropriate for general use, where the receiver must call [ZiplineService.close].
  */
-internal interface HasPassbyReferenceName {
+internal interface HasPassByReferenceName {
   var passbyReferenceName: String?
 }
