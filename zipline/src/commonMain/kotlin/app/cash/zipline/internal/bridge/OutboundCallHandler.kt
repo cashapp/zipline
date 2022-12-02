@@ -128,9 +128,12 @@ internal class OutboundCallHandler(
       val suspendCall = endpoint.callCodec.lastInboundCall!!
       val callResult = CallResult(result, suspendCall.encodedCall, suspendCall.serviceNames)
       completed = true
+
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
-      endpoint.remove(passbyReferenceName!!)
+      val name = passbyReferenceName
+      if (name != null) endpoint.remove(name)
       endpoint.incompleteContinuations -= continuation
+
       endpoint.eventListener.callEnd(externalCall, callResult, callStart)
       continuation.resumeWith(result)
     }

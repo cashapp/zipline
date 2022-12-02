@@ -102,7 +102,8 @@ internal class InboundService<T : ZiplineService>(
       }
     }
     job.invokeOnCompletion {
-      endpoint.remove(cancelCallback.passbyReferenceName!!)
+      val name = cancelCallback.passbyReferenceName
+      if (name != null) endpoint.remove(name)
     }
 
     return endpoint.json.encodeToStringFast(cancelCallbackSerializer, cancelCallback)
