@@ -143,18 +143,6 @@ class Endpoint internal constructor(
     return inboundServices.remove(name)
   }
 
-  @PublishedApi
-  internal fun remove(service: ZiplineService) {
-    val i = inboundServices.values.iterator()
-    while (i.hasNext()) {
-      val inboundService = i.next()
-      if (inboundService.service === service) {
-        i.remove()
-        return
-      }
-    }
-  }
-
   internal fun generatePassByReferenceName(): String {
     return "$passByReferencePrefix${nextId++}"
   }
