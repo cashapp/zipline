@@ -53,10 +53,12 @@ jobs:
         if: matrix.os == 'macOS-latest'
         run: ./.github/workflows/build-mac.sh -a ${{ matrix.arch }} -c ${{ matrix.cmake-arch }}
 
+      - name: Install libtinfo5
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install -y libtinfo5
+
       # Build unless this is a cross-compile.
-      - run: |
-          sudo apt-get install -y libtinfo5
-          ./gradlew build --stacktrace
+      - run: ./gradlew build --stacktrace
         if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
 
       - uses: actions/upload-artifact@v3
