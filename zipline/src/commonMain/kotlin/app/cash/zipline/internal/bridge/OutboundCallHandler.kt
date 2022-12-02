@@ -105,11 +105,13 @@ internal class OutboundCallHandler(
     }
   }
 
-  private inner class RealSuspendCallback<R> : SuspendCallback<R> {
+  private inner class RealSuspendCallback<R> : SuspendCallback<R>, HasPassbyReferenceName {
     lateinit var internalCall: InternalCall
     lateinit var externalCall: Call
     lateinit var continuation: Continuation<R>
     var callStart: Any? = null
+
+    override var passbyReferenceName: String? = null
 
     /** True once this has been called. Used to prevent cancel-after-complete. */
     var completed = false
@@ -127,7 +129,7 @@ internal class OutboundCallHandler(
       val callResult = CallResult(result, suspendCall.encodedCall, suspendCall.serviceNames)
       completed = true
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
-      endpoint.remove(this@RealSuspendCallback)
+      endpoint.remove(passbyReferenceName!!)
       endpoint.incompleteContinuations -= continuation
       endpoint.eventListener.callEnd(externalCall, callResult, callStart)
       continuation.resumeWith(result)

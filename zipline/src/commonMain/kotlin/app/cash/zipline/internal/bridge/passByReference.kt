@@ -54,6 +54,9 @@ internal class PassByReferenceSerializer(
   override fun serialize(encoder: Encoder, value: PassByReference) {
     require(value is SendByReference<*>)
     val serviceName = endpoint.generatePassByReferenceName()
+    if (value.service is HasPassbyReferenceName) {
+      value.service.passbyReferenceName = serviceName
+    }
     endpoint.callCodec.encodedServiceNames += serviceName
     value.bind(endpoint, serviceName)
     encoder.encodeString(serviceName)
@@ -64,4 +67,14 @@ internal class PassByReferenceSerializer(
     endpoint.callCodec.decodedServiceNames += serviceName
     return ReceiveByReference(serviceName, endpoint)
   }
+}
+
+/**
+ * Implemented by concrete [ZiplineService] implementations that close themselves: [SuspendCallback]
+ * and [CancelCallback]. Otherwise, they wouldn't know what to pass to [Endpoint.remove]!
+ *
+ * Not appropriate for general use, where the receiver must call [ZiplineService.close].
+ */
+internal interface HasPassbyReferenceName {
+  var passbyReferenceName: String?
 }

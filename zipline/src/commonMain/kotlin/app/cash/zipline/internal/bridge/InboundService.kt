@@ -94,13 +94,15 @@ internal class InboundService<T : ZiplineService>(
       }
     }
 
-    val cancelCallback = object : CancelCallback {
+    val cancelCallback = object : CancelCallback, HasPassbyReferenceName {
+      override var passbyReferenceName: String? = null
+
       override fun cancel() {
         job.cancel()
       }
     }
     job.invokeOnCompletion {
-      endpoint.remove(cancelCallback)
+      endpoint.remove(cancelCallback.passbyReferenceName!!)
     }
 
     return endpoint.json.encodeToStringFast(cancelCallbackSerializer, cancelCallback)
