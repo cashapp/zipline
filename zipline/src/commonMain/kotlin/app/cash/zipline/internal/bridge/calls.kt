@@ -51,7 +51,9 @@ internal class InternalCall(
   val suspendCallback: SuspendCallback<Any?>? = null,
 
   val args: List<*>,
-)
+) {
+  override fun toString() = "Call(receiver=$serviceName, function=${function.name}, args=$args)"
+}
 
 /** This uses [Int] as a placeholder; in practice the element type depends on the argument type. */
 private val argsListDescriptor = ListSerializer(Int.serializer()).descriptor

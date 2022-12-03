@@ -62,6 +62,8 @@ internal class FlowSerializer<T>(
           collector.close()
         }
       }
+
+      override fun toString() = this@toZiplineService.toString()
     }
   }
 

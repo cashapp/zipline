@@ -58,4 +58,6 @@ class Call(
    * closed properly.
    */
   val serviceNames: List<String> = serviceNames.toList() // Defensive copy.
+
+  override fun toString() = "Call(receiver=$service, function=${function.name}, args=$args)"
 }

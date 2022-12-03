@@ -137,5 +137,9 @@ internal class OutboundCallHandler(
       endpoint.eventListener.callEnd(externalCall, callResult, callStart)
       continuation.resumeWith(result)
     }
+
+    override fun toString() = "SuspendCallback/$internalCall"
   }
+
+  override fun toString() = serviceName
 }
