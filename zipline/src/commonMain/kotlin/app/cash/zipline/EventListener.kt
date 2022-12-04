@@ -51,7 +51,11 @@ abstract class EventListener {
   open fun callEnd(zipline: Zipline, call: Call, result: CallResult, startValue: Any?) {
   }
 
-  /** Invoked when a service is garbage collected without being closed. */
+  /**
+   * Invoked when a service is garbage collected without being closed.
+   *
+   * Note that this method may be invoked after [ziplineClosed].
+   */
   open fun serviceLeaked(zipline: Zipline, name: String) {
   }
 
@@ -153,6 +157,13 @@ abstract class EventListener {
     url: String?,
     exception: Exception,
   ) {
+  }
+
+  /**
+   * Invoked when a Zipline is closed. Unless otherwise noted, other methods on this interface will
+   * not be invoked after this.
+   */
+  open fun ziplineClosed(zipline: Zipline) {
   }
 
   companion object {

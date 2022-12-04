@@ -199,4 +199,13 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
     assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such service")
   }
+
+  @Test fun ziplineClosed() = runBlocking {
+    zipline.close()
+    assertThat(eventListener.take()).isEqualTo("ziplineClosed")
+
+    // Close is idempotent and doesn't repeat events.
+    zipline.close()
+    assertThat(eventListener.takeAll()).isEmpty()
+  }
 }

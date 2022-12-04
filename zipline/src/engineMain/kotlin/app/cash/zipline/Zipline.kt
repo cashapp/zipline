@@ -48,7 +48,7 @@ actual class Zipline private constructor(
   userSerializersModule: SerializersModule,
   dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
-  eventListener: EventListener,
+  private val eventListener: EventListener,
 ) {
   private val endpoint = Endpoint(
     scope = scope,
@@ -83,6 +83,8 @@ actual class Zipline private constructor(
 
   internal actual val clientNames: Set<String>
     get() = endpoint.clientNames
+
+  private var closed = false
 
   init {
     // Eagerly publish the channel so they can call us.
@@ -142,6 +144,9 @@ actual class Zipline private constructor(
    *  * Accessing the objects returned from [take].
    */
   fun close() {
+    if (closed) return
+    closed = true
+
     scope.cancel()
     quickJs.close()
 
@@ -151,6 +156,7 @@ actual class Zipline private constructor(
       continuation.resumeWithException(CancellationException("Zipline closed"))
     }
     endpoint.incompleteContinuations.clear()
+    eventListener.ziplineClosed(this)
   }
 
   fun loadJsModule(script: String, id: String) {
