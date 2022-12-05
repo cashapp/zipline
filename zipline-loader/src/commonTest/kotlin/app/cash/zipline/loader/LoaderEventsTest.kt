@@ -128,6 +128,7 @@ class LoaderEventsTest {
         "downloadStart red https://example.com/files/red/unreachable.zipline",
         "downloadFailed red https://example.com/files/red/unreachable.zipline " +
           "${IOException::class.qualifiedName}: 404: https://example.com/files/red/unreachable.zipline not found",
+        "ziplineClosed",
         "applicationLoadFailed red " +
           "${IOException::class.qualifiedName}: 404: https://example.com/files/red/unreachable.zipline not found",
         "applicationLoadStart red null",
@@ -148,6 +149,7 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/broken.zipline",
         "downloadEnd red https://example.com/files/red/broken.zipline",
+        "ziplineClosed",
         "applicationLoadFailed red app.cash.zipline.QuickJsException: broken",
         "applicationLoadStart red null",
         "applicationLoadSuccess red null",
@@ -167,6 +169,7 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/crashes.zipline",
         "downloadEnd red https://example.com/files/red/crashes.zipline",
+        "ziplineClosed",
         "applicationLoadFailed red ${IllegalArgumentException::class.qualifiedName}: Zipline code run failed",
         "applicationLoadStart red null",
         "applicationLoadSuccess red null",
