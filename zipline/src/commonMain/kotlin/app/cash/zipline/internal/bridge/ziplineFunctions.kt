@@ -30,6 +30,8 @@ internal abstract class ReturningZiplineFunction<T : ZiplineService>(
   /** A serializer for a `kotlin.Result<T>` which supports success or failure. */
   val kotlinResultSerializer = ResultSerializer(resultSerializer)
 
+  override val isSuspending = false
+
   override val isClose
     get() = name == "fun close(): kotlin.Unit"
 
@@ -48,6 +50,7 @@ internal abstract class SuspendingZiplineFunction<T : ZiplineService>(
 ) : ZiplineFunction<T> {
   val argsListSerializer = ArgsListSerializer(argSerializers)
 
+  override val isSuspending = true
   override val isClose = false
 
   abstract suspend fun callSuspending(service: T, args: List<*>): Any?

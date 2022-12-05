@@ -21,6 +21,9 @@ package app.cash.zipline
 interface ZiplineFunction<T : ZiplineService> {
   val name: String
 
+  /** True if this function completes asynchronously. */
+  val isSuspending: Boolean
+
   /** True if this function is [ZiplineService.close]. */
   val isClose: Boolean
 }
