@@ -148,6 +148,10 @@ class LoggingEventListener : EventListener() {
     )
   }
 
+  override fun ziplineClosed(zipline: Zipline) {
+    log(log = "ziplineClosed")
+  }
+
   fun take(
     skipServiceEvents: Boolean = false,
     skipApplicationEvents: Boolean = false,
