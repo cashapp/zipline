@@ -2,8 +2,7 @@
 
 ## [Unreleased]
 
-
-## [0.9.10] - 2022-11-30
+## [0.9.11] - 2022-12-05
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -12,6 +11,12 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * New: Publish an event when Zipline is closed.
+ * Fix: Avoid a linear search through endpoint names.
+
+
+## [0.9.10] - 2022-11-30
 
  * New: Add support for `var` and `val` declarations in service interfaces.
  * Fix: Update Gradle task to serve zipline files for compatibility with Gradle 7.6.
