@@ -160,6 +160,31 @@ abstract class EventListener {
   }
 
   /**
+   * Invoked when a module load starts. This is the process of loading code into QuickJS.
+   *
+   * @return any object. This value will be passed back to [callEnd] when the call is completed. The
+   *   base function always returns null.
+   */
+  open fun moduleLoadStart(zipline: Zipline, moduleId: String): Any? {
+    return null
+  }
+
+  /**
+   * Invoked when a module load completes.
+   *
+   * @param startValue the value returned by [moduleLoadStart] for the start of this call. This is
+   *   null unless [moduleLoadStart] is overridden to return something else.
+   */
+  open fun moduleLoadEnd(zipline: Zipline, moduleId: String, startValue: Any?) {
+  }
+
+  /**
+   * Invoked when a Zipline is created, before any application code is loaded.
+   */
+  open fun ziplineCreated(zipline: Zipline) {
+  }
+
+  /**
    * Invoked when a Zipline is closed. Unless otherwise noted, other methods on this interface will
    * not be invoked after this.
    */

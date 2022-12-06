@@ -302,7 +302,12 @@ class ZiplineLoader internal constructor(
   ): Zipline {
     val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
     try {
-      receive(ZiplineLoadReceiver(zipline), loadedManifest, applicationName, nowEpochMs)
+      receive(
+        ZiplineLoadReceiver(zipline, eventListener),
+        loadedManifest,
+        applicationName,
+        nowEpochMs,
+      )
 
       // Run caller lambda to validate and initialize the loaded code to confirm it works.
       initializer(zipline)

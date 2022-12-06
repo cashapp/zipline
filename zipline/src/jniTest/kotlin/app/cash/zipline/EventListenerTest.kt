@@ -42,6 +42,7 @@ class EventListenerTest {
 
   @Before fun setUp() = runBlocking {
     zipline.loadTestingJs()
+    eventListener.takeAll() // Skip events created by loadTestingJs().
     uncaughtExceptionHandler.setUp()
   }
 
