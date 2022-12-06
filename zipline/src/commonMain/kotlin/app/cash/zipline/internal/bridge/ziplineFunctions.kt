@@ -50,8 +50,8 @@ internal abstract class SuspendingZiplineFunction<T : ZiplineService>(
 ) : ZiplineFunction<T> {
   val argsListSerializer = ArgsListSerializer(argSerializers)
 
-  override val isSuspending = true
-  override val isClose = false
+  override val isSuspending get() = true
+  override val isClose get() = false
 
   abstract suspend fun callSuspending(service: T, args: List<*>): Any?
 
