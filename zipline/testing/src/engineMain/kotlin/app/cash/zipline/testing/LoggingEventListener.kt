@@ -148,18 +148,45 @@ class LoggingEventListener : EventListener() {
     )
   }
 
+  override fun moduleLoadStart(zipline: Zipline, moduleId: String): Any? {
+    log(
+      moduleId = moduleId,
+      log = "moduleLoadStart $moduleId"
+    )
+    return null
+  }
+
+  override fun moduleLoadEnd(zipline: Zipline, moduleId: String, startValue: Any?) {
+    log(
+      moduleId = moduleId,
+      log = "moduleLoadEnd $moduleId"
+    )
+  }
+
+  override fun ziplineCreated(zipline: Zipline) {
+    log(log = "ziplineCreated")
+  }
+
   override fun ziplineClosed(zipline: Zipline) {
     log(log = "ziplineClosed")
   }
 
   fun take(
+    skipModuleEvents: Boolean = false,
     skipServiceEvents: Boolean = false,
     skipApplicationEvents: Boolean = false,
     skipInternalServices: Boolean = true,
   ): String {
     while (true) {
       val entry = log.removeFirst()
-      if (entry.matches(skipServiceEvents, skipApplicationEvents, skipInternalServices)) {
+      if (
+        entry.matches(
+          skipModuleEvents = skipModuleEvents,
+          skipServiceEvents = skipServiceEvents,
+          skipApplicationEvents = skipApplicationEvents,
+          skipInternalServices = skipInternalServices,
+        )
+      ) {
         return entry.log
       }
     }
@@ -175,6 +202,7 @@ class LoggingEventListener : EventListener() {
   }
 
   fun takeAll(
+    skipModuleEvents: Boolean = false,
     skipServiceEvents: Boolean = false,
     skipApplicationEvents: Boolean = false,
     skipInternalServices: Boolean = true,
@@ -182,13 +210,21 @@ class LoggingEventListener : EventListener() {
     val result = mutableListOf<String>()
     while (true) {
       val entry = log.removeFirstOrNull() ?: return result
-      if (entry.matches(skipServiceEvents, skipApplicationEvents, skipInternalServices)) {
+      if (
+        entry.matches(
+          skipModuleEvents = skipModuleEvents,
+          skipServiceEvents = skipServiceEvents,
+          skipApplicationEvents = skipApplicationEvents,
+          skipInternalServices = skipInternalServices,
+        )
+      ) {
         result += entry.log
       }
     }
   }
 
   private fun log(
+    moduleId: String? = null,
     service: ZiplineService? = null,
     serviceName: String? = null,
     applicationName: String? = null,
@@ -198,10 +234,11 @@ class LoggingEventListener : EventListener() {
     val isInternalService = service is CancelCallback ||
       service is SuspendCallback<*> ||
       serviceName?.startsWith(ziplineInternalPrefix) == true
-    this.log += LogEntry(serviceName, applicationName, isInternalService, exception, log)
+    this.log += LogEntry(moduleId, serviceName, applicationName, isInternalService, exception, log)
   }
 
   data class LogEntry(
+    val moduleId: String?,
     val serviceName: String?,
     val applicationName: String?,
     val isInternalService: Boolean,
@@ -209,11 +246,13 @@ class LoggingEventListener : EventListener() {
     val log: String,
   ) {
     fun matches(
+      skipModuleEvents: Boolean,
       skipServiceEvents: Boolean,
       skipApplicationEvents: Boolean,
       skipInternalServices: Boolean,
     ) : Boolean {
-      val skip = (skipServiceEvents && serviceName != null)
+      val skip = (skipModuleEvents && moduleId != null)
+        || (skipServiceEvents && serviceName != null)
         || (skipApplicationEvents && applicationName != null)
         || (skipInternalServices && isInternalService)
       return !skip

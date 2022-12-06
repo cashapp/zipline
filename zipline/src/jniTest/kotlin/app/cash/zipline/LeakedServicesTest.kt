@@ -34,6 +34,7 @@ class LeakedServicesTest {
 
   @Before fun setUp() {
     zipline.loadTestingJs()
+    eventListener.takeAll() // Skip events created by loadTestingJs().
     uncaughtExceptionHandler.setUp()
   }
 

@@ -179,7 +179,9 @@ actual class Zipline private constructor(
       quickJs.initModuleLoader()
 
       val scope = CoroutineScope(dispatcher)
-      return Zipline(quickJs, serializersModule, dispatcher, scope, eventListener)
+      val result = Zipline(quickJs, serializersModule, dispatcher, scope, eventListener)
+      eventListener.ziplineCreated(result)
+      return result
     }
   }
 }

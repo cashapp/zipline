@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.receiver
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.ZiplineFile.Companion.toZiplineFile
@@ -25,9 +26,15 @@ import okio.ByteString
  * Load the [ZiplineFile] into a Zipline runtime instance.
  */
 internal class ZiplineLoadReceiver(
-  private val zipline: Zipline
+  private val zipline: Zipline,
+  private val eventListener: EventListener,
 ) : Receiver {
   override suspend fun receive(byteString: ByteString, id: String, sha256: ByteString) {
-    zipline.multiplatformLoadJsModule(byteString.toZiplineFile().quickjsBytecode.toByteArray(), id)
+    val startValue = eventListener.moduleLoadStart(zipline, id)
+    try {
+      zipline.multiplatformLoadJsModule(byteString.toZiplineFile().quickjsBytecode.toByteArray(), id)
+    } finally {
+      eventListener.moduleLoadEnd(zipline, id, startValue)
+    }
   }
 }
