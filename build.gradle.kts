@@ -40,7 +40,7 @@ apply(plugin = "com.vanniktech.maven.publish.base")
 
 allprojects {
   group = "app.cash.zipline"
-  version = "1.0.0-SNAPSHOT"
+  version = "0.9.12"
 
   repositories {
     mavenCentral()

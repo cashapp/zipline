@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.11] - 2022-12-05
+## [0.9.12] - 2022-12-06
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -11,6 +11,12 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * New: Add `ZiplineFunction.isSuspending`.
+ * New: Add events for `ziplineCreate()`, `moduleLoadStart()`, and `moduleLoadEnd()`.
+
+
+## [0.9.11] - 2022-12-05
 
  * New: Publish an event when Zipline is closed.
  * Fix: Avoid a linear search through endpoint names.
