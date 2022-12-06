@@ -30,7 +30,7 @@ internal abstract class ReturningZiplineFunction<T : ZiplineService>(
   /** A serializer for a `kotlin.Result<T>` which supports success or failure. */
   val kotlinResultSerializer = ResultSerializer(resultSerializer)
 
-  override val isSuspending = false
+  override val isSuspending get() = false
 
   override val isClose
     get() = name == "fun close(): kotlin.Unit"
