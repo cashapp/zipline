@@ -209,4 +209,33 @@ class EventListenerTest {
     zipline.close()
     assertThat(eventListener.takeAll()).isEmpty()
   }
+
+  /**
+   * We had a bug where EventListeners that called [ZiplineService.toString] would trigger a crash
+   * on a lateinit value in the suspend callback.
+   */
+  @Test fun serviceToStrings() = runBlocking {
+    val outboundServiceToString =
+      "SuspendingEchoService\$Companion\$Adapter\$GeneratedOutboundService"
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
+    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.unblockSuspendingJs()")
+
+    val service = zipline.take<SuspendingEchoService>("jsSuspendingEchoService")
+    service.suspendingEcho(EchoRequest("Jake"))
+
+    val event1 = eventListener.takeEntry(skipInternalServices = false)
+    assertThat(event1.log).isEqualTo("takeService jsSuspendingEchoService")
+    assertThat(event1.serviceToString)
+      .contains(outboundServiceToString)
+
+    val event2 = eventListener.takeEntry(skipInternalServices = false)
+    assertThat(event2.log).startsWith("bindService zipline/host-1")
+    assertThat(event2.serviceToString)
+      .startsWith("SuspendCallback/Call(receiver=jsSuspendingEchoService")
+
+    val event3 = eventListener.takeEntry(skipInternalServices = false)
+    assertThat(event3.log).startsWith("callStart 1 jsSuspendingEchoService")
+    assertThat(event3.serviceToString)
+      .contains(outboundServiceToString)
+  }
 }

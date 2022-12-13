@@ -162,8 +162,8 @@ abstract class EventListener {
   /**
    * Invoked when a module load starts. This is the process of loading code into QuickJS.
    *
-   * @return any object. This value will be passed back to [callEnd] when the call is completed. The
-   *   base function always returns null.
+   * @return any object. This value will be passed back to [moduleLoadEnd] when the call is
+   *   completed. The base function always returns null.
    */
   open fun moduleLoadStart(zipline: Zipline, moduleId: String): Any? {
     return null
