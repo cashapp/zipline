@@ -177,6 +177,21 @@ class LoggingEventListener : EventListener() {
     skipApplicationEvents: Boolean = false,
     skipInternalServices: Boolean = true,
   ): String {
+    val entry = takeEntry(
+      skipModuleEvents,
+      skipServiceEvents,
+      skipApplicationEvents,
+      skipInternalServices,
+    )
+    return entry.log
+  }
+
+  fun takeEntry(
+    skipModuleEvents: Boolean = false,
+    skipServiceEvents: Boolean = false,
+    skipApplicationEvents: Boolean = false,
+    skipInternalServices: Boolean = true,
+  ): LogEntry {
     while (true) {
       val entry = log.removeFirst()
       if (
@@ -187,7 +202,7 @@ class LoggingEventListener : EventListener() {
           skipInternalServices = skipInternalServices,
         )
       ) {
-        return entry.log
+        return entry
       }
     }
   }
@@ -231,14 +246,24 @@ class LoggingEventListener : EventListener() {
     exception: Exception? = null,
     log: String,
   ) {
+    service.toString()
     val isInternalService = service is CancelCallback ||
       service is SuspendCallback<*> ||
       serviceName?.startsWith(ziplineInternalPrefix) == true
-    this.log += LogEntry(moduleId, serviceName, applicationName, isInternalService, exception, log)
+    this.log += LogEntry(
+      moduleId = moduleId,
+      serviceToString = service?.toString(),
+      serviceName = serviceName,
+      applicationName = applicationName,
+      isInternalService = isInternalService,
+      exception = exception,
+      log = log,
+    )
   }
 
   data class LogEntry(
     val moduleId: String?,
+    val serviceToString: String?,
     val serviceName: String?,
     val applicationName: String?,
     val isInternalService: Boolean,

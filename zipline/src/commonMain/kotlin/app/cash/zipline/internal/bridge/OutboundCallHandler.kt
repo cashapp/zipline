@@ -79,8 +79,8 @@ internal class OutboundCallHandler(
       suspendCallback = suspendCallback,
       args = argsList,
     )
-    val externalCall = endpoint.callCodec.encodeCall(internalCall, service)
     suspendCallback.internalCall = internalCall
+    val externalCall = endpoint.callCodec.encodeCall(internalCall, service)
     suspendCallback.externalCall = externalCall
     suspendCallback.callStart = endpoint.eventListener.callStart(externalCall)
 
