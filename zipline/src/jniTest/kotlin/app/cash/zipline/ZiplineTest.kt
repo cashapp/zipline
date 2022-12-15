@@ -217,8 +217,8 @@ class ZiplineTest {
       zipline.take<PotatoService>("helloService").echo()
     }).hasMessageThat().startsWith("""
       no such method (incompatible API versions?)
-        called service:
-          helloService
+      	called service:
+      		helloService
       	called function:
       		fun echo(): app.cash.zipline.testing.EchoResponse
       	available functions:
@@ -236,8 +236,8 @@ class ZiplineTest {
       zipline.take<SuspendingPotatoService>("helloService").echo()
     }).hasMessageThat().startsWith("""
       no such method (incompatible API versions?)
-        called service:
-          helloService
+      	called service:
+      		helloService
       	called function:
       		suspend fun echo(): app.cash.zipline.testing.EchoResponse
       	available functions:
@@ -255,8 +255,8 @@ class ZiplineTest {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
     }).hasMessageThat().startsWith("""
       app.cash.zipline.ZiplineApiMismatchException: no such method (incompatible API versions?)
-        called service:
-          supService
+      	called service:
+      		supService
       	called function:
       		fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
       	available functions:
@@ -276,8 +276,8 @@ class ZiplineTest {
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingPotatoException") as String?)
       .startsWith("""
         ZiplineApiMismatchException: app.cash.zipline.ZiplineApiMismatchException: no such method (incompatible API versions?)
-          called service:
-            jvmSuspendingPotatoService
+        	called service:
+        		jvmSuspendingPotatoService
         	called function:
         		suspend fun echo(): app.cash.zipline.testing.EchoResponse
         	available functions:
