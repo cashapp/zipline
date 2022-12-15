@@ -192,6 +192,9 @@ internal class RealCallSerializer(
         endpoint.inboundServices.keys.joinTo(this, separator = "\n") { "\t\t$it" }
       } else {
         appendLine("no such method (incompatible API versions?)")
+        appendLine("\tcalled service:")
+        append("\t\t")
+        appendLine(serviceName)
         appendLine("\tcalled function:")
         append("\t\t")
         appendLine(functionName)
