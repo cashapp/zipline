@@ -34,5 +34,8 @@ expect class Zipline {
 
   fun <T : ZiplineService> bind(name: String, instance: T)
 
-  fun <T : ZiplineService> take(name: String): T
+  fun <T : ZiplineService> take(
+    name: String,
+    scope: ZiplineScope = ZiplineScope(),
+  ): T
 }

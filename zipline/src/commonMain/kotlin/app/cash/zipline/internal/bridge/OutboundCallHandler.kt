@@ -18,6 +18,8 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineFunction
+import app.cash.zipline.ZiplineScope
+import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
 import kotlin.coroutines.Continuation
@@ -35,14 +37,20 @@ internal class OutboundCallHandler(
 ) {
   /** Used by generated code when closing a service. */
   var closed = false
+    private set
 
   /** Used by generated code to call a function. */
   fun call(
     service: ZiplineService,
+    scope: ZiplineScope,
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
     val function = functionsList[functionIndex] as ReturningZiplineFunction<*>
+    if (function.isClose) {
+      closed = true
+      scope.remove(service)
+    }
     val argsList = args.toList()
     val internalCall = InternalCall(
       serviceName = serviceName,
@@ -55,24 +63,30 @@ internal class OutboundCallHandler(
       else -> Unit // Don't call callStart() for suspend callbacks.
     }
     val encodedResult = endpoint.outboundChannel.call(externalCall.encodedCall)
-    val callResult = endpoint.callCodec.decodeResult(function, encodedResult)
-    when (service) {
-      !is SuspendCallback<*> -> endpoint.eventListener.callEnd(externalCall, callResult, callStart)
-      else -> Unit // Don't call callEnd() for suspend callbacks.
+    return endpoint.withTakeScope(scope) {
+      val callResult = endpoint.callCodec.decodeResult(function, encodedResult)
+      when (service) {
+        !is SuspendCallback<*> -> {
+          endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+        }
+        else -> {
+          Unit // Don't call callEnd() for suspend callbacks.
+        }
+      }
+      return@withTakeScope callResult.result.getOrThrow()
     }
-    return callResult.result.getOrThrow()
   }
-
 
   /** Used by generated code to call a suspending function. */
   suspend fun callSuspending(
     service: ZiplineService,
+    scope: ZiplineScope,
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
     val function = functionsList[functionIndex] as SuspendingZiplineFunction<*>
     val argsList = args.toList()
-    val suspendCallback = RealSuspendCallback<Any?>()
+    val suspendCallback = RealSuspendCallback<Any?>(scope)
     val internalCall = InternalCall(
       serviceName = serviceName,
       function = function,
@@ -105,7 +119,9 @@ internal class OutboundCallHandler(
     }
   }
 
-  private inner class RealSuspendCallback<R> : SuspendCallback<R>, HasPassByReferenceName {
+  private inner class RealSuspendCallback<R>(
+    override val scope: ZiplineScope
+  ) : SuspendCallback<R>, HasPassByReferenceName, ZiplineScoped {
     lateinit var internalCall: InternalCall
     lateinit var externalCall: Call
     lateinit var continuation: Continuation<R>

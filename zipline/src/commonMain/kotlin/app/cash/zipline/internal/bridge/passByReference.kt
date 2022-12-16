@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.descriptors.PrimitiveKind
@@ -33,7 +34,8 @@ internal class ReceiveByReference(
   var endpoint: Endpoint,
 ) : PassByReference {
   fun <T : ZiplineService> take(adapter: ZiplineServiceAdapter<T>): T {
-    return endpoint.take(name, adapter)
+    val scope = endpoint.takeScope ?: ZiplineScope()
+    return endpoint.take(name, scope, adapter)
   }
 }
 

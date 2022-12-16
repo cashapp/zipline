@@ -17,6 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineApiMismatchException
 import app.cash.zipline.ZiplineFunction
+import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.ziplineServiceSerializer
 import kotlinx.serialization.KSerializer
@@ -106,63 +107,69 @@ internal class RealCallSerializer(
   }
 
   override fun deserialize(decoder: Decoder): InternalCall {
-    return decoder.decodeStructure(descriptor) {
-      var serviceName = ""
-      var inboundService: InboundService<*>? = null
-      var functionName = ""
-      var function: ZiplineFunction<*>? = null
-      var suspendCallback: SuspendCallback<Any?>? = null
-      var args = listOf<Any?>()
-      while (true) {
-        when (val index = decodeElementIndex(descriptor)) {
-          0 -> {
-            serviceName = decodeStringElement(descriptor, index)
-            inboundService = endpoint.inboundServices[serviceName]
-          }
-          1 -> {
-            functionName = decodeStringElement(descriptor, index)
-            function = inboundService?.functions?.get(functionName)
-          }
-          2 -> {
-            @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
-            val serializer = when (function) {
-              is SuspendingZiplineFunction<*> -> function.suspendCallbackSerializer
-              // We can use any suspend callback if we're only returning failures.
-              else -> failureSuspendCallbackSerializer
-            } as KSerializer<SuspendCallback<Any?>>
+    val pushedTakeScope = endpoint.takeScope
+    try {
+      return decoder.decodeStructure(descriptor) {
+        var serviceName = ""
+        var inboundService: InboundService<*>? = null
+        var functionName = ""
+        var function: ZiplineFunction<*>? = null
+        var suspendCallback: SuspendCallback<Any?>? = null
+        var args = listOf<Any?>()
+        while (true) {
+          when (val index = decodeElementIndex(descriptor)) {
+            0 -> {
+              serviceName = decodeStringElement(descriptor, index)
+              inboundService = endpoint.inboundServices[serviceName]
+              endpoint.takeScope = (inboundService?.service as? ZiplineScoped)?.scope
+            }
+            1 -> {
+              functionName = decodeStringElement(descriptor, index)
+              function = inboundService?.functions?.get(functionName)
+            }
+            2 -> {
+              @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
+              val serializer = when (function) {
+                is SuspendingZiplineFunction<*> -> function.suspendCallbackSerializer
+                // We can use any suspend callback if we're only returning failures.
+                else -> failureSuspendCallbackSerializer
+              } as KSerializer<SuspendCallback<Any?>>
 
-            suspendCallback = decodeSerializableElement(
-              descriptor,
-              index,
-              serializer,
-            )
-          }
-          3 -> {
-            val argsListSerializer = when (function) {
-              is SuspendingZiplineFunction<*> -> function.argsListSerializer
-              is ReturningZiplineFunction<*> -> function.argsListSerializer
-              else -> null
+              suspendCallback = decodeSerializableElement(
+                descriptor,
+                index,
+                serializer,
+              )
             }
-            if (argsListSerializer != null) {
-              args = decodeSerializableElement(descriptor, index, argsListSerializer)
-            } else {
-              // Discard args for unknown function.
-              (decoder as JsonDecoder).decodeJsonElement()
+            3 -> {
+              val argsListSerializer = when (function) {
+                is SuspendingZiplineFunction<*> -> function.argsListSerializer
+                is ReturningZiplineFunction<*> -> function.argsListSerializer
+                else -> null
+              }
+              if (argsListSerializer != null) {
+                args = decodeSerializableElement(descriptor, index, argsListSerializer)
+              } else {
+                // Discard args for unknown function.
+                (decoder as JsonDecoder).decodeJsonElement()
+              }
             }
+            DECODE_DONE -> break
+            else -> error("Unexpected index: $index")
           }
-          DECODE_DONE -> break
-          else -> error("Unexpected index: $index")
         }
+        return@decodeStructure InternalCall(
+          serviceName = serviceName,
+          inboundService = inboundService ?: unknownService(),
+          function = function ?: unknownFunction<ZiplineService>(
+            serviceName, functionName, inboundService, suspendCallback
+          ),
+          suspendCallback = suspendCallback,
+          args = args
+        )
       }
-      return@decodeStructure InternalCall(
-        serviceName = serviceName,
-        inboundService = inboundService ?: unknownService(),
-        function = function ?: unknownFunction<ZiplineService>(
-          serviceName, functionName, inboundService, suspendCallback
-        ),
-        suspendCallback = suspendCallback,
-        args = args
-      )
+    } finally {
+      endpoint.takeScope = pushedTakeScope
     }
   }
 

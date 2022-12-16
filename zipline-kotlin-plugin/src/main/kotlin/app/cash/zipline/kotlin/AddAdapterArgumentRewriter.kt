@@ -33,7 +33,8 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
  *
  * ```
  * val helloService: SampleService = zipline.take(
- *   "helloService"
+ *   "helloService",
+ *   myZiplineScope,
  * )
  * ```
  *
@@ -42,7 +43,8 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
  * ```
  * val helloService: SampleService = zipline.take(
  *   "helloService",
- *   SampleService.Companion.Adapter
+ *   myZiplineScope,
+ *   SampleService.Companion.Adapter,
  * )
  * ```
  *

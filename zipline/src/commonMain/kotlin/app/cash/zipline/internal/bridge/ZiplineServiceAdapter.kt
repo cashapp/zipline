@@ -16,6 +16,7 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineFunction
+import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -42,7 +43,8 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
   ): List<ZiplineFunction<T>>
 
   abstract fun outboundService(
-    callHandler: OutboundCallHandler
+    callHandler: OutboundCallHandler,
+    scope: ZiplineScope,
   ): T
 
   override fun serialize(encoder: Encoder, value: T) {

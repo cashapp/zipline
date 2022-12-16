@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.passByReferencePrefix
 import app.cash.zipline.ziplineServiceSerializer
@@ -44,6 +45,8 @@ class Endpoint internal constructor(
 
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
+
+  internal var takeScope: ZiplineScope? = null
 
   /** This uses both Zipline-provided serializers and user-provided serializers. */
   internal val json: Json = Json {
@@ -121,21 +124,39 @@ class Endpoint internal constructor(
   }
 
   @Suppress("UNUSED_PARAMETER") // Parameter is used by the compiler plug-in.
-  fun <T : ZiplineService> take(name: String): T {
+  fun <T : ZiplineService> take(
+    name: String,
+    scope: ZiplineScope = ZiplineScope(),
+  ): T {
     error("unexpected call to Endpoint.take: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
+  internal fun <T : ZiplineService> take(
+    name: String,
+    scope: ZiplineScope = ZiplineScope(),
+    adapter: ZiplineServiceAdapter<T>,
+  ): T {
     // Detect leaked old services when creating new services.
     detectLeaks()
 
     val functions = adapter.ziplineFunctions(json.serializersModule)
     val callHandler = OutboundCallHandler(name, this, functions)
-    val result = adapter.outboundService(callHandler)
+    val result = adapter.outboundService(callHandler, scope)
+    scope.add(result)
     eventListener.takeService(name, result)
     trackLeaks(eventListener, name, callHandler, result)
     return result
+  }
+
+  internal fun <T> withTakeScope(scope: ZiplineScope, block: () -> T): T {
+    val pushedTakeScope = takeScope
+    takeScope = scope
+    try {
+      return block()
+    } finally {
+      takeScope = pushedTakeScope
+    }
   }
 
   @PublishedApi
