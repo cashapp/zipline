@@ -17,7 +17,6 @@ package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
-import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
@@ -39,6 +38,7 @@ internal class ZiplineApis(
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
   private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
   private val ziplineFqName = packageFqName.child("Zipline")
+  private val outboundServiceFqName = bridgeFqName.child("OutboundService")
   val ziplineServiceFqName = packageFqName.child("ZiplineService")
   private val ziplineServiceSerializerFunctionFqName =
     packageFqName.child("ziplineServiceSerializer")
@@ -144,6 +144,14 @@ internal class ZiplineApis(
   val outboundCallHandlerCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
       outboundCallHandlerFqName.child("callSuspending")
+    ).single()
+
+  val outboundService: IrClassSymbol
+    get() = pluginContext.referenceClass(outboundServiceFqName)!!
+
+  val outboundServiceCallHandler: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      outboundServiceFqName.child("callHandler")
     ).single()
 
   val ziplineService: IrClassSymbol

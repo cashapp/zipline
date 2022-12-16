@@ -16,8 +16,10 @@
 package app.cash.zipline.kotlin;
 
 import app.cash.zipline.ZiplineFunction;
+import app.cash.zipline.ZiplineScope;
 import app.cash.zipline.internal.bridge.Endpoint;
 import app.cash.zipline.internal.bridge.OutboundCallHandler;
+import app.cash.zipline.internal.bridge.OutboundService;
 import app.cash.zipline.internal.bridge.ReturningZiplineFunction;
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter;
 import app.cash.zipline.testing.EchoRequest;
@@ -68,7 +70,7 @@ public final class ZiplineTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static EchoService takeEchoClient(Endpoint endpoint, String name) {
-    return endpoint.take(name, EchoServiceAdapter.INSTANCE);
+    return endpoint.take(name, new ZiplineScope(), EchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for inbound calls. */
@@ -78,7 +80,7 @@ public final class ZiplineTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static GenericEchoService<String> takeGenericEchoService(Endpoint endpoint, String name) {
-    return endpoint.take(name, GenericEchoServiceAdapter.INSTANCE);
+    return endpoint.take(name, new ZiplineScope(), GenericEchoServiceAdapter.INSTANCE);
   }
 
   /** Simulate generated code for inbound calls. */
@@ -121,11 +123,16 @@ public final class ZiplineTestInternals {
       return new GeneratedOutboundService(callHandler);
     }
 
-    private static class GeneratedOutboundService implements EchoService {
+    private static class GeneratedOutboundService
+        implements EchoService, OutboundService {
       private final OutboundCallHandler callHandler;
 
       GeneratedOutboundService(OutboundCallHandler callHandler) {
         this.callHandler = callHandler;
+      }
+
+      @Override public OutboundCallHandler getCallHandler() {
+        return callHandler;
       }
 
       @Override public EchoResponse echo(EchoRequest request) {
@@ -171,11 +178,16 @@ public final class ZiplineTestInternals {
       return new GeneratedOutboundService(callHandler);
     }
 
-    private static class GeneratedOutboundService implements GenericEchoService<String> {
+    private static class GeneratedOutboundService
+        implements GenericEchoService<String>, OutboundService {
       private final OutboundCallHandler callHandler;
 
       GeneratedOutboundService(OutboundCallHandler callHandler) {
         this.callHandler = callHandler;
+      }
+
+      @Override public OutboundCallHandler getCallHandler() {
+        return callHandler;
       }
 
       @Override public List<String> genericEcho(String request) {
@@ -222,11 +234,15 @@ public final class ZiplineTestInternals {
     }
 
     private static class GeneratedOutboundService
-        implements EchoZiplineService {
+        implements EchoZiplineService, OutboundService {
       private final OutboundCallHandler callHandler;
 
       GeneratedOutboundService(OutboundCallHandler callHandler) {
         this.callHandler = callHandler;
+      }
+
+      @Override public OutboundCallHandler getCallHandler() {
+        return callHandler;
       }
 
       @Override public EchoResponse echo(EchoRequest request) {
@@ -246,7 +262,7 @@ public final class ZiplineTestInternals {
 
   /** Simulate generated code for outbound calls. */
   public static EchoZiplineService takeEchoZiplineService(Endpoint endpoint, String name) {
-    return endpoint.take(name, EchoZiplineServiceAdapter.INSTANCE);
+    return endpoint.take(name, new ZiplineScope(), EchoZiplineServiceAdapter.INSTANCE);
   }
 
   private ZiplineTestInternals() {

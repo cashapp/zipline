@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.OutboundCallHandler
+import app.cash.zipline.internal.bridge.OutboundService
 import app.cash.zipline.internal.bridge.ReturningZiplineFunction
 import app.cash.zipline.internal.bridge.SuspendCallback
 import app.cash.zipline.internal.bridge.SuspendingZiplineFunction
@@ -125,8 +126,8 @@ interface SampleService<T> : ZiplineService {
       ): SampleService<TX> = GeneratedOutboundService(callHandler)
 
       private class GeneratedOutboundService<TS>(
-        private val callHandler: OutboundCallHandler
-      ) : SampleService<TS> {
+        override val callHandler: OutboundCallHandler
+      ) : SampleService<TS>, OutboundService {
         override fun ping(request: SampleRequest): SampleResponse {
           val callHandler = callHandler
           return callHandler.call(this, 0, request) as SampleResponse

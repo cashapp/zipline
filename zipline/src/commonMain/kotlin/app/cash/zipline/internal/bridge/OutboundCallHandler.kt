@@ -18,6 +18,8 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineFunction
+import app.cash.zipline.ZiplineScope
+import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.decodeFromStringFast
 import kotlin.coroutines.Continuation
@@ -32,6 +34,8 @@ internal class OutboundCallHandler(
   private val serviceName: String,
   private val endpoint: Endpoint,
   private val functionsList: List<ZiplineFunction<*>>,
+  /** Used by generated code to implement [ZiplineScoped]. */
+  val scope: ZiplineScope,
 ) {
   /** Used by generated code when closing a service. */
   var closed = false
@@ -55,14 +59,19 @@ internal class OutboundCallHandler(
       else -> Unit // Don't call callStart() for suspend callbacks.
     }
     val encodedResult = endpoint.outboundChannel.call(externalCall.encodedCall)
-    val callResult = endpoint.callCodec.decodeResult(function, encodedResult)
-    when (service) {
-      !is SuspendCallback<*> -> endpoint.eventListener.callEnd(externalCall, callResult, callStart)
-      else -> Unit // Don't call callEnd() for suspend callbacks.
+    return endpoint.withTakeScope(scope) {
+      val callResult = endpoint.callCodec.decodeResult(function, encodedResult)
+      when (service) {
+        !is SuspendCallback<*> -> {
+          endpoint.eventListener.callEnd(externalCall, callResult, callStart)
+        }
+        else -> {
+          Unit // Don't call callEnd() for suspend callbacks.
+        }
+      }
+      return@withTakeScope callResult.result.getOrThrow()
     }
-    return callResult.result.getOrThrow()
   }
-
 
   /** Used by generated code to call a suspending function. */
   suspend fun callSuspending(
@@ -105,13 +114,17 @@ internal class OutboundCallHandler(
     }
   }
 
-  private inner class RealSuspendCallback<R> : SuspendCallback<R>, HasPassByReferenceName {
+  private inner class RealSuspendCallback<R> :
+    SuspendCallback<R>, HasPassByReferenceName, ZiplineScoped
+  {
     lateinit var internalCall: InternalCall
     lateinit var externalCall: Call
     lateinit var continuation: Continuation<R>
     var callStart: Any? = null
 
     override var passbyReferenceName: String? = null
+
+    override val scope = this@OutboundCallHandler.scope
 
     /** True once this has been called. Used to prevent cancel-after-complete. */
     var completed = false

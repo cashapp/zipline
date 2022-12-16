@@ -90,13 +90,20 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
     endpoint.bind(name, service, adapter)
   }
 
-  actual fun <T : ZiplineService> take(name: String): T {
+  actual fun <T : ZiplineService> take(
+    name: String,
+    scope: ZiplineScope,
+  ): T {
     error("unexpected call to Zipline.take: is the Zipline plugin configured?")
   }
 
   @PublishedApi
-  internal fun <T : ZiplineService> take(name: String, adapter: ZiplineServiceAdapter<T>): T {
-    return endpoint.take(name, adapter)
+  internal fun <T : ZiplineService> take(
+    name: String,
+    scope: ZiplineScope = ZiplineScope(),
+    adapter: ZiplineServiceAdapter<T>,
+  ): T {
+    return endpoint.take(name, scope, adapter)
   }
 
   companion object {

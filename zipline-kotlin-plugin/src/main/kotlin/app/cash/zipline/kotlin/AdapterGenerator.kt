@@ -493,7 +493,7 @@ internal class AdapterGenerator(
       bridgedInterfaceT = bridgedInterfaceT,
     )
 
-    // We add overrides here so we can call them below.
+    // We add overrides here, so we can call them below.
     functionClass.addFakeOverrides(
       irTypeSystemContext,
       listOf(callFunction)
@@ -629,8 +629,8 @@ internal class AdapterGenerator(
   }
 
   // private class GeneratedOutboundService(
-  //   private val callHandler: OutboundCallHandler
-  // ) : SampleService {
+  //   override val callHandler: OutboundCallHandler
+  // ) : SampleService, OutboundService {
   //   override fun ping(request: SampleRequest): SampleResponse { ... }
   // }
   private fun irOutboundServiceClass(
@@ -649,7 +649,10 @@ internal class AdapterGenerator(
     }
     val bridgedInterfaceT = bridgedInterface.type
       .remapTypeParameters(original, outboundServiceClass)
-    outboundServiceClass.superTypes = listOf(bridgedInterfaceT)
+    outboundServiceClass.superTypes = listOf(
+      bridgedInterfaceT,
+      ziplineApis.outboundService.defaultType,
+    )
 
     val constructor = outboundServiceClass.addConstructor {
       initDefaults(original)
@@ -672,10 +675,11 @@ internal class AdapterGenerator(
     }
 
     // override val callHandler: OutboundCallHandler = callHandler
-    val callHandlerProperty = outboundServiceClass.addPropertyFromConstructorParameter(
-      "callHandler",
+    val callHandlerProperty = irCallHandlerProperty(
+      outboundServiceClass,
       constructor.valueParameters[0],
     )
+    outboundServiceClass.declarations += callHandlerProperty
 
     for ((i, overridesList) in bridgedInterface.bridgedFunctionsWithOverrides.values.withIndex()) {
       outboundServiceClass.irBridgedFunction(
@@ -688,26 +692,30 @@ internal class AdapterGenerator(
 
     outboundServiceClass.addFakeOverrides(
       irTypeSystemContext,
-      outboundServiceClass.functions.toList(),
+      buildList {
+        add(callHandlerProperty)
+        addAll(outboundServiceClass.functions)
+      }
     )
 
     return outboundServiceClass
   }
 
-  private fun IrClass.addPropertyFromConstructorParameter(
-    name: String,
-    constructorParameter: IrValueParameter
+  /** Declare a property that overrides `OutboundService.callHandler`. */
+  private fun irCallHandlerProperty(
+    outboundServiceClass: IrClass,
+    callHandlerParameter: IrValueParameter,
   ): IrProperty {
-    val result = irVal(
+    // override val callHandler: OutboundCallHandler = callHandler
+    return irVal(
       pluginContext = pluginContext,
-      propertyType = constructorParameter.type,
-      declaringClass = this,
-      propertyName = Name.identifier(name)
+      propertyType = ziplineApis.outboundCallHandler.defaultType,
+      declaringClass = outboundServiceClass,
+      propertyName = ziplineApis.outboundServiceCallHandler.owner.name,
+      overriddenProperty = ziplineApis.outboundServiceCallHandler,
     ) {
-      irExprBody(irGet(constructorParameter))
+      irExprBody(irGet(callHandlerParameter))
     }
-    declarations += result
-    return result
   }
 
   private fun IrClass.irBridgedFunction(
