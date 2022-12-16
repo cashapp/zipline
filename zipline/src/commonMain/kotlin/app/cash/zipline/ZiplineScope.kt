@@ -81,6 +81,7 @@ class ZiplineScope {
     closed = true
 
     val servicesCopy = services.toTypedArray() // Because ZiplineService.close() mutates the set.
+    services.clear()
     for (service in servicesCopy) {
       service.close()
     }
