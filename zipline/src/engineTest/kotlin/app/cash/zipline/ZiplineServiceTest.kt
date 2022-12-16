@@ -125,7 +125,7 @@ internal class ZiplineServiceTest {
     val failure = assertFailsWith<ZiplineApiMismatchException> {
       helloService.echo(EchoRequest("Jake"))
     }
-    assertTrue("no such service" in (failure.message ?: ""), failure.message)
+    assertTrue("no such service" in failure.message, failure.message)
     assertEquals(setOf("factory"), endpointA.serviceNames)
   }
 

@@ -132,6 +132,8 @@ class EventListenerTest {
       zipline.take<PotatoService>("helloService").echo()
     }).hasMessageThat().startsWith("""
       no such method (incompatible API versions?)
+      	called service:
+      		helloService
       	called function:
       		fun echo(): app.cash.zipline.testing.EchoResponse
       	available functions:
