@@ -15,6 +15,52 @@
  */
 package app.cash.zipline
 
+/**
+ * An opaque set of [ZiplineServices][ZiplineService] that can be closed as a unit. Use this to
+ * avoid tracking individual services.
+ *
+ *
+ * # Using ZiplineScope With Take
+ *
+ * To use this, pass an instance to [Zipline.take], then the returned service and all services
+ * it produces can be closed with [ZiplineService.close].
+ *
+ * ```kotlin
+ * val scope = ZiplineScope()
+ * val quoteService = zipline.take<QuoteService>("quoteService", scope)
+ *
+ * val appl: LiveChart = quoteService.chart("APPL")
+ * val nke: LiveChart = quoteService.chart("NKE")
+ * val sq: LiveChart = quoteService.chart("SQ")
+ *
+ * scope.close() // closes quoteService, appl, nke, and sq.
+ * ```
+ *
+ * Note that returned services should be closed early if they are no longer needed.
+ *
+ *
+ * # Using ZiplineScope With Bind
+ *
+ * When defining a service for others to call, implement from [ZiplineScoped] to set the scope that
+ * passed-in services will be added to.
+ *
+ * ```kotlin
+ * class RealPriceWatcherService : PriceWatcherService, ZiplineScoped {
+ *   override val scope = ZiplineScope()
+ *
+ *   fun subscribe(listener: PriceListener) {
+ *     ...
+ *   }
+ *
+ *   override fun close() {
+ *     scope.close() // closes all listeners ever passed to subscribe.
+ *   }
+ * }
+ * ```
+ *
+ * When a service does not implement [ZiplineScoped], the services passed in to it must be closed
+ * individually.
+ */
 class ZiplineScope {
   internal var closed = false
     private set
@@ -34,7 +80,7 @@ class ZiplineScope {
     if (closed) return
     closed = true
 
-    val servicesCopy = services.toTypedArray() // Because close() mutates the set.
+    val servicesCopy = services.toTypedArray() // Because ZiplineService.close() mutates the set.
     for (service in servicesCopy) {
       service.close()
     }

@@ -15,6 +15,17 @@
  */
 package app.cash.zipline
 
+/**
+ * Implement this interface on inbound services to specify which scope service arguments are added
+ * to. See [ZiplineScope] for details.
+ *
+ * Do not extend this in your [ZiplineService] interfaces; it should only be implemented by concrete
+ * implementation classes.
+ */
 interface ZiplineScoped {
+  /**
+   * Returns the scope that will be used for services passed as parameters to this service. Note
+   * that the declaring service is not added to this scope.
+   */
   val scope: ZiplineScope
 }
