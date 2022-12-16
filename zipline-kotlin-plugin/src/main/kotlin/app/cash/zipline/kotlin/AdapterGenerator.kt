@@ -37,7 +37,6 @@ import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
-import org.jetbrains.kotlin.ir.builders.irTrue
 import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
@@ -586,7 +585,7 @@ internal class AdapterGenerator(
     }
   }
 
-  /** Override `ZiplineServiceAdapter.outboundService()`. */
+  /** Override `ZiplineServiceAdapter.outboundService(...)`. */
   private fun irOutboundServiceFunction(
     bridgedInterface: BridgedInterface,
     adapterClass: IrClass,
@@ -594,7 +593,10 @@ internal class AdapterGenerator(
   ): IrSimpleFunction {
     val bridgedInterfaceT = bridgedInterface.type
       .remapTypeParameters(original, adapterClass)
-    // override fun outboundService(callHandler: OutboundCallHandler): SampleService
+    // override fun outboundService(
+    //   callHandler: OutboundCallHandler,
+    //   scope: ZiplineScope,
+    // ): SampleService
     val outboundServiceFunction = adapterClass.addFunction {
       initDefaults(original)
       name = ziplineApis.ziplineServiceAdapterOutboundService.owner.name
@@ -609,6 +611,11 @@ internal class AdapterGenerator(
         name = Name.identifier("callHandler")
         type = ziplineApis.outboundCallHandler.defaultType
       }
+      addValueParameter {
+        initDefaults(original)
+        name = Name.identifier("scope")
+        type = ziplineApis.ziplineScope.defaultType
+      }
       overriddenSymbols = listOf(ziplineApis.ziplineServiceAdapterOutboundService)
     }
     outboundServiceFunction.irFunctionBody(
@@ -621,6 +628,7 @@ internal class AdapterGenerator(
           typeArguments = adapterClass.typeParameters.map { it.defaultType },
         ).apply {
           putValueArgument(0, irGet(outboundServiceFunction.valueParameters[0]))
+          putValueArgument(1, irGet(outboundServiceFunction.valueParameters[1]))
           type = bridgedInterfaceT
         }
       )
@@ -629,7 +637,8 @@ internal class AdapterGenerator(
   }
 
   // private class GeneratedOutboundService(
-  //   override val callHandler: OutboundCallHandler
+  //   override val callHandler: OutboundCallHandler,
+  //   override val scope: ZiplineScope,
   // ) : SampleService, OutboundService {
   //   override fun ping(request: SampleRequest): SampleResponse { ... }
   // }
@@ -662,6 +671,11 @@ internal class AdapterGenerator(
         name = Name.identifier("callHandler")
         type = ziplineApis.outboundCallHandler.defaultType
       }
+      addValueParameter {
+        initDefaults(original)
+        name = Name.identifier("scope")
+        type = ziplineApis.ziplineScope.defaultType
+      }
     }
     constructor.irConstructorBody(pluginContext) { statements ->
       statements += irDelegatingConstructorCall(
@@ -674,18 +688,24 @@ internal class AdapterGenerator(
       )
     }
 
-    // override val callHandler: OutboundCallHandler = callHandler
     val callHandlerProperty = irCallHandlerProperty(
       outboundServiceClass,
       constructor.valueParameters[0],
     )
     outboundServiceClass.declarations += callHandlerProperty
 
+    val scopeProperty = irScopeProperty(
+      outboundServiceClass,
+      constructor.valueParameters[1],
+    )
+    outboundServiceClass.declarations += scopeProperty
+
     for ((i, overridesList) in bridgedInterface.bridgedFunctionsWithOverrides.values.withIndex()) {
       outboundServiceClass.irBridgedFunction(
         functionIndex = i,
         bridgedInterface = bridgedInterface,
         callHandlerProperty = callHandlerProperty,
+        scopeProperty = scopeProperty,
         overridesList = overridesList,
       )
     }
@@ -694,6 +714,7 @@ internal class AdapterGenerator(
       irTypeSystemContext,
       buildList {
         add(callHandlerProperty)
+        add(scopeProperty)
         addAll(outboundServiceClass.functions)
       }
     )
@@ -718,10 +739,28 @@ internal class AdapterGenerator(
     }
   }
 
+  /** Declare a property that overrides `OutboundService.scope`. */
+  private fun irScopeProperty(
+    outboundServiceClass: IrClass,
+    scopeParameter: IrValueParameter,
+  ): IrProperty {
+    // override val scope: ZiplineScope = scope
+    return irVal(
+      pluginContext = pluginContext,
+      propertyType = ziplineApis.ziplineScope.defaultType,
+      declaringClass = outboundServiceClass,
+      propertyName = ziplineApis.outboundServiceScope.owner.name,
+      overriddenProperty = ziplineApis.outboundServiceScope,
+    ) {
+      irExprBody(irGet(scopeParameter))
+    }
+  }
+
   private fun IrClass.irBridgedFunction(
     functionIndex: Int,
     bridgedInterface: BridgedInterface,
     callHandlerProperty: IrProperty,
+    scopeProperty: IrProperty,
     overridesList: List<IrSimpleFunctionSymbol>,
   ): IrSimpleFunction {
     // override fun ping(request: SampleRequest): SampleResponse {
@@ -781,7 +820,7 @@ internal class AdapterGenerator(
       }
     }
 
-    // return callHandler.call(this, 0, request) as SampleResponse
+    // return callHandler.call(this, scope, 0, request) as SampleResponse
     result.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = result.symbol
@@ -797,14 +836,16 @@ internal class AdapterGenerator(
       ).apply {
         origin = IrDeclarationOrigin.DEFINED
       }
-
-      // If this is the close() function, tell the OutboundCallHandler that this instance is closed.
-      //   callHandler.close = true
-      if (bridgedFunction.isZiplineClose()) {
-        +irCall(ziplineApis.outboundCallHandlerClosed.owner.setter!!).apply {
-          dispatchReceiver = irGet(callHandlerLocal)
-          putValueArgument(0, irTrue())
-        }
+      val scopeLocal = irTemporary(
+        value = irCall(
+          callee = scopeProperty.getter!!
+        ).apply {
+          dispatchReceiver = irGet(result.dispatchReceiverParameter!!)
+        },
+        nameHint = "scope",
+        isMutable = false
+      ).apply {
+        origin = IrDeclarationOrigin.DEFINED
       }
 
       // One of:
@@ -822,10 +863,14 @@ internal class AdapterGenerator(
         )
         putValueArgument(
           1,
-          irInt(functionIndex),
+          irGet(scopeLocal),
         )
         putValueArgument(
           2,
+          irInt(functionIndex),
+        )
+        putValueArgument(
+          3,
           irVararg(
             elementType = pluginContext.symbols.any.defaultType.makeNullable(),
             values = result.valueParameters.map {

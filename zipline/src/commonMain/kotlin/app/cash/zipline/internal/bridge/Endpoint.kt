@@ -141,8 +141,8 @@ class Endpoint internal constructor(
     detectLeaks()
 
     val functions = adapter.ziplineFunctions(json.serializersModule)
-    val callHandler = OutboundCallHandler(name, this, functions, scope)
-    val result = adapter.outboundService(callHandler)
+    val callHandler = OutboundCallHandler(name, this, functions)
+    val result = adapter.outboundService(callHandler, scope)
     scope.add(result)
     eventListener.takeService(name, result)
     trackLeaks(eventListener, name, callHandler, result)

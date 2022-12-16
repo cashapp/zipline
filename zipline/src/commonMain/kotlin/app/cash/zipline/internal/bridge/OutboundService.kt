@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
 
 /**
@@ -23,4 +24,5 @@ import app.cash.zipline.ZiplineService
 @PublishedApi
 internal interface OutboundService {
   val callHandler: OutboundCallHandler
+  val scope: ZiplineScope
 }

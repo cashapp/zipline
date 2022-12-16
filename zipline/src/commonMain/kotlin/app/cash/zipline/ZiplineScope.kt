@@ -19,20 +19,24 @@ class ZiplineScope {
   internal var closed = false
     private set
 
-  private val services = mutableListOf<ZiplineService>()
+  private val services = mutableSetOf<ZiplineService>()
 
   internal fun add(result: ZiplineService) {
     check(!closed)
     services += result
   }
 
+  internal fun remove(result: ZiplineService) {
+    services -= result
+  }
+
   fun close() {
     if (closed) return
     closed = true
 
-    for (service in services) {
+    val servicesCopy = services.toTypedArray() // Because close() mutates the set.
+    for (service in servicesCopy) {
       service.close()
     }
-    services.clear()
   }
 }

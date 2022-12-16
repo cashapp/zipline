@@ -131,11 +131,6 @@ internal class ZiplineApis(
   val outboundCallHandler: IrClassSymbol
     get() = pluginContext.referenceClass(outboundCallHandlerFqName)!!
 
-  val outboundCallHandlerClosed: IrPropertySymbol
-    get() = pluginContext.referenceProperties(
-      outboundCallHandlerFqName.child("closed")
-    ).single()
-
   val outboundCallHandlerCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
       outboundCallHandlerFqName.child("call")
@@ -153,6 +148,16 @@ internal class ZiplineApis(
     get() = pluginContext.referenceProperties(
       outboundServiceFqName.child("callHandler")
     ).single()
+
+  val outboundServiceScope: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      outboundServiceFqName.child("scope")
+    ).single()
+
+  val ziplineScopeFqName = packageFqName.child("ZiplineScope")
+
+  val ziplineScope: IrClassSymbol
+    get() = pluginContext.referenceClass(ziplineScopeFqName)!!
 
   val ziplineService: IrClassSymbol
     get() = pluginContext.referenceClass(ziplineServiceFqName)!!
