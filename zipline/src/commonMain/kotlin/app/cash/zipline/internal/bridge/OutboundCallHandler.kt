@@ -54,9 +54,13 @@ internal class OutboundCallHandler(
   ): Any? {
     val function = functionsList[functionIndex] as ReturningZiplineFunction<*>
     if (function.isClose) {
+      if (closed) return Unit // ZiplineService.close() is idempotent.
       closed = true
       scope.remove(this)
+    } else {
+      check(!closed) { "$serviceName is closed" }
     }
+
     val argsList = args.toList()
     val internalCall = InternalCall(
       serviceName = serviceName,
@@ -89,6 +93,8 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
+    check(!closed) { "$serviceName is closed" }
+
     val function = functionsList[functionIndex] as SuspendingZiplineFunction<*>
     val argsList = args.toList()
     val suspendCallback = RealSuspendCallback<Any?>()
