@@ -37,10 +37,10 @@ internal class ZiplineScopedEndpointTest {
     endpointA.bind<EchoService>("serviceA", RealEchoService(log, "serviceA"))
     endpointA.bind<EchoService>("serviceB", RealEchoService(log, "serviceB"))
     val clientA = endpointB.take<EchoService>("serviceA")
-    val scopeA = (clientA as OutboundService).scope
+    val scopeA = (clientA as OutboundService).callHandler.scope
 
     val clientB = endpointB.take<EchoService>("serviceB")
-    val scopeB = (clientB as OutboundService).scope
+    val scopeB = (clientB as OutboundService).callHandler.scope
 
     assertNotSame(scopeA, scopeB)
     clientA.echo(EchoRequest("hello"))
@@ -69,10 +69,10 @@ internal class ZiplineScopedEndpointTest {
     endpointA.bind<EchoService>("serviceA", RealEchoService(log, "serviceA"))
     endpointA.bind<EchoService>("serviceB", RealEchoService(log, "serviceB"))
     val clientA = endpointB.take<EchoService>("serviceA", scope)
-    assertSame(scope, (clientA as OutboundService).scope)
+    assertSame(scope, (clientA as OutboundService).callHandler.scope)
 
     val clientB = endpointB.take<EchoService>("serviceB", scope)
-    assertSame(scope, (clientB as OutboundService).scope)
+    assertSame(scope, (clientB as OutboundService).callHandler.scope)
 
     clientA.echo(EchoRequest("hello"))
     clientB.echo(EchoRequest("hello"))
@@ -107,13 +107,13 @@ internal class ZiplineScopedEndpointTest {
     assertEquals("received service", log.removeFirst())
     assertNull(log.removeFirstOrNull())
     val receivedA = receivedServices.removeFirst()
-    val receivedAScope = (receivedA as OutboundService).scope
+    val receivedAScope = (receivedA as OutboundService).callHandler.scope
 
     client.check(RealEchoService(log, "b"))
     assertEquals("received service", log.removeFirst())
     assertNull(log.removeFirstOrNull())
     val receivedB = receivedServices.removeFirst()
-    val receivedBScope = (receivedB as OutboundService).scope
+    val receivedBScope = (receivedB as OutboundService).callHandler.scope
 
     assertNotSame(receivedAScope, receivedBScope)
 
@@ -150,13 +150,13 @@ internal class ZiplineScopedEndpointTest {
     assertEquals("received service", log.removeFirst())
     assertNull(log.removeFirstOrNull())
     val receivedA = receivedServices.removeFirst()
-    assertSame(serviceScope, (receivedA as OutboundService).scope)
+    assertSame(serviceScope, (receivedA as OutboundService).callHandler.scope)
 
     client.check(RealEchoService(log, "b"))
     assertEquals("received service", log.removeFirst())
     assertNull(log.removeFirstOrNull())
     val receivedB = receivedServices.removeFirst()
-    assertSame(serviceScope, (receivedB as OutboundService).scope)
+    assertSame(serviceScope, (receivedB as OutboundService).callHandler.scope)
 
     serviceScope.close()
     assertEquals("a closed", log.removeFirst())
@@ -188,12 +188,12 @@ internal class ZiplineScopedEndpointTest {
     val client = endpointB.take<EchoServiceMaker>("service", scope)
 
     val serviceA = client.newEchoService("a")
-    assertSame(scope, (serviceA as OutboundService).scope)
+    assertSame(scope, (serviceA as OutboundService).callHandler.scope)
     assertEquals("making a", log.removeFirst())
     assertNull(log.removeFirstOrNull())
 
     val serviceB = client.newEchoService("b")
-    assertSame(scope, (serviceB as OutboundService).scope)
+    assertSame(scope, (serviceB as OutboundService).callHandler.scope)
     assertEquals("making b", log.removeFirst())
     assertNull(log.removeFirstOrNull())
 
@@ -226,12 +226,12 @@ internal class ZiplineScopedEndpointTest {
     val client = endpointB.take<SuspendingEchoServiceMaker>("service", scope)
 
     val serviceA = client.newEchoService("a")
-    assertSame(scope, (serviceA as OutboundService).scope)
+    assertSame(scope, (serviceA as OutboundService).callHandler.scope)
     assertEquals("making a", log.removeFirst())
     assertNull(log.removeFirstOrNull())
 
     val serviceB = client.newEchoService("b")
-    assertSame(scope, (serviceB as OutboundService).scope)
+    assertSame(scope, (serviceB as OutboundService).callHandler.scope)
     assertEquals("making b", log.removeFirst())
     assertNull(log.removeFirstOrNull())
 

@@ -33,23 +33,29 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 internal class OutboundCallHandler(
   private val serviceName: String,
   private val endpoint: Endpoint,
+  private val adapter: ZiplineServiceAdapter<*>,
+  internal val scope: ZiplineScope,
   private val functionsList: List<ZiplineFunction<*>>,
 ) {
   /** Used by generated code when closing a service. */
   var closed = false
     private set
 
+  /** Returns a new service that uses this to send calls. */
+  fun <T : ZiplineService> outboundService(): T {
+    return adapter.outboundService(this) as T
+  }
+
   /** Used by generated code to call a function. */
   fun call(
     service: ZiplineService,
-    scope: ZiplineScope,
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
     val function = functionsList[functionIndex] as ReturningZiplineFunction<*>
     if (function.isClose) {
       closed = true
-      scope.remove(service)
+      scope.remove(this)
     }
     val argsList = args.toList()
     val internalCall = InternalCall(
@@ -80,13 +86,12 @@ internal class OutboundCallHandler(
   /** Used by generated code to call a suspending function. */
   suspend fun callSuspending(
     service: ZiplineService,
-    scope: ZiplineScope,
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
     val function = functionsList[functionIndex] as SuspendingZiplineFunction<*>
     val argsList = args.toList()
-    val suspendCallback = RealSuspendCallback<Any?>(scope)
+    val suspendCallback = RealSuspendCallback<Any?>()
     val internalCall = InternalCall(
       serviceName = serviceName,
       function = function,
@@ -119,15 +124,15 @@ internal class OutboundCallHandler(
     }
   }
 
-  private inner class RealSuspendCallback<R>(
-    override val scope: ZiplineScope
-  ) : SuspendCallback<R>, HasPassByReferenceName, ZiplineScoped {
+  private inner class RealSuspendCallback<R>
+    : SuspendCallback<R>, HasPassByReferenceName, ZiplineScoped {
     lateinit var internalCall: InternalCall
     lateinit var externalCall: Call
     lateinit var continuation: Continuation<R>
     var callStart: Any? = null
 
     override var passbyReferenceName: String? = null
+    override val scope: ZiplineScope = this@OutboundCallHandler.scope
 
     /** True once this has been called. Used to prevent cancel-after-complete. */
     var completed = false

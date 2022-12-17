@@ -15,6 +15,8 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.OutboundCallHandler
+
 /**
  * An opaque set of [ZiplineServices][ZiplineService] that can be closed as a unit. Use this to
  * avoid tracking individual services.
@@ -65,25 +67,30 @@ class ZiplineScope {
   internal var closed = false
     private set
 
-  private val services = mutableSetOf<ZiplineService>()
+  /**
+   * Track [OutboundCallHandler] instead of services to avoid a reference cycle between the
+   * service implementation and this scope. Avoiding the reference cycles causes QuickJS to detect
+   * leaks eagerly.
+   */
+  private val callHandlers = mutableSetOf<OutboundCallHandler>()
 
-  internal fun add(result: ZiplineService) {
+  internal fun add(callHandler: OutboundCallHandler) {
     check(!closed)
-    services += result
+    callHandlers += callHandler
   }
 
-  internal fun remove(result: ZiplineService) {
-    services -= result
+  internal fun remove(callHandler: OutboundCallHandler) {
+    callHandlers -= callHandler
   }
 
   fun close() {
     if (closed) return
     closed = true
 
-    val servicesCopy = services.toTypedArray() // Because ZiplineService.close() mutates the set.
-    services.clear()
-    for (service in servicesCopy) {
-      service.close()
+    val callHandlersCopy = callHandlers.toTypedArray() // Because ZiplineService.close() mutates.
+    callHandlers.clear()
+    for (callHandler in callHandlersCopy) {
+      callHandler.outboundService<ZiplineService>().close()
     }
   }
 }

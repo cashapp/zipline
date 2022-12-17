@@ -49,17 +49,12 @@ internal class ZiplineApis(
   val flowFqName = FqName("kotlinx.coroutines.flow").child("Flow")
   private val collectionsFqName = FqName("kotlin.collections")
   private val listFqName = collectionsFqName.child("List")
-  private val reflectFqName = FqName("kotlin.reflect")
-  private val ktypeFqName = reflectFqName.child("KType")
 
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!
 
   val kSerializer: IrClassSymbol
     get() = pluginContext.referenceClass(serializationFqName.child("KSerializer"))!!
-
-  val kType: IrClassSymbol
-    get() = pluginContext.referenceClass(ktypeFqName)!!
 
   val serializersModule: IrClassSymbol
     get() = pluginContext.referenceClass(serializersModuleFqName)!!
@@ -126,7 +121,7 @@ internal class ZiplineApis(
       bridgeFqName.child("SuspendingZiplineFunction").child("callSuspending")
     ).single()
 
-  val outboundCallHandlerFqName = bridgeFqName.child("OutboundCallHandler")
+  private val outboundCallHandlerFqName = bridgeFqName.child("OutboundCallHandler")
 
   val outboundCallHandler: IrClassSymbol
     get() = pluginContext.referenceClass(outboundCallHandlerFqName)!!
@@ -148,16 +143,6 @@ internal class ZiplineApis(
     get() = pluginContext.referenceProperties(
       outboundServiceFqName.child("callHandler")
     ).single()
-
-  val outboundServiceScope: IrPropertySymbol
-    get() = pluginContext.referenceProperties(
-      outboundServiceFqName.child("scope")
-    ).single()
-
-  val ziplineScopeFqName = packageFqName.child("ZiplineScope")
-
-  val ziplineScope: IrClassSymbol
-    get() = pluginContext.referenceClass(ziplineScopeFqName)!!
 
   val ziplineService: IrClassSymbol
     get() = pluginContext.referenceClass(ziplineServiceFqName)!!
