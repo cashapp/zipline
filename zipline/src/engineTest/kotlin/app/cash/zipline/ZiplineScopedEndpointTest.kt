@@ -19,12 +19,15 @@ import app.cash.zipline.internal.bridge.OutboundService
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertNull
 import kotlin.test.assertSame
+import kotlinx.coroutines.async
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 
 internal class ZiplineScopedEndpointTest {
@@ -240,6 +243,63 @@ internal class ZiplineScopedEndpointTest {
     assertEquals("a closed", log.removeFirst())
     assertEquals("b closed", log.removeFirst())
     assertNull(log.removeFirstOrNull())
+  }
+
+  /**
+   * `SuspendCallback` is a special service that closes itself. Confirm that closing the scope
+   * while this is active doesn't crash.
+   */
+  @Test
+  fun suspendCallbacksNotScoped() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val serviceScope = ZiplineScope()
+
+    val service = object : SuspendingEchoService, ZiplineScoped {
+      override val scope = serviceScope
+
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        scope.close()
+        return EchoResponse("response")
+      }
+    }
+
+    endpointA.bind<SuspendingEchoService>("service", service)
+    val client = endpointB.take<SuspendingEchoService>("service")
+
+    val response = client.suspendingEcho(EchoRequest("request"))
+    assertEquals("response", response.message)
+  }
+
+  /**
+   * `CancelCallback` is another special service that closes itself. Confirm that closing the scope
+   * while this is active doesn't crash.
+   */
+  @Test
+  fun cancelCallbacksNotScoped() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val scope = ZiplineScope()
+    val channel = Channel<String>()
+
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        channel.send("suspend call received")
+        assertEquals("scope canceled", channel.receive())
+        return EchoResponse("response")
+      }
+    }
+
+    endpointA.bind<SuspendingEchoService>("service", service)
+    val client = endpointB.take<SuspendingEchoService>("service", scope)
+
+    val deferred = async {
+      client.suspendingEcho(EchoRequest("request"))
+    }
+    assertEquals("suspend call received", channel.receive())
+    scope.close()
+    channel.send("scope canceled")
+    assertEquals("response", deferred.await().message)
   }
 
   class RealEchoService(

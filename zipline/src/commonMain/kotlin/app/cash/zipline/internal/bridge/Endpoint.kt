@@ -143,10 +143,24 @@ class Endpoint internal constructor(
     val functions = adapter.ziplineFunctions(json.serializersModule)
     val callHandler = OutboundCallHandler(name, this, adapter, scope, functions)
     val result = callHandler.outboundService<T>()
-    scope.add(callHandler)
+    if (result.usesScope()) {
+      scope.add(callHandler)
+    }
     eventListener.takeService(name, result)
     trackLeaks(eventListener, name, callHandler, result)
     return result
+  }
+
+  /**
+   * Returns true if this is a service that must be closed, either explicitly or using a scope.
+   *
+   * (Both [SuspendCallback] and [CancelCallback] close themselves automatically when the call
+   * completes.)
+   */
+  private fun ZiplineService.usesScope(): Boolean {
+    if (this is SuspendCallback<*>) return false
+    if (this is CancelCallback) return false
+    return true
   }
 
   internal fun <T> withTakeScope(scope: ZiplineScope, block: () -> T): T {
