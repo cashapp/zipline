@@ -108,10 +108,12 @@ internal class OutboundCallHandler(
       endpoint.incompleteContinuations += continuation
       endpoint.scope.launch {
         val encodedCancelCallback = endpoint.outboundChannel.call(externalCall.encodedCall)
-        val cancelCallback = endpoint.json.decodeFromStringFast(
-          cancelCallbackSerializer,
-          encodedCancelCallback,
-        )
+        val cancelCallback = endpoint.withTakeScope(scope) {
+          endpoint.json.decodeFromStringFast(
+            cancelCallbackSerializer,
+            encodedCancelCallback,
+          )
+        }
 
         continuation.invokeOnCancellation {
           endpoint.scope.launch {
