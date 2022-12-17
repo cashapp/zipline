@@ -371,6 +371,71 @@ internal class EndpointTest {
     assertEquals("ack hello", response.message)
   }
 
+  @Test
+  fun callAfterClose() = runBlocking {
+    val scope = ZiplineScope()
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    endpointA.bind<EchoService>("serviceA",
+      object : EchoService {
+        override fun echo(request: EchoRequest) = error("unexpected call")
+      }
+    )
+
+    val client = endpointB.take<EchoService>("serviceA", scope)
+    client.close()
+    val exception = assertFailsWith<IllegalStateException> {
+      client.echo(EchoRequest("request"))
+    }
+    assertEquals("serviceA is closed", exception.message)
+  }
+
+  @Test
+  fun suspendingCallAfterClose() = runBlocking {
+    val scope = ZiplineScope()
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    endpointA.bind<SuspendingEchoService>("serviceA",
+      object : SuspendingEchoService {
+        override suspend fun suspendingEcho(request: EchoRequest) = error("unexpected call")
+      }
+    )
+
+    val client = endpointB.take<SuspendingEchoService>("serviceA", scope)
+    client.close()
+    val exception = assertFailsWith<IllegalStateException> {
+      client.suspendingEcho(EchoRequest("request"))
+    }
+    assertEquals("serviceA is closed", exception.message)
+  }
+
+  @Test
+  fun closeIsIdempotent() = runBlocking {
+    val scope = ZiplineScope()
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val log = ArrayDeque<String>()
+
+    endpointA.bind<EchoService>("service",
+      object : EchoService {
+        override fun echo(request: EchoRequest) = error("unexpected call")
+
+        override fun close() {
+          log += "service closed"
+        }
+      }
+    )
+
+    val client = endpointB.take<EchoService>("service", scope)
+    client.close()
+    client.close()
+    assertEquals("service closed", log.removeFirst())
+    assertNull(log.removeFirstOrNull())
+  }
+
   interface ExtendsEchoService : ZiplineService, ExtendableInterface
 
   interface ExtendableInterface {

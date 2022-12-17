@@ -24,7 +24,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
-import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -122,10 +121,10 @@ internal class ZiplineServiceTest {
 
     assertEquals(EchoResponse("hello Jesse"), helloService.echo(EchoRequest("Jesse")))
     helloService.close()
-    val failure = assertFailsWith<ZiplineApiMismatchException> {
+    val failure = assertFailsWith<IllegalStateException> {
       helloService.echo(EchoRequest("Jake"))
     }
-    assertTrue("no such service" in failure.message, failure.message)
+    assertEquals("zipline/host-1 is closed", failure.message)
     assertEquals(setOf("factory"), endpointA.serviceNames)
   }
 
