@@ -132,7 +132,7 @@ internal class OutboundCallHandler(
     var callStart: Any? = null
 
     override var passbyReferenceName: String? = null
-    override val scope: ZiplineScope = this@OutboundCallHandler.scope
+    override val scope: ZiplineScope get() = this@OutboundCallHandler.scope
 
     /** True once this has been called. Used to prevent cancel-after-complete. */
     var completed = false
