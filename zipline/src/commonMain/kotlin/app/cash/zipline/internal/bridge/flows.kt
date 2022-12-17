@@ -17,7 +17,6 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.ziplineServiceSerializer
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.KSerializer
@@ -27,7 +26,7 @@ import kotlinx.serialization.encoding.Encoder
 // Zipline can only bridge interfaces, not implementations, so split this in two.
 @PublishedApi
 internal interface FlowZiplineService<T> : ZiplineService {
-  suspend fun collectJson(collector: FlowZiplineCollector<T>)
+  suspend fun collect(collector: FlowZiplineCollector<T>)
 }
 
 @PublishedApi
@@ -53,7 +52,7 @@ internal class FlowSerializer<T>(
 
   private fun Flow<T>.toZiplineService(): FlowZiplineService<T> {
     return object : FlowZiplineService<T> {
-      override suspend fun collectJson(collector: FlowZiplineCollector<T>) {
+      override suspend fun collect(collector: FlowZiplineCollector<T>) {
         try {
           this@toZiplineService.collect {
             collector.emit(it)
@@ -72,13 +71,9 @@ internal class FlowSerializer<T>(
     return service.toFlow()
   }
 
-  @OptIn(ExperimentalCoroutinesApi::class) // Zipline must track changes to kotlinx.coroutines.
   private fun FlowZiplineService<T>.toFlow(): Flow<T> {
     return channelFlow {
-      invokeOnClose {
-        this@toFlow.close()
-      }
-      this@toFlow.collectJson(object : FlowZiplineCollector<T> {
+      this@toFlow.collect(object : FlowZiplineCollector<T> {
         override suspend fun emit(value: T) {
           this@channelFlow.send(value)
         }
