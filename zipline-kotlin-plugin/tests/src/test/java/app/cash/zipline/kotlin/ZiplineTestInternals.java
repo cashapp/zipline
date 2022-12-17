@@ -119,31 +119,24 @@ public final class ZiplineTestInternals {
       );
     }
 
-    @Override public EchoService outboundService(
-        OutboundCallHandler callHandler, ZiplineScope scope) {
-      return new GeneratedOutboundService(callHandler, scope);
+    @Override public EchoService outboundService(OutboundCallHandler callHandler) {
+      return new GeneratedOutboundService(callHandler);
     }
 
     private static class GeneratedOutboundService
         implements EchoService, OutboundService {
       private final OutboundCallHandler callHandler;
-      private final ZiplineScope scope;
 
-      GeneratedOutboundService(OutboundCallHandler callHandler, ZiplineScope scope) {
+      GeneratedOutboundService(OutboundCallHandler callHandler) {
         this.callHandler = callHandler;
-        this.scope = scope;
       }
 
       @Override public OutboundCallHandler getCallHandler() {
         return callHandler;
       }
 
-      @Override public ZiplineScope getScope() {
-        return scope;
-      }
-
       @Override public EchoResponse echo(EchoRequest request) {
-        return (EchoResponse) callHandler.call(this, scope, 0, request);
+        return (EchoResponse) callHandler.call(this, 0, request);
       }
 
       @Override public void close() {
@@ -181,31 +174,24 @@ public final class ZiplineTestInternals {
         });
     }
 
-    @Override public GenericEchoService<String> outboundService(
-        OutboundCallHandler callHandler, ZiplineScope scope) {
-      return new GeneratedOutboundService(callHandler, scope);
+    @Override public GenericEchoService<String> outboundService(OutboundCallHandler callHandler) {
+      return new GeneratedOutboundService(callHandler);
     }
 
     private static class GeneratedOutboundService
         implements GenericEchoService<String>, OutboundService {
       private final OutboundCallHandler callHandler;
-      private final ZiplineScope scope;
 
-      GeneratedOutboundService(OutboundCallHandler callHandler, ZiplineScope scope) {
+      GeneratedOutboundService(OutboundCallHandler callHandler) {
         this.callHandler = callHandler;
-        this.scope = scope;
       }
 
       @Override public OutboundCallHandler getCallHandler() {
         return callHandler;
       }
 
-      @Override public ZiplineScope getScope() {
-        return scope;
-      }
-
       @Override public List<String> genericEcho(String request) {
-        return (List<String>) callHandler.call(this, scope, 0, request);
+        return (List<String>) callHandler.call(this, 0, request);
       }
 
       @Override public void close() {
@@ -242,31 +228,24 @@ public final class ZiplineTestInternals {
         });
     }
 
-    @Override public EchoZiplineService outboundService(
-        OutboundCallHandler callHandler, ZiplineScope scope) {
-      return new GeneratedOutboundService(callHandler, scope);
+    @Override public EchoZiplineService outboundService(OutboundCallHandler callHandler) {
+      return new GeneratedOutboundService(callHandler);
     }
 
     private static class GeneratedOutboundService
         implements EchoZiplineService, OutboundService {
       private final OutboundCallHandler callHandler;
-      private final ZiplineScope scope;
 
-      GeneratedOutboundService(OutboundCallHandler callHandler, ZiplineScope scope) {
+      GeneratedOutboundService(OutboundCallHandler callHandler) {
         this.callHandler = callHandler;
-        this.scope = scope;
       }
 
       @Override public OutboundCallHandler getCallHandler() {
         return callHandler;
       }
 
-      @Override public ZiplineScope getScope() {
-        return scope;
-      }
-
       @Override public EchoResponse echo(EchoRequest request) {
-        return (EchoResponse) callHandler.call(this, scope, 0, request);
+        return (EchoResponse) callHandler.call(this, 0, request);
       }
 
       @Override public void close() {

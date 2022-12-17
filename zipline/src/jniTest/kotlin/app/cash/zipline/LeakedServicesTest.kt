@@ -61,7 +61,6 @@ class LeakedServicesTest {
     val name = "supService"
     zipline.bind<EchoService>(name, supService)
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.allocateAndLeakService()")
-    zipline.quickJs.gc()
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.triggerLeakDetection()")
     assertThat(eventListener.take()).isEqualTo("bindService $name")
     assertThat(eventListener.take()).isEqualTo("serviceLeaked $name")

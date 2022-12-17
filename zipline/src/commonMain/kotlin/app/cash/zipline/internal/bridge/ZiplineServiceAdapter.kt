@@ -44,7 +44,6 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
 
   abstract fun outboundService(
     callHandler: OutboundCallHandler,
-    scope: ZiplineScope,
   ): T
 
   override fun serialize(encoder: Encoder, value: T) {
