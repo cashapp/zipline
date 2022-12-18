@@ -40,7 +40,9 @@ internal class FlowTest {
     suspend fun flowParameter(flow: Flow<String>): Int
   }
 
-  class RealFlowEchoService : FlowEchoService {
+  class RealFlowEchoService : FlowEchoService, ZiplineScoped {
+    override val scope = ZiplineScope()
+
     override fun createFlow(message: String, count: Int): Flow<String> {
       return flow {
         for (i in 0 until count) {
@@ -53,24 +55,28 @@ internal class FlowTest {
     override suspend fun flowParameter(flow: Flow<String>): Int {
       return flow.count()
     }
+
+    override fun close() {
+      scope.close()
+    }
   }
 
   @Test
   fun flowReturnValueWorks() = runBlocking {
+    val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
 
     endpointA.bind<FlowEchoService>("service", service)
-    val client = endpointB.take<FlowEchoService>("service")
-    val initialServiceNames = endpointA.serviceNames
-    val initialClientNames = endpointA.clientNames
+    val client = endpointB.take<FlowEchoService>("service", scope)
 
     val flow = client.createFlow("hello", 3)
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
 
     // Confirm that no services or clients were leaked.
-    assertEquals(initialServiceNames, endpointA.serviceNames)
-    assertEquals(initialClientNames, endpointA.clientNames)
+    scope.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
   }
 
   @Test
@@ -80,8 +86,6 @@ internal class FlowTest {
 
     endpointA.bind<FlowEchoService>("service", service)
     val client = endpointB.take<FlowEchoService>("service")
-    val initialServiceNames = endpointA.serviceNames
-    val initialClientNames = endpointA.clientNames
 
     val flow = flow {
       for (i in 1..3) {
@@ -97,8 +101,9 @@ internal class FlowTest {
     assertEquals(3, deferredCount.await())
 
     // Confirm that no services or clients were leaked.
-    assertEquals(initialServiceNames, endpointA.serviceNames)
-    assertEquals(initialClientNames, endpointA.clientNames)
+    client.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
   }
 
   @Test
@@ -110,6 +115,7 @@ internal class FlowTest {
 
   @Test
   fun receivingEndpointCancelsFlow() = runBlocking {
+    val scope = ZiplineScope()
     val channel = Channel<String>(Int.MAX_VALUE)
 
     val (endpointA, endpointB) = newEndpointPair(this)
@@ -122,9 +128,7 @@ internal class FlowTest {
     }
 
     endpointA.bind<FlowEchoService>("service", service)
-    val client = endpointB.take<FlowEchoService>("service")
-    val initialServiceNames = endpointA.serviceNames
-    val initialClientNames = endpointA.clientNames
+    val client = endpointB.take<FlowEchoService>("service", scope)
 
     val flow = client.createFlow("", 0)
     channel.send("A")
@@ -142,12 +146,14 @@ internal class FlowTest {
     assertEquals(listOf("A", "B"), received)
 
     // Confirm that no services or clients were leaked.
-    assertEquals(initialServiceNames, endpointA.serviceNames)
-    assertEquals(initialClientNames, endpointA.clientNames)
+    scope.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
   }
 
   @Test
   fun callingEndpointCancelsFlow() = runBlocking {
+    val scope = ZiplineScope()
     val channel = Channel<String>(Int.MAX_VALUE)
 
     val (endpointA, endpointB) = newEndpointPair(this)
@@ -160,9 +166,7 @@ internal class FlowTest {
     }
 
     endpointA.bind<FlowEchoService>("service", service)
-    val client = endpointB.take<FlowEchoService>("service")
-    val initialServiceNames = endpointA.serviceNames
-    val initialClientNames = endpointA.clientNames
+    val client = endpointB.take<FlowEchoService>("service", scope)
 
     val flow = client.createFlow("", 0)
     channel.send("A")
@@ -185,7 +189,44 @@ internal class FlowTest {
     assertEquals(listOf("A", "B"), received)
 
     // Confirm that no services or clients were leaked.
-    awaitCondition { initialServiceNames == endpointA.serviceNames }
-    awaitCondition { initialClientNames == endpointA.clientNames }
+    scope.close()
+    awaitEquals(setOf<String>()) { endpointA.serviceNames }
+    awaitEquals(setOf<String>()) { endpointA.clientNames }
+  }
+
+  @Test
+  fun collectFlowMultipleTimes() = runBlocking {
+    val scope = ZiplineScope()
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = RealFlowEchoService()
+
+    endpointA.bind<FlowEchoService>("service", service)
+    val client = endpointB.take<FlowEchoService>("service", scope)
+
+    val flow = client.createFlow("hello", 3)
+    assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
+    assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
+
+    // Confirm that no services or clients were leaked.
+    scope.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
+  }
+
+  @Test
+  fun collectFlowZeroTimes() = runBlocking {
+    val scope = ZiplineScope()
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = RealFlowEchoService()
+
+    endpointA.bind<FlowEchoService>("service", service)
+    val client = endpointB.take<FlowEchoService>("service", scope)
+
+    client.createFlow("hello", 3)
+
+    // Confirm that no services or clients were leaked.
+    scope.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
   }
 }

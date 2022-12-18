@@ -21,17 +21,22 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
 /**
- * Yields until [condition] returns true.
+ * Yields until [expected] equals the result of [actual].
  *
  * Use this to assert asynchronously triggered side effects, such as resource cleanups.
  */
-suspend fun awaitCondition(condition: () -> Boolean) {
-  if (condition()) return
+suspend fun awaitEquals(
+  expected: Any?,
+  actual: () -> Any?
+) {
+  var actualValue = actual()
+  if (expected == actualValue) return
   for (i in 0 until 5) {
     yield()
-    if (condition()) return
+    actualValue = actual()
+    if (expected == actualValue) return
   }
-  throw AssertionError("gave up waiting for condition")
+  throw AssertionError("$expected != $actualValue")
 }
 
 fun prettyPrint(jsonString: String): String {
