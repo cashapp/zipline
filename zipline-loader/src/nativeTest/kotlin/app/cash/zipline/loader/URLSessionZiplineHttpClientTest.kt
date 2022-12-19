@@ -41,6 +41,8 @@ class URLSessionZiplineHttpClientTest {
 
   @Test
   fun requestHeaders(): Unit = runBlocking {
+    if (!enabled) return@runBlocking
+
     val httpClient = URLSessionZiplineHttpClient(NSURLSession.sharedSession)
     val download = httpClient.download(
       "https://squareup.com/robots.txt",
