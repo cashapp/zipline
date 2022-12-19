@@ -50,7 +50,7 @@ private class ZiplineServiceReference(
 ) : PhantomReference<ZiplineService>(service, allReferencesQueue) {
   fun afterGc() {
     allReferencesSet.remove(this)
-    if (!callHandler.closed) {
+    if (!callHandler.serviceState.closed) {
       eventListener.serviceLeaked(serviceName)
     }
   }

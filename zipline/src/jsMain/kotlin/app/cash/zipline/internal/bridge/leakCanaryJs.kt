@@ -53,7 +53,7 @@ private class ZiplineServiceReference(
   private val callHandler: OutboundCallHandler,
 ) {
   fun afterGc() {
-    if (!callHandler.closed) {
+    if (!callHandler.serviceState.closed) {
       eventListener.serviceLeaked(name)
     }
   }

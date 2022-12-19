@@ -36,10 +36,17 @@ internal class OutboundCallHandler(
   private val adapter: ZiplineServiceAdapter<*>,
   internal val scope: ZiplineScope,
   private val functionsList: List<ZiplineFunction<*>>,
+  internal val serviceState: ServiceState = ServiceState(),
 ) {
-  /** Used by generated code when closing a service. */
-  var closed = false
-    private set
+  /**
+   * Returns a copy of this call handler that targets the same service, but that applies [scope] to
+   * outbound services produced by this service.
+   */
+  fun withScope(scope: ZiplineScope): OutboundCallHandler {
+    return OutboundCallHandler(
+      serviceName, endpoint, adapter, scope, functionsList, serviceState,
+    )
+  }
 
   /** Returns a new service that uses this to send calls. */
   fun <T : ZiplineService> outboundService(): T {
@@ -54,11 +61,11 @@ internal class OutboundCallHandler(
   ): Any? {
     val function = functionsList[functionIndex] as ReturningZiplineFunction<*>
     if (function.isClose) {
-      if (closed) return Unit // ZiplineService.close() is idempotent.
-      closed = true
+      if (serviceState.closed) return Unit // ZiplineService.close() is idempotent.
+      serviceState.closed = true
       scope.remove(this)
     } else {
-      check(!closed) { "$serviceName is closed" }
+      check(!serviceState.closed) { "$serviceName is closed" }
     }
 
     val argsList = args.toList()
@@ -93,7 +100,7 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
-    check(!closed) { "$serviceName is closed" }
+    check(!serviceState.closed) { "$serviceName is closed" }
 
     val function = functionsList[functionIndex] as SuspendingZiplineFunction<*>
     val argsList = args.toList()
@@ -130,6 +137,16 @@ internal class OutboundCallHandler(
         }
       }
     }
+  }
+
+  override fun toString() = serviceName
+
+  /**
+   * Shared state for the handled service. If we have multiple outbound call handlers for the same
+   * target service (perhaps with different scopes), this state is shared between them.
+   */
+  class ServiceState {
+    var closed = false
   }
 
   private inner class RealSuspendCallback<R>
@@ -169,6 +186,4 @@ internal class OutboundCallHandler(
 
     override fun toString() = "SuspendCallback/$internalCall"
   }
-
-  override fun toString() = serviceName
 }
