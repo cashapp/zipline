@@ -24,7 +24,6 @@ import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
-import kotlin.test.assertNull
 import kotlin.test.assertSame
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -48,17 +47,20 @@ internal class ZiplineScopedEndpointTest {
     assertNotSame(scopeA, scopeB)
     clientA.echo(EchoRequest("hello"))
     clientB.echo(EchoRequest("hello"))
-    assertEquals("serviceA request", log.removeFirst())
-    assertEquals("serviceB request", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "serviceA request",
+      "serviceB request",
+    )
 
     scopeA.close()
-    assertEquals("serviceA closed", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "serviceA closed",
+    )
 
     scopeB.close()
-    assertEquals("serviceB closed", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "serviceB closed",
+    )
   }
 
   @Test
@@ -79,14 +81,16 @@ internal class ZiplineScopedEndpointTest {
 
     clientA.echo(EchoRequest("hello"))
     clientB.echo(EchoRequest("hello"))
-    assertEquals("serviceA request", log.removeFirst())
-    assertEquals("serviceB request", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "serviceA request",
+      "serviceB request",
+    )
 
     scope.close()
-    assertEquals("serviceA closed", log.removeFirst())
-    assertEquals("serviceB closed", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "serviceA closed",
+      "serviceB closed",
+    )
   }
 
   @Test
@@ -107,26 +111,30 @@ internal class ZiplineScopedEndpointTest {
     val client = endpointB.take<EchoServiceChecker>("service")
 
     client.check(RealEchoService(log, "a"))
-    assertEquals("received service", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "received service",
+    )
     val receivedA = receivedServices.removeFirst()
     val receivedAScope = (receivedA as OutboundService).callHandler.scope
 
     client.check(RealEchoService(log, "b"))
-    assertEquals("received service", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "received service",
+    )
     val receivedB = receivedServices.removeFirst()
     val receivedBScope = (receivedB as OutboundService).callHandler.scope
 
     assertNotSame(receivedAScope, receivedBScope)
 
     receivedAScope.close()
-    assertEquals("a closed", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "a closed",
+    )
 
     receivedBScope.close()
-    assertEquals("b closed", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "b closed",
+    )
   }
 
   @Test
@@ -150,23 +158,26 @@ internal class ZiplineScopedEndpointTest {
     val client = endpointB.take<EchoServiceChecker>("service")
 
     client.check(RealEchoService(log, "a"))
-    assertEquals("received service", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "received service",
+    )
     val receivedA = receivedServices.removeFirst()
     assertSame(serviceScope, (receivedA as OutboundService).callHandler.scope)
 
     client.check(RealEchoService(log, "b"))
-    assertEquals("received service", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "received service",
+    )
     val receivedB = receivedServices.removeFirst()
     assertSame(serviceScope, (receivedB as OutboundService).callHandler.scope)
 
     serviceScope.close()
-    assertEquals("a closed", log.removeFirst())
-    assertEquals("b closed", log.removeFirst())
-    // Note that the EchoServiceChecker isn't closed here. In practice, it'll do that itself by
-    // overriding close() and calling scope.close().
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "a closed",
+      "b closed",
+      // Note that the EchoServiceChecker isn't closed here. In practice, it'll do that itself by
+      // overriding close() and calling scope.close().
+    )
   }
 
   @Test
@@ -192,19 +203,22 @@ internal class ZiplineScopedEndpointTest {
 
     val serviceA = client.newEchoService("a")
     assertSame(scope, (serviceA as OutboundService).callHandler.scope)
-    assertEquals("making a", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "making a",
+    )
 
     val serviceB = client.newEchoService("b")
     assertSame(scope, (serviceB as OutboundService).callHandler.scope)
-    assertEquals("making b", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "making b",
+    )
 
     scope.close()
-    assertEquals("maker closed", log.removeFirst())
-    assertEquals("a closed", log.removeFirst())
-    assertEquals("b closed", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "maker closed",
+      "a closed",
+      "b closed",
+    )
   }
 
   @Test
@@ -230,19 +244,22 @@ internal class ZiplineScopedEndpointTest {
 
     val serviceA = client.newEchoService("a")
     assertSame(scope, (serviceA as OutboundService).callHandler.scope)
-    assertEquals("making a", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "making a",
+    )
 
     val serviceB = client.newEchoService("b")
     assertSame(scope, (serviceB as OutboundService).callHandler.scope)
-    assertEquals("making b", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "making b",
+    )
 
     scope.close()
-    assertEquals("maker closed", log.removeFirst())
-    assertEquals("a closed", log.removeFirst())
-    assertEquals("b closed", log.removeFirst())
-    assertNull(log.removeFirstOrNull())
+    log.takeAndAssertContents(
+      "maker closed",
+      "a closed",
+      "b closed",
+    )
   }
 
   /**
@@ -300,6 +317,139 @@ internal class ZiplineScopedEndpointTest {
     scope.close()
     channel.send("scope canceled")
     assertEquals("response", deferred.await().message)
+  }
+
+  @Test
+  fun withScopeForShorterLifetime() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val scope1 = ZiplineScope()
+    val log = ArrayDeque<String>()
+
+    val service = object : EchoServiceMaker {
+      override fun newEchoService(name: String): EchoService {
+        log += "making $name"
+        return RealEchoService(log, name)
+      }
+
+      override fun close() {
+        log += "maker closed"
+      }
+    }
+
+    endpointA.bind<EchoServiceMaker>("service", service)
+    val clientWithScope1 = endpointB.take<EchoServiceMaker>("service", scope1)
+
+    val serviceA = clientWithScope1.newEchoService("a")
+    assertSame(scope1, (serviceA as OutboundService).callHandler.scope)
+    log.takeAndAssertContents(
+      "making a",
+    )
+
+    val scope2 = ZiplineScope()
+    val clientWithScope2 = clientWithScope1.withScope(scope2)
+    val serviceB = clientWithScope2.newEchoService("b")
+    assertSame(scope2, (serviceB as OutboundService).callHandler.scope)
+    log.takeAndAssertContents(
+      "making b",
+    )
+
+    scope2.close()
+    log.takeAndAssertContents(
+      "b closed",
+    )
+
+    scope1.close()
+    log.takeAndAssertContents(
+      "maker closed",
+      "a closed",
+    )
+  }
+
+  /** Confirm there's no nesting relationship between scopes. */
+  @Test
+  fun withScopeForLongerLifetime() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val scope1 = ZiplineScope()
+    val log = ArrayDeque<String>()
+
+    val service = object : EchoServiceMaker {
+      override fun newEchoService(name: String): EchoService {
+        log += "making $name"
+        return RealEchoService(log, name)
+      }
+
+      override fun close() {
+        log += "maker closed"
+      }
+    }
+
+    endpointA.bind<EchoServiceMaker>("service", service)
+    val clientWithScope1 = endpointB.take<EchoServiceMaker>("service", scope1)
+
+    val serviceA = clientWithScope1.newEchoService("a")
+    assertSame(scope1, (serviceA as OutboundService).callHandler.scope)
+    log.takeAndAssertContents(
+      "making a",
+    )
+
+    val scope2 = ZiplineScope()
+    val clientWithScope2 = clientWithScope1.withScope(scope2)
+    val serviceB = clientWithScope2.newEchoService("b")
+    assertSame(scope2, (serviceB as OutboundService).callHandler.scope)
+    log.takeAndAssertContents(
+      "making b",
+    )
+
+    scope1.close()
+    log.takeAndAssertContents(
+      "maker closed",
+      "a closed",
+    )
+
+    scope2.close()
+    log.takeAndAssertContents(
+      "b closed",
+    )
+  }
+
+  @Test
+  fun closingResultOfWithScopeClosesOriginal() = runBlocking {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val scope1 = ZiplineScope()
+    val scope2 = ZiplineScope()
+
+    val log = ArrayDeque<String>()
+
+    val service = object : EchoServiceMaker {
+      override fun newEchoService(name: String) = error("unexpected call")
+
+      override fun close() {
+        log += "maker closed"
+      }
+    }
+
+    endpointA.bind<EchoServiceMaker>("service", service)
+    val clientWithScope1 = endpointB.take<EchoServiceMaker>("service", scope1)
+
+    val clientWithScope2 = clientWithScope1.withScope(scope2)
+
+    clientWithScope2.close()
+    log.takeAndAssertContents(
+      "maker closed",
+    )
+
+    clientWithScope1.close()
+    log.takeAndAssertContents(
+      // Nothing to do: close() is idempotent.
+    )
+  }
+
+  private fun ArrayDeque<String>.takeAndAssertContents(vararg expected: String) {
+    assertEquals(expected.toList(), toList())
+    clear()
   }
 
   class RealEchoService(
