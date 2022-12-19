@@ -29,11 +29,19 @@ import okio.ByteString
 internal class OkHttpZiplineHttpClient(
   private val okHttpClient: OkHttpClient
 ) : ZiplineHttpClient {
-  override suspend fun download(url: String): ByteString {
+  override suspend fun download(
+    url: String,
+    requestHeaders: List<Pair<String, String>>,
+  ): ByteString {
     return suspendCancellableCoroutine { continuation ->
       val call = okHttpClient.newCall(
         Request.Builder()
           .url(url)
+          .apply {
+            for ((name, value) in requestHeaders) {
+              addHeader(name, value)
+            }
+          }
           .build()
       )
 
