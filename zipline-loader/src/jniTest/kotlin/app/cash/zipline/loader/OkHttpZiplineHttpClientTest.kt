@@ -36,11 +36,33 @@ class OkHttpZiplineHttpClientTest {
         .setBody("hello")
     )
 
-    val content = client.download(server.url("/foo").toString())
+    val content = client.download(server.url("/foo").toString(), listOf())
     assertEquals(content, "hello".encodeUtf8())
 
     val request = server.takeRequest()
     assertEquals("/foo", request.path)
+  }
+
+  @Test
+  fun requestHeaders(): Unit = runBlocking {
+    server.enqueue(
+      MockResponse()
+        .setBody("hello")
+    )
+
+    val content = client.download(
+      server.url("/foo").toString(),
+      listOf(
+        "Header-One" to "a",
+        "Header-Two" to "b",
+        "Header-One" to "c",
+      ),
+    )
+    assertEquals(content, "hello".encodeUtf8())
+
+    val request = server.takeRequest()
+    assertEquals(listOf("a", "c"), request.headers.values("Header-One"))
+    assertEquals(listOf("b"), request.headers.values("Header-Two"))
   }
 
   @Test
@@ -49,7 +71,7 @@ class OkHttpZiplineHttpClientTest {
     server.shutdown() // Force a failure.
 
     assertFailsWith<IOException> {
-      client.download(url.toString())
+      client.download(url.toString(), listOf())
     }
   }
 
@@ -63,7 +85,7 @@ class OkHttpZiplineHttpClientTest {
 
     val url = server.url("/foo")
     val exception = assertFailsWith<IOException> {
-      client.download(url.toString())
+      client.download(url.toString(), listOf())
     }
     assertEquals("failed to fetch $url: 404", exception.message)
   }

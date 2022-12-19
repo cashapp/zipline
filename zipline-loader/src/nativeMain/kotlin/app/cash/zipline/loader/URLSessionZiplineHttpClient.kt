@@ -26,10 +26,12 @@ import okio.toByteString
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSHTTPURLResponse
+import platform.Foundation.NSMutableURLRequest
 import platform.Foundation.NSURL
 import platform.Foundation.NSURLResponse
 import platform.Foundation.NSURLSession
-import platform.Foundation.dataTaskWithURL
+import platform.Foundation.addValue
+import platform.Foundation.dataTaskWithRequest
 
 internal class URLSessionZiplineHttpClient(
   private val urlSession: NSURLSession,
@@ -38,13 +40,20 @@ internal class URLSessionZiplineHttpClient(
     maybeFreeze()
   }
 
-  override suspend fun download(url: String): ByteString {
+  override suspend fun download(
+    url: String,
+    requestHeaders: List<Pair<String, String>>,
+  ): ByteString {
     val nsUrl = NSURL(string = url)
     return suspendCancellableCoroutine { continuation: CancellableContinuation<ByteString> ->
       val completionHandler = CompletionHandler(url, continuation)
 
-      val task = urlSession.dataTaskWithURL(
-        url = nsUrl,
+      val task = urlSession.dataTaskWithRequest(
+        request = NSMutableURLRequest(nsUrl).apply {
+          for ((name, value) in requestHeaders) {
+            addValue(value = value, forHTTPHeaderField = name)
+          }
+        },
         completionHandler = completionHandler::invoke.maybeFreeze()
       )
 

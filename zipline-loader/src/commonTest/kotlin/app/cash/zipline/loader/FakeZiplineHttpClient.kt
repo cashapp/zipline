@@ -22,7 +22,10 @@ import okio.IOException
 class FakeZiplineHttpClient: ZiplineHttpClient {
   var filePathToByteString: Map<String, ByteString> = mapOf()
 
-  override suspend fun download(url: String): ByteString {
+  override suspend fun download(
+    url: String,
+    requestHeaders: List<Pair<String, String>>,
+  ): ByteString {
     return filePathToByteString[url] ?: throw IOException("404: $url not found")
   }
 }

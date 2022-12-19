@@ -18,5 +18,5 @@ package app.cash.zipline.loader
 import okio.ByteString
 
 interface ZiplineHttpClient {
-  suspend fun download(url: String): ByteString
+  suspend fun download(url: String, requestHeaders: List<Pair<String, String>>): ByteString
 }

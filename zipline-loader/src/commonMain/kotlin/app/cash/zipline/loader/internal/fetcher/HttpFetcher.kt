@@ -45,6 +45,7 @@ internal class HttpFetcher(
     applicationName = applicationName,
     baseUrl = baseUrl,
     url = url,
+    requestHeaders = ZIPLINE_REQUEST_HEADERS,
   )
 
   suspend fun fetchManifest(
@@ -52,7 +53,12 @@ internal class HttpFetcher(
     url: String,
     freshAtEpochMs: Long,
   ): LoadedManifest {
-    val manifestBytesWithoutBaseUrlUtf8 = fetchByteString(applicationName, null, url)
+    val manifestBytesWithoutBaseUrlUtf8 = fetchByteString(
+      applicationName = applicationName,
+      baseUrl = null,
+      url = url,
+      requestHeaders = MANIFEST_REQUEST_HEADERS,
+    )
     val manifestBytesWithoutBaseUrl = manifestBytesWithoutBaseUrlUtf8.utf8()
     check(manifestBytesWithoutBaseUrl.length <= MANIFEST_MAX_SIZE) {
       "manifest larger than $MANIFEST_MAX_SIZE: ${manifestBytesWithoutBaseUrl.length}"
@@ -104,6 +110,7 @@ internal class HttpFetcher(
     applicationName: String,
     baseUrl: String?,
     url: String,
+    requestHeaders: List<Pair<String, String>>,
   ): ByteString {
     val fullUrl = when {
       baseUrl != null -> resolveUrl(baseUrl, url)
@@ -112,7 +119,7 @@ internal class HttpFetcher(
 
     val startValue = eventListener.downloadStart(applicationName, fullUrl)
     val result = try {
-      httpClient.download(fullUrl)
+      httpClient.download(fullUrl, requestHeaders)
     } catch (e: Exception) {
       eventListener.downloadFailed(applicationName, fullUrl, e, startValue)
       throw e
@@ -120,5 +127,18 @@ internal class HttpFetcher(
     eventListener.downloadEnd(applicationName, fullUrl, startValue)
 
     return result
+  }
+
+  companion object {
+    /** Headers for the HTTP GET request for the manifest file. */
+    val MANIFEST_REQUEST_HEADERS = listOf<Pair<String, String>>()
+
+    /**
+     * Headers for the HTTP GET request for the .zipline files.
+     *
+     * We use no-store because `ZiplineLoader` already stores these keyed by their hash. Storing
+     * only once potentially saves disk & compute.
+     */
+    val ZIPLINE_REQUEST_HEADERS = listOf("Cache-Control" to "no-store")
   }
 }
