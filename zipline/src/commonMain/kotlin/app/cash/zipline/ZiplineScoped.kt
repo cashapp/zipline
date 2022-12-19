@@ -72,7 +72,7 @@ interface ZiplineScoped {
  * scopeB.close() // closes nke.
  * ```
  *
- * Note that closing the returned service will close this: the two handles target the same object.
+ * Note that closing the returned service will close the receiver: the two handles target the same object.
  * Closing [scope] will not close either.
  */
 fun <T : ZiplineService> T.withScope(scope: ZiplineScope): T {
