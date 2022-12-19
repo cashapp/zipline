@@ -35,7 +35,21 @@ class URLSessionZiplineHttpClientTest {
     if (!enabled) return@runBlocking
 
     val httpClient = URLSessionZiplineHttpClient(NSURLSession.sharedSession)
-    val download = httpClient.download("https://squareup.com/robots.txt")
+    val download = httpClient.download("https://squareup.com/robots.txt", listOf())
+    println(download.utf8())
+  }
+
+  @Test
+  fun requestHeaders(): Unit = runBlocking {
+    val httpClient = URLSessionZiplineHttpClient(NSURLSession.sharedSession)
+    val download = httpClient.download(
+      "https://squareup.com/robots.txt",
+      listOf(
+        "Header-One" to "a",
+        "Header-Two" to "b",
+        "Header-One" to "c",
+      ),
+    )
     println(download.utf8())
   }
 
@@ -45,7 +59,7 @@ class URLSessionZiplineHttpClientTest {
 
     val httpClient = URLSessionZiplineHttpClient(NSURLSession.sharedSession)
     val exception = assertFailsWith<IOException> {
-      httpClient.download("https://198.51.100.1/robots.txt") // Unreachable IP address.
+      httpClient.download("https://198.51.100.1/robots.txt", listOf()) // Unreachable IP address.
     }
     assertTrue("The request timed out." in exception.message!!, exception.message)
   }
@@ -56,7 +70,7 @@ class URLSessionZiplineHttpClientTest {
 
     val httpClient = URLSessionZiplineHttpClient(NSURLSession.sharedSession)
     val exception = assertFailsWith<IOException> {
-      httpClient.download("https://squareup.com/.well-known/404")
+      httpClient.download("https://squareup.com/.well-known/404", listOf())
     }
     assertEquals(
       "failed to fetch https://squareup.com/.well-known/404: 404",
