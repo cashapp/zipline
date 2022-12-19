@@ -73,7 +73,7 @@ interface ZiplineScoped {
  * ```
  *
  * Note that closing the returned service will close the receiver: the two handles target the same object.
- * Closing [scope] will not close either.
+ * Closing either will not close [scope].
  */
 fun <T : ZiplineService> T.withScope(scope: ZiplineScope): T {
   require(this is OutboundService) { "cannot scope $this; it isn't an outbound service" }
