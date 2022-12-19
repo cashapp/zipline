@@ -34,7 +34,10 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   // A fake HTTP client that returns files as the Webpack dev server would return them.
   val localDirectoryHttpClient = object : ZiplineHttpClient {
     val base = "build/compileSync/main/productionExecutable/kotlinZipline".toPath()
-    override suspend fun download(url: String): ByteString {
+    override suspend fun download(
+      url: String,
+      requestHeaders: List<Pair<String, String>>,
+    ): ByteString {
       val file = url.substringAfterLast("/")
       return FileSystem.SYSTEM.read(base / file) { readByteString() }
     }
