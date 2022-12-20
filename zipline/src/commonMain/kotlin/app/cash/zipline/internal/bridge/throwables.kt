@@ -33,7 +33,7 @@ internal expect fun toInboundThrowable(
  * Serialize a [Throwable] in two parts:
  *
  *  * A list of types in preference-order. We'll only need one type in almost all cases, but if we
- *    want to introduce new throwable subtypes in the future this enables backwards=compatibility.
+ *    want to introduce new throwable subtypes in the future this enables backwards-compatibility.
  *
  *  * The throwable message and stacktrace, all together. This may be prefixed with the name
  *    of the throwable class.

@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.ir.util.isInterface
 
 class ZiplineIrGenerationExtension(
@@ -38,6 +39,16 @@ class ZiplineIrGenerationExtension(
         val declaration = super.visitClassNew(declaration) as IrClass
 
         try {
+          if (declaration.isInterface &&
+            declaration.superTypes.any { it.classFqName == ziplineApis.ziplineScopedFqName }
+          ) {
+            throw ZiplineCompilationException(
+              element = declaration,
+              message = "Only classes may implement ZiplineScoped, but" +
+                " ${declaration.fqNameWhenAvailable} is an interface",
+            )
+          }
+
           if (declaration.isInterface &&
             declaration.superTypes.any { it.classFqName == ziplineApis.ziplineServiceFqName }
           ) {
