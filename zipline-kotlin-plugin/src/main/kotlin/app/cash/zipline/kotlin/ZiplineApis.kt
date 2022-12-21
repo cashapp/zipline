@@ -39,6 +39,7 @@ internal class ZiplineApis(
   private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
   private val ziplineFqName = packageFqName.child("Zipline")
   private val outboundServiceFqName = bridgeFqName.child("OutboundService")
+  val ziplineScopedFqName = packageFqName.child("ZiplineScoped")
   val ziplineServiceFqName = packageFqName.child("ZiplineService")
   private val ziplineServiceSerializerFunctionFqName =
     packageFqName.child("ziplineServiceSerializer")

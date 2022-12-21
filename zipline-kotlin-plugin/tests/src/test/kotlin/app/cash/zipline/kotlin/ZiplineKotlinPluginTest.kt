@@ -345,6 +345,26 @@ class ZiplineKotlinPluginTest {
     assertThat(adapterClass).isNotNull()
     assertThat(adapterClass.interfaces).asList().containsExactly(KSerializer::class.java)
   }
+
+  @Test
+  fun `interfaces cannot extend ZiplineScoped`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.ZiplineScoped
+
+        interface SomeInterface : ZiplineScoped
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
+    assertThat(result.messages)
+      .contains("(5, 1): Only classes may implement ZiplineScoped, but " +
+        "app.cash.zipline.testing.SomeInterface is an interface")
+  }
 }
 
 fun compile(
