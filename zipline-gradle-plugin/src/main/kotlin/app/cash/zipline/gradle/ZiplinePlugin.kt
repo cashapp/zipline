@@ -111,6 +111,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     project.tasks.register(serveTaskName, ZiplineServeTask::class.java) { createdTask ->
       createdTask.description = "Serves Zipline files"
       createdTask.inputDir.set(ziplineCompileTask.flatMap { it.outputDir })
+      createdTask.port.set(configuration.httpServerPort)
     }
   }
 
