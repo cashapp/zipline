@@ -24,6 +24,7 @@ abstract class ZiplineExtension {
   abstract val mainFunction: Property<String>
   abstract val version: Property<String>
   abstract val signingKeys: NamedDomainObjectContainer<SigningKey>
+  abstract val httpServerPort: Property<Int>
 
   abstract class SigningKey(val name: String) {
     abstract val algorithmId: Property<SignatureAlgorithmId>

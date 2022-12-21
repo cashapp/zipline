@@ -73,7 +73,7 @@ abstract class ZiplineServeTask : DefaultTask() {
           Pair("zipline", ContentType.TEXT_PLAIN)
         )
       )
-      val server = PolyHandler(http, ws).asServer(Jetty(8080))
+      val server = PolyHandler(http, ws).asServer(Jetty(port.orNull ?: 8080))
       deploymentRegistry.start(
         deploymentId,
         DeploymentRegistry.ChangeBehavior.BLOCK,
