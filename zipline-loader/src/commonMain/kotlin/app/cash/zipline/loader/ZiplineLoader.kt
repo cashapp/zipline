@@ -18,30 +18,21 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.internal.runApplication
-import app.cash.zipline.loader.internal.fetcher.FsCachingFetcher
-import app.cash.zipline.loader.internal.fetcher.FsEmbeddedFetcher
-import app.cash.zipline.loader.internal.fetcher.HttpFetcher
-import app.cash.zipline.loader.internal.fetcher.LoadedManifest
-import app.cash.zipline.loader.internal.fetcher.fetch
+import app.cash.zipline.loader.internal.fetcher.*
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.internal.receiver.FsSaveReceiver
 import app.cash.zipline.loader.internal.receiver.Receiver
 import app.cash.zipline.loader.internal.receiver.ZiplineLoadReceiver
 import app.cash.zipline.loader.internal.systemEpochMsClock
 import kotlin.coroutines.cancellation.CancellationException
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ProducerScope
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.joinAll
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withContext
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okio.FileSystem
@@ -225,7 +216,7 @@ class ZiplineLoader internal constructor(
       )
       cachingFetcher?.pin(applicationName, loadedManifest, now) // Pin after success.
       eventListener.applicationLoadSuccess(applicationName, manifestUrl, zipline, startValue)
-      send(LoadResult.Success(zipline, loadedManifest.freshAtEpochMs))
+      send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
       return loadedManifest.manifest
 
     } catch (e: CancellationException) {
@@ -262,7 +253,7 @@ class ZiplineLoader internal constructor(
         initializer,
       )
       eventListener.applicationLoadSuccess(applicationName, null, zipline, startValue)
-      send(LoadResult.Success(zipline, loadedManifest.freshAtEpochMs))
+      send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
       return loadedManifest.manifest
 
     } catch (e: CancellationException) {

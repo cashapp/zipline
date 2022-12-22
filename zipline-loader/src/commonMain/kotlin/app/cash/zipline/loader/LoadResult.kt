@@ -26,6 +26,20 @@ sealed class LoadResult {
    */
   data class Success(
     val zipline: Zipline,
+
+    /** Manifest that describes the code loaded into [zipline]. */
+    val manifest: ZiplineManifest,
+
+    /**
+     * Timestamp when this manifest was last known fresh.
+     *
+     *  * If the manifest came from the network, this is the local time when the request started.
+     *  * If the manifest came from the cache, this is the last known fresh time of what was stored.
+     *  * If the manifest was embedded, this is the last known fresh time of what was embedded.
+     *
+     * This timestamp is computed by the local machine for network and cached manifests. For
+     * embedded manifests it is computed by whatever machine performed the embedding.
+     */
     val freshAtEpochMs: Long,
   ): LoadResult()
 
