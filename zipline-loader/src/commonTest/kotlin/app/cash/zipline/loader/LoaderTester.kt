@@ -41,7 +41,7 @@ class LoaderTester(
   val httpClient = FakeZiplineHttpClient()
   private val dispatcher = UnconfinedTestDispatcher()
   private val cacheMaxSizeInBytes = 100 * 1024 * 1024
-  private var nowMillis = 1_000L
+  var nowMillis = 1_000L
 
   private var zipline = Zipline.create(dispatcher)
 
@@ -114,7 +114,7 @@ class LoaderTester(
     return log.removeSuffix(" loaded\n")
   }
 
-  fun load(applicationName: String, seed: String, count: Int): Flow<LoadResult> {
+  fun load(applicationName: String, seed: String, count: Int = 1): Flow<LoadResult> {
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
@@ -299,7 +299,11 @@ class LoaderTester(
   }
 
   /** First result is failure, second is the success from the pinned previous load */
-  private suspend fun loadZiplineFromLastResult(applicationName: String, manifestUrl: String, initializer: (Zipline) -> Unit = {}) {
+  private suspend fun loadZiplineFromLastResult(
+    applicationName: String,
+    manifestUrl: String,
+    initializer: (Zipline) -> Unit = {},
+  ) {
     val results = loader.load(applicationName, flowOf(manifestUrl), initializer = initializer)
     zipline = (results.last() as LoadResult.Success).zipline
   }

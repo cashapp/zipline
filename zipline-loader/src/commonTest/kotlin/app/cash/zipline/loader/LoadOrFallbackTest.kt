@@ -19,7 +19,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.runBlocking
 
 @Suppress("UnstableApiUsage")
@@ -143,5 +145,18 @@ class LoadOrFallbackTest {
   fun fallBackBecauseManifestIsMalformedJson() = runBlocking {
     tester.seedEmbedded("red", "firetruck")
     assertEquals("firetruck", tester.failureManifestMalformedJson("red"))
+  }
+
+  @Test
+  fun freshAtMillisForSubsequentNetworkCalls() = runBlocking {
+    tester.nowMillis = 1_000L
+    val load1 = tester.load("red", "apple").single() as LoadResult.Success
+    assertEquals(1_000L, load1.freshAtEpochMs)
+    assertNull(load1.manifest.freshAtEpochMs) // Network manifests don't track this.
+
+    tester.nowMillis = 2_000L
+    val load2 = tester.load("red", "apple").single() as LoadResult.Success
+    assertEquals(2_000L, load2.freshAtEpochMs)
+    assertNull(load2.manifest.freshAtEpochMs) // Network manifests don't track this.
   }
 }

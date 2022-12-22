@@ -225,7 +225,7 @@ class ZiplineLoader internal constructor(
       )
       cachingFetcher?.pin(applicationName, loadedManifest, now) // Pin after success.
       eventListener.applicationLoadSuccess(applicationName, manifestUrl, zipline, startValue)
-      send(LoadResult.Success(zipline, loadedManifest.freshAtEpochMs))
+      send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
       return loadedManifest.manifest
 
     } catch (e: CancellationException) {
@@ -262,7 +262,7 @@ class ZiplineLoader internal constructor(
         initializer,
       )
       eventListener.applicationLoadSuccess(applicationName, null, zipline, startValue)
-      send(LoadResult.Success(zipline, loadedManifest.freshAtEpochMs))
+      send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
       return loadedManifest.manifest
 
     } catch (e: CancellationException) {
