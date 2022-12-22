@@ -31,11 +31,11 @@ internal data class SourceMapJson(
   val mappings: String,
 )
 
-internal data class Group(
+data class Group(
   val segments: List<Segment>,
 )
 
-internal data class Segment(
+data class Segment(
   val startingColumn: Long,
   val source: String?,
   val sourceLine: Long,
@@ -43,7 +43,7 @@ internal data class Segment(
   val name: String?,
 )
 
-internal data class SourceMap(
+data class SourceMap(
   val version: Int,
   val file: String?,
   val sourcesContent: List<String?>,

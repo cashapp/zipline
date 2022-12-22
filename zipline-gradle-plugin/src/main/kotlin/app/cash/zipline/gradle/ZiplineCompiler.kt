@@ -17,7 +17,9 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.bytecode.SourceMap
 import app.cash.zipline.bytecode.applySourceMapToBytecode
+import app.cash.zipline.bytecode.removeLeadingDotDots
 import app.cash.zipline.internal.collectModuleDependencies
 import app.cash.zipline.internal.getModuleDependencies
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
@@ -128,8 +130,9 @@ internal object ZiplineCompiler {
       var bytecode = quickJs.compile(jsFile.readText(), jsFile.name)
 
       if (jsSourceMapFile.exists()) {
-        // rewrite the bytecode with source line numbers
-        bytecode = applySourceMapToBytecode(bytecode, jsSourceMapFile.readText())
+        // rewrite the bytecode with source line numbers.
+        val sourceMap = SourceMap.parse(jsSourceMapFile.readText()).removeLeadingDotDots()
+        bytecode = applySourceMapToBytecode(bytecode, sourceMap)
       }
       val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode.toByteString())
       val sha256 = outputZiplineFile.sink().use { fileSink ->

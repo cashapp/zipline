@@ -27,7 +27,7 @@ import org.junit.Test
 class ApplySourceMapToBytecodeTest {
   private val quickJs = QuickJs.create()
 
-  private val emptySourceMap = """
+  private val emptySourceMap = SourceMap.parse("""
     |{
     |  "version": 3,
     |  "sources": [],
@@ -35,7 +35,7 @@ class ApplySourceMapToBytecodeTest {
     |  "names": [],
     |  "mappings": ";;"
     |}
-    """.trimMargin()
+    """.trimMargin())
 
   @Before
   fun setUp() {
@@ -112,7 +112,7 @@ class ApplySourceMapToBytecodeTest {
 
     // Use QuickJS to compile a script into bytecode.
     val bytecode = quickJs.compile(js, "demo.js")
-    val updatedBytecode = applySourceMapToBytecode(bytecode, sourceMap)
+    val updatedBytecode = applySourceMapToBytecode(bytecode, SourceMap.parse(sourceMap))
     quickJs.loadJsModule("demo", updatedBytecode)
     val exception = assertFailsWith<Exception> {
       quickJs.evaluate("require('demo').sayHello()")
@@ -124,6 +124,56 @@ class ApplySourceMapToBytecodeTest {
       |	at JavaScript.goBoom3(throwException.kt:6)
       |	at JavaScript.sayHello(throwException.kt:3)
       |	at JavaScript.<eval>(?)
+      |""".trimMargin())
+  }
+
+  @Test fun removeLeadingDotDotsInSourceMap() {
+    val js = """
+       /*  1 */ (function (root, factory) {
+       /*  2 */   define(['exports'], factory);
+       /*  3 */ }(this, function (_) {
+       /*  4 */   _.app = {};
+       /*  5 */   _.app.cash = {};
+       /*  6 */   _.app.cash.zipline = {};
+       /*  7 */   _.app.cash.zipline.testing = {};
+       /*  8 */   _.app.cash.zipline.testing.goBoom = function(countDown) {
+       /*  9 */     if (countDown <= 0) throw new Error('boom');
+       /* 10 */     _.app.cash.zipline.testing.goBoom(countDown - 1);
+       /* 11 */   };
+       /* 12 */   return _;
+       /* 13 */ }));
+       """.trimIndent()
+
+    // kotlin-js-demo.js.map
+    val originalSourceMap = """
+      {
+        "version": 3,
+        "sources": [
+          "../../../../../go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt"
+        ],
+        "sourcesContent": [
+          null
+        ],
+        "names": [],
+        "mappings": ";;;;;;;;QAGM,aAAa,C;"
+      }
+      """.trimIndent()
+    val sourceMap = SourceMap.parse(originalSourceMap).removeLeadingDotDots()
+
+    // Use QuickJS to compile a script into bytecode.
+    val bytecode = quickJs.compile(js, "goBoom.js")
+    val updatedBytecode = applySourceMapToBytecode(bytecode, sourceMap)
+    quickJs.loadJsModule("goBoom", updatedBytecode)
+    val exception = assertFailsWith<Exception> {
+      quickJs.evaluate("require('goBoom').app.cash.zipline.testing.goBoom(3)")
+    }
+    assertThat(exception.stackTraceToString().replace("\t", "  ")).startsWith("""
+      |app.cash.zipline.QuickJsException: boom
+      |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:4)
+      |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
+      |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
+      |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
+      |  at JavaScript.<eval>(?)
       |""".trimMargin())
   }
 
