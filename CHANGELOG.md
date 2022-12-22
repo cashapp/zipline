@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.12] - 2022-12-06
+## [0.9.13] - 2022-12-22
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -11,6 +11,27 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * New: `ZiplineScope` is a new mechanism to close pass-by-reference services and flows. Pass a
+   `ZiplineScope` to `Zipline.take()` or implement `ZiplineScoped` in a `ZiplineService` to declare
+   a scope, then call `ZiplineScope.close()` to close all received services. Note that Flows
+   that were passed-by-reference previously needed to be collected exactly once; with this change
+   Flows may be collected any number of times.
+ * New: Configure the development HTTP server's local port in Gradle:
+    ```kotlin
+    zipline {
+      ...
+      httpServerPort.set(22364)
+    }
+    ```
+ * New: Include the service name in `ZiplineApiMismatchException`.
+ * Fix: Prevent `.zipline` files from being stored in the HTTP cache. We've added
+   'Cache-Control: no-store' request headers to downloads to prevent caching that's redundant
+   with ZiplineLoader's cache.
+ * Fix: Make `ZiplineService.close()` idempotent for outbound services.
+
+
+## [0.9.12] - 2022-12-06
 
  * New: Add `ZiplineFunction.isSuspending`.
  * New: Add events for `ziplineCreate()`, `moduleLoadStart()`, and `moduleLoadEnd()`.
