@@ -147,7 +147,7 @@ buildConfig {
 
   sourceSets.named("engineMain") {
     packageName("app.cash.zipline")
-    buildConfigField("String", "quickJsVersion") { "\"${quickJsVersion()}\"" }
+    buildConfigField("String", "quickJsVersion", "\"${quickJsVersion()}\"")
   }
 }
 
