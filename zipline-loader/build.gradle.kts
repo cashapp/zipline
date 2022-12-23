@@ -130,7 +130,6 @@ android {
   defaultConfig {
     minSdkVersion(18)
     multiDexEnabled = true
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   sourceSets {
