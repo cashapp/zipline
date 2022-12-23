@@ -13,7 +13,7 @@ sqldelight = "1.5.4"
 targetSdk = "31"
 
 [libraries]
-android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.0" }
+android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "1.2.2" }
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version = "7.2.1" }
 android-material = { module = "com.google.android.material:material", version = "1.4.0" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.6.1" }
