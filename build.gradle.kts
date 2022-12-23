@@ -27,7 +27,7 @@ buildscript {
 }
 
 plugins {
-  id("com.github.gmazzo.buildconfig") version "2.1.0" apply false
+  id("com.github.gmazzo.buildconfig") version "3.1.0" apply false
 }
 
 apply(plugin = "org.jetbrains.dokka")
