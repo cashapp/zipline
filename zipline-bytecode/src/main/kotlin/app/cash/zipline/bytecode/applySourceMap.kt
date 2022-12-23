@@ -24,7 +24,10 @@ import okio.Buffer
  *
  * We use this to get Kotlin line numbers in our QuickJS bytecode.
  */
-fun applySourceMapToBytecode(jsBytecode: ByteArray, sourceMap: String): ByteArray {
+fun applySourceMapToBytecode(
+  jsBytecode: ByteArray,
+  sourceMap: SourceMap,
+): ByteArray {
   val jsReader = JsObjectReader(jsBytecode)
   val jsObject = jsReader.use {
     jsReader.readJsObject()
@@ -32,7 +35,7 @@ fun applySourceMapToBytecode(jsBytecode: ByteArray, sourceMap: String): ByteArra
 
   val atoms = jsReader.atoms.toMutableAtomSet()
   val rewriter = SourceMapBytecodeRewriter(
-    sourceMap = SourceMap.parse(sourceMap),
+    sourceMap = sourceMap,
     atoms = atoms
   )
 
