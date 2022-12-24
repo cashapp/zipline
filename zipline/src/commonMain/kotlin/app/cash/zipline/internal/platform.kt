@@ -16,10 +16,12 @@
 package app.cash.zipline.internal
 
 import app.cash.zipline.ZiplineService
+import kotlinx.serialization.Serializable
 
 const val ziplineInternalPrefix = "zipline/"
 internal expect val passByReferencePrefix: String
 internal const val eventLoopName = "${ziplineInternalPrefix}event_loop"
+internal const val httpClientName = "${ziplineInternalPrefix}http_client"
 internal const val consoleName = "${ziplineInternalPrefix}console"
 internal const val eventListenerName = "${ziplineInternalPrefix}event_listener"
 internal const val jsPlatformName = "${ziplineInternalPrefix}js"
@@ -27,6 +29,23 @@ internal const val jsPlatformName = "${ziplineInternalPrefix}js"
 internal interface EventLoop : ZiplineService {
   fun setTimeout(timeoutId: Int, delayMillis: Int)
   fun clearTimeout(timeoutId: Int)
+}
+
+internal interface HttpClient : ZiplineService {
+  suspend fun execute(request: Request): Response
+
+  @Serializable
+  data class Request(
+    val method: String,
+    val url: String,
+    val headers: Map<String, String>,
+  )
+  @Serializable
+  data class Response(
+    val status: Short,
+    val statusText: String,
+    val headers: Map<String, String>,
+  )
 }
 
 internal interface Console : ZiplineService {

@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.internal.Console
 import app.cash.zipline.internal.EventListenerService
 import app.cash.zipline.internal.EventLoop
+import app.cash.zipline.internal.HttpClient
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
@@ -27,6 +28,7 @@ import app.cash.zipline.internal.bridge.outboundChannelName
 import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventListenerName
 import app.cash.zipline.internal.eventLoopName
+import app.cash.zipline.internal.httpClientName
 import app.cash.zipline.internal.jsPlatformName
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -74,6 +76,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
     get() = endpoint.clientNames
 
   internal val eventLoop: EventLoop = endpoint.take(eventLoopName)
+  internal val httpClient: HttpClient = endpoint.take(httpClientName)
   internal val eventListenerService: EventListenerService = endpoint.take(eventListenerName)
   internal val console: Console = endpoint.take(consoleName)
 

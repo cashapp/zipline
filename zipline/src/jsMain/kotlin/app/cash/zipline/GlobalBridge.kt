@@ -15,9 +15,18 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.HttpClient
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.inboundChannelName
+import kotlin.js.Promise
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.promise
+import org.w3c.fetch.Headers
+import org.w3c.fetch.Request
+import org.w3c.fetch.Response
+import org.w3c.fetch.ResponseInit
 
 /**
  * JS-global bindings for implementing a complete JS platform (setTimeout, console), and receiving
@@ -54,6 +63,9 @@ internal object GlobalBridge : JsPlatform, CallChannel {
         info: function() { globalBridge.consoleMessage('info', arguments) },
         log: function() { globalBridge.consoleMessage('log', arguments) },
         warn: function() { globalBridge.consoleMessage('warn', arguments) },
+      };
+      globalThis.fetch = function(resource, options) {
+        return globalBridge.fetch(new Request(resource, options));
       };
       """
     )
@@ -103,6 +115,35 @@ internal object GlobalBridge : JsPlatform, CallChannel {
       }
     }
     zipline.console.log(level, argumentsList.joinToString(separator = " "), throwable)
+  }
+
+  @JsName("fetch")
+  @OptIn(DelicateCoroutinesApi::class)
+  fun fetch(request: Request): Promise<Response> {
+    val clientRequest = HttpClient.Request(
+      method = request.method,
+      url = request.url,
+      headers = buildMap {
+         for (item in request.headers.asDynamic().iterator()) {
+           put(item[0], item[1])
+         }
+      },
+    )
+    return GlobalScope.promise {
+      val clientResponse = zipline.httpClient.execute(clientRequest)
+      Response(
+        body = null,
+        init = ResponseInit(
+          status = clientResponse.status,
+          statusText = clientResponse.statusText,
+          headers = Headers().apply {
+            for ((name, value) in clientResponse.headers) {
+              set(name, value)
+            }
+          }
+        ),
+      )
+    }
   }
 
   private class Job(
