@@ -25,7 +25,7 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", versi
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "androidx-compose" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.9.0" }
 androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.5.1" }
-androidx-test-runner = { module = "androidx.test:runner", version = "1.5.1" }
+androidx-test-runner = { module = "androidx.test:runner", version = "1.5.2" }
 cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.2.4" }
 coil-compose = { module = "io.coil-kt:coil-compose", version = "2.2.2" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "1.7.20" }
