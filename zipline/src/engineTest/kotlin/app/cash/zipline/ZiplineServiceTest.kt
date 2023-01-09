@@ -124,7 +124,13 @@ internal class ZiplineServiceTest {
     val failure = assertFailsWith<IllegalStateException> {
       helloService.echo(EchoRequest("Jake"))
     }
-    assertEquals("zipline/host-1 is closed", failure.message)
+    assertEquals(
+      """
+      |EchoService zipline/host-1 is closed, failed to call:
+      |  fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      """.trimMargin(),
+      failure.message
+    )
     assertEquals(setOf("factory"), endpointA.serviceNames)
   }
 
