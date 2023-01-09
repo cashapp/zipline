@@ -1,0 +1,13 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:base",
+  ],
+  "packageRules": [
+    {
+      // First release used Kotlin version + project version which sorts higher than new versions.
+      "matchPackageNames": ["co.touchlab:cklib-gradle-plugin"],
+      "allowedVersions": "!/1\\.5\\.31\\.2/",
+    },
+  ],
+}
