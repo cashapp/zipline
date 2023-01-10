@@ -388,7 +388,13 @@ internal class EndpointTest {
     val exception = assertFailsWith<IllegalStateException> {
       client.echo(EchoRequest("request"))
     }
-    assertEquals("serviceA is closed", exception.message)
+    assertEquals(
+      """
+      |EchoService serviceA is closed, failed to call:
+      |  fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      """.trimMargin(),
+      exception.message
+    )
   }
 
   @Test
@@ -408,7 +414,13 @@ internal class EndpointTest {
     val exception = assertFailsWith<IllegalStateException> {
       client.suspendingEcho(EchoRequest("request"))
     }
-    assertEquals("serviceA is closed", exception.message)
+    assertEquals(
+      """
+      |SuspendingEchoService serviceA is closed, failed to call:
+      |  suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      """.trimMargin(),
+      exception.message
+    )
   }
 
   @Test

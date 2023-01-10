@@ -65,7 +65,12 @@ internal class OutboundCallHandler(
       serviceState.closed = true
       scope.remove(this)
     } else {
-      check(!serviceState.closed) { "$serviceName is closed" }
+      check(!serviceState.closed) {
+        """
+        |$adapter $serviceName is closed, failed to call:
+        |  $function
+        """.trimMargin()
+      }
     }
 
     val argsList = args.toList()
@@ -100,9 +105,14 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
-    check(!serviceState.closed) { "$serviceName is closed" }
-
     val function = functionsList[functionIndex] as SuspendingZiplineFunction<*>
+    check(!serviceState.closed) {
+      """
+      |$adapter $serviceName is closed, failed to call:
+      |  $function
+      """.trimMargin()
+    }
+
     val argsList = args.toList()
     val suspendCallback = RealSuspendCallback<Any?>()
     val internalCall = InternalCall(

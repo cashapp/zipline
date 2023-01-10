@@ -16,7 +16,6 @@
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineFunction
-import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
@@ -61,6 +60,8 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
     serializers == other.serializers
 
   override fun hashCode() = this::class.hashCode()
+
+  override fun toString() = serialName
 }
 
 @PublishedApi
