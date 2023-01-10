@@ -138,6 +138,6 @@ internal class CallCodec(
       function.suspendingResultSerializer,
       resultJson,
     )
-    return EncodedSuspendingResult(result, resultJson, encodedServiceNames)
+    return EncodedSuspendingResult(result, resultJson, decodedServiceNames)
   }
 }
