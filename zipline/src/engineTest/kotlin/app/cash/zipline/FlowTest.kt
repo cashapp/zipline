@@ -131,9 +131,14 @@ internal class FlowTest {
     val client = endpointB.take<FlowEchoService>("service", scope)
 
     val flow = client.createFlow("", 0)
-    channel.send("A")
-    channel.send("B")
-    channel.send("C")
+    val deferred = async {
+      channel.send("A")
+      forceSuspend()
+      channel.send("B")
+      forceSuspend()
+      channel.send("C")
+      forceSuspend()
+    }
 
     val received = mutableListOf<String>()
     val e = assertFailsWith<ZiplineException> {
@@ -143,6 +148,7 @@ internal class FlowTest {
       }
     }
     assertContains(e.toString(), "CancellationException")
+    deferred.join()
     assertEquals(listOf("A", "B"), received)
 
     // Confirm that no services or clients were leaked.
@@ -169,9 +175,14 @@ internal class FlowTest {
     val client = endpointB.take<FlowEchoService>("service", scope)
 
     val flow = client.createFlow("", 0)
-    channel.send("A")
-    channel.send("B")
-    channel.send("C")
+    val deferred = async {
+      channel.send("A")
+      forceSuspend()
+      channel.send("B")
+      forceSuspend()
+      channel.send("C")
+      forceSuspend()
+    }
 
     val received = mutableListOf<String>()
     supervisorScope {
@@ -186,6 +197,7 @@ internal class FlowTest {
         }
       }
     }
+    deferred.join()
     assertEquals(listOf("A", "B"), received)
 
     // Confirm that no services or clients were leaked.
