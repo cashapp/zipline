@@ -46,7 +46,7 @@ class NewSerializersTest {
   private val json = zipline.json
 
   @Test
-  fun stringParameter() = runBlocking {
+  fun stringParameter() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<StringParameter>(),
     ) as ReturningZiplineFunction
@@ -61,7 +61,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun stringReturnValue() = runBlocking {
+  fun stringReturnValue() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<StringReturnValue>(),
     ) as ReturningZiplineFunction
@@ -76,7 +76,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun stringSuspendResult() = runBlocking {
+  fun stringSuspendResult() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<StringSuspendResult>(),
     ) as SuspendingZiplineFunction<*>
@@ -91,7 +91,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun byteArrayParameter() = runBlocking {
+  fun byteArrayParameter() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<ByteArrayParameter>(),
     ) as ReturningZiplineFunction
@@ -106,7 +106,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun byteArrayReturnValue() = runBlocking {
+  fun byteArrayReturnValue() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<ByteArrayReturnValue>(),
     ) as ReturningZiplineFunction
@@ -121,7 +121,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun byteArraySuspendResult() = runBlocking {
+  fun byteArraySuspendResult() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<ByteArraySuspendResult>(),
     ) as SuspendingZiplineFunction<*>
@@ -136,7 +136,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun genericParameter() = runBlocking {
+  fun genericParameter() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericParameter<String>>(),
     ) as ReturningZiplineFunction
@@ -151,7 +151,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun genericReturnValue() = runBlocking {
+  fun genericReturnValue() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericReturnValue<String>>(),
     ) as ReturningZiplineFunction
@@ -166,7 +166,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun genericSuspendResult() = runBlocking {
+  fun genericSuspendResult() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericSuspendResult<String>>(),
     ) as SuspendingZiplineFunction<*>
@@ -181,7 +181,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun genericParameterInList() = runBlocking {
+  fun genericParameterInList() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericParameterInList<String>>(),
     ) as ReturningZiplineFunction
@@ -197,7 +197,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun genericReturnValueInList() = runBlocking {
+  fun genericReturnValueInList() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericReturnValueInList<String>>(),
     ) as ReturningZiplineFunction
@@ -214,7 +214,7 @@ class NewSerializersTest {
 
   @Ignore("No equals function for these")
   @Test
-  fun genericSuspendResultInList() = runBlocking {
+  fun genericSuspendResultInList() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericSuspendResultInList<String>>(),
     ) as SuspendingZiplineFunction<*>
@@ -229,7 +229,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun flowParameter() = runBlocking {
+  fun flowParameter() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<FlowParameter>(),
     ) as ReturningZiplineFunction
@@ -244,7 +244,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun flowReturnValue() = runBlocking {
+  fun flowReturnValue() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<FlowReturnValue>(),
     ) as ReturningZiplineFunction
@@ -259,7 +259,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun flowSuspendResult() = runBlocking {
+  fun flowSuspendResult() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<FlowSuspendResult>(),
     ) as SuspendingZiplineFunction<*>
@@ -274,7 +274,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun genericFlowParameter() = runBlocking {
+  fun genericFlowParameter() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericFlowParameter<String>>(),
     ) as ReturningZiplineFunction
@@ -289,7 +289,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun genericFlowReturnValue() = runBlocking {
+  fun genericFlowReturnValue() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericFlowReturnValue<String>>(),
     ) as ReturningZiplineFunction
@@ -304,7 +304,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun genericFlowSuspendResult() = runBlocking {
+  fun genericFlowSuspendResult() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<GenericFlowSuspendResult<String>>(),
     ) as SuspendingZiplineFunction<*>
@@ -319,7 +319,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun serviceParameter() = runBlocking {
+  fun serviceParameter() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<ServiceParameter>(),
     ) as ReturningZiplineFunction
@@ -334,7 +334,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun serviceReturnValue() = runBlocking {
+  fun serviceReturnValue() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<ServiceReturnValue>(),
     ) as ReturningZiplineFunction
@@ -349,7 +349,7 @@ class NewSerializersTest {
   }
 
   @Test
-  fun serviceSuspendResult() = runBlocking {
+  fun serviceSuspendResult() = runBlocking(dispatcher) {
     val function = onlyZiplineFunction(
       serviceSerializer = ziplineServiceSerializer<ServiceSuspendResult>(),
     ) as SuspendingZiplineFunction<*>

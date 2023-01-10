@@ -40,18 +40,18 @@ class EventListenerTest {
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)
   private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
-  @Before fun setUp() = runBlocking {
+  @Before fun setUp() = runBlocking(dispatcher) {
     zipline.loadTestingJs()
     eventListener.takeAll() // Skip events created by loadTestingJs().
     uncaughtExceptionHandler.setUp()
   }
 
-  @After fun tearDown() = runBlocking {
+  @After fun tearDown() = runBlocking(dispatcher) {
     zipline.close()
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun jvmCallJsService() = runBlocking {
+  @Test fun jvmCallJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
     val helloService = zipline.take<EchoService>("helloService")
@@ -66,7 +66,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from JavaScript, Jake))")
   }
 
-  @Test fun jsCallJvmService() = runBlocking {
+  @Test fun jsCallJvmService() = runBlocking(dispatcher) {
     val jvmEchoService = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse {
         return EchoResponse("sup from the JVM, ${request.message}")
@@ -85,7 +85,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=sup from the JVM, homie))")
   }
 
-  @Test fun suspendingJvmCallJsService() = runBlocking {
+  @Test fun suspendingJvmCallJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.unblockSuspendingJs()")
 
@@ -101,7 +101,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from suspending JavaScript, Jake))")
   }
 
-  @Test fun suspendingJsCallJvmService() = runBlocking {
+  @Test fun suspendingJsCallJvmService() = runBlocking(dispatcher) {
     val jvmSuspendingEchoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
         return EchoResponse("hello from the suspending JVM, ${request.message}")
@@ -125,7 +125,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).isEqualTo("callEnd 3 $name $funName $request Success(EchoResponse(message=hello from the suspending JVM, Eric))")
   }
 
-  @Test fun jvmCallIncompatibleJsService() = runBlocking {
+  @Test fun jvmCallIncompatibleJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
     assertThat(assertFailsWith<ZiplineApiMismatchException> {
@@ -150,7 +150,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such method")
   }
 
-  @Test fun jvmCallUnknownJsService() = runBlocking {
+  @Test fun jvmCallUnknownJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
 
     assertThat(assertFailsWith<ZiplineApiMismatchException> {
@@ -171,7 +171,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such service")
   }
 
-  @Test fun jsCallIncompatibleJvmService() = runBlocking {
+  @Test fun jsCallIncompatibleJvmService() = runBlocking(dispatcher) {
     val jvmPotatoService = object : PotatoService {
       override fun echo(): EchoResponse {
         error("unexpected call")
@@ -191,7 +191,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such method")
   }
 
-  @Test fun jsCallUnknownJvmService() = runBlocking {
+  @Test fun jsCallUnknownJvmService() = runBlocking(dispatcher) {
     assertThat(assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
     }).hasMessageThat().startsWith("app.cash.zipline.ZiplineApiMismatchException: no such service")
@@ -203,7 +203,7 @@ class EventListenerTest {
     assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such service")
   }
 
-  @Test fun ziplineClosed() = runBlocking {
+  @Test fun ziplineClosed() = runBlocking(dispatcher) {
     zipline.close()
     assertThat(eventListener.take()).isEqualTo("ziplineClosed")
 
@@ -216,7 +216,7 @@ class EventListenerTest {
    * We had a bug where EventListeners that called [ZiplineService.toString] would trigger a crash
    * on a lateinit value in the suspend callback.
    */
-  @Test fun serviceToStrings() = runBlocking {
+  @Test fun serviceToStrings() = runBlocking(dispatcher) {
     val outboundServiceToString =
       "SuspendingEchoService\$Companion\$Adapter\$GeneratedOutboundService"
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSuspendingJsBridges()")

@@ -27,6 +27,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers.Unconfined
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -45,7 +47,7 @@ internal class EventListenerEndpointTest {
   }
 
   @Test
-  fun simpleRequestAndResponse() = runBlocking {
+  fun simpleRequestAndResponse() = runBlocking(Unconfined) {
     val (clientEndpoint, serviceEndpoint) = newEndpointPair(
       scope = this,
       listenerA = clientListener,
@@ -140,7 +142,7 @@ internal class EventListenerEndpointTest {
   }
 
   @Test
-  fun suspendingRequestAndResponse() = runBlocking {
+  fun suspendingRequestAndResponse() = runBlocking(Unconfined) {
     val (clientEndpoint, serviceEndpoint) = newEndpointPair(
       scope = this,
       listenerA = clientListener,
@@ -149,8 +151,10 @@ internal class EventListenerEndpointTest {
 
     val service = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        forceSuspend()
-        return EchoResponse("pong")
+        val result = async {
+          EchoResponse("pong")
+        }
+        return result.await()
       }
     }
 
@@ -246,7 +250,7 @@ internal class EventListenerEndpointTest {
   }
 
   @Test
-  fun serviceRequestAndResponse() = runBlocking {
+  fun serviceRequestAndResponse() = runBlocking(Unconfined) {
     val (clientEndpoint, serviceEndpoint) = newEndpointPair(
       scope = this,
       listenerA = clientListener,

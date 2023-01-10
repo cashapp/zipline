@@ -37,31 +37,31 @@ class SerializersTest {
   private val ziplineRequestOnly = Zipline.create(dispatcher, AdaptersRequestSerializersModule)
   private val ziplineResponseOnly = Zipline.create(dispatcher, AdaptersResponseSerializersModule)
 
-  @Before fun setUp() = runBlocking {
+  @Before fun setUp() = runBlocking(dispatcher) {
     zipline.loadTestingJs()
     ziplineRequestOnly.loadTestingJs()
     ziplineResponseOnly.loadTestingJs()
   }
 
-  @After fun tearDown() = runBlocking {
+  @After fun tearDown() = runBlocking(dispatcher) {
     zipline.close()
     ziplineRequestOnly.close()
     ziplineResponseOnly.close()
   }
 
-  @Test fun missingGetReturnValueSerializerFailsFast() = runBlocking {
+  @Test fun missingGetReturnValueSerializerFailsFast() = runBlocking(dispatcher) {
     assertThat(assertFailsWith<IllegalArgumentException> {
       ziplineRequestOnly.take<AdaptersService>("adaptersService")
     }).hasMessageThat().contains("Serializer for class 'AdaptersResponse' is not found.")
   }
 
-  @Test fun missingGetParameterSerializerFailsFast() = runBlocking {
+  @Test fun missingGetParameterSerializerFailsFast() = runBlocking(dispatcher) {
     assertThat(assertFailsWith<IllegalArgumentException> {
       ziplineResponseOnly.take<AdaptersService>("adaptersService")
     }).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
   }
 
-  @Test fun presentGetSerializersSucceeds() = runBlocking {
+  @Test fun presentGetSerializersSucceeds() = runBlocking(dispatcher) {
     val service = zipline.take<AdaptersService>("adaptersService")
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareAdaptersJsBridges()")
 
@@ -69,7 +69,7 @@ class SerializersTest {
       .isEqualTo(AdaptersResponse("thank you for using your serializers, Andrew"))
   }
 
-  @Test fun missingSetReturnValueSerializerFailsFast() = runBlocking {
+  @Test fun missingSetReturnValueSerializerFailsFast() = runBlocking(dispatcher) {
     assertThat(assertFailsWith<IllegalArgumentException> {
       ziplineRequestOnly.bind<AdaptersService>(
         "adaptersService",
@@ -78,7 +78,7 @@ class SerializersTest {
     }).hasMessageThat().contains("Serializer for class 'AdaptersResponse' is not found.")
   }
 
-  @Test fun missingSetParameterSerializerFailsFast() = runBlocking {
+  @Test fun missingSetParameterSerializerFailsFast() = runBlocking(dispatcher) {
     assertThat(assertFailsWith<IllegalArgumentException> {
       ziplineResponseOnly.bind<AdaptersService>(
         "adaptersService",
@@ -87,7 +87,7 @@ class SerializersTest {
     }).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
   }
 
-  @Test fun presentSetSerializersSucceeds() = runBlocking {
+  @Test fun presentSetSerializersSucceeds() = runBlocking(dispatcher) {
     zipline.bind<AdaptersService>(
       "adaptersService",
       JvmAdaptersService()

@@ -21,6 +21,7 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
@@ -62,7 +63,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun flowReturnValueWorks() = runBlocking {
+  fun flowReturnValueWorks() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
@@ -80,7 +81,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun flowParameterWorks() = runBlocking {
+  fun flowParameterWorks() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
 
@@ -107,14 +108,14 @@ internal class FlowTest {
   }
 
   @Test
-  fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking {
+  fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking(Unconfined) {
     val service = RealFlowEchoService()
     val flow = service.createFlow("hello", 3)
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
   }
 
   @Test
-  fun receivingEndpointCancelsFlow() = runBlocking {
+  fun receivingEndpointCancelsFlow() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val channel = Channel<String>(Int.MAX_VALUE)
 
@@ -158,7 +159,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun callingEndpointCancelsFlow() = runBlocking {
+  fun callingEndpointCancelsFlow() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val channel = Channel<String>(Int.MAX_VALUE)
 
@@ -207,7 +208,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun collectFlowMultipleTimes() = runBlocking {
+  fun collectFlowMultipleTimes() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
@@ -226,7 +227,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun collectFlowZeroTimes() = runBlocking {
+  fun collectFlowZeroTimes() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()

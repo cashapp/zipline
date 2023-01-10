@@ -24,6 +24,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertNull
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
@@ -31,7 +32,7 @@ import kotlinx.serialization.modules.SerializersModule
 
 internal class ZiplineServiceTest {
   @Test
-  fun requestAndResponse() = runBlocking {
+  fun requestAndResponse() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val events = ArrayDeque<String>()
@@ -67,7 +68,7 @@ internal class ZiplineServiceTest {
   }
 
   @Test
-  fun transmitServices() = runBlocking {
+  fun transmitServices() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     endpointA.bind<EchoServiceFactory>("factory", FactoryService())
@@ -88,7 +89,7 @@ internal class ZiplineServiceTest {
    * contextual adapter that uses [ziplineServiceSerializer].
    */
   @Test
-  fun registerSerializerToSerializeServicesAsMembers() = runBlocking {
+  fun registerSerializerToSerializeServicesAsMembers() = runBlocking(Unconfined) {
     val serializersModule = SerializersModule {
       contextual(EchoService::class, ziplineServiceSerializer())
     }
@@ -109,7 +110,7 @@ internal class ZiplineServiceTest {
   }
 
   @Test
-  fun closingAnOutboundServiceRemovesItAndPreventsFurtherCalls() = runBlocking {
+  fun closingAnOutboundServiceRemovesItAndPreventsFurtherCalls() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     endpointA.bind<EchoServiceFactory>("factory", FactoryService())
