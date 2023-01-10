@@ -47,3 +47,11 @@ fun prettyPrint(jsonString: String): String {
   val jsonTree = json.decodeFromString(JsonElement.serializer(), jsonString)
   return json.encodeToStringFast(JsonElement.serializer(), jsonTree)
 }
+
+/**
+ * Endpoints exercise different code paths when the receiver suspends. Call this to force a
+ * suspend to exercise that code path.
+ */
+suspend fun forceSuspend() {
+  yield()
+}

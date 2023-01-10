@@ -30,6 +30,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -172,6 +173,7 @@ internal class EndpointTest {
 
     val echoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        forceSuspend()
         // In the middle of a suspending call there's a temporary reference to the callback.
         assertEquals(setOf("echoService", "zipline/host-1"), endpointA.serviceNames)
         assertEquals(setOf("echoService", "zipline/host-1"), endpointB.clientNames)
@@ -446,6 +448,51 @@ internal class EndpointTest {
     client.close()
     assertEquals("service closed", log.removeFirst())
     assertNull(log.removeFirstOrNull())
+  }
+
+  /** Confirm that coroutines don't suspend unless they do something that requires it. */
+  @Test
+  fun noSuspendReturn() = runBlocking {
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest) = EchoResponse("response")
+    }
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+    endpointA.bind<SuspendingEchoService>("service", service)
+    val client = endpointB.take<SuspendingEchoService>("service")
+
+    var ziplineResult: EchoResponse? = null
+    launch(start = UNDISPATCHED) {
+      ziplineResult = client.suspendingEcho(EchoRequest("request"))
+    }
+    assertEquals(EchoResponse("response"), ziplineResult)
+
+    client.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointB.serviceNames)
+  }
+
+  @Test
+  fun noSuspendThrow() = runBlocking {
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest) = throw Exception("boom!")
+    }
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+    endpointA.bind<SuspendingEchoService>("service", service)
+    val client = endpointB.take<SuspendingEchoService>("service")
+
+    var exception: ZiplineException? = null
+    launch(start = UNDISPATCHED) {
+      exception = assertFailsWith {
+        client.suspendingEcho(EchoRequest("request"))
+      }
+    }
+    assertTrue(exception!!.message!!.contains("Exception: boom!"))
+
+    client.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 
   interface ExtendsEchoService : ZiplineService, ExtendableInterface

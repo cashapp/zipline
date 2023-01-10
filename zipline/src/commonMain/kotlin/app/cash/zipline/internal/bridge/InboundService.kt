@@ -20,8 +20,9 @@ import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.encodeToStringFast
-import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
+import kotlinx.coroutines.async
+import kotlinx.coroutines.isActive
 import kotlinx.serialization.KSerializer
 
 /**
@@ -72,47 +73,78 @@ internal class InboundService<T : ZiplineService>(
     @Suppress("UNCHECKED_CAST") // We found this function by matching on its service type T.
     val function = internalCall.function as SuspendingZiplineFunction<ZiplineService>
 
-    val job = endpoint.scope.launch {
-      val args = internalCall.args
+    val callStart = endpoint.eventListener.callStart(externalCall)
 
-      val callStart = endpoint.eventListener.callStart(externalCall)
-      val result = runCatching {
+    val deferred = endpoint.scope.async(start = UNDISPATCHED) {
+      val args = internalCall.args
+      runCatching {
         function.callSuspending(service, args)
       }
-      endpoint.callCodec.nextOutboundCallCallback = { callbackCall ->
-        endpoint.eventListener.callEnd(
-          externalCall,
-          CallResult(result, callbackCall.encodedCall, callbackCall.serviceNames),
-          callStart,
-        )
-      }
-
-      // Don't resume a continuation if the Zipline has since been closed.
-      endpoint.scope.ensureActive()
-
-      when {
-        result.isSuccess -> suspendCallback.success(result.getOrNull())
-        else -> suspendCallback.failure(result.exceptionOrNull()!!)
-      }
     }
 
-    val cancelCallback = object : CancelCallback, HasPassByReferenceName {
-      override var passbyReferenceName: String? = null
+    val suspendingResult: SuspendingResult<*>
 
-      override fun cancel() {
-        job.cancel()
+    if (deferred.isActive) {
+      val cancelCallback = object : CancelCallback, HasPassByReferenceName {
+        override var passbyReferenceName: String? = null
+
+        override fun cancel() {
+          deferred.cancel()
+        }
+
+        override fun toString() = "CancelCallback/$internalCall"
       }
 
-      override fun toString() = "CancelCallback/$internalCall"
-    }
-    job.invokeOnCompletion {
-      val name = cancelCallback.passbyReferenceName
-      if (name != null) endpoint.remove(name)
-    }
+      deferred.invokeOnCompletion {
+        val name = cancelCallback.passbyReferenceName
+        if (name != null) endpoint.remove(name)
 
-    val suspendingResult = SuspendingResult<Unit>(
-      cancelCallback = cancelCallback,
-    )
+        val failure = deferred.getCompletionExceptionOrNull()
+        val kotlinResult = when {
+          failure != null -> Result.failure(failure)
+          else -> deferred.getCompleted()
+        }
+
+        // Don't resume a continuation if the Zipline has since been closed.
+        if (!endpoint.scope.isActive) return@invokeOnCompletion
+
+        endpoint.callCodec.nextOutboundCallCallback = { callbackCall ->
+          endpoint.eventListener.callEnd(
+            externalCall,
+            CallResult(kotlinResult, callbackCall.encodedCall, callbackCall.serviceNames),
+            callStart,
+          )
+        }
+
+        when {
+          kotlinResult.isFailure -> suspendCallback.failure(kotlinResult.exceptionOrNull()!!)
+          else -> suspendCallback.success(kotlinResult.getOrNull())
+        }
+      }
+
+      suspendingResult = SuspendingResult<Unit>(cancelCallback = cancelCallback)
+    } else {
+      val failure = deferred.getCompletionExceptionOrNull()
+      val kotlinResult = when {
+        failure != null -> Result.failure(failure)
+        else -> deferred.getCompleted()
+      }
+
+      endpoint.eventListener.callEnd(
+        externalCall,
+        CallResult(
+          kotlinResult,
+          externalCall.encodedCall,
+          listOf() // TODO(jwilson): capture this from encoding the result.
+        ),
+        callStart,
+      )
+
+      suspendingResult = when {
+        kotlinResult.isFailure -> SuspendingResult<Unit>(failure = kotlinResult.exceptionOrNull()!!)
+        else -> SuspendingResult(success = kotlinResult.getOrNull())
+      }
+    }
 
     return endpoint.json.encodeToStringFast(
       function.suspendingResultSerializer as KSerializer<SuspendingResult<*>>,

@@ -126,26 +126,45 @@ internal class OutboundCallHandler(
     suspendCallback.externalCall = externalCall
     suspendCallback.callStart = endpoint.eventListener.callStart(externalCall)
 
-    return suspendCancellableCoroutine { continuation ->
-      suspendCallback.continuation = continuation
-      endpoint.incompleteContinuations += continuation
-      endpoint.scope.launch {
-        val encodedSuspendingResult = endpoint.outboundChannel.call(externalCall.encodedCall)
-        val suspendingResult = endpoint.withTakeScope(scope) {
-          endpoint.json.decodeFromStringFast(
-            function.suspendingResultSerializer,
-            encodedSuspendingResult,
-          )
-        }
+    val encodedSuspendingResult = endpoint.outboundChannel.call(externalCall.encodedCall)
+    val suspendingResult = endpoint.withTakeScope(scope) {
+      endpoint.json.decodeFromStringFast(
+        function.suspendingResultSerializer,
+        encodedSuspendingResult,
+      )
+    }
 
+    if (suspendingResult.cancelCallback != null) {
+      return suspendCancellableCoroutine { continuation ->
+        suspendCallback.continuation = continuation
+        endpoint.incompleteContinuations += continuation
         continuation.invokeOnCancellation {
           endpoint.scope.launch {
             if (!suspendCallback.completed) {
-              suspendingResult.cancelCallback!!.cancel()
+              suspendingResult.cancelCallback.cancel()
             }
           }
         }
       }
+    } else {
+      val kotlinResult = when {
+        suspendingResult.failure != null -> Result.failure(suspendingResult.failure)
+        else -> Result.success(suspendingResult.success)
+      }
+
+      val callResult = CallResult(
+        kotlinResult,
+        encodedSuspendingResult,
+        listOf(), // TODO(jwilson): CallCodec.decodedServiceNames.
+      )
+
+      // Suspend callbacks are one-shot. When triggered, remove them immediately.
+      val name = suspendCallback.passbyReferenceName
+      if (name != null) endpoint.remove(name)
+
+      endpoint.eventListener.callEnd(externalCall, callResult, suspendCallback.callStart)
+
+      return kotlinResult.getOrThrow()
     }
   }
 
