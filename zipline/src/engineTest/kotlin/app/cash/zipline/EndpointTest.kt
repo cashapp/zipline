@@ -335,7 +335,7 @@ internal class EndpointTest {
     endpointA.bind<SuspendingEchoService>("helloService", service)
     val client = endpointB.take<SuspendingEchoService>("helloService")
 
-    val deferredResponse = async {
+    val deferredResponse = async(Dispatchers.Unconfined) {
       client.suspendingEcho(EchoRequest("ping"))
     }
 

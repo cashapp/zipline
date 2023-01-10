@@ -40,17 +40,17 @@ class InterfaceSerializersTest {
   private val zipline = Zipline.create(dispatcher, MessageInterfaceSerializersModule)
   private val ziplineNoSerializer = Zipline.create(dispatcher)
 
-  @Before fun setUp() = runBlocking {
+  @Before fun setUp() = runBlocking(dispatcher) {
     zipline.loadTestingJs()
     ziplineNoSerializer.loadTestingJs()
   }
 
-  @After fun tearDown() = runBlocking {
+  @After fun tearDown() = runBlocking(dispatcher) {
     zipline.close()
     ziplineNoSerializer.close()
   }
 
-  @Test fun jvmToJsRequestInterfaceSucceeds() = runBlocking {
+  @Test fun jvmToJsRequestInterfaceSucceeds() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate(
       "testing.app.cash.zipline.testing.prepareInterfaceSerializersJsBridges()"
     )
@@ -59,7 +59,7 @@ class InterfaceSerializersTest {
       .isEqualTo("JS received an interface, Andrew")
   }
 
-  @Test fun jvmToJsResponseInterfaceSucceeds() = runBlocking {
+  @Test fun jvmToJsResponseInterfaceSucceeds() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate(
       "testing.app.cash.zipline.testing.prepareInterfaceSerializersJsBridges()"
     )
@@ -68,7 +68,7 @@ class InterfaceSerializersTest {
       .isEqualTo(RealMessageInterface("JS returned an interface, Andrew"))
   }
 
-  @Test fun jsToJvmRequestInterfaceSucceeds() = runBlocking {
+  @Test fun jsToJvmRequestInterfaceSucceeds() = runBlocking(dispatcher) {
     zipline.bind<RequestInterfaceService>(
       "requestInterfaceService",
       JvmMessageInterfaceService()
@@ -80,7 +80,7 @@ class InterfaceSerializersTest {
     assertThat(result).isEqualTo("JVM received an interface, Jesse")
   }
 
-  @Test fun jsToJvmResponseInterfaceSucceeds() = runBlocking {
+  @Test fun jsToJvmResponseInterfaceSucceeds() = runBlocking(dispatcher) {
     zipline.bind<ResponseInterfaceService>(
       "responseInterfaceService",
       JvmMessageInterfaceService()
@@ -92,7 +92,7 @@ class InterfaceSerializersTest {
     assertThat(result).isEqualTo("JVM returned an interface, Jesse")
   }
 
-  @Test fun jsToJvmInterfaceRequestFailsLate() = runBlocking {
+  @Test fun jsToJvmInterfaceRequestFailsLate() = runBlocking(dispatcher) {
     ziplineNoSerializer.bind<RequestInterfaceService>(
       "requestInterfaceService",
       JvmMessageInterfaceService()
@@ -107,7 +107,7 @@ class InterfaceSerializersTest {
       .contains("Class 'app.cash.zipline.testing.RealMessageInterface' is not registered")
   }
 
-  @Test fun jsToJvmInterfaceResponseFailsLate() = runBlocking {
+  @Test fun jsToJvmInterfaceResponseFailsLate() = runBlocking(dispatcher) {
     ziplineNoSerializer.bind<ResponseInterfaceService>(
       "responseInterfaceService",
       JvmMessageInterfaceService()

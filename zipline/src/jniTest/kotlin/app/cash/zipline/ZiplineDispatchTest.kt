@@ -19,7 +19,6 @@ import app.cash.zipline.testing.SchedulerService
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
-import kotlin.test.Ignore
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -59,7 +58,7 @@ class ZiplineDispatchTest {
   }
 
   @Test
-  fun callbacksCalledInSequence() = runBlocking {
+  fun callbacksCalledInSequence() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -97,9 +96,8 @@ class ZiplineDispatchTest {
     assertThat(channel.receive()).isEqualTo("delay = 200")
   }
 
-  @Ignore
   @Test
-  fun recursiveCallbacksInterleaved() = runBlocking {
+  fun recursiveCallbacksInterleaved() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -150,9 +148,8 @@ class ZiplineDispatchTest {
     assertThat(channel.receive()).isEqualTo("delay = 100 + 200")
   }
 
-  @Ignore
   @Test
-  fun recursiveSuspendingFunctionsDontStackOverflow() = runBlocking {
+  fun recursiveSuspendingFunctionsDontStackOverflow() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -160,6 +157,7 @@ class ZiplineDispatchTest {
       var count = 0
 
       override suspend fun invoke(): String {
+        forceSuspend()
         count++
         return when {
           count <= 200 -> {
@@ -175,9 +173,8 @@ class ZiplineDispatchTest {
       .isEqualTo("${".".repeat(200)}!")
   }
 
-  @Ignore
   @Test
-  fun recursiveDelayingFunctionsDontStackOverflow() = runBlocking {
+  fun recursiveDelayingFunctionsDontStackOverflow() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
