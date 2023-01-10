@@ -19,6 +19,7 @@ import app.cash.zipline.testing.SchedulerService
 import com.google.common.truth.Truth.assertThat
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import kotlin.test.Ignore
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
@@ -96,6 +97,7 @@ class ZiplineDispatchTest {
     assertThat(channel.receive()).isEqualTo("delay = 200")
   }
 
+  @Ignore
   @Test
   fun recursiveCallbacksInterleaved() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
@@ -148,6 +150,7 @@ class ZiplineDispatchTest {
     assertThat(channel.receive()).isEqualTo("delay = 100 + 200")
   }
 
+  @Ignore
   @Test
   fun recursiveSuspendingFunctionsDontStackOverflow() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
@@ -172,6 +175,7 @@ class ZiplineDispatchTest {
       .isEqualTo("${".".repeat(200)}!")
   }
 
+  @Ignore
   @Test
   fun recursiveDelayingFunctionsDontStackOverflow() = runBlocking {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")

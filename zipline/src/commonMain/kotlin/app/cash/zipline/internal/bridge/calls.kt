@@ -311,7 +311,24 @@ internal class SuspendingResult<T>(
 
   /** The function succeeded without suspending. */
   val success: T? = null,
-)
+) {
+  fun kotlinResult(): Result<Any?> {
+    return when {
+      cancelCallback != null -> error("no result available")
+      failure != null -> Result.failure<T?>(failure)
+      else -> Result.success(success)
+    }
+  }
+}
+
+/** Combination of [SuspendingResult] and [app.cash.zipline.CallResult]. */
+internal class EncodedSuspendingResult(
+  val result: SuspendingResult<*>,
+  val encodedResult: String,
+  serviceNames: List<String>,
+) {
+  val serviceNames: List<String> = serviceNames.toList() // Defensive copy.
+}
 
 internal class SuspendingResultSerializer<T>(
   internal val successSerializer: KSerializer<T>,

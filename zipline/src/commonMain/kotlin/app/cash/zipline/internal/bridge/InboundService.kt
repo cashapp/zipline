@@ -19,11 +19,9 @@ import app.cash.zipline.Call
 import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.encodeToStringFast
 import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
 import kotlinx.coroutines.async
 import kotlinx.coroutines.isActive
-import kotlinx.serialization.KSerializer
 
 /**
  * Inbound calls use this to call into the real service.
@@ -82,8 +80,6 @@ internal class InboundService<T : ZiplineService>(
       }
     }
 
-    val suspendingResult: SuspendingResult<*>
-
     if (deferred.isActive) {
       val cancelCallback = object : CancelCallback, HasPassByReferenceName {
         override var passbyReferenceName: String? = null
@@ -122,7 +118,12 @@ internal class InboundService<T : ZiplineService>(
         }
       }
 
-      suspendingResult = SuspendingResult<Unit>(cancelCallback = cancelCallback)
+      val encodedSuspendingResult = endpoint.callCodec.encodeResult(
+        function,
+        SuspendingResult<Unit>(cancelCallback = cancelCallback)
+      )
+      return encodedSuspendingResult.encodedResult
+
     } else {
       val failure = deferred.getCompletionExceptionOrNull()
       val kotlinResult = when {
@@ -130,26 +131,25 @@ internal class InboundService<T : ZiplineService>(
         else -> deferred.getCompleted()
       }
 
+      val suspendingResult = when {
+        kotlinResult.isFailure -> SuspendingResult<Unit>(failure = kotlinResult.exceptionOrNull()!!)
+        else -> SuspendingResult(success = kotlinResult.getOrNull())
+      }
+
+      val encodedSuspendingResult = endpoint.callCodec.encodeResult(function, suspendingResult)
+
       endpoint.eventListener.callEnd(
         externalCall,
         CallResult(
           kotlinResult,
-          externalCall.encodedCall,
-          listOf() // TODO(jwilson): capture this from encoding the result.
+          encodedSuspendingResult.encodedResult,
+          encodedSuspendingResult.serviceNames,
         ),
         callStart,
       )
 
-      suspendingResult = when {
-        kotlinResult.isFailure -> SuspendingResult<Unit>(failure = kotlinResult.exceptionOrNull()!!)
-        else -> SuspendingResult(success = kotlinResult.getOrNull())
-      }
+      return encodedSuspendingResult.encodedResult
     }
-
-    return endpoint.json.encodeToStringFast(
-      function.suspendingResultSerializer as KSerializer<SuspendingResult<*>>,
-      suspendingResult,
-    )
   }
 
   override fun toString() = service.toString()

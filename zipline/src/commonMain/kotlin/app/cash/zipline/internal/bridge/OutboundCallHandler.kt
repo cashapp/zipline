@@ -21,7 +21,6 @@ import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.decodeFromStringFast
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -126,36 +125,30 @@ internal class OutboundCallHandler(
     suspendCallback.externalCall = externalCall
     suspendCallback.callStart = endpoint.eventListener.callStart(externalCall)
 
-    val encodedSuspendingResult = endpoint.outboundChannel.call(externalCall.encodedCall)
-    val suspendingResult = endpoint.withTakeScope(scope) {
-      endpoint.json.decodeFromStringFast(
-        function.suspendingResultSerializer,
-        encodedSuspendingResult,
-      )
+    val resultJson = endpoint.outboundChannel.call(externalCall.encodedCall)
+    val encodedSuspendingResult = endpoint.withTakeScope(scope) {
+      endpoint.callCodec.decodeResult(function, resultJson)
     }
 
-    if (suspendingResult.cancelCallback != null) {
+    if (encodedSuspendingResult.result.cancelCallback != null) {
       return suspendCancellableCoroutine { continuation ->
         suspendCallback.continuation = continuation
         endpoint.incompleteContinuations += continuation
         continuation.invokeOnCancellation {
           endpoint.scope.launch {
             if (!suspendCallback.completed) {
-              suspendingResult.cancelCallback.cancel()
+              encodedSuspendingResult.result.cancelCallback.cancel()
             }
           }
         }
       }
     } else {
-      val kotlinResult = when {
-        suspendingResult.failure != null -> Result.failure(suspendingResult.failure)
-        else -> Result.success(suspendingResult.success)
-      }
+      val kotlinResult = encodedSuspendingResult.result.kotlinResult()
 
       val callResult = CallResult(
         kotlinResult,
-        encodedSuspendingResult,
-        listOf(), // TODO(jwilson): CallCodec.decodedServiceNames.
+        resultJson,
+        encodedSuspendingResult.serviceNames,
       )
 
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
