@@ -17,6 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.ziplineServiceSerializer
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.KSerializer
@@ -73,6 +74,8 @@ internal class FlowSerializer<T>(
 
   private fun FlowZiplineService<T>.toFlow(): Flow<T> {
     return channelFlow {
+      ensureActive()
+
       this@toFlow.collect(object : FlowZiplineCollector<T> {
         override suspend fun emit(value: T) {
           this@channelFlow.send(value)

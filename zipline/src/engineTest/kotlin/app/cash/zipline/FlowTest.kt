@@ -21,6 +21,8 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
@@ -226,6 +229,56 @@ internal class FlowTest {
 
     // Confirm that no services or clients were leaked.
     scope.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
+  }
+
+  /**
+   * We had a bug where flows collect after their coroutine scopes are canceled and then they crash
+   * calling [Flow.collect]. This code in this test isn't representative of what would happen in
+   * practice, but it reproduces a problematic sequence of calls.
+   */
+  @Test
+  fun cancelScopeThatIsCollectingAFlow() = runBlocking {
+    val ziplineScope = ZiplineScope()
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val service = object : FlowEchoService, ZiplineScoped {
+      private val coroutineScope = CoroutineScope(SupervisorJob())
+      override val scope = ZiplineScope()
+
+      override suspend fun flowParameter(flow: Flow<String>): Int {
+        val job = coroutineScope.async {
+          flow.last()
+        }
+
+        // In practice this would come in from the caller.
+        close()
+
+        // Make sure the job is cleanly canceled.
+        assertFailsWith<CancellationException> {
+          job.await()
+        }
+
+        return 0
+      }
+
+      override fun createFlow(message: String, count: Int) = error("unexpected call")
+
+      override fun close() {
+        coroutineScope.cancel()
+        scope.close()
+      }
+    }
+
+    endpointA.bind<FlowEchoService>("service", service)
+    val client = endpointB.take<FlowEchoService>("service", ziplineScope)
+
+    val channel = Channel<String>(0)
+    assertEquals(0, client.flowParameter(channel.consumeAsFlow()))
+
+    // Confirm that no services or clients were leaked.
+    ziplineScope.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointA.clientNames)
   }
