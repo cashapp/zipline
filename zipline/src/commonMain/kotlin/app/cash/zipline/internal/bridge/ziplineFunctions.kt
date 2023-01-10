@@ -44,11 +44,14 @@ internal abstract class ReturningZiplineFunction<T : ZiplineService>(
 internal abstract class SuspendingZiplineFunction<T : ZiplineService>(
   override val name: String,
   argSerializers: List<KSerializer<*>>,
+  resultSerializer: KSerializer<*>,
 
   /** A serializer for a `SuspendCallback<R>` where `R` is the response type. */
   val suspendCallbackSerializer: KSerializer<*>,
 ) : ZiplineFunction<T> {
   val argsListSerializer = ArgsListSerializer(argSerializers)
+
+  val suspendingResultSerializer = SuspendingResultSerializer(resultSerializer)
 
   override val isSuspending get() = true
   override val isClose get() = false

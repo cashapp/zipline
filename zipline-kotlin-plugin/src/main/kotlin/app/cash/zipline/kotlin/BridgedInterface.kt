@@ -124,9 +124,9 @@ internal class BridgedInterface(
         requiredTypes += resolveTypeParameters(valueParameter.type)
       }
       val resolvedReturnType = resolveTypeParameters(bridgedFunction.owner.returnType)
-      requiredTypes += when {
-        bridgedFunction.isSuspend -> ziplineApis.suspendCallback.typeWith(resolvedReturnType)
-        else -> resolvedReturnType
+      requiredTypes += resolvedReturnType
+      if (bridgedFunction.isSuspend) {
+        requiredTypes += ziplineApis.suspendCallback.typeWith(resolvedReturnType)
       }
     }
 

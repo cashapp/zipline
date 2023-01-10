@@ -22,6 +22,7 @@ import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.encodeToStringFast
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.KSerializer
 
 /**
  * Inbound calls use this to call into the real service.
@@ -68,9 +69,10 @@ internal class InboundService<T : ZiplineService>(
     externalCall: Call,
     suspendCallback: SuspendCallback<Any?>,
   ): String {
+    @Suppress("UNCHECKED_CAST") // We found this function by matching on its service type T.
+    val function = internalCall.function as SuspendingZiplineFunction<ZiplineService>
+
     val job = endpoint.scope.launch {
-      @Suppress("UNCHECKED_CAST") // We found this function by matching on its service type T.
-      val function = internalCall.function as SuspendingZiplineFunction<ZiplineService>
       val args = internalCall.args
 
       val callStart = endpoint.eventListener.callStart(externalCall)
@@ -108,7 +110,14 @@ internal class InboundService<T : ZiplineService>(
       if (name != null) endpoint.remove(name)
     }
 
-    return endpoint.json.encodeToStringFast(cancelCallbackSerializer, cancelCallback)
+    val suspendingResult = SuspendingResult<Unit>(
+      cancelCallback = cancelCallback,
+    )
+
+    return endpoint.json.encodeToStringFast(
+      function.suspendingResultSerializer as KSerializer<SuspendingResult<*>>,
+      suspendingResult,
+    )
   }
 
   override fun toString() = service.toString()

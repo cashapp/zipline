@@ -130,18 +130,18 @@ internal class OutboundCallHandler(
       suspendCallback.continuation = continuation
       endpoint.incompleteContinuations += continuation
       endpoint.scope.launch {
-        val encodedCancelCallback = endpoint.outboundChannel.call(externalCall.encodedCall)
-        val cancelCallback = endpoint.withTakeScope(scope) {
+        val encodedSuspendingResult = endpoint.outboundChannel.call(externalCall.encodedCall)
+        val suspendingResult = endpoint.withTakeScope(scope) {
           endpoint.json.decodeFromStringFast(
-            cancelCallbackSerializer,
-            encodedCancelCallback,
+            function.suspendingResultSerializer,
+            encodedSuspendingResult,
           )
         }
 
         continuation.invokeOnCancellation {
           endpoint.scope.launch {
             if (!suspendCallback.completed) {
-              cancelCallback.cancel()
+              suspendingResult.cancelCallback!!.cancel()
             }
           }
         }
