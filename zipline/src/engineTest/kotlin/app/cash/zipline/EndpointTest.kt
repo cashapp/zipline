@@ -114,9 +114,11 @@ internal class EndpointTest {
     val responses = Channel<String>(1)
     val service = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        forceSuspend()
-        requests.send(request.message)
-        return EchoResponse(responses.receive())
+        // Force a suspend with async.
+        val result = async {
+          EchoResponse(responses.receive())
+        }
+        return result.await()
       }
     }
 

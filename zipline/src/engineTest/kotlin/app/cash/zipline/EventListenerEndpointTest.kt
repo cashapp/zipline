@@ -151,7 +151,7 @@ internal class EventListenerEndpointTest {
 
     val service = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        // Force suspend.
+        // Force a suspend with async.
         val result = async {
           EchoResponse("pong")
         }
