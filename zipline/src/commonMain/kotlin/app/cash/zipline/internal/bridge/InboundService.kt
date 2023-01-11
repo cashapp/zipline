@@ -125,6 +125,8 @@ internal class InboundService<T : ZiplineService>(
       return encodedSuspendingResult.encodedResult
 
     } else {
+      // Convert our Deferred<Result<T>> into a Result<T>, which will be failure if _either_ the
+      // Deferred failed or if it contains a failure Result.
       val failure = deferred.getCompletionExceptionOrNull()
       val kotlinResult = when {
         failure != null -> Result.failure(failure)

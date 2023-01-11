@@ -312,6 +312,10 @@ internal class SuspendingResult<T>(
   /** The function succeeded without suspending. */
   val success: T? = null,
 ) {
+  init {
+    require(listOfNotNull(cancelCallback, failure, success).size == 1)
+  }
+
   fun kotlinResult(): Result<Any?> {
     return when {
       cancelCallback != null -> error("no result available")
