@@ -26,7 +26,6 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.count
@@ -47,7 +46,7 @@ internal class FlowTest {
     override fun createFlow(message: String, count: Int): Flow<String> {
       return flow {
         for (i in 0 until count) {
-          delay(10) // Ensure we can send async through the reference.
+          forceSuspend() // Ensure we can send async through the reference.
           emit("$i $message")
         }
       }
@@ -90,7 +89,7 @@ internal class FlowTest {
 
     val flow = flow {
       for (i in 1..3) {
-        delay(10) // Ensure we can send async through the reference.
+        forceSuspend() // Ensure we can send async through the reference.
         emit("$i")
       }
     }
