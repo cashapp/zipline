@@ -335,7 +335,7 @@ internal class SuspendingResultSerializer<T>(
 ) : KSerializer<SuspendingResult<T>> {
 
   override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Result") {
-    element("cancelCallback", ThrowableSerializer.descriptor)
+    element("cancelCallback", cancelCallbackSerializer.descriptor)
     element("failure", ThrowableSerializer.descriptor)
     element("success", successSerializer.descriptor)
   }
