@@ -116,6 +116,7 @@ internal class EndpointTest {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
         // Force a suspend with async.
         val result = async {
+          requests.send(request.message)
           EchoResponse(responses.receive())
         }
         return result.await()
