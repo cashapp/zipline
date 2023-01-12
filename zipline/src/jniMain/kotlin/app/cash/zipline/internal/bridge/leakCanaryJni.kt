@@ -37,7 +37,7 @@ internal actual fun detectLeaks() {
 }
 
 /** Keep every [ZiplineServiceReference] reachable until its target is GC'd. */
-private val allReferencesSet = synchronizedSet(mutableSetOf<ZiplineServiceReference>())
+internal val allReferencesSet = synchronizedSet(mutableSetOf<PhantomReference<ZiplineService>>())
 
 /** The VM adds each [ZiplineServiceReference] here when its target is GC'd. */
 private val allReferencesQueue = ReferenceQueue<ZiplineService>()
