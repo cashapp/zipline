@@ -43,7 +43,7 @@ class LeakedServicesTest {
     uncaughtExceptionHandler.tearDown()
   }
 
-  @Test fun jvmLeaksService() = runBlocking {
+  @Test fun jvmLeaksService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
     allocateAndLeakService()
     awaitGarbageCollection()
@@ -53,7 +53,7 @@ class LeakedServicesTest {
     assertThat(eventListener.take()).isEqualTo("serviceLeaked $name")
   }
 
-  @Test fun jsLeaksService() = runBlocking {
+  @Test fun jsLeaksService() = runBlocking(dispatcher) {
     val supService = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse = error("unexpected call")
     }

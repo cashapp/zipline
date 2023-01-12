@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.encodeToStringFast
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -46,4 +47,15 @@ fun prettyPrint(jsonString: String): String {
   }
   val jsonTree = json.decodeFromString(JsonElement.serializer(), jsonString)
   return json.encodeToStringFast(JsonElement.serializer(), jsonTree)
+}
+
+/**
+ * Endpoints exercise different code paths when the receiver suspends. Call this to force a
+ * suspend to exercise that code path.
+ */
+suspend fun forceSuspend() {
+  // Yield multiple times to isolate against arbitrary coroutine scheduling.
+  for (i in 0 until 2) {
+    yield()
+  }
 }

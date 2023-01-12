@@ -21,7 +21,6 @@ import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.decodeFromStringFast
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -126,26 +125,39 @@ internal class OutboundCallHandler(
     suspendCallback.externalCall = externalCall
     suspendCallback.callStart = endpoint.eventListener.callStart(externalCall)
 
-    return suspendCancellableCoroutine { continuation ->
-      suspendCallback.continuation = continuation
-      endpoint.incompleteContinuations += continuation
-      endpoint.scope.launch {
-        val encodedCancelCallback = endpoint.outboundChannel.call(externalCall.encodedCall)
-        val cancelCallback = endpoint.withTakeScope(scope) {
-          endpoint.json.decodeFromStringFast(
-            cancelCallbackSerializer,
-            encodedCancelCallback,
-          )
-        }
+    val resultJson = endpoint.outboundChannel.call(externalCall.encodedCall)
+    val encodedSuspendingResult = endpoint.withTakeScope(scope) {
+      endpoint.callCodec.decodeResult(function, resultJson)
+    }
 
+    if (encodedSuspendingResult.result.cancelCallback != null) {
+      return suspendCancellableCoroutine { continuation ->
+        suspendCallback.continuation = continuation
+        endpoint.incompleteContinuations += continuation
         continuation.invokeOnCancellation {
           endpoint.scope.launch {
             if (!suspendCallback.completed) {
-              cancelCallback.cancel()
+              encodedSuspendingResult.result.cancelCallback.cancel()
             }
           }
         }
       }
+    } else {
+      val kotlinResult = encodedSuspendingResult.result.kotlinResult()
+
+      val callResult = CallResult(
+        kotlinResult,
+        resultJson,
+        encodedSuspendingResult.serviceNames,
+      )
+
+      // Suspend callbacks are one-shot. When triggered, remove them immediately.
+      val name = suspendCallback.passbyReferenceName
+      if (name != null) endpoint.remove(name)
+
+      endpoint.eventListener.callEnd(externalCall, callResult, suspendCallback.callStart)
+
+      return kotlinResult.getOrThrow()
     }
   }
 

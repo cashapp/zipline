@@ -25,6 +25,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -58,7 +59,7 @@ class ZiplineDispatchTest {
   }
 
   @Test
-  fun callbacksCalledInSequence() = runBlocking {
+  fun callbacksCalledInSequence() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -97,7 +98,7 @@ class ZiplineDispatchTest {
   }
 
   @Test
-  fun recursiveCallbacksInterleaved() = runBlocking {
+  fun recursiveCallbacksInterleaved() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -149,7 +150,7 @@ class ZiplineDispatchTest {
   }
 
   @Test
-  fun recursiveSuspendingFunctionsDontStackOverflow() = runBlocking {
+  fun recursiveSuspendingFunctionsDontStackOverflow() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -157,6 +158,7 @@ class ZiplineDispatchTest {
       var count = 0
 
       override suspend fun invoke(): String {
+        forceSuspend()
         count++
         return when {
           count <= 200 -> {
@@ -173,7 +175,7 @@ class ZiplineDispatchTest {
   }
 
   @Test
-  fun recursiveDelayingFunctionsDontStackOverflow() = runBlocking {
+  fun recursiveDelayingFunctionsDontStackOverflow() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -181,7 +183,9 @@ class ZiplineDispatchTest {
       var count = 0
 
       override suspend fun invoke(): String {
-        delay(1L)
+        withContext(dispatcher) {
+          delay(1L)
+        }
         count++
         return when {
           count <= 200 -> {

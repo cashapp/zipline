@@ -21,6 +21,7 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
@@ -31,7 +32,7 @@ import kotlinx.serialization.Serializable
 internal class ManualCallEncodingTest {
 
   @Test
-  fun happyPath() = runBlocking {
+  fun happyPath() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = ArrayDeque<String>()
@@ -72,7 +73,7 @@ internal class ManualCallEncodingTest {
   }
 
   @Test
-  fun absentValuesAreDefaulted() = runBlocking {
+  fun absentValuesAreDefaulted() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = ArrayDeque<String>()
@@ -113,7 +114,7 @@ internal class ManualCallEncodingTest {
   }
 
   @Test
-  fun defaultValuesArePresent() = runBlocking {
+  fun defaultValuesArePresent() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : ReceiveService {
@@ -148,7 +149,7 @@ internal class ManualCallEncodingTest {
   }
 
   @Test
-  fun mapsAreStructured() = runBlocking {
+  fun mapsAreStructured() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = ArrayDeque<String>()

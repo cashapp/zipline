@@ -52,7 +52,11 @@ fun unblockSuspendingJs() {
 fun callSuspendingEchoService(message: String) {
   val service = zipline.take<SuspendingEchoService>("jvmSuspendingEchoService")
   GlobalScope.launch {
-    suspendingEchoResult = service.suspendingEcho(EchoRequest(message)).message
+    suspendingEchoResult = try {
+      service.suspendingEcho(EchoRequest(message)).message
+    } catch (e: Exception) {
+      e.toString()
+    }
   }
 }
 

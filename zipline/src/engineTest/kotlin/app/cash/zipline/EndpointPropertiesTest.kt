@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 
@@ -31,7 +32,7 @@ internal class EndpointPropertiesTest {
   }
 
   @Test
-  fun valProperty() = runBlocking {
+  fun valProperty() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     var countCalls = 0
@@ -58,7 +59,7 @@ internal class EndpointPropertiesTest {
   }
 
   @Test
-  fun varProperty() = runBlocking {
+  fun varProperty() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     var countCalls = 0
@@ -103,7 +104,7 @@ internal class EndpointPropertiesTest {
   }
 
   @Test
-  fun genericValProperty() = runBlocking {
+  fun genericValProperty() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     var fooCalls = 0
@@ -146,7 +147,7 @@ internal class EndpointPropertiesTest {
   }
 
   @Test
-  fun genericVarProperty() = runBlocking {
+  fun genericVarProperty() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     var fooCalls = 0

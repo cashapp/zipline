@@ -25,13 +25,14 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertSame
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 
 internal class ZiplineScopedEndpointTest {
   @Test
-  fun eachTakeGetsAFreshScopeIfNoneProvided() = runBlocking {
+  fun eachTakeGetsAFreshScopeIfNoneProvided() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val log = ArrayDeque<String>()
@@ -64,7 +65,7 @@ internal class ZiplineScopedEndpointTest {
   }
 
   @Test
-  fun takeHonorsCallerProvidedScope() = runBlocking {
+  fun takeHonorsCallerProvidedScope() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
 
     val (endpointA, endpointB) = newEndpointPair(this)
@@ -94,7 +95,7 @@ internal class ZiplineScopedEndpointTest {
   }
 
   @Test
-  fun eachPassedInServiceGetsAFreshScopeIfReceiverIsNotZiplineScoped() = runBlocking {
+  fun eachPassedInServiceGetsAFreshScopeIfReceiverIsNotZiplineScoped() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val log = ArrayDeque<String>()
@@ -138,7 +139,7 @@ internal class ZiplineScopedEndpointTest {
   }
 
   @Test
-  fun eachServiceParameterHonorsZiplineScopedReceiver() = runBlocking {
+  fun eachServiceParameterHonorsZiplineScopedReceiver() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val serviceScope = ZiplineScope()
@@ -181,7 +182,7 @@ internal class ZiplineScopedEndpointTest {
   }
 
   @Test
-  fun eachServiceResultSharesSubjectsScope() = runBlocking {
+  fun eachServiceResultSharesSubjectsScope() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val scope = ZiplineScope()
@@ -222,7 +223,7 @@ internal class ZiplineScopedEndpointTest {
   }
 
   @Test
-  fun eachServiceResultSharesSubjectsScopeWhenSuspending() = runBlocking {
+  fun eachServiceResultSharesSubjectsScopeWhenSuspending() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val scope = ZiplineScope()
@@ -267,7 +268,7 @@ internal class ZiplineScopedEndpointTest {
    * while this is active doesn't crash.
    */
   @Test
-  fun suspendCallbacksNotScoped() = runBlocking {
+  fun suspendCallbacksNotScoped() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val serviceScope = ZiplineScope()
@@ -293,7 +294,7 @@ internal class ZiplineScopedEndpointTest {
    * while this is active doesn't crash.
    */
   @Test
-  fun cancelCallbacksNotScoped() = runBlocking {
+  fun cancelCallbacksNotScoped() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val scope = ZiplineScope()
@@ -320,7 +321,7 @@ internal class ZiplineScopedEndpointTest {
   }
 
   @Test
-  fun withScopeForShorterLifetime() = runBlocking {
+  fun withScopeForShorterLifetime() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val scope1 = ZiplineScope()
@@ -368,7 +369,7 @@ internal class ZiplineScopedEndpointTest {
 
   /** Confirm there's no nesting relationship between scopes. */
   @Test
-  fun withScopeForLongerLifetime() = runBlocking {
+  fun withScopeForLongerLifetime() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val scope1 = ZiplineScope()
@@ -415,7 +416,7 @@ internal class ZiplineScopedEndpointTest {
   }
 
   @Test
-  fun closingResultOfWithScopeClosesOriginal() = runBlocking {
+  fun closingResultOfWithScopeClosesOriginal() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val scope1 = ZiplineScope()

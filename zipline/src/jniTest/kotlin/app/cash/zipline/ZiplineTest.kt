@@ -375,8 +375,9 @@ class ZiplineTest {
       .isEqualTo("response 1")
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('')")
-    assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult"))
-      .isEqualTo("response 2")
+    assertThat(
+      zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult") as String
+    ).startsWith("ZiplineException: kotlinx.coroutines.JobCancellationException")
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('')")
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult"))

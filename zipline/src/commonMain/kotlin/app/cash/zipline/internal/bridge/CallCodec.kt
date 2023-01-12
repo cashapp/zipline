@@ -103,6 +103,20 @@ internal class CallCodec(
     return CallResult(result, resultJson, encodedServiceNames)
   }
 
+  internal fun encodeResult(
+    function: SuspendingZiplineFunction<*>,
+    result: SuspendingResult<*>,
+  ): EncodedSuspendingResult {
+    encodedServiceNames.clear()
+    @Suppress("UNCHECKED_CAST") // We delegate to the right serializer to encode.
+    val resultJson = endpoint.json.encodeToStringFast(
+      function.suspendingResultSerializer as KSerializer<Any?>,
+      result,
+    )
+
+    return EncodedSuspendingResult(result, resultJson, encodedServiceNames)
+  }
+
   internal fun decodeResult(
     function: ReturningZiplineFunction<*>,
     resultJson: String,
@@ -113,5 +127,17 @@ internal class CallCodec(
       resultJson,
     )
     return CallResult(result, resultJson, decodedServiceNames)
+  }
+
+  internal fun decodeResult(
+    function: SuspendingZiplineFunction<*>,
+    resultJson: String,
+  ): EncodedSuspendingResult {
+    decodedServiceNames.clear()
+    val result = endpoint.json.decodeFromStringFast(
+      function.suspendingResultSerializer,
+      resultJson,
+    )
+    return EncodedSuspendingResult(result, resultJson, decodedServiceNames)
   }
 }

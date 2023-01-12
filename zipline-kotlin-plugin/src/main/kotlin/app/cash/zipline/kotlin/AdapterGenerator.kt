@@ -391,11 +391,11 @@ internal class AdapterGenerator(
             )
           })
           val returnType = bridgedFunction.owner.returnType
-          val resultSerializerType = when {
-            bridgedFunction.isSuspend -> ziplineApis.suspendCallback.typeWith(returnType)
-            else -> returnType
+          putValueArgument(1, irGet(serializers[returnType]!!))
+          if (bridgedFunction.isSuspend) {
+            val suspendCallbackType = ziplineApis.suspendCallback.typeWith(returnType)
+            putValueArgument(2, irGet(serializers[suspendCallbackType]!!))
           }
-          putValueArgument(1, irGet(serializers[resultSerializerType]!!))
         }
       }
 
@@ -467,17 +467,31 @@ internal class AdapterGenerator(
         name = Name.identifier("resultSerializer")
         type = ziplineApis.kSerializer.starProjectedType
       }
+      val valueArgumentsCount: Int
+      if (bridgedFunction.isSuspend) {
+        addValueParameter {
+          initDefaults(original)
+          name = Name.identifier("suspendCallbackSerializer")
+          type = ziplineApis.kSerializer.starProjectedType
+        }
+        valueArgumentsCount = 4
+      } else {
+        valueArgumentsCount = 3
+      }
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = supertype.constructors.single(),
-          valueArgumentsCount = 3,
+          valueArgumentsCount = valueArgumentsCount,
           typeArgumentsCount = 1,
         ) {
           putTypeArgument(0, bridgedInterfaceT)
           putValueArgument(0, irString(bridgedFunction.owner.signature))
           putValueArgument(1, irGet(valueParameters[0]))
           putValueArgument(2, irGet(valueParameters[1]))
+          if (bridgedFunction.isSuspend) {
+            putValueArgument(3, irGet(valueParameters[2]))
+          }
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,

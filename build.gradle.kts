@@ -67,6 +67,9 @@ subprojects {
   }
 
   tasks.withType(Test::class).configureEach {
+    // https://github.com/cashapp/zipline/issues/848
+    jvmArgs = jvmArgs!! + "-Xss2048k"
+
     testLogging {
       if (System.getenv("CI") == "true") {
         events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.PASSED)

@@ -22,6 +22,7 @@ import app.cash.zipline.testing.GenericEchoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.kotlinBuiltInSerializersModule
 import app.cash.zipline.testing.newEndpointPair
+import kotlin.coroutines.suspendCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -30,16 +31,19 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
 
 internal class EndpointTest {
   @Test
-  fun requestAndResponse() = runBlocking {
+  fun requestAndResponse() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = ArrayDeque<String>()
@@ -67,7 +71,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun nullRequest() = runBlocking {
+  fun nullRequest() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : NullableEchoService {
@@ -85,7 +89,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun nullResponse() = runBlocking {
+  fun nullResponse() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : NullableEchoService {
@@ -103,15 +107,19 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingRequestAndResponse() = runBlocking {
+  fun suspendingRequestAndResponse() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)
     val responses = Channel<String>(1)
     val service = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        requests.send(request.message)
-        return EchoResponse(responses.receive())
+        // Force a suspend with async.
+        val result = async {
+          requests.send(request.message)
+          EchoResponse(responses.receive())
+        }
+        return result.await()
       }
     }
 
@@ -129,7 +137,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun callThrowsException() = runBlocking {
+  fun callThrowsException() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : EchoService {
@@ -148,7 +156,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingCallThrowsException() = runBlocking {
+  fun suspendingCallThrowsException() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : SuspendingEchoService {
@@ -167,17 +175,20 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingCallbacksCreateTemporaryReferences() = runBlocking {
+  fun suspendingCallbacksCreateTemporaryReferences() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val echoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        // In the middle of a suspending call there's a temporary reference to the callback.
-        assertEquals(setOf("echoService", "zipline/host-1"), endpointA.serviceNames)
-        assertEquals(setOf("echoService", "zipline/host-1"), endpointB.clientNames)
-        assertEquals(setOf("zipline/host-1"), endpointA.clientNames)
-        assertEquals(setOf("zipline/host-1"), endpointB.serviceNames)
-        return EchoResponse("hello, ${request.message}")
+        val result = async {
+          // In the middle of a suspending call there's a temporary reference to the callback.
+          assertEquals(setOf("echoService", "zipline/host-1"), endpointA.serviceNames)
+          assertEquals(setOf("echoService", "zipline/host-1"), endpointB.clientNames)
+          assertEquals(setOf("zipline/host-1"), endpointA.clientNames)
+          assertEquals(setOf("zipline/host-1"), endpointB.serviceNames)
+          EchoResponse("hello, ${request.message}")
+        }
+        return result.await()
       }
     }
 
@@ -195,7 +206,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingCallCanceled() = runBlocking {
+  fun suspendingCallCanceled() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)
@@ -225,7 +236,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun multipleCancelsAreIdempotent() = runBlocking {
+  fun multipleCancelsAreIdempotent() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)
@@ -257,7 +268,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun cancelAfterResult() = runBlocking {
+  fun cancelAfterResult() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<String>(1)
@@ -284,7 +295,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun genericRequestAndResponse() = runBlocking {
+  fun genericRequestAndResponse() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this, kotlinBuiltInSerializersModule)
 
     val stringService = object : GenericEchoService<String> {
@@ -315,7 +326,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun cancelIsAlwaysReceivedOnZiplineDispatcher() = runBlocking {
+  fun cancelIsAlwaysReceivedOnZiplineDispatcher() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
     val channel = Channel<String>(1)
 
@@ -342,7 +353,7 @@ internal class EndpointTest {
       channel.receive(),
     )
 
-    launch(Dispatchers.Unconfined) {
+    launch {
       deferredResponse.cancel()
     }
 
@@ -357,7 +368,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun extendInterface() = runBlocking {
+  fun extendInterface() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : ExtendsEchoService {
@@ -372,7 +383,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun callAfterClose() = runBlocking {
+  fun callAfterClose() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
 
     val (endpointA, endpointB) = newEndpointPair(this)
@@ -398,7 +409,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun suspendingCallAfterClose() = runBlocking {
+  fun suspendingCallAfterClose() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
 
     val (endpointA, endpointB) = newEndpointPair(this)
@@ -424,7 +435,7 @@ internal class EndpointTest {
   }
 
   @Test
-  fun closeIsIdempotent() = runBlocking {
+  fun closeIsIdempotent() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
 
     val (endpointA, endpointB) = newEndpointPair(this)
@@ -446,6 +457,51 @@ internal class EndpointTest {
     client.close()
     assertEquals("service closed", log.removeFirst())
     assertNull(log.removeFirstOrNull())
+  }
+
+  /** Confirm that coroutines don't suspend unless they do something that requires it. */
+  @Test
+  fun noSuspendReturn() = runBlocking(Unconfined) {
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest) = EchoResponse("response")
+    }
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+    endpointA.bind<SuspendingEchoService>("service", service)
+    val client = endpointB.take<SuspendingEchoService>("service")
+
+    var ziplineResult: EchoResponse? = null
+    launch(start = UNDISPATCHED) {
+      ziplineResult = client.suspendingEcho(EchoRequest("request"))
+    }
+    assertEquals(EchoResponse("response"), ziplineResult)
+
+    client.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointB.serviceNames)
+  }
+
+  @Test
+  fun noSuspendThrow() = runBlocking(Unconfined) {
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest) = throw Exception("boom!")
+    }
+
+    val (endpointA, endpointB) = newEndpointPair(this)
+    endpointA.bind<SuspendingEchoService>("service", service)
+    val client = endpointB.take<SuspendingEchoService>("service")
+
+    var exception: ZiplineException? = null
+    launch(start = UNDISPATCHED) {
+      exception = assertFailsWith {
+        client.suspendingEcho(EchoRequest("request"))
+      }
+    }
+    assertTrue(exception!!.message!!.contains("Exception: boom!"))
+
+    client.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 
   interface ExtendsEchoService : ZiplineService, ExtendableInterface

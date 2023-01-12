@@ -79,10 +79,12 @@ interface SampleService<T> : ZiplineService {
       class ZiplineFunction1<TF>(
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
+        suspendCallbackSerializer: KSerializer<*>,
       ) : SuspendingZiplineFunction<SampleService<TF>>(
         "suspend fun reduce(List<T>): T",
         argSerializers,
         resultSerializer,
+        suspendCallbackSerializer,
       ) {
         override suspend fun callSuspending(service: SampleService<TF>, args: List<*>) =
           service.reduce(args[0] as List<TF>)
@@ -116,7 +118,7 @@ interface SampleService<T> : ZiplineService {
         )
         return listOf(
           ZiplineFunction0(listOf(sampleRequestSerializer), sampleResponseSerializer),
-          ZiplineFunction1(listOf(listOfTSerializer), suspendCallbackTSerializer),
+          ZiplineFunction1(listOf(listOfTSerializer), serializers[0], suspendCallbackTSerializer),
           ZiplineFunction2(listOf(), unitSerializer),
         )
       }

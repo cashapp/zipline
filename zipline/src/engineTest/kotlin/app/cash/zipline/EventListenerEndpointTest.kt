@@ -27,6 +27,8 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotSame
 import kotlin.test.assertTrue
+import kotlinx.coroutines.Dispatchers.Unconfined
+import kotlinx.coroutines.async
 import kotlinx.coroutines.runBlocking
 
 /**
@@ -45,7 +47,7 @@ internal class EventListenerEndpointTest {
   }
 
   @Test
-  fun simpleRequestAndResponse() = runBlocking {
+  fun simpleRequestAndResponse() = runBlocking(Unconfined) {
     val (clientEndpoint, serviceEndpoint) = newEndpointPair(
       scope = this,
       listenerA = clientListener,
@@ -140,7 +142,7 @@ internal class EventListenerEndpointTest {
   }
 
   @Test
-  fun suspendingRequestAndResponse() = runBlocking {
+  fun suspendingRequestAndResponse() = runBlocking(Unconfined) {
     val (clientEndpoint, serviceEndpoint) = newEndpointPair(
       scope = this,
       listenerA = clientListener,
@@ -149,7 +151,11 @@ internal class EventListenerEndpointTest {
 
     val service = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        return EchoResponse("pong")
+        // Force a suspend with async.
+        val result = async {
+          EchoResponse("pong")
+        }
+        return result.await()
       }
     }
 
@@ -245,7 +251,104 @@ internal class EventListenerEndpointTest {
   }
 
   @Test
-  fun serviceRequestAndResponse() = runBlocking {
+  fun suspendingRequestAndResponseWithoutSuspend() = runBlocking(Unconfined) {
+    val (clientEndpoint, serviceEndpoint) = newEndpointPair(
+      scope = this,
+      listenerA = clientListener,
+      listenerB = serviceListener,
+    )
+
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        return EchoResponse("pong") // Doesn't suspend.
+      }
+    }
+
+    serviceEndpoint.bind<SuspendingEchoService>("echoService", service)
+    val client = clientEndpoint.take<SuspendingEchoService>("echoService")
+    client.suspendingEcho(EchoRequest("ping"))
+
+    val clientCall = clientListener.calls.removeFirst()
+    assertEquals("echoService", clientCall.serviceName)
+    assertEquals(client, clientCall.service)
+    assertEquals(
+      "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      clientCall.function.name,
+    )
+    assertEquals(listOf(EchoRequest("ping")), clientCall.args)
+    assertEquals(
+      """
+      |{
+      |  "service": "echoService",
+      |  "function": "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "callback": "zipline/host-1",
+      |  "args": [
+      |    {
+      |      "message": "ping"
+      |    }
+      |  ]
+      |}
+      """.trimMargin(),
+      prettyPrint(clientCall.encodedCall),
+    )
+    assertEquals(listOf("zipline/host-1"), clientCall.serviceNames) // This is the callback.
+
+    val serviceCall = serviceListener.calls.removeFirst()
+    assertEquals("echoService", serviceCall.serviceName)
+    assertEquals(service, serviceCall.service) // Note this is different from clientCall.service.
+    assertEquals(
+      "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      serviceCall.function.name,
+    )
+    assertEquals(listOf(EchoRequest("ping")), serviceCall.args)
+    assertEquals(
+      """
+      |{
+      |  "service": "echoService",
+      |  "function": "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "callback": "zipline/host-1",
+      |  "args": [
+      |    {
+      |      "message": "ping"
+      |    }
+      |  ]
+      |}
+      """.trimMargin(),
+      prettyPrint(serviceCall.encodedCall),
+    )
+    assertEquals(listOf("zipline/host-1"), serviceCall.serviceNames)
+
+    val clientResult = clientListener.results.removeFirst()
+    assertEquals(EchoResponse("pong"), clientResult.result.getOrNull())
+    assertEquals(
+      """
+      |{
+      |  "success": {
+      |    "message": "pong"
+      |  }
+      |}
+      """.trimMargin(),
+      prettyPrint(clientResult.encodedResult),
+    )
+    assertEquals(listOf(), clientResult.serviceNames)
+
+    val serviceResult = serviceListener.results.removeFirst()
+    assertEquals(EchoResponse("pong"), serviceResult.result.getOrNull())
+    assertEquals(
+      """
+      |{
+      |  "success": {
+      |    "message": "pong"
+      |  }
+      |}
+      """.trimMargin(),
+      prettyPrint(serviceResult.encodedResult),
+    )
+    assertEquals(listOf(), serviceResult.serviceNames)
+  }
+
+  @Test
+  fun serviceRequestAndResponse() = runBlocking(Unconfined) {
     val (clientEndpoint, serviceEndpoint) = newEndpointPair(
       scope = this,
       listenerA = clientListener,

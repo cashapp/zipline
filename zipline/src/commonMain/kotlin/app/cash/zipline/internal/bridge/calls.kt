@@ -214,6 +214,7 @@ internal class RealCallSerializer(
       return object : SuspendingZiplineFunction<T>(
         name = functionName,
         argSerializers = listOf(),
+        resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
         suspendCallbackSerializer = failureSuspendCallbackSerializer,
       ) {
         override suspend fun callSuspending(service: T, args: List<*>) =
@@ -293,6 +294,85 @@ internal class ResultSerializer<T>(
         }
       }
       return@decodeStructure result!!
+    }
+  }
+}
+
+/**
+ * Immediate result from invoking a suspending function, that may include either a value (if the
+ * call never suspended) or a cancel callback (if it did suspend).
+ */
+internal class SuspendingResult<T>(
+  /** The function suspended. Only non-null for suspend calls. */
+  val cancelCallback: CancelCallback? = null,
+
+  /** The function failed without suspending. */
+  val failure: Throwable? = null,
+
+  /** The function succeeded without suspending. */
+  val success: T? = null,
+) {
+  init {
+    require(listOfNotNull(cancelCallback, failure, success).size == 1)
+  }
+
+  fun kotlinResult(): Result<Any?> {
+    return when {
+      cancelCallback != null -> error("no result available")
+      failure != null -> Result.failure<T?>(failure)
+      else -> Result.success(success)
+    }
+  }
+}
+
+/** Combination of [SuspendingResult] and [app.cash.zipline.CallResult]. */
+internal class EncodedSuspendingResult(
+  val result: SuspendingResult<*>,
+  val encodedResult: String,
+  serviceNames: List<String>,
+) {
+  val serviceNames: List<String> = serviceNames.toList() // Defensive copy.
+}
+
+internal class SuspendingResultSerializer<T>(
+  internal val successSerializer: KSerializer<T>,
+) : KSerializer<SuspendingResult<T>> {
+
+  override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Result") {
+    element("cancelCallback", cancelCallbackSerializer.descriptor)
+    element("failure", ThrowableSerializer.descriptor)
+    element("success", successSerializer.descriptor)
+  }
+
+  override fun serialize(encoder: Encoder, value: SuspendingResult<T>) {
+    encoder.encodeStructure(descriptor) {
+      if (value.cancelCallback != null) {
+        encodeSerializableElement(descriptor, 0, cancelCallbackSerializer, value.cancelCallback)
+      } else if (value.failure != null) {
+        encodeSerializableElement(descriptor, 1, ThrowableSerializer, value.failure)
+      } else {
+        @Suppress("UNCHECKED_CAST") // We know the value of a success result is a 'T'.
+        encodeSerializableElement(descriptor, 2, successSerializer, value.success as T)
+      }
+    }
+  }
+
+  override fun deserialize(decoder: Decoder): SuspendingResult<T> {
+    return decoder.decodeStructure(descriptor) {
+      var cancelCallback: CancelCallback? = null
+      var failure: Throwable? = null
+      var success: T? = null
+
+      while (true) {
+        when (val index = decodeElementIndex(descriptor)) {
+          0 -> cancelCallback = decodeSerializableElement(descriptor, 0, cancelCallbackSerializer)
+          1 -> failure = decodeSerializableElement(descriptor, 1, ThrowableSerializer)
+          2 -> success = decodeSerializableElement(descriptor, 2, successSerializer)
+          DECODE_DONE -> break
+          else -> error("Unexpected index: $index")
+        }
+      }
+      return@decodeStructure SuspendingResult(cancelCallback, failure, success)
     }
   }
 }

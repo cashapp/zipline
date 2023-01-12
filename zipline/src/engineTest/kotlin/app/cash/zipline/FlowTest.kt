@@ -21,11 +21,11 @@ import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.count
@@ -46,7 +46,7 @@ internal class FlowTest {
     override fun createFlow(message: String, count: Int): Flow<String> {
       return flow {
         for (i in 0 until count) {
-          delay(10) // Ensure we can send async through the reference.
+          forceSuspend() // Ensure we can send async through the reference.
           emit("$i $message")
         }
       }
@@ -62,7 +62,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun flowReturnValueWorks() = runBlocking {
+  fun flowReturnValueWorks() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
@@ -80,7 +80,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun flowParameterWorks() = runBlocking {
+  fun flowParameterWorks() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
 
@@ -89,7 +89,7 @@ internal class FlowTest {
 
     val flow = flow {
       for (i in 1..3) {
-        delay(10) // Ensure we can send async through the reference.
+        forceSuspend() // Ensure we can send async through the reference.
         emit("$i")
       }
     }
@@ -107,14 +107,14 @@ internal class FlowTest {
   }
 
   @Test
-  fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking {
+  fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking(Unconfined) {
     val service = RealFlowEchoService()
     val flow = service.createFlow("hello", 3)
     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
   }
 
   @Test
-  fun receivingEndpointCancelsFlow() = runBlocking {
+  fun receivingEndpointCancelsFlow() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val channel = Channel<String>(Int.MAX_VALUE)
 
@@ -131,9 +131,14 @@ internal class FlowTest {
     val client = endpointB.take<FlowEchoService>("service", scope)
 
     val flow = client.createFlow("", 0)
-    channel.send("A")
-    channel.send("B")
-    channel.send("C")
+    val deferred = async {
+      channel.send("A")
+      forceSuspend()
+      channel.send("B")
+      forceSuspend()
+      channel.send("C")
+      forceSuspend()
+    }
 
     val received = mutableListOf<String>()
     val e = assertFailsWith<ZiplineException> {
@@ -143,6 +148,7 @@ internal class FlowTest {
       }
     }
     assertContains(e.toString(), "CancellationException")
+    deferred.join()
     assertEquals(listOf("A", "B"), received)
 
     // Confirm that no services or clients were leaked.
@@ -152,7 +158,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun callingEndpointCancelsFlow() = runBlocking {
+  fun callingEndpointCancelsFlow() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val channel = Channel<String>(Int.MAX_VALUE)
 
@@ -169,9 +175,14 @@ internal class FlowTest {
     val client = endpointB.take<FlowEchoService>("service", scope)
 
     val flow = client.createFlow("", 0)
-    channel.send("A")
-    channel.send("B")
-    channel.send("C")
+    val deferred = async {
+      channel.send("A")
+      forceSuspend()
+      channel.send("B")
+      forceSuspend()
+      channel.send("C")
+      forceSuspend()
+    }
 
     val received = mutableListOf<String>()
     supervisorScope {
@@ -186,6 +197,7 @@ internal class FlowTest {
         }
       }
     }
+    deferred.join()
     assertEquals(listOf("A", "B"), received)
 
     // Confirm that no services or clients were leaked.
@@ -195,7 +207,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun collectFlowMultipleTimes() = runBlocking {
+  fun collectFlowMultipleTimes() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
@@ -214,7 +226,7 @@ internal class FlowTest {
   }
 
   @Test
-  fun collectFlowZeroTimes() = runBlocking {
+  fun collectFlowZeroTimes() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealFlowEchoService()
