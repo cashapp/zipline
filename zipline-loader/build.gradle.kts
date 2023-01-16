@@ -125,10 +125,10 @@ kotlin {
 
 
 android {
-  compileSdkVersion(libs.versions.compileSdk.get().toInt())
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
-    minSdkVersion(18)
+    minSdk = libs.versions.minSdk.get().toInt()
     multiDexEnabled = true
   }
 

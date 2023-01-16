@@ -173,10 +173,10 @@ cklib {
 }
 
 android {
-  compileSdkVersion(libs.versions.compileSdk.get().toInt())
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
-    minSdkVersion(18)
+    minSdk = libs.versions.minSdk.get().toInt()
     multiDexEnabled = true
 
     testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -197,8 +197,9 @@ android {
     packagingOptions {
       // We get multiple copies of some license files via JNA, which is a transitive dependency of
       // kotlinx-coroutines-test. Don't fail the build on these duplicates.
-      exclude("META-INF/AL2.0")
-      exclude("META-INF/LGPL2.1")
+      resources {
+        excludes += listOf("META-INF/AL2.0", "META-INF/LGPL2.1")
+      }
 
       // Keep debug symbols to get function names if QuickJS crashes in native code. This grows the
       // release libquickjs.so artifact from 793 KiB to 2.1 MiB. (We expect that release builds of
