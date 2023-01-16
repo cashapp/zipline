@@ -163,6 +163,22 @@ class LoggingEventListener : EventListener() {
     )
   }
 
+  override fun initializerStart(applicationName: String, zipline: Zipline) {
+    log(applicationName = applicationName, log = "initializerStart $applicationName")
+  }
+
+  override fun initializerEnd(applicationName: String, zipline: Zipline, startValue: Any?) {
+    log(applicationName = applicationName, log = "initializerEnd $applicationName")
+  }
+
+  override fun mainFunctionStart(applicationName: String, zipline: Zipline) {
+    log(applicationName = applicationName, log = "mainFunctionStart $applicationName")
+  }
+
+  override fun mainFunctionEnd(applicationName: String, zipline: Zipline, startValue: Any?) {
+    log(applicationName = applicationName, log = "mainFunctionEnd $applicationName")
+  }
+
   override fun ziplineCreated(zipline: Zipline) {
     log(log = "ziplineCreated")
   }

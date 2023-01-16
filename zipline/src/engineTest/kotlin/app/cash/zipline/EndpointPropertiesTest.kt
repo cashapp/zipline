@@ -37,7 +37,6 @@ internal class EndpointPropertiesTest {
 
     var countCalls = 0
     var result = 42
-
     val service = object : ValService {
       override val count: Int
         get() {

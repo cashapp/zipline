@@ -310,11 +310,21 @@ class ZiplineLoader internal constructor(
       )
 
       // Run caller lambda to validate and initialize the loaded code to confirm it works.
-      initializer(zipline)
+      val initializerStartValue = eventListener.initializerStart(applicationName, zipline)
+      try {
+        initializer(zipline)
+      } finally {
+        eventListener.initializerEnd(applicationName, zipline, initializerStartValue)
+      }
 
       // Run the application after initializer has been run on Zipline engine.
-      loadedManifest.manifest.mainFunction?.let { mainFunction ->
-        zipline.quickJs.runApplication(loadedManifest.manifest.mainModuleId, mainFunction)
+      val mainFunctionStartValue = eventListener.mainFunctionStart(applicationName, zipline)
+      try {
+        loadedManifest.manifest.mainFunction?.let { mainFunction ->
+          zipline.quickJs.runApplication(loadedManifest.manifest.mainModuleId, mainFunction)
+        }
+      } finally {
+        eventListener.mainFunctionEnd(applicationName, zipline, mainFunctionStartValue)
       }
 
       return zipline
