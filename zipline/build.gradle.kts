@@ -210,9 +210,6 @@ android {
   }
 
   sourceSets {
-    getByName("main") {
-      manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    }
     getByName("androidTest") {
       java.srcDirs("src/engineTest/kotlin/", "src/jniTest/kotlin/")
       resources.srcDir("src/androidInstrumentationTest/resources/")
