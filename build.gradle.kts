@@ -135,7 +135,7 @@ allprojects {
       }
     }
     configure<MavenPublishBaseExtension> {
-      publishToMavenCentral(SonatypeHost.DEFAULT)
+      publishToMavenCentral(SonatypeHost.DEFAULT, automaticRelease = true)
       signAllPublications()
       pom {
         description.set("Runs Kotlin/JS libraries in Kotlin/JVM and Kotlin/Native programs")
