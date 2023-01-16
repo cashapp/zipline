@@ -6,6 +6,7 @@ plugins {
 }
 
 android {
+  namespace = "app.cash.zipline.samples.worldclock"
   compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {

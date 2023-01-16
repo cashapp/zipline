@@ -1,3 +1,5 @@
+rootProject.name = "samples"
+
 include(":trivia:trivia-host")
 include(":trivia:trivia-js")
 include(":trivia:trivia-shared")
