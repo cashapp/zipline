@@ -51,6 +51,9 @@ function build() {
   echo "CMAKE_ARCH=${CMAKE_ARCH}"
   echo ""
 
+  # Clean the build/jni directory to prevent confusing failure cases
+  echoRun rm -rf build/jni/$MACOS_ARCH
+
   # Build commands extracted from Github Actions
   echoRun mkdir -p build/jni/$MACOS_ARCH/
   echoRun mkdir -p zipline/src/jvmMain/resources/jni/$MACOS_ARCH/
