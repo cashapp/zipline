@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.13] - 2022-12-22
+## [0.9.14] - 2022-01-16
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -11,6 +11,16 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * Fix: Don’t force `suspend` functions to suspend. We've changed our calling convention so
+   suspendable functions are executed inline and on the same call stack until they suspend. If such
+   functions return without suspending, the async dispatch is skipped.
+ * Fix: Provide more information when calling a closed service.
+ * Fix: Clean up file names in stack traces.
+ * New: Add a `ZiplineManifest` to `LoadResult.Success`.
+
+
+## [0.9.13] - 2022-12-22
 
  * New: `ZiplineScope` is a new mechanism to close pass-by-reference services and flows. Pass a
    `ZiplineScope` to `Zipline.take()` or implement `ZiplineScoped` in a `ZiplineService` to declare
