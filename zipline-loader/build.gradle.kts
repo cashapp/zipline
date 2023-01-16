@@ -102,6 +102,7 @@ kotlin {
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(libs.sqlite.jdbc)
+        implementation(libs.truth)
       }
     }
     val jvmTest by getting {
