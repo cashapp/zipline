@@ -125,6 +125,7 @@ kotlin {
 
 
 android {
+  namespace = "app.cash.zipline.loader"
   compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
