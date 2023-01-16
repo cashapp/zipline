@@ -136,7 +136,7 @@ android {
 
   sourceSets {
     getByName("androidTest") {
-      java.srcDirs("src/androidTest/kotlin/")
+      java.srcDirs("src/androidInstrumentedTest/kotlin/")
     }
   }
 }
