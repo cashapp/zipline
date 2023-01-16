@@ -22,6 +22,7 @@ import app.cash.zipline.loader.internal.tink.subtle.Field25519
 import app.cash.zipline.loader.internal.tink.subtle.KeyPair
 import app.cash.zipline.loader.internal.tink.subtle.newKeyPairFromSeed
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 import okio.ByteString
@@ -62,6 +63,7 @@ internal expect fun canLoadTestResources(): Boolean
 /** We don't implement ECDSA P-256 signing on non-JNI platforms. */
 internal expect fun canSignEcdsaP256(): Boolean
 
+@OptIn(ExperimentalSerializationApi::class)
 fun prettyPrint(jsonString: String): String {
   val json = Json {
     prettyPrint = true
