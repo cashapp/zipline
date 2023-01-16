@@ -173,6 +173,7 @@ cklib {
 }
 
 android {
+  namespace = "app.cash.zipline"
   compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
