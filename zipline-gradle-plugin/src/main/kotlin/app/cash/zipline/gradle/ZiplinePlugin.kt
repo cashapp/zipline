@@ -77,7 +77,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     val ziplineCompileTask = project.tasks.register(compileZiplineTaskName, ZiplineCompileTask::class.java) { createdTask ->
       createdTask.description = "Compile .js to .zipline"
 
-      val linkOutputFolderProvider = kotlinBinary.linkTask.map { File(it.kotlinOptions.outputFile!!).parentFile }
+      val linkOutputFolderProvider = kotlinBinary.linkTask.map { it.outputFileProperty.get().parentFile }
       createdTask.inputDir.fileProvider(linkOutputFolderProvider)
       createdTask.outputDir.fileProvider(linkOutputFolderProvider.map { it.parentFile.resolve("${it.name}Zipline") })
 
