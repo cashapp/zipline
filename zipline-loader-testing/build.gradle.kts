@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
-  id("com.squareup.sqldelight")
+  id("app.cash.sqldelight")
 }
 
 kotlin {

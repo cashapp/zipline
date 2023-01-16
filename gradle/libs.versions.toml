@@ -11,7 +11,7 @@ okHttp = "4.10.0"
 okio = "3.2.0"
 minSdk = "18"
 picocli = "4.7.0"
-sqldelight = "1.5.4"
+sqldelight = "2.0.0-alpha04"
 
 [libraries]
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "1.2.2" }
@@ -53,11 +53,11 @@ okio-fakeFileSystem = { module = "com.squareup.okio:okio-fakefilesystem", versio
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 picocli-compiler = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
 shadowJar-gradle-plugin = { module = "gradle.plugin.com.github.johnrengelman:shadow", version = "7.1.2" }
-sqldelight-gradle-plugin = { module = "com.squareup.sqldelight:gradle-plugin", version.ref = "sqldelight" }
-sqldelight-driver-android = { module = "com.squareup.sqldelight:android-driver", version.ref = "sqldelight" }
-sqldelight-driver-native = { module = "com.squareup.sqldelight:native-driver", version.ref = "sqldelight" }
-sqldelight-driver-sqlite = { module = "com.squareup.sqldelight:sqlite-driver", version.ref = "sqldelight" }
-sqldelight-runtime = { module = "com.squareup.sqldelight:runtime", version.ref = "sqldelight" }
+sqldelight-gradle-plugin = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqldelight" }
+sqldelight-driver-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
+sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
+sqldelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", version.ref = "sqldelight" }
+sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.40.0.0" }
 turbine = { module = "app.cash.turbine:turbine", version = "0.12.1" }
 truth = { module = "com.google.truth:truth", version = "1.1.3" }

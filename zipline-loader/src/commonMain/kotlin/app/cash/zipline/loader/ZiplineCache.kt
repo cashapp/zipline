@@ -22,7 +22,7 @@ import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import app.cash.zipline.loader.internal.cache.createDatabase
 import app.cash.zipline.loader.internal.cache.isSqlException
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
-import com.squareup.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlDriver
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.Closeable

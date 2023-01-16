@@ -19,7 +19,7 @@ import app.cash.zipline.loader.randomToken
 import app.cash.zipline.loader.systemFileSystem
 import app.cash.zipline.loader.testSqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import com.squareup.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlDriver
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
