@@ -16,6 +16,7 @@
 package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
+import org.jetbrains.kotlin.backend.common.extensions.FirIncompatiblePluginAPI
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageLocationWithRange
@@ -362,6 +363,7 @@ fun irBlockBodyBuilder(
 }
 
 /** This creates `companion object` if it doesn't exist already. */
+@OptIn(FirIncompatiblePluginAPI::class)
 fun getOrCreateCompanion(
   enclosing: IrClass,
   irPluginContext: IrPluginContext,

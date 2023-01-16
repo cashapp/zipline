@@ -16,6 +16,7 @@
 package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
+import org.jetbrains.kotlin.backend.common.extensions.FirIncompatiblePluginAPI
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
@@ -59,6 +60,7 @@ import org.jetbrains.kotlin.name.Name
  * access a specific serializer. Declaring serializers is useful to fast fail if ever a serializer
  * is required but not configured.
  */
+@OptIn(FirIncompatiblePluginAPI::class)
 internal class BridgedInterface(
   private val pluginContext: IrPluginContext,
   private val ziplineApis: ZiplineApis,

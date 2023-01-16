@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.kotlin
 
+import org.jetbrains.kotlin.backend.common.extensions.FirIncompatiblePluginAPI
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
@@ -28,6 +29,7 @@ import org.jetbrains.kotlin.ir.util.isVararg
 import org.jetbrains.kotlin.name.FqName
 
 /** Looks up APIs used by the code rewriters. */
+@OptIn(FirIncompatiblePluginAPI::class)
 internal class ZiplineApis(
   private val pluginContext: IrPluginContext,
 ) {

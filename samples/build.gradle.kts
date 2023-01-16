@@ -18,5 +18,6 @@ allprojects {
   repositories {
     mavenCentral()
     google()
+    maven(url = "https://androidx.dev/storage/compose-compiler/repository/")
   }
 }
