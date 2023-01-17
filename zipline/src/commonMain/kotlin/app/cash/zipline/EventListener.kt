@@ -179,6 +179,32 @@ abstract class EventListener {
   }
 
   /**
+   * Initializer runs before the mainFunction and executes on the host platform.
+   */
+  open fun initializerStart(zipline: Zipline, applicationName: String): Any? {
+    return null
+  }
+
+  /**
+   * Invoked when initializer is finished. Failure is not recorded separately as it is unrecoverable.
+   */
+  open fun initializerEnd(zipline: Zipline, applicationName: String, startValue: Any?) {
+  }
+
+  /**
+   * Invoked when mainFunction is run within the JS platform to start an application.
+   */
+  open fun mainFunctionStart(zipline: Zipline, applicationName: String): Any? {
+    return null
+  }
+
+  /**
+   * Invoked when mainFunction is finished. Failure is not recorded separately as it is unrecoverable.
+   */
+  open fun mainFunctionEnd(zipline: Zipline, applicationName: String, startValue: Any?) {
+  }
+
+  /**
    * Invoked when a Zipline is created, before any application code is loaded.
    */
   open fun ziplineCreated(zipline: Zipline) {
