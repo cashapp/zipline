@@ -65,6 +65,7 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
@@ -72,6 +73,7 @@ import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createDispatchReceiverParameter
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.isLocal
 import org.jetbrains.kotlin.ir.util.packageFqName
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
@@ -411,9 +413,9 @@ val IrType.classId: ClassId?
   get() {
     val irClass = getClass()
     val packageName = irClass?.packageFqName
-    val topLevelName = irClass?.name
-    return if (packageName != null && topLevelName != null) {
-      ClassId(packageName, topLevelName)
+    val relativeClassName = classFqName
+    return if (packageName != null && relativeClassName != null) {
+      ClassId(packageName, relativeClassName, irClass.isLocal)
     } else {
       null
     }
