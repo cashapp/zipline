@@ -14,9 +14,9 @@ val IrType.classId: ClassId?
   get() {
     val irClass = getClass()
     val packageName = irClass?.packageFqName
-    val relativeClassName = classFqName
-    return if (packageName != null && relativeClassName != null) {
-      ClassId(packageName, relativeClassName, irClass.isLocal)
+    val className = classFqName
+    return if (packageName != null && className != null) {
+      ClassId(packageName, className, irClass.isLocal)
     } else {
       null
     }

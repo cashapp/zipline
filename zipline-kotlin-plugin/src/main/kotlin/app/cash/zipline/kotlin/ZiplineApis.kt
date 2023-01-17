@@ -85,8 +85,9 @@ internal class ZiplineApis(
       }
 
   val requireContextual: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(bridgeFqName.callableId("requireContextual"))
-      .single()
+    get() = pluginContext.referenceFunctions(
+      bridgeFqName.callableId("requireContextual")
+    ).single()
 
   /** This symbol for `ziplineServiceSerializer(KClass<*>, List<KSerializer<*>>)`. */
   val ziplineServiceSerializerTwoArg: IrSimpleFunctionSymbol
