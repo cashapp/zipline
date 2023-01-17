@@ -411,9 +411,9 @@ val IrType.classId: ClassId?
   get() {
     val irClass = getClass()
     val packageName = irClass?.packageFqName
-    val className = irClass?.name
-    return if (packageName != null && className != null) {
-      ClassId(packageName, className)
+    val topLevelName = irClass?.name
+    return if (packageName != null && topLevelName != null) {
+      ClassId(packageName, topLevelName)
     } else {
       null
     }
