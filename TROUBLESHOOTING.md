@@ -16,7 +16,7 @@ If you don't have Android SDK downloaded yet, the easiest way is to install Andr
 
 ## Missing cmake
 
-You may encounter silent failure in the `$ ./.github/workflows/build-mac.sh` from missing `cmake` where this is no build output logs.
+You may encounter silent failure in the `./.github/workflows/build-mac.sh` from missing `cmake` where this is no build output logs.
 
 On macOS, install with `brew install cmake`.
 
@@ -24,7 +24,7 @@ On macOS, install with `brew install cmake`.
 
 Zipline requires architecture specific built artifacts of native code.
 
-On macOS, run from Zipline root directory `$ ./.github/workflows/build-mac.sh`.
+On macOS, run from Zipline root directory `./.github/workflows/build-mac.sh`.
 
 ## Missing JNI Libraries
 
