@@ -16,7 +16,6 @@
 package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
-import org.jetbrains.kotlin.backend.common.extensions.FirIncompatiblePluginAPI
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.IrElement
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
@@ -45,7 +44,6 @@ import org.jetbrains.kotlin.ir.util.isInterface
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.substitute
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 /**
@@ -60,7 +58,6 @@ import org.jetbrains.kotlin.name.Name
  * access a specific serializer. Declaring serializers is useful to fast fail if ever a serializer
  * is required but not configured.
  */
-@OptIn(FirIncompatiblePluginAPI::class)
 internal class BridgedInterface(
   private val pluginContext: IrPluginContext,
   private val ziplineApis: ZiplineApis,
@@ -216,7 +213,7 @@ internal class BridgedInterface(
           pluginContext,
           ziplineApis,
           this@BridgedInterface.scope,
-          pluginContext.referenceClass(type.classFqName!!)!!.owner,
+          pluginContext.referenceClass(type.classId!!)!!.owner,
         ).adapterExpression(parameterList)
       }
 
@@ -231,7 +228,7 @@ internal class BridgedInterface(
           putTypeArgument(0, type)
           putValueArgument(
             0,
-            irKClass(pluginContext.referenceClass(type.classFqName!!)!!.owner)
+            irKClass(pluginContext.referenceClass(type.classId!!)!!.owner)
           )
           putValueArgument(1, parameterList)
         }
@@ -283,7 +280,7 @@ internal class BridgedInterface(
       functionName: String,
       type: IrType,
     ): BridgedInterface {
-      val classSymbol = pluginContext.referenceClass(type.classFqName ?: FqName.ROOT)
+      val classSymbol = type.classId?.let { pluginContext.referenceClass(it) }
       if (classSymbol == null || !classSymbol.owner.isInterface) {
         throw ZiplineCompilationException(
           element = element,
