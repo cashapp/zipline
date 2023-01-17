@@ -125,17 +125,15 @@ kotlin {
 
 
 android {
-  compileSdkVersion(libs.versions.compileSdk.get().toInt())
+  namespace = "app.cash.zipline.loader"
+  compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
-    minSdkVersion(18)
+    minSdk = libs.versions.minSdk.get().toInt()
     multiDexEnabled = true
   }
 
   sourceSets {
-    getByName("main") {
-      manifest.srcFile("src/androidMain/AndroidManifest.xml")
-    }
     getByName("androidTest") {
       java.srcDirs("src/androidTest/kotlin/")
     }

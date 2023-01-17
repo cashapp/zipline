@@ -6,12 +6,13 @@ plugins {
 }
 
 android {
+  namespace = "app.cash.zipline.samples.worldclock"
   compileSdk = libs.versions.compileSdk.get().toInt()
 
   defaultConfig {
     applicationId = "com.example.zipline.worldclock"
     minSdk = 21
-    targetSdk = libs.versions.targetSdk.get().toInt()
+    targetSdk = 33
   }
 
   compileOptions {
