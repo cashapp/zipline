@@ -38,6 +38,7 @@ import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
+import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
@@ -147,7 +148,7 @@ internal class BridgedInterface(
   }
 
   private val IrType.isContextual
-    get() = annotations.any { it.type.classId == ziplineApis.contextualClassId }
+    get() = annotations.any { it.type.getClass()?.classId == ziplineApis.contextualClassId }
 
   class SerializerExpression(
     val expression: IrExpression,
@@ -213,7 +214,7 @@ internal class BridgedInterface(
           pluginContext,
           ziplineApis,
           this@BridgedInterface.scope,
-          pluginContext.referenceClass(type.classId!!)!!.owner,
+          pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner,
         ).adapterExpression(parameterList)
       }
 
@@ -228,7 +229,7 @@ internal class BridgedInterface(
           putTypeArgument(0, type)
           putValueArgument(
             0,
-            irKClass(pluginContext.referenceClass(type.classId!!)!!.owner)
+            irKClass(pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner)
           )
           putValueArgument(1, parameterList)
         }
@@ -254,7 +255,7 @@ internal class BridgedInterface(
   }
 
   private val IrType.isFlow
-    get() = classId == ziplineApis.flowClassId
+    get() = getClass()?.classId == ziplineApis.flowClassId
 
   /** Call this on any declaration returned by [classSymbol] to fill in the generic parameters. */
   fun resolveTypeParameters(type: IrType): IrType {
@@ -280,7 +281,7 @@ internal class BridgedInterface(
       functionName: String,
       type: IrType,
     ): BridgedInterface {
-      val classSymbol = type.classId?.let { pluginContext.referenceClass(it) }
+      val classSymbol = type.getClass()?.classId?.let { pluginContext.referenceClass(it) }
       if (classSymbol == null || !classSymbol.owner.isInterface) {
         throw ZiplineCompilationException(
           element = element,

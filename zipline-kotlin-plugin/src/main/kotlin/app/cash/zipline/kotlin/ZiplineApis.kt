@@ -20,8 +20,10 @@ import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
+import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isVararg
 import org.jetbrains.kotlin.name.CallableId
@@ -71,7 +73,7 @@ internal class ZiplineApis(
   val serializerFunctionTypeParam: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(serializationFqName.callableId("serializer"))
       .single {
-        it.owner.extensionReceiverParameter?.type?.classId == serializersModuleClassId &&
+        it.owner.extensionReceiverParameter?.type?.getClass()?.classId == serializersModuleClassId &&
           it.owner.valueParameters.isEmpty() &&
           it.owner.typeParameters.size == 1
       }
@@ -188,7 +190,7 @@ internal class ZiplineApis(
   private fun rewritePair(funName: CallableId): Pair<String, IrSimpleFunctionSymbol> {
     val overloads = pluginContext.referenceFunctions(funName)
     val rewriteTarget = overloads.single {
-      it.owner.valueParameters.lastOrNull()?.type?.classId == ziplineServiceAdapterClassId
+      it.owner.valueParameters.lastOrNull()?.type?.getClass()?.classId == ziplineServiceAdapterClassId
     }
     val original = overloads.single {
       it.owner.valueParameters.size + 1 == rewriteTarget.owner.valueParameters.size
