@@ -11,7 +11,7 @@ okHttp = "4.10.0"
 okio = "3.2.0"
 minSdk = "18"
 picocli = "4.7.0"
-sqldelight = "2.0.0-alpha04"
+sqldelight = "2.0.0-SNAPSHOT"
 
 [libraries]
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "1.2.2" }

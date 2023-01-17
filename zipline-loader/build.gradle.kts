@@ -142,8 +142,8 @@ android {
 }
 
 sqldelight {
-  database("Database") {
-    packageName = "app.cash.zipline.loader.internal.cache"
+  databases.create("Database") {
+    packageName.set("app.cash.zipline.loader.internal.cache")
   }
 }
 

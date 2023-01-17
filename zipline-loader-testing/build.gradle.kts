@@ -61,7 +61,7 @@ kotlin {
 }
 
 sqldelight {
-  database("Produce") {
-    packageName = "app.cash.zipline.loader.internal.cache.testing"
+  databases.create("Produce") {
+    packageName.set("app.cash.zipline.loader.internal.cache.testing")
   }
 }

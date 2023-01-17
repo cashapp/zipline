@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.CommonExtension
 import com.android.build.gradle.BaseExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
@@ -12,6 +13,7 @@ buildscript {
     mavenCentral()
     google()
     gradlePluginPortal()
+    maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
   }
   dependencies {
     classpath(libs.android.gradle.plugin)
@@ -45,23 +47,24 @@ allprojects {
   repositories {
     mavenCentral()
     google()
+    maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
   }
 }
 
 subprojects {
   plugins.withId("com.android.library") {
     extensions.configure<BaseExtension> {
-      lintOptions {
+      (this as CommonExtension<*, *, *, *>).lint {
         textReport = true
-        textOutput("stdout")
+        textOutput = File("stdout")
         lintConfig = rootProject.file("lint.xml")
 
-        isCheckDependencies = true
-        isCheckTestSources = false // TODO true https://issuetracker.google.com/issues/138247523
-        isExplainIssues = false
+        checkDependencies = true
+        checkTestSources = false // TODO true https://issuetracker.google.com/issues/138247523
+        explainIssues = false
 
         // We run a full lint analysis as build part in CI, so skip vital checks for assemble task.
-        isCheckReleaseBuilds = false
+        checkReleaseBuilds = false
       }
     }
   }
