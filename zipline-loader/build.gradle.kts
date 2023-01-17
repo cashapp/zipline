@@ -175,8 +175,13 @@ tasks.withType<Test> {
   dependsOn(fetchWycheproofJson)
 }
 
-tasks.withType<AndroidUnitTest> {
-  enabled = false
+afterEvaluate {
+  tasks.named("compileDebugUnitTestKotlinAndroid") {
+    enabled = false
+  }
+  tasks.named("compileReleaseUnitTestKotlinAndroid") {
+    enabled = false
+  }
 }
 
 configure<MavenPublishBaseExtension> {
