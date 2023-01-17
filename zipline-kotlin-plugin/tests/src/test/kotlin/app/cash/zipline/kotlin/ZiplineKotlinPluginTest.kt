@@ -25,11 +25,8 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
 import kotlinx.serialization.KSerializer
-import org.jetbrains.kotlin.com.intellij.mock.MockProject
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
-import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
-import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.junit.Test
 
 /** Confirm bridge calls are rewritten to use `OutboundBridge` or `InboundBridge` as appropriate. */
@@ -380,7 +377,7 @@ fun compile(
   return KotlinCompilation().apply {
     sources = sourceFiles
     useIR = true
-    compilerPlugins = listOf(plugin.asComponentRegistrar())
+    compilerPluginRegistrars = listOf(plugin)
     inheritClassPath = true
   }.compile()
 }
@@ -391,18 +388,4 @@ fun compile(
   plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
 ): KotlinCompilation.Result {
   return compile(listOf(sourceFile), plugin)
-}
-
-// https://github.com/tschuchortdev/kotlin-compile-testing/issues/336
-@Suppress("DEPRECATION")
-@OptIn(ExperimentalCompilerApi::class)
-private fun CompilerPluginRegistrar.asComponentRegistrar() = object : ComponentRegistrar {
-  override val supportsK2 get() = this@asComponentRegistrar.supportsK2
-
-  override fun registerProjectComponents(
-    project: MockProject,
-    configuration: CompilerConfiguration
-  ) = with(CompilerPluginRegistrar.ExtensionStorage()) {
-    registerExtensions(configuration)
-  }
 }
