@@ -19,7 +19,6 @@ allprojects {
   repositories {
     mavenCentral()
     google()
-    maven(url = "https://androidx.dev/storage/compose-compiler/repository/")
     maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
   }
 }
