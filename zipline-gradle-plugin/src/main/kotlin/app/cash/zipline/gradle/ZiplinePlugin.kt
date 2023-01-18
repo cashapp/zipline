@@ -15,14 +15,11 @@
  */
 package app.cash.zipline.gradle
 
-import app.cash.zipline.gradle.ZiplineCompileTask.ManifestSigningKey
 import app.cash.zipline.loader.SignatureAlgorithmId
 import app.cash.zipline.loader.internal.generateKeyPair
-import java.io.File
-import java.util.Locale
-import okio.ByteString.Companion.decodeHex
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
+import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
@@ -31,6 +28,7 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginArtifact
 import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
+import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 import org.slf4j.LoggerFactory
 
 @Suppress("unused") // Created reflectively by Gradle.
@@ -50,69 +48,63 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
     createGenerateKeyPairTasks(target)
 
-    val extension = target.extensions.findByType(KotlinMultiplatformExtension::class.java)
+    val kotlinExtension = target.extensions.findByType(KotlinMultiplatformExtension::class.java)
       ?: return
 
-    val configuration = target.extensions.create("zipline", ZiplineExtension::class.java)
+    val ziplineExtension = target.extensions.create("zipline", ZiplineExtension::class.java)
 
-    extension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
+    kotlinExtension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
       kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
-        registerCompileZiplineTask(target, kotlinBinary, configuration)
+        registerCompileZiplineTask(
+          project = target,
+          jsProductionTask = kotlinBinary.asJsProductionTask(),
+          extension = ziplineExtension,
+        )
+      }
+    }
+
+    target.tasks.withType(KotlinWebpack::class.java) { kotlinWebpack ->
+      if (!kotlinWebpack.name.endsWith("Webpack")) {
+        return@withType
+      }
+      val ziplineCompileTask = registerCompileZiplineTask(
+        project = target,
+        jsProductionTask = kotlinWebpack.asJsProductionTask(),
+        extension = ziplineExtension,
+      )
+      ziplineCompileTask.configure {
+        it.dependsOn(kotlinWebpack)
       }
     }
   }
 
   private fun registerCompileZiplineTask(
     project: Project,
-    kotlinBinary: JsIrBinary,
-    configuration: ZiplineExtension,
-  ) {
-    // Like 'compileDevelopmentExecutableKotlinJsZipline'.
-    val linkTaskName = kotlinBinary.linkTaskName
-    val compileZiplineTaskName = "${linkTaskName}Zipline"
-
+    jsProductionTask: JsProductionTask,
+    extension: ZiplineExtension,
+  ): TaskProvider<ZiplineCompileTask> {
     // For every JS executable, create a task that compiles its .js to .zipline.
     //    input: build/compileSync/main/productionExecutable/kotlin
     //   output: build/compileSync/main/productionExecutable/kotlinZipline
-    val ziplineCompileTask = project.tasks.register(compileZiplineTaskName, ZiplineCompileTask::class.java) { createdTask ->
-      createdTask.description = "Compile .js to .zipline"
-
-      val linkOutputFolderProvider = kotlinBinary.linkTask.map { File(it.kotlinOptions.outputFile!!).parentFile }
-      createdTask.inputDir.fileProvider(linkOutputFolderProvider)
-      createdTask.outputDir.fileProvider(linkOutputFolderProvider.map { it.parentFile.resolve("${it.name}Zipline") })
-
-      createdTask.mainModuleId.set(configuration.mainModuleId)
-      createdTask.mainFunction.set(configuration.mainFunction)
-      createdTask.version.set(configuration.version)
-
-      fun <T> Iterable<Provider<T>>.flatten(): Provider<List<T>> {
-        val empty = project.provider { emptyList<T>() }
-        return fold(empty) { listProvider, elementProvider ->
-          listProvider.zip(elementProvider, Collection<T>::plus)
-        }
-      }
-
-      createdTask.signingKeys.set(project.provider {
-        configuration.signingKeys.asMap.values
-      }.flatMap {
-        it.map { dslKey ->
-          dslKey.privateKeyHex.zip(dslKey.algorithmId) { privateKeyHex, algorithmId ->
-            ManifestSigningKey(dslKey.name, algorithmId, privateKeyHex.decodeHex())
-          }
-        }.flatten()
-      })
+    val ziplineCompileTask = project.tasks.register(
+      "${jsProductionTask.name}Zipline",
+      ZiplineCompileTask::class.java,
+    )
+    ziplineCompileTask.configure {
+      it.configure(jsProductionTask, extension)
     }
 
-    val target = if (kotlinBinary.target.name == "js") "" else kotlinBinary.target.name
-    val capitalizedMode = kotlinBinary.mode.name
-      .lowercase(locale = Locale.US)
-      .replaceFirstChar { it.titlecase(locale = Locale.US) }
-    val serveTaskName = "serve${target}${capitalizedMode}Zipline"
+    val target = (if (jsProductionTask.targetName == "js") "" else jsProductionTask.targetName)
+    val mode = jsProductionTask.mode.name
+    val toolName = jsProductionTask.toolName ?: ""
+    val serveTaskName = "serve${target.capitalize()}${mode.capitalize()}${toolName}Zipline"
     project.tasks.register(serveTaskName, ZiplineServeTask::class.java) { createdTask ->
       createdTask.description = "Serves Zipline files"
       createdTask.inputDir.set(ziplineCompileTask.flatMap { it.outputDir })
-      createdTask.port.set(configuration.httpServerPort)
+      createdTask.port.set(extension.httpServerPort)
     }
+
+    return ziplineCompileTask
   }
 
   override fun applyToCompilation(
