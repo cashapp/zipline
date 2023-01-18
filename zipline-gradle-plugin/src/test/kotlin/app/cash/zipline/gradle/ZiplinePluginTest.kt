@@ -76,6 +76,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/distributionsZipline"
     )
+    assertThat(ziplineOut.listFiles()?.size).isEqualTo(2)
     assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
     assertThat(ziplineOut.resolve("lib.zipline").exists()).isTrue()
   }
