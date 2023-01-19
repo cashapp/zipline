@@ -29,6 +29,7 @@ internal data class SourceMapJson(
   val sourcesContent: List<String?>,
   val names: List<String>,
   val mappings: String,
+  val sourceRoot: String? = null,
 )
 
 data class Group(

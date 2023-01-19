@@ -21,6 +21,7 @@ import app.cash.zipline.loader.SignatureAlgorithmId
 import java.io.File
 import java.io.Serializable
 import okio.ByteString
+import okio.ByteString.Companion.decodeHex
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
@@ -60,6 +61,35 @@ abstract class ZiplineCompileTask : DefaultTask() {
   @get:Optional
   @get:Input
   abstract val version: Property<String>
+
+  internal fun configure(
+    jsProductionTask: JsProductionTask,
+    extension: ZiplineExtension,
+  ) {
+    description = "Compile .js to .zipline"
+
+    val linkOutputFolderProvider = jsProductionTask.outputFile.map { it.parentFile }
+    inputDir.fileProvider(linkOutputFolderProvider)
+    outputDir.fileProvider(
+      linkOutputFolderProvider.map {
+        it.parentFile.resolve("${it.name}Zipline")
+      }
+    )
+
+    mainModuleId.set(extension.mainModuleId)
+    mainFunction.set(extension.mainFunction)
+    version.set(extension.version)
+
+    signingKeys.set(project.provider {
+      extension.signingKeys.asMap.values
+    }.flatMap {
+      it.map { dslKey ->
+        dslKey.privateKeyHex.zip(dslKey.algorithmId) { privateKeyHex, algorithmId ->
+          ManifestSigningKey(dslKey.name, algorithmId, privateKeyHex.decodeHex())
+        }
+      }.flatten()
+    })
+  }
 
   @TaskAction
   fun task(inputChanges: InputChanges) {

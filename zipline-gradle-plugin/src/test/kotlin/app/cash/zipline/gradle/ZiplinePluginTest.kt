@@ -61,6 +61,27 @@ class ZiplinePluginTest {
   }
 
   /**
+   * Run the Zipline compiler on the Webpack output. It's flattened into a single module and
+   * minified.
+   */
+  @Test
+  fun webpackBuild() {
+    val projectDir = File("src/test/projects/basic")
+
+    val taskName = ":lib:jsBrowserProductionWebpackZipline"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(taskName)!!.outcome)
+
+    val ziplineOut = projectDir.resolve(
+      "lib/build/distributionsZipline"
+    )
+    assertThat(ziplineOut.listFiles()?.size).isEqualTo(2)
+    assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
+    assertThat(ziplineOut.resolve("lib.zipline").exists()).isTrue()
+  }
+
+  /**
    * This confirms these plugin features are working:
    *
    *  - IR rewriting in JS and JVM
