@@ -84,8 +84,8 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     extension: ZiplineExtension,
   ): TaskProvider<ZiplineCompileTask> {
     // For every JS executable, create a task that compiles its .js to .zipline.
-    //    input: build/compileSync/main/productionExecutable/kotlin
-    //   output: build/compileSync/main/productionExecutable/kotlinZipline
+    //   input: build/compileSync/js/main/productionExecutable/kotlin
+    //   output: build/compileSync/js/main/productionExecutable/kotlinZipline
     val ziplineCompileTask = project.tasks.register(
       "${jsProductionTask.name}Zipline",
       ZiplineCompileTask::class.java,
