@@ -5,7 +5,6 @@ buildscript {
     }
     mavenCentral()
     google()
-    maven(url = "https://oss.sonatype.org/content/repositories/snapshots")
   }
   dependencies {
     classpath("app.cash.zipline:zipline-gradle-plugin:${project.property("ziplineVersion")}")
