@@ -11,7 +11,7 @@ plugins {
   kotlin("plugin.serialization")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
-  id("app.cash.sqldelight")
+  id("com.squareup.sqldelight")
   id("de.undercouch.download")
 }
 

@@ -17,14 +17,13 @@ package app.cash.zipline.loader.internal.cache
 
 import co.touchlab.sqliter.DatabaseConfiguration
 import co.touchlab.sqliter.interop.SQLiteException
-import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.db.SqlSchema
-import app.cash.sqldelight.driver.native.NativeSqliteDriver
-import app.cash.sqldelight.driver.native.wrapConnection
+import com.squareup.sqldelight.db.SqlDriver
+import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
+import com.squareup.sqldelight.drivers.native.wrapConnection
 import okio.Path
 
 internal actual class SqlDriverFactory {
-  actual fun create(path: Path, schema: SqlSchema): SqlDriver {
+  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
     validateDbPath(path)
     return NativeSqliteDriver(
       configuration = DatabaseConfiguration(

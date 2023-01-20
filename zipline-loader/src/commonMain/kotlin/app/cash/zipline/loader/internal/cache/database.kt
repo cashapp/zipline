@@ -15,9 +15,8 @@
  */
 package app.cash.zipline.loader.internal.cache
 
-import app.cash.sqldelight.EnumColumnAdapter
-import app.cash.sqldelight.db.SqlDriver
-import app.cash.sqldelight.db.SqlSchema
+import com.squareup.sqldelight.EnumColumnAdapter
+import com.squareup.sqldelight.db.SqlDriver
 import okio.Path
 
 internal expect class SqlDriverFactory {
@@ -26,7 +25,7 @@ internal expect class SqlDriverFactory {
    *
    * Database is created and migrated after the driver is initialized prior to return.
    */
-  fun create(path: Path, schema: SqlSchema): SqlDriver
+  fun create(path: Path, schema: SqlDriver.Schema): SqlDriver
 }
 
 /** Identify if an exception is from platform specific SqlLite library */
