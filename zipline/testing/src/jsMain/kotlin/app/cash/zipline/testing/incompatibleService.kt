@@ -1,6 +1,7 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
@@ -25,7 +26,7 @@ fun prepareSuspendingPotatoJsBridges() {
 @JsExport
 fun callSuspendingPotatoService() {
   val service = zipline.take<SuspendingPotatoService>("jvmSuspendingPotatoService")
-  GlobalScope.launch {
+  GlobalScope.launch(start = CoroutineStart.UNDISPATCHED) {
     try {
       suspendingPotatoResult = service.echo().message
     } catch (e: Exception) {

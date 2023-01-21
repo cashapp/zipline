@@ -22,31 +22,27 @@ import app.cash.zipline.testing.ServiceAndPrefix
 import app.cash.zipline.testing.ServiceMemberSerializersModule
 import app.cash.zipline.testing.ServiceTransformer
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /**
  * Confirm we can pass services as contextual members of serializable types, as described in
  * [ziplineServiceSerializer]. This test confirms it all works across bridges.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class ServiceMemberTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher, ServiceMemberSerializersModule)
-  private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
   @Before fun setUp() = runBlocking(dispatcher) {
     zipline.loadTestingJs()
-    uncaughtExceptionHandler.setUp()
   }
 
   @After fun tearDown() = runBlocking(dispatcher) {
     zipline.close()
-    uncaughtExceptionHandler.tearDown()
   }
 
   @Test fun serviceMember() = runBlocking(dispatcher) {

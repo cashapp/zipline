@@ -23,16 +23,15 @@ import app.cash.zipline.testing.AdaptersSerializersModule
 import app.cash.zipline.testing.AdaptersService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class SerializersTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher, AdaptersSerializersModule)
   private val ziplineRequestOnly = Zipline.create(dispatcher, AdaptersRequestSerializersModule)
   private val ziplineResponseOnly = Zipline.create(dispatcher, AdaptersResponseSerializersModule)

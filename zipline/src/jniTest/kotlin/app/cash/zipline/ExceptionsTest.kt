@@ -20,16 +20,15 @@ import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class ExceptionsTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 
   @Before fun setUp(): Unit = runBlocking(dispatcher) {

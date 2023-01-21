@@ -24,10 +24,8 @@ import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.kotlinBuiltInSerializersModule
 import kotlin.test.assertEquals
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ByteArraySerializer
@@ -37,11 +35,12 @@ import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
 import org.junit.Ignore
+import org.junit.Rule
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class NewSerializersTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher, kotlinBuiltInSerializersModule)
   private val json = zipline.json
 

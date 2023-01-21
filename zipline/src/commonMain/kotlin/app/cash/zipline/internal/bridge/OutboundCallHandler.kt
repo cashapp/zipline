@@ -22,6 +22,7 @@ import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
 import kotlin.coroutines.Continuation
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 
@@ -104,6 +105,8 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
+    endpoint.scope.ensureActive()
+
     val function = functionsList[functionIndex] as SuspendingZiplineFunction<*>
     check(!serviceState.closed) {
       """

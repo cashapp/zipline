@@ -20,10 +20,10 @@ import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -31,7 +31,8 @@ import org.junit.Test
  * each doesn't mangle content. We've had bugs where non-ASCII characters weren't encoded properly.
  */
 class Utf8Test {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
   private val quickjs = zipline.quickJs
 

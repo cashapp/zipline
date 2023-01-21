@@ -16,16 +16,16 @@
 package app.cash.zipline
 
 import kotlin.test.assertEquals
-import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class SetTimeoutTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 
   @Before fun setUp(): Unit = runBlocking(dispatcher) {
@@ -51,7 +51,7 @@ class SetTimeoutTest {
     )
 
     assertEquals("hello", zipline.quickJs.evaluate("greeting"))
-    dispatcher.advanceTimeBy(200L)
+    delay(200L)
     assertEquals("goodbye", zipline.quickJs.evaluate("greeting"))
   }
 
@@ -66,6 +66,6 @@ class SetTimeoutTest {
     )
 
     zipline.close()
-    dispatcher.advanceTimeBy(200L)
+    delay(200L)
   }
 }
