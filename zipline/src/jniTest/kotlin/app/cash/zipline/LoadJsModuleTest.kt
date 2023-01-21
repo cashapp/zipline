@@ -16,20 +16,19 @@
 package app.cash.zipline
 
 import com.google.common.truth.Truth.assertThat
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /**
  * This exercises the code in [app.cash.zipline.internal.defineJs] to confirm that Zipline can load
  * modules in the standard forms that the Kotlin compiler produces.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class LoadJsModuleTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 
   @Before fun setUp() = runBlocking(dispatcher) {

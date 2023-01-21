@@ -21,26 +21,24 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.LoggingEventListener
 import com.google.common.truth.Truth.assertThat
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 class LeakedServicesTest {
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val eventListener = LoggingEventListener()
-  private val dispatcher = TestCoroutineDispatcher()
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)
-  private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
   @Before fun setUp() {
     zipline.loadTestingJs()
     eventListener.takeAll() // Skip events created by loadTestingJs().
-    uncaughtExceptionHandler.setUp()
   }
 
   @After fun tearDown() {
     zipline.close()
-    uncaughtExceptionHandler.tearDown()
   }
 
   @Test fun jvmLeaksService() = runBlocking(dispatcher) {

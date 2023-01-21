@@ -22,21 +22,20 @@ import app.cash.zipline.testing.RequestInterfaceService
 import app.cash.zipline.testing.ResponseInterfaceService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import kotlinx.serialization.SerializationException
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /**
  * When requests and responses are interfaces we don't get crashes early; we get them late. This is
  * a weakness in kotlinx.serialization, which is lazy when resolving serializers for interfaces.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class InterfaceSerializersTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher, MessageInterfaceSerializersModule)
   private val ziplineNoSerializer = Zipline.create(dispatcher)
 

@@ -17,9 +17,6 @@ package app.cash.zipline
 
 import app.cash.zipline.testing.SchedulerService
 import com.google.common.truth.Truth.assertThat
-import java.util.concurrent.Executors
-import java.util.concurrent.TimeUnit
-import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
@@ -28,6 +25,7 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -35,13 +33,8 @@ import org.junit.Test
  * stacks. Confirm that recursive suspend functions don't crash.
  */
 class ZiplineDispatchTest {
-  private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
-  private val executorService = Executors.newSingleThreadExecutor { runnable ->
-    Thread(runnable, "ZiplineDispatchTest").also {
-      it.uncaughtExceptionHandler = uncaughtExceptionHandler
-    }
-  }
-  private val dispatcher = executorService.asCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 
   @Before fun setUp() {
@@ -54,8 +47,6 @@ class ZiplineDispatchTest {
     runBlocking(dispatcher) {
       zipline.close()
     }
-    executorService.shutdown()
-    executorService.awaitTermination(5, TimeUnit.SECONDS)
   }
 
   @Test

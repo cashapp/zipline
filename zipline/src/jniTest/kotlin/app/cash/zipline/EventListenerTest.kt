@@ -23,32 +23,28 @@ import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
 /**
  * This test exercises event listeners using QuickJS.
  */
-@OptIn(ExperimentalCoroutinesApi::class)
 class EventListenerTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val eventListener = LoggingEventListener()
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)
-  private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
-  @Before fun setUp() = runBlocking(dispatcher) {
+  @Before fun setUp(): Unit = runBlocking(dispatcher) {
     zipline.loadTestingJs()
     eventListener.takeAll() // Skip events created by loadTestingJs().
-    uncaughtExceptionHandler.setUp()
   }
 
-  @After fun tearDown() = runBlocking(dispatcher) {
+  @After fun tearDown(): Unit = runBlocking(dispatcher) {
     zipline.close()
-    uncaughtExceptionHandler.tearDown()
   }
 
   @Test fun jvmCallJsService() = runBlocking(dispatcher) {
@@ -121,8 +117,8 @@ class EventListenerTest {
     val funName = "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
     val request = "[EchoRequest(message=Eric)]"
     assertThat(eventListener.take()).isEqualTo("bindService $name")
-    assertThat(eventListener.take()).isEqualTo("callStart 3 $name $funName $request")
-    assertThat(eventListener.take()).isEqualTo("callEnd 3 $name $funName $request Success(EchoResponse(message=hello from the suspending JVM, Eric))")
+    assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
+    assertThat(eventListener.take()).isEqualTo("callEnd 1 $name $funName $request Success(EchoResponse(message=hello from the suspending JVM, Eric))")
   }
 
   @Test fun jvmCallIncompatibleJsService() = runBlocking(dispatcher) {

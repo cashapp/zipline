@@ -28,32 +28,30 @@ import app.cash.zipline.testing.SuspendingPotatoService
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.test.TestCoroutineDispatcher
 import org.junit.After
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class ZiplineTest {
-  private val dispatcher = TestCoroutineDispatcher()
+  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
-  private val uncaughtExceptionHandler = TestUncaughtExceptionHandler()
 
   @Before fun setUp() = runBlocking(dispatcher) {
     zipline.loadTestingJs()
-    uncaughtExceptionHandler.setUp()
   }
 
-  @After fun tearDown() = runBlocking(dispatcher) {
-    zipline.close()
-    uncaughtExceptionHandler.tearDown()
+  @After fun tearDown() {
+    runBlocking(dispatcher) {
+      zipline.close()
+    }
   }
 
   @Test fun cannotTakeOrBindServiceAfterClose(): Unit = runBlocking(dispatcher) {
@@ -150,6 +148,8 @@ class ZiplineTest {
     lock.withPermit {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('Eric')")
     }
+    // Let the suspended call complete.
+    forceSuspend()
     val e = assertFailsWith<IllegalStateException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult")
     }

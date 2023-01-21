@@ -16,6 +16,7 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -51,7 +52,7 @@ fun unblockSuspendingJs() {
 @JsExport
 fun callSuspendingEchoService(message: String) {
   val service = zipline.take<SuspendingEchoService>("jvmSuspendingEchoService")
-  GlobalScope.launch {
+  GlobalScope.launch(start = CoroutineStart.UNDISPATCHED) {
     suspendingEchoResult = try {
       service.suspendingEcho(EchoRequest(message)).message
     } catch (e: Exception) {
