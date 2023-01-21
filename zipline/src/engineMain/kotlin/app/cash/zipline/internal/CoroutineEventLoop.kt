@@ -21,6 +21,7 @@ import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 
 /**
@@ -56,6 +57,7 @@ internal class CoroutineEventLoop(
       if (canceled) return
       this.job = scope.launch(start = UNDISPATCHED) {
         delay(delayMillis.toLong())
+        scope.ensureActive() // Necessary as delay() won't detect cancellation if the duration is 0.
         jsPlatform.runJob(timeoutId)
         jobs.remove(timeoutId)
       }
