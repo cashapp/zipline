@@ -32,6 +32,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import org.junit.After
@@ -171,6 +172,53 @@ class ZiplineTest {
     assertFailsWith<CancellationException> {
       deferred.await()
     }
+  }
+
+  /**
+   * This is a regression test for the following scenario:
+   *
+   *  1. An asynchronous job is enqueued with a 0 millisecond delay (ie. `setTimeout(job, 0)`).
+   *  2. Zipline is closed.
+   *  3. The asynchronous job is executed.
+   *
+   * For correct behavior the job must fail with a non-fatal [CancellationException] and not a fatal
+   * [IllegalStateException].
+   */
+  @Test fun suspendedJsCallResumesAfterClose(): Unit = runBlocking(dispatcher) {
+    val lock1 = Mutex(locked = true)
+    val lock2 = Mutex(locked = true)
+
+    val jvmSuspendingEchoService = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        when (request.message) {
+          "A" -> {
+            lock1.lock()
+            lock2.unlock()
+          }
+          "B" -> {
+            lock1.unlock()
+          }
+        }
+        return EchoResponse(request.message)
+      }
+    }
+
+    zipline.bind<SuspendingEchoService>(
+      "jvmSuspendingEchoService",
+      jvmSuspendingEchoService
+    )
+
+    val deferredA = async {
+      zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('A')")
+    }
+    val deferredB = async {
+      zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('B')")
+    }
+
+    lock2.lock()
+    zipline.close()
+    deferredA.await()
+    deferredB.await()
   }
 
   @Test fun serviceNamesAndClientNames(): Unit = runBlocking(dispatcher) {
