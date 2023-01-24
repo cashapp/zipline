@@ -21,7 +21,7 @@ plugins {
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
   dependsOn(":zipline:testing:compileDevelopmentLibraryKotlinJs")
   destinationDir = buildDir.resolve("generated/testingJs")
-  from(projectDir.resolve("testing/build/compileSync/js/main/developmentLibrary/kotlin"))
+  from(projectDir.resolve("testing/build/compileSync/main/developmentLibrary/kotlin"))
 }
 
 kotlin {
@@ -166,7 +166,7 @@ cklib {
         "-Wno-unused-function",
         "-Wno-error=atomic-alignment",
         "-Wno-sign-compare",
-        "-Wno-unused-parameter" /* for windows 32 */
+        "-Wno-unused-parameter" /* for windows 32*/
       )
     )
   }

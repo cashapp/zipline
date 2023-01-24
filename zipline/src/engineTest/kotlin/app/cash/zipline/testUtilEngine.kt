@@ -16,8 +16,8 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.encodeToStringFast
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.yield
-import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
@@ -40,7 +40,6 @@ suspend fun awaitEquals(
   throw AssertionError("$expected != $actualValue")
 }
 
-@OptIn(ExperimentalSerializationApi::class)
 fun prettyPrint(jsonString: String): String {
   val json = Json {
     prettyPrint = true
