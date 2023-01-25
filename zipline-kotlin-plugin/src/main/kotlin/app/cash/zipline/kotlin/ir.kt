@@ -65,13 +65,17 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.classId
+import org.jetbrains.kotlin.ir.util.companionObject
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createDispatchReceiverParameter
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.name.CallableId
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
@@ -101,8 +105,6 @@ internal val IrSimpleFunction.signature: String
       )
     }
   }
-
-internal fun FqName.child(name: String) = child(Name.identifier(name))
 
 /** Thrown on invalid or unexpected input code. */
 class ZiplineCompilationException(
@@ -366,13 +368,11 @@ fun getOrCreateCompanion(
   enclosing: IrClass,
   irPluginContext: IrPluginContext,
 ): IrClass {
-  val existing = enclosing.declarations.firstOrNull {
-    it is IrClass && it.name.identifier == "Companion"
-  }
-  if (existing != null) return existing as IrClass
+  val existing = enclosing.companionObject()
+  if (existing != null) return existing
 
   val irFactory = irPluginContext.irFactory
-  val anyType = irPluginContext.referenceClass(irPluginContext.irBuiltIns.anyType.classFqName!!)!!
+  val anyType = irPluginContext.referenceClass(irPluginContext.irBuiltIns.anyType.getClass()!!.classId!!)!!
   val companionClass = irFactory.buildClass {
     initDefaults(enclosing)
     name = Name.identifier("Companion")
@@ -403,4 +403,16 @@ fun getOrCreateCompanion(
 
   enclosing.declarations.add(companionClass)
   return companionClass
+}
+
+fun FqName.classId(name: String): ClassId {
+  return ClassId(this, Name.identifier(name))
+}
+
+fun FqName.callableId(name: String): CallableId {
+  return CallableId(this, Name.identifier(name))
+}
+
+fun ClassId.callableId(name: String): CallableId {
+  return CallableId(this, Name.identifier(name))
 }
