@@ -16,15 +16,15 @@ If you don't have Android SDK downloaded yet, the easiest way is to install Andr
 
 ## Missing cmake
 
-You may encounter silent failure in the `./.github/workflows/build-mac.sh` from missing `cmake` where this is no build output logs.
+You may encounter silent failure in the `$ ./.github/workflows/build-mac.sh` from missing `cmake` where this is no build output logs. 
 
-On macOS, install with `brew install cmake`.
+On macOS, install with `brew install cmake`. 
 
 ## Build Native Libraries Locally
 
 Zipline requires architecture specific built artifacts of native code.
 
-On macOS, run from Zipline root directory `./.github/workflows/build-mac.sh`.
+On macOS, run from Zipline root directory `$ ./.github/workflows/build-mac.sh`.
 
 ## Missing JNI Libraries
 
@@ -43,7 +43,7 @@ Caused by: java.lang.IllegalStateException: Unable to read /jni/aarch64/libquick
 
 For tests like `app.cash.zipline.ConsoleTest`, failures with the above stacktrace point to missing `.dylib` prebuilt C libraries necessary for using QuickJS from within Kotlin Multiplatform.
 
-To fix, download the latest published JVM JAR (e.g. `jvm-0.9.2.jar`) from the [releases](https://github.com/cashapp/zipline/releases) and extract the files (change the file extension to `.zip` and unzip) in the `jni` directory into `zipline/src/jvmMain/resources/jni` in your local Zipline repo.
+To fix, download the latest published JVM JAR (name should be like `zipline-jvm-0.1.0-square.47.jar`) and extract the files (change the file extension to `.zip` and unzip) in the `jni` directory into `/zipline/zipline/src/jvmMain/resources/jni` in your local Zipline repo on disk.
 
 ## Java Architecture Mismatch
 

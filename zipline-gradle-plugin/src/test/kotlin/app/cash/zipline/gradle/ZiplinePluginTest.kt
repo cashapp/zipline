@@ -34,7 +34,7 @@ class ZiplinePluginTest {
       .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/productionExecutable/kotlinZipline"
+      "lib/build/compileSync/main/productionExecutable/kotlinZipline"
     )
     assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
@@ -54,7 +54,7 @@ class ZiplinePluginTest {
       .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline"
+      "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
     assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
@@ -127,7 +127,7 @@ class ZiplinePluginTest {
       .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline"
+      "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
     val manifest = ziplineOut.resolve(MANIFEST_FILE_NAME)
     assertThat(manifest.exists()).isTrue()
@@ -146,7 +146,7 @@ class ZiplinePluginTest {
       .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline"
+      "lib/build/compileSync/main/developmentExecutable/kotlinZipline"
     )
     val manifest = ziplineOut.resolve(MANIFEST_FILE_NAME)
     assertThat(manifest.readText())

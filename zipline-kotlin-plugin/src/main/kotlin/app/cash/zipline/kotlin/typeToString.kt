@@ -12,7 +12,6 @@ import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrStarProjection
 import org.jetbrains.kotlin.ir.types.IrTypeArgument
 import org.jetbrains.kotlin.ir.types.IrTypeProjection
-import org.jetbrains.kotlin.ir.types.isMarkedNullable
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
@@ -23,7 +22,7 @@ fun IrSimpleType.asString(): String =
     (arguments.ifNotEmpty {
       joinToString(separator = ",", prefix = "<", postfix = ">") { it.asString() }
     } ?: "") +
-    (if (isMarkedNullable()) "?" else "")
+    (if (hasQuestionMark) "?" else "")
 
 /** Copied from [org.jetbrains.kotlin.ir.backend.js.utils.asString]. */
 private fun IrTypeArgument.asString(): String = when (this) {

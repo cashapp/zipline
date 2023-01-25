@@ -102,7 +102,6 @@ kotlin {
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(libs.sqlite.jdbc)
-        implementation(libs.truth)
       }
     }
     val jvmTest by getting {
@@ -136,7 +135,7 @@ android {
 
   sourceSets {
     getByName("androidTest") {
-      java.srcDirs("src/androidInstrumentedTest/kotlin/")
+      java.srcDirs("src/androidTest/kotlin/")
     }
   }
 }
@@ -175,13 +174,8 @@ tasks.withType<Test> {
   dependsOn(fetchWycheproofJson)
 }
 
-afterEvaluate {
-  tasks.named("compileDebugUnitTestKotlinAndroid") {
-    enabled = false
-  }
-  tasks.named("compileReleaseUnitTestKotlinAndroid") {
-    enabled = false
-  }
+tasks.withType<AndroidUnitTest> {
+  enabled = false
 }
 
 configure<MavenPublishBaseExtension> {

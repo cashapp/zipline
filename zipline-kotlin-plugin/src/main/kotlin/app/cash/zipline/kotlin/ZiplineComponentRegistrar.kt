@@ -19,21 +19,22 @@ import com.google.auto.service.AutoService
 import org.jetbrains.kotlin.backend.common.extensions.IrGenerationExtension
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
-import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
-import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
+import org.jetbrains.kotlin.com.intellij.mock.MockProject
+import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
 import org.jetbrains.kotlin.config.CompilerConfiguration
 
-@OptIn(ExperimentalCompilerApi::class)
-@AutoService(CompilerPluginRegistrar::class)
-class ZiplineCompilerPluginRegistrar : CompilerPluginRegistrar() {
-  override val supportsK2 get() = false
-
-  override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
+@AutoService(ComponentRegistrar::class)
+class ZiplineComponentRegistrar : ComponentRegistrar {
+  override fun registerProjectComponents(
+    project: MockProject,
+    configuration: CompilerConfiguration,
+  ) {
     val messageCollector = configuration.get(
       CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY,
       MessageCollector.NONE
     )
     IrGenerationExtension.registerExtension(
+      project = project,
       extension = ZiplineIrGenerationExtension(messageCollector)
     )
   }
