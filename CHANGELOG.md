@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.14] - 2022-01-16
+## [0.9.15] - 2022-01-25
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -11,6 +11,20 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * Fix: Don't crash if canceled with a 0-delay job enqueued. We had a bug where calling
+   `Zipline.close()` could race with an enqueued job.
+ * Fix: Don't crash in the JS CoroutineEventLoop. This replaces an `IllegalStateException` with a
+   `CancellationException` when making a suspending call after the Zipline is closed.
+ * Fix: Do not set `-Xir-per-module`. This is no longer necessary, and may have prevented
+   whole-program module generation.
+ * New: Support Webpack builds. In addition to modular builds that emit many `.zipline` files per
+   program, webpack builds emit a single minified `.zipline` file. (In both cases a single manifest
+   file is used.)
+ * New: We've added event listener events for the loader's initializer and main function.
+
+
+## [0.9.14] - 2022-01-16
 
  * Fix: Don’t force `suspend` functions to suspend. We've changed our calling convention so
    suspendable functions are executed inline and on the same call stack until they suspend. If such
