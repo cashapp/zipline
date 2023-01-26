@@ -267,7 +267,7 @@ internal class BridgedInterface(
 
   companion object {
     /** Don't bridge these. */
-    private val NON_INTERFACE_FUNCTION_NAMES = mutableSetOf(
+    private val NON_INTERFACE_FUNCTION_NAMES = setOf(
       "equals",
       "hashCode",
       "toString",
