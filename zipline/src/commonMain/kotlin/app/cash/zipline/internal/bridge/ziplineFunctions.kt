@@ -28,7 +28,7 @@ internal abstract class ReturningZiplineFunction<T : ZiplineService>(
   val argsListSerializer = ArgsListSerializer(argSerializers)
 
   /** A serializer for a `kotlin.Result<T>` which supports success or failure. */
-  val kotlinResultSerializer = ResultSerializer(resultSerializer)
+  val resultSerializer = ResultOrCallbackSerializer(resultSerializer)
 
   override val isSuspending get() = false
 
@@ -51,7 +51,7 @@ internal abstract class SuspendingZiplineFunction<T : ZiplineService>(
 ) : ZiplineFunction<T> {
   val argsListSerializer = ArgsListSerializer(argSerializers)
 
-  val suspendingResultSerializer = SuspendingResultSerializer(resultSerializer)
+  val resultOrCallbackSerializer = ResultOrCallbackSerializer(resultSerializer)
 
   override val isSuspending get() = true
   override val isClose get() = false

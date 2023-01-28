@@ -80,9 +80,11 @@ internal class InboundService<T : ZiplineService>(
       }
     }
 
+    // If the deferred is still active, that means the call suspended. Prepare a cancel callback
+    // that can cancel the coroutine and return that.
     if (deferred.isActive) {
       val cancelCallback = object : CancelCallback, HasPassByReferenceName {
-        override var passbyReferenceName: String? = null
+        override var passByReferenceName: String? = null
 
         override fun cancel() {
           deferred.cancel()
@@ -92,7 +94,7 @@ internal class InboundService<T : ZiplineService>(
       }
 
       deferred.invokeOnCompletion {
-        val name = cancelCallback.passbyReferenceName
+        val name = cancelCallback.passByReferenceName
         if (name != null) endpoint.remove(name)
 
         val failure = deferred.getCompletionExceptionOrNull()
@@ -118,40 +120,33 @@ internal class InboundService<T : ZiplineService>(
         }
       }
 
-      val encodedSuspendingResult = endpoint.callCodec.encodeResult(
+      val encodedResultOrCallback = endpoint.callCodec.encodeResultOrCallback(
         function,
-        SuspendingResult<Unit>(cancelCallback = cancelCallback)
+        ResultOrCallback<Unit>(callback = cancelCallback)
       )
-      return encodedSuspendingResult.encodedResult
-
-    } else {
-      // Convert our Deferred<Result<T>> into a Result<T>, which will be failure if _either_ the
-      // Deferred failed or if it contains a failure Result.
-      val failure = deferred.getCompletionExceptionOrNull()
-      val kotlinResult = when {
-        failure != null -> Result.failure(failure)
-        else -> deferred.getCompleted()
-      }
-
-      val suspendingResult = when {
-        kotlinResult.isFailure -> SuspendingResult<Unit>(failure = kotlinResult.exceptionOrNull()!!)
-        else -> SuspendingResult(success = kotlinResult.getOrNull())
-      }
-
-      val encodedSuspendingResult = endpoint.callCodec.encodeResult(function, suspendingResult)
-
-      endpoint.eventListener.callEnd(
-        externalCall,
-        CallResult(
-          kotlinResult,
-          encodedSuspendingResult.encodedResult,
-          encodedSuspendingResult.serviceNames,
-        ),
-        callStart,
-      )
-
-      return encodedSuspendingResult.encodedResult
+      return encodedResultOrCallback.json
     }
+
+    // The function returned without suspending. Convert our Deferred<Result<T>> into a Result<T>,
+    // which will be failure if _either_ the Deferred failed or if it contains a failure Result.
+    val failure = deferred.getCompletionExceptionOrNull()
+    val result = when {
+      failure != null -> Result.failure(failure)
+      else -> deferred.getCompleted()
+    }
+
+    val encodedResultOrCallback = endpoint.callCodec.encodeResultOrCallback(
+      function,
+      ResultOrCallback(result = result),
+    )
+
+    endpoint.eventListener.callEnd(
+      externalCall,
+      encodedResultOrCallback.callResult!!,
+      callStart,
+    )
+
+    return encodedResultOrCallback.json
   }
 
   override fun toString() = service.toString()

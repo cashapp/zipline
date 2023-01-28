@@ -97,24 +97,23 @@ internal class CallCodec(
     encodedServiceNames.clear()
     @Suppress("UNCHECKED_CAST") // We delegate to the right serializer to encode.
     val resultJson = endpoint.json.encodeToStringFast(
-      function.kotlinResultSerializer as KSerializer<Any?>,
-      result,
+      function.resultSerializer as KSerializer<Any?>,
+      ResultOrCallback(result),
     )
     return CallResult(result, resultJson, encodedServiceNames)
   }
 
-  internal fun encodeResult(
+  internal fun encodeResultOrCallback(
     function: SuspendingZiplineFunction<*>,
-    result: SuspendingResult<*>,
-  ): EncodedSuspendingResult {
+    result: ResultOrCallback<*>,
+  ): EncodedResultOrCallback {
     encodedServiceNames.clear()
     @Suppress("UNCHECKED_CAST") // We delegate to the right serializer to encode.
-    val resultJson = endpoint.json.encodeToStringFast(
-      function.suspendingResultSerializer as KSerializer<Any?>,
+    val resultOrCallbackJson = endpoint.json.encodeToStringFast(
+      function.resultOrCallbackSerializer as KSerializer<Any?>,
       result,
     )
-
-    return EncodedSuspendingResult(result, resultJson, encodedServiceNames)
+    return EncodedResultOrCallback(result, resultOrCallbackJson, encodedServiceNames)
   }
 
   internal fun decodeResult(
@@ -123,21 +122,21 @@ internal class CallCodec(
   ): CallResult {
     decodedServiceNames.clear()
     val result = endpoint.json.decodeFromStringFast(
-      function.kotlinResultSerializer,
+      function.resultSerializer,
       resultJson,
     )
-    return CallResult(result, resultJson, decodedServiceNames)
+    return CallResult(result.result!!, resultJson, decodedServiceNames)
   }
 
-  internal fun decodeResult(
+  internal fun decodeResultOrCallback(
     function: SuspendingZiplineFunction<*>,
-    resultJson: String,
-  ): EncodedSuspendingResult {
+    resultOrCallbackJson: String,
+  ): EncodedResultOrCallback {
     decodedServiceNames.clear()
     val result = endpoint.json.decodeFromStringFast(
-      function.suspendingResultSerializer,
-      resultJson,
+      function.resultOrCallbackSerializer,
+      resultOrCallbackJson,
     )
-    return EncodedSuspendingResult(result, resultJson, decodedServiceNames)
+    return EncodedResultOrCallback(result, resultOrCallbackJson, decodedServiceNames)
   }
 }
