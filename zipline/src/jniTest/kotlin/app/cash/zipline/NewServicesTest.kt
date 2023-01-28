@@ -66,7 +66,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction
     assertEquals(
       String.serializer(),
-      function.kotlinResultSerializer.successSerializer,
+      function.resultSerializer.successSerializer,
     )
   }
 
@@ -111,7 +111,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction
     assertEquals(
       ByteArraySerializer(),
-      function.kotlinResultSerializer.successSerializer,
+      function.resultSerializer.successSerializer,
     )
   }
 
@@ -156,7 +156,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction
     assertEquals(
       String.serializer(),
-      function.kotlinResultSerializer.successSerializer,
+      function.resultSerializer.successSerializer,
     )
   }
 
@@ -202,7 +202,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction
     assertSerializersEqual(
       ListSerializer(String.serializer()),
-      function.kotlinResultSerializer.successSerializer,
+      function.resultSerializer.successSerializer,
       listOf("a", "b", "c"),
     )
   }
@@ -249,7 +249,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction
     assertEquals(
       FlowSerializer(ziplineServiceSerializer<FlowZiplineService<String>>()),
-      function.kotlinResultSerializer.successSerializer,
+      function.resultSerializer.successSerializer,
     )
   }
 
@@ -294,7 +294,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction
     assertEquals(
       FlowSerializer(ziplineServiceSerializer<FlowZiplineService<String>>()),
-      function.kotlinResultSerializer.successSerializer,
+      function.resultSerializer.successSerializer,
     )
   }
 
@@ -339,7 +339,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction
     assertEquals(
       ziplineServiceSerializer<EchoService>(),
-      function.kotlinResultSerializer.successSerializer,
+      function.resultSerializer.successSerializer,
     )
   }
 
@@ -386,7 +386,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction<*>
     assertEquals(
       RequiresContextualSerializer,
-      function.kotlinResultSerializer.successSerializer
+      function.resultSerializer.successSerializer
     )
   }
 

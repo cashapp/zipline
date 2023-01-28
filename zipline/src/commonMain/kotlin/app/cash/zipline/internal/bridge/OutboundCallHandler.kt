@@ -128,40 +128,38 @@ internal class OutboundCallHandler(
     suspendCallback.externalCall = externalCall
     suspendCallback.callStart = endpoint.eventListener.callStart(externalCall)
 
-    val resultJson = endpoint.outboundChannel.call(externalCall.encodedCall)
-    val encodedSuspendingResult = endpoint.withTakeScope(scope) {
-      endpoint.callCodec.decodeResult(function, resultJson)
+    val resultOrCallbackJson = endpoint.outboundChannel.call(externalCall.encodedCall)
+    val encodedResultOrCallback = endpoint.withTakeScope(scope) {
+      endpoint.callCodec.decodeResultOrCallback(function, resultOrCallbackJson)
     }
 
-    if (encodedSuspendingResult.result.cancelCallback != null) {
+    // If the call returned a cancel callback, then it suspended and hasn't returned yet. Suspend
+    // the current coroutine until the called function completes.
+    val cancelCallback = encodedResultOrCallback.value.callback
+    if (cancelCallback != null) {
       return suspendCancellableCoroutine { continuation ->
         suspendCallback.continuation = continuation
         endpoint.incompleteContinuations += continuation
         continuation.invokeOnCancellation {
           endpoint.scope.launch {
             if (!suspendCallback.completed) {
-              encodedSuspendingResult.result.cancelCallback.cancel()
+              cancelCallback.cancel()
             }
           }
         }
       }
-    } else {
-      val kotlinResult = encodedSuspendingResult.result.kotlinResult()
-
-      val callResult = CallResult(
-        kotlinResult,
-        resultJson,
-        encodedSuspendingResult.serviceNames,
-      )
-
-      // Suspend callbacks are one-shot. When triggered, remove them immediately.
-      val name = suspendCallback.passbyReferenceName
-      if (name != null) endpoint.remove(name)
-
-      endpoint.eventListener.callEnd(externalCall, callResult, suspendCallback.callStart)
-
-      return kotlinResult.getOrThrow()
     }
+
+    // The call didn't suspend. Return its result without suspending.
+    val callResult = encodedResultOrCallback.callResult!!
+
+    // Suspend callbacks are one-shot. When triggered, remove them immediately.
+    val name = suspendCallback.passByReferenceName
+    if (name != null) endpoint.remove(name)
+
+    endpoint.eventListener.callEnd(externalCall, callResult, suspendCallback.callStart)
+
+    return callResult.result.getOrThrow()
   }
 
   override fun toString() = serviceName
@@ -181,7 +179,7 @@ internal class OutboundCallHandler(
     lateinit var continuation: Continuation<R>
     var callStart: Any? = null
 
-    override var passbyReferenceName: String? = null
+    override var passByReferenceName: String? = null
     override val scope: ZiplineScope get() = this@OutboundCallHandler.scope
 
     /** True once this has been called. Used to prevent cancel-after-complete. */
@@ -201,7 +199,7 @@ internal class OutboundCallHandler(
       completed = true
 
       // Suspend callbacks are one-shot. When triggered, remove them immediately.
-      val name = passbyReferenceName
+      val name = passByReferenceName
       if (name != null) endpoint.remove(name)
       endpoint.incompleteContinuations -= continuation
 
