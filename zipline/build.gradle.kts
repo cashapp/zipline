@@ -3,6 +3,7 @@ import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
+import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
@@ -109,6 +110,10 @@ kotlin {
           header(file("native/common/finalization-registry.h"))
           packageName("app.cash.zipline.quickjs")
         }
+      }
+
+      binaries.withType<Framework> {
+        linkerOpts += "-lsqlite3"
       }
 
       val test by compilations.getting
