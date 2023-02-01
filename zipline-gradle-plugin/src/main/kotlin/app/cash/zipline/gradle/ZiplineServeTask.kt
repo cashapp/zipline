@@ -61,7 +61,6 @@ abstract class ZiplineServeTask : DefaultTask() {
       val ws = websockets(
         "/ws" bind { ws: Websocket ->
           websockets.add(ws)
-          ws.send(WsMessage(RELOAD_MESSAGE))
           ws.onClose {
             websockets.remove(ws)
           }
