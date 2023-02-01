@@ -218,7 +218,7 @@ internal class BridgedInterface(
         ).adapterExpression(parameterList)
       }
 
-      hasTypeParameter || contextual || type.isFlow -> {
+      hasTypeParameter || contextual || type.isFlow || type.isStateFlow -> {
         // serializersModule.requireContextual<T>(root KClass, recurse on type args)
         irCall(
           callee = ziplineApis.requireContextual,
@@ -256,6 +256,9 @@ internal class BridgedInterface(
 
   private val IrType.isFlow
     get() = classFqName == ziplineApis.flowFqName
+
+  private val IrType.isStateFlow
+    get() = classFqName == ziplineApis.stateFlowFqName
 
   /** Call this on any declaration returned by [classSymbol] to fill in the generic parameters. */
   fun resolveTypeParameters(type: IrType): IrType {

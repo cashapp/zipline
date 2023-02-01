@@ -48,6 +48,7 @@ internal class ZiplineApis(
   private val endpointFqName = bridgeFqName.child("Endpoint")
   private val suspendCallbackFqName = bridgeFqName.child("SuspendCallback")
   val flowFqName = FqName("kotlinx.coroutines.flow").child("Flow")
+  val stateFlowFqName = FqName("kotlinx.coroutines.flow").child("StateFlow")
   private val collectionsFqName = FqName("kotlin.collections")
   private val listFqName = collectionsFqName.child("List")
 
