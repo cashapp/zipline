@@ -85,7 +85,7 @@ internal class OkHttpZiplineHttpClient(
     }
   }
 
-  override fun openDevelopmentServerWebSocket(url: String, requestHeaders: List<Pair<String, String>>): Flow<String> {
+  override suspend fun openDevelopmentServerWebSocket(url: String, requestHeaders: List<Pair<String, String>>): Flow<String> {
     val request = Request.Builder()
       .url(url)
       .build()

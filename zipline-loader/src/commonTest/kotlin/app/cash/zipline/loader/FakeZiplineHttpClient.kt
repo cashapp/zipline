@@ -16,22 +16,45 @@
 
 package app.cash.zipline.loader
 
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import okio.ByteString
 import okio.IOException
 
-class FakeZiplineHttpClient: ZiplineHttpClient {
+class FakeZiplineHttpClient : ZiplineHttpClient {
   var filePathToByteString: Map<String, ByteString> = mapOf()
-  val developmentServerWebSocket = Channel<String>()
+  val developmentServerWebSocketsLock = Mutex()
+  val developmentServerWebSockets = mutableMapOf<String, Channel<String>>()
 
-  suspend fun sendUpdate() {
-    developmentServerWebSocket.send("reload")
+  suspend fun sendUpdate(url: String? = null) {
+    var socket: Channel<String>? = null
+    while (socket == null) {
+      socket = developmentServerWebSocketsLock.withLock {
+        url?.let { developmentServerWebSockets[it] }
+          ?: developmentServerWebSockets.entries.firstOrNull()?.value
+      }
+      delay(100.milliseconds)
+    }
+    socket.send("reload")
   }
 
-  fun closeUpdatesChannel() {
-    developmentServerWebSocket.close()
+  fun closeUpdatesChannel(url: String? = null) {
+    val socket: Channel<String>? = url?.let { developmentServerWebSockets[it] }
+      ?: developmentServerWebSockets.entries.firstOrNull()?.value
+    socket?.close()
+//    while (socket == null) {
+//      socket = developmentServerWebSocketsLock.withLock {
+//        url?.let { developmentServerWebSockets[it] }
+//          ?: developmentServerWebSockets.entries.firstOrNull()?.value
+//      }
+//      delay(100.milliseconds)
+//    }
+//    socket.close()
   }
 
   override suspend fun download(
@@ -41,12 +64,14 @@ class FakeZiplineHttpClient: ZiplineHttpClient {
     return filePathToByteString[url] ?: throw IOException("404: $url not found")
   }
 
-  // TODO add a url to websocket mapping so we can test multiple URLs result in multiple web sockets being set up
-
-  override fun openDevelopmentServerWebSocket(
+  override suspend fun openDevelopmentServerWebSocket(
     url: String,
     requestHeaders: List<Pair<String, String>>,
   ): Flow<String> {
-    return developmentServerWebSocket.consumeAsFlow()
+    val socket = developmentServerWebSocketsLock.withLock {
+      developmentServerWebSockets[url] = Channel()
+      developmentServerWebSockets[url]!!
+    }
+    return socket.consumeAsFlow()
   }
 }

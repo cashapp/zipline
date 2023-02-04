@@ -22,7 +22,8 @@ class FastCodeUpdatesTest {
   @Test
   internal fun opensWebSocketAndReceivesUpdates() = runTest {
     val testDuration = testTimeSource.measureTime {
-      val manifestUrlFlow = flowOf("http://localhost:8080/manifest.json")
+      val manifestUrl = "http://localhost:8080/manifest.json"
+      val manifestUrlFlow = flowOf(manifestUrl)
       val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
 
       val channel = Channel<String>(capacity = Int.MAX_VALUE)
@@ -52,7 +53,7 @@ class FastCodeUpdatesTest {
     }
 
     // confirm < 500 ms wall clock time has elapsed
-    assertEquals(0L, testDuration.inWholeMilliseconds)
+    assertTrue(testDuration.inWholeMilliseconds < 500)
   }
 
   @Test
@@ -70,6 +71,30 @@ class FastCodeUpdatesTest {
     }
 
     // confirm >= 500 ms has elapsed
-    assertEquals(500L, testDuration.inWholeMilliseconds)
+    assertTrue(testDuration.inWholeMilliseconds >= 500)
+  }
+
+  @Test
+  internal fun webSocketClosedForOldUrl() = runTest {
+    val testDuration = testTimeSource.measureTime {
+      val manifestUrlFlow = flowOf(
+        "http://localhost:1/manifest.json",
+        "http://localhost:2/manifest.json",
+        "http://localhost:3/manifest.json",
+      )
+      val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
+
+      // close channel
+      client.closeUpdatesChannel("http://localhost:1/manifest.json")
+      client.closeUpdatesChannel("http://localhost:2/manifest.json")
+      client.closeUpdatesChannel("http://localhost:3/manifest.json")
+
+      // await URL flow emitting twice: once at time 0, once at 500ms on polling fallback
+      //    from socket failure
+      fastCodeFlow.take(6).toList()
+    }
+
+    // confirm >= 500 ms has elapsed
+    assertTrue(testDuration.inWholeMilliseconds >= 500)
   }
 }
