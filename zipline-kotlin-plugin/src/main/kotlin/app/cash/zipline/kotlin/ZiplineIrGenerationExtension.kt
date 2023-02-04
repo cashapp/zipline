@@ -48,9 +48,9 @@ class ZiplineIrGenerationExtension(
                 " ${declaration.fqNameWhenAvailable} is an interface",
             )
           }
-
+          // TODO check if asSingleFqName returns the expected result
           if (declaration.isInterface &&
-            declaration.superTypes.any { it.classFqName == ziplineApis.ziplineServiceFqName }
+            declaration.superTypes.any { it.classFqName == ziplineApis.ziplineServiceClassId.asSingleFqName() }
           ) {
             AdapterGenerator(
               pluginContext,

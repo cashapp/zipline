@@ -25,7 +25,7 @@ import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isVararg
-import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.*
 
 /** Looks up APIs used by the code rewriters. */
 internal class ZiplineApis(
@@ -34,43 +34,49 @@ internal class ZiplineApis(
   private val packageFqName = FqName("app.cash.zipline")
   private val bridgeFqName = FqName("app.cash.zipline.internal.bridge")
   private val serializationFqName = FqName("kotlinx.serialization")
-  val contextualFqName = serializationFqName.child("Contextual")
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
-  private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
-  private val ziplineFqName = packageFqName.child("Zipline")
-  private val outboundServiceFqName = bridgeFqName.child("OutboundService")
-  val ziplineScopedFqName = packageFqName.child("ZiplineScoped")
-  val ziplineServiceFqName = packageFqName.child("ZiplineService")
-  private val ziplineServiceSerializerFunctionFqName =
-    packageFqName.child("ziplineServiceSerializer")
-  private val ziplineServiceAdapterFunctionFqName = bridgeFqName.child("ziplineServiceAdapter")
-  private val ziplineServiceAdapterFqName = bridgeFqName.child("ZiplineServiceAdapter")
-  private val endpointFqName = bridgeFqName.child("Endpoint")
-  private val suspendCallbackFqName = bridgeFqName.child("SuspendCallback")
+
+  private val ziplineServiceSerializerFunctionCallableId =
+    packageFqName.childFunctionId("ziplineServiceSerializer")
+  private val ziplineServiceAdapterFunctionFqName = bridgeFqName.childFunctionId("ziplineServiceAdapter")
+
   val flowFqName = FqName("kotlinx.coroutines.flow").child("Flow")
-  private val collectionsFqName = FqName("kotlin.collections")
-  private val listFqName = collectionsFqName.child("List")
+  private val serializersModuleFqName = serializationModulesFqName.child("SerializersModule")
+  val ziplineScopedFqName = packageFqName.child("ZiplineScoped")
+  val contextualFqName = serializationFqName.child("Contextual")
+
+  private val outboundServiceClassId = bridgeFqName.childClassId("OutboundService")
+  val ziplineServiceClassId = packageFqName.childClassId("ZiplineService")
+  private val ziplineServiceAdapterClassId = bridgeFqName.childClassId("ZiplineServiceAdapter")
+  private val suspendCallbackClassId= bridgeFqName.childClassId("SuspendCallback")
+  private val collectionsClassId = StandardClassIds.BASE_COLLECTIONS_PACKAGE
+  private val endpointClassId= bridgeFqName.childClassId("Endpoint")
+  private val ziplineClassId= packageFqName.childClassId("Zipline")
+
+
+
 
   val any: IrClassSymbol
-    get() = pluginContext.referenceClass(FqName("kotlin.Any"))!!
+    get() = pluginContext.referenceClass(StandardClassIds.Any)!!
 
   val kSerializer: IrClassSymbol
-    get() = pluginContext.referenceClass(serializationFqName.child("KSerializer"))!!
+    get() = pluginContext.referenceClass(serializationFqName.childClassId("KSerializer"))!!
 
   val serializersModule: IrClassSymbol
-    get() = pluginContext.referenceClass(serializersModuleFqName)!!
+    get() = pluginContext.referenceClass(serializationModulesFqName.childClassId("SerializersModule"))!!
 
   val map: IrClassSymbol
-    get() = pluginContext.referenceClass(collectionsFqName.child("Map"))!!
+    get() = pluginContext.referenceClass(StandardClassIds.Map)!!
 
   val list: IrClassSymbol
-    get() = pluginContext.referenceClass(listFqName)!!
+    get() = pluginContext.referenceClass(StandardClassIds.List)!!
 
   val listOfKSerializerStar: IrSimpleType
     get() = list.typeWith(kSerializer.starProjectedType)
 
   val serializerFunctionTypeParam: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(serializationFqName.child("serializer"))
+      // should work because this fqname refers to a package as oppose to a class
+    get() = pluginContext.referenceFunctions(serializationFqName.childFunctionId("serializer"))
       .single {
         it.owner.extensionReceiverParameter?.type?.classFqName == serializersModuleFqName &&
           it.owner.valueParameters.isEmpty() &&
@@ -78,7 +84,7 @@ internal class ZiplineApis(
       }
 
   val serializerFunctionNoReceiver: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(serializationFqName.child("serializer"))
+    get() = pluginContext.referenceFunctions(serializationFqName.childFunctionId("serializer"))
       .single {
         it.owner.extensionReceiverParameter == null &&
           it.owner.valueParameters.isEmpty() &&
@@ -86,79 +92,79 @@ internal class ZiplineApis(
       }
 
   val requireContextual: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(bridgeFqName.child("requireContextual"))
+    get() = pluginContext.referenceFunctions(bridgeFqName.childFunctionId("requireContextual"))
       .single()
 
   /** This symbol for `ziplineServiceSerializer(KClass<*>, List<KSerializer<*>>)`. */
   val ziplineServiceSerializerTwoArg: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(ziplineServiceSerializerFunctionFqName)
+    get() = pluginContext.referenceFunctions(ziplineServiceSerializerFunctionCallableId)
       .single { it.owner.valueParameters.size == 2 }
 
   val listOfFunction: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(collectionsFqName.child("listOf"))
+    get() = pluginContext.referenceFunctions(collectionsClassId.childFunctionId("listOf"))
       .single { it.owner.valueParameters.firstOrNull()?.isVararg == true }
 
   val listGetFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      collectionsFqName.child("List").child("get")
+      StandardClassIds.List.childFunctionId("get")
     ).single()
 
   val ziplineFunction: IrClassSymbol
-    get() = pluginContext.referenceClass(packageFqName.child("ZiplineFunction"))!!
+    get() = pluginContext.referenceClass(packageFqName.childClassId("ZiplineFunction"))!!
 
   val returningZiplineFunction: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("ReturningZiplineFunction"))!!
+    get() = pluginContext.referenceClass(bridgeFqName.childClassId("ReturningZiplineFunction"))!!
 
   val suspendingZiplineFunction: IrClassSymbol
-    get() = pluginContext.referenceClass(bridgeFqName.child("SuspendingZiplineFunction"))!!
+    get() = pluginContext.referenceClass(bridgeFqName.childClassId("SuspendingZiplineFunction"))!!
 
   val returningZiplineFunctionCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("ReturningZiplineFunction").child("call")
+      bridgeFqName.childClassId("ReturningZiplineFunction").childFunctionId("call")
     ).single()
 
   val suspendingZiplineFunctionCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqName.child("SuspendingZiplineFunction").child("callSuspending")
+      CallableId(bridgeFqName.childClassId("SuspendingZiplineFunction"), Name.identifier("callSuspending"))
     ).single()
 
-  private val outboundCallHandlerFqName = bridgeFqName.child("OutboundCallHandler")
+  private val outboundCallHandlerClassId = bridgeFqName.childClassId("OutboundCallHandler")
 
   val outboundCallHandler: IrClassSymbol
-    get() = pluginContext.referenceClass(outboundCallHandlerFqName)!!
+    get() = pluginContext.referenceClass(bridgeFqName.childClassId("OutboundCallHandler"))!!
 
   val outboundCallHandlerCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      outboundCallHandlerFqName.child("call")
+      outboundCallHandlerClassId.childFunctionId("call")
     ).single()
 
   val outboundCallHandlerCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      outboundCallHandlerFqName.child("callSuspending")
+      outboundCallHandlerClassId.childFunctionId("callSuspending")
     ).single()
 
   val outboundService: IrClassSymbol
-    get() = pluginContext.referenceClass(outboundServiceFqName)!!
+    get() = pluginContext.referenceClass(bridgeFqName.childClassId("OutboundService"))!!
 
   val outboundServiceCallHandler: IrPropertySymbol
     get() = pluginContext.referenceProperties(
-      outboundServiceFqName.child("callHandler")
+      outboundServiceClassId.childFunctionId("callHandler")
     ).single()
 
   val ziplineService: IrClassSymbol
-    get() = pluginContext.referenceClass(ziplineServiceFqName)!!
+    get() = pluginContext.referenceClass(ziplineServiceClassId)!!
 
   val ziplineServiceAdapter: IrClassSymbol
-    get() = pluginContext.referenceClass(ziplineServiceAdapterFqName)!!
+    get() = pluginContext.referenceClass(ziplineServiceAdapterClassId)!!
 
   val ziplineServiceAdapterSerialName: IrPropertySymbol
     get() = pluginContext.referenceProperties(
-      ziplineServiceAdapterFqName.child("serialName")
+      ziplineServiceAdapterClassId.childFunctionId("serialName")
     ).single()
 
   val ziplineServiceAdapterSerializers: IrPropertySymbol
     get() = pluginContext.referenceProperties(
-      ziplineServiceAdapterFqName.child("serializers")
+      ziplineServiceAdapterClassId.childFunctionId("serializers")
     ).single()
 
   val ziplineServiceAdapterZiplineFunctions: IrSimpleFunctionSymbol
@@ -172,23 +178,23 @@ internal class ZiplineApis(
     }
 
   val suspendCallback: IrClassSymbol
-    get() = pluginContext.referenceClass(suspendCallbackFqName)!!
+    get() = pluginContext.referenceClass(suspendCallbackClassId)!!
 
   /** Keys are renderings of functions like `Zipline.take()` and values are their rewrite targets. */
   val ziplineServiceAdapterFunctions: Map<String, IrSimpleFunctionSymbol> = listOf(
-    rewritePair(ziplineFqName.child("take")),
-    rewritePair(endpointFqName.child("take")),
-    rewritePair(ziplineFqName.child("bind")),
-    rewritePair(endpointFqName.child("bind")),
+    rewritePair(ziplineClassId.childFunctionId("take")),
+    rewritePair(endpointClassId.childFunctionId("take")),
+    rewritePair(ziplineClassId.childFunctionId("bind")),
+    rewritePair(endpointClassId.childFunctionId("bind")),
     rewritePair(ziplineServiceAdapterFunctionFqName),
-    rewritePair(ziplineServiceSerializerFunctionFqName),
+    rewritePair(ziplineServiceSerializerFunctionCallableId),
   ).toMap()
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
-  private fun rewritePair(funName: FqName): Pair<String, IrSimpleFunctionSymbol> {
+  private fun rewritePair(funName: CallableId): Pair<String, IrSimpleFunctionSymbol> {
     val overloads = pluginContext.referenceFunctions(funName)
     val rewriteTarget = overloads.single {
-      it.owner.valueParameters.lastOrNull()?.type?.classFqName == ziplineServiceAdapterFqName
+      it.owner.valueParameters.lastOrNull()?.type?.classFqName == ziplineServiceAdapterClassId.asSingleFqName()
     }
     val original = overloads.single {
       it.owner.valueParameters.size + 1 == rewriteTarget.owner.valueParameters.size
@@ -196,3 +202,9 @@ internal class ZiplineApis(
     return original.toString() to rewriteTarget
   }
 }
+
+fun FqName.childClassId(name: String) = ClassId(this, Name.identifier(name))
+
+// use only when the fqName is a package name
+fun FqName.childFunctionId(name: String) = CallableId(this, Name.identifier(name))
+fun ClassId.childFunctionId(name: String) = CallableId(this, Name.identifier(name))

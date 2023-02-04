@@ -34,16 +34,19 @@ import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.classOrNull
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
+import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
 import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.substitute
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
@@ -214,7 +217,7 @@ internal class BridgedInterface(
           pluginContext,
           ziplineApis,
           this@BridgedInterface.scope,
-          pluginContext.referenceClass(type.classFqName!!)!!.owner,
+          type.classOrNull!!.owner,
         ).adapterExpression(parameterList)
       }
 
@@ -229,7 +232,7 @@ internal class BridgedInterface(
           putTypeArgument(0, type)
           putValueArgument(
             0,
-            irKClass(pluginContext.referenceClass(type.classFqName!!)!!.owner)
+            irKClass(type.classOrNull!!.owner)
           )
           putValueArgument(1, parameterList)
         }
@@ -281,7 +284,8 @@ internal class BridgedInterface(
       functionName: String,
       type: IrType,
     ): BridgedInterface {
-      val classSymbol = pluginContext.referenceClass(type.classFqName ?: FqName.ROOT)
+      // TODO check if this is the correct class id corresponding to fqname.root
+      val classSymbol = pluginContext.referenceClass(type.getClass()?.classId ?: ClassId.fromString(""))
       if (classSymbol == null || !classSymbol.owner.isInterface) {
         throw ZiplineCompilationException(
           element = element,
