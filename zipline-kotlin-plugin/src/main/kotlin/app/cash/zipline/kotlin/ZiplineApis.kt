@@ -28,6 +28,7 @@ import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isVararg
 import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.StandardClassIds
 
 /** Looks up APIs used by the code rewriters. */
 internal class ZiplineApis(
@@ -50,10 +51,9 @@ internal class ZiplineApis(
   private val endpointClassId = bridgeFqName.classId("Endpoint")
   private val suspendCallbackClassId = bridgeFqName.classId("SuspendCallback")
   val flowClassId = FqName("kotlinx.coroutines.flow").classId("Flow")
-  private val anyClassId = FqName("kotlin").classId("Any")
 
   val any: IrClassSymbol
-    get() = pluginContext.referenceClass(anyClassId)!!
+    get() = pluginContext.referenceClass(StandardClassIds.Any)!!
 
   val kSerializer: IrClassSymbol
     get() = pluginContext.referenceClass(serializationFqName.classId("KSerializer"))!!
@@ -62,10 +62,10 @@ internal class ZiplineApis(
     get() = pluginContext.referenceClass(serializersModuleClassId)!!
 
   val map: IrClassSymbol
-    get() = pluginContext.referenceClass(collectionsFqName.classId("Map"))!!
+    get() = pluginContext.referenceClass(StandardClassIds.Map)!!
 
   val list: IrClassSymbol
-    get() = pluginContext.referenceClass(collectionsFqName.classId("List"))!!
+    get() = pluginContext.referenceClass(StandardClassIds.List)!!
 
   val listOfKSerializerStar: IrSimpleType
     get() = list.typeWith(kSerializer.starProjectedType)
@@ -102,7 +102,7 @@ internal class ZiplineApis(
 
   val listGetFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      collectionsFqName.classId("List").callableId("get")
+      StandardClassIds.List.callableId("get")
     ).single()
 
   val ziplineFunction: IrClassSymbol
