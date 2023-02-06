@@ -36,7 +36,7 @@ interface ZiplineHttpClient {
    * if the web socket cannot be established, after a graceful shutdown, or after an
    * abrupt disconnection. Why it's closed is not exposed in this API.
    */
-  suspend fun openDevelopmentServerWebSocket(
+  fun openDevelopmentServerWebSocket(
     url: String,
     requestHeaders: List<Pair<String, String>>,
   ): Flow<String>
