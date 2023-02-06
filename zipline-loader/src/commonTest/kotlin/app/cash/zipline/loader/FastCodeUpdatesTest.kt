@@ -85,9 +85,9 @@ class FastCodeUpdatesTest {
       val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
 
       // close channel
-      client.closeUpdatesChannel("http://localhost:1/manifest.json")
-      client.closeUpdatesChannel("http://localhost:2/manifest.json")
-      client.closeUpdatesChannel("http://localhost:3/manifest.json")
+      client.closeUpdatesChannel()
+      client.closeUpdatesChannel()
+      client.closeUpdatesChannel()
 
       // await URL flow emitting twice: once at time 0, once at 500ms on polling fallback
       //    from socket failure
