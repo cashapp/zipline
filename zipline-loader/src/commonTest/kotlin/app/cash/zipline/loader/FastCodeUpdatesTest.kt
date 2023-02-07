@@ -8,6 +8,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
@@ -39,21 +40,23 @@ class FastCodeUpdatesTest {
       assertTrue(channel.isEmpty)
 
       // 3 x publish event & await URL flow emits
-      client.sendUpdate()
+      client.sendDevelopmentServerUpdate()
       channel.receive()
       assertTrue(channel.isEmpty)
-      client.sendUpdate()
+      client.sendDevelopmentServerUpdate()
       channel.receive()
       assertTrue(channel.isEmpty)
-      client.sendUpdate()
+      client.sendDevelopmentServerUpdate()
       channel.receive()
       assertTrue(channel.isEmpty)
 
       job.cancel()
+      client.log.close()
     }
 
     // confirm < 500 ms wall clock time has elapsed
     assertTrue(testDuration.inWholeMilliseconds < 500)
+    assertEquals(listOf("open socket http://localhost:8080/ws"), client.log.consumeAsFlow().toList())
   }
 
   @Test
@@ -63,15 +66,17 @@ class FastCodeUpdatesTest {
       val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
 
       // close channel
-      client.closeUpdatesChannel()
+      client.closeDevelopmentServerChannel("http://localhost:8080/manifest.json")
 
       // await URL flow emitting twice: once at time 0, once at 500ms on polling fallback
       //    from socket failure
       fastCodeFlow.take(2).toList()
+      client.log.close()
     }
 
     // confirm >= 500 ms has elapsed
     assertTrue(testDuration.inWholeMilliseconds >= 500)
+    assertEquals(listOf("open socket http://localhost:8080/ws", "close socket http://localhost:8080/manifest.json"), client.log.consumeAsFlow().toList().reversed())
   }
 
   @Test
@@ -85,16 +90,25 @@ class FastCodeUpdatesTest {
       val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
 
       // close channel
-      client.closeUpdatesChannel()
-      client.closeUpdatesChannel()
-      client.closeUpdatesChannel()
+      client.closeDevelopmentServerChannel("http://localhost:1/manifest.json")
+      client.closeDevelopmentServerChannel("http://localhost:2/manifest.json")
+      client.closeDevelopmentServerChannel("http://localhost:3/manifest.json")
 
       // await URL flow emitting twice: once at time 0, once at 500ms on polling fallback
       //    from socket failure
       fastCodeFlow.take(6).toList()
+      client.log.close()
     }
 
     // confirm >= 500 ms has elapsed
     assertTrue(testDuration.inWholeMilliseconds >= 500)
+    assertEquals(listOf(
+      "open socket http://localhost:3/ws",
+      "open socket http://localhost:2/ws",
+      "open socket http://localhost:1/ws",
+      "close socket http://localhost:3/manifest.json",
+      "close socket http://localhost:2/manifest.json",
+      "close socket http://localhost:1/manifest.json",
+    ), client.log.consumeAsFlow().toList().reversed())
   }
 }
