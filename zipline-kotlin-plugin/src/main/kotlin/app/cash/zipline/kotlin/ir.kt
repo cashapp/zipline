@@ -74,9 +74,6 @@ import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createDispatchReceiverParameter
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.name.CallableId
-import org.jetbrains.kotlin.name.ClassId
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
 
 // Should produce a string like "var count: kotlin.Int" or "val count: kotlin.Int" or "fun echo(request: EchoRequest): EchoResponse"
@@ -403,16 +400,4 @@ fun getOrCreateCompanion(
 
   enclosing.declarations.add(companionClass)
   return companionClass
-}
-
-fun FqName.classId(name: String): ClassId {
-  return ClassId(this, Name.identifier(name))
-}
-
-fun FqName.callableId(name: String): CallableId {
-  return CallableId(this, Name.identifier(name))
-}
-
-fun ClassId.callableId(name: String): CallableId {
-  return CallableId(this, Name.identifier(name))
 }
