@@ -36,7 +36,6 @@ internal class ZiplineApis(
 ) {
   private val packageFqName = FqName("app.cash.zipline")
   private val bridgeFqName = FqName("app.cash.zipline.internal.bridge")
-  private val collectionsFqName = FqName("kotlin.collections")
   private val serializationFqName = FqName("kotlinx.serialization")
   val contextualClassId = serializationFqName.classId("Contextual")
   private val serializationModulesFqName = FqName("kotlinx.serialization.modules")
@@ -97,7 +96,7 @@ internal class ZiplineApis(
       .single { it.owner.valueParameters.size == 2 }
 
   val listOfFunction: IrSimpleFunctionSymbol
-    get() = pluginContext.referenceFunctions(collectionsFqName.callableId("listOf"))
+    get() = pluginContext.referenceFunctions(StandardClassIds.BASE_COLLECTIONS_PACKAGE.callableId("listOf"))
       .single { it.owner.valueParameters.firstOrNull()?.isVararg == true }
 
   val listGetFunction: IrSimpleFunctionSymbol
