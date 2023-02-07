@@ -25,14 +25,14 @@ import okio.IOException
 class FakeZiplineHttpClient: ZiplineHttpClient {
   var filePathToByteString: Map<String, ByteString> = mapOf()
   val developmentServerWebSocket = Channel<String>()
-  // TODO emit when channels are closed/opened
-  val webSocketLog = Channel<String>()
+  val log = Channel<String>(capacity = Int.MAX_VALUE)
 
-  suspend fun sendUpdate() {
+  suspend fun sendDevelopmentServerUpdate() {
     developmentServerWebSocket.send("reload")
   }
 
-  fun closeUpdatesChannel() {
+  suspend fun closeDevelopmentServerChannel(url: String) {
+    log.send("close socket $url")
     developmentServerWebSocket.close()
   }
 
@@ -45,10 +45,11 @@ class FakeZiplineHttpClient: ZiplineHttpClient {
 
   // TODO add a url to websocket mapping so we can test multiple URLs result in multiple web sockets being set up
 
-  override fun openDevelopmentServerWebSocket(
+  override suspend fun openDevelopmentServerWebSocket(
     url: String,
     requestHeaders: List<Pair<String, String>>,
   ): Flow<String> {
+    log.send("open socket $url")
     return developmentServerWebSocket.consumeAsFlow()
   }
 }
