@@ -7,18 +7,18 @@ import org.jetbrains.kotlin.name.Name
 
 /** Represents a package name without an associated class. */
 @JvmInline
-value class FqPackageName(val fqName: String)
+value class FqPackageName(val fqName: FqName)
 
-fun FqPackageName(name: FqName): FqPackageName {
-  return FqPackageName(name.asString())
+fun FqPackageName(name: String): FqPackageName {
+  return FqPackageName(FqName(name))
 }
 
 fun FqPackageName.classId(name: String): ClassId {
-  return ClassId(FqName(fqName), Name.identifier(name))
+  return ClassId(fqName, Name.identifier(name))
 }
 
 fun FqPackageName.callableId(name: String): CallableId {
-  return CallableId(FqName(fqName), Name.identifier(name))
+  return CallableId(fqName, Name.identifier(name))
 }
 
 fun ClassId.callableId(name: String): CallableId {
