@@ -20,6 +20,7 @@ import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
 import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.isActive
 
@@ -63,6 +64,7 @@ internal class InboundService<T : ZiplineService>(
     return callResult.encodedResult
   }
 
+  @OptIn(ExperimentalCoroutinesApi::class)
   fun callSuspending(
     internalCall: InternalCall,
     externalCall: Call,

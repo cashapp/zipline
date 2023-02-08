@@ -3,6 +3,7 @@ import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
+import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
@@ -21,7 +22,7 @@ plugins {
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
   dependsOn(":zipline:testing:compileDevelopmentLibraryKotlinJs")
   destinationDir = buildDir.resolve("generated/testingJs")
-  from(projectDir.resolve("testing/build/compileSync/main/developmentLibrary/kotlin"))
+  from(projectDir.resolve("testing/build/compileSync/js/main/developmentLibrary/kotlin"))
 }
 
 kotlin {
@@ -111,6 +112,10 @@ kotlin {
         }
       }
 
+      binaries.withType<Framework> {
+        linkerOpts += "-lsqlite3"
+      }
+
       val test by compilations.getting
       test.defaultSourceSet.dependsOn(nativeTest)
     }
@@ -166,7 +171,7 @@ cklib {
         "-Wno-unused-function",
         "-Wno-error=atomic-alignment",
         "-Wno-sign-compare",
-        "-Wno-unused-parameter" /* for windows 32*/
+        "-Wno-unused-parameter" /* for windows 32 */
       )
     )
   }
