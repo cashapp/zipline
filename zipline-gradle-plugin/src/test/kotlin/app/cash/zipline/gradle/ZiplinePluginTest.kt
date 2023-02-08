@@ -92,7 +92,7 @@ class ZiplinePluginTest {
     val projectDir = File("src/test/projects/basic")
 
     val taskName = ":lib:launchGreetService"
-    val result = createRunner(projectDir, "clean", taskName).build()
+    val result = createRunner(projectDir, "clean", taskName, "--stacktrace").build()
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
     assertThat(result.output).contains("end-to-end call result: 'Hello, Jesse'")

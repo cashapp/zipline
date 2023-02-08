@@ -25,6 +25,8 @@ import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import okio.ByteString
 import okio.FileSystem
@@ -33,7 +35,7 @@ import okio.Path.Companion.toPath
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   // A fake HTTP client that returns files as the Webpack dev server would return them.
   val localDirectoryHttpClient = object : ZiplineHttpClient {
-    val base = "build/compileSync/main/productionExecutable/kotlinZipline".toPath()
+    val base = "build/distributionsZipline".toPath()
     override suspend fun download(
       url: String,
       requestHeaders: List<Pair<String, String>>,
@@ -41,6 +43,10 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
       val file = url.substringAfterLast("/")
       return FileSystem.SYSTEM.read(base / file) { readByteString() }
     }
+    override suspend fun openDevelopmentServerWebSocket(
+      url: String,
+      requestHeaders: List<Pair<String, String>>,
+    ): Flow<String> = flowOf<String>()
   }
   val loader = ZiplineLoader(
     dispatcher = dispatcher,
