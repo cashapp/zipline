@@ -75,6 +75,7 @@ import org.jetbrains.kotlin.ir.util.createDispatchReceiverParameter
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.StandardClassIds
 
 // Should produce a string like "var count: kotlin.Int" or "val count: kotlin.Int" or "fun echo(request: EchoRequest): EchoResponse"
 internal val IrSimpleFunction.signature: String
@@ -369,7 +370,7 @@ fun getOrCreateCompanion(
   if (existing != null) return existing
 
   val irFactory = irPluginContext.irFactory
-  val anyType = irPluginContext.referenceClass(irPluginContext.irBuiltIns.anyType.getClass()!!.classId!!)!!
+  val anyType = irPluginContext.referenceClass(StandardClassIds.Any)!!
   val companionClass = irFactory.buildClass {
     initDefaults(enclosing)
     name = Name.identifier("Companion")
