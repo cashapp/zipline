@@ -33,7 +33,7 @@ kotlin {
 // This task makes the JVM program available to ZiplinePluginTest.
 val jvmTestRuntimeClasspath by configurations.getting
 val launchGreetService by tasks.creating(JavaExec::class) {
-  dependsOn(":lib:compileProductionExecutableKotlinJsZipline")
+  dependsOn(":lib:jsBrowserProductionWebpackZipline")
   classpath = jvmTestRuntimeClasspath
   mainClass.set("app.cash.zipline.tests.LaunchGreetServiceJvmKt")
 }
