@@ -18,12 +18,7 @@ package app.cash.zipline.loader
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.native.concurrent.freeze
-import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.transformLatest
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okio.ByteString
 import okio.IOException
@@ -40,7 +35,7 @@ import platform.Foundation.dataTaskWithRequest
 
 internal class URLSessionZiplineHttpClient(
   private val urlSession: NSURLSession,
-) : ZiplineHttpClient {
+) : ZiplineHttpClient() {
   init {
     maybeFreeze()
   }
@@ -68,11 +63,6 @@ internal class URLSessionZiplineHttpClient(
 
       task.resume()
     }
-  }
-
-  override suspend fun openDevelopmentServerWebSocket(url: String, requestHeaders: List<Pair<String, String>>): Flow<String> {
-    // TODO add native web socket implementation, for now return empty flow which falls back to polling
-    return flowOf()
   }
 }
 

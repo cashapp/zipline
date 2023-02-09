@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import okio.ByteString
 import okio.IOException
 
-class FakeZiplineHttpClient: ZiplineHttpClient {
+class FakeZiplineHttpClient: ZiplineHttpClient() {
   var filePathToByteString: Map<String, ByteString> = mapOf()
   val developmentServerWebSocket = Channel<String>()
   val log = Channel<String>(capacity = Int.MAX_VALUE)
@@ -43,7 +43,8 @@ class FakeZiplineHttpClient: ZiplineHttpClient {
     return filePathToByteString[url] ?: throw IOException("404: $url not found")
   }
 
-  // TODO add a url to websocket mapping so we can test multiple URLs result in multiple web sockets being set up
+  // TODO add a url to websocket mapping so we can test multiple URLs result in multiple web
+  //   sockets being set up
 
   override suspend fun openDevelopmentServerWebSocket(
     url: String,
