@@ -15,9 +15,11 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.testing.awaitEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
@@ -125,7 +127,9 @@ class OkHttpZiplineHttpClientTest {
     job.cancel()
 
     // assert that websocket is not leaked
-    assertEquals(0, okHttpClient.connectionPool.connectionCount())
+    awaitEquals(0, delay = 100.milliseconds) {
+      okHttpClient.connectionPool.connectionCount()
+    }
   }
 
   @Test

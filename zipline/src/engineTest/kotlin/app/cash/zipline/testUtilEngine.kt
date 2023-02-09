@@ -21,25 +21,6 @@ import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
-/**
- * Yields until [expected] equals the result of [actual].
- *
- * Use this to assert asynchronously triggered side effects, such as resource cleanups.
- */
-suspend fun awaitEquals(
-  expected: Any?,
-  actual: () -> Any?
-) {
-  var actualValue = actual()
-  if (expected == actualValue) return
-  for (i in 0 until 5) {
-    yield()
-    actualValue = actual()
-    if (expected == actualValue) return
-  }
-  throw AssertionError("$expected != $actualValue")
-}
-
 @OptIn(ExperimentalSerializationApi::class)
 fun prettyPrint(jsonString: String): String {
   val json = Json {
