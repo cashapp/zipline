@@ -35,7 +35,7 @@ import platform.Foundation.dataTaskWithRequest
 
 internal class URLSessionZiplineHttpClient(
   private val urlSession: NSURLSession,
-) : ZiplineHttpClient {
+) : ZiplineHttpClient() {
   init {
     maybeFreeze()
   }

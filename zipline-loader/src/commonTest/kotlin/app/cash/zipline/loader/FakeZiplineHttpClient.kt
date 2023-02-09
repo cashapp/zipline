@@ -16,16 +16,41 @@
 
 package app.cash.zipline.loader
 
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.consumeAsFlow
 import okio.ByteString
 import okio.IOException
 
-class FakeZiplineHttpClient: ZiplineHttpClient {
+class FakeZiplineHttpClient: ZiplineHttpClient() {
   var filePathToByteString: Map<String, ByteString> = mapOf()
+  val developmentServerWebSocket = Channel<String>()
+  val log = Channel<String>(capacity = Int.MAX_VALUE)
+
+  suspend fun sendDevelopmentServerUpdate() {
+    developmentServerWebSocket.send("reload")
+  }
+
+  suspend fun closeDevelopmentServerChannel(url: String) {
+    log.send("close socket $url")
+    developmentServerWebSocket.close()
+  }
 
   override suspend fun download(
     url: String,
     requestHeaders: List<Pair<String, String>>,
   ): ByteString {
     return filePathToByteString[url] ?: throw IOException("404: $url not found")
+  }
+
+  // TODO add a url to websocket mapping so we can test multiple URLs result in multiple web
+  //   sockets being set up
+
+  override suspend fun openDevelopmentServerWebSocket(
+    url: String,
+    requestHeaders: List<Pair<String, String>>,
+  ): Flow<String> {
+    log.send("open socket $url")
+    return developmentServerWebSocket.consumeAsFlow()
   }
 }

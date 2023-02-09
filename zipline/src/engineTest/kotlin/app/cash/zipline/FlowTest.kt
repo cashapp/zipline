@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.testing.awaitEquals
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertContains
