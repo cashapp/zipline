@@ -1,4 +1,3 @@
-import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
@@ -132,6 +131,12 @@ android {
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
     multiDexEnabled = true
+  }
+
+  // TODO: Remove when https://issuetracker.google.com/issues/260059413 is resolved.
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
   }
 
   sourceSets {

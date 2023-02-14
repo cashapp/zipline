@@ -214,6 +214,12 @@ android {
     }
   }
 
+  // TODO: Remove when https://issuetracker.google.com/issues/260059413 is resolved.
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+  }
+
   sourceSets {
     getByName("androidTest") {
       java.srcDirs("src/engineTest/kotlin/", "src/jniTest/kotlin/")
