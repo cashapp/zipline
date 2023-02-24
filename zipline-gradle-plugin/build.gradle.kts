@@ -29,11 +29,6 @@ dependencies {
   testImplementation(libs.truth)
 }
 
-java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
-}
-
 buildConfig {
   useKotlinOutput {
     internalVisibility = true

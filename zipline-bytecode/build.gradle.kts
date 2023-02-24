@@ -19,11 +19,6 @@ dependencies {
   testImplementation(libs.truth)
 }
 
-java {
-  sourceCompatibility = JavaVersion.VERSION_11
-  targetCompatibility = JavaVersion.VERSION_11
-}
-
 configure<MavenPublishBaseExtension> {
   configure(
     KotlinJvm(
