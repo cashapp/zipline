@@ -6,6 +6,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 buildscript {
@@ -104,9 +105,13 @@ allprojects {
 
   plugins.withId("org.jetbrains.kotlin.multiplatform") {
     configure<KotlinMultiplatformExtension> {
-      jvmToolchain {
-        languageVersion.set(JavaLanguageVersion.of(11))
-      }
+      jvmToolchain(11)
+    }
+  }
+
+  plugins.withId("org.jetbrains.kotlin.jvm") {
+    configure<KotlinJvmProjectExtension> {
+      jvmToolchain(11)
     }
   }
 

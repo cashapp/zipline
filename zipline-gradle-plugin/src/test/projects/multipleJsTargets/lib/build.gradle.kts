@@ -9,11 +9,17 @@ kotlin {
   js("blue") {
     browser()
     binaries.executable()
+    attributes {
+      attribute(Attribute.of(String::class.java), "blue")
+    }
   }
 
   js("red") {
     browser()
     binaries.executable()
+    attributes {
+      attribute(Attribute.of(String::class.java), "red")
+    }
   }
 
   sourceSets {
