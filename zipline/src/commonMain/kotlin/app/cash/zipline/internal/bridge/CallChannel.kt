@@ -17,6 +17,10 @@ package app.cash.zipline.internal.bridge
 
 import kotlin.js.JsName
 
+/**
+ * Be careful changing these. They're inlined manually in js() blocks to workaround this issue:
+ * https://github.com/cashapp/zipline/issues/900
+ */
 internal const val inboundChannelName = "app_cash_zipline_inboundChannel"
 internal const val outboundChannelName = "app_cash_zipline_outboundChannel"
 
