@@ -97,11 +97,11 @@ internal class StateFlowTest {
        }
      }
 
-     val deferredCount = async {
+     val deferredLength = async {
        client.flowParameter(flow)
      }
 
-     assertEquals(3, deferredCount.await())
+     assertEquals(3, deferredLength.await())
 
      // Confirm that no services or clients were leaked.
      client.close()
