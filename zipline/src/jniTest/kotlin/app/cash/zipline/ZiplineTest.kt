@@ -49,10 +49,8 @@ class ZiplineTest {
     zipline.loadTestingJs()
   }
 
-  @After fun tearDown() {
-    runBlocking(dispatcher) {
-      zipline.close()
-    }
+  @After fun tearDown() = runBlocking(dispatcher) {
+    zipline.close()
   }
 
   @Test fun cannotTakeOrBindServiceAfterClose(): Unit = runBlocking(dispatcher) {

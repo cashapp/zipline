@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.builders.irVararg
+import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.declarations.IrVariable
@@ -72,35 +73,30 @@ internal class BridgedInterface(
 ) {
   val typeIrClass = classSymbol.owner
 
-  // TODO(jwilson): support overloaded functions?
-  val bridgedFunctionsWithOverrides: Map<Name, List<IrSimpleFunctionSymbol>>
+  val bridgedFunctionsWithOverrides: List<List<IrSimpleFunctionSymbol>>
     get() {
-      val result = mutableMapOf<Name, MutableList<IrSimpleFunctionSymbol>>()
+      val result = mutableMapOf<String, MutableList<IrSimpleFunctionSymbol>>()
       for (supertype in listOf(classSymbol.owner.defaultType) + classSymbol.owner.superTypes) {
         val supertypeClass = supertype.getClass() ?: continue
+        val functions = mutableListOf<IrSimpleFunction>()
         for (function in supertypeClass.functions) {
           if (function.name.identifier in NON_INTERFACE_FUNCTION_NAMES) continue
-          val overrides = result.getOrPut(function.name) { mutableListOf() }
-          overrides += function.symbol
+          functions += function
         }
         for (property in supertypeClass.properties) {
-          val getter = property.getter
-          if (getter != null) {
-            val overrides = result.getOrPut(getter.name) { mutableListOf() }
-            overrides += getter.symbol
-          }
-          val setter = property.setter
-          if (setter != null) {
-            val overrides = result.getOrPut(setter.name) { mutableListOf() }
-            overrides += setter.symbol
-          }
+          property.getter?.let { functions += it }
+          property.setter?.let { functions += it }
+        }
+        for (function in functions) {
+          val overrides = result.getOrPut(function.signature) { mutableListOf() }
+          overrides += function.symbol
         }
       }
-      return result
+      return result.values.toList()
     }
 
   val bridgedFunctions: List<IrSimpleFunctionSymbol>
-    get() = bridgedFunctionsWithOverrides.values.map { it[0] }
+    get() = bridgedFunctionsWithOverrides.map { it[0] }
 
   /** Declares local vars for all the serializers needed to bridge this interface. */
   fun declareSerializerTemporaries(

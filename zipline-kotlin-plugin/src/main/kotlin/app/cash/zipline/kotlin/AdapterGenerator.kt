@@ -694,7 +694,7 @@ internal class AdapterGenerator(
     )
     outboundServiceClass.declarations += callHandlerProperty
 
-    for ((i, overridesList) in bridgedInterface.bridgedFunctionsWithOverrides.values.withIndex()) {
+    for ((i, overridesList) in bridgedInterface.bridgedFunctionsWithOverrides.withIndex()) {
       outboundServiceClass.irBridgedFunction(
         functionIndex = i,
         bridgedInterface = bridgedInterface,
