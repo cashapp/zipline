@@ -369,6 +369,29 @@ class ZiplineKotlinPluginTest {
       .contains(":5:1 Only classes may implement ZiplineScoped, but " +
         "app.cash.zipline.testing.SomeInterface is an interface")
   }
+
+  @Test
+  fun `service has function with overloads`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.ZiplineService
+
+        interface ParentService : ZiplineService {
+            fun test(first: Int)
+        }
+
+        interface ChildService : ParentService, ZiplineService {
+            fun test(first: Int, second: Int)
+        }
+        """
+      )
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+  }
 }
 
 @OptIn(ExperimentalCompilerApi::class)
