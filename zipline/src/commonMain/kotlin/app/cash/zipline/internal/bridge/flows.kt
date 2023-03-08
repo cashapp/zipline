@@ -61,9 +61,7 @@ internal class FlowSerializer<T>(
     return object : FlowZiplineService<T> {
       override suspend fun collect(collector: FlowZiplineCollector<T>) {
         try {
-          this@toZiplineService.collect {
-            collector.emit(it)
-          }
+          this@toZiplineService.collect(collector::emit)
         } finally {
           collector.close()
         }
@@ -115,9 +113,7 @@ internal class StateFlowSerializer<T>(
     return object : StateFlowZiplineService<T> {
       override suspend fun collect(collector: FlowZiplineCollector<T>) {
         try {
-          this@toZiplineService.collect {
-            collector.emit(it)
-          }
+          this@toZiplineService.collect(collector::emit)
         } finally {
           collector.close()
         }
