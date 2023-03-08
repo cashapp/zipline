@@ -22,9 +22,9 @@ kotlin {
     val jvmMain by getting {
       dependencies {
         implementation("app.cash.zipline:zipline-loader:${project.property("ziplineVersion")}")
-        implementation("com.squareup.okio:okio:3.0.0")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.4.1")
-        implementation("org.jetbrains.kotlinx:kotlinx-serialization-core:1.4.1")
+        implementation(libs.okio.core)
+        implementation(libs.kotlinx.serialization.core)
+        implementation(libs.kotlinx.serialization.json)
       }
     }
   }

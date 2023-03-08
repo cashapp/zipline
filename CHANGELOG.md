@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.15] - 2022-01-25
+## [0.9.16] - 2022-02-09
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -11,6 +11,13 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * New `withDevelopmentServerPush()` subscribes to the local development server's websocket to
+   trigger hot reloads. This is lower-latency and more efficient than polling.
+ * Upgrade: [Kotlin 1.8.0][kotlin_1_8_0].
+
+
+## [0.9.15] - 2022-01-25
 
  * Fix: Don't crash if canceled with a 0-delay job enqueued. We had a bug where calling
    `Zipline.close()` could race with an enqueued job.
@@ -288,4 +295,5 @@ Initial release.
 
 
 [kotlin_1_7_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.7.10
+[kotlin_1_8_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.0
 [kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0

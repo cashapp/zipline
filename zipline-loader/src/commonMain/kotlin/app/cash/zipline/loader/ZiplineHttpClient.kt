@@ -15,11 +15,32 @@
  */
 package app.cash.zipline.loader
 
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOf
 import okio.ByteString
 
-interface ZiplineHttpClient {
-  suspend fun download(
+abstract class ZiplineHttpClient {
+  abstract suspend fun download(
     url: String,
     requestHeaders: List<Pair<String, String>>,
   ): ByteString
+
+  /**
+   * Opens a receive-only web socket to [url], and returns a flow that emits each message pushed by
+   * the server.
+   *
+   * This is not a general-purpose web socket API, and serves only the needs of [ZiplineLoader]'s
+   * code update signaling for development. For example, this does not expose HTTP response headers,
+   * binary messages, open events, or close events.
+   *
+   * The flow terminates when the web socket is closed. This will be immediately if the web socket
+   * cannot be established, after a graceful shutdown, or after an abrupt disconnection. The close
+   * reason is not exposed in this API.
+   *
+   * The default implementation returns an empty flow.
+   */
+  open suspend fun openDevelopmentServerWebSocket(
+    url: String,
+    requestHeaders: List<Pair<String, String>>,
+  ): Flow<String> = flowOf()
 }

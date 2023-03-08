@@ -6,6 +6,8 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 
 buildscript {
   repositories {
@@ -99,6 +101,18 @@ allprojects {
   // triggers 'signJsPublication' even when we aren't publishing (and so don't have signing keys).
   tasks.withType<Sign>().configureEach {
     enabled = project.findProperty("signingInMemoryKey") != null
+  }
+
+  plugins.withId("org.jetbrains.kotlin.multiplatform") {
+    configure<KotlinMultiplatformExtension> {
+      jvmToolchain(11)
+    }
+  }
+
+  plugins.withId("org.jetbrains.kotlin.jvm") {
+    configure<KotlinJvmProjectExtension> {
+      jvmToolchain(11)
+    }
   }
 
   plugins.withId("com.vanniktech.maven.publish.base") {

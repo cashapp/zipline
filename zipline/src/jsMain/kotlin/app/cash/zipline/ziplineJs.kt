@@ -49,7 +49,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
       /** Lazily fetch the channel to call out. */
       @Suppress("UnsafeCastFromDynamic")
       private val jsOutboundChannel: CallChannel
-        get() = js("globalThis.$outboundChannelName")
+        get() = js("globalThis.app_cash_zipline_outboundChannel")
 
       override fun serviceNamesArray(): Array<String> {
         return jsOutboundChannel.serviceNamesArray()

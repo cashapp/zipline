@@ -1,4 +1,3 @@
-import com.android.build.gradle.tasks.factory.AndroidUnitTest
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
@@ -102,6 +101,7 @@ kotlin {
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(libs.sqlite.jdbc)
+        implementation(libs.truth)
       }
     }
     val jvmTest by getting {
@@ -133,9 +133,15 @@ android {
     multiDexEnabled = true
   }
 
+  // TODO: Remove when https://issuetracker.google.com/issues/260059413 is resolved.
+  compileOptions {
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
+  }
+
   sourceSets {
     getByName("androidTest") {
-      java.srcDirs("src/androidTest/kotlin/")
+      java.srcDirs("src/androidInstrumentedTest/kotlin/")
     }
   }
 }
@@ -174,8 +180,13 @@ tasks.withType<Test> {
   dependsOn(fetchWycheproofJson)
 }
 
-tasks.withType<AndroidUnitTest> {
-  enabled = false
+afterEvaluate {
+  tasks.named("compileDebugUnitTestKotlinAndroid") {
+    enabled = false
+  }
+  tasks.named("compileReleaseUnitTestKotlinAndroid") {
+    enabled = false
+  }
 }
 
 configure<MavenPublishBaseExtension> {

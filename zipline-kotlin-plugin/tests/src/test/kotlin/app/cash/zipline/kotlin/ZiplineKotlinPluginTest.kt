@@ -25,10 +25,14 @@ import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
 import kotlinx.serialization.KSerializer
-import org.jetbrains.kotlin.compiler.plugin.ComponentRegistrar
+import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
+import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Test
 
 /** Confirm bridge calls are rewritten to use `OutboundBridge` or `InboundBridge` as appropriate. */
+@OptIn(ExperimentalCompilerApi::class)
 class ZiplineKotlinPluginTest {
   @Test
   fun `zipline service rewritten with adapter`() {
@@ -147,7 +151,7 @@ class ZiplineKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains("(6, 12): The type argument to Zipline.bind() must be an interface type")
+      .contains(":6:12 The type argument to Zipline.bind() must be an interface type")
   }
 
   @Test
@@ -171,7 +175,7 @@ class ZiplineKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains("(9, 19): The type argument to Zipline.take() must be an interface type")
+      .contains(":9:19 The type argument to Zipline.take() must be an interface type")
   }
 
   @Test
@@ -362,26 +366,33 @@ class ZiplineKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains("(5, 1): Only classes may implement ZiplineScoped, but " +
+      .contains(":5:1 Only classes may implement ZiplineScoped, but " +
         "app.cash.zipline.testing.SomeInterface is an interface")
   }
 }
 
+@OptIn(ExperimentalCompilerApi::class)
 fun compile(
   sourceFiles: List<SourceFile>,
-  plugin: ComponentRegistrar = ZiplineComponentRegistrar(),
+  plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
 ): KotlinCompilation.Result {
   return KotlinCompilation().apply {
     sources = sourceFiles
     useIR = true
-    compilerPlugins = listOf(plugin)
+    // https://github.com/ZacSweers/kotlin-compile-testing/pull/124
+    commandLineProcessors = listOf(object : CommandLineProcessor {
+      override val pluginId get() = ""
+      override val pluginOptions get() = emptySet<AbstractCliOption>()
+    })
+    compilerPluginRegistrars = listOf(plugin)
     inheritClassPath = true
   }.compile()
 }
 
+@OptIn(ExperimentalCompilerApi::class)
 fun compile(
   sourceFile: SourceFile,
-  plugin: ComponentRegistrar = ZiplineComponentRegistrar(),
+  plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
 ): KotlinCompilation.Result {
   return compile(listOf(sourceFile), plugin)
 }

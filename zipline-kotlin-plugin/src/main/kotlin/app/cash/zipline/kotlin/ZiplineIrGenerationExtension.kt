@@ -24,7 +24,8 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrModuleFragment
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.types.classFqName
+import org.jetbrains.kotlin.ir.types.getClass
+import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.ir.util.isInterface
 
@@ -40,7 +41,7 @@ class ZiplineIrGenerationExtension(
 
         try {
           if (declaration.isInterface &&
-            declaration.superTypes.any { it.classFqName == ziplineApis.ziplineScopedFqName }
+            declaration.superTypes.any { it.getClass()?.classId == ziplineApis.ziplineScopedClassId }
           ) {
             throw ZiplineCompilationException(
               element = declaration,
@@ -50,7 +51,7 @@ class ZiplineIrGenerationExtension(
           }
 
           if (declaration.isInterface &&
-            declaration.superTypes.any { it.classFqName == ziplineApis.ziplineServiceFqName }
+            declaration.superTypes.any { it.getClass()?.classId == ziplineApis.ziplineServiceClassId }
           ) {
             AdapterGenerator(
               pluginContext,

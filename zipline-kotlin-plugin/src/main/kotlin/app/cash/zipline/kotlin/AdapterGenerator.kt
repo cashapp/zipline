@@ -59,7 +59,6 @@ import org.jetbrains.kotlin.ir.util.addFakeOverrides
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isGetter
 import org.jetbrains.kotlin.ir.util.isSuspend
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
@@ -703,14 +702,6 @@ internal class AdapterGenerator(
         overridesList = overridesList,
       )
     }
-
-    outboundServiceClass.addFakeOverrides(
-      irTypeSystemContext,
-      buildList {
-        add(callHandlerProperty)
-        addAll(outboundServiceClass.functions)
-      }
-    )
 
     return outboundServiceClass
   }

@@ -65,15 +65,15 @@ import org.jetbrains.kotlin.ir.symbols.impl.IrPropertySymbolImpl
 import org.jetbrains.kotlin.ir.symbols.impl.IrSimpleFunctionSymbolImpl
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
-import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
+import org.jetbrains.kotlin.ir.util.companionObject
 import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createDispatchReceiverParameter
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
-import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
+import org.jetbrains.kotlin.name.StandardClassIds
 
 // Should produce a string like "var count: kotlin.Int" or "val count: kotlin.Int" or "fun echo(request: EchoRequest): EchoResponse"
 internal val IrSimpleFunction.signature: String
@@ -101,8 +101,6 @@ internal val IrSimpleFunction.signature: String
       )
     }
   }
-
-internal fun FqName.child(name: String) = child(Name.identifier(name))
 
 /** Thrown on invalid or unexpected input code. */
 class ZiplineCompilationException(
@@ -366,13 +364,11 @@ fun getOrCreateCompanion(
   enclosing: IrClass,
   irPluginContext: IrPluginContext,
 ): IrClass {
-  val existing = enclosing.declarations.firstOrNull {
-    it is IrClass && it.name.identifier == "Companion"
-  }
-  if (existing != null) return existing as IrClass
+  val existing = enclosing.companionObject()
+  if (existing != null) return existing
 
   val irFactory = irPluginContext.irFactory
-  val anyType = irPluginContext.referenceClass(irPluginContext.irBuiltIns.anyType.classFqName!!)!!
+  val anyType = irPluginContext.referenceClass(StandardClassIds.Any)!!
   val companionClass = irFactory.buildClass {
     initDefaults(enclosing)
     name = Name.identifier("Companion")

@@ -41,7 +41,7 @@ internal object GlobalBridge : JsPlatform, CallChannel {
     val globalBridge = this
     js(
       """
-      globalThis.$inboundChannelName = globalBridge;
+      globalThis.app_cash_zipline_inboundChannel = globalBridge;
 
       globalThis.setTimeout = function(handler, delay) {
         return globalBridge.setTimeout(handler, delay, arguments);

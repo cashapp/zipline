@@ -18,17 +18,23 @@ package app.cash.zipline.loader
 import java.io.IOException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.trySendBlocking
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
 import okio.ByteString
 
 internal class OkHttpZiplineHttpClient(
   private val okHttpClient: OkHttpClient
-) : ZiplineHttpClient {
+) : ZiplineHttpClient() {
   override suspend fun download(
     url: String,
     requestHeaders: List<Pair<String, String>>,
@@ -76,6 +82,38 @@ internal class OkHttpZiplineHttpClient(
           continuation.resume(byteString)
         }
       })
+    }
+  }
+
+  override suspend fun openDevelopmentServerWebSocket(
+    url: String, requestHeaders: List<Pair<String, String>>,
+  ): Flow<String> {
+    val request = Request.Builder()
+      .url(url)
+      .build()
+
+    return callbackFlow {
+      val webSocket = okHttpClient.newWebSocket(
+        request,
+        object : WebSocketListener() {
+          override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+            channel.close()
+            webSocket.close(1000, null)
+          }
+
+          override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+            channel.close()
+          }
+
+          override fun onMessage(webSocket: WebSocket, text: String) {
+            trySendBlocking(text)
+          }
+        },
+      )
+
+      awaitClose {
+        webSocket.cancel()
+      }
     }
   }
 }
