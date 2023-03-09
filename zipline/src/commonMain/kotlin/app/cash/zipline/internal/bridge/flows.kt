@@ -92,7 +92,6 @@ internal class FlowSerializer<T>(
   override fun hashCode() = delegateSerializer.hashCode()
 }
 
-
 /**
  * This serializes [StateFlow] instances (not directly serializable) by converting them to
  * [StateFlowZiplineService] instances which can be serialized by [ziplineServiceSerializer] to
