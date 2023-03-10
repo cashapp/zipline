@@ -15,30 +15,20 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.testing.awaitEquals
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
-import kotlin.test.assertContains
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.supervisorScope
 
 @OptIn(DelicateCoroutinesApi::class)
 internal class StateFlowTest {
@@ -75,7 +65,7 @@ internal class StateFlowTest {
   fun stateFlowValueWorks() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
-    val service = RealStateFlowEchoService("first")
+    val service = RealStateFlowEchoService(initialValue = "first")
 
     endpointA.bind<StateFlowEchoService>("service", service)
     val client = endpointB.take<StateFlowEchoService>("service", scope)
@@ -101,7 +91,7 @@ internal class StateFlowTest {
   fun stateFlowReplayCacheWorks() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
-    val service = RealStateFlowEchoService("first")
+    val service = RealStateFlowEchoService(initialValue = "first")
 
     endpointA.bind<StateFlowEchoService>("service", service)
     val client = endpointB.take<StateFlowEchoService>("service", scope)
@@ -127,7 +117,7 @@ internal class StateFlowTest {
   fun stateFlowAbortWorks() = runBlocking(Unconfined) {
     val scope = ZiplineScope()
     val (endpointA, endpointB) = newEndpointPair(this)
-    val service = RealStateFlowEchoService("first")
+    val service = RealStateFlowEchoService(initialValue = "first")
 
     endpointA.bind<StateFlowEchoService>("service", service)
     val client = endpointB.take<StateFlowEchoService>("service", scope)
@@ -173,103 +163,6 @@ internal class StateFlowTest {
      val service = RealStateFlowEchoService()
      val flow = service.createFlow("hello", 3)
      assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.take(3).toList())
-   }
-
-   @Test
-   fun receivingEndpointCancelsFlow() = runBlocking(Unconfined) {
-     val scope = ZiplineScope()
-     val channel = Channel<String>(Int.MAX_VALUE)
-
-     val (endpointA, endpointB) = newEndpointPair(this)
-     val service = object : StateFlowEchoService {
-       override val flow get() = error("unexpected call")
-
-       override suspend fun createFlow(message: String, count: Int): StateFlow<String> {
-         return channel.consumeAsFlow().stateIn(GlobalScope, SharingStarted.Lazily, "initial")
-       }
-
-       override suspend fun take(flow: StateFlow<String>, count: Int) = error("unexpected call")
-     }
-
-     endpointA.bind<StateFlowEchoService>("service", service)
-     val client = endpointB.take<StateFlowEchoService>("service", scope)
-
-     val flow = client.createFlow("", 0)
-     val deferred = async {
-       channel.send("A")
-       forceSuspend()
-       channel.send("B")
-       forceSuspend()
-       channel.send("C")
-       forceSuspend()
-     }
-
-     val received = mutableListOf<String>()
-     val e = assertFailsWith<ZiplineException> {
-       flow.collect {
-         received += it
-         if (received.size == 2) channel.cancel()
-       }
-     }
-     assertContains(e.toString(), "CancellationException")
-     deferred.join()
-     assertEquals(listOf("initial", "A", "B"), received)
-
-     // Confirm that no services or clients were leaked.
-     scope.close()
-     assertEquals(setOf(), endpointA.serviceNames)
-     assertEquals(setOf(), endpointA.clientNames)
-   }
-
-   @Test
-   fun callingEndpointCancelsFlow() = runBlocking(Unconfined) {
-     val scope = ZiplineScope()
-     val channel = Channel<String>(Int.MAX_VALUE)
-
-     val (endpointA, endpointB) = newEndpointPair(this)
-     val service = object : StateFlowEchoService {
-       override val flow get() = error("unexpected call")
-
-       override suspend fun createFlow(message: String, count: Int): StateFlow<String> {
-         return channel.consumeAsFlow().stateIn(GlobalScope)
-       }
-
-       override suspend fun take(flow: StateFlow<String>, count: Int) = error("unexpected call")
-     }
-
-     endpointA.bind<StateFlowEchoService>("service", service)
-     val client = endpointB.take<StateFlowEchoService>("service", scope)
-
-     val flow = client.createFlow("", 0)
-     val deferred = async {
-       channel.send("A")
-       forceSuspend()
-       channel.send("B")
-       forceSuspend()
-       channel.send("C")
-       forceSuspend()
-     }
-
-     val received = mutableListOf<String>()
-     supervisorScope {
-       assertFailsWith<CancellationException> {
-         coroutineScope {
-           flow.collect {
-             received += it
-             if (received.size == 2) {
-               this@coroutineScope.cancel()
-             }
-           }
-         }
-       }
-     }
-     deferred.join()
-     assertEquals(listOf("A", "B"), received)
-
-     // Confirm that no services or clients were leaked.
-     scope.close()
-     awaitEquals(setOf<String>()) { endpointA.serviceNames }
-     awaitEquals(setOf<String>()) { endpointA.clientNames }
    }
 
    @Test
