@@ -167,7 +167,7 @@ internal class StateFlowTest {
    fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking(Unconfined) {
      val service = RealStateFlowEchoService()
      val flow = service.createFlow("hello", 3)
-     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.take(3).toList())
+     assertEquals(listOf("0 hello", "1 hello", "2 hello"), service.take(flow, 3))
    }
 
    @Test
@@ -180,7 +180,7 @@ internal class StateFlowTest {
      val client = endpointB.take<StateFlowEchoService>("service", scope)
 
      val flow = client.createFlow("hello", 3)
-     assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.take(3).toList())
+     assertEquals(listOf("0 hello", "1 hello", "2 hello"), client.take(flow, 3))
 
      // Confirm that no services or clients were leaked.
      scope.close()
