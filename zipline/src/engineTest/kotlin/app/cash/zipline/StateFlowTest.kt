@@ -24,6 +24,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
@@ -85,7 +86,7 @@ internal class StateFlowTest {
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointA.clientNames)
-    assertEquals(0, service.mutableFlow.subscriptionCount.value)
+    assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
   @Test
@@ -112,7 +113,7 @@ internal class StateFlowTest {
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointA.clientNames)
-    assertEquals(0, service.mutableFlow.subscriptionCount.value)
+    assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
   @Test
@@ -131,7 +132,7 @@ internal class StateFlowTest {
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointA.clientNames)
-    assertEquals(0, service.mutableFlow.subscriptionCount.value)
+    assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
    @Test
@@ -159,7 +160,7 @@ internal class StateFlowTest {
      client.close()
      assertEquals(setOf(), endpointA.serviceNames)
      assertEquals(setOf(), endpointA.clientNames)
-     assertEquals(0, service.mutableFlow.subscriptionCount.value)
+     assertEquals(0, service.mutableFlow.subscriptionCount.first())
    }
 
    @Test
@@ -185,7 +186,7 @@ internal class StateFlowTest {
      scope.close()
      assertEquals(setOf(), endpointA.serviceNames)
      assertEquals(setOf(), endpointA.clientNames)
-     assertEquals(0, service.mutableFlow.subscriptionCount.value)
+     assertEquals(0, service.mutableFlow.subscriptionCount.first())
    }
 
    @Test
@@ -203,6 +204,6 @@ internal class StateFlowTest {
      scope.close()
      assertEquals(setOf(), endpointA.serviceNames)
      assertEquals(setOf(), endpointA.clientNames)
-     assertEquals(0, service.mutableFlow.subscriptionCount.value)
+     assertEquals(0, service.mutableFlow.subscriptionCount.first())
    }
 }
