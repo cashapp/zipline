@@ -118,8 +118,7 @@ internal class StateFlowSerializer<T>(
         }
       }
 
-      override val value: T
-        get() = this@toZiplineService.value
+      override val value: T get() = this@toZiplineService.value
 
       override fun toString() = this@toZiplineService.toString()
     }
@@ -138,11 +137,10 @@ internal class StateFlowSerializer<T>(
             collector.emit(value)
           }
         })
-        throw AssertionError() // StateFlows never end!
+        throw AssertionError() // StateFlows never complete!
       }
 
-      override val value: T
-        get() = this@toStateFlow.value
+      override val value: T get() = this@toStateFlow.value
 
       override val replayCache: List<T> get() = listOf(value)
     }
