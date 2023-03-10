@@ -31,7 +31,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
@@ -73,7 +72,7 @@ internal class FlowTest {
     val client = endpointB.take<FlowEchoService>("service", scope)
 
     val flow = client.createFlow("hello", 3)
-    assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.take(3).toList())
+    assertEquals(listOf("0 hello", "1 hello", "2 hello"), flow.toList())
 
     // Confirm that no services or clients were leaked.
     scope.close()
