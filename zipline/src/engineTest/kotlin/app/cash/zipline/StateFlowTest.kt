@@ -85,6 +85,7 @@ internal class StateFlowTest {
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(0, service.mutableFlow.subscriptionCount.value)
   }
 
   @Test
@@ -111,6 +112,7 @@ internal class StateFlowTest {
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(0, service.mutableFlow.subscriptionCount.value)
   }
 
   @Test
@@ -129,6 +131,7 @@ internal class StateFlowTest {
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(0, service.mutableFlow.subscriptionCount.value)
   }
 
    @Test
@@ -156,6 +159,7 @@ internal class StateFlowTest {
      client.close()
      assertEquals(setOf(), endpointA.serviceNames)
      assertEquals(setOf(), endpointA.clientNames)
+     assertEquals(0, service.mutableFlow.subscriptionCount.value)
    }
 
    @Test
@@ -181,6 +185,7 @@ internal class StateFlowTest {
      scope.close()
      assertEquals(setOf(), endpointA.serviceNames)
      assertEquals(setOf(), endpointA.clientNames)
+     assertEquals(0, service.mutableFlow.subscriptionCount.value)
    }
 
    @Test
@@ -198,5 +203,6 @@ internal class StateFlowTest {
      scope.close()
      assertEquals(setOf(), endpointA.serviceNames)
      assertEquals(setOf(), endpointA.clientNames)
+     assertEquals(0, service.mutableFlow.subscriptionCount.value)
    }
 }
