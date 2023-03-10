@@ -132,11 +132,13 @@ internal class StateFlowSerializer<T>(
   private fun StateFlowZiplineService<T>.toStateFlow(): StateFlow<T> {
     return object : StateFlow<T> {
       override suspend fun collect(collector: FlowCollector<T>): Nothing {
-        this@toStateFlow.collect(object : FlowZiplineCollector<T> {
-          override suspend fun emit(value: T) {
-            collector.emit(value)
-          }
-        })
+        channelFlow {
+          this@toStateFlow.collect(object : FlowZiplineCollector<T> {
+            override suspend fun emit(value: T) {
+              this@channelFlow.send(value)
+            }
+          })
+        }.collect(collector)
         throw AssertionError() // StateFlows never complete!
       }
 
