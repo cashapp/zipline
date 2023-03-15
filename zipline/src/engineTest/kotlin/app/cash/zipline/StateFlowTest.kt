@@ -135,75 +135,75 @@ internal class StateFlowTest {
     assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
-   @Test
-   fun flowParameterWorks() = runBlocking(Unconfined) {
-     val (endpointA, endpointB) = newEndpointPair(this)
-     val service = RealStateFlowEchoService()
+  @Test
+  fun flowParameterWorks() = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = RealStateFlowEchoService()
 
-     endpointA.bind<StateFlowEchoService>("service", service)
-     val client = endpointB.take<StateFlowEchoService>("service")
+    endpointA.bind<StateFlowEchoService>("service", service)
+    val client = endpointB.take<StateFlowEchoService>("service")
 
-     val flow = flow {
-       for (i in 1..3) {
-         forceSuspend() // Ensure we can send async through the reference.
-         emit("$i")
-       }
-     }.stateIn(GlobalScope)
+    val flow = flow {
+      for (i in 1..3) {
+        forceSuspend() // Ensure we can send async through the reference.
+        emit("$i")
+      }
+    }.stateIn(GlobalScope)
 
-     val deferredItems = async {
-       client.take(flow, 3)
-     }
+    val deferredItems = async {
+      client.take(flow, 3)
+    }
 
-     assertEquals(listOf("1", "2", "3"), deferredItems.await())
+    assertEquals(listOf("1", "2", "3"), deferredItems.await())
 
-     // Confirm that no services or clients were leaked.
-     client.close()
-     assertEquals(setOf(), endpointA.serviceNames)
-     assertEquals(setOf(), endpointA.clientNames)
-     assertEquals(0, service.mutableFlow.subscriptionCount.first())
-   }
+    // Confirm that no services or clients were leaked.
+    client.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(0, service.mutableFlow.subscriptionCount.first())
+  }
 
-   @Test
-   fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking(Unconfined) {
-     val service = RealStateFlowEchoService()
-     val flow = service.createFlow("hello", 3)
-     assertEquals(listOf("0 hello", "1 hello", "2 hello"), service.take(flow, 3))
-   }
+  @Test
+  fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking(Unconfined) {
+    val service = RealStateFlowEchoService()
+    val flow = service.createFlow("hello", 3)
+    assertEquals(listOf("0 hello", "1 hello", "2 hello"), service.take(flow, 3))
+  }
 
-   @Test
-   fun collectFlowOneTime() = runBlocking(Unconfined) {
-     val scope = ZiplineScope()
-     val (endpointA, endpointB) = newEndpointPair(this)
-     val service = RealStateFlowEchoService()
+  @Test
+  fun collectFlowOneTime() = runBlocking(Unconfined) {
+    val scope = ZiplineScope()
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = RealStateFlowEchoService()
 
-     endpointA.bind<StateFlowEchoService>("service", service)
-     val client = endpointB.take<StateFlowEchoService>("service", scope)
+    endpointA.bind<StateFlowEchoService>("service", service)
+    val client = endpointB.take<StateFlowEchoService>("service", scope)
 
-     val flow = client.createFlow("hello", 3)
-     assertEquals(listOf("0 hello", "1 hello", "2 hello"), client.take(flow, 3))
+    val flow = client.createFlow("hello", 3)
+    assertEquals(listOf("0 hello", "1 hello", "2 hello"), client.take(flow, 3))
 
-     // Confirm that no services or clients were leaked.
-     scope.close()
-     assertEquals(setOf(), endpointA.serviceNames)
-     assertEquals(setOf(), endpointA.clientNames)
-     assertEquals(0, service.mutableFlow.subscriptionCount.first())
-   }
+    // Confirm that no services or clients were leaked.
+    scope.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(0, service.mutableFlow.subscriptionCount.first())
+  }
 
-   @Test
-   fun collectFlowZeroTimes() = runBlocking(Unconfined) {
-     val scope = ZiplineScope()
-     val (endpointA, endpointB) = newEndpointPair(this)
-     val service = RealStateFlowEchoService()
+  @Test
+  fun collectFlowZeroTimes() = runBlocking(Unconfined) {
+    val scope = ZiplineScope()
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = RealStateFlowEchoService()
 
-     endpointA.bind<StateFlowEchoService>("service", service)
-     val client = endpointB.take<StateFlowEchoService>("service", scope)
+    endpointA.bind<StateFlowEchoService>("service", service)
+    val client = endpointB.take<StateFlowEchoService>("service", scope)
 
-     client.createFlow("hello", 3)
+    client.createFlow("hello", 3)
 
-     // Confirm that no services or clients were leaked.
-     scope.close()
-     assertEquals(setOf(), endpointA.serviceNames)
-     assertEquals(setOf(), endpointA.clientNames)
-     assertEquals(0, service.mutableFlow.subscriptionCount.first())
-   }
+    // Confirm that no services or clients were leaked.
+    scope.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(0, service.mutableFlow.subscriptionCount.first())
+  }
 }
