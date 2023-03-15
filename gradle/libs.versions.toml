@@ -31,7 +31,7 @@ auto-service-compiler = { module = "com.google.auto.service:auto-service", versi
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
 cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.2.4" }
 coil-compose = { module = "io.coil-kt:coil-compose", version = "2.2.2" }
-dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "1.7.20" }
+dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "1.8.10" }
 duktape = { module = "com.squareup.duktape:duktape-android", version = "1.4.0" }
 http4k-core = { module = "org.http4k:http4k-core", version.ref = "http4k" }
 http4k-server-jetty = { module = "org.http4k:http4k-server-jetty", version.ref = "http4k" }
