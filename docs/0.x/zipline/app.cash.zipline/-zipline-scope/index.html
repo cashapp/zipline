@@ -34,7 +34,7 @@
     <div class="library-name">
 <a href="../../../index.html">
 <span>zipline-root</span>            </a>    </div>
-    <div>0.9.16
+    <div>0.9.17
     </div>
     <div class="pull-right d-flex">
         <div class="filter-section" id="filter-section">
@@ -49,44 +49,48 @@
         <div id="sideMenu"></div>
     </div>
     <div id="main">
-<div class="main-content" id="content" pageids="zipline::app.cash.zipline/ZiplineScope///PointingToDeclaration//1918917616">
+<div class="main-content" data-page-type="classlike" id="content" pageids="zipline::app.cash.zipline/ZiplineScope///PointingToDeclaration//1918917616">
   <div class="breadcrumbs"><a href="../../index.html">zipline</a><span class="delimiter">/</span><a href="../index.html">app.cash.zipline</a><span class="delimiter">/</span><span class="current">ZiplineScope</span></div>
   <div class="cover ">
     <h1 class="cover"><span>Zipline</span><wbr><span><span>Scope</span></span></h1>
     <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/commonMain"><div class="symbol monospace"><span class="token keyword">class </span><a href="index.html">ZiplineScope</a></div><p class="paragraph">An opaque set of <a href="../-zipline-service/index.html">ZiplineServices</a> that can be closed as a unit. Use this to avoid tracking individual services.</p><h1 class=""> Using ZiplineScope With Take</h1><p class="paragraph">To use this, pass an instance to <a href="../-zipline/take.html">Zipline.take</a>, then the returned service and all services it produces can be closed with <a href="../-zipline-service/close.html">ZiplineService.close</a>.</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">val scope = ZiplineScope()<br>val quoteService = zipline.take&lt;QuoteService&gt;("quoteService", scope)<br><br>val appl: LiveChart = quoteService.chart("APPL")<br>val nke: LiveChart = quoteService.chart("NKE")<br>val sq: LiveChart = quoteService.chart("SQ")<br><br>scope.close() // closes quoteService, appl, nke, and sq.</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Note that returned services should be closed early if they are no longer needed.</p><h1 class=""> Using ZiplineScope With Bind</h1><p class="paragraph">When defining a service for others to call, implement from <a href="../-zipline-scoped/index.html">ZiplineScoped</a> to set the scope that passed-in services will be added to.</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">class RealPriceWatcherService : PriceWatcherService, ZiplineScoped {<br>  override val scope = ZiplineScope()<br><br>  fun subscribe(listener: PriceListener) {<br>    ...<br>  }<br><br>  override fun close() {<br>    scope.close() // closes all listeners ever passed to subscribe.<br>  }<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">When a service does not implement <a href="../-zipline-scoped/index.html">ZiplineScoped</a>, the services passed in to it must be closed individually.</p></div></div>
   </div>
   <div class="tabbedcontent">
-    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="Constructors">Constructors</button><button class="section-tab" data-togglable="Functions">Functions</button></div>
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,FUNCTION,PROPERTY">Members</button></div>
     <div class="tabs-section-body">
-      <h2 class="tabbedcontent">Constructors</h2>
-      <div class="table" data-togglable="Constructors"><a data-name="1995393046%2FConstructors%2F1918917616" anchor-label="ZiplineScope" id="1995393046%2FConstructors%2F1918917616" data-filterable-set=":zipline:dokkaHtmlPartial/commonMain"></a>
-        <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline:dokkaHtmlPartial/commonMain">
-          <div class="main-subrow keyValue TabbedContent">
-            <div class=""><span class="inline-flex">
-                <div><a href="-zipline-scope.html"><span>Zipline</span><wbr><span><span>Scope</span></span></a></div>
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="1995393046%2FConstructors%2F1918917616" anchor-label="ZiplineScope" id="1995393046%2FConstructors%2F1918917616" data-filterable-set=":zipline:dokkaHtmlPartial/commonMain"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":zipline:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline:dokkaHtmlPartial/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-zipline-scope.html"><span>Zipline</span><wbr><span><span>Scope</span></span></a></div>
 <span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1995393046%2FConstructors%2F1918917616"></span>
-                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                </span></span></div>
-            <div>
-              <div class="title">
-                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/commonMain"><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">fun </span><a href="-zipline-scope.html"><span class="token function">ZiplineScope</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/commonMain"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-      <h2 class="">Functions</h2>
-      <div class="table" data-togglable="Functions"><a data-name="435092333%2FFunctions%2F1918917616" anchor-label="close" id="435092333%2FFunctions%2F1918917616" data-filterable-set=":zipline:dokkaHtmlPartial/commonMain"></a>
-        <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline:dokkaHtmlPartial/commonMain">
-          <div class="main-subrow keyValue ">
-            <div class=""><span class="inline-flex">
-                <div><a href="close.html"><span><span>close</span></span></a></div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="435092333%2FFunctions%2F1918917616" anchor-label="close" id="435092333%2FFunctions%2F1918917616" data-filterable-set=":zipline:dokkaHtmlPartial/commonMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/commonMain" data-filterable-set=":zipline:dokkaHtmlPartial/commonMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="close.html"><span><span>close</span></span></a></div>
 <span class="anchor-wrapper"><span class="anchor-icon" pointing-to="435092333%2FFunctions%2F1918917616"></span>
-                  <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
-                </span></span></div>
-            <div>
-              <div class="title">
-                <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/commonMain"><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">fun </span><a href="close.html"><span class="token function">close</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/commonMain"><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">fun </span><a href="close.html"><span class="token function">close</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div></div>
+                </div>
               </div>
             </div>
           </div>
@@ -100,6 +104,6 @@
       </div>
     </div>
 </div>
-
-</body></html>
+</body>
+</html>
 
