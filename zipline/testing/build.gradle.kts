@@ -77,4 +77,8 @@ tasks {
     dependsOn(named("jsProductionLibraryCompileSync"))
     dependsOn(named("jsDevelopmentLibraryCompileSync"))
   }
+  named("jsBrowserProductionLibraryPrepare").configure {
+    dependsOn(named("jsProductionExecutableCompileSync"))
+    dependsOn(named("jsDevelopmentLibraryCompileSync"))
+  }
 }
