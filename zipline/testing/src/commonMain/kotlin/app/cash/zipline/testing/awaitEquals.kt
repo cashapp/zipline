@@ -24,15 +24,16 @@ import kotlinx.coroutines.yield
  *
  * Use this to assert asynchronously triggered side effects, such as resource cleanups.
  */
-suspend fun awaitEquals(
-  expected: Any?,
-  delay: Duration? = null,
-  actual: () -> Any?
+suspend fun <T> awaitEquals(
+  expected: T?,
+  delay: Duration = Duration.ZERO,
+  attempts: Int = 5,
+  actual: () -> T?
 ) {
   var actualValue = actual()
   if (expected == actualValue) return
-  for (i in 0 until 5) {
-    if (delay != null) {
+  repeat(attempts) {
+    if (delay.isPositive()) {
       delay(delay)
     } else {
       yield()
