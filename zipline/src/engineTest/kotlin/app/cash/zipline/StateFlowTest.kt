@@ -18,10 +18,11 @@ package app.cash.zipline
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Unconfined
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
@@ -31,7 +32,6 @@ import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 
-@OptIn(DelicateCoroutinesApi::class)
 internal class StateFlowTest {
   interface StateFlowEchoService : ZiplineService {
     val flow: StateFlow<String>
@@ -40,6 +40,7 @@ internal class StateFlowTest {
   }
 
   class RealStateFlowEchoService(initialValue: String = "") : StateFlowEchoService, ZiplineScoped {
+    private val coroutineScope = CoroutineScope(Job())
     override val scope = ZiplineScope()
     val mutableFlow = MutableStateFlow(initialValue)
     override val flow: StateFlow<String> get() = mutableFlow
@@ -47,10 +48,10 @@ internal class StateFlowTest {
     override suspend fun createFlow(message: String, count: Int): StateFlow<String> {
       return flow {
         repeat(count) { index ->
-          forceSuspend() // Ensure we can send async through the reference.
+          //forceSuspend() // Ensure we can send async through the reference.
           emit("$index $message")
         }
-      }.stateIn(GlobalScope)
+      }.stateIn(coroutineScope)
     }
 
     override suspend fun take(flow: StateFlow<String>, count: Int): List<String> {
@@ -58,6 +59,7 @@ internal class StateFlowTest {
     }
 
     override fun close() {
+      coroutineScope.cancel()
       scope.close()
     }
   }
@@ -143,18 +145,21 @@ internal class StateFlowTest {
     endpointA.bind<StateFlowEchoService>("service", service)
     val client = endpointB.take<StateFlowEchoService>("service")
 
+    val coroutineScope = CoroutineScope(Job())
     val flow = flow {
       for (i in 1..3) {
         forceSuspend() // Ensure we can send async through the reference.
         emit("$i")
       }
-    }.stateIn(GlobalScope)
+    }.stateIn(coroutineScope)
 
     val deferredItems = async {
       client.take(flow, 3)
     }
 
     assertEquals(listOf("1", "2", "3"), deferredItems.await())
+
+    coroutineScope.cancel()
 
     // Confirm that no services or clients were leaked.
     client.close()

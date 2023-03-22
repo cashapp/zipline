@@ -121,7 +121,7 @@ internal class RealCallSerializer(
           when (val index = decodeElementIndex(descriptor)) {
             0 -> {
               serviceName = decodeStringElement(descriptor, index)
-              inboundService = endpoint.inboundServices[serviceName]
+              inboundService = endpoint[serviceName]
               endpoint.takeScope = (inboundService?.service as? ZiplineScoped)?.scope
             }
             1 -> {
@@ -197,7 +197,7 @@ internal class RealCallSerializer(
         append("\t\t")
         appendLine(serviceName)
         appendLine("\tavailable services:")
-        endpoint.inboundServices.keys.joinTo(this, separator = "\n") { "\t\t$it" }
+        endpoint.serviceNames.joinTo(this, separator = "\n") { "\t\t$it" }
       } else {
         appendLine("no such method (incompatible API versions?)")
         appendLine("\tcalled service:")
