@@ -70,4 +70,10 @@ tasks {
       freeCompilerArgs += listOf("-Xir-per-module")
     }
   }
+
+  // https://youtrack.jetbrains.com/issue/KT-56025
+  // https://youtrack.jetbrains.com/issue/KT-57203
+  named("jsProductionLibraryCompileSync").configure {
+    dependsOn(named("jsBrowserProductionWebpack"))
+  }
 }
