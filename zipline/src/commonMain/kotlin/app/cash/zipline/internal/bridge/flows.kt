@@ -18,6 +18,8 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.ziplineServiceSerializer
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.FlowCollector
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.encoding.Decoder
@@ -27,6 +29,11 @@ import kotlinx.serialization.encoding.Encoder
 @PublishedApi
 internal interface FlowZiplineService<T> : ZiplineService {
   suspend fun collect(collector: FlowZiplineCollector<T>)
+}
+
+@PublishedApi
+internal interface StateFlowZiplineService<T> : FlowZiplineService<T> {
+  val value: T
 }
 
 @PublishedApi
@@ -54,9 +61,7 @@ internal class FlowSerializer<T>(
     return object : FlowZiplineService<T> {
       override suspend fun collect(collector: FlowZiplineCollector<T>) {
         try {
-          this@toZiplineService.collect {
-            collector.emit(it)
-          }
+          this@toZiplineService.collect(collector::emit)
         } finally {
           collector.close()
         }
@@ -83,6 +88,68 @@ internal class FlowSerializer<T>(
 
   override fun equals(other: Any?) =
     other is FlowSerializer<*> && other.delegateSerializer == delegateSerializer
+
+  override fun hashCode() = delegateSerializer.hashCode()
+}
+
+/**
+ * This serializes [StateFlow] instances (not directly serializable) by converting them to
+ * [StateFlowZiplineService] instances which can be serialized by [ziplineServiceSerializer] to
+ * pass-by-reference.
+ */
+@PublishedApi
+internal class StateFlowSerializer<T>(
+  private val delegateSerializer: KSerializer<StateFlowZiplineService<T>>,
+) : KSerializer<StateFlow<T>> {
+  override val descriptor = delegateSerializer.descriptor
+
+  override fun serialize(encoder: Encoder, value: StateFlow<T>) {
+    val service = value.toZiplineService()
+    return encoder.encodeSerializableValue(delegateSerializer, service)
+  }
+
+  private fun StateFlow<T>.toZiplineService(): StateFlowZiplineService<T> {
+    return object : StateFlowZiplineService<T> {
+      override suspend fun collect(collector: FlowZiplineCollector<T>) {
+        try {
+          this@toZiplineService.collect(collector::emit)
+        } finally {
+          collector.close()
+        }
+      }
+
+      override val value: T get() = this@toZiplineService.value
+
+      override fun toString() = this@toZiplineService.toString()
+    }
+  }
+
+  override fun deserialize(decoder: Decoder): StateFlow<T> {
+    val service = decoder.decodeSerializableValue(delegateSerializer)
+    return service.toStateFlow()
+  }
+
+  private fun StateFlowZiplineService<T>.toStateFlow(): StateFlow<T> {
+    return object : StateFlow<T> {
+      override suspend fun collect(collector: FlowCollector<T>): Nothing {
+        channelFlow {
+          this@toStateFlow.collect(object : FlowZiplineCollector<T> {
+            override suspend fun emit(value: T) {
+              this@channelFlow.send(value)
+            }
+          })
+        }.collect(collector)
+        throw AssertionError() // StateFlows never complete!
+      }
+
+      override val value: T get() = this@toStateFlow.value
+
+      override val replayCache: List<T> get() = listOf(value)
+    }
+  }
+
+  override fun equals(other: Any?) =
+    other is StateFlowSerializer<*> && other.delegateSerializer == delegateSerializer
 
   override fun hashCode() = delegateSerializer.hashCode()
 }

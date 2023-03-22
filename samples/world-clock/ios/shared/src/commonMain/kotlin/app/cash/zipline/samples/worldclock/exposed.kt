@@ -18,7 +18,7 @@ package app.cash.zipline.samples.worldclock
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
 import okio.ByteString
-import okio.toByteString
+import okio.ByteString.Companion.toByteString
 import platform.Foundation.NSData
 
 @Suppress("unused", "UNUSED_PARAMETER") // Used to export types to Objective-C / Swift.

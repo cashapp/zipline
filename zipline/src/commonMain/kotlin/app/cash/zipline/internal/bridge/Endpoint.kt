@@ -22,6 +22,7 @@ import app.cash.zipline.ziplineServiceSerializer
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 
@@ -72,6 +73,14 @@ class Endpoint internal constructor(
           )
         )
       }
+      contextual(StateFlow::class) { serializers ->
+        StateFlowSerializer(
+          ziplineServiceSerializer<StateFlowZiplineService<Any?>>(
+            StateFlowZiplineService::class,
+            serializers,
+          )
+        )
+      }
       include(userSerializersModule)
     }
   }
@@ -102,7 +111,7 @@ class Endpoint internal constructor(
     }
 
     override fun disconnect(instanceName: String): Boolean {
-      return inboundServices.remove(instanceName) != null
+      return remove(instanceName) != null
     }
   }
 

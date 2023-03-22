@@ -37,7 +37,5 @@ fun prettyPrint(jsonString: String): String {
  */
 suspend fun forceSuspend() {
   // Yield multiple times to isolate against arbitrary coroutine scheduling.
-  for (i in 0 until 2) {
-    yield()
-  }
+  repeat(2) { yield() }
 }

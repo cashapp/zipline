@@ -49,7 +49,9 @@ internal class ZiplineApis(
   private val ziplineServiceAdapterClassId = bridgeFqPackage.classId("ZiplineServiceAdapter")
   private val endpointClassId = bridgeFqPackage.classId("Endpoint")
   private val suspendCallbackClassId = bridgeFqPackage.classId("SuspendCallback")
-  val flowClassId = FqPackageName("kotlinx.coroutines.flow").classId("Flow")
+  private val flowFqPackage = FqPackageName("kotlinx.coroutines.flow")
+  val flowClassId = flowFqPackage.classId("Flow")
+  val stateFlowClassId = flowFqPackage.classId("StateFlow")
 
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(StandardClassIds.Any)!!

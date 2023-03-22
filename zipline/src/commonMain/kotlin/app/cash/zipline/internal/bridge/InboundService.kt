@@ -44,7 +44,7 @@ internal class InboundService<T : ZiplineService>(
     // Removes the handler in calls to [ZiplineService.close]. We remove before dispatching so
     // it'll always be removed even if the call stalls or throws.
     if (function.isClose) {
-      endpoint.inboundServices.remove(internalCall.serviceName)
+      endpoint.remove(internalCall.serviceName)
     }
 
     val callStart = when (externalCall.service) {
