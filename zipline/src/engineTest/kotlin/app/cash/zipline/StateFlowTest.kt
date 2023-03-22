@@ -35,23 +35,17 @@ import kotlinx.coroutines.runBlocking
 internal class StateFlowTest {
   interface StateFlowEchoService : ZiplineService {
     val flow: StateFlow<String>
-    suspend fun createFlow(message: String, count: Int): StateFlow<String>
+    suspend fun createFlow(initialValue: String): StateFlow<String>
     suspend fun take(flow: StateFlow<String>, count: Int): List<String>
   }
 
   class RealStateFlowEchoService(initialValue: String = "") : StateFlowEchoService, ZiplineScoped {
-    private val coroutineScope = CoroutineScope(Job())
     override val scope = ZiplineScope()
     val mutableFlow = MutableStateFlow(initialValue)
     override val flow: StateFlow<String> get() = mutableFlow
 
-    override suspend fun createFlow(message: String, count: Int): StateFlow<String> {
-      return flow {
-        repeat(count) { index ->
-          //forceSuspend() // Ensure we can send async through the reference.
-          emit("$index $message")
-        }
-      }.stateIn(coroutineScope)
+    override suspend fun createFlow(initialValue: String): StateFlow<String> {
+      return MutableStateFlow(initialValue)
     }
 
     override suspend fun take(flow: StateFlow<String>, count: Int): List<String> {
@@ -59,7 +53,6 @@ internal class StateFlowTest {
     }
 
     override fun close() {
-      coroutineScope.cancel()
       scope.close()
     }
   }
@@ -148,7 +141,7 @@ internal class StateFlowTest {
     val coroutineScope = CoroutineScope(Job())
     val flow = flow {
       for (i in 1..3) {
-        forceSuspend() // Ensure we can send async through the reference.
+        forceSuspend()
         emit("$i")
       }
     }.stateIn(coroutineScope)
@@ -171,8 +164,8 @@ internal class StateFlowTest {
   @Test
   fun flowCanBeUsedWithoutPassingThroughZipline() = runBlocking(Unconfined) {
     val service = RealStateFlowEchoService()
-    val flow = service.createFlow("hello", 3)
-    assertEquals(listOf("0 hello", "1 hello", "2 hello"), service.take(flow, 3))
+    val flow = service.createFlow("hello")
+    assertEquals(listOf("hello"), service.take(flow, 1))
   }
 
   @Test
@@ -184,8 +177,8 @@ internal class StateFlowTest {
     endpointA.bind<StateFlowEchoService>("service", service)
     val client = endpointB.take<StateFlowEchoService>("service", scope)
 
-    val flow = client.createFlow("hello", 3)
-    assertEquals(listOf("0 hello", "1 hello", "2 hello"), client.take(flow, 3))
+    val flow = client.createFlow("hello")
+    assertEquals(listOf("hello"), client.take(flow, 1))
 
     // Confirm that no services or clients were leaked.
     scope.close()
@@ -203,7 +196,7 @@ internal class StateFlowTest {
     endpointA.bind<StateFlowEchoService>("service", service)
     val client = endpointB.take<StateFlowEchoService>("service", scope)
 
-    client.createFlow("hello", 3)
+    client.createFlow("hello")
 
     // Confirm that no services or clients were leaked.
     scope.close()

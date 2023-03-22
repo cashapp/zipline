@@ -36,14 +36,13 @@ class Endpoint internal constructor(
   internal val eventListener: EndpointEventListener,
   internal val outboundChannel: CallChannel,
 ) {
-  private val inboundServices = mutableMapOf<String, InboundService<*>>()
-  private val removedServices = mutableSetOf<String>()
+  internal val inboundServices = mutableMapOf<String, InboundService<*>>()
   private var nextId = 1
 
   internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
 
   val serviceNames: Set<String>
-    get() = inboundServices.keys.toSet() - removedServices
+    get() = inboundServices.keys.toSet()
 
   val clientNames: Set<String>
     get() = outboundChannel.serviceNamesArray().toSet()
@@ -184,13 +183,7 @@ class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal operator fun get(name: String): InboundService<*>? {
-    return inboundServices[name]
-  }
-
-  @PublishedApi
   internal fun remove(name: String): InboundService<*>? {
-    removedServices += name
     return inboundServices.remove(name)
   }
 

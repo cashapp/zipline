@@ -121,7 +121,7 @@ internal class RealCallSerializer(
           when (val index = decodeElementIndex(descriptor)) {
             0 -> {
               serviceName = decodeStringElement(descriptor, index)
-              inboundService = endpoint[serviceName]
+              inboundService = endpoint.inboundServices[serviceName]
               endpoint.takeScope = (inboundService?.service as? ZiplineScoped)?.scope
             }
             1 -> {
