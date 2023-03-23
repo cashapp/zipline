@@ -1,5 +1,5 @@
 [versions]
-androidx-compose = "1.3.3"
+androidx-compose = "1.4.0"
 androidx-compose-compiler = "1.4.2"
 auto-service="1.0.1"
 compileSdk = "33"
@@ -17,7 +17,7 @@ sqldelight = "1.5.5"
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "1.2.2" }
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version = "7.4.2" }
 android-material = { module = "com.google.android.material:material", version = "1.8.0" }
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.6.1" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.7.0" }
 androidx-annotation = { module = "androidx.annotation:annotation", version = "1.6.0" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version = "1.6.1" }
 androidx-compose-material = { module = "androidx.compose.material:material", version = "1.3.1" }
@@ -25,7 +25,7 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "androi
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "androidx-compose" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.9.0" }
-androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.0" }
+androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.1" }
 androidx-test-runner = { module = "androidx.test:runner", version = "1.5.2" }
 auto-service-compiler = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }

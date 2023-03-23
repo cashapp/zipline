@@ -65,6 +65,7 @@ kotlin {
     val engineTest by creating {
       dependsOn(commonTest)
       dependencies {
+        implementation(libs.kotlinx.coroutines.test)
         implementation(projects.zipline.testing)
       }
     }
@@ -87,7 +88,6 @@ kotlin {
       resources.srcDir(copyTestingJs)
       dependencies {
         implementation(libs.truth)
-        implementation(libs.kotlinx.coroutines.test)
         implementation(projects.zipline.testing)
       }
     }
