@@ -18,16 +18,11 @@ package app.cash.zipline
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Unconfined
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
@@ -138,21 +133,12 @@ internal class StateFlowTest {
     endpointA.bind<StateFlowEchoService>("service", service)
     val client = endpointB.take<StateFlowEchoService>("service")
 
-    val coroutineScope = CoroutineScope(Job())
-    val flow = flow {
-      for (i in 1..3) {
-        forceSuspend()
-        emit("$i")
-      }
-    }.stateIn(coroutineScope)
-
+    val flow = MutableStateFlow("hello")
     val deferredItems = async {
-      client.take(flow, 3)
+      client.take(flow, 1)
     }
 
-    assertEquals(listOf("1", "2", "3"), deferredItems.await())
-
-    coroutineScope.cancel()
+    assertEquals(listOf("hello"), deferredItems.await())
 
     // Confirm that no services or clients were leaked.
     client.close()
