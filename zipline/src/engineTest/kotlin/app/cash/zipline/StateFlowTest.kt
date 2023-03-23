@@ -18,12 +18,11 @@ package app.cash.zipline
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Unconfined
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -31,7 +30,9 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.runTest
 
+@OptIn(ExperimentalCoroutinesApi::class)
 internal class StateFlowTest {
   interface StateFlowEchoService : ZiplineService {
     val flow: StateFlow<String>
@@ -131,28 +132,25 @@ internal class StateFlowTest {
   }
 
   @Test
-  fun flowParameterWorks() = runBlocking(Unconfined) {
+  fun flowParameterWorks() = runTest {
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = RealStateFlowEchoService()
 
     endpointA.bind<StateFlowEchoService>("service", service)
     val client = endpointB.take<StateFlowEchoService>("service")
 
-    val coroutineScope = CoroutineScope(Job())
     val flow = flow {
       for (i in 1..3) {
         forceSuspend()
         emit("$i")
       }
-    }.stateIn(coroutineScope)
+    }.stateIn(backgroundScope, SharingStarted.Lazily, "0")
 
     val deferredItems = async {
-      client.take(flow, 3)
+      client.take(flow, 4)
     }
 
-    assertEquals(listOf("1", "2", "3"), deferredItems.await())
-
-    coroutineScope.cancel()
+    assertEquals(listOf("0", "1", "2", "3"), deferredItems.await())
 
     // Confirm that no services or clients were leaked.
     client.close()
