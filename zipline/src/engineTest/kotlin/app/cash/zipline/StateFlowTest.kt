@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
@@ -37,6 +38,7 @@ internal class StateFlowTest {
   interface StateFlowEchoService : ZiplineService {
     val flow: StateFlow<String>
     suspend fun createFlow(initialValue: String): StateFlow<String>
+    suspend fun createFlow(initialValue: String, values: List<String>): StateFlow<String>
     suspend fun take(flow: StateFlow<String>, count: Int): List<String>
   }
 
@@ -47,6 +49,17 @@ internal class StateFlowTest {
 
     override suspend fun createFlow(initialValue: String): StateFlow<String> {
       return MutableStateFlow(initialValue)
+    }
+
+    lateinit var coroutineScope: CoroutineScope
+
+    override suspend fun createFlow(initialValue: String, values: List<String>): StateFlow<String> {
+      return flow {
+        for (value in values) {
+          forceSuspend()
+          emit(value)
+        }
+      }.stateIn(coroutineScope, SharingStarted.Lazily, initialValue)
     }
 
     override suspend fun take(flow: StateFlow<String>, count: Int): List<String> {
@@ -123,6 +136,26 @@ internal class StateFlowTest {
 
     // 'Flow.take' throws AbortFlowException internally. Make sure we handle it gracefully.
     assertEquals(listOf("first"), client.flow.take(1).toList())
+
+    // Confirm that no services or clients were leaked.
+    scope.close()
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(0, service.mutableFlow.subscriptionCount.first())
+  }
+
+  @Test
+  fun stateFlowDoesNotEmitUnlessValueChanges() = runTest {
+    val scope = ZiplineScope()
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = RealStateFlowEchoService()
+    service.coroutineScope = backgroundScope
+
+    endpointA.bind<StateFlowEchoService>("service", service)
+    val client = endpointB.take<StateFlowEchoService>("service", scope)
+
+    val flow = client.createFlow("1", listOf("1", "1", "2", "3", "3", "3", "4"))
+    assertEquals(listOf("1", "2", "3", "4"), client.take(flow, 4))
 
     // Confirm that no services or clients were leaked.
     scope.close()
