@@ -16,9 +16,6 @@
 
 package app.cash.zipline.gradle
 
-import java.util.Timer
-import javax.inject.Inject
-import kotlin.concurrent.schedule
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
@@ -26,21 +23,8 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.TaskAction
-import org.gradle.deployment.internal.Deployment
 import org.gradle.deployment.internal.DeploymentHandle
 import org.gradle.deployment.internal.DeploymentRegistry
-import org.http4k.core.ContentType
-import org.http4k.routing.ResourceLoader.Companion.Directory
-import org.http4k.routing.bind
-import org.http4k.routing.routes
-import org.http4k.routing.static
-import org.http4k.routing.websockets
-import org.http4k.server.Http4kServer
-import org.http4k.server.Jetty
-import org.http4k.server.PolyHandler
-import org.http4k.server.asServer
-import org.http4k.websocket.Websocket
-import org.http4k.websocket.WsMessage
 
 abstract class ZiplineServeTask : DefaultTask() {
 
@@ -55,62 +39,21 @@ abstract class ZiplineServeTask : DefaultTask() {
   fun task() {
     val deploymentId = "serveZipline"
     val deploymentRegistry = services.get(DeploymentRegistry::class.java)
-    val deploymentHandle = deploymentRegistry.get(deploymentId, ZiplineServerDeploymentHandle::class.java)
+    val deploymentHandle = deploymentRegistry.get(deploymentId, DeploymentHandle::class.java)
     if (deploymentHandle == null) {
-      // First time this task is run, start the server
-      val ws = websockets(
-        "/ws" bind { ws: Websocket ->
-          websockets.add(ws)
-          ws.onClose {
-            websockets.remove(ws)
-          }
-        }
-      )
-      val http = routes(
-        "/" bind static(
-          Directory(inputDir.get().asFile.absolutePath),
-          Pair("zipline", ContentType.TEXT_PLAIN)
-        )
-      )
-      val server = PolyHandler(http, ws).asServer(Jetty(port.orNull ?: 8080))
+      // First time this task is run, start the server.
       deploymentRegistry.start(
         deploymentId,
         DeploymentRegistry.ChangeBehavior.BLOCK,
-        ZiplineServerDeploymentHandle::class.java,
-        server
+        ZiplineDevelopmentServer::class.java,
+        inputDir.get(),
+        port.orNull ?: 8080,
       )
-
-      // Keep the connection open by sending a message periodically
-      Timer("WebsocketHeartbeat", true).schedule(0, 10000) {
-        websockets.forEach { it.send(WsMessage("heartbeat")) }
-      }
     } else {
-      // Subsequent task runs, just send a websocket message
-      websockets.forEach { it.send(WsMessage(RELOAD_MESSAGE)) }
+      // On subsequent task runs, just send a websocket message. We trigger this call reflectively
+      // because the two instances of this task may be running in different class loaders.
+      val method = deploymentHandle::class.java.getMethod("sendReloadToAllWebSockets")
+      method.invoke(deploymentHandle)
     }
-  }
-
-  companion object {
-    const val RELOAD_MESSAGE = "reload"
-    val websockets: MutableList<Websocket> = mutableListOf()
-  }
-}
-
-internal open class ZiplineServerDeploymentHandle @Inject constructor(
-  private val server: Http4kServer
-) : DeploymentHandle {
-
-  var running: Boolean = false
-
-  override fun isRunning(): Boolean = running
-
-  override fun start(deployment: Deployment) {
-    running = true
-    server.start()
-  }
-
-  override fun stop() {
-    running = false
-    server.stop()
   }
 }
