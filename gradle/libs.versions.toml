@@ -1,5 +1,5 @@
 [versions]
-androidx-compose = "1.4.0"
+androidx-compose = "1.4.1"
 androidx-compose-compiler = "1.4.2"
 auto-service="1.0.1"
 compileSdk = "33"
