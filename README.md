@@ -218,7 +218,7 @@ Zipline uses unstable APIs in its implementation and is sensitive to version upd
 components.
 
 | Component            | Supported Version | Notes                                                                       |
-| :------------------- |:------------------| :-------------------------------------------------------------------------- |
+| :------------------- | :---------------- | :-------------------------------------------------------------------------- |
 | Kotlin Compiler      | 1.8.20            | Kotlin compiler plugins do not yet have a stable API.                       |
 | Kotlin Coroutines    | 1.6.3-native-mt   | For `invokeOnClose()`.                                                      |
 | Kotlin Serialization | 1.4.0             | For `decodeFromDynamic()`, `encodeToDynamic()`, and `ContextualSerializer`. |
