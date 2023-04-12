@@ -24,16 +24,23 @@ import okio.IOException
 
 class FakeZiplineHttpClient: ZiplineHttpClient() {
   var filePathToByteString: Map<String, ByteString> = mapOf()
-  val developmentServerWebSocket = Channel<String>()
+  val webSockets = mutableMapOf<String, Channel<String>>()
   val log = Channel<String>(capacity = Int.MAX_VALUE)
 
-  suspend fun sendDevelopmentServerUpdate() {
-    developmentServerWebSocket.send("reload")
+  suspend fun sendDevelopmentServerUpdate(url: String) {
+    val channel = webSockets.getOrPut(url) { Channel() }
+    channel.send("reload")
+  }
+
+  suspend fun sendDevelopmentServerError(url: String) {
+    val channel = webSockets.getOrPut(url) { Channel() }
+    channel.send("boom!")
   }
 
   suspend fun closeDevelopmentServerChannel(url: String) {
     log.send("close socket $url")
-    developmentServerWebSocket.close()
+    val channel = webSockets.getOrPut(url) { Channel() }
+    channel.close()
   }
 
   override suspend fun download(
@@ -43,14 +50,12 @@ class FakeZiplineHttpClient: ZiplineHttpClient() {
     return filePathToByteString[url] ?: throw IOException("404: $url not found")
   }
 
-  // TODO add a url to websocket mapping so we can test multiple URLs result in multiple web
-  //   sockets being set up
-
   override suspend fun openDevelopmentServerWebSocket(
     url: String,
     requestHeaders: List<Pair<String, String>>,
   ): Flow<String> {
     log.send("open socket $url")
-    return developmentServerWebSocket.consumeAsFlow()
+    val channel = webSockets.getOrPut(url) { Channel() }
+    return channel.consumeAsFlow()
   }
 }

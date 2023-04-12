@@ -20,6 +20,8 @@ import kotlin.time.Duration.Companion.milliseconds
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.transformLatest
 
 
@@ -37,22 +39,26 @@ fun Flow<String>.withDevelopmentServerPush(
   pollingInterval: Duration = 500.milliseconds
 ): Flow<String> {
   return transformLatest { manifestUrl ->
-    // Pass through immediately before any websocket setup or polling for changes.
+    // Attempt once before any websocket setup or polling.
     emit(manifestUrl)
 
-    // Collect reload signals on a web socket.
-    val webSocketUrl = schemeAndAuthority(manifestUrl) + "/ws"
-    val flow = httpClient.openDevelopmentServerWebSocket(webSocketUrl, listOf())
-    flow.collect { message ->
-      when (message) {
-        "reload" -> emit(manifestUrl)
-        "heartbeat" -> Unit
-        else -> return@collect // Not the web socket we were expecting. Fall back to polling.
-      }
-    }
-
-    // If our web socket was exhausted or never worked, fall back to polling.
     while (true) {
+      // Collect reload signals on a web socket.
+      val webSocketUrl = schemeAndAuthority(manifestUrl) + "/ws"
+      val flow = httpClient.openDevelopmentServerWebSocket(webSocketUrl, listOf())
+      flow.takeWhile { message ->
+        when (message) {
+          "reload" -> {
+            emit(manifestUrl)
+            true
+          }
+          "heartbeat" -> true
+          else -> false // Not the web socket we were expecting. Fall back to polling.
+        }
+      }.collect()
+
+      // If our web socket was exhausted or never worked? Poll once, then try the web socket again.
+      // This ensures we reconnect if the web socket server is restarted.
       delay(pollingInterval)
       emit(manifestUrl)
     }
