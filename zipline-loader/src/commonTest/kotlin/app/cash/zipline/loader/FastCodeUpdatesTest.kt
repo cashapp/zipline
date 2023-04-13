@@ -39,6 +39,7 @@ class FastCodeUpdatesTest {
   internal fun opensWebSocketAndReceivesUpdates() = runTest {
     val testDuration = testTimeSource.measureTime {
       val manifestUrl = "http://localhost:8080/manifest.json"
+      val wsUrl = "http://localhost:8080/ws"
       val manifestUrlFlow = flowOf(manifestUrl)
       val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
 
@@ -55,13 +56,13 @@ class FastCodeUpdatesTest {
       assertTrue(channel.isEmpty)
 
       // 3 x publish event & await URL flow emits
-      client.sendDevelopmentServerUpdate()
+      client.sendDevelopmentServerUpdate(wsUrl)
       channel.receive()
       assertTrue(channel.isEmpty)
-      client.sendDevelopmentServerUpdate()
+      client.sendDevelopmentServerUpdate(wsUrl)
       channel.receive()
       assertTrue(channel.isEmpty)
-      client.sendDevelopmentServerUpdate()
+      client.sendDevelopmentServerUpdate(wsUrl)
       channel.receive()
       assertTrue(channel.isEmpty)
 
@@ -77,11 +78,13 @@ class FastCodeUpdatesTest {
   @Test
   internal fun webSocketAlreadyClosedFallsBackToPolling() = runTest {
     val testDuration = testTimeSource.measureTime {
-      val manifestUrlFlow = flowOf("http://localhost:8080/manifest.json")
+      val manifestUrl = "http://localhost:8080/manifest.json"
+      val wsUrl = "http://localhost:8080/ws"
+      val manifestUrlFlow = flowOf(manifestUrl)
       val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
 
       // close channel
-      client.closeDevelopmentServerChannel("http://localhost:8080/manifest.json")
+      client.closeDevelopmentServerChannel(wsUrl)
 
       // await URL flow emitting twice: once at time 0, once at 500ms on polling fallback
       //    from socket failure
@@ -91,23 +94,36 @@ class FastCodeUpdatesTest {
 
     // Confirm 500 ms has elapsed.
     assertTrue(testDuration.inWholeMilliseconds >= 500)
-    assertEquals(listOf("open socket http://localhost:8080/ws", "close socket http://localhost:8080/manifest.json"), client.log.consumeAsFlow().toList().reversed())
+    assertEquals(
+      listOf(
+        "open socket http://localhost:8080/ws",
+        "open socket http://localhost:8080/ws",
+        "close socket http://localhost:8080/ws",
+      ),
+      client.log.consumeAsFlow().toList().reversed(),
+    )
   }
 
   @Test
   internal fun webSocketClosedForOldUrl() = runTest {
+    val manifestUrlA = "http://a/manifest.json"
+    val manifestUrlB = "http://b/manifest.json"
+    val manifestUrlC = "http://c/manifest.json"
+    val wsUrlA = "http://a/ws"
+    val wsUrlB = "http://b/ws"
+    val wsUrlC = "http://c/ws"
     val testDuration = testTimeSource.measureTime {
       val manifestUrlFlow = flowOf(
-        "http://localhost:1/manifest.json",
-        "http://localhost:2/manifest.json",
-        "http://localhost:3/manifest.json",
+        manifestUrlA,
+        manifestUrlB,
+        manifestUrlC,
       )
       val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
 
       // close channel
-      client.closeDevelopmentServerChannel("http://localhost:1/manifest.json")
-      client.closeDevelopmentServerChannel("http://localhost:2/manifest.json")
-      client.closeDevelopmentServerChannel("http://localhost:3/manifest.json")
+      client.closeDevelopmentServerChannel(wsUrlA)
+      client.closeDevelopmentServerChannel(wsUrlB)
+      client.closeDevelopmentServerChannel(wsUrlC)
 
       // await URL flow emitting twice: once at time 0, once at 500ms on polling fallback
       //    from socket failure
@@ -118,12 +134,51 @@ class FastCodeUpdatesTest {
     // confirm >= 500 ms has elapsed
     assertTrue(testDuration.inWholeMilliseconds >= 500)
     assertEquals(listOf(
-      "open socket http://localhost:3/ws",
-      "open socket http://localhost:2/ws",
-      "open socket http://localhost:1/ws",
-      "close socket http://localhost:3/manifest.json",
-      "close socket http://localhost:2/manifest.json",
-      "close socket http://localhost:1/manifest.json",
-    ), client.log.consumeAsFlow().toList().reversed())
+      "close socket $wsUrlA",
+      "close socket $wsUrlB",
+      "close socket $wsUrlC",
+      "open socket $wsUrlA",
+      "open socket $wsUrlB",
+      "open socket $wsUrlC",
+    ), client.log.consumeAsFlow().toList().take(6))
+  }
+
+  @Test
+  internal fun reconnectsToWebSocketAfterFailure() = runTest {
+    val wsUrl = "http://localhost:8080/ws"
+    val manifestUrl = "http://localhost:8080/manifest.json"
+    val manifestUrlFlow = flowOf(manifestUrl)
+    val fastCodeFlow = manifestUrlFlow.withDevelopmentServerPush(client, 500.milliseconds)
+
+    val channel = Channel<String>(capacity = Int.MAX_VALUE)
+    val job = launch {
+      fastCodeFlow.collect {
+        channel.send(it)
+      }
+      try {
+        channel.close()
+      } catch (ignored: Exception) {
+      }
+    }
+
+    // Receive initial value.
+    channel.receive()
+    assertTrue(channel.isEmpty)
+
+    // Receive web socket value.
+    client.sendDevelopmentServerUpdate(wsUrl)
+    channel.receive()
+
+    // Break the web socket, it should disconnect, poll once, and then re-open the socket.
+    client.sendDevelopmentServerError(wsUrl)
+    channel.receive()
+
+    job.cancel()
+    client.log.close()
+
+    assertEquals(listOf(
+      "open socket $wsUrl",
+      "open socket $wsUrl",
+    ), client.log.consumeAsFlow().toList().take(6))
   }
 }
