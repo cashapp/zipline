@@ -133,6 +133,38 @@ class JsObjectEncodingTest {
     )
   }
 
+  /**
+   * We had an off-by-one reading the `has_debug` bit from the flags in
+   * `JsObjectReader.readFunction()`.
+   *
+   * The bug stayed hidden for a long time because the bit we were reading instead
+   * (`arguments_allowed`) had always been true, and the `has_debug` had also always been true. We
+   * only discovered the problem when upgrading to Kotlin 1.8.20, which includes JavaScript that
+   * causes `arguments_allowed` to be false.
+   *
+   * This regression test reproduces that exact situation. The code sample is simplified from
+   * `kotlin-kotlin-stdlib-js-ir.js` as emitted by the Kotlin 1.8.20 compiler.
+   */
+  @Test fun debugSymbolsCrash() {
+    val evalFunction = assertRoundTrip(
+      """
+      |function createExternalThis(ctor, superExternalCtor, parameters, box) {
+      |  var newCtor = class extends ctor {}
+      |}
+      |function newThrowable(message, cause) {
+      |}
+      """.trimMargin(), "hello.js"
+    )
+
+    assertThat(evalFunction.name).isEqualTo("<eval>")
+
+    val createExternalThis = evalFunction.constantPool[0] as JsFunctionBytecode
+    assertThat(createExternalThis.name).isEqualTo("createExternalThis")
+
+    val newThrowable = evalFunction.constantPool[1] as JsFunctionBytecode
+    assertThat(newThrowable.name).isEqualTo("newThrowable")
+  }
+
   /** Returns the model object for the bytecode of [script]. */
   private fun assertRoundTrip(
     script: String,
