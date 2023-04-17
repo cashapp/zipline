@@ -103,7 +103,7 @@ class JsObjectReader(
     val bytecode = source.readByteString(bytecodeLength.toLong())
     // TODO: fixup atoms within bytecode?
 
-    val hasDebug = flags.bit(10)
+    val hasDebug = flags.bit(11)
     val debug: Debug? = if (hasDebug) readDebug() else null
 
     val constantPool = mutableListOf<JsObject>()
