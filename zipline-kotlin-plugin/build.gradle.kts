@@ -34,3 +34,8 @@ configure<MavenPublishBaseExtension> {
     )
   )
 }
+
+// https://github.com/Kotlin/dokka/issues/1833
+tasks.named("dokkaHtmlPartial").configure {
+  dependsOn(tasks.named("kaptKotlin"))
+}

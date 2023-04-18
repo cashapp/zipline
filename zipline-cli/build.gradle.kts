@@ -28,6 +28,11 @@ tasks.named("distTar").configure {
   enabled = false
 }
 
+// https://github.com/Kotlin/dokka/issues/1833
+tasks.named("dokkaHtmlPartial").configure {
+  dependsOn(tasks.named("kaptKotlin"))
+}
+
 // Remove default .jar output artifact.
 configurations.archives.configure {
   artifacts.clear()
