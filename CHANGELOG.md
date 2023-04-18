@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.17] - 2022-03-15
+## [0.9.18] - 2022-04-17
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -11,6 +11,18 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * New: Support pass-by-reference of `StateFlow` values.
+ * Upgrade: [Kotlin 1.8.20][kotlin_1_8_20].
+ * Fix: Don't crash applying source maps to QuickJS bytecode. We had a longstanding off-by-one
+   error interpreting an encoded function's flags.
+ * Fix: Retry web sockets when polling for fresh code in development mode. Previously we fell back
+   to polling after a single web socket error.
+ * Fix: Don't `ClassCastException` when running Gradle in continuous mode. We were failing to post
+   web socket updates when fresh code is available.
+
+
+## [0.9.17] - 2022-03-15
 
  * Upgrade: [Kotlin 1.8.10][kotlin_1_8_10].
  * Upgrade: [Kotlin Serialization 1.5.0][kotlin_serialization_1_5_0].
@@ -306,5 +318,6 @@ Initial release.
 [kotlin_1_7_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.7.10
 [kotlin_1_8_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.0
 [kotlin_1_8_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.10
+[kotlin_1_8_20]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.20
 [kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
