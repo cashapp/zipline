@@ -29,6 +29,9 @@ tasks.named("distTar").configure {
 }
 
 // https://github.com/Kotlin/dokka/issues/1833
+tasks.named("dokkaGfm").configure {
+  dependsOn(tasks.named("kaptKotlin"))
+}
 tasks.named("dokkaHtmlPartial").configure {
   dependsOn(tasks.named("kaptKotlin"))
 }
