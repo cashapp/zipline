@@ -110,6 +110,7 @@ import kotlinx.cinterop.toKStringFromUtf8
 import kotlinx.cinterop.value
 import platform.posix.size_tVar
 
+@EngineApi
 actual class QuickJs private constructor(
   private val runtime: CPointer<JSRuntime>,
   internal val context: CPointer<JSContext>,

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2023 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,16 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package app.cash.zipline
 
-@EngineApi
-fun interface InterruptHandler {
-  /**
-   * This function is called back frequently during code execution to detect asynchronous
-   * interruptions. Operations performed on the [QuickJs] during interruption are not themselves
-   * subject to interruption.
-   *
-   * @return true to halt execution of JavaScript with an error.
-   */
-  fun poll(): Boolean
-}
+@RequiresOptIn(
+  message = "This API exposes the low-level JS engine and should be used with extreme care",
+  level = RequiresOptIn.Level.WARNING,
+)
+annotation class EngineApi

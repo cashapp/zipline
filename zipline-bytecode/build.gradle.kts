@@ -8,6 +8,14 @@ plugins {
   id("com.vanniktech.maven.publish.base")
 }
 
+kotlin {
+  sourceSets.all {
+    languageSettings {
+      optIn("app.cash.zipline.EngineApi")
+    }
+  }
+}
+
 dependencies {
   api(projects.zipline)
   api(libs.okio.core)

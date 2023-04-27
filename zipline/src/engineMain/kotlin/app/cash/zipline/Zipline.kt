@@ -44,6 +44,7 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual class Zipline private constructor(
+  @property:EngineApi
   val quickJs: QuickJs,
   userSerializersModule: SerializersModule,
   dispatcher: CoroutineDispatcher,

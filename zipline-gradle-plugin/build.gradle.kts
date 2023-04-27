@@ -10,6 +10,14 @@ plugins {
   id("com.vanniktech.maven.publish.base")
 }
 
+kotlin {
+  sourceSets.all {
+    languageSettings {
+      optIn("app.cash.zipline.EngineApi")
+    }
+  }
+}
+
 dependencies {
   implementation(kotlin("gradle-plugin-api"))
   implementation(projects.zipline)
