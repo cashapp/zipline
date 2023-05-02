@@ -94,7 +94,7 @@ public final class ZiplineTestInternals {
     public static final EchoServiceAdapter INSTANCE = new EchoServiceAdapter();
 
     @Override public String getSerialName() {
-      return "EchoService";
+      return "app.cash.zipline.kotlin.EchoService";
     }
 
     @Override public List<KSerializer<?>> getSerializers() {
@@ -150,7 +150,7 @@ public final class ZiplineTestInternals {
     public static final GenericEchoServiceAdapter INSTANCE = new GenericEchoServiceAdapter();
 
     @Override public String getSerialName() {
-      return "GenericEchoService";
+      return "app.cash.zipline.kotlin.GenericEchoService<kotlin.String>";
     }
 
     @Override public List<KSerializer<?>> getSerializers() {
