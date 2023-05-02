@@ -26,6 +26,7 @@ import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.types.getClass
 import org.jetbrains.kotlin.ir.util.classId
+import org.jetbrains.kotlin.ir.util.dump
 import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.ir.util.isInterface
 
@@ -53,6 +54,10 @@ class ZiplineIrGenerationExtension(
           if (declaration.isInterface &&
             declaration.superTypes.any { it.getClass()?.classId == ziplineApis.ziplineServiceClassId }
           ) {
+            // This is a great place to dump the declarations and see what before and after look
+            // like. The dumps contain all the type-inference stuff. I really like writing the code
+            // I want the compiler to produce by-hand, dumping that, and then trying to get the
+            // compiler plugin to produce my target output.
             AdapterGenerator(
               pluginContext,
               ziplineApis,

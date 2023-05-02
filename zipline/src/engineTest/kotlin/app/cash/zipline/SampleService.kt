@@ -22,6 +22,7 @@ import app.cash.zipline.internal.bridge.SuspendCallback
 import app.cash.zipline.internal.bridge.SuspendingZiplineFunction
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.bridge.requireContextual
+import kotlin.reflect.typeOf
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.modules.SerializersModule
@@ -50,6 +51,8 @@ interface SampleService<T> : ZiplineService {
     /** This function's body is what callers use to create a properly-typed adapter. */
     internal inline fun <reified T> manualAdapter(): ManualAdapter<T> {
       return ManualAdapter<T>(
+        // Here we know what 'T' is and we'd like to capture that as the adapter's name
+        typeOf<ManualAdapter<T>>().toString(),
         listOf(serializer<T>())
       )
     }
@@ -60,9 +63,10 @@ interface SampleService<T> : ZiplineService {
      * `AdapterGenerator`.
      */
     internal class ManualAdapter<TX>(
+      // We can keep the variable as 'serialName' or we can rename it to 'name'.
+      override val serialName: String,
       override val serializers: List<KSerializer<*>>,
     ) : ZiplineServiceAdapter<SampleService<TX>>() {
-      override val serialName: String = "SampleService"
 
       class ZiplineFunction0<TF>(
         argSerializers: List<KSerializer<*>>,

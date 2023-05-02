@@ -286,6 +286,29 @@ internal class AdapterGenerator(
    * like "SampleService".
    */
   private fun irSerialNameProperty(adapterClass: IrClass): IrProperty {
+    // This is the current declaration of the serialName property. I think we want to replace this
+    // with a constructor parameter. Note that in compiler plugins we don't get the benefit of
+    // syntactic sugar!
+    //
+    // Ie. this is the code you'd write by hand:
+    //
+    // internal class ManualAdapter<TX>(
+    //   override val serialName: String,
+    //   override val serializers: List<KSerializer<*>>,
+    // )
+    //
+    // But what we generate is closer to this:
+    //
+    // internal class ManualAdapter<TX> internal constructor(
+    //   serialName: String,
+    //   serializers: List<KSerializer<*>>,
+    // ) {
+    //   override val serialName: String = serialName
+    //   override val serializers: List<KSerializer<*>> = serializers
+    // )
+    //
+    // Fortunately we've got the 'serializers' property to serve as a reference.
+
     // override val serialName: String = "SampleService"
     return irVal(
       pluginContext = pluginContext,

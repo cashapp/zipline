@@ -180,6 +180,7 @@ class ZiplineKotlinPluginTest {
 
   @Test
   fun `generic service`() {
+    // This test could be quite useful!
     val result = compile(
       sourceFile = SourceFile.kotlin(
         "main.kt",

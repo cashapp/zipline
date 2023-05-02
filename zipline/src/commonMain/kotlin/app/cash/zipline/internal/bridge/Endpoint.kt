@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.passByReferencePrefix
@@ -115,6 +116,8 @@ class Endpoint internal constructor(
     }
   }
 
+  private val functionsCache = mutableMapOf<String, List<ZiplineFunction<*>>>()
+
   @Suppress("UNUSED_PARAMETER") // Parameters are used by the compiler plug-in.
   fun <T : ZiplineService> bind(name: String, instance: T) {
     error("unexpected call to Endpoint.bind: is the Zipline plugin configured?")
@@ -128,7 +131,11 @@ class Endpoint internal constructor(
   ) {
     eventListener.bindService(name, service)
 
-    val functions = adapter.ziplineFunctions(json.serializersModule)
+    // Once we have a good cache key, caching functions is pretty straightforward? 
+    val functions: List<ZiplineFunction<T>> = functionsCache.getOrPut(adapter.serialName) {
+      adapter.ziplineFunctions(json.serializersModule)
+    } as List<ZiplineFunction<T>>
+
     inboundServices[name] = InboundService(service, this, functions)
   }
 

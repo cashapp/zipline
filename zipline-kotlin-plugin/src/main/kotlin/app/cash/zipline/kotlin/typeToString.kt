@@ -17,6 +17,7 @@ import org.jetbrains.kotlin.ir.util.fqNameWhenAvailable
 import org.jetbrains.kotlin.types.Variance
 import org.jetbrains.kotlin.utils.addToStdlib.ifNotEmpty
 
+// This might be useful?
 /** Inspired by [org.jetbrains.kotlin.ir.backend.js.utils.asString]. */
 fun IrSimpleType.asString(): String =
   classifier.asString() +
