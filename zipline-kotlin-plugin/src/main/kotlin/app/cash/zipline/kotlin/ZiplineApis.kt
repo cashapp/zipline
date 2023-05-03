@@ -164,6 +164,11 @@ internal class ZiplineApis(
       ziplineServiceAdapterClassId.callableId("serializers")
     ).single()
 
+  val ziplineServiceAdapterSimpleName: IrPropertySymbol
+    get() = pluginContext.referenceProperties(
+      ziplineServiceAdapterClassId.callableId("simpleName")
+    ).single()
+
   val ziplineServiceAdapterZiplineFunctions: IrSimpleFunctionSymbol
     get() = ziplineServiceAdapter.functions.single {
       it.owner.name.identifier == "ziplineFunctions"

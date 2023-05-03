@@ -249,6 +249,9 @@ internal class AdapterGenerator(
     val serialNameProperty = irSerialNameProperty(adapterClass, constructor)
     adapterClass.declarations += serialNameProperty
 
+    val simpleNameProperty = irSimpleNameProperty(adapterClass)
+    adapterClass.declarations += simpleNameProperty
+
     val serializersProperty = irSerializersProperty(adapterClass, constructor)
     adapterClass.declarations += serializersProperty
 
@@ -295,8 +298,8 @@ internal class AdapterGenerator(
   }
 
   /**
-   * Override `ZiplineServiceAdapter.serialName`. The constant value is the service's simple name,
-   * like "SampleService".
+   * Override `ZiplineServiceAdapter.serialName`. The constant value is the service's full
+   * typed name like "my.package.SampleService<package.Type1>".
    */
   private fun irSerialNameProperty(adapterClass: IrClass, value: IrConstructor): IrProperty {
     // override val serialName: String = serialName
@@ -308,6 +311,23 @@ internal class AdapterGenerator(
       overriddenProperty = ziplineApis.ziplineServiceAdapterSerialName,
     ) {
       irExprBody(irGet(value.valueParameters[1]))
+    }
+  }
+
+  /**
+   * Override `ZiplineServiceAdapter.simpleName`. The constant value is the service's simple name,
+   * like "SampleService".
+   */
+  private fun irSimpleNameProperty(adapterClass: IrClass): IrProperty {
+    // override val simpleName: String = "MyClass"
+    return irVal(
+      pluginContext = pluginContext,
+      propertyType = pluginContext.symbols.string.defaultType,
+      declaringClass = adapterClass,
+      propertyName = ziplineApis.ziplineServiceAdapterSimpleName.owner.name,
+      overriddenProperty = ziplineApis.ziplineServiceAdapterSimpleName,
+    ) {
+      irExprBody(irString(original.name.identifier))
     }
   }
 
