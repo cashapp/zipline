@@ -21,6 +21,7 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrExpression
+import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 
@@ -54,6 +55,9 @@ internal class CallAdapterConstructorRewriter(
     val kClassArgument = original.getValueArgument(0) ?: return original
     val serializersListExpression = original.getValueArgument(1) ?: return original
 
+    // my.package.AdapterClass<package.Type1, package.Type2>
+    val serialName = (original.getTypeArgument(0) as IrSimpleType).asString()
+
     val bridgedInterfaceType = when (kClassArgument) {
       is IrClassReference -> kClassArgument.classType
       else -> return original
@@ -75,7 +79,7 @@ internal class CallAdapterConstructorRewriter(
       ziplineApis,
       scope,
       bridgedInterface.typeIrClass
-    ).adapterExpression(serializersListExpression)
+    ).adapterExpression(serializersListExpression, serialName)
     result.patchDeclarationParents(declarationParent)
     return result
   }

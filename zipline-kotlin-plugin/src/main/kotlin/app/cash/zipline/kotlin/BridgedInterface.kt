@@ -43,10 +43,9 @@ import org.jetbrains.kotlin.ir.util.classId
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.functions
 import org.jetbrains.kotlin.ir.util.isInterface
-import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.isSuspend
+import org.jetbrains.kotlin.ir.util.properties
 import org.jetbrains.kotlin.ir.util.substitute
-import org.jetbrains.kotlin.name.Name
 
 /**
  * A user-defined interface (like `EchoService` or `Callback<String>`) and support for generating
@@ -211,7 +210,10 @@ internal class BridgedInterface(
           ziplineApis,
           this@BridgedInterface.scope,
           pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner,
-        ).adapterExpression(parameterList)
+        ).adapterExpression(
+          serializersListExpression = parameterList,
+          serialName = type.asString()
+        )
       }
 
       hasTypeParameter || contextual || type.isFlow || type.isStateFlow -> {

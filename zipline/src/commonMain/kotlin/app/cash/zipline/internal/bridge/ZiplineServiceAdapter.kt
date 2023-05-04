@@ -34,6 +34,7 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
   private val contextualSerializer = ContextualSerializer(PassByReference::class)
   abstract val serializers: List<KSerializer<*>>
   abstract val serialName: String
+  abstract val simpleName: String
 
   override val descriptor = contextualSerializer.descriptor
 
@@ -61,7 +62,7 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
 
   override fun hashCode() = this::class.hashCode()
 
-  override fun toString() = serialName
+  override fun toString() = simpleName
 }
 
 @PublishedApi

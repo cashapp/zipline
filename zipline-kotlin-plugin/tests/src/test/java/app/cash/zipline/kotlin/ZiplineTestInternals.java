@@ -46,6 +46,8 @@ import kotlinx.serialization.modules.SerializersModule;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import androidx.annotation.NonNull;
+
 /**
  * Call these {@link PublishedApi} internal APIs from Java rather than from Kotlin to hack around
  * visibility of internal APIs.
@@ -93,8 +95,12 @@ public final class ZiplineTestInternals {
   public static class EchoServiceAdapter extends ZiplineServiceAdapter<EchoService> {
     public static final EchoServiceAdapter INSTANCE = new EchoServiceAdapter();
 
-    @Override public String getSerialName() {
+    @Override public String getSimpleName() {
       return "EchoService";
+    }
+
+    @Override public String getSerialName() {
+      return "app.cash.zipline.kotlin.EchoService";
     }
 
     @Override public List<KSerializer<?>> getSerializers() {
@@ -149,8 +155,12 @@ public final class ZiplineTestInternals {
       extends ZiplineServiceAdapter<GenericEchoService<String>> {
     public static final GenericEchoServiceAdapter INSTANCE = new GenericEchoServiceAdapter();
 
-    @Override public String getSerialName() {
+    @Override public String getSimpleName() {
       return "GenericEchoService";
+    }
+
+    @Override public String getSerialName() {
+      return "app.cash.zipline.kotlin.GenericEchoService<kotlin.String>";
     }
 
     @Override public List<KSerializer<?>> getSerializers() {
@@ -203,8 +213,12 @@ public final class ZiplineTestInternals {
   public static class EchoZiplineServiceAdapter extends ZiplineServiceAdapter<EchoZiplineService> {
     public static final EchoZiplineServiceAdapter INSTANCE = new EchoZiplineServiceAdapter();
 
+    @Override public String getSimpleName() {
+      return "EchoService";
+    }
+
     @Override public String getSerialName() {
-      return "EchoZiplineService";
+      return "app.cash.zipline.kotlin.EchoZiplineService";
     }
 
     @Override public List<KSerializer<?>> getSerializers() {

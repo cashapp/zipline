@@ -127,12 +127,15 @@ internal class AdapterGenerator(
       )
     }
 
+    val serialName = irString(adapterType.asString())
+
     // Adapter<String, Long>(...)
     return irCallConstructor(
       callee = adapterClass.constructors.single().symbol,
       typeArguments = adapterType.arguments.map { it as IrType },
     ).apply {
       putValueArgument(0, serializersList)
+      putValueArgument(1, serialName)
     }
   }
 
@@ -142,7 +145,8 @@ internal class AdapterGenerator(
    * of that type.
    */
   fun adapterExpression(
-    serializersListExpression: IrExpression
+    serializersListExpression: IrExpression,
+    serialName: String,
   ): IrFunctionAccessExpression {
     val adapterClass = generateAdapterIfAbsent()
     return with(irBlockBodyBuilder(pluginContext, scope, original)) {
@@ -152,6 +156,10 @@ internal class AdapterGenerator(
         putValueArgument(
           0,
           serializersListExpression
+        )
+        putValueArgument(
+          1,
+          irString(serialName)
         )
       }
     }
@@ -218,6 +226,11 @@ internal class AdapterGenerator(
         name = Name.identifier("serializers")
         type = ziplineApis.listOfKSerializerStar
       }
+      addValueParameter {
+        initDefaults(original)
+        name = Name.identifier("serialName")
+        type = pluginContext.symbols.string.defaultType
+      }
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
           context = pluginContext,
@@ -233,8 +246,11 @@ internal class AdapterGenerator(
       }
     }
 
-    val serialNameProperty = irSerialNameProperty(adapterClass)
+    val serialNameProperty = irSerialNameProperty(adapterClass, constructor)
     adapterClass.declarations += serialNameProperty
+
+    val simpleNameProperty = irSimpleNameProperty(adapterClass)
+    adapterClass.declarations += simpleNameProperty
 
     val serializersProperty = irSerializersProperty(adapterClass, constructor)
     adapterClass.declarations += serializersProperty
@@ -282,11 +298,11 @@ internal class AdapterGenerator(
   }
 
   /**
-   * Override `ZiplineServiceAdapter.serialName`. The constant value is the service's simple name,
-   * like "SampleService".
+   * Override `ZiplineServiceAdapter.serialName`. The constant value is the service's full
+   * typed name like "my.package.SampleService<package.Type1>".
    */
-  private fun irSerialNameProperty(adapterClass: IrClass): IrProperty {
-    // override val serialName: String = "SampleService"
+  private fun irSerialNameProperty(adapterClass: IrClass, value: IrConstructor): IrProperty {
+    // override val serialName: String = serialName
     return irVal(
       pluginContext = pluginContext,
       propertyType = pluginContext.symbols.string.defaultType,
@@ -294,12 +310,29 @@ internal class AdapterGenerator(
       propertyName = ziplineApis.ziplineServiceAdapterSerialName.owner.name,
       overriddenProperty = ziplineApis.ziplineServiceAdapterSerialName,
     ) {
+      irExprBody(irGet(value.valueParameters[1]))
+    }
+  }
+
+  /**
+   * Override `ZiplineServiceAdapter.simpleName`. The constant value is the service's simple name,
+   * like "SampleService".
+   */
+  private fun irSimpleNameProperty(adapterClass: IrClass): IrProperty {
+    // override val simpleName: String = "MyClass"
+    return irVal(
+      pluginContext = pluginContext,
+      propertyType = pluginContext.symbols.string.defaultType,
+      declaringClass = adapterClass,
+      propertyName = ziplineApis.ziplineServiceAdapterSimpleName.owner.name,
+      overriddenProperty = ziplineApis.ziplineServiceAdapterSimpleName,
+    ) {
       irExprBody(irString(original.name.identifier))
     }
   }
 
   private fun irSerializersProperty(adapterClass: IrClass, value: IrConstructor): IrProperty {
-    // override val serializers: List<KSerializer<*>>
+    // override val serializers: List<KSerializer<*>> = serializers
     return irVal(
       pluginContext = pluginContext,
       propertyType = ziplineApis.listOfKSerializerStar,
