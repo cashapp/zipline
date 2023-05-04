@@ -65,7 +65,7 @@ interface SampleService<T> : ZiplineService {
       override val serializers: List<KSerializer<*>>,
       override val serialName: String,
     ) : ZiplineServiceAdapter<SampleService<TX>>() {
-      override val simpleName: String = "ManualAdapter"
+      override val simpleName: String = "SampleService"
 
       class ZiplineFunction0<TF>(
         argSerializers: List<KSerializer<*>>,
