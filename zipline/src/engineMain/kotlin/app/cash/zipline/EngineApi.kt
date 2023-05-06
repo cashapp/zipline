@@ -17,7 +17,7 @@
 package app.cash.zipline
 
 @RequiresOptIn(
-  message = "This API exposes the low-level JS engine and should be used with extreme care",
+  message = "This API exposes the low-level JS engine. This API will change when the engine changes.",
   level = RequiresOptIn.Level.WARNING,
 )
 annotation class EngineApi
