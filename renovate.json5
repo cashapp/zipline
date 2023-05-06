@@ -14,7 +14,7 @@
       "groupName": "Kotlin and Compose",
       "matchPackagePrefixes": [
         "androidx.compose.compiler",
-        "org.jetbrains.kotlin",
+        "org.jetbrains.kotlin:kotlin",
       ],
     },
   ],
