@@ -23,6 +23,7 @@ import app.cash.zipline.internal.bridge.CallChannel
  * This class is NOT thread safe. If multiple threads access an instance concurrently it must be
  * synchronized externally.
  */
+@EngineApi
 expect class QuickJs {
   companion object {
     /**

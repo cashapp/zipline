@@ -120,6 +120,12 @@ kotlin {
       val test by compilations.getting
       test.defaultSourceSet.dependsOn(nativeTest)
     }
+
+    sourceSets.all {
+      languageSettings {
+        optIn("app.cash.zipline.EngineApi")
+      }
+    }
   }
 }
 

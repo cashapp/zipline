@@ -47,6 +47,12 @@ kotlin {
       val main by compilations.getting
       main.defaultSourceSet.dependsOn(engineMain)
     }
+
+    sourceSets.all {
+      languageSettings {
+        optIn("app.cash.zipline.EngineApi")
+      }
+    }
   }
 
   targets.all {

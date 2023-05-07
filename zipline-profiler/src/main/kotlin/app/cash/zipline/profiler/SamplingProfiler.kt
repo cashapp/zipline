@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.profiler
 
+import app.cash.zipline.EngineApi
 import app.cash.zipline.InterruptHandler
 import app.cash.zipline.QuickJs
 import java.io.File
@@ -33,10 +34,12 @@ import okio.sink
  *
  * @param hprofFile a new file to write profiling data to. Typically, such files end with `.hprof`.
  */
+@EngineApi
 fun QuickJs.startCpuSampling(hprofFile: File): Closeable {
   return startCpuSampling(hprofFile.sink().buffer())
 }
 
+@EngineApi
 fun QuickJs.startCpuSampling(hprofSink: BufferedSink): Closeable {
   val samplingProfiler = SamplingProfiler(this, HprofWriter(hprofSink))
   val previousInterruptHandler = interruptHandler
