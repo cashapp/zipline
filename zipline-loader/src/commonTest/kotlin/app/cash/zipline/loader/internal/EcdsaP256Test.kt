@@ -39,18 +39,22 @@ class EcdsaP256Test {
     assertTrue(ecdsaP256.verify(data, SampleKeys.key4HelloWorldsignatureB, SampleKeys.key4Public))
 
     // If the data changes, it doesn't verify.
-    assertFalse(ecdsaP256.verify(
+    assertFalse(
+      ecdsaP256.verify(
       message = "hello World".encodeUtf8(),
       signature = SampleKeys.key4HelloWorldsignatureA,
-      publicKey = SampleKeys.key4Public
-    ))
+      publicKey = SampleKeys.key4Public,
+    ),
+    )
 
     // If the key changes, it doesn't verify.
-    assertFalse(ecdsaP256.verify(
+    assertFalse(
+      ecdsaP256.verify(
       message = data,
       signature = SampleKeys.key4HelloWorldsignatureA,
-      publicKey = SampleKeys.key5Public
-    ))
+      publicKey = SampleKeys.key5Public,
+    ),
+    )
   }
 
   @Test
@@ -80,12 +84,12 @@ class EcdsaP256Test {
         val signature = testcase.sig.decodeHex()
         if (ecdsaP256.verify(message, signature, publicKey)) {
           if (testcase.result == "invalid") {
-            println("FAIL ${testcaseId}: accepting invalid signature")
+            println("FAIL $testcaseId: accepting invalid signature")
             if (testcaseId !in knownFailures) unexpectedErrors++
           }
         } else {
           if (testcase.result == "valid") {
-            println("FAIL ${testcaseId}: rejecting valid signature")
+            println("FAIL $testcaseId: rejecting valid signature")
             if (testcaseId !in knownFailures) unexpectedErrors++
           }
         }

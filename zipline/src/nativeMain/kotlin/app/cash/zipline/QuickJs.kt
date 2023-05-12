@@ -261,8 +261,11 @@ actual class QuickJs private constructor(
     }
     val result = memScoped {
       val bufferLengthVar = alloc<size_tVar>()
-      val buffer = JS_WriteObject(contextForCompiling, bufferLengthVar.ptr, compiled,
-        JS_WRITE_OBJ_BYTECODE or JS_WRITE_OBJ_REFERENCE
+      val buffer = JS_WriteObject(
+        contextForCompiling,
+        bufferLengthVar.ptr,
+        compiled,
+        JS_WRITE_OBJ_BYTECODE or JS_WRITE_OBJ_REFERENCE,
       )
       val bufferLength = bufferLengthVar.value.toInt()
 
@@ -285,8 +288,11 @@ actual class QuickJs private constructor(
 
     @Suppress("UNCHECKED_CAST") // ByteVar and UByteVar have the same bit layout.
     val bytecodeRef = bytecode.refTo(0) as CValuesRef<UByteVar>
-    val obj = JS_ReadObject(context, bytecodeRef, bytecode.size.convert(),
-      JS_READ_OBJ_BYTECODE or JS_READ_OBJ_REFERENCE or JS_EVAL_FLAG_STRICT
+    val obj = JS_ReadObject(
+      context,
+      bytecodeRef,
+      bytecode.size.convert(),
+      JS_READ_OBJ_BYTECODE or JS_READ_OBJ_REFERENCE or JS_EVAL_FLAG_STRICT,
     )
     if (JS_IsException(obj) != 0) {
       throwJsException()
@@ -327,7 +333,8 @@ actual class QuickJs private constructor(
 
       val jsOutboundCallChannel = JS_NewObjectClass(context, outboundCallChannelClassId)
       if (JS_IsException(jsOutboundCallChannel) != 0 ||
-          JS_SetProperty(context, globalThis, propertyName, jsOutboundCallChannel) <= 0) {
+          JS_SetProperty(context, globalThis, propertyName, jsOutboundCallChannel) <= 0
+      ) {
         throwJsException()
       }
 
@@ -402,8 +409,9 @@ actual class QuickJs private constructor(
     val messageValue = JS_GetPropertyStr(context, exceptionValue, "message")
     val stackValue = JS_GetPropertyStr(context, exceptionValue, "stack")
 
-    val message = JS_ToCString(context,
-      messageValue.takeUnless { JS_IsUndefined(messageValue) != 0 } ?: exceptionValue
+    val message = JS_ToCString(
+      context,
+      messageValue.takeUnless { JS_IsUndefined(messageValue) != 0 } ?: exceptionValue,
     )?.toKStringFromUtf8() ?: ""
     JS_FreeValue(context, messageValue)
 

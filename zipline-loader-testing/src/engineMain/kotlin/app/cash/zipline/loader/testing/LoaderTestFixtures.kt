@@ -61,7 +61,7 @@ class LoaderTestFixtures {
       ),
     ),
     mainFunction = "zipline.ziplineMain",
-    baseUrl = manifestUrl
+    baseUrl = manifestUrl,
   )
 
   val manifestJsonString = manifest.encodeToString()
@@ -93,7 +93,7 @@ class LoaderTestFixtures {
     }
     val ziplineFile = ZiplineFile(
       CURRENT_ZIPLINE_VERSION,
-      compiledJavaScript.toByteString()
+      compiledJavaScript.toByteString(),
     )
     val buffer = Buffer()
     ziplineFile.writeTo(buffer)
@@ -117,7 +117,7 @@ class LoaderTestFixtures {
           seed to ZiplineManifest.Module(
             url = "$seed.zipline",
             sha256 = seedFileSha256,
-          )
+          ),
         ),
         mainFunction = "zipline.ziplineMain",
       )
@@ -139,7 +139,7 @@ class LoaderTestFixtures {
       return LoadedManifest(
         manifestJson.encodeUtf8(),
         manifest,
-        1L
+        1L,
       )
     }
 
@@ -178,13 +178,13 @@ class LoaderTestFixtures {
       mainBody = """
               globalThis.mainLog = globalThis.mainLog || "";
               globalThis.mainLog += "$seed loaded\n";
-            """.trimIndent()
+            """.trimIndent(),
     )
 
     fun createFailureJs(seed: String) = jsBoilerplate(
       seed = seed,
       loadBody = "throw Error('$seed');",
-      mainBody = "throw Error('$seed');"
+      mainBody = "throw Error('$seed');",
     )
 
     private fun jsBoilerplate(seed: String, loadBody: String, mainBody: String) = """

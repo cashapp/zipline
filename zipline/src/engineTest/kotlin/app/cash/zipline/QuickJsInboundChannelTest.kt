@@ -39,7 +39,8 @@ class QuickJsInboundChannelTest {
 
   @BeforeTest
   fun setUp() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       globalThis.$inboundChannelName = {};
       globalThis.$inboundChannelName.serviceNamesArray = function() {
       };
@@ -47,16 +48,19 @@ class QuickJsInboundChannelTest {
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
       };
-    """.trimIndent())
+    """.trimIndent(),
+    )
   }
 
   @Test
   fun callHappyPath() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       globalThis.$inboundChannelName.call = function(callJson) {
         return 'received call(' + callJson + ') and the call was successful!';
       };
-    """.trimIndent())
+    """.trimIndent(),
+    )
 
     val inboundChannel = quickJs.getInboundChannel()
     val result = inboundChannel.call("firstArg")
@@ -65,12 +69,14 @@ class QuickJsInboundChannelTest {
 
   @Test
   fun serviceNamesArrayHappyPath() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       var callLog = [];
       globalThis.$inboundChannelName.serviceNamesArray = function() {
         return ['service one', 'service two'];
       };
-    """.trimIndent())
+    """.trimIndent(),
+    )
 
     val inboundChannel = quickJs.getInboundChannel()
     val result = inboundChannel.serviceNamesArray()
@@ -85,7 +91,8 @@ class QuickJsInboundChannelTest {
 
   @Test
   fun disconnectHappyPath() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       var callLog = "";
       globalThis.$inboundChannelName.call = function(callJson) {
         var result = callLog;
@@ -96,7 +103,8 @@ class QuickJsInboundChannelTest {
         callLog += 'disconnect(' + instanceName + ')';
         return true;
       };
-    """.trimIndent())
+    """.trimIndent(),
+    )
 
     val inboundChannel = quickJs.getInboundChannel()
     assertTrue(inboundChannel.disconnect("service one"))
@@ -106,9 +114,11 @@ class QuickJsInboundChannelTest {
 
   @Test
   fun noInboundChannelThrows() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       delete globalThis.$inboundChannelName;
-    """.trimIndent())
+    """.trimIndent(),
+    )
 
     val t = assertFailsWith<IllegalStateException> {
       quickJs.getInboundChannel()

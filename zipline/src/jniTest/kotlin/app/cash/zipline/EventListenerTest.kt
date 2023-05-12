@@ -33,7 +33,8 @@ import org.junit.Test
  * This test exercises event listeners using QuickJS.
  */
 class EventListenerTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val eventListener = LoggingEventListener()
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)
@@ -106,7 +107,7 @@ class EventListenerTest {
 
     zipline.bind<SuspendingEchoService>(
       "jvmSuspendingEchoService",
-      jvmSuspendingEchoService
+      jvmSuspendingEchoService,
     )
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSuspendingEchoService('Eric')")
@@ -124,9 +125,12 @@ class EventListenerTest {
   @Test fun jvmCallIncompatibleJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
-    assertThat(assertFailsWith<ZiplineApiMismatchException> {
+    assertThat(
+      assertFailsWith<ZiplineApiMismatchException> {
       zipline.take<PotatoService>("helloService").echo()
-    }).hasMessageThat().startsWith("""
+    },
+    ).hasMessageThat().startsWith(
+      """
       no such method (incompatible API versions?)
       	called service:
       		helloService
@@ -136,7 +140,7 @@ class EventListenerTest {
       		fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
       		fun close(): kotlin.Unit
      		at
-      """.trimIndent()
+      """.trimIndent(),
     )
     val name = "helloService"
     val funName = "fun echo(): app.cash.zipline.testing.EchoResponse"
@@ -149,15 +153,18 @@ class EventListenerTest {
   @Test fun jvmCallUnknownJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
 
-    assertThat(assertFailsWith<ZiplineApiMismatchException> {
+    assertThat(
+      assertFailsWith<ZiplineApiMismatchException> {
       zipline.take<EchoService>("helloService").echo(EchoRequest("hello"))
-    }).hasMessageThat().startsWith("""
+    },
+    ).hasMessageThat().startsWith(
+      """
         no such service (service closed?)
         	called service:
         		helloService
         	available services:
         		zipline/js
-      """.trimIndent()
+      """.trimIndent(),
     )
     val name = "helloService"
     val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
@@ -175,9 +182,11 @@ class EventListenerTest {
     }
     zipline.bind<PotatoService>("supService", jvmPotatoService)
 
-    assertThat(assertFailsWith<QuickJsException> {
+    assertThat(
+      assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
-    }).hasMessageThat().startsWith("app.cash.zipline.ZiplineApiMismatchException: no such method")
+    },
+    ).hasMessageThat().startsWith("app.cash.zipline.ZiplineApiMismatchException: no such method")
 
     val name = "supService"
     val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
@@ -188,9 +197,11 @@ class EventListenerTest {
   }
 
   @Test fun jsCallUnknownJvmService() = runBlocking(dispatcher) {
-    assertThat(assertFailsWith<QuickJsException> {
+    assertThat(
+      assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
-    }).hasMessageThat().startsWith("app.cash.zipline.ZiplineApiMismatchException: no such service")
+    },
+    ).hasMessageThat().startsWith("app.cash.zipline.ZiplineApiMismatchException: no such service")
 
     val name = "supService"
     val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"

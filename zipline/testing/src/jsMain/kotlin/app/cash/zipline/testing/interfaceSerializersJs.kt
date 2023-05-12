@@ -31,11 +31,11 @@ private val zipline by lazy { Zipline.get(MessageInterfaceSerializersModule) }
 fun prepareInterfaceSerializersJsBridges() {
   zipline.bind<RequestInterfaceService>(
     "requestInterfaceService",
-    JsMessageInterfaceService()
+    JsMessageInterfaceService(),
   )
   zipline.bind<ResponseInterfaceService>(
     "responseInterfaceService",
-    JsMessageInterfaceService()
+    JsMessageInterfaceService(),
   )
 }
 
@@ -50,4 +50,3 @@ fun callInterfaceRequest(): String {
   val service = zipline.take<RequestInterfaceService>("requestInterfaceService")
   return service.echo(RealMessageInterface("Jesse"))
 }
-

@@ -30,18 +30,18 @@ interface AdaptersService : ZiplineService {
 
 // Note that this is not @Serializable.
 data class AdaptersRequest(
-  val message: String
+  val message: String,
 )
 
 // Note that this is not @Serializable.
 data class AdaptersResponse(
-  val message: String
+  val message: String,
 )
 
 internal object AdaptersRequestSerializer : KSerializer<AdaptersRequest> {
   override val descriptor = PrimitiveSerialDescriptor(
     "app.cash.zipline.testing.AdaptersRequestSerializer",
-    PrimitiveKind.STRING
+    PrimitiveKind.STRING,
   )
 
   override fun serialize(encoder: Encoder, value: AdaptersRequest) {
@@ -56,7 +56,7 @@ internal object AdaptersRequestSerializer : KSerializer<AdaptersRequest> {
 internal object AdaptersResponseSerializer : KSerializer<AdaptersResponse> {
   override val descriptor = PrimitiveSerialDescriptor(
     "app.cash.zipline.testing.AdaptersResponseSerializer",
-    PrimitiveKind.STRING
+    PrimitiveKind.STRING,
   )
 
   override fun serialize(encoder: Encoder, value: AdaptersResponse) {

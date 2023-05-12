@@ -34,7 +34,7 @@ class FinalizationRegistryTest {
         log.length = 0;
         return result;
       };
-      """
+      """,
     )
   }
 
@@ -59,7 +59,7 @@ class FinalizationRegistryTest {
       }
 
       makeFinalizableObject();
-      """.trimIndent()
+      """.trimIndent(),
     )
     assertEquals(
       """["heavy object was finalized"]""",
@@ -79,7 +79,7 @@ class FinalizationRegistryTest {
         data: 'this data is owned by the heavy object.'
       };
       registry.register(heavyObject, 'heavy object');
-      """.trimIndent()
+      """.trimIndent(),
     )
     assertEquals(
       """[]""",
@@ -90,7 +90,7 @@ class FinalizationRegistryTest {
       """
       globalThis.anotherProperty = globalThis.heavyObject;
       delete globalThis.heavyObject;
-      """.trimIndent()
+      """.trimIndent(),
     )
     assertEquals(
       """[]""",
@@ -100,7 +100,7 @@ class FinalizationRegistryTest {
     quickJs.evaluate(
       """
       delete globalThis.anotherProperty;
-      """.trimIndent()
+      """.trimIndent(),
     )
     assertEquals(
       """["registry got heavy object"]""",
@@ -127,7 +127,7 @@ class FinalizationRegistryTest {
       }
 
       makeCycleContainingFinalizableObject();
-      """.trimIndent()
+      """.trimIndent(),
     )
     assertEquals(
       """[]""",
@@ -159,14 +159,13 @@ class FinalizationRegistryTest {
       makeFinalizableObject('red');
       makeFinalizableObject('green');
       makeFinalizableObject('blue');
-      """.trimIndent()
+      """.trimIndent(),
     )
     assertEquals(
       """["registry got red","registry got green","registry got blue"]""",
       takeLog(),
     )
   }
-
 
   @Test
   fun multipleRegistriesMayBeUsed() {
@@ -189,7 +188,7 @@ class FinalizationRegistryTest {
 
       makeFinalizableObject(registryA, 'green');
       makeFinalizableObject(registryB, 'blue');
-      """.trimIndent()
+      """.trimIndent(),
     )
     assertEquals(
       """["registry A got green","registry B got blue"]""",

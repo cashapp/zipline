@@ -35,7 +35,8 @@ class JsObjectEncodingTest {
       |function greet(name) {
       |  return "hello, " + name;
       |}
-      """.trimMargin(), "hello.js"
+      """.trimMargin(),
+        "hello.js",
     )
 
     assertThat(evalFunction.name).isEqualTo("<eval>")
@@ -64,7 +65,7 @@ class JsObjectEncodingTest {
       |    "hello"
       |  ];
       |}
-      """.trimMargin()
+      """.trimMargin(),
     )
   }
 
@@ -74,7 +75,7 @@ class JsObjectEncodingTest {
       |function toString() {
       |  return "JSON"
       |}
-      """.trimMargin()
+      """.trimMargin(),
     )
     assertThat(evalFunction.name).isEqualTo("<eval>")
     val toStringFunction = evalFunction.constantPool.single() as JsFunctionBytecode
@@ -94,7 +95,7 @@ class JsObjectEncodingTest {
       |  console.log("line 8");
       |  return 0;
       |}
-      """.trimMargin()
+      """.trimMargin(),
     )
 
     assertThat(evalFunction.name).isEqualTo("<eval>")
@@ -116,7 +117,7 @@ class JsObjectEncodingTest {
       |    "Café 🍩", // NFD (7 code points)
       |  ];
       |}
-      """.trimMargin()
+      """.trimMargin(),
     )
   }
 
@@ -129,7 +130,7 @@ class JsObjectEncodingTest {
       |    "\u00ff"
       |  ];
       |}
-      """.trimMargin()
+      """.trimMargin(),
     )
   }
 
@@ -153,7 +154,8 @@ class JsObjectEncodingTest {
       |}
       |function newThrowable(message, cause) {
       |}
-      """.trimMargin(), "hello.js"
+      """.trimMargin(),
+        "hello.js",
     )
 
     assertThat(evalFunction.name).isEqualTo("<eval>")
@@ -168,7 +170,7 @@ class JsObjectEncodingTest {
   /** Returns the model object for the bytecode of [script]. */
   private fun assertRoundTrip(
     script: String,
-    fileName: String = "test.js"
+    fileName: String = "test.js",
   ): JsFunctionBytecode {
     // Use QuickJS to compile a script into bytecode.
     val bytecode: ByteArray = quickJs.compile(script, fileName)

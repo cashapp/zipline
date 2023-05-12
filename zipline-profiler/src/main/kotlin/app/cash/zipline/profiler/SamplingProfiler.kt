@@ -59,8 +59,10 @@ internal class SamplingProfiler internal constructor(
 
   /** Placeholder value for the JavaScript thread. */
   private val javaScriptThreadId: Int = nextId++
+
   /** Placeholder value for JavaScript functions that don't have a proper signature. */
   private val javaScriptMethodSignatureStringId: Int
+
   /** Placeholder value for JavaScript functions that don't have a proper class. */
   private val javaScriptClassId: Int
 
@@ -80,7 +82,7 @@ internal class SamplingProfiler internal constructor(
       stackTraceId = nullStackTraceId,
       threadNameStringId = hprofWriter.allocateStringId("main"),
       threadGroupNameId = hprofWriter.allocateStringId("main"),
-      threadParentGroupNameId = hprofWriter.allocateStringId("system")
+      threadParentGroupNameId = hprofWriter.allocateStringId("system"),
     )
   }
 

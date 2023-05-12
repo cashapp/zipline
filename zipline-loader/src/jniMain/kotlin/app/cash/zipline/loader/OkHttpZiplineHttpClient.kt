@@ -33,7 +33,7 @@ import okhttp3.WebSocketListener
 import okio.ByteString
 
 internal class OkHttpZiplineHttpClient(
-  private val okHttpClient: OkHttpClient
+  private val okHttpClient: OkHttpClient,
 ) : ZiplineHttpClient() {
   override suspend fun download(
     url: String,
@@ -48,7 +48,7 @@ internal class OkHttpZiplineHttpClient(
               addHeader(name, value)
             }
           }
-          .build()
+          .build(),
       )
 
       continuation.invokeOnCancellation {
@@ -58,14 +58,14 @@ internal class OkHttpZiplineHttpClient(
       call.enqueue(object : Callback {
         override fun onFailure(
           call: Call,
-          e: IOException
+          e: IOException,
         ) {
           continuation.resumeWithException(e)
         }
 
         override fun onResponse(
           call: Call,
-          response: Response
+          response: Response,
         ) {
           val byteString = response.use {
             try {
@@ -86,7 +86,8 @@ internal class OkHttpZiplineHttpClient(
   }
 
   override suspend fun openDevelopmentServerWebSocket(
-    url: String, requestHeaders: List<Pair<String, String>>,
+    url: String,
+    requestHeaders: List<Pair<String, String>>,
   ): Flow<String> {
     val request = Request.Builder()
       .url(url)

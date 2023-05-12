@@ -24,10 +24,10 @@ interface EchoService : ZiplineService {
 
 @Serializable
 data class EchoRequest(
-  val message: String
+  val message: String,
 )
 
 @Serializable
 data class EchoResponse(
-  val message: String
+  val message: String,
 )

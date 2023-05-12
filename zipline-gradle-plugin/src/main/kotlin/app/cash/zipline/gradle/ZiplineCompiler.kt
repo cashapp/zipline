@@ -86,7 +86,7 @@ internal object ZiplineCompiler {
     }
 
     // Delete Zipline files for any removed JS files
-    removedFileNames.forEach { File(outputDir.path + "/" + it.removeSuffix(".js") + ZIPLINE_EXTENSION).delete()}
+    removedFileNames.forEach { File(outputDir.path + "/" + it.removeSuffix(".js") + ZIPLINE_EXTENSION).delete() }
 
     // Compile the newly added or modified files and add them into the module list
     val addedOrModifiedFiles = getJsFiles(addedFiles) + getJsFiles(modifiedFiles)
@@ -150,7 +150,7 @@ internal object ZiplineCompiler {
       return "$MODULE_PATH_PREFIX${jsFile.name}" to ZiplineManifest.Module(
         url = outputZiplineFilePath,
         sha256 = sha256,
-        dependsOnIds = dependencies
+        dependsOnIds = dependencies,
       )
     }
   }

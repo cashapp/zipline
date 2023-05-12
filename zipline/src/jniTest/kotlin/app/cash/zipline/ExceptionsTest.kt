@@ -27,7 +27,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class ExceptionsTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 
@@ -44,15 +45,17 @@ class ExceptionsTest {
 
     val service = zipline.take<EchoService>("throwingService")
 
-    assertThat(assertFailsWith<ZiplineException> {
+    assertThat(
+      assertFailsWith<ZiplineException> {
       service.echo(EchoRequest("Jake"))
-    }.stackTraceToString()).apply {
+    }.stackTraceToString(),
+    ).apply {
       matches(
         """(?s).*IllegalStateException: boom!""" +
           """.*at goBoom1""" +
           """.*at goBoom2""" +
           """.*at goBoom3""" +
-          """.*"""
+          """.*""",
       )
     }
   }
@@ -60,16 +63,18 @@ class ExceptionsTest {
   @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
     zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
 
-    assertThat(assertFailsWith<QuickJsException> {
+    assertThat(
+      assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callThrowingService('homie')")
-    }.stackTraceToString()).apply {
+    }.stackTraceToString(),
+    ).apply {
       matches(
         """(?s).*java\.lang\.IllegalStateException: boom!""" +
           """.*JvmThrowingEchoService\.goBoom1""" +
           """.*JvmThrowingEchoService\.goBoom2""" +
           """.*JvmThrowingEchoService\.goBoom3""" +
           """.*JvmThrowingEchoService\.echo""" +
-          """.*"""
+          """.*""",
       )
     }
   }
@@ -80,9 +85,11 @@ class ExceptionsTest {
 
     val service = zipline.take<EchoService>("delegatingService")
 
-    assertThat(assertFailsWith<ZiplineException> {
+    assertThat(
+      assertFailsWith<ZiplineException> {
       service.echo(EchoRequest("Jake"))
-    }.stackTraceToString()).apply {
+    }.stackTraceToString(),
+    ).apply {
       matches(
         """(?s).*IllegalStateException: boom!""" +
           """.*at .*JvmThrowingEchoService\.goBoom1""" +
@@ -92,7 +99,7 @@ class ExceptionsTest {
           """.*at delegate1""" +
           """.*at delegate2""" +
           """.*at delegate3""" +
-          """.*"""
+          """.*""",
       )
     }
   }

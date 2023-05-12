@@ -31,10 +31,10 @@ class ZiplineCompilerPluginRegistrar : CompilerPluginRegistrar() {
   override fun ExtensionStorage.registerExtensions(configuration: CompilerConfiguration) {
     val messageCollector = configuration.get(
       CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY,
-      MessageCollector.NONE
+      MessageCollector.NONE,
     )
     IrGenerationExtension.registerExtension(
-      extension = ZiplineIrGenerationExtension(messageCollector)
+      extension = ZiplineIrGenerationExtension(messageCollector),
     )
   }
 }

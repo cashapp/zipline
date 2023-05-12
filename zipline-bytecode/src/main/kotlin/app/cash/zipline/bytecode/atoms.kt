@@ -29,7 +29,7 @@ interface AtomSet {
 }
 
 class MutableAtomSet(
-  strings: List<JsString>
+  strings: List<JsString>,
 ) : AtomSet {
   private val _strings = strings.toMutableList()
   private val stringToId = mutableMapOf<JsString, Int>()
@@ -270,18 +270,18 @@ private val BUILT_IN_ATOMS: List<JsString> = listOf(
   "TypeError",
   "URIError",
   "InternalError",
-  "<brand>",  // Symbols
-  "Symbol.toPrimitive",  // Symbols
-  "Symbol.iterator",  // Symbols
-  "Symbol.match",  // Symbols
-  "Symbol.matchAll",  // Symbols
-  "Symbol.replace",  // Symbols
-  "Symbol.search",  // Symbols
-  "Symbol.split",  // Symbols
-  "Symbol.toStringTag",  // Symbols
-  "Symbol.isConcatSpreadable",  // Symbols
-  "Symbol.hasInstance",  // Symbols
-  "Symbol.species",  // Symbols
-  "Symbol.unscopables",  // Symbols
-  "Symbol.asyncIterator",  // Symbols
+  "<brand>", // Symbols
+  "Symbol.toPrimitive", // Symbols
+  "Symbol.iterator", // Symbols
+  "Symbol.match", // Symbols
+  "Symbol.matchAll", // Symbols
+  "Symbol.replace", // Symbols
+  "Symbol.search", // Symbols
+  "Symbol.split", // Symbols
+  "Symbol.toStringTag", // Symbols
+  "Symbol.isConcatSpreadable", // Symbols
+  "Symbol.hasInstance", // Symbols
+  "Symbol.species", // Symbols
+  "Symbol.unscopables", // Symbols
+  "Symbol.asyncIterator", // Symbols
 ).map { it.toJsString() }

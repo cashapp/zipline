@@ -47,13 +47,13 @@ class ZiplineKotlinPluginTest {
         interface SampleService : ZiplineService {
           fun hello(request: EchoRequest): EchoResponse
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val adapterClass = result.classLoader.loadClass(
-      "app.cash.zipline.testing.SampleService\$Companion\$Adapter"
+      "app.cash.zipline.testing.SampleService\$Companion\$Adapter",
     )
     assertThat(adapterClass).isNotNull()
     assertThat(adapterClass.interfaces).asList().containsExactly(KSerializer::class.java)
@@ -80,8 +80,8 @@ class ZiplineKotlinPluginTest {
         fun prepareJsBridges(endpoint: Endpoint) {
           endpoint.bind<EchoZiplineService>("helloService", TestingEchoService("hello"))
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
@@ -107,8 +107,8 @@ class ZiplineKotlinPluginTest {
         fun takeHelloService(endpoint: Endpoint): EchoZiplineService {
           return endpoint.take("helloService")
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
@@ -146,8 +146,8 @@ class ZiplineKotlinPluginTest {
         object TestingEchoService : EchoService {
           override fun echo(request: EchoRequest): EchoResponse = error("")
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
@@ -170,8 +170,8 @@ class ZiplineKotlinPluginTest {
         fun takeHelloService(endpoint: Endpoint): Concrete {
           return endpoint.take("helloService")
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
@@ -200,8 +200,8 @@ class ZiplineKotlinPluginTest {
             TestingGenericEchoService()
           )
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
@@ -226,8 +226,8 @@ class ZiplineKotlinPluginTest {
         fun takeGenericService(endpoint: Endpoint): GenericEchoService<String> {
           return endpoint.take("genericService")
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
@@ -265,8 +265,8 @@ class ZiplineKotlinPluginTest {
             }
           })
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
@@ -293,8 +293,8 @@ class ZiplineKotlinPluginTest {
         interface SampleService : ZiplineService {
           fun hello(request: Flow<EchoRequest>): Flow<EchoResponse>
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
   }
@@ -313,8 +313,8 @@ class ZiplineKotlinPluginTest {
         fun createServiceSerializer(): KSerializer<EchoZiplineService> {
           return ziplineServiceSerializer(EchoZiplineService::class, listOf())
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
@@ -338,13 +338,13 @@ class ZiplineKotlinPluginTest {
           val count: Int
           var total: Int
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
 
     val adapterClass = result.classLoader.loadClass(
-      "app.cash.zipline.testing.SampleService\$Companion\$Adapter"
+      "app.cash.zipline.testing.SampleService\$Companion\$Adapter",
     )
     assertThat(adapterClass).isNotNull()
     assertThat(adapterClass.interfaces).asList().containsExactly(KSerializer::class.java)
@@ -361,13 +361,15 @@ class ZiplineKotlinPluginTest {
         import app.cash.zipline.ZiplineScoped
 
         interface SomeInterface : ZiplineScoped
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains(":5:1 Only classes may implement ZiplineScoped, but " +
-        "app.cash.zipline.testing.SomeInterface is an interface")
+      .contains(
+        ":5:1 Only classes may implement ZiplineScoped, but " +
+        "app.cash.zipline.testing.SomeInterface is an interface",
+      )
   }
 
   @Test
@@ -387,8 +389,8 @@ class ZiplineKotlinPluginTest {
         interface ChildService : ParentService, ZiplineService {
             fun test(first: Int, second: Int)
         }
-        """
-      )
+        """,
+      ),
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
   }

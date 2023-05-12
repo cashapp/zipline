@@ -94,7 +94,7 @@ internal class EndpointPropertiesTest {
   data class Bar(
     val alpha: Boolean,
     val bravo: String,
-    val charlie: Baz
+    val charlie: Baz,
   )
 
   @Serializable
@@ -110,7 +110,7 @@ internal class EndpointPropertiesTest {
     var result = Bar(
       alpha = true,
       bravo = "bingo",
-      charlie = Baz.BINGO
+      charlie = Baz.BINGO,
     )
 
     val service = object : GenericValService<Bar> {
@@ -124,24 +124,30 @@ internal class EndpointPropertiesTest {
     endpointA.bind<GenericValService<Bar>>("genericValService", service)
     val client = endpointB.take<GenericValService<Bar>>("genericValService")
 
-    assertEquals(Bar(
+    assertEquals(
+      Bar(
       alpha = true,
       bravo = "bingo",
-      charlie = Baz.BINGO
-    ), client.foo)
+      charlie = Baz.BINGO,
+    ),
+      client.foo,
+    )
     assertEquals(1, fooCalls)
 
     // Confirm every access goes to the source of truth.
     result = Bar(
       alpha = false,
       bravo = "bloop",
-      charlie = Baz.BLOOP
+      charlie = Baz.BLOOP,
     )
-    assertEquals(Bar(
+    assertEquals(
+      Bar(
       alpha = false,
       bravo = "bloop",
-      charlie = Baz.BLOOP
-    ), client.foo)
+      charlie = Baz.BLOOP,
+    ),
+      client.foo,
+    )
     assertEquals(2, fooCalls)
   }
 
@@ -153,7 +159,7 @@ internal class EndpointPropertiesTest {
     var state = Bar(
       alpha = true,
       bravo = "bingo",
-      charlie = Baz.BINGO
+      charlie = Baz.BINGO,
     )
 
     val service = object : GenericVarService<Bar> {
@@ -172,13 +178,16 @@ internal class EndpointPropertiesTest {
     client.foo = Bar(
       alpha = false,
       bravo = "bloop",
-      charlie = Baz.BLOOP
+      charlie = Baz.BLOOP,
     )
     assertEquals(1, fooCalls)
-    assertEquals(Bar(
+    assertEquals(
+      Bar(
       alpha = false,
       bravo = "bloop",
-      charlie = Baz.BLOOP
-    ), state)
+      charlie = Baz.BLOOP,
+    ),
+      state,
+    )
   }
 }

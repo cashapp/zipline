@@ -130,7 +130,7 @@ internal class ZiplineServiceTest {
       |EchoService zipline/host-1 is closed, failed to call:
       |  fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
       """.trimMargin(),
-      failure.message
+      failure.message,
     )
     assertEquals(setOf("factory"), endpointA.serviceNames)
   }

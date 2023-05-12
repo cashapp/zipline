@@ -53,7 +53,7 @@ data class ZiplineFile(
       val ziplineVersion = source.readInt()
       if (ziplineVersion != CURRENT_ZIPLINE_VERSION) {
         throw IOException(
-          "unsupported version [version=$ziplineVersion][currentVersion=$CURRENT_ZIPLINE_VERSION]"
+          "unsupported version [version=$ziplineVersion][currentVersion=$CURRENT_ZIPLINE_VERSION]",
         )
       }
       while (!source.exhausted()) {
@@ -64,12 +64,14 @@ data class ZiplineFile(
 
       return ZiplineFile(
         ziplineVersion = ziplineVersion,
-        quickjsBytecode = quickjsBytecode ?: throw IOException("QuickJS bytecode section missing")
+        quickjsBytecode = quickjsBytecode ?: throw IOException("QuickJS bytecode section missing"),
       )
     }
 
     private fun BufferedSource.readSection(
-      quickjsBytecode: ByteString? = null, sectionHeader: Int, sectionLength: Int
+      quickjsBytecode: ByteString? = null,
+      sectionHeader: Int,
+      sectionLength: Int,
     ): ByteString? = when (sectionHeader) {
       SECTION_HEADER_QUICKJS_BYTECODE -> {
         if (quickjsBytecode != null) {

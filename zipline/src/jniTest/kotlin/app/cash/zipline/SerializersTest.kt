@@ -30,7 +30,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class SerializersTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher, AdaptersSerializersModule)
   private val ziplineRequestOnly = Zipline.create(dispatcher, AdaptersRequestSerializersModule)
@@ -49,15 +50,19 @@ class SerializersTest {
   }
 
   @Test fun missingGetReturnValueSerializerFailsFast() = runBlocking(dispatcher) {
-    assertThat(assertFailsWith<IllegalArgumentException> {
+    assertThat(
+      assertFailsWith<IllegalArgumentException> {
       ziplineRequestOnly.take<AdaptersService>("adaptersService")
-    }).hasMessageThat().contains("Serializer for class 'AdaptersResponse' is not found.")
+    },
+    ).hasMessageThat().contains("Serializer for class 'AdaptersResponse' is not found.")
   }
 
   @Test fun missingGetParameterSerializerFailsFast() = runBlocking(dispatcher) {
-    assertThat(assertFailsWith<IllegalArgumentException> {
+    assertThat(
+      assertFailsWith<IllegalArgumentException> {
       ziplineResponseOnly.take<AdaptersService>("adaptersService")
-    }).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
+    },
+    ).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
   }
 
   @Test fun presentGetSerializersSucceeds() = runBlocking(dispatcher) {
@@ -69,27 +74,31 @@ class SerializersTest {
   }
 
   @Test fun missingSetReturnValueSerializerFailsFast() = runBlocking(dispatcher) {
-    assertThat(assertFailsWith<IllegalArgumentException> {
+    assertThat(
+      assertFailsWith<IllegalArgumentException> {
       ziplineRequestOnly.bind<AdaptersService>(
         "adaptersService",
-        JvmAdaptersService()
+        JvmAdaptersService(),
       )
-    }).hasMessageThat().contains("Serializer for class 'AdaptersResponse' is not found.")
+    },
+    ).hasMessageThat().contains("Serializer for class 'AdaptersResponse' is not found.")
   }
 
   @Test fun missingSetParameterSerializerFailsFast() = runBlocking(dispatcher) {
-    assertThat(assertFailsWith<IllegalArgumentException> {
+    assertThat(
+      assertFailsWith<IllegalArgumentException> {
       ziplineResponseOnly.bind<AdaptersService>(
         "adaptersService",
-        JvmAdaptersService()
+        JvmAdaptersService(),
       )
-    }).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
+    },
+    ).hasMessageThat().contains("Serializer for class 'AdaptersRequest' is not found.")
   }
 
   @Test fun presentSetSerializersSucceeds() = runBlocking(dispatcher) {
     zipline.bind<AdaptersService>(
       "adaptersService",
-      JvmAdaptersService()
+      JvmAdaptersService(),
     )
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callAdaptersService()"))
       .isEqualTo("JavaScript received nice adapters, Jesse")

@@ -60,7 +60,7 @@ internal suspend fun List<Fetcher>.fetch(
         sha256 = sha256,
         nowEpochMs = nowEpochMs,
         baseUrl = baseUrl,
-        url = url
+        url = url,
       ) ?: continue
     } catch (e: Exception) {
       if (firstException == null) {

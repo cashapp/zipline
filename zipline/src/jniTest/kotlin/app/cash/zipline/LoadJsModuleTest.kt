@@ -27,7 +27,8 @@ import org.junit.Test
  * modules in the standard forms that the Kotlin compiler produces.
  */
 class LoadJsModuleTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 

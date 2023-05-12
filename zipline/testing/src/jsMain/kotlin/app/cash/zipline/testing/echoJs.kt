@@ -18,7 +18,7 @@ package app.cash.zipline.testing
 import app.cash.zipline.Zipline
 
 class JsEchoService(
-  private val greeting: String
+  private val greeting: String,
 ) : EchoService {
   override fun echo(request: EchoRequest): EchoResponse {
     return EchoResponse("$greeting from JavaScript, ${request.message}")

@@ -30,25 +30,30 @@ import picocli.CommandLine.Command
 import picocli.CommandLine.Option
 
 @Command(
-  name = NAME, description = ["Recursively download Zipline code to a directory from a URL"],
-  mixinStandardHelpOptions = true, versionProvider = Main.VersionProvider::class
+  name = NAME,
+  description = ["Recursively download Zipline code to a directory from a URL"],
+  mixinStandardHelpOptions = true,
+  versionProvider = Main.VersionProvider::class,
 )
 class Download : Runnable {
   @Option(
     names = ["-A", "--application-name"],
-    description = ["Application name for the Zipline Manifest."], required = true
+    description = ["Application name for the Zipline Manifest."],
+    required = true,
   )
   lateinit var applicationName: String
 
   @Option(
     names = ["-M", "--manifest-url"],
-    description = ["URL to the Zipline Manifest for the code to download."], required = true
+    description = ["URL to the Zipline Manifest for the code to download."],
+    required = true,
   )
   lateinit var manifestUrl: String
 
   @Option(
-    names = ["-D", "--download-dir"], description = ["Directory where code will be downloaded to."],
-    required = true
+    names = ["-D", "--download-dir"],
+    description = ["Directory where code will be downloaded to."],
+    required = true,
   )
   lateinit var downloadDir: File
 

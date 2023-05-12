@@ -33,7 +33,8 @@ import org.junit.Test
  * [ziplineServiceSerializer]. This test confirms it all works across bridges.
  */
 class ServiceMemberTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher, ServiceMemberSerializersModule)
 

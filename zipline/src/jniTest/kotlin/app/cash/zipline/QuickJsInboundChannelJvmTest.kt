@@ -37,7 +37,8 @@ class QuickJsInboundChannelJvmTest {
 
   @Before
   fun setUp() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       globalThis.$inboundChannelName = {};
       globalThis.$inboundChannelName.serviceNamesArray = function() {
       };
@@ -45,7 +46,8 @@ class QuickJsInboundChannelJvmTest {
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
       };
-    """.trimIndent())
+    """.trimIndent(),
+    )
   }
 
   /**
@@ -53,14 +55,17 @@ class QuickJsInboundChannelJvmTest {
    * that crashes it could throw a JavaScript exception. Confirm such exceptions are reasonable.
    */
   @Test fun inboundChannelThrowsInJavaScript() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       function goBoom() {
         noSuchMethod();
       }
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
         goBoom();
       };
-    """.trimIndent(), "explode.js")
+    """.trimIndent(),
+      "explode.js",
+    )
     val inboundChannel = quickJs.getInboundChannel()
     val t = assertFailsWith<QuickJsException> {
       inboundChannel.disconnect("service one")

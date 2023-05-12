@@ -25,7 +25,7 @@ internal expect fun trackLeaks(
   eventListener: EndpointEventListener,
   serviceName: String,
   callHandler: OutboundCallHandler,
-  service: ZiplineService
+  service: ZiplineService,
 )
 
 /**

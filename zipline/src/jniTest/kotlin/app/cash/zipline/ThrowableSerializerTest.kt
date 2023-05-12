@@ -32,7 +32,7 @@ class ThrowableSerializerTest {
   @Test fun happyPath() {
     val exception = Exception("boom")
     exception.stackTrace = arrayOf(
-      StackTraceElement("ThrowableSerializerTest", "goBoom", "test.kt", 5)
+      StackTraceElement("ThrowableSerializerTest", "goBoom", "test.kt", 5),
     )
 
     val exceptionJson = """
@@ -55,7 +55,7 @@ class ThrowableSerializerTest {
       |java.lang.Exception: boom
       |${'\t'}at ThrowableSerializerTest.goBoom(test.kt:5)
       """.trimMargin(),
-      decoded.message
+      decoded.message,
     )
   }
 

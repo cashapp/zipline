@@ -29,7 +29,7 @@ private val zipline by lazy { Zipline.get(AdaptersSerializersModule) }
 fun prepareAdaptersJsBridges() {
   zipline.bind<AdaptersService>(
     "adaptersService",
-    JsAdaptersService()
+    JsAdaptersService(),
   )
 }
 

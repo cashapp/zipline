@@ -25,12 +25,14 @@ class QuickJsInterruptTest {
   private val quickJs = QuickJs.create()
 
   @BeforeTest fun setUp() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       |var fib = function(a) {
       |  if (a < 2) return 1;
       |  return fib(a - 1) + fib(a - 2);
       |}
-      """.trimMargin())
+      """.trimMargin(),
+    )
 
     // Set a huge max stack because of the heavy recursion of fib().
     quickJs.maxStackSize *= 5
@@ -69,9 +71,12 @@ class QuickJsInterruptTest {
       }
     }
 
-    assertEquals("interrupted", assertFailsWith<QuickJsException> {
+    assertEquals(
+      "interrupted",
+      assertFailsWith<QuickJsException> {
       quickJs.evaluate("""fib(20)""")
-    }.message)
+    }.message,
+    )
   }
 
   @Test fun removeInterruptHandler() {

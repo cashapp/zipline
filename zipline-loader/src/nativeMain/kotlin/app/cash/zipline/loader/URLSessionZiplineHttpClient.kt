@@ -21,8 +21,8 @@ import kotlin.native.concurrent.freeze
 import kotlinx.coroutines.CancellableContinuation
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okio.ByteString
-import okio.IOException
 import okio.ByteString.Companion.toByteString
+import okio.IOException
 import platform.Foundation.NSData
 import platform.Foundation.NSError
 import platform.Foundation.NSHTTPURLResponse
@@ -54,7 +54,7 @@ internal class URLSessionZiplineHttpClient(
             addValue(value = value, forHTTPHeaderField = name)
           }
         },
-        completionHandler = completionHandler::invoke.maybeFreeze()
+        completionHandler = completionHandler::invoke.maybeFreeze(),
       )
 
       continuation.invokeOnCancellation {
@@ -83,7 +83,7 @@ private class CompletionHandler(
 
     if (response.statusCode !in 200 until 300) {
       continuation.resumeWithException(
-        IOException("failed to fetch $url: ${response.statusCode}")
+        IOException("failed to fetch $url: ${response.statusCode}"),
       )
       return
     }

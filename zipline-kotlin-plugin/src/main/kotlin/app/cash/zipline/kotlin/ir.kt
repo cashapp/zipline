@@ -84,12 +84,12 @@ internal val IrSimpleFunction.signature: String
       if (valueParameters.size == 1) {
         // setter
         append(
-          "var ${name}: ${(valueParameters[0].type as IrSimpleType).asString()}"
+          "var $name: ${(valueParameters[0].type as IrSimpleType).asString()}",
         )
       } else {
         // getter
         append(
-          "val ${name}: ${(returnType as IrSimpleType).asString()}"
+          "val $name: ${(returnType as IrSimpleType).asString()}",
         )
       }
     } else {
@@ -97,7 +97,7 @@ internal val IrSimpleFunction.signature: String
         append("suspend ")
       }
       append(
-        "fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}"
+        "fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}",
       )
     }
   }
@@ -113,7 +113,7 @@ class ZiplineCompilationException(
 fun IrFile.locationOf(irElement: IrElement?): CompilerMessageSourceLocation {
   val sourceRangeInfo = fileEntry.getSourceRangeInfo(
     beginOffset = irElement?.startOffset ?: SYNTHETIC_OFFSET,
-    endOffset = irElement?.endOffset ?: SYNTHETIC_OFFSET
+    endOffset = irElement?.endOffset ?: SYNTHETIC_OFFSET,
   )
   return CompilerMessageLocationWithRange.create(
     path = sourceRangeInfo.filePath,
@@ -121,7 +121,7 @@ fun IrFile.locationOf(irElement: IrElement?): CompilerMessageSourceLocation {
     columnStart = sourceRangeInfo.startColumnNumber + 1,
     lineEnd = sourceRangeInfo.endLineNumber + 1,
     columnEnd = sourceRangeInfo.endColumnNumber + 1,
-    lineContent = null
+    lineContent = null,
   )!!
 }
 
@@ -178,13 +178,13 @@ private fun Int.toSyntheticIfUnknown(): Int {
 
 fun IrConstructor.irConstructorBody(
   context: IrGeneratorContext,
-  blockBody: DeclarationIrBuilder.(MutableList<IrStatement>) -> Unit
+  blockBody: DeclarationIrBuilder.(MutableList<IrStatement>) -> Unit,
 ) {
   val constructorIrBuilder = DeclarationIrBuilder(
     generatorContext = context,
     symbol = IrSimpleFunctionSymbolImpl(),
     startOffset = startOffset,
-    endOffset = endOffset
+    endOffset = endOffset,
   )
   body = context.irFactory.createBlockBody(
     startOffset = constructorIrBuilder.startOffset,
@@ -207,7 +207,7 @@ fun DeclarationIrBuilder.irDelegatingConstructorCall(
     type = context.irBuiltIns.unitType,
     symbol = symbol,
     typeArgumentsCount = typeArgumentsCount,
-    valueArgumentsCount = valueArgumentsCount
+    valueArgumentsCount = valueArgumentsCount,
   )
   result.block()
   return result
@@ -228,7 +228,7 @@ fun DeclarationIrBuilder.irInstanceInitializerCall(
 fun IrSimpleFunction.irFunctionBody(
   context: IrGeneratorContext,
   scopeOwnerSymbol: IrSymbol,
-  blockBody: IrBlockBodyBuilder.() -> Unit
+  blockBody: IrBlockBodyBuilder.() -> Unit,
 ) {
   val bodyBuilder = IrBlockBodyBuilder(
     startOffset = startOffset,
@@ -282,7 +282,7 @@ fun irVal(
     visibility = DescriptorVisibilities.PRIVATE,
     isFinal = true,
     isExternal = false,
-    isStatic = false
+    isStatic = false,
   ).apply {
     parent = declaringClass
     correspondingPropertySymbol = result.symbol
@@ -312,7 +312,7 @@ fun irVal(
     isInfix = false,
     isExpect = false,
     isFakeOverride = false,
-    containerSource = null
+    containerSource = null,
   ).apply {
     parent = declaringClass
     correspondingPropertySymbol = result.symbol
@@ -320,13 +320,13 @@ fun irVal(
     createDispatchReceiverParameter()
     irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = symbol
+      scopeOwnerSymbol = symbol,
     ) {
       +irReturn(
         value = irGetField(
           irGet(dispatchReceiverParameter!!),
-          result.backingField!!
-        )
+          result.backingField!!,
+        ),
       )
     }
   }
@@ -342,14 +342,14 @@ internal fun IrBuilderWithScope.irKClass(
     endOffset = endOffset,
     type = context.irBuiltIns.kClassClass.typeWith(containerClass.defaultType),
     symbol = containerClass.symbol,
-    classType = containerClass.defaultType
+    classType = containerClass.defaultType,
   )
 }
 
 fun irBlockBodyBuilder(
   irPluginContext: IrGeneratorContext,
   scopeWithIr: ScopeWithIr,
-  original: IrElement
+  original: IrElement,
 ): IrBlockBodyBuilder {
   return IrBlockBodyBuilder(
     context = irPluginContext,
@@ -388,7 +388,7 @@ fun getOrCreateCompanion(
     irConstructorBody(irPluginContext) { statements ->
       statements += irDelegatingConstructorCall(
         context = irPluginContext,
-        symbol = anyType.constructors.single()
+        symbol = anyType.constructors.single(),
       )
       statements += irInstanceInitializerCall(
         context = irPluginContext,

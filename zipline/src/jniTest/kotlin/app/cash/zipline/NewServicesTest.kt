@@ -39,7 +39,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class NewSerializersTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher, kotlinBuiltInSerializersModule)
   private val json = zipline.json
@@ -187,7 +188,7 @@ class NewSerializersTest {
     assertSerializersEqual(
       ListSerializer(String.serializer()),
       function.argsListSerializer.serializers[0],
-      listOf("a", "b", "c")
+      listOf("a", "b", "c"),
     )
   }
 
@@ -370,7 +371,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction<*>
     assertEquals(
       RequiresContextualSerializer,
-      function.argsListSerializer.serializers.first()
+      function.argsListSerializer.serializers.first(),
     )
   }
 
@@ -386,7 +387,7 @@ class NewSerializersTest {
     ) as ReturningZiplineFunction<*>
     assertEquals(
       RequiresContextualSerializer,
-      function.resultSerializer.successSerializer
+      function.resultSerializer.successSerializer,
     )
   }
 
@@ -402,7 +403,7 @@ class NewSerializersTest {
     ) as SuspendingZiplineFunction<*>
     assertEquals(
       suspendCallbackSerializer(RequiresContextualSerializer),
-      function.suspendCallbackSerializer
+      function.suspendCallbackSerializer,
     )
   }
 
@@ -411,17 +412,17 @@ class NewSerializersTest {
   }
 
   private fun <T> suspendCallbackSerializer(
-    resultSerializer: KSerializer<T>
+    resultSerializer: KSerializer<T>,
   ): KSerializer<SuspendCallback<T>> {
     return ziplineServiceSerializer(
       SuspendCallback::class,
-      listOf(resultSerializer)
+      listOf(resultSerializer),
     )
   }
 
   private fun <T> flowSerializer(elementSerializer: KSerializer<T>): KSerializer<Flow<T>> {
     return FlowSerializer(
-      ziplineServiceSerializer(FlowZiplineService::class, listOf(elementSerializer))
+      ziplineServiceSerializer(FlowZiplineService::class, listOf(elementSerializer)),
     )
   }
 
@@ -440,7 +441,7 @@ class NewSerializersTest {
 
   // Note: no @Serializable.
   class RequiresContextual(
-    val string: String
+    val string: String,
   )
 
   object RequiresContextualSerializer : KSerializer<RequiresContextual> {

@@ -107,7 +107,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   }
 
   override fun applyToCompilation(
-    kotlinCompilation: KotlinCompilation<*>
+    kotlinCompilation: KotlinCompilation<*>,
   ): Provider<List<SubpluginOption>> {
     return kotlinCompilation.target.project.provider {
       listOf() // No options.

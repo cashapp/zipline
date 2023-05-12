@@ -27,7 +27,7 @@ internal val registry = run {
     new FinalizationRegistry(function(heldValue) {
       referenceQueue.push(heldValue);
     })
-    """
+    """,
   )
 }
 
@@ -35,7 +35,7 @@ internal actual fun trackLeaks(
   eventListener: EndpointEventListener,
   serviceName: String,
   callHandler: OutboundCallHandler,
-  service: ZiplineService
+  service: ZiplineService,
 ) {
   registry.register(service, ZiplineServiceReference(eventListener, serviceName, callHandler))
 }

@@ -26,7 +26,7 @@ import okio.Path
 internal class FsSaveReceiver(
   private val downloadFileSystem: FileSystem,
   private val downloadDir: Path,
-): Receiver {
+) : Receiver {
   override suspend fun receive(byteString: ByteString, id: String, sha256: ByteString) {
     downloadFileSystem.write(downloadDir / sha256.hex()) {
       write(byteString)

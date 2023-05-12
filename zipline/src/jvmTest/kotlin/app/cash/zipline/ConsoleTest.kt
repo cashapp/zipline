@@ -30,7 +30,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class ConsoleTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 
@@ -86,7 +87,7 @@ class ConsoleTest {
         """.*at goBoom2""" +
         """.*at goBoom3""" +
         """.*at consoleLogWithThrowable""" +
-        """.*"""
+        """.*""",
     )
 
     val record2 = logRecords.take()

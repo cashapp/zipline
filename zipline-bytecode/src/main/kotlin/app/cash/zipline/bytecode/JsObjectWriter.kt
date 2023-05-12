@@ -26,7 +26,7 @@ import okio.Closeable
  */
 class JsObjectWriter(
   private val atoms: AtomSet,
-  private val sink: BufferedSink
+  private val sink: BufferedSink,
 ) : Closeable by sink {
   private var used: Boolean = false
 
@@ -134,7 +134,7 @@ class JsObjectWriter(
       value.kind or
         value.isConst.toBit(4) or
         value.isLexical.toBit(5) or
-        value.isCaptured.toBit(6)
+        value.isCaptured.toBit(6),
     )
   }
 
@@ -146,7 +146,7 @@ class JsObjectWriter(
         value.isArg.toBit(1) or
         value.isConst.toBit(2) or
         value.isLexical.toBit(3) or
-        (value.kind shl 4)
+        (value.kind shl 4),
     )
   }
 

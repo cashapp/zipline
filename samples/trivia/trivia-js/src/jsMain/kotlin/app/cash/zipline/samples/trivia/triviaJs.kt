@@ -26,11 +26,11 @@ class RealTriviaService : TriviaService {
           override fun result(answer: String) = when {
             answer.trim().equals("Eclipse", ignoreCase = true) -> AnswerResult(
               correct = true,
-              message = "Yep! Next they'll need to block out an Oracle."
+              message = "Yep! Next they'll need to block out an Oracle.",
             )
             else -> AnswerResult(
               correct = false,
-              message = "Nope! The stars aren't in alignment for you."
+              message = "Nope! The stars aren't in alignment for you.",
             )
           }
         },
@@ -41,18 +41,17 @@ class RealTriviaService : TriviaService {
           override fun result(answer: String) = when {
             answer.matches(Regex("vim?", option = RegexOption.IGNORE_CASE)) -> AnswerResult(
               correct = true,
-              message = "You got it! :wq while you're ahead!"
+              message = "You got it! :wq while you're ahead!",
             )
             else -> AnswerResult(
               correct = false,
-              message = "Not that! Are you taking your VItamins?"
+              message = "Not that! Are you taking your VItamins?",
             )
           }
         },
       ),
-    )
+    ),
   )
-
 
   override fun games() = gameWithAnswersList.map { it.game }
 
@@ -68,7 +67,7 @@ interface QuestionAndAnswer {
 class GameWithAnswers(
   private val id: Int,
   private val name: String,
-  val questionList: List<QuestionAndAnswer>
+  val questionList: List<QuestionAndAnswer>,
 ) {
   val game: TriviaGame
     get() = TriviaGame(

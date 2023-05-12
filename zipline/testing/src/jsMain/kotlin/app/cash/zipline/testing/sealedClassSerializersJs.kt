@@ -38,6 +38,6 @@ private val zipline by lazy { Zipline.get() }
 fun prepareSealedClassMessageService() {
   zipline.bind<SealedClassMessageService>(
     "sealedClassMessageService",
-    JsSealedClassMessageService()
+    JsSealedClassMessageService(),
   )
 }

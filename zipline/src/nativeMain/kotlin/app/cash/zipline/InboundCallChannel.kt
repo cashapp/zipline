@@ -39,6 +39,7 @@ internal class InboundCallChannel(
     val property = JS_NewAtom(context, "serviceNamesArray")
 
     val jsResult = JS_Invoke(context, inboundChannel, property, 0, null)
+
     @Suppress("UNCHECKED_CAST") // Our JS implementation returns an Array<String>.
     val kotlinResult = with(quickJs) { jsResult.toKotlinInstanceOrNull() } as Array<String>
 
