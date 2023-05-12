@@ -30,22 +30,22 @@ fun main() {
   val worldClockHost = zipline.take<WorldClockHost>("WorldClockHost")
   zipline.bind<WorldClockPresenter>(
     name = "WorldClockPresenter",
-    instance = RealWorldClockPresenter(worldClockHost)
+    instance = RealWorldClockPresenter(worldClockHost),
   )
 }
 
 class RealWorldClockPresenter(
-  private val host: WorldClockHost
+  private val host: WorldClockHost,
 ) : WorldClockPresenter {
   override fun models(
-    events: Flow<WorldClockEvent>
+    events: Flow<WorldClockEvent>,
   ): Flow<WorldClockModel> {
     return flow {
       while (true) {
         emit(
           WorldClockModel(
-            label = TimeFormatter().formatLocalTime()
-          )
+            label = TimeFormatter().formatLocalTime(),
+          ),
         )
         delay(16)
       }

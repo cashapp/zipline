@@ -19,13 +19,13 @@ import app.cash.zipline.internal.bridge.CallChannel
 
 internal class JniCallChannel(
   private val quickJs: QuickJs,
-  private val instance: Long
+  private val instance: Long,
 ) : CallChannel {
   override fun serviceNamesArray() = serviceNamesArray(quickJs.context, instance)
 
   private external fun serviceNamesArray(
     context: Long,
-    instance: Long
+    instance: Long,
   ): Array<String>
 
   override fun call(callJson: String) =
@@ -43,6 +43,6 @@ internal class JniCallChannel(
   private external fun disconnect(
     context: Long,
     instance: Long,
-    instanceName: String
+    instanceName: String,
   ): Boolean
 }

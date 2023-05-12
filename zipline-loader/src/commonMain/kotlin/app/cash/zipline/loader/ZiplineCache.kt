@@ -215,7 +215,7 @@ class ZiplineCache internal constructor(
       .executeAsOneOrNull() ?: return null
     val manifestBytes = read(manifestFile, nowEpochMs)
       ?: throw FileNotFoundException(
-        "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]"
+        "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]",
       )
     return LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms!!)
   }
@@ -281,11 +281,11 @@ class ZiplineCache internal constructor(
     // Pin the fallback manifest, which removes all pins prior to pinning.
     val fallbackManifestBytes = read(fallbackManifestFile, nowEpochMs)
       ?: throw FileNotFoundException(
-        "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]"
+        "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]",
       )
     val fallbackManifest = LoadedManifest(
       fallbackManifestBytes,
-      fallbackManifestFile.fresh_at_epoch_ms!!
+      fallbackManifestFile.fresh_at_epoch_ms!!,
     )
     pinManifest(applicationName, fallbackManifest, nowEpochMs)
   }
@@ -372,11 +372,11 @@ class ZiplineCache internal constructor(
   }
 
   private fun getOrNull(
-    sha256: ByteString
+    sha256: ByteString,
   ): Files? = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()
 
   private fun getOrNull(
-    id: Long
+    id: Long,
   ): Files? = database.filesQueries.getById(id).executeAsOneOrNull()
 
   /**
@@ -452,7 +452,7 @@ class ZiplineCache internal constructor(
     ) ?: return // Pruned.
     database.filesQueries.updateFresh(
       id = manifestMetadata.id,
-      fresh_at_epoch_ms = freshAtMs
+      fresh_at_epoch_ms = freshAtMs,
     )
   }
 }

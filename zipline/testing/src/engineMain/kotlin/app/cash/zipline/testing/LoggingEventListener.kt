@@ -32,7 +32,7 @@ class LoggingEventListener : EventListener() {
     log(
       service = service,
       serviceName = name,
-      log = "bindService $name"
+      log = "bindService $name",
     )
   }
 
@@ -40,7 +40,7 @@ class LoggingEventListener : EventListener() {
     log(
       service = service,
       serviceName = name,
-      log = "takeService $name"
+      log = "takeService $name",
     )
   }
 
@@ -49,7 +49,7 @@ class LoggingEventListener : EventListener() {
     log(
       service = call.service,
       serviceName = call.serviceName,
-      log = "callStart $callId ${call.serviceName} ${call.function.name} ${call.args}"
+      log = "callStart $callId ${call.serviceName} ${call.function.name} ${call.args}",
     )
     return callId
   }
@@ -59,21 +59,21 @@ class LoggingEventListener : EventListener() {
       service = call.service,
       serviceName = call.serviceName,
       log = "callEnd $startValue " +
-        "${call.serviceName} ${call.function.name} ${call.args} ${result.result}"
+        "${call.serviceName} ${call.function.name} ${call.args} ${result.result}",
     )
   }
 
   override fun serviceLeaked(zipline: Zipline, name: String) {
     log(
       serviceName = name,
-      log = "serviceLeaked $name"
+      log = "serviceLeaked $name",
     )
   }
 
   override fun applicationLoadStart(applicationName: String, manifestUrl: String?) {
     log(
       applicationName = applicationName,
-      log = "applicationLoadStart $applicationName $manifestUrl"
+      log = "applicationLoadStart $applicationName $manifestUrl",
     )
   }
 
@@ -81,22 +81,22 @@ class LoggingEventListener : EventListener() {
     applicationName: String,
     manifestUrl: String?,
     zipline: Zipline,
-    startValue: Any?
+    startValue: Any?,
   ) {
     log(
       applicationName = applicationName,
-      log = "applicationLoadSuccess $applicationName $manifestUrl"
+      log = "applicationLoadSuccess $applicationName $manifestUrl",
     )
   }
 
   override fun applicationLoadSkipped(
     applicationName: String,
     manifestUrl: String,
-    startValue: Any?
+    startValue: Any?,
   ) {
     log(
       applicationName = applicationName,
-      log = "applicationLoadSkipped $applicationName $manifestUrl"
+      log = "applicationLoadSkipped $applicationName $manifestUrl",
     )
   }
 
@@ -104,26 +104,26 @@ class LoggingEventListener : EventListener() {
     applicationName: String,
     manifestUrl: String?,
     exception: Exception,
-    startValue: Any?
+    startValue: Any?,
   ) {
     log(
       applicationName = applicationName,
       exception = exception,
-      log = "applicationLoadFailed $applicationName $exception"
+      log = "applicationLoadFailed $applicationName $exception",
     )
   }
 
   override fun downloadStart(applicationName: String, url: String) {
     log(
       applicationName = applicationName,
-      log = "downloadStart $applicationName $url"
+      log = "downloadStart $applicationName $url",
     )
   }
 
   override fun downloadEnd(applicationName: String, url: String, startValue: Any?) {
     log(
       applicationName = applicationName,
-      log = "downloadEnd $applicationName $url"
+      log = "downloadEnd $applicationName $url",
     )
   }
 
@@ -131,12 +131,12 @@ class LoggingEventListener : EventListener() {
     applicationName: String,
     url: String,
     exception: Exception,
-    startValue: Any?
+    startValue: Any?,
   ) {
     log(
       applicationName = applicationName,
       exception = exception,
-      log = "downloadFailed $applicationName $url $exception"
+      log = "downloadFailed $applicationName $url $exception",
     )
   }
 
@@ -144,14 +144,14 @@ class LoggingEventListener : EventListener() {
     log(
       applicationName = applicationName,
       exception = exception,
-      log = "manifestParseFailed $applicationName $url"
+      log = "manifestParseFailed $applicationName $url",
     )
   }
 
   override fun moduleLoadStart(zipline: Zipline, moduleId: String): Any? {
     log(
       moduleId = moduleId,
-      log = "moduleLoadStart $moduleId"
+      log = "moduleLoadStart $moduleId",
     )
     return null
   }
@@ -159,7 +159,7 @@ class LoggingEventListener : EventListener() {
   override fun moduleLoadEnd(zipline: Zipline, moduleId: String, startValue: Any?) {
     log(
       moduleId = moduleId,
-      log = "moduleLoadEnd $moduleId"
+      log = "moduleLoadEnd $moduleId",
     )
   }
 
@@ -291,11 +291,11 @@ class LoggingEventListener : EventListener() {
       skipServiceEvents: Boolean,
       skipApplicationEvents: Boolean,
       skipInternalServices: Boolean,
-    ) : Boolean {
-      val skip = (skipModuleEvents && moduleId != null)
-        || (skipServiceEvents && serviceName != null)
-        || (skipApplicationEvents && applicationName != null)
-        || (skipInternalServices && isInternalService)
+    ): Boolean {
+      val skip = (skipModuleEvents && moduleId != null) ||
+        (skipServiceEvents && serviceName != null) ||
+        (skipApplicationEvents && applicationName != null) ||
+        (skipInternalServices && isInternalService)
       return !skip
     }
   }

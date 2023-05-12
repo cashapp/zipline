@@ -74,7 +74,7 @@ internal class AdapterGenerator(
   private val pluginContext: IrPluginContext,
   private val ziplineApis: ZiplineApis,
   private val scope: ScopeWithIr,
-  private val original: IrClass
+  private val original: IrClass,
 ) {
   private val irFactory = pluginContext.irFactory
   private val irTypeSystemContext = IrTypeSystemContextImpl(pluginContext.irBuiltIns)
@@ -85,7 +85,7 @@ internal class AdapterGenerator(
     scope,
     original,
     "Zipline.take()",
-    original.defaultType
+    original.defaultType,
   )
 
   /** Returns an expression that references the adapter, generating it if necessary. */
@@ -123,7 +123,7 @@ internal class AdapterGenerator(
         irVararg(
           ziplineApis.kSerializer.starProjectedType,
           serializersExpressions,
-        )
+        ),
       )
     }
 
@@ -155,11 +155,11 @@ internal class AdapterGenerator(
       ).apply {
         putValueArgument(
           0,
-          serializersListExpression
+          serializersListExpression,
         )
         putValueArgument(
           1,
-          irString(serialName)
+          irString(serialName),
         )
       }
     }
@@ -190,7 +190,7 @@ internal class AdapterGenerator(
   }
 
   private fun getOrCreateAdapterClass(
-    companion: IrClass
+    companion: IrClass,
   ): IrClass {
     // class Adapter : ZiplineServiceAdapter<SampleService>(
     //   val serializers: List<KSerializer<*>>,
@@ -235,7 +235,7 @@ internal class AdapterGenerator(
         statements += irDelegatingConstructorCall(
           context = pluginContext,
           symbol = ziplineApis.ziplineServiceAdapter.constructors.single(),
-          typeArgumentsCount = 1
+          typeArgumentsCount = 1,
         ) {
           putTypeArgument(0, original.defaultType.remapTypeParameters(original, adapterClass))
         }
@@ -288,8 +288,8 @@ internal class AdapterGenerator(
       listOf(
         serialNameProperty,
         ziplineFunctionsFunction,
-        outboundServiceFunction
-      )
+        outboundServiceFunction,
+      ),
     )
 
     companion.declarations += adapterClass
@@ -382,12 +382,12 @@ internal class AdapterGenerator(
     ) {
       val serializersLocal = irTemporary(
         value = irCall(
-          callee = serializersProperty.getter!!
+          callee = serializersProperty.getter!!,
         ).apply {
           dispatchReceiver = irGet(ziplineFunctionsFunction.dispatchReceiverParameter!!)
         },
         nameHint = "serializers",
-        isMutable = false
+        isMutable = false,
       ).apply {
         origin = IrDeclarationOrigin.DEFINED
       }
@@ -413,15 +413,19 @@ internal class AdapterGenerator(
           typeArguments = adapterClass.typeParameters.map { it.defaultType },
         ).apply {
           type = ziplineFunctionT
-          putValueArgument(0, irCall(ziplineApis.listOfFunction).apply {
+          putValueArgument(
+            0,
+            irCall(ziplineApis.listOfFunction).apply {
             putTypeArgument(0, ziplineApis.kSerializer.starProjectedType)
-            putValueArgument(0,
+            putValueArgument(
+              0,
               irVararg(
                 ziplineApis.kSerializer.starProjectedType,
-                bridgedFunction.owner.valueParameters.map { irGet(serializers[it.type]!!) }
-              )
+                bridgedFunction.owner.valueParameters.map { irGet(serializers[it.type]!!) },
+              ),
             )
-          })
+          },
+          )
           val returnType = bridgedFunction.owner.returnType
           putValueArgument(1, irGet(serializers[returnType]!!))
           if (bridgedFunction.isSuspend) {
@@ -435,16 +439,18 @@ internal class AdapterGenerator(
       //   ZiplineFunction0(...),
       //   ZiplineFunction1(...),
       // )
-      +irReturn(irCall(ziplineApis.listOfFunction).apply {
+      +irReturn(
+        irCall(ziplineApis.listOfFunction).apply {
         putTypeArgument(0, ziplineFunctionT)
         putValueArgument(
           0,
           irVararg(
             ziplineFunctionT,
             expressions,
-          )
+          ),
         )
-      })
+      },
+      )
     }
 
     return ziplineFunctionsFunction
@@ -541,7 +547,7 @@ internal class AdapterGenerator(
     // We add overrides here, so we can call them below.
     functionClass.addFakeOverrides(
       irTypeSystemContext,
-      listOf(callFunction)
+      listOf(callFunction),
     )
 
     callFunction.irFunctionBody(
@@ -554,7 +560,7 @@ internal class AdapterGenerator(
           ziplineFunctionClass = functionClass,
           callFunction = callFunction,
           bridgedFunction = bridgedFunction,
-        )
+        ),
       )
     }
 
@@ -625,7 +631,7 @@ internal class AdapterGenerator(
             },
             bridgedInterface.resolveTypeParameters(bridgedFunction.owner.valueParameters[p].type)
               .remapTypeParameters(original, ziplineFunctionClass),
-          )
+          ),
         )
       }
     }
@@ -669,7 +675,7 @@ internal class AdapterGenerator(
         ).apply {
           putValueArgument(0, irGet(outboundServiceFunction.valueParameters[0]))
           type = bridgedInterfaceT
-        }
+        },
       )
     }
     return outboundServiceFunction
@@ -822,16 +828,16 @@ internal class AdapterGenerator(
     // return callHandler.call(this, scope, 0, request) as SampleResponse
     result.irFunctionBody(
       context = pluginContext,
-      scopeOwnerSymbol = result.symbol
+      scopeOwnerSymbol = result.symbol,
     ) {
       val callHandlerLocal = irTemporary(
         value = irCall(
-          callee = callHandlerProperty.getter!!
+          callee = callHandlerProperty.getter!!,
         ).apply {
           dispatchReceiver = irGet(result.dispatchReceiverParameter!!)
         },
         nameHint = "callHandler",
-        isMutable = false
+        isMutable = false,
       ).apply {
         origin = IrDeclarationOrigin.DEFINED
       }
@@ -862,15 +868,15 @@ internal class AdapterGenerator(
                 type = it.type,
                 variable = it.symbol,
               )
-            }
-          )
+            },
+          ),
         )
       }
 
       +irReturn(
         value = irAs(
           argument = call,
-          type = functionReturnType
+          type = functionReturnType,
         ),
         returnTargetSymbol = result.symbol,
         type = pluginContext.irBuiltIns.nothingType,

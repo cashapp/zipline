@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.consumeAsFlow
 import okio.ByteString
 import okio.IOException
 
-class FakeZiplineHttpClient: ZiplineHttpClient() {
+class FakeZiplineHttpClient : ZiplineHttpClient() {
   var filePathToByteString: Map<String, ByteString> = mapOf()
   val webSockets = mutableMapOf<String, Channel<String>>()
   val log = Channel<String>(capacity = Int.MAX_VALUE)

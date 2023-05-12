@@ -13,7 +13,7 @@ fun QuickJs.getModuleDependencies(): List<String> {
   val dependencies = Json.decodeFromString<List<String>>(
     dependenciesString
     // If define is never called, dependencies is returned as null
-      ?: "[]"
+      ?: "[]",
   )
   return dependencies
 }
@@ -42,7 +42,7 @@ fun QuickJs.loadJsModule(id: String, bytecode: ByteArray) {
 
 fun QuickJs.runApplication(mainModuleId: String, mainFunction: String) {
   evaluate(
-    script = "require('${mainModuleId}').$mainFunction()",
+    script = "require('$mainModuleId').$mainFunction()",
     fileName = "RunApplication.kt",
   )
 }

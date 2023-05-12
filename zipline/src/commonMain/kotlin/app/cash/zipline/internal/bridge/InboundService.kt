@@ -124,7 +124,7 @@ internal class InboundService<T : ZiplineService>(
 
       val encodedResultOrCallback = endpoint.callCodec.encodeResultOrCallback(
         function,
-        ResultOrCallback<Unit>(callback = cancelCallback)
+        ResultOrCallback<Unit>(callback = cancelCallback),
       )
       return encodedResultOrCallback.json
     }

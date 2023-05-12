@@ -183,7 +183,7 @@ internal class BridgedInterface(
         irVararg(
           ziplineApis.kSerializer.starProjectedType,
           parameterExpressions.map { it.expression },
-        )
+        ),
       )
     }
 
@@ -212,7 +212,7 @@ internal class BridgedInterface(
           pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner,
         ).adapterExpression(
           serializersListExpression = parameterList,
-          serialName = type.asString()
+          serialName = type.asString(),
         )
       }
 
@@ -227,7 +227,7 @@ internal class BridgedInterface(
           putTypeArgument(0, type)
           putValueArgument(
             0,
-            irKClass(pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner)
+            irKClass(pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner),
           )
           putValueArgument(1, parameterList)
         }
@@ -296,7 +296,7 @@ internal class BridgedInterface(
         ziplineApis,
         scope,
         type,
-        classSymbol
+        classSymbol,
       )
     }
   }

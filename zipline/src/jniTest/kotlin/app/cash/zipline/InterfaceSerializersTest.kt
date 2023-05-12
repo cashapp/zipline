@@ -34,7 +34,8 @@ import org.junit.Test
  * a weakness in kotlinx.serialization, which is lazy when resolving serializers for interfaces.
  */
 class InterfaceSerializersTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher, MessageInterfaceSerializersModule)
   private val ziplineNoSerializer = Zipline.create(dispatcher)
@@ -51,7 +52,7 @@ class InterfaceSerializersTest {
 
   @Test fun jvmToJsRequestInterfaceSucceeds() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate(
-      "testing.app.cash.zipline.testing.prepareInterfaceSerializersJsBridges()"
+      "testing.app.cash.zipline.testing.prepareInterfaceSerializersJsBridges()",
     )
     val service = zipline.take<RequestInterfaceService>("requestInterfaceService")
     assertThat(service.echo(RealMessageInterface("Andrew")))
@@ -60,7 +61,7 @@ class InterfaceSerializersTest {
 
   @Test fun jvmToJsResponseInterfaceSucceeds() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate(
-      "testing.app.cash.zipline.testing.prepareInterfaceSerializersJsBridges()"
+      "testing.app.cash.zipline.testing.prepareInterfaceSerializersJsBridges()",
     )
     val service = zipline.take<ResponseInterfaceService>("responseInterfaceService")
     assertThat(service.echo("Andrew"))
@@ -70,11 +71,11 @@ class InterfaceSerializersTest {
   @Test fun jsToJvmRequestInterfaceSucceeds() = runBlocking(dispatcher) {
     zipline.bind<RequestInterfaceService>(
       "requestInterfaceService",
-      JvmMessageInterfaceService()
+      JvmMessageInterfaceService(),
     )
 
     val result = zipline.quickJs.evaluate(
-      "testing.app.cash.zipline.testing.callInterfaceRequest()"
+      "testing.app.cash.zipline.testing.callInterfaceRequest()",
     )
     assertThat(result).isEqualTo("JVM received an interface, Jesse")
   }
@@ -82,11 +83,11 @@ class InterfaceSerializersTest {
   @Test fun jsToJvmResponseInterfaceSucceeds() = runBlocking(dispatcher) {
     zipline.bind<ResponseInterfaceService>(
       "responseInterfaceService",
-      JvmMessageInterfaceService()
+      JvmMessageInterfaceService(),
     )
 
     val result = zipline.quickJs.evaluate(
-      "testing.app.cash.zipline.testing.callInterfaceResponse()"
+      "testing.app.cash.zipline.testing.callInterfaceResponse()",
     )
     assertThat(result).isEqualTo("JVM returned an interface, Jesse")
   }
@@ -94,12 +95,12 @@ class InterfaceSerializersTest {
   @Test fun jsToJvmInterfaceRequestFailsLate() = runBlocking(dispatcher) {
     ziplineNoSerializer.bind<RequestInterfaceService>(
       "requestInterfaceService",
-      JvmMessageInterfaceService()
+      JvmMessageInterfaceService(),
     )
 
     val exception = assertFailsWith<SerializationException> {
       ziplineNoSerializer.quickJs.evaluate(
-        "testing.app.cash.zipline.testing.callInterfaceRequest()"
+        "testing.app.cash.zipline.testing.callInterfaceRequest()",
       )
     }
     assertThat(exception).hasMessageThat()
@@ -109,12 +110,12 @@ class InterfaceSerializersTest {
   @Test fun jsToJvmInterfaceResponseFailsLate() = runBlocking(dispatcher) {
     ziplineNoSerializer.bind<ResponseInterfaceService>(
       "responseInterfaceService",
-      JvmMessageInterfaceService()
+      JvmMessageInterfaceService(),
     )
 
     val exception = assertFailsWith<SerializationException> {
       ziplineNoSerializer.quickJs.evaluate(
-        "testing.app.cash.zipline.testing.callInterfaceResponse()"
+        "testing.app.cash.zipline.testing.callInterfaceResponse()",
       )
     }
     assertThat(exception).hasMessageThat()

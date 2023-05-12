@@ -22,7 +22,6 @@ import app.cash.zipline.testing.GenericEchoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.kotlinBuiltInSerializersModule
 import app.cash.zipline.testing.newEndpointPair
-import kotlin.coroutines.suspendCoroutine
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -32,11 +31,9 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.suspendCancellableCoroutine
@@ -316,12 +313,12 @@ internal class EndpointTest {
 
     assertEquals(
       listOf(mapOf(), mapOf("one" to 1, "two" to 2)),
-      mapsClient.genericEcho(mapOf("one" to 1, "two" to 2))
+      mapsClient.genericEcho(mapOf("one" to 1, "two" to 2)),
     )
 
     assertEquals(
       listOf("x", "hello"),
-      stringClient.genericEcho("hello")
+      stringClient.genericEcho("hello"),
     )
   }
 
@@ -388,10 +385,11 @@ internal class EndpointTest {
 
     val (endpointA, endpointB) = newEndpointPair(this)
 
-    endpointA.bind<EchoService>("serviceA",
+    endpointA.bind<EchoService>(
+      "serviceA",
       object : EchoService {
         override fun echo(request: EchoRequest) = error("unexpected call")
-      }
+      },
     )
 
     val client = endpointB.take<EchoService>("serviceA", scope)
@@ -404,7 +402,7 @@ internal class EndpointTest {
       |EchoService serviceA is closed, failed to call:
       |  fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
       """.trimMargin(),
-      exception.message
+      exception.message,
     )
   }
 
@@ -414,10 +412,11 @@ internal class EndpointTest {
 
     val (endpointA, endpointB) = newEndpointPair(this)
 
-    endpointA.bind<SuspendingEchoService>("serviceA",
+    endpointA.bind<SuspendingEchoService>(
+      "serviceA",
       object : SuspendingEchoService {
         override suspend fun suspendingEcho(request: EchoRequest) = error("unexpected call")
-      }
+      },
     )
 
     val client = endpointB.take<SuspendingEchoService>("serviceA", scope)
@@ -430,7 +429,7 @@ internal class EndpointTest {
       |SuspendingEchoService serviceA is closed, failed to call:
       |  suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
       """.trimMargin(),
-      exception.message
+      exception.message,
     )
   }
 
@@ -442,14 +441,15 @@ internal class EndpointTest {
 
     val log = ArrayDeque<String>()
 
-    endpointA.bind<EchoService>("service",
+    endpointA.bind<EchoService>(
+      "service",
       object : EchoService {
         override fun echo(request: EchoRequest) = error("unexpected call")
 
         override fun close() {
           log += "service closed"
         }
-      }
+      },
     )
 
     val client = endpointB.take<EchoService>("service", scope)

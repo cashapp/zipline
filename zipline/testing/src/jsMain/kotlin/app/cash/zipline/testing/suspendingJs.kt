@@ -23,7 +23,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 class JsSuspendingEchoService(
-  private val greeting: String
+  private val greeting: String,
 ) : SuspendingEchoService {
   override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
     mutex.withLock {
@@ -40,7 +40,7 @@ private val mutex = Mutex(locked = true)
 fun prepareSuspendingJsBridges() {
   zipline.bind<SuspendingEchoService>(
     "jsSuspendingEchoService",
-    JsSuspendingEchoService("hello")
+    JsSuspendingEchoService("hello"),
   )
 }
 

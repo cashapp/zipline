@@ -63,7 +63,7 @@ class DatabaseCommonTest {
       file_state = FileState.DIRTY,
       size_bytes = 0L,
       last_used_at_epoch_ms = 1,
-      fresh_at_epoch_ms = 1
+      fresh_at_epoch_ms = 1,
     )
 
     // Inserting another row with the same sha256_hex should fail!
@@ -74,7 +74,7 @@ class DatabaseCommonTest {
         file_state = FileState.DIRTY,
         size_bytes = 0L,
         last_used_at_epoch_ms = 1,
-        fresh_at_epoch_ms = 1
+        fresh_at_epoch_ms = 1,
       )
     }
 

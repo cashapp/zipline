@@ -53,25 +53,25 @@ class EcdsaP256JniTest {
     // Pads out to the full width.
     assertEquals(
       "00000000".decodeHex(),
-      BigInteger("0").toUnsignedFixedWidth(4).toByteString()
+      BigInteger("0").toUnsignedFixedWidth(4).toByteString(),
     )
     assertEquals(
       "00000001".decodeHex(),
-      BigInteger("1").toUnsignedFixedWidth(4).toByteString()
+      BigInteger("1").toUnsignedFixedWidth(4).toByteString(),
     )
     assertEquals(
       "000000ff".decodeHex(),
-      BigInteger("255").toUnsignedFixedWidth(4).toByteString()
+      BigInteger("255").toUnsignedFixedWidth(4).toByteString(),
     )
 
     // Leading sign '0' bit is dropped.
     assertEquals(
       "7fffffff".decodeHex(),
-      BigInteger("2147483647").toUnsignedFixedWidth(4).toByteString()
+      BigInteger("2147483647").toUnsignedFixedWidth(4).toByteString(),
     )
     assertEquals(
       "ffffffff".decodeHex(),
-      BigInteger("4294967295").toUnsignedFixedWidth(4).toByteString()
+      BigInteger("4294967295").toUnsignedFixedWidth(4).toByteString(),
     )
   }
 
@@ -97,4 +97,3 @@ class EcdsaP256JniTest {
     return keyFactory.generatePublic(keySpec) as ECPublicKey
   }
 }
-

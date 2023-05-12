@@ -68,7 +68,7 @@ class Field25519Test {
       assertEquals(
         "Subtraction x[i] - y[i]: " + x[i] + "-" + y[i],
         expectedResult,
-        result
+        result,
       )
     }
   }
@@ -100,7 +100,7 @@ class Field25519Test {
       assertEquals(
         "Multiplication x[i] * y[i]: " + x[i] + "*" + y[i],
         expectedResult,
-        result
+        result,
       )
     }
   }
@@ -119,7 +119,7 @@ class Field25519Test {
       assertEquals(
         "Scalar product x[i] * 10 " + x[i] + "*" + 10,
         expectedResult,
-        result
+        result,
       )
     }
   }

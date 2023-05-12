@@ -54,7 +54,7 @@ import kotlinx.serialization.KSerializer
  * The caller must call [ZiplineService.close] when they are done with the returned service to
  * release the held reference.
  */
-fun <T : ZiplineService> ziplineServiceSerializer() : KSerializer<T> {
+fun <T : ZiplineService> ziplineServiceSerializer(): KSerializer<T> {
   error("unexpected call to ziplineServiceSerializer(): is the Zipline plugin configured?")
 }
 
@@ -64,14 +64,14 @@ fun <T : ZiplineService> ziplineServiceSerializer() : KSerializer<T> {
  */
 fun <T : ZiplineService> ziplineServiceSerializer(
   kClass: KClass<*>,
-  typeArgumentsSerializers: List<KSerializer<*>> = emptyList()
-) : KSerializer<T> {
+  typeArgumentsSerializers: List<KSerializer<*>> = emptyList(),
+): KSerializer<T> {
   error("unexpected call to ziplineServiceSerializer(): is the Zipline plugin configured?")
 }
 
 @PublishedApi
 internal fun <T : ZiplineService> ziplineServiceSerializer(
-  ziplineServiceAdapter: ZiplineServiceAdapter<T>
-) : KSerializer<T> {
+  ziplineServiceAdapter: ZiplineServiceAdapter<T>,
+): KSerializer<T> {
   return ziplineServiceAdapter
 }

@@ -83,7 +83,7 @@ class ZiplineLoader internal constructor(
 
   fun withEmbedded(
     embeddedDir: Path,
-    embeddedFileSystem: FileSystem
+    embeddedFileSystem: FileSystem,
   ): ZiplineLoader = copy(
     embeddedDir = embeddedDir,
     embeddedFileSystem = embeddedFileSystem,
@@ -92,7 +92,7 @@ class ZiplineLoader internal constructor(
   fun withCache(
     cache: ZiplineCache,
   ): ZiplineLoader = copy(
-    cache = cache
+    cache = cache,
   )
 
   private fun copy(
@@ -227,12 +227,10 @@ class ZiplineLoader internal constructor(
       eventListener.applicationLoadSuccess(applicationName, manifestUrl, zipline, startValue)
       send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
       return loadedManifest.manifest
-
     } catch (e: CancellationException) {
       // If emit() threw a CancellationException, consider that emit to be successful.
       // That's 'cause loadOnce() accepts an element and then immediately cancels the flow.
       throw e
-
     } catch (e: Exception) {
       eventListener.applicationLoadFailed(applicationName, manifestUrl, e, startValue)
       if (loadedManifest != null) {
@@ -264,12 +262,10 @@ class ZiplineLoader internal constructor(
       eventListener.applicationLoadSuccess(applicationName, null, zipline, startValue)
       send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
       return loadedManifest.manifest
-
     } catch (e: CancellationException) {
       // If emit() threw a CancellationException, consider that emit to be successful.
       // That's 'cause loadOnce() accepts an element and then immediately cancels the flow.
       throw e
-
     } catch (e: Exception) {
       send(LoadResult.Failure(e))
       eventListener.applicationLoadFailed(applicationName, null, e, startValue)
@@ -286,7 +282,7 @@ class ZiplineLoader internal constructor(
     applicationName,
     flowOf(manifestUrl),
     serializersModule,
-    initializer
+    initializer,
   ).first()
 
   /**
@@ -378,7 +374,7 @@ class ZiplineLoader internal constructor(
           baseUrl = loadedManifest.manifest.baseUrl,
           nowEpochMs = nowEpochMs,
           module = it.value,
-          receiver = receiver
+          receiver = receiver,
         )
       }
       for (load in loads) {

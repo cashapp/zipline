@@ -54,12 +54,12 @@ class Ed25519VerifyTest {
         val verifier = Ed25519Verify(publicKey)
         if (verifier.verify(sig, msg)) {
           if (result == "invalid") {
-            println("FAIL ${tcId}: accepting invalid signature")
+            println("FAIL $tcId: accepting invalid signature")
             errors++
           }
         } else {
           if (result == "valid") {
-            println("FAIL ${tcId}: rejecting valid signature")
+            println("FAIL $tcId: rejecting valid signature")
             errors++
           }
         }

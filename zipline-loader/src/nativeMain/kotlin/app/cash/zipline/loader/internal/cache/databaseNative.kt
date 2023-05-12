@@ -38,7 +38,7 @@ internal actual class SqlDriverFactory {
         extendedConfig = DatabaseConfiguration.Extended(
           basePath = path.parent!!.toString(),
         ),
-      )
+      ),
     )
   }
 }

@@ -33,13 +33,13 @@ interface MessageInterface {
 
 @Serializable
 data class RealMessageInterface(
-  override val message: String
-): MessageInterface
+  override val message: String,
+) : MessageInterface
 
 val MessageInterfaceSerializersModule: SerializersModule = SerializersModule {
   polymorphic(
     MessageInterface::class,
     RealMessageInterface::class,
-    RealMessageInterface.serializer()
+    RealMessageInterface.serializer(),
   )
 }

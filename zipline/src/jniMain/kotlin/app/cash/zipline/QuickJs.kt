@@ -29,7 +29,7 @@ import java.io.Closeable
  */
 @EngineApi
 actual class QuickJs private constructor(
-  internal var context: Long
+  internal var context: Long,
 ) : Closeable {
   actual companion object {
     init {

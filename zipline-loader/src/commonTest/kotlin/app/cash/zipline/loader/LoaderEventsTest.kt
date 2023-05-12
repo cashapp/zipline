@@ -61,7 +61,7 @@ class LoaderEventsTest {
         "mainFunctionEnd red",
         "applicationLoadSuccess red https://example.com/files/red/red.manifest.zipline.json",
       ),
-      eventListener.takeAll(skipServiceEvents = true)
+      eventListener.takeAll(skipServiceEvents = true),
     )
   }
 
@@ -89,7 +89,7 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
         "applicationLoadSkipped red https://example.com/files/red/red.manifest.zipline.json",
       ),
-      eventListener.takeAll(skipServiceEvents = true)
+      eventListener.takeAll(skipServiceEvents = true),
     )
   }
 
@@ -114,7 +114,7 @@ class LoaderEventsTest {
         "mainFunctionEnd red",
         "applicationLoadSuccess red https://example.com/files/red/red.manifest.zipline.json",
       ),
-      eventListener.takeAll(skipServiceEvents = true)
+      eventListener.takeAll(skipServiceEvents = true),
     )
   }
 
@@ -140,7 +140,7 @@ class LoaderEventsTest {
         "mainFunctionEnd red",
         "applicationLoadSuccess red null",
       ),
-      eventListener.takeAll(skipServiceEvents = true)
+      eventListener.takeAll(skipServiceEvents = true),
     )
   }
 
@@ -170,7 +170,7 @@ class LoaderEventsTest {
         "mainFunctionEnd red",
         "applicationLoadSuccess red null",
       ),
-      eventListener.takeAll(skipServiceEvents = true)
+      eventListener.takeAll(skipServiceEvents = true),
     )
   }
 
@@ -200,7 +200,7 @@ class LoaderEventsTest {
         "mainFunctionEnd red",
         "applicationLoadSuccess red null",
       ),
-      eventListener.takeAll(skipServiceEvents = true)
+      eventListener.takeAll(skipServiceEvents = true),
     )
   }
 
@@ -232,7 +232,7 @@ class LoaderEventsTest {
         "mainFunctionEnd red",
         "applicationLoadSuccess red null",
       ),
-      eventListener.takeAll(skipServiceEvents = true)
+      eventListener.takeAll(skipServiceEvents = true),
     )
   }
 }

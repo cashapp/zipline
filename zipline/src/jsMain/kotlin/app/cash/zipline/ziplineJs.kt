@@ -23,7 +23,6 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.EventListenerAdapter
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
-import app.cash.zipline.internal.bridge.outboundChannelName
 import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventListenerName
 import app.cash.zipline.internal.eventLoopName
@@ -85,7 +84,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
   internal fun <T : ZiplineService> bind(
     name: String,
     service: T,
-    adapter: ZiplineServiceAdapter<T>
+    adapter: ZiplineServiceAdapter<T>,
   ) {
     endpoint.bind(name, service, adapter)
   }

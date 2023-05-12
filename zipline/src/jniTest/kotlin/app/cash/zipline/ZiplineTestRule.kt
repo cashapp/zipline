@@ -30,7 +30,11 @@ class ZiplineTestRule : TestRule {
   private val exceptions = mutableListOf<Throwable>()
 
   private val executorService = ThreadPoolExecutor(
-    0, 1, 100, TimeUnit.MILLISECONDS, LinkedBlockingQueue()
+    0,
+    1,
+    100,
+    TimeUnit.MILLISECONDS,
+    LinkedBlockingQueue(),
   ) { runnable ->
     Thread(runnable, "ZiplineTestRule").also {
       it.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, exception ->

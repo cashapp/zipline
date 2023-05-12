@@ -39,7 +39,7 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
   override val descriptor = contextualSerializer.descriptor
 
   abstract fun ziplineFunctions(
-    serializersModule: SerializersModule
+    serializersModule: SerializersModule,
   ): List<ZiplineFunction<T>>
 
   abstract fun outboundService(
@@ -66,13 +66,13 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
 }
 
 @PublishedApi
-internal fun <T : ZiplineService> ziplineServiceAdapter() : ZiplineServiceAdapter<T> {
+internal fun <T : ZiplineService> ziplineServiceAdapter(): ZiplineServiceAdapter<T> {
   error("unexpected call to ziplineServiceAdapter(): is the Zipline plugin configured?")
 }
 
 @PublishedApi
 internal fun <T : ZiplineService> ziplineServiceAdapter(
-  ziplineServiceAdapter: ZiplineServiceAdapter<T>
-) : ZiplineServiceAdapter<T> {
+  ziplineServiceAdapter: ZiplineServiceAdapter<T>,
+): ZiplineServiceAdapter<T> {
   return ziplineServiceAdapter
 }

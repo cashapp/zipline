@@ -28,7 +28,6 @@ internal interface Receiver {
   suspend fun receive(
     byteString: ByteString,
     id: String,
-    sha256: ByteString
+    sha256: ByteString,
   )
 }
-

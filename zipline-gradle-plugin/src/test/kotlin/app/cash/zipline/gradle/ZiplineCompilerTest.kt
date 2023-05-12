@@ -68,7 +68,8 @@ class ZiplineCompilerTest {
       |	at JavaScript.goBoom3(throwException.kt:6)
       |	at JavaScript.sayHello(throwException.kt:3)
       |	at JavaScript.<eval>(test.js)
-      |""".trimMargin()
+      |
+""".trimMargin(),
     )
   }
 
@@ -102,10 +103,11 @@ class ZiplineCompilerTest {
     // Start with base compile to generate manifest and starting files
     compile("$rootProject/base", false)
 
-    val moduleNameToFile = assertZiplineIncrementalCompile("$rootProject/base",
+    val moduleNameToFile = assertZiplineIncrementalCompile(
+      "$rootProject/base",
       addedFiles = File("$rootProject/added").listFiles()!!.asList(),
       modifiedFiles = File("$rootProject/modified").listFiles()!!.asList(),
-      removedFiles = File("$rootProject/removed").listFiles()!!.asList()
+      removedFiles = File("$rootProject/removed").listFiles()!!.asList(),
     )
     for ((_, ziplineFile) in moduleNameToFile) {
       quickJs.execute(ziplineFile.quickjsBytecode.toByteArray())

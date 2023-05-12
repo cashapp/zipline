@@ -22,7 +22,7 @@ internal actual object HostConsole : Console {
     when (level) {
       "warn" -> Log.w("Zipline", message, throwable)
       "error" -> Log.e("Zipline", message, throwable)
-      else ->  Log.i("Zipline", message, throwable)
+      else -> Log.i("Zipline", message, throwable)
     }
   }
 }

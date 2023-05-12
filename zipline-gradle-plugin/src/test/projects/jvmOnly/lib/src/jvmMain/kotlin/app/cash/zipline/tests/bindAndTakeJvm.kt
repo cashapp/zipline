@@ -26,10 +26,13 @@ internal interface UnusedService : ZiplineService {
 fun main() {
   val zipline = Zipline.create(Dispatchers.Default)
   zipline.take<UnusedService>("takenService")
-  zipline.bind<UnusedService>("boundService", object : UnusedService {
+  zipline.bind<UnusedService>(
+    "boundService",
+    object : UnusedService {
     override fun unusedMethod() {
     }
-  })
+  },
+  )
 
   // If we reach this line without crashing, bind() and take() were rewritten. (If the Zipline
   // plugin is not installed we'll get an error like "is the Zipline plugin configured?")

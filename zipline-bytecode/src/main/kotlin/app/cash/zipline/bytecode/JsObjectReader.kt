@@ -123,7 +123,7 @@ class JsObjectReader(
       closureVars = closureVars,
       bytecode = bytecode,
       constantPool = constantPool,
-      debug = debug
+      debug = debug,
     )
   }
 
@@ -180,7 +180,7 @@ class JsObjectReader(
     return Debug(
       fileName = fileName.string,
       lineNumber = lineNumber,
-      pc2Line = pc2line
+      pc2Line = pc2line,
     )
   }
 }

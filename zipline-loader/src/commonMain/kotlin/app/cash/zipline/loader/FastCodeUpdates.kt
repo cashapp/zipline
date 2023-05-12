@@ -24,7 +24,6 @@ import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.flow.transformLatest
 
-
 /**
  * Returns a flow that emits every time this flow emits, and also emits whenever the websocket
  * for the most recent URL signals an update.
@@ -36,7 +35,7 @@ import kotlinx.coroutines.flow.transformLatest
 @OptIn(ExperimentalCoroutinesApi::class)
 fun Flow<String>.withDevelopmentServerPush(
   httpClient: ZiplineHttpClient,
-  pollingInterval: Duration = 500.milliseconds
+  pollingInterval: Duration = 500.milliseconds,
 ): Flow<String> {
   return transformLatest { manifestUrl ->
     // Attempt once before any websocket setup or polling.

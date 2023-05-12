@@ -24,7 +24,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class SetTimeoutTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 
@@ -47,7 +48,7 @@ class SetTimeoutTest {
       };
 
       setTimeout(sayGoodbye, 100);
-      """
+      """,
     )
 
     assertEquals("hello", zipline.quickJs.evaluate("greeting"))
@@ -62,7 +63,7 @@ class SetTimeoutTest {
       };
 
       setTimeout(doNothing, 100);
-      """
+      """,
     )
 
     zipline.close()

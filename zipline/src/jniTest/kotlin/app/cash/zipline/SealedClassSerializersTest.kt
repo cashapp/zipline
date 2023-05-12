@@ -28,7 +28,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class SealedClassSerializersTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val zipline = Zipline.create(dispatcher)
 
@@ -43,7 +44,7 @@ class SealedClassSerializersTest {
   @Test fun sealedClassesEncodeAndDecode() = runBlocking(dispatcher) {
     val service = zipline.take<SealedClassMessageService>("sealedClassMessageService")
     zipline.quickJs.evaluate(
-      "testing.app.cash.zipline.testing.prepareSealedClassMessageService()"
+      "testing.app.cash.zipline.testing.prepareSealedClassMessageService()",
     )
 
     assertThat(service.colorSwap(RedMessage("hello!")))
@@ -57,7 +58,7 @@ class SealedClassSerializersTest {
   @Test fun sealedClassesFlow(): Unit = runBlocking(dispatcher) {
     val service = zipline.take<SealedClassMessageService>("sealedClassMessageService")
     zipline.quickJs.evaluate(
-      "testing.app.cash.zipline.testing.prepareSealedClassMessageService()"
+      "testing.app.cash.zipline.testing.prepareSealedClassMessageService()",
     )
 
     val sealedMessageFlow = flow {

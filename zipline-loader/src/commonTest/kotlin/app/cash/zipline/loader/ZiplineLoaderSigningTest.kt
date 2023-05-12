@@ -26,7 +26,6 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
@@ -44,7 +43,7 @@ class ZiplineLoaderSigningTest {
     eventListener = eventListener,
     manifestVerifier = ManifestVerifier.Builder()
       .addEd25519("key1", SampleKeys.key1Public)
-      .build()
+      .build(),
   )
 
   private val testFixtures = LoaderTestFixtures()
@@ -90,7 +89,7 @@ class ZiplineLoaderSigningTest {
           "bravo" -> value.copy(sha256 = "wrong content for SHA-256".encodeUtf8().sha256())
           else -> value
         }
-      }
+      },
     )
     val manifest = signer.sign(manifestWithBadChecksum)
 
@@ -123,7 +122,7 @@ class ZiplineLoaderSigningTest {
     val loadResult = tester.loader.loadOnce("test", manifestUrl)
     assertEquals(
       "manifest signature for key key1 did not verify!",
-      (loadResult as LoadResult.Failure).exception.message
+      (loadResult as LoadResult.Failure).exception.message,
     )
     val listenerException = eventListener.takeException()
     assertTrue(listenerException is IllegalStateException)

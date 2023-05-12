@@ -27,7 +27,7 @@ import picocli.CommandLine.Option
 @Command(
   name = NAME,
   description = [
-    "Generate an Ed25519 key pair for ManifestSigner and ManifestVerifier"
+    "Generate an Ed25519 key pair for ManifestSigner and ManifestVerifier",
   ],
   mixinStandardHelpOptions = true,
   versionProvider = Main.VersionProvider::class,

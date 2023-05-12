@@ -60,7 +60,7 @@ internal class CallCodec(
       internalCall.function,
       internalCall.args,
       encodedCall,
-      encodedServiceNames
+      encodedServiceNames,
     )
 
     val callback = nextOutboundCallCallback
@@ -85,7 +85,7 @@ internal class CallCodec(
       internalCall.function,
       internalCall.args,
       callJson,
-      decodedServiceNames
+      decodedServiceNames,
     )
     return internalCall
   }

@@ -39,7 +39,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf(),
         ),
       ),
-      mainFunction = "zipline.ziplineMain"
+      mainFunction = "zipline.ziplineMain",
     )
     val sorted = ZiplineManifest.create(
       modules = mapOf(
@@ -54,7 +54,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf("alpha"),
         ),
       ),
-      mainFunction = "zipline.ziplineMain"
+      mainFunction = "zipline.ziplineMain",
     )
     assertEquals(sorted, unsorted)
   }
@@ -67,9 +67,9 @@ class ZiplineManifestTest {
           url = "/alpha.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf(),
-        )
+        ),
       ),
-      mainFunction = "zipline.ziplineMain"
+      mainFunction = "zipline.ziplineMain",
     )
     val unsortedException = assertFailsWith<IllegalArgumentException> {
       empty.copy(
@@ -83,13 +83,13 @@ class ZiplineManifestTest {
             url = "/alpha.zipline",
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf(),
-          )
-        )
+          ),
+        ),
       )
     }
     assertEquals(
       "Modules are not topologically sorted and can not be loaded",
-      unsortedException.message
+      unsortedException.message,
     )
   }
 
@@ -109,7 +109,7 @@ class ZiplineManifestTest {
     }
     assertEquals(
       "No topological ordering is possible for [alpha]",
-      selfDependencyException.message
+      selfDependencyException.message,
     )
 
     val cyclicalException = assertFailsWith<IllegalArgumentException> {
@@ -125,12 +125,12 @@ class ZiplineManifestTest {
             sha256 = "abc123".encodeUtf8(),
             dependsOnIds = listOf("alpha"),
           ),
-        )
+        ),
       )
     }
     assertEquals(
       "No topological ordering is possible for [alpha, bravo]",
-      cyclicalException.message
+      cyclicalException.message,
     )
   }
 
@@ -149,7 +149,7 @@ class ZiplineManifestTest {
           dependsOnIds = listOf("alpha"),
         ),
       ),
-      mainFunction = "zipline.ziplineMain"
+      mainFunction = "zipline.ziplineMain",
     )
     assertEquals("bravo", manifest.mainModuleId)
   }
@@ -202,7 +202,7 @@ class ZiplineManifestTest {
         |  "version": null
         |}
       """.trimMargin(),
-      prettyPrint(serialized)
+      prettyPrint(serialized),
     )
 
     val parsed = serialized.decodeToManifest()
@@ -262,7 +262,7 @@ class ZiplineManifestTest {
           url = "/alpha.zipline",
           sha256 = "abc123".encodeUtf8(),
           dependsOnIds = listOf(),
-        )
+        ),
       ),
       mainModuleId = "/alpha.zipline",
     )

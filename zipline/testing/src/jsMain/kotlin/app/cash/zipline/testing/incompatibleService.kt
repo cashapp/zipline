@@ -6,7 +6,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 
 class JsSuspendingPotatoService(
-  private val greeting: String
+  private val greeting: String,
 ) : SuspendingPotatoService {
   override suspend fun echo(): EchoResponse {
     return EchoResponse("$greeting from suspending JavaScript, anonymous")
@@ -19,7 +19,7 @@ private val zipline by lazy { Zipline.get() }
 fun prepareSuspendingPotatoJsBridges() {
   zipline.bind<SuspendingPotatoService>(
     "jsSuspendingPotatoService",
-    JsSuspendingPotatoService("hello")
+    JsSuspendingPotatoService("hello"),
   )
 }
 

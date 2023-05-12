@@ -44,9 +44,11 @@ class QuickJsOutboundChannelTest {
   @Test
   fun callHappyPath() {
     callChannel.callResult = "result one"
-    val callResult = quickJs.evaluate("""
-      globalThis.${outboundChannelName}.call('firstArg');
-    """.trimIndent())
+    val callResult = quickJs.evaluate(
+      """
+      globalThis.$outboundChannelName.call('firstArg');
+    """.trimIndent(),
+    )
     assertEquals("result one", callResult)
     assertEquals(listOf("call(firstArg)"), callChannel.log)
   }
@@ -56,9 +58,11 @@ class QuickJsOutboundChannelTest {
     callChannel.serviceNamesResult += "service one"
     callChannel.serviceNamesResult += "service two"
 
-    val serviceNames = quickJs.evaluate("""
-      globalThis.${outboundChannelName}.serviceNamesArray();
-    """.trimIndent()) as Array<Any>
+    val serviceNames = quickJs.evaluate(
+      """
+      globalThis.$outboundChannelName.serviceNamesArray();
+    """.trimIndent(),
+    ) as Array<Any>
     assertContentEquals(
       arrayOf(
         "service one",
@@ -78,9 +82,11 @@ class QuickJsOutboundChannelTest {
   fun disconnectHappyPath() {
     callChannel.disconnectResult = true
 
-    val disconnectResult = quickJs.evaluate("""
-      globalThis.${outboundChannelName}.disconnect('theInstanceName');
-    """.trimIndent()) as Boolean
+    val disconnectResult = quickJs.evaluate(
+      """
+      globalThis.$outboundChannelName.disconnect('theInstanceName');
+    """.trimIndent(),
+    ) as Boolean
     assertTrue(disconnectResult)
     assertEquals(
       listOf(
@@ -96,11 +102,11 @@ class QuickJsOutboundChannelTest {
       """
       |var count = 0;
       |for (var i = 0; i < 100000; i++) {
-      |  var result = globalThis.${outboundChannelName}.disconnect('theInstanceName');
+      |  var result = globalThis.$outboundChannelName.disconnect('theInstanceName');
       |  if (result) count++;
       |}
       |count;
-      """.trimMargin()
+      """.trimMargin(),
     ) as Int
     assertEquals(100000, callChannel.log.size)
     assertEquals(100000, count)

@@ -30,7 +30,8 @@ class QuickJsJvmTest {
 
   @Test fun exceptionsInScriptIncludeStackTrace() {
     val t = assertFailsWith<QuickJsException> {
-      quickjs.evaluate("""
+      quickjs.evaluate(
+        """
         |f1();
         |
         |function f1() {
@@ -40,7 +41,10 @@ class QuickJsJvmTest {
         |function f2() {
         |  nope();
         |}
-        |""".trimMargin(), "test.js")
+        |
+""".trimMargin(),
+        "test.js",
+      )
     }
     assertEquals("'nope' is not defined", t.message)
     assertEquals("JavaScript.f2(test.js:8)", t.stackTrace[0].toString())
@@ -53,7 +57,9 @@ class QuickJsJvmTest {
     val beforeMillis = System.currentTimeMillis().toDouble()
     val nowMillis = quickjs.evaluate("Date.now()") as Double
     val afterMillis = System.currentTimeMillis().toDouble()
-    assertTrue("$beforeMillis <= $nowMillis <= $afterMillis",
-      nowMillis in beforeMillis..afterMillis)
+    assertTrue(
+      "$beforeMillis <= $nowMillis <= $afterMillis",
+      nowMillis in beforeMillis..afterMillis,
+    )
   }
 }

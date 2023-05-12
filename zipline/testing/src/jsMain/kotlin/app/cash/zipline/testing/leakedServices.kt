@@ -32,4 +32,3 @@ fun triggerLeakDetection() {
   } catch (ignored: Exception) {
   }
 }
-

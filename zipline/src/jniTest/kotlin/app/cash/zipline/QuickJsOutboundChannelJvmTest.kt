@@ -45,9 +45,10 @@ class QuickJsOutboundChannelJvmTest {
   fun jvmExceptionsWithUnifiedStackTrace() {
     callChannel.disconnectThrow = true
     val t = assertFailsWith<UnsupportedOperationException> {
-      quickJs.evaluate("""
+      quickJs.evaluate(
+        """
         function f1() {
-          globalThis.${outboundChannelName}.disconnect('theInstanceName');
+          globalThis.$outboundChannelName.disconnect('theInstanceName');
         }
 
         function f2() {
@@ -55,7 +56,9 @@ class QuickJsOutboundChannelJvmTest {
         }
 
         f2();
-      """.trimIndent(), "explode.js")
+      """.trimIndent(),
+        "explode.js",
+      )
     }
     assertThat(t)
       .hasMessageThat()

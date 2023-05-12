@@ -33,7 +33,7 @@ class JsThrowingEchoService : EchoService {
 }
 
 class JsDelegatingEchoService(
-  private val delegate: EchoService
+  private val delegate: EchoService,
 ) : EchoService {
   override fun echo(request: EchoRequest): EchoResponse {
     return delegate3(request)

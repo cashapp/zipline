@@ -27,7 +27,7 @@ class JsServiceTransformer : ServiceTransformer {
 
 private class PrefixingEchoService(
   private val prefix: String,
-  private val delegate: EchoService
+  private val delegate: EchoService,
 ) : EchoService {
   override fun echo(request: EchoRequest): EchoResponse {
     val response = delegate.echo(request)
@@ -45,7 +45,6 @@ private val zipline by lazy { Zipline.get(ServiceMemberSerializersModule) }
 fun prepareServiceMemberJsBridges() {
   zipline.bind<ServiceTransformer>(
     "serviceTransformer",
-    JsServiceTransformer()
+    JsServiceTransformer(),
   )
 }
-

@@ -59,9 +59,9 @@ class ZiplineGradleDownloaderTest {
           url = webServer.url("/latest/app/alpha.zipline").toString(),
           sha256 = testFixtures.alphaSha256,
           dependsOnIds = listOf(),
-        )
+        ),
       ),
-      mainFunction = "zipline.ziplineMain"
+      mainFunction = "zipline.ziplineMain",
     )
     val manifestJsonString = manifest.encodeToString()
 
@@ -69,14 +69,14 @@ class ZiplineGradleDownloaderTest {
     webServer.enqueue(
       MockResponse()
         .setResponseCode(200)
-        .setBody(manifestJsonString)
+        .setBody(manifestJsonString),
     )
 
     // Enqueue the zipline file
     webServer.enqueue(
       MockResponse()
         .setResponseCode(200)
-        .setBody(Buffer().write(testFixtures.alphaByteString))
+        .setBody(Buffer().write(testFixtures.alphaByteString)),
     )
 
     val applicationName = "app1"
@@ -90,7 +90,7 @@ class ZiplineGradleDownloaderTest {
     assertTrue(fileSystem.exists(downloadDirPath / getApplicationManifestFileName(applicationName)))
 
     val actualManifestByteString = fileSystem.read(
-      downloadDirPath / getApplicationManifestFileName(applicationName)
+      downloadDirPath / getApplicationManifestFileName(applicationName),
     ) { readByteString() }
     assertDownloadedToEmbeddedManifest(
       manifest.copy(baseUrl = manifestUrl),
@@ -99,6 +99,7 @@ class ZiplineGradleDownloaderTest {
     assertTrue(fileSystem.exists(downloadDirPath / testFixtures.alphaSha256Hex))
     assertEquals(
       testFixtures.alphaByteString,
-      fileSystem.read(downloadDirPath / testFixtures.alphaSha256Hex) { readByteString() })
+      fileSystem.read(downloadDirPath / testFixtures.alphaSha256Hex) { readByteString() },
+    )
   }
 }

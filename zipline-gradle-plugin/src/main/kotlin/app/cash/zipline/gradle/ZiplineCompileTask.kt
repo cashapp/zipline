@@ -73,14 +73,15 @@ abstract class ZiplineCompileTask : DefaultTask() {
     outputDir.fileProvider(
       linkOutputFolderProvider.map {
         it.parentFile.resolve("${it.name}Zipline")
-      }
+      },
     )
 
     mainModuleId.set(extension.mainModuleId)
     mainFunction.set(extension.mainFunction)
     version.set(extension.version)
 
-    signingKeys.set(project.provider {
+    signingKeys.set(
+      project.provider {
       extension.signingKeys.asMap.values
     }.flatMap {
       it.map { dslKey ->
@@ -88,7 +89,8 @@ abstract class ZiplineCompileTask : DefaultTask() {
           ManifestSigningKey(dslKey.name, algorithmId, privateKeyHex.decodeHex())
         }
       }.flatten()
-    })
+    },
+    )
   }
 
   @TaskAction

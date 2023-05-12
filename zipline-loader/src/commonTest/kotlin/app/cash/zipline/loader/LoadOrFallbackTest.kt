@@ -110,17 +110,23 @@ class LoadOrFallbackTest {
   @Test
   fun successfulNetworkMakesPreviousNetworkPrunable() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
-    assertEquals(2, tester.countFiles {
+    assertEquals(
+      2,
+      tester.countFiles {
       assertEquals("firetruck", tester.success("red", "firetruck"))
-    })
+    },
+    )
   }
 
   @Test
   fun loadFailureIsPrunable() = runBlocking {
     assertEquals("apple", tester.success("red", "apple"))
-    assertEquals(1, tester.countFiles {
+    assertEquals(
+      1,
+      tester.countFiles {
       assertEquals("apple", tester.failureCodeLoadFails("red"))
-    })
+    },
+    )
     assertEquals(-1, tester.prune())
   }
 

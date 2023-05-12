@@ -28,7 +28,7 @@ suspend fun <T> awaitEquals(
   expected: T?,
   delay: Duration = Duration.ZERO,
   attempts: Int = 5,
-  actual: () -> T?
+  actual: () -> T?,
 ) {
   var actualValue = actual()
   if (expected == actualValue) return

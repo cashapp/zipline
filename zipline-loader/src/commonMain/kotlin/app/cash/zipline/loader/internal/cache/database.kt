@@ -41,7 +41,7 @@ internal fun createDatabase(driver: SqlDriver): Database {
   return Database(
     driver,
     filesAdapter = Files.Adapter(
-      file_stateAdapter = EnumColumnAdapter()
-    )
+      file_stateAdapter = EnumColumnAdapter(),
+    ),
   )
 }
