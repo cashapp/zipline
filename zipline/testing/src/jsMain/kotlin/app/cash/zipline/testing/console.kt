@@ -40,7 +40,7 @@ fun consoleLogWithThrowable() {
   console.error(
     "3. multiple exceptions",
     IllegalStateException("number one!"),
-    IllegalStateException("number two!")
+    IllegalStateException("number two!"),
   )
   console.error(IllegalStateException("exception first!"), "4. message second")
   console.info("5. info with exception", IllegalStateException())

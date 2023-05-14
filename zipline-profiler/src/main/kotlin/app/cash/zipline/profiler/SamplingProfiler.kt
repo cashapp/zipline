@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.profiler
 
+import app.cash.zipline.EngineApi
 import app.cash.zipline.InterruptHandler
 import app.cash.zipline.QuickJs
 import java.io.File
@@ -33,10 +34,12 @@ import okio.sink
  *
  * @param hprofFile a new file to write profiling data to. Typically, such files end with `.hprof`.
  */
+@EngineApi
 fun QuickJs.startCpuSampling(hprofFile: File): Closeable {
   return startCpuSampling(hprofFile.sink().buffer())
 }
 
+@EngineApi
 fun QuickJs.startCpuSampling(hprofSink: BufferedSink): Closeable {
   val samplingProfiler = SamplingProfiler(this, HprofWriter(hprofSink))
   val previousInterruptHandler = interruptHandler
@@ -56,8 +59,10 @@ internal class SamplingProfiler internal constructor(
 
   /** Placeholder value for the JavaScript thread. */
   private val javaScriptThreadId: Int = nextId++
+
   /** Placeholder value for JavaScript functions that don't have a proper signature. */
   private val javaScriptMethodSignatureStringId: Int
+
   /** Placeholder value for JavaScript functions that don't have a proper class. */
   private val javaScriptClassId: Int
 
@@ -77,7 +82,7 @@ internal class SamplingProfiler internal constructor(
       stackTraceId = nullStackTraceId,
       threadNameStringId = hprofWriter.allocateStringId("main"),
       threadGroupNameId = hprofWriter.allocateStringId("main"),
-      threadParentGroupNameId = hprofWriter.allocateStringId("system")
+      threadParentGroupNameId = hprofWriter.allocateStringId("system"),
     )
   }
 

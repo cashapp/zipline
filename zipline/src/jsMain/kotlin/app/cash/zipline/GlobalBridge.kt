@@ -17,7 +17,6 @@ package app.cash.zipline
 
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
-import app.cash.zipline.internal.bridge.inboundChannelName
 
 /**
  * JS-global bindings for implementing a complete JS platform (setTimeout, console), and receiving
@@ -55,7 +54,7 @@ internal object GlobalBridge : JsPlatform, CallChannel {
         log: function() { globalBridge.consoleMessage('log', arguments) },
         warn: function() { globalBridge.consoleMessage('warn', arguments) },
       };
-      """
+      """,
     )
   }
 
@@ -107,6 +106,6 @@ internal object GlobalBridge : JsPlatform, CallChannel {
 
   private class Job(
     val handler: dynamic,
-    val arguments: Array<out Any?>
+    val arguments: Array<out Any?>,
   )
 }

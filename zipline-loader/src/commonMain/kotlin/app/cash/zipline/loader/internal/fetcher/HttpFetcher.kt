@@ -69,7 +69,7 @@ internal class HttpFetcher(
       val manifestJsonElement = withBaseUrl(manifestJsonElementWithoutBaseUrl, url)
       val manifestJson = Json.encodeToString(
         JsonElement.serializer(),
-        manifestJsonElement
+        manifestJsonElement,
       )
       return LoadedManifest(
         manifestBytes = manifestJson.encodeUtf8(),

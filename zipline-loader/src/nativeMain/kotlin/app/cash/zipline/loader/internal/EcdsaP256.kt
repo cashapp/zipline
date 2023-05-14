@@ -58,10 +58,14 @@ class EcdsaP256 : SignatureAlgorithm {
       valueCallBacks = kCFTypeDictionaryValueCallBacks.ptr,
     )
     CFDictionaryAddValue(
-      attributes, kSecAttrKeyType, kSecAttrKeyTypeECSECPrimeRandom,
+      attributes,
+      kSecAttrKeyType,
+      kSecAttrKeyTypeECSECPrimeRandom,
     )
     CFDictionaryAddValue(
-      attributes, kSecAttrKeyClass, kSecAttrKeyClassPublic,
+      attributes,
+      kSecAttrKeyClass,
+      kSecAttrKeyClassPublic,
     )
 
     memScoped {
@@ -93,7 +97,7 @@ class EcdsaP256 : SignatureAlgorithm {
 
       require(
         errorRef.value == null ||
-        CFErrorGetCode(errorRef.value) == errSecVerifyFailed.toLong()
+        CFErrorGetCode(errorRef.value) == errSecVerifyFailed.toLong(),
       ) {
         "failed to verify signature: ${CFErrorGetCode(errorRef.value)}"
       }
@@ -112,7 +116,7 @@ class EcdsaP256 : SignatureAlgorithm {
     }
     val nsData = NSData.dataWithBytesNoCopy(
       bytes = bytesPointer,
-      length = byteArray.size.convert()
+      length = byteArray.size.convert(),
     )
     val typeRef = CFBridgingRetain(nsData) as CFDataRef
     try {

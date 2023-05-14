@@ -21,7 +21,7 @@ import java.util.regex.Pattern
 @Keep // Instruct ProGuard not to strip this type.
 actual class QuickJsException @JvmOverloads constructor(
   detailMessage: String,
-  jsStackTrace: String? = null
+  jsStackTrace: String? = null,
 ) : RuntimeException(detailMessage) {
   init {
     if (jsStackTrace != null) {
@@ -60,9 +60,10 @@ actual class QuickJsException @JvmOverloads constructor(
       // Splice the JavaScript stack in right above the call to QuickJs.
       var spliced = false
       for (stackTraceElement in stackTrace) {
-        if (!spliced
-          && stackTraceElement.isNativeMethod
-          && stackTraceElement.isZipline) {
+        if (!spliced &&
+          stackTraceElement.isNativeMethod &&
+          stackTraceElement.isZipline
+        ) {
           spliced = true
           for (line in lines) {
             val jsElement = toStackTraceElement(line) ?: continue
@@ -82,8 +83,12 @@ actual class QuickJsException @JvmOverloads constructor(
       return if (!m.matches()) {
         null // Nothing interesting on this line.
       } else {
-        StackTraceElement(STACK_TRACE_CLASS_NAME, m.group(1), m.group(2),
-            if (m.groupCount() > 3) m.group(3)!!.toInt() else -1)
+        StackTraceElement(
+          STACK_TRACE_CLASS_NAME,
+          m.group(1),
+          m.group(2),
+            if (m.groupCount() > 3) m.group(3)!!.toInt() else -1,
+        )
       }
     }
   }

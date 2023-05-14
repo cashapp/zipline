@@ -77,9 +77,9 @@ class DownloadTest {
           url = webServer.url("/latest/app/alpha.zipline").toString(),
           sha256 = testFixtures.alphaSha256,
           dependsOnIds = listOf(),
-        )
+        ),
       ),
-      mainFunction = "zipline.ziplineMain"
+      mainFunction = "zipline.ziplineMain",
     )
     val manifestJsonString = manifest.encodeToString()
 
@@ -87,14 +87,14 @@ class DownloadTest {
     webServer.enqueue(
       MockResponse()
         .setResponseCode(200)
-        .setBody(manifestJsonString)
+        .setBody(manifestJsonString),
     )
 
     // Enqueue the zipline file
     webServer.enqueue(
       MockResponse()
         .setResponseCode(200)
-        .setBody(Buffer().write(testFixtures.alphaByteString))
+        .setBody(Buffer().write(testFixtures.alphaByteString)),
     )
 
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()

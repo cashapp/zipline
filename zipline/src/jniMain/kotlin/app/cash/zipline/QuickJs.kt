@@ -27,8 +27,9 @@ import java.io.Closeable
  * This class is NOT thread safe. If multiple threads access an instance concurrently it must be
  * synchronized externally.
  */
+@EngineApi
 actual class QuickJs private constructor(
-  internal var context: Long
+  internal var context: Long,
 ) : Closeable {
   actual companion object {
     init {

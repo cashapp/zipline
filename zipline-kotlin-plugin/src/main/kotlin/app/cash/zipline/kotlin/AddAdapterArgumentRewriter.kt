@@ -67,7 +67,7 @@ internal class AddAdapterArgumentRewriter(
     scope,
     original,
     "Zipline.${original.symbol.owner.name.identifier}()",
-    bridgedInterfaceType
+    bridgedInterfaceType,
   )
 
   fun rewrite(): IrCall {
@@ -75,7 +75,7 @@ internal class AddAdapterArgumentRewriter(
       pluginContext,
       ziplineApis,
       scope,
-      bridgedInterface.typeIrClass
+      bridgedInterface.typeIrClass,
     ).adapterExpression(bridgedInterfaceType as IrSimpleType)
 
     return irCall(original, rewrittenFunction).apply {

@@ -83,7 +83,7 @@ class SourceMapParsingTest {
         sourceColumn = 3,
         name = null,
       ),
-      sourceMap.find(lineNumber = 14)
+      sourceMap.find(lineNumber = 14),
     )
     // Doesn't match any lines in the source file.
     assertNull(sourceMap.find(lineNumber = 17))

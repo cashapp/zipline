@@ -30,12 +30,12 @@ import kotlinx.serialization.serializer
 
 @Serializable
 data class SampleRequest(
-  val message: String
+  val message: String,
 )
 
 @Serializable
 data class SampleResponse(
-  val message: String
+  val message: String,
 )
 
 /**

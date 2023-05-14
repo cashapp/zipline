@@ -43,7 +43,7 @@ class OkHttpZiplineHttpClientTest {
   fun happyPath(): Unit = runBlocking {
     server.enqueue(
       MockResponse()
-        .setBody("hello")
+        .setBody("hello"),
     )
 
     val content = client.download(server.url("/foo").toString(), listOf())
@@ -57,7 +57,7 @@ class OkHttpZiplineHttpClientTest {
   fun requestHeaders(): Unit = runBlocking {
     server.enqueue(
       MockResponse()
-        .setBody("hello")
+        .setBody("hello"),
     )
 
     val content = client.download(
@@ -90,7 +90,7 @@ class OkHttpZiplineHttpClientTest {
     server.enqueue(
       MockResponse()
         .setResponseCode(404)
-        .setBody("hello")
+        .setBody("hello"),
     )
 
     val url = server.url("/foo")
@@ -102,7 +102,7 @@ class OkHttpZiplineHttpClientTest {
 
   @Test
   fun tearDownWebSocketWhenClosed(): Unit = runBlocking {
-    val webSocketListener = object: WebSocketListener() {
+    val webSocketListener = object : WebSocketListener() {
       override fun onOpen(webSocket: WebSocket, response: Response) {
         assertEquals(1, okHttpClient.connectionPool.connectionCount())
         webSocket.send("reload")
@@ -143,7 +143,7 @@ class OkHttpZiplineHttpClientTest {
     // If there are any HTTP connections in OkHttp, they had better be idle.
     assertEquals(
       okHttpClient.connectionPool.idleConnectionCount(),
-      okHttpClient.connectionPool.connectionCount()
+      okHttpClient.connectionPool.connectionCount(),
     )
   }
 }

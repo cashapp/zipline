@@ -38,7 +38,7 @@ internal class FsEmbeddedFetcher(
 
   fun loadEmbeddedManifest(applicationName: String): LoadedManifest? {
     val manifestBytes = fetchByteString(
-      filePath = embeddedDir / getApplicationManifestFileName(applicationName)
+      filePath = embeddedDir / getApplicationManifestFileName(applicationName),
     ) ?: return null
     return LoadedManifest(manifestBytes)
   }
@@ -50,4 +50,3 @@ internal class FsEmbeddedFetcher(
     else -> null
   }
 }
-

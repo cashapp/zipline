@@ -163,10 +163,13 @@ internal class RealCallSerializer(
           serviceName = serviceName,
           inboundService = inboundService ?: unknownService(),
           function = function ?: unknownFunction<ZiplineService>(
-            serviceName, functionName, inboundService, suspendCallback
+            serviceName,
+            functionName,
+            inboundService,
+            suspendCallback,
           ),
           suspendCallback = suspendCallback,
-          args = args
+          args = args,
         )
       }
     } finally {
@@ -179,7 +182,7 @@ internal class RealCallSerializer(
     return InboundService(
       service = object : ZiplineService {},
       endpoint = endpoint,
-      functionsList = listOf()
+      functionsList = listOf(),
     )
   }
 
@@ -261,7 +264,6 @@ internal class ArgsListSerializer(
     }
   }
 }
-
 
 internal class ResultSerializer<T>(
   internal val successSerializer: KSerializer<T>,
@@ -373,10 +375,10 @@ internal class ResultOrCallbackSerializer<T>(
         when (val index = decodeElementIndex(descriptor)) {
           0 -> callback = decodeSerializableElement(descriptor, 0, cancelCallbackSerializer)
           1 -> result = Result.failure(
-            decodeSerializableElement(descriptor, 1, ThrowableSerializer)
+            decodeSerializableElement(descriptor, 1, ThrowableSerializer),
           )
           2 -> result = Result.success(
-            decodeSerializableElement(descriptor, 2, successSerializer)
+            decodeSerializableElement(descriptor, 2, successSerializer),
           )
           DECODE_DONE -> break
           else -> error("Unexpected index: $index")

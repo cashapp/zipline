@@ -21,7 +21,7 @@ internal actual fun trackLeaks(
   eventListener: EndpointEventListener,
   serviceName: String,
   callHandler: OutboundCallHandler,
-  service: ZiplineService
+  service: ZiplineService,
 ) {
   // TODO: can we implement this with ARC?
 }

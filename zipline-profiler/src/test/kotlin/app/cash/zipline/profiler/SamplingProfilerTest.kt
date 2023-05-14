@@ -25,7 +25,8 @@ internal class SamplingProfilerTest {
   private val quickJs = QuickJs.create()
 
   @Before fun setUp() {
-    quickJs.evaluate("""
+    quickJs.evaluate(
+      """
       |function fib0() {
       |  return 1;
       |}
@@ -65,8 +66,11 @@ internal class SamplingProfilerTest {
       |function fib9() {
       |  return fib8() + fib7();
       |}
-      """.trimMargin(), "smallFibs.js")
-    quickJs.evaluate("""
+      """.trimMargin(),
+      "smallFibs.js",
+    )
+    quickJs.evaluate(
+      """
       |function fib10() {
       |  return fib9() + fib8();
       |}
@@ -111,7 +115,9 @@ internal class SamplingProfilerTest {
       |  return fib19() + fib18();
       |}
       |
-      """.trimMargin(), "bigFibs.js")
+      """.trimMargin(),
+      "bigFibs.js",
+    )
   }
 
   @After fun tearDown() {

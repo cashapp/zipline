@@ -71,14 +71,14 @@ internal class CallAdapterConstructorRewriter(
       scope,
       original,
       "ziplineServiceSerializer()",
-      bridgedInterfaceType
+      bridgedInterfaceType,
     )
 
     val result = AdapterGenerator(
       pluginContext,
       ziplineApis,
       scope,
-      bridgedInterface.typeIrClass
+      bridgedInterface.typeIrClass,
     ).adapterExpression(serializersListExpression, serialName)
     result.patchDeclarationParents(declarationParent)
     return result

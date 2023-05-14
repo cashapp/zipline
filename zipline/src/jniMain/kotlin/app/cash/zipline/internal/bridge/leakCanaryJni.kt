@@ -24,7 +24,7 @@ internal actual fun trackLeaks(
   eventListener: EndpointEventListener,
   serviceName: String,
   callHandler: OutboundCallHandler,
-  service: ZiplineService
+  service: ZiplineService,
 ) {
   allReferencesSet += ZiplineServiceReference(eventListener, serviceName, callHandler, service)
 }
@@ -46,7 +46,7 @@ private class ZiplineServiceReference(
   private val eventListener: EndpointEventListener,
   private val serviceName: String,
   private val callHandler: OutboundCallHandler,
-  service: ZiplineService
+  service: ZiplineService,
 ) : PhantomReference<ZiplineService>(service, allReferencesQueue) {
   fun afterGc() {
     allReferencesSet.remove(this)

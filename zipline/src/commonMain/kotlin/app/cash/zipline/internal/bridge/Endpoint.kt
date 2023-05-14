@@ -70,8 +70,8 @@ class Endpoint internal constructor(
         FlowSerializer(
           ziplineServiceSerializer<FlowZiplineService<Any?>>(
             FlowZiplineService::class,
-            serializers
-          )
+            serializers,
+          ),
         )
       }
       contextual(StateFlow::class) { serializers ->
@@ -79,7 +79,7 @@ class Endpoint internal constructor(
           ziplineServiceSerializer<StateFlowZiplineService<Any?>>(
             StateFlowZiplineService::class,
             serializers,
-          )
+          ),
         )
       }
       include(userSerializersModule)
@@ -102,11 +102,11 @@ class Endpoint internal constructor(
         internalCall.suspendCallback != null -> inboundService.callSuspending(
           internalCall,
           externalCall,
-          internalCall.suspendCallback
+          internalCall.suspendCallback,
         )
         else -> inboundService.call(
           internalCall,
-          externalCall
+          externalCall,
         )
       }
     }
@@ -127,7 +127,7 @@ class Endpoint internal constructor(
   internal fun <T : ZiplineService> bind(
     name: String,
     service: T,
-    adapter: ZiplineServiceAdapter<T>
+    adapter: ZiplineServiceAdapter<T>,
   ) {
     eventListener.bindService(name, service)
 

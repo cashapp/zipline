@@ -78,8 +78,9 @@ class ProductionFetcherReceiverTest {
       """
       |alpha loaded
       |bravo loaded
-      |""".trimMargin(),
-      zipline.quickJs.getLog()
+      |
+""".trimMargin(),
+      zipline.quickJs.getLog(),
     )
   }
 
@@ -102,8 +103,9 @@ class ProductionFetcherReceiverTest {
       """
       |alpha loaded
       |bravo loaded
-      |""".trimMargin(),
-      zipline.quickJs.getLog()
+      |
+""".trimMargin(),
+      zipline.quickJs.getLog(),
     )
   }
 
@@ -123,8 +125,9 @@ class ProductionFetcherReceiverTest {
       """
       |alpha loaded
       |bravo loaded
-      |""".trimMargin(),
-      zipline.quickJs.getLog()
+      |
+""".trimMargin(),
+      zipline.quickJs.getLog(),
     )
 
     val ziplineFileFromCache = cache.getOrPut("app1", testFixtures.alphaSha256, nowMillis) {

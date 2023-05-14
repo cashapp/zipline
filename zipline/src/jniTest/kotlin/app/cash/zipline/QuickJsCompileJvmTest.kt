@@ -28,7 +28,8 @@ class QuickJsCompileJvmTest {
   }
 
   @Test fun exceptionsInScriptIncludeStackTrace() {
-    val code = quickJs.compile("""
+    val code = quickJs.compile(
+      """
       |f1();
       |
       |function f1() {
@@ -38,7 +39,10 @@ class QuickJsCompileJvmTest {
       |function f2() {
       |  nope();
       |}
-      |""".trimMargin(), "C:\\Documents\\myFile.js")
+      |
+""".trimMargin(),
+      "C:\\Documents\\myFile.js",
+    )
     val t = assertFailsWith<QuickJsException> {
       quickJs.execute(code)
     }

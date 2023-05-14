@@ -36,7 +36,7 @@ fun applySourceMapToBytecode(
   val atoms = jsReader.atoms.toMutableAtomSet()
   val rewriter = SourceMapBytecodeRewriter(
     sourceMap = sourceMap,
-    atoms = atoms
+    atoms = atoms,
   )
 
   val ktObject = with(rewriter) {
@@ -59,7 +59,7 @@ private class SourceMapBytecodeRewriter(
       is JsFunctionBytecode -> {
         copy(
           debug = debug?.jsToKt(),
-          constantPool = constantPool.map { it.jsToKt() }
+          constantPool = constantPool.map { it.jsToKt() },
         )
       }
       else -> this
@@ -71,7 +71,7 @@ private class SourceMapBytecodeRewriter(
 
     val jsReader = LineNumberReader(
       functionLineNumber = lineNumber,
-      source = Buffer().write(pc2Line)
+      source = Buffer().write(pc2Line),
     )
 
     var ktFileName: String? = null

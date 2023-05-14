@@ -67,7 +67,7 @@ class TuningApisTest {
       quickjs.evaluate(
         """
         globalThis.hello = 'hello';
-        """
+        """,
       )
     }
     assertEquals(diff.stringsCount, 0L) // Why isn't this 1?
@@ -81,7 +81,7 @@ class TuningApisTest {
         globalThis.hypotenuse = function(a, b) {
           return Math.sqrt((a * a) + (b * b));
         };
-        """
+        """,
       )
     }
     assertEquals(diff.jsFunctionsCount, 1L)
@@ -96,7 +96,7 @@ class TuningApisTest {
       quickjs.evaluate(
         """
         globalThis.buffer = new Uint8Array(1024 * 1024);
-        """
+        """,
       )
     }
     assertTrue(diff.memoryAllocatedSize >= 1024L * 1024L)

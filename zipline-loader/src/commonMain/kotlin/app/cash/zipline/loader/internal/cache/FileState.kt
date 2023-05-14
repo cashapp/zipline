@@ -31,5 +31,5 @@ enum class FileState {
    * The file is on the file system and ready to read.
    * It will not be modified until it is deleted.
    */
-  READY
+  READY,
 }

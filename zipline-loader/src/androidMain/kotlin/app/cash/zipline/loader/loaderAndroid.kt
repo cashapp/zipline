@@ -16,7 +16,6 @@
 package app.cash.zipline.loader
 
 import android.content.Context
-import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import okio.FileSystem
 import okio.Path

@@ -27,7 +27,9 @@ import picocli.CommandLine.Option
 import picocli.CommandLine.ParameterException
 import picocli.CommandLine.Spec
 
-@Command(name = NAME, description = ["Use Zipline without Gradle."],
+@Command(
+  name = NAME,
+  description = ["Use Zipline without Gradle."],
   mixinStandardHelpOptions = true,
   synopsisSubcommandLabel = "COMMAND",
   subcommands = [Download::class, GenerateKeyPair::class, HelpCommand::class],

@@ -27,7 +27,8 @@ import org.junit.Test
 class ApplySourceMapToBytecodeTest {
   private val quickJs = QuickJs.create()
 
-  private val emptySourceMap = SourceMap.parse("""
+  private val emptySourceMap = SourceMap.parse(
+    """
     |{
     |  "version": 3,
     |  "sources": [],
@@ -35,7 +36,8 @@ class ApplySourceMapToBytecodeTest {
     |  "names": [],
     |  "mappings": ";;"
     |}
-    """.trimMargin())
+    """.trimMargin(),
+  )
 
   @Before
   fun setUp() {
@@ -117,14 +119,17 @@ class ApplySourceMapToBytecodeTest {
     val exception = assertFailsWith<Exception> {
       quickJs.evaluate("require('demo').sayHello()")
     }
-    assertThat(exception.stackTraceToString()).startsWith("""
+    assertThat(exception.stackTraceToString()).startsWith(
+      """
       |app.cash.zipline.QuickJsException: boom!
       |	at JavaScript.goBoom1(throwException.kt)
       |	at JavaScript.goBoom2(throwException.kt:9)
       |	at JavaScript.goBoom3(throwException.kt:6)
       |	at JavaScript.sayHello(throwException.kt:3)
       |	at JavaScript.<eval>(?)
-      |""".trimMargin())
+      |
+""".trimMargin(),
+    )
   }
 
   @Test fun removeLeadingDotDotsInSourceMap() {
@@ -167,21 +172,25 @@ class ApplySourceMapToBytecodeTest {
     val exception = assertFailsWith<Exception> {
       quickJs.evaluate("require('goBoom').app.cash.zipline.testing.goBoom(3)")
     }
-    assertThat(exception.stackTraceToString().replace("\t", "  ")).startsWith("""
+    assertThat(exception.stackTraceToString().replace("\t", "  ")).startsWith(
+      """
       |app.cash.zipline.QuickJsException: boom
       |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:4)
       |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
       |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
       |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
       |  at JavaScript.<eval>(?)
-      |""".trimMargin())
+      |
+""".trimMargin(),
+    )
   }
 
   @Test fun functionWithNoInstructions() {
     val js = """
       |function doNothing() {
       |}
-      |""".trimMargin()
+      |
+""".trimMargin()
 
     // Just confirm the empty function can be transformed successfully.
     val bytecode = quickJs.compile(js, "demo.js")
@@ -203,7 +212,8 @@ class ApplySourceMapToBytecodeTest {
       |        : b + c + d + Array(e-d.length+1).join(0);
       |    });
       |}
-      |""".trimMargin()
+      |
+""".trimMargin()
 
     val bytecode = quickJs.compile(js, "demo.js")
     val bytecodeWithSourceMap = applySourceMapToBytecode(bytecode, emptySourceMap)

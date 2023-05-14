@@ -110,89 +110,128 @@ internal object Field25519 {
    */
   fun product(out: LongArray, in2: LongArray, in1: LongArray) {
     out[0] = (in2[0] * in1[0])
-    out[1] = ((in2[0] * in1[1]
-      + in2[1] * in1[0]))
-    out[2] = (2 * in2[1] * in1[1]
-      + in2[0] * in1[2]
-      + in2[2] * in1[0])
-    out[3] = (in2[1] * in1[2]
-      + in2[2] * in1[1]
-      + in2[0] * in1[3]
-      + in2[3] * in1[0])
-    out[4] = (in2[2] * in1[2]
-      + 2 * (in2[1] * in1[3] + in2[3] * in1[1])
-      + in2[0] * in1[4]
-      + in2[4] * in1[0])
-    out[5] = (in2[2] * in1[3]
-      + in2[3] * in1[2]
-      + in2[1] * in1[4]
-      + in2[4] * in1[1]
-      + in2[0] * in1[5]
-      + in2[5] * in1[0])
-    out[6] = (2 * (in2[3] * in1[3] + in2[1] * in1[5] + in2[5] * in1[1])
-      + in2[2] * in1[4]
-      + in2[4] * in1[2]
-      + in2[0] * in1[6]
-      + in2[6] * in1[0])
-    out[7] = (in2[3] * in1[4]
-      + in2[4] * in1[3]
-      + in2[2] * in1[5]
-      + in2[5] * in1[2]
-      + in2[1] * in1[6]
-      + in2[6] * in1[1]
-      + in2[0] * in1[7]
-      + in2[7] * in1[0])
-    out[8] = (in2[4] * in1[4]
-      + 2 * (in2[3] * in1[5] + in2[5] * in1[3] + in2[1] * in1[7] + in2[7] * in1[1])
-      + in2[2] * in1[6]
-      + in2[6] * in1[2]
-      + in2[0] * in1[8]
-      + in2[8] * in1[0])
-    out[9] = (in2[4] * in1[5]
-      + in2[5] * in1[4]
-      + in2[3] * in1[6]
-      + in2[6] * in1[3]
-      + in2[2] * in1[7]
-      + in2[7] * in1[2]
-      + in2[1] * in1[8]
-      + in2[8] * in1[1]
-      + in2[0] * in1[9]
-      + in2[9] * in1[0])
+    out[1] = (
+      (
+        in2[0] * in1[1] +
+      in2[1] * in1[0]
+      )
+    )
+    out[2] = (
+      2 * in2[1] * in1[1] +
+      in2[0] * in1[2] +
+      in2[2] * in1[0]
+    )
+    out[3] = (
+      in2[1] * in1[2] +
+      in2[2] * in1[1] +
+      in2[0] * in1[3] +
+      in2[3] * in1[0]
+    )
+    out[4] = (
+      in2[2] * in1[2] +
+      2 * (in2[1] * in1[3] + in2[3] * in1[1]) +
+      in2[0] * in1[4] +
+      in2[4] * in1[0]
+    )
+    out[5] = (
+      in2[2] * in1[3] +
+      in2[3] * in1[2] +
+      in2[1] * in1[4] +
+      in2[4] * in1[1] +
+      in2[0] * in1[5] +
+      in2[5] * in1[0]
+    )
+    out[6] = (
+      2 * (in2[3] * in1[3] + in2[1] * in1[5] + in2[5] * in1[1]) +
+      in2[2] * in1[4] +
+      in2[4] * in1[2] +
+      in2[0] * in1[6] +
+      in2[6] * in1[0]
+    )
+    out[7] = (
+      in2[3] * in1[4] +
+      in2[4] * in1[3] +
+      in2[2] * in1[5] +
+      in2[5] * in1[2] +
+      in2[1] * in1[6] +
+      in2[6] * in1[1] +
+      in2[0] * in1[7] +
+      in2[7] * in1[0]
+    )
+    out[8] = (
+      in2[4] * in1[4] +
+      2 * (in2[3] * in1[5] + in2[5] * in1[3] + in2[1] * in1[7] + in2[7] * in1[1]) +
+      in2[2] * in1[6] +
+      in2[6] * in1[2] +
+      in2[0] * in1[8] +
+      in2[8] * in1[0]
+    )
+    out[9] = (
+      in2[4] * in1[5] +
+      in2[5] * in1[4] +
+      in2[3] * in1[6] +
+      in2[6] * in1[3] +
+      in2[2] * in1[7] +
+      in2[7] * in1[2] +
+      in2[1] * in1[8] +
+      in2[8] * in1[1] +
+      in2[0] * in1[9] +
+      in2[9] * in1[0]
+    )
     out[10] = (
-      2 * (in2[5] * in1[5] + in2[3] * in1[7] + in2[7] * in1[3] + in2[1] * in1[9] + in2[9] * in1[1])
-        + in2[4] * in1[6]
-        + in2[6] * in1[4]
-        + in2[2] * in1[8]
-        + in2[8] * in1[2])
-    out[11] = (in2[5] * in1[6]
-      + in2[6] * in1[5]
-      + in2[4] * in1[7]
-      + in2[7] * in1[4]
-      + in2[3] * in1[8]
-      + in2[8] * in1[3]
-      + in2[2] * in1[9]
-      + in2[9] * in1[2])
-    out[12] = (in2[6] * in1[6]
-      + 2 * (in2[5] * in1[7] + in2[7] * in1[5] + in2[3] * in1[9] + in2[9] * in1[3])
-      + in2[4] * in1[8]
-      + in2[8] * in1[4])
-    out[13] = (in2[6] * in1[7]
-      + in2[7] * in1[6]
-      + in2[5] * in1[8]
-      + in2[8] * in1[5]
-      + in2[4] * in1[9]
-      + in2[9] * in1[4])
-    out[14] = (2 * (in2[7] * in1[7] + in2[5] * in1[9] + in2[9] * in1[5])
-      + in2[6] * in1[8]
-      + in2[8] * in1[6])
-    out[15] = (in2[7] * in1[8]
-      + in2[8] * in1[7]
-      + in2[6] * in1[9]
-      + in2[9] * in1[6])
-    out[16] = ((in2[8] * in1[8]
-      + 2 * (in2[7] * in1[9] + in2[9] * in1[7])))
-    out[17] = ((in2[8] * in1[9]
-      + in2[9] * in1[8]))
+      2 * (in2[5] * in1[5] + in2[3] * in1[7] + in2[7] * in1[3] + in2[1] * in1[9] + in2[9] * in1[1]) +
+        in2[4] * in1[6] +
+        in2[6] * in1[4] +
+        in2[2] * in1[8] +
+        in2[8] * in1[2]
+    )
+    out[11] = (
+      in2[5] * in1[6] +
+      in2[6] * in1[5] +
+      in2[4] * in1[7] +
+      in2[7] * in1[4] +
+      in2[3] * in1[8] +
+      in2[8] * in1[3] +
+      in2[2] * in1[9] +
+      in2[9] * in1[2]
+    )
+    out[12] = (
+      in2[6] * in1[6] +
+      2 * (in2[5] * in1[7] + in2[7] * in1[5] + in2[3] * in1[9] + in2[9] * in1[3]) +
+      in2[4] * in1[8] +
+      in2[8] * in1[4]
+    )
+    out[13] = (
+      in2[6] * in1[7] +
+      in2[7] * in1[6] +
+      in2[5] * in1[8] +
+      in2[8] * in1[5] +
+      in2[4] * in1[9] +
+      in2[9] * in1[4]
+    )
+    out[14] = (
+      2 * (in2[7] * in1[7] + in2[5] * in1[9] + in2[9] * in1[5]) +
+      in2[6] * in1[8] +
+      in2[8] * in1[6]
+    )
+    out[15] = (
+      in2[7] * in1[8] +
+      in2[8] * in1[7] +
+      in2[6] * in1[9] +
+      in2[9] * in1[6]
+    )
+    out[16] = (
+      (
+        in2[8] * in1[8] +
+      2 * (in2[7] * in1[9] + in2[9] * in1[7])
+      )
+    )
+    out[17] = (
+      (
+        in2[8] * in1[9] +
+      in2[9] * in1[8]
+      )
+    )
     out[18] = (2 * in2[9] * in1[9])
   }
 
@@ -329,22 +368,36 @@ internal object Field25519 {
     out[1] = (2 * in1[0] * in1[1])
     out[2] = (2 * (in1[1] * in1[1] + in1[0] * in1[2]))
     out[3] = (2 * (in1[1] * in1[2] + in1[0] * in1[3]))
-    out[4] = (in1[2] * in1[2]
-      + 4 * in1[1] * in1[3]
-      + 2 * in1[0] * in1[4])
+    out[4] = (
+      in1[2] * in1[2] +
+      4 * in1[1] * in1[3] +
+      2 * in1[0] * in1[4]
+    )
     out[5] = (2 * (in1[2] * in1[3] + in1[1] * in1[4] + in1[0] * in1[5]))
     out[6] = (2 * (in1[3] * in1[3] + in1[2] * in1[4] + in1[0] * in1[6] + 2 * in1[1] * in1[5]))
     out[7] = (2 * (in1[3] * in1[4] + in1[2] * in1[5] + in1[1] * in1[6] + in1[0] * in1[7]))
-    out[8] = ((in1[4] * in1[4]
-      + 2 * (in1[2] * in1[6] + in1[0] * in1[8] + 2 * (in1[1] * in1[7] + in1[3] * in1[5]))))
+    out[8] = (
+      (
+        in1[4] * in1[4] +
+      2 * (in1[2] * in1[6] + in1[0] * in1[8] + 2 * (in1[1] * in1[7] + in1[3] * in1[5]))
+      )
+    )
     out[9] = (2 * (in1[4] * in1[5] + in1[3] * in1[6] + in1[2] * in1[7] + in1[1] * in1[8] + in1[0] * in1[9]))
-    out[10] = (2 * (in1[5] * in1[5]
-      + in1[4] * in1[6]
-      + in1[2] * in1[8]
-      + 2 * (in1[3] * in1[7] + in1[1] * in1[9])))
+    out[10] = (
+      2 * (
+        in1[5] * in1[5] +
+      in1[4] * in1[6] +
+      in1[2] * in1[8] +
+      2 * (in1[3] * in1[7] + in1[1] * in1[9])
+      )
+    )
     out[11] = (2 * (in1[5] * in1[6] + in1[4] * in1[7] + in1[3] * in1[8] + in1[2] * in1[9]))
-    out[12] = ((in1[6] * in1[6]
-      + 2 * (in1[4] * in1[8] + 2 * (in1[5] * in1[7] + in1[3] * in1[9]))))
+    out[12] = (
+      (
+        in1[6] * in1[6] +
+      2 * (in1[4] * in1[8] + 2 * (in1[5] * in1[7] + in1[3] * in1[9]))
+      )
+    )
     out[13] = (2 * (in1[6] * in1[7] + in1[5] * in1[8] + in1[4] * in1[9]))
     out[14] = (2 * (in1[7] * in1[7] + in1[6] * in1[8] + 2 * in1[5] * in1[9]))
     out[15] = (2 * (in1[7] * in1[8] + in1[6] * in1[9]))
@@ -375,10 +428,12 @@ internal object Field25519 {
   fun expand(input: ByteArray): LongArray {
     val output = LongArray(LIMB_CNT)
     for (i in 0 until LIMB_CNT) {
-      output[i] = ((input[EXPAND_START[i]].toInt() and 0xff).toLong()
+      output[i] = (
+        (input[EXPAND_START[i]].toInt() and 0xff).toLong()
         or ((input[EXPAND_START[i] + 1].toInt() and 0xff).toLong() shl 8)
         or ((input[EXPAND_START[i] + 2].toInt() and 0xff).toLong() shl 16)
-        or ((input[EXPAND_START[i] + 3].toInt() and 0xff).toLong() shl 24)) shr EXPAND_SHIFT[i] and MASK[i and 1].toLong()
+        or ((input[EXPAND_START[i] + 3].toInt() and 0xff).toLong() shl 24)
+      ) shr EXPAND_SHIFT[i] and MASK[i and 1].toLong()
     }
     return output
   }
@@ -477,14 +532,22 @@ internal object Field25519 {
     }
     val output = ByteArray(FIELD_LEN)
     for (i in 0 until LIMB_CNT) {
-      output[EXPAND_START[i]] = (output[EXPAND_START[i]]
-        .toLong() or (input[i] and 0xffL)).toByte()
-      output[EXPAND_START[i] + 1] = (output[EXPAND_START[i] + 1]
-        .toLong() or (input[i] shr 8 and 0xffL)).toByte()
-      output[EXPAND_START[i] + 2] = (output[EXPAND_START[i] + 2]
-        .toLong() or (input[i] shr 16 and 0xffL)).toByte()
-      output[EXPAND_START[i] + 3] = (output[EXPAND_START[i] + 3]
-        .toLong() or (input[i] shr 24 and 0xffL)).toByte()
+      output[EXPAND_START[i]] = (
+        output[EXPAND_START[i]]
+        .toLong() or (input[i] and 0xffL)
+      ).toByte()
+      output[EXPAND_START[i] + 1] = (
+        output[EXPAND_START[i] + 1]
+        .toLong() or (input[i] shr 8 and 0xffL)
+      ).toByte()
+      output[EXPAND_START[i] + 2] = (
+        output[EXPAND_START[i] + 2]
+        .toLong() or (input[i] shr 16 and 0xffL)
+      ).toByte()
+      output[EXPAND_START[i] + 3] = (
+        output[EXPAND_START[i] + 3]
+        .toLong() or (input[i] shr 24 and 0xffL)
+      ).toByte()
     }
     return output
   }
@@ -507,97 +570,97 @@ internal object Field25519 {
     val t0 = LongArray(LIMB_CNT)
     val t1 = LongArray(LIMB_CNT)
 
-    square(z2, z)                                // 2
-    square(t1, z2)                               // 4
-    square(t0, t1)                               // 8
-    mult(z9, t0, z)                              // 9
-    mult(z11, z9, z2)                            // 11
-    square(t0, z11)                              // 22
-    mult(z2To5Minus1, t0, z9)                    // 2^5 - 2^0 = 31
+    square(z2, z) // 2
+    square(t1, z2) // 4
+    square(t0, t1) // 8
+    mult(z9, t0, z) // 9
+    mult(z11, z9, z2) // 11
+    square(t0, z11) // 22
+    mult(z2To5Minus1, t0, z9) // 2^5 - 2^0 = 31
 
-    square(t0, z2To5Minus1)                      // 2^6 - 2^1
-    square(t1, t0)                               // 2^7 - 2^2
-    square(t0, t1)                               // 2^8 - 2^3
-    square(t1, t0)                               // 2^9 - 2^4
-    square(t0, t1)                               // 2^10 - 2^5
-    mult(z2To10Minus1, t0, z2To5Minus1)          // 2^10 - 2^0
+    square(t0, z2To5Minus1) // 2^6 - 2^1
+    square(t1, t0) // 2^7 - 2^2
+    square(t0, t1) // 2^8 - 2^3
+    square(t1, t0) // 2^9 - 2^4
+    square(t0, t1) // 2^10 - 2^5
+    mult(z2To10Minus1, t0, z2To5Minus1) // 2^10 - 2^0
 
-    square(t0, z2To10Minus1)                     // 2^11 - 2^1
-    square(t1, t0)                               // 2^12 - 2^2
+    square(t0, z2To10Minus1) // 2^11 - 2^1
+    square(t1, t0) // 2^12 - 2^2
     run {
       var i = 2
-      while (i < 10) {                           // 2^20 - 2^10
+      while (i < 10) { // 2^20 - 2^10
         square(t0, t1)
         square(t1, t0)
         i += 2
       }
     }
-    mult(z2To20Minus1, t1, z2To10Minus1)         // 2^20 - 2^0
+    mult(z2To20Minus1, t1, z2To10Minus1) // 2^20 - 2^0
 
-    square(t0, z2To20Minus1)                     // 2^21 - 2^1
-    square(t1, t0)                               // 2^22 - 2^2
+    square(t0, z2To20Minus1) // 2^21 - 2^1
+    square(t1, t0) // 2^22 - 2^2
     run {
       var i = 2
-      while (i < 20) {                           // 2^40 - 2^20
+      while (i < 20) { // 2^40 - 2^20
         square(t0, t1)
         square(t1, t0)
         i += 2
       }
     }
-    mult(t0, t1, z2To20Minus1)                   // 2^40 - 2^0
+    mult(t0, t1, z2To20Minus1) // 2^40 - 2^0
 
-    square(t1, t0)                               // 2^41 - 2^1
-    square(t0, t1)                               // 2^42 - 2^2
+    square(t1, t0) // 2^41 - 2^1
+    square(t0, t1) // 2^42 - 2^2
     run {
       var i = 2
-      while (i < 10) {                           // 2^50 - 2^10
+      while (i < 10) { // 2^50 - 2^10
         square(t1, t0)
         square(t0, t1)
         i += 2
       }
     }
-    mult(z2To50Minus1, t0, z2To10Minus1)         // 2^50 - 2^0
+    mult(z2To50Minus1, t0, z2To10Minus1) // 2^50 - 2^0
 
-    square(t0, z2To50Minus1)                     // 2^51 - 2^1
-    square(t1, t0)                               // 2^52 - 2^2
+    square(t0, z2To50Minus1) // 2^51 - 2^1
+    square(t1, t0) // 2^52 - 2^2
     run {
       var i = 2
-      while (i < 50) {                           // 2^100 - 2^50
+      while (i < 50) { // 2^100 - 2^50
         square(t0, t1)
         square(t1, t0)
         i += 2
       }
     }
-    mult(z2To100Minus1, t1, z2To50Minus1)        // 2^100 - 2^0
+    mult(z2To100Minus1, t1, z2To50Minus1) // 2^100 - 2^0
 
-    square(t1, z2To100Minus1)                    // 2^101 - 2^1
-    square(t0, t1)                               // 2^102 - 2^2
+    square(t1, z2To100Minus1) // 2^101 - 2^1
+    square(t0, t1) // 2^102 - 2^2
     run {
       var i = 2
-      while (i < 100) {                          // 2^200 - 2^100
+      while (i < 100) { // 2^200 - 2^100
         square(t1, t0)
         square(t0, t1)
         i += 2
       }
     }
-    mult(t1, t0, z2To100Minus1)                  // 2^200 - 2^0
+    mult(t1, t0, z2To100Minus1) // 2^200 - 2^0
 
-    square(t0, t1)                               // 2^201 - 2^1
-    square(t1, t0)                               // 2^202 - 2^2
+    square(t0, t1) // 2^201 - 2^1
+    square(t1, t0) // 2^202 - 2^2
     var i = 2
-    while (i < 50) {                             // 2^250 - 2^50
+    while (i < 50) { // 2^250 - 2^50
       square(t0, t1)
       square(t1, t0)
       i += 2
     }
-    mult(t0, t1, z2To50Minus1)                   // 2^250 - 2^0
+    mult(t0, t1, z2To50Minus1) // 2^250 - 2^0
 
-    square(t1, t0)                               // 2^251 - 2^1
-    square(t0, t1)                               // 2^252 - 2^2
-    square(t1, t0)                               // 2^253 - 2^3
-    square(t0, t1)                               // 2^254 - 2^4
-    square(t1, t0)                               // 2^255 - 2^5
-    mult(out, t1, z11)                           // 2^255 - 21
+    square(t1, t0) // 2^251 - 2^1
+    square(t0, t1) // 2^252 - 2^2
+    square(t1, t0) // 2^253 - 2^3
+    square(t0, t1) // 2^254 - 2^4
+    square(t1, t0) // 2^255 - 2^5
+    mult(out, t1, z11) // 2^255 - 21
   }
 
   /**

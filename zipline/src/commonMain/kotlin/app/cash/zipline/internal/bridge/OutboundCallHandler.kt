@@ -44,7 +44,12 @@ internal class OutboundCallHandler(
    */
   fun withScope(scope: ZiplineScope): OutboundCallHandler {
     return OutboundCallHandler(
-      serviceName, endpoint, adapter, scope, functionsList, serviceState,
+      serviceName,
+      endpoint,
+      adapter,
+      scope,
+      functionsList,
+      serviceState,
     )
   }
 
@@ -77,7 +82,7 @@ internal class OutboundCallHandler(
     val internalCall = InternalCall(
       serviceName = serviceName,
       function = function,
-      args = argsList
+      args = argsList,
     )
     val externalCall = endpoint.callCodec.encodeCall(internalCall, service)
     val callStart = when (service) {
@@ -172,8 +177,8 @@ internal class OutboundCallHandler(
     var closed = false
   }
 
-  private inner class RealSuspendCallback<R>
-    : SuspendCallback<R>, HasPassByReferenceName, ZiplineScoped {
+  private inner class RealSuspendCallback<R> :
+    SuspendCallback<R>, HasPassByReferenceName, ZiplineScoped {
     lateinit var internalCall: InternalCall
     lateinit var externalCall: Call
     lateinit var continuation: Continuation<R>

@@ -133,14 +133,17 @@ class FastCodeUpdatesTest {
 
     // confirm >= 500 ms has elapsed
     assertTrue(testDuration.inWholeMilliseconds >= 500)
-    assertEquals(listOf(
+    assertEquals(
+      listOf(
       "close socket $wsUrlA",
       "close socket $wsUrlB",
       "close socket $wsUrlC",
       "open socket $wsUrlA",
       "open socket $wsUrlB",
       "open socket $wsUrlC",
-    ), client.log.consumeAsFlow().toList().take(6))
+    ),
+      client.log.consumeAsFlow().toList().take(6),
+    )
   }
 
   @Test
@@ -176,9 +179,12 @@ class FastCodeUpdatesTest {
     job.cancel()
     client.log.close()
 
-    assertEquals(listOf(
+    assertEquals(
+      listOf(
       "open socket $wsUrl",
       "open socket $wsUrl",
-    ), client.log.consumeAsFlow().toList().take(6))
+    ),
+      client.log.consumeAsFlow().toList().take(6),
+    )
   }
 }

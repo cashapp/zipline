@@ -41,12 +41,12 @@ sealed class LoadResult {
      * embedded manifests it is computed by whatever machine performed the embedding.
      */
     val freshAtEpochMs: Long,
-  ): LoadResult()
+  ) : LoadResult()
 
   /**
    * [Exception] from the Zipline code load failure and corresponding metadata.
    */
   data class Failure(
     val exception: Exception,
-  ): LoadResult()
+  ) : LoadResult()
 }

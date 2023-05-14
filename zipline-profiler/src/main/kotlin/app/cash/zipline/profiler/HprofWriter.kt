@@ -34,7 +34,7 @@ import okio.utf8Size
  */
 internal class HprofWriter(
   private val sink: BufferedSink,
-  private val clock: ProfilerClock = DefaultProfilerClock
+  private val clock: ProfilerClock = DefaultProfilerClock,
 ) : Closeable by sink {
   private val headerTime = clock.currentTimeMillis
   private val headerNanoTime = clock.nanoTime
@@ -57,7 +57,7 @@ internal class HprofWriter(
   fun writeControlSettings(
     allocationTraces: Boolean = false,
     cpuSampling: Boolean = false,
-    stackTraceDepth: Short = Short.MAX_VALUE
+    stackTraceDepth: Short = Short.MAX_VALUE,
   ) {
     var bitMaskFlags = 0
     if (allocationTraces) bitMaskFlags = bitMaskFlags or 0x1
@@ -115,7 +115,7 @@ internal class HprofWriter(
   fun allocateClassId(
     className: String,
     classObjectId: Int,
-    stackTraceSerialNumber: Int
+    stackTraceSerialNumber: Int,
   ): Int {
     return classIds.getOrPut(className) {
       val id = classIds.size + 2_000_000

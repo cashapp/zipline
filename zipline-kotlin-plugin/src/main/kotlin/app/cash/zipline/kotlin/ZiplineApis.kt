@@ -89,7 +89,7 @@ internal class ZiplineApis(
 
   val requireContextual: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqPackage.callableId("requireContextual")
+      bridgeFqPackage.callableId("requireContextual"),
     ).single()
 
   /** This symbol for `ziplineServiceSerializer(KClass<*>, List<KSerializer<*>>)`. */
@@ -103,7 +103,7 @@ internal class ZiplineApis(
 
   val listGetFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      StandardClassIds.List.callableId("get")
+      StandardClassIds.List.callableId("get"),
     ).single()
 
   val ziplineFunction: IrClassSymbol
@@ -117,12 +117,12 @@ internal class ZiplineApis(
 
   val returningZiplineFunctionCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqPackage.classId("ReturningZiplineFunction").callableId("call")
+      bridgeFqPackage.classId("ReturningZiplineFunction").callableId("call"),
     ).single()
 
   val suspendingZiplineFunctionCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      bridgeFqPackage.classId("SuspendingZiplineFunction").callableId("callSuspending")
+      bridgeFqPackage.classId("SuspendingZiplineFunction").callableId("callSuspending"),
     ).single()
 
   private val outboundCallHandlerClassId = bridgeFqPackage.classId("OutboundCallHandler")
@@ -132,12 +132,12 @@ internal class ZiplineApis(
 
   val outboundCallHandlerCall: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      outboundCallHandlerClassId.callableId("call")
+      outboundCallHandlerClassId.callableId("call"),
     ).single()
 
   val outboundCallHandlerCallSuspending: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
-      outboundCallHandlerClassId.callableId("callSuspending")
+      outboundCallHandlerClassId.callableId("callSuspending"),
     ).single()
 
   val outboundService: IrClassSymbol
@@ -145,7 +145,7 @@ internal class ZiplineApis(
 
   val outboundServiceCallHandler: IrPropertySymbol
     get() = pluginContext.referenceProperties(
-      outboundServiceClassId.callableId("callHandler")
+      outboundServiceClassId.callableId("callHandler"),
     ).single()
 
   val ziplineService: IrClassSymbol
@@ -156,17 +156,17 @@ internal class ZiplineApis(
 
   val ziplineServiceAdapterSerialName: IrPropertySymbol
     get() = pluginContext.referenceProperties(
-      ziplineServiceAdapterClassId.callableId("serialName")
+      ziplineServiceAdapterClassId.callableId("serialName"),
     ).single()
 
   val ziplineServiceAdapterSerializers: IrPropertySymbol
     get() = pluginContext.referenceProperties(
-      ziplineServiceAdapterClassId.callableId("serializers")
+      ziplineServiceAdapterClassId.callableId("serializers"),
     ).single()
 
   val ziplineServiceAdapterSimpleName: IrPropertySymbol
     get() = pluginContext.referenceProperties(
-      ziplineServiceAdapterClassId.callableId("simpleName")
+      ziplineServiceAdapterClassId.callableId("simpleName"),
     ).single()
 
   val ziplineServiceAdapterZiplineFunctions: IrSimpleFunctionSymbol

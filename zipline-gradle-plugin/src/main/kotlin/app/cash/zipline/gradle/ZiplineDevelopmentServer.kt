@@ -57,14 +57,14 @@ internal open class ZiplineDevelopmentServer @Inject constructor(
         ws.onClose {
           websockets.remove(ws)
         }
-      }
+      },
     )
 
     val http = routes(
       "/" bind static(
         ResourceLoader.Directory(inputDirectory.asFile.absolutePath),
-        Pair("zipline", ContentType.TEXT_PLAIN)
-      )
+        Pair("zipline", ContentType.TEXT_PLAIN),
+      ),
     )
 
     // Keep the connection open by sending a message periodically.

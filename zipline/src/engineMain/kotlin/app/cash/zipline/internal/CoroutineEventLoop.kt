@@ -48,7 +48,7 @@ internal class CoroutineEventLoop(
 
   private inner class DelayedJob(
     val timeoutId: Int,
-    val delayMillis: Int
+    val delayMillis: Int,
   ) : Runnable {
     var canceled = false
     var job: Job? = null

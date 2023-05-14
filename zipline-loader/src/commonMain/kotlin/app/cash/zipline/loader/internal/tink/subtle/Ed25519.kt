@@ -48,7 +48,7 @@ internal object Ed25519 : SignatureAlgorithm {
     XYZ(
       longArrayOf(0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
       longArrayOf(1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
-      longArrayOf(1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+      longArrayOf(1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
     ),
     longArrayOf(1, 0, 0, 0, 0, 0, 0, 0, 0, 0),
   )
@@ -63,7 +63,7 @@ internal object Ed25519 : SignatureAlgorithm {
     0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
     0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
     0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x00.toByte(),
-    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x10.toByte()
+    0x00.toByte(), 0x00.toByte(), 0x00.toByte(), 0x10.toByte(),
   )
 
   /**

@@ -27,7 +27,8 @@ import org.junit.Rule
 import org.junit.Test
 
 class LeakedServicesTest {
-  @Rule @JvmField val ziplineTestRule = ZiplineTestRule()
+  @Rule @JvmField
+  val ziplineTestRule = ZiplineTestRule()
   private val dispatcher = ziplineTestRule.dispatcher
   private val eventListener = LoggingEventListener()
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)

@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 /** Introspect QuickJS for its current memory usage. */
+@EngineApi
 data class MemoryUsage(
   /** Memory allocated. */
   val memoryAllocatedCount: Long,

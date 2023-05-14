@@ -58,7 +58,9 @@ class QuickJsTest {
     assertNull(quickJs.evaluate("undefined;"))
     assertNull(quickJs.evaluate("null;"))
 
-    assertContentEquals(arrayOf("test", true, false, 1, 1.123, null, null),
-      quickJs.evaluate("""["test", true, false, 1, 1.123, undefined, null];""") as Array<Any?>)
+    assertContentEquals(
+      arrayOf("test", true, false, 1, 1.123, null, null),
+      quickJs.evaluate("""["test", true, false, 1, 1.123, undefined, null];""") as Array<Any?>,
+    )
   }
 }

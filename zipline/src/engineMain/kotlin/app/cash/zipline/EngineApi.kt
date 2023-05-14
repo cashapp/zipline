@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Block, Inc.
+ * Copyright (C) 2023 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,22 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.ZiplineService
+package app.cash.zipline
 
-/**
- * Install tracking to notify [eventListener] if [service] is garbage collected without being
- * closed.
- */
-internal expect fun trackLeaks(
-  eventListener: EndpointEventListener,
-  serviceName: String,
-  callHandler: OutboundCallHandler,
-  service: ZiplineService,
+@RequiresOptIn(
+  message = "This API exposes the low-level JS engine. This API will change when the engine changes.",
+  level = RequiresOptIn.Level.WARNING,
 )
-
-/**
- * Call this to identify if any instance registered with [trackLeaks] has since been leaked.
- */
-internal expect fun detectLeaks()
+annotation class EngineApi

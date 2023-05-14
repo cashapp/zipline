@@ -15,13 +15,11 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.EventListener
-import kotlinx.coroutines.CoroutineDispatcher
-import okio.FileSystem
+import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import java.security.SecureRandom
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
-import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import okio.FileSystem
 
 // This file is necessary to get Android tests to build.
 //

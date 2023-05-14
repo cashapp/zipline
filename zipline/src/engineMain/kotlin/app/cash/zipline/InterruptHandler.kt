@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+@EngineApi
 fun interface InterruptHandler {
   /**
    * This function is called back frequently during code execution to detect asynchronous

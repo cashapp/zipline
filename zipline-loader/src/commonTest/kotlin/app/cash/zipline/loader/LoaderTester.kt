@@ -34,7 +34,7 @@ import okio.FileSystem
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoaderTester(
   private val eventListener: EventListener = EventListener.NONE,
-  private val manifestVerifier: ManifestVerifier = NO_SIGNATURE_CHECKS
+  private val manifestVerifier: ManifestVerifier = NO_SIGNATURE_CHECKS,
 ) {
   val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "okio-${randomToken().hex()}"
 
@@ -65,7 +65,7 @@ class LoaderTester(
     cache = testZiplineCache(
       systemFileSystem,
       cacheDir,
-      cacheMaxSizeInBytes.toLong()
+      cacheMaxSizeInBytes.toLong(),
     )
     loader = testZiplineLoader(
       dispatcher = dispatcher,
@@ -77,7 +77,7 @@ class LoaderTester(
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
     ).withCache(
-      cache
+      cache,
     )
   }
 
@@ -101,8 +101,8 @@ class LoaderTester(
     }
     embeddedFileSystem.write(
       embeddedDir / getApplicationManifestFileName(
-        applicationName
-      )
+        applicationName,
+      ),
     ) {
       write(embeddedManifest.manifestBytes)
     }
@@ -125,7 +125,7 @@ class LoaderTester(
     )
     httpClient.filePathToByteString = mapOf(
       manifestUrl to loadedManifest.manifestBytes,
-      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
     )
     return loader.load(
       applicationName = applicationName,
@@ -152,16 +152,17 @@ class LoaderTester(
     val seed = "fail"
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
     val ziplineFileByteString = testFixtures.createZiplineFile(
-      LoaderTestFixtures.createJs(seed), "$seed.js"
+      LoaderTestFixtures.createJs(seed),
+      "$seed.js",
     )
     httpClient.filePathToByteString = mapOf(
-      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
     )
 
     loadZiplineFromLastResult(applicationName, manifestUrl)
 
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
-      " loaded\n"
+      " loaded\n",
     )
   }
 
@@ -189,7 +190,7 @@ class LoaderTester(
     loadZiplineFromLastResult(applicationName, manifestUrl)
 
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
-      " loaded\n"
+      " loaded\n",
     )
   }
 
@@ -212,13 +213,13 @@ class LoaderTester(
       .readByteString()
     httpClient.filePathToByteString = mapOf(
       manifestUrl to malformedManifest,
-      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
     )
 
     loadZiplineFromLastResult(applicationName, manifestUrl)
 
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
-      " loaded\n"
+      " loaded\n",
     )
   }
 
@@ -241,7 +242,7 @@ class LoaderTester(
     loadZiplineFromLastResult(applicationName, manifestUrl)
 
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
-      " loaded\n"
+      " loaded\n",
     )
   }
 
@@ -249,8 +250,9 @@ class LoaderTester(
     val seed = "broken"
     val ziplineFileByteString = testFixtures.createZiplineFile(
       LoaderTestFixtures.createFailureJs(
-        seed
-      ), "$seed.js"
+        seed,
+      ),
+        "$seed.js",
     )
     val loadedManifest = LoaderTestFixtures.createRelativeManifest(
       seed,
@@ -262,7 +264,7 @@ class LoaderTester(
 
     httpClient.filePathToByteString = mapOf(
       manifestUrl to loadedManifest.manifestBytes,
-      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
     )
 
     loadZiplineFromLastResult(applicationName, manifestUrl)
@@ -285,7 +287,7 @@ class LoaderTester(
 
     httpClient.filePathToByteString = mapOf(
       manifestUrl to loadedManifest.manifestBytes,
-      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
     )
 
     loadZiplineFromLastResult(applicationName, manifestUrl) {
