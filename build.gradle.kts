@@ -113,6 +113,21 @@ allprojects {
     }
   }
 
+  // Workaround for https://github.com/Kotlin/dokka/issues/2977.
+  // We disable the C Interop IDE metadata task when generating documentation using Dokka.
+  gradle.taskGraph.whenReady {
+    val hasDokkaTasks = gradle.taskGraph.allTasks.any {
+      it is org.jetbrains.dokka.gradle.AbstractDokkaTask
+    }
+    if (hasDokkaTasks) {
+      // Type is internal so we must look it up with reflection.
+      val cinteropType = Class.forName("org.jetbrains.kotlin.gradle.targets.native.internal.CInteropMetadataDependencyTransformationTask") as Class<Task>
+      tasks.withType(cinteropType).configureEach {
+        enabled = false
+      }
+    }
+  }
+
   // Don't attempt to sign anything if we don't have an in-memory key. Otherwise, the 'build' task
   // triggers 'signJsPublication' even when we aren't publishing (and so don't have signing keys).
   tasks.withType<Sign>().configureEach {
