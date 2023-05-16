@@ -36,7 +36,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 20
 
       - name: Build native library (Linux)
         if: matrix.os == 'ubuntu-latest'
@@ -76,7 +76,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 20
 
       - run: ./gradlew assembleAndroidTest
 
@@ -94,7 +94,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 20
 
       - name: Build Xcode samples
         run: |
@@ -114,7 +114,7 @@ jobs:
       - uses: actions/setup-java@v3
         with:
           distribution: 'zulu'
-          java-version: 11
+          java-version: 20
 
       - uses: actions/download-artifact@v3
       - run: |
