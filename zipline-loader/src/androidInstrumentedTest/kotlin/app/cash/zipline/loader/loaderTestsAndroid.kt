@@ -43,3 +43,5 @@ private fun testSecureRandom() = SecureRandom()
   }
 
 internal actual fun canSignEcdsaP256() = true
+
+internal actual fun getEnv(name: String): String? = System.getenv(name)
