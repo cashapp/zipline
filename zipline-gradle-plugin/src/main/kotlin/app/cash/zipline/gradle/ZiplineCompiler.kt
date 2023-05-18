@@ -22,12 +22,12 @@ import app.cash.zipline.bytecode.SourceMap
 import app.cash.zipline.bytecode.applySourceMapToBytecode
 import app.cash.zipline.bytecode.removeLeadingDotDots
 import app.cash.zipline.internal.collectModuleDependencies
+import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.internal.getModuleDependencies
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
-import app.cash.zipline.loader.internal.fetcher.encodeToString
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
