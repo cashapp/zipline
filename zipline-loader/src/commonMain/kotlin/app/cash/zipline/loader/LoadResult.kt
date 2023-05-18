@@ -16,6 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.ZiplineManifest
 
 /**
  * Final result state from a ZiplineLoader attempt.

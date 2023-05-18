@@ -16,8 +16,8 @@
 
 package app.cash.zipline.gradle
 
-import app.cash.zipline.loader.ZiplineManifest
-import app.cash.zipline.loader.internal.fetcher.encodeToString
+import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.assertDownloadedToEmbeddedManifest

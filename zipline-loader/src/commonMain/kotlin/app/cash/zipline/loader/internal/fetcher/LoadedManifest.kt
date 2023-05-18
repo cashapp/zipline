@@ -15,12 +15,9 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
-import app.cash.zipline.loader.ZiplineManifest
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
-import kotlinx.serialization.json.decodeFromJsonElement
+import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.internal.decodeToManifest
+import app.cash.zipline.internal.encodeToString
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 
@@ -42,37 +39,6 @@ data class LoadedManifest(
     return LoadedManifest(freshManifestBytes, freshManifest, freshAtEpochMs)
   }
 }
-
-private val jsonForManifest = Json {
-  // For backwards-compatibility, allow new fields to be introduced.
-  ignoreUnknownKeys = true
-
-  // Because new releases may change default values, it's best to encode them.
-  encodeDefaults = true
-}
-
-/**
- * Confirm the manifest is of a reasonable size before proceeding to operate on it. 10 KiB is a
- * typical size for our test applications. 640K ought to be enough for anybody.
- */
-const val MANIFEST_MAX_SIZE = 640 * 1024
-
-fun ZiplineManifest.encodeToString(): String {
-  val result = jsonForManifest.encodeToString(this)
-  check(result.length <= MANIFEST_MAX_SIZE) {
-    "manifest larger than $MANIFEST_MAX_SIZE: ${result.length}"
-  }
-  return result
-}
-
-fun String.decodeToManifest(): ZiplineManifest {
-  check(length <= MANIFEST_MAX_SIZE) {
-    "manifest larger than $MANIFEST_MAX_SIZE: $length"
-  }
-  return jsonForManifest.decodeFromString(this)
-}
-
-fun JsonElement.decodeToManifest(): ZiplineManifest = jsonForManifest.decodeFromJsonElement(this)
 
 internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): LoadedManifest {
   val manifest = manifestBytes.utf8().decodeToManifest()

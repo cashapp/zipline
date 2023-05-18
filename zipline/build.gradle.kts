@@ -61,6 +61,9 @@ kotlin {
 
     val engineMain by creating {
       dependsOn(commonMain)
+      dependencies {
+        api(libs.okio.core)
+      }
     }
     val engineTest by creating {
       dependsOn(commonTest)

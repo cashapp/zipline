@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package app.cash.zipline.loader
+package app.cash.zipline
 
-import app.cash.zipline.loader.internal.fetcher.decodeToManifest
-import app.cash.zipline.loader.internal.fetcher.encodeToString
+import app.cash.zipline.internal.decodeToManifest
+import app.cash.zipline.internal.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

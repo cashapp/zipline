@@ -15,9 +15,10 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.internal.signaturePayload
 import app.cash.zipline.loader.internal.SignatureAlgorithm
 import app.cash.zipline.loader.internal.get
-import app.cash.zipline.loader.internal.signaturePayload
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.ByteString.Companion.encodeUtf8

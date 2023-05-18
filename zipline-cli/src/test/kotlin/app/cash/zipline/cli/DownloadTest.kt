@@ -15,8 +15,8 @@
  */
 package app.cash.zipline.cli
 
-import app.cash.zipline.loader.ZiplineManifest
-import app.cash.zipline.loader.internal.fetcher.encodeToString
+import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlin.test.assertEquals

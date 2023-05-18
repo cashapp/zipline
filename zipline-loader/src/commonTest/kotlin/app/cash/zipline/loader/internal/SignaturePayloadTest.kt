@@ -16,7 +16,8 @@
 
 package app.cash.zipline.loader.internal
 
-import app.cash.zipline.loader.ZiplineManifest
+import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.internal.signaturePayload
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals

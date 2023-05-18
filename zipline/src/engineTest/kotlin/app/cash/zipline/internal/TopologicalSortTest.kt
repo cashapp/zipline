@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package app.cash.zipline.loader
+package app.cash.zipline.internal
 
-import app.cash.zipline.loader.internal.isTopologicallySorted
-import app.cash.zipline.loader.internal.topologicalSort
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

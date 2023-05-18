@@ -13,21 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader
+package app.cash.zipline
 
-import app.cash.zipline.loader.internal.ByteStringAsHexSerializer
-import app.cash.zipline.loader.internal.fetcher.encodeToString
-import app.cash.zipline.loader.internal.isTopologicallySorted
-import app.cash.zipline.loader.internal.signaturePayload
-import app.cash.zipline.loader.internal.topologicalSort
+import app.cash.zipline.internal.ByteStringAsHexSerializer
+import app.cash.zipline.internal.encodeToString
+import app.cash.zipline.internal.isTopologicallySorted
+import app.cash.zipline.internal.signaturePayload
+import app.cash.zipline.internal.topologicalSort
 import kotlinx.serialization.Serializable
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 
 /**
- * Preferred construction is via [ZiplineManifest.create]
- * Constructor is still accessible from .copy() on data class, alternatively can implement without the data class but
- * with manual equals/hashCode to support value equality
+ * Describes a Zipline application that can be loaded and executed.
+ *
+ * Use [ZiplineManifest.create] to create instances.
  */
 @Serializable
 data class ZiplineManifest private constructor(

@@ -17,8 +17,8 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
+import app.cash.zipline.internal.MANIFEST_MAX_SIZE
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
-import app.cash.zipline.loader.internal.fetcher.MANIFEST_MAX_SIZE
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlinx.coroutines.ExperimentalCoroutinesApi

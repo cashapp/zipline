@@ -17,6 +17,7 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.bytecode.SourceMap
 import app.cash.zipline.bytecode.applySourceMapToBytecode
 import app.cash.zipline.bytecode.removeLeadingDotDots
@@ -25,7 +26,6 @@ import app.cash.zipline.internal.getModuleDependencies
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
-import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 import app.cash.zipline.loader.internal.fetcher.encodeToString
 import java.io.File
