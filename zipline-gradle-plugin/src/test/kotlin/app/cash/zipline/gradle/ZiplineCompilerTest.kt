@@ -69,7 +69,7 @@ class ZiplineCompilerTest {
       |	at JavaScript.sayHello(throwException.kt:3)
       |	at JavaScript.<eval>(test.js)
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
   }
 

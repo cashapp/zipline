@@ -166,7 +166,7 @@ class ZiplinePluginTest {
       |     PUBLIC KEY: [\da-f]{64}
       |    PRIVATE KEY: [\da-f]{64}
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
   }
 

@@ -42,7 +42,7 @@ class QuickJsJvmTest {
         |  nope();
         |}
         |
-""".trimMargin(),
+        """.trimMargin(),
         "test.js",
       )
     }

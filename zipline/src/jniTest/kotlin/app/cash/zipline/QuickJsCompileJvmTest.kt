@@ -40,7 +40,7 @@ class QuickJsCompileJvmTest {
       |  nope();
       |}
       |
-""".trimMargin(),
+      """.trimMargin(),
       "C:\\Documents\\myFile.js",
     )
     val t = assertFailsWith<QuickJsException> {

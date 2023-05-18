@@ -81,7 +81,7 @@ class ZiplineLoaderTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
     zipline.close()
   }
@@ -100,7 +100,7 @@ class ZiplineLoaderTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
     zipline.close()
   }
@@ -120,7 +120,7 @@ class ZiplineLoaderTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
     ziplineColdCache.close()
 
@@ -136,7 +136,7 @@ class ZiplineLoaderTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
     ziplineWarmedCache.close()
   }
@@ -164,7 +164,7 @@ class ZiplineLoaderTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
     zipline.close()
   }
@@ -210,7 +210,7 @@ class ZiplineLoaderTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
     zipline.close()
   }

@@ -62,7 +62,7 @@ class Utf8Test {
         |  nope();
         |}
         |
-""".trimMargin(),
+        """.trimMargin(),
         "a\uD83D\uDC1Dcdefg.js",
       )
       quickjs.evaluate("formatter.format();")
