@@ -79,7 +79,7 @@ class ProductionFetcherReceiverTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
       zipline.quickJs.getLog(),
     )
   }
@@ -104,7 +104,7 @@ class ProductionFetcherReceiverTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
       zipline.quickJs.getLog(),
     )
   }
@@ -126,7 +126,7 @@ class ProductionFetcherReceiverTest {
       |alpha loaded
       |bravo loaded
       |
-""".trimMargin(),
+      """.trimMargin(),
       zipline.quickJs.getLog(),
     )
 

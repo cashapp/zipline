@@ -128,7 +128,7 @@ class ApplySourceMapToBytecodeTest {
       |	at JavaScript.sayHello(throwException.kt:3)
       |	at JavaScript.<eval>(?)
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
   }
 
@@ -181,7 +181,7 @@ class ApplySourceMapToBytecodeTest {
       |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
       |  at JavaScript.<eval>(?)
       |
-""".trimMargin(),
+      """.trimMargin(),
     )
   }
 

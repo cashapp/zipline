@@ -201,7 +201,7 @@ class ZiplineManifestTest {
         |  "mainFunction": "zipline.ziplineMain",
         |  "version": null
         |}
-      """.trimMargin(),
+        """.trimMargin(),
       prettyPrint(serialized),
     )
 
