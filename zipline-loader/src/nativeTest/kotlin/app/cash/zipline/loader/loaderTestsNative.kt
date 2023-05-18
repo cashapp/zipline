@@ -17,10 +17,11 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import kotlin.random.Random
+import kotlinx.cinterop.toKString
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 import okio.FileSystem
-import okio.Path.Companion.toPath
+import platform.posix.getenv
 
 actual val systemFileSystem = FileSystem.SYSTEM
 
@@ -30,9 +31,6 @@ actual fun randomByteString(size: Int): ByteString {
   return Random.nextBytes(size).toByteString()
 }
 
-internal actual fun canLoadTestResources(): Boolean {
-  // If the current working directory contains CoreSimulator, don't try to load test resources.
-  return "CoreSimulator" !in systemFileSystem.canonicalize(".".toPath()).segments
-}
-
 internal actual fun canSignEcdsaP256() = false
+
+internal actual fun getEnv(name: String): String? = getenv(name)?.toKString()

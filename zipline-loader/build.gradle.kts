@@ -1,7 +1,6 @@
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import de.undercouch.gradle.tasks.download.Download
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
@@ -156,34 +155,6 @@ sqldelight {
   database("Database") {
     packageName = "app.cash.zipline.loader.internal.cache"
   }
-}
-
-// Fetch the EdDSA test suite from https://github.com/google/wycheproof/
-val fetchWycheproofJson by tasks.creating(Download::class) {
-  val wycheproof = file("$buildDir/wycheproof")
-  val wycheproofZip = file("$wycheproof/wycheproof.zip")
-  val eddsaTestJson = file("$wycheproof/eddsa_test.json")
-  val ecdsaP256Json = file("$wycheproof/ecdsa_secp256r1_sha256_test.json")
-
-  onlyIf { !eddsaTestJson.exists() || !ecdsaP256Json.exists() }
-  tempAndMove(true)
-  src("https://github.com/google/wycheproof/archive/d8ed1ba95ac4c551db67f410c06131c3bc00a97c.zip")
-  dest(wycheproofZip)
-
-  doLast {
-    copy {
-      from(zipTree(wycheproofZip)
-        .matching {
-          include("**/testvectors/eddsa_test.json")
-          include("**/testvectors/ecdsa_secp256r1_sha256_test.json")
-        }.files)
-      into(wycheproof)
-    }
-  }
-}
-
-tasks.withType<Test> {
-  dependsOn(fetchWycheproofJson)
 }
 
 afterEvaluate {

@@ -42,6 +42,4 @@ private fun testSecureRandom() = SecureRandom()
     it.nextLong() // Force seeding.
   }
 
-internal actual fun canLoadTestResources() = true
-
 internal actual fun canSignEcdsaP256() = true

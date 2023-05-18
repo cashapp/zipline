@@ -9,6 +9,9 @@ import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
+import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 buildscript {
   repositories {
@@ -206,5 +209,20 @@ allprojects {
         }
       }
     }
+  }
+}
+
+allprojects {
+  tasks.withType<KotlinJvmTest>().configureEach {
+    environment("ZIPLINE_ROOT", rootDir)
+  }
+
+  tasks.withType<KotlinNativeTest>().configureEach {
+    environment("SIMCTL_CHILD_ZIPLINE_ROOT", rootDir)
+    environment("ZIPLINE_ROOT", rootDir)
+  }
+
+  tasks.withType<KotlinJsTest>().configureEach {
+    environment("ZIPLINE_ROOT", rootDir.toString())
   }
 }

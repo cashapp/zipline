@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.loader.internal
 
-import app.cash.zipline.loader.canLoadTestResources
 import app.cash.zipline.loader.internal.tink.subtle.loadEcdsaP256TestJson
 import app.cash.zipline.loader.testing.SampleKeys
 import kotlin.test.Test
@@ -59,8 +58,6 @@ class EcdsaP256Test {
 
   @Test
   fun testVerificationWithWycheproofVectors() {
-    if (!canLoadTestResources()) return
-
     // SecKeyVerifySignature is not strict about BER vs. DER encoding, and so some signatures are
     // accepted even though they are not in canonical form. This is not a cryptographic weakness,
     // just an overly lenient ASN.1 decoder. These are bugs in the underlying Apple crypto code.
