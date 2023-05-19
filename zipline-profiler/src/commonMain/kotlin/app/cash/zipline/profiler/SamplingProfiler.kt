@@ -18,12 +18,12 @@ package app.cash.zipline.profiler
 import app.cash.zipline.EngineApi
 import app.cash.zipline.InterruptHandler
 import app.cash.zipline.QuickJs
-import java.io.File
 import okio.Buffer
 import okio.BufferedSink
 import okio.Closeable
+import okio.FileSystem
+import okio.Path
 import okio.buffer
-import okio.sink
 
 /**
  * Starts collecting CPU samples and writing them to [hprofFile]. The caller must close the returned
@@ -35,8 +35,9 @@ import okio.sink
  * @param hprofFile a new file to write profiling data to. Typically, such files end with `.hprof`.
  */
 @EngineApi
-fun QuickJs.startCpuSampling(hprofFile: File): Closeable {
-  return startCpuSampling(hprofFile.sink().buffer())
+fun QuickJs.startCpuSampling(fileSystem: FileSystem, hprofFile: Path): Closeable {
+  val bufferedSink = fileSystem.sink(hprofFile).buffer()
+  return startCpuSampling(bufferedSink)
 }
 
 @EngineApi
@@ -45,9 +46,11 @@ fun QuickJs.startCpuSampling(hprofSink: BufferedSink): Closeable {
   val previousInterruptHandler = interruptHandler
   interruptHandler = samplingProfiler
 
-  return Closeable {
-    interruptHandler = previousInterruptHandler
-    samplingProfiler.close()
+  return object : Closeable {
+    override fun close() {
+      interruptHandler = previousInterruptHandler
+      samplingProfiler.close()
+    }
   }
 }
 
@@ -135,14 +138,4 @@ internal class SamplingProfiler internal constructor(
   private companion object {
     val STACK_FRAME_REGEX = Regex("    at ([^ ]+) \\(([^ :]+)(?::(\\d+))?\\)\n")
   }
-}
-
-internal interface ProfilerClock {
-  val nanoTime: Long
-  val currentTimeMillis: Long
-}
-
-internal object DefaultProfilerClock : ProfilerClock {
-  override val nanoTime: Long get() = System.nanoTime()
-  override val currentTimeMillis: Long get() = System.currentTimeMillis()
 }

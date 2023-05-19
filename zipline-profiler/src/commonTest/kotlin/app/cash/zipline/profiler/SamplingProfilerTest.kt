@@ -16,15 +16,16 @@
 package app.cash.zipline.profiler
 
 import app.cash.zipline.QuickJs
-import java.io.File
-import org.junit.After
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import okio.Path.Companion.toPath
+import okio.use
 
 internal class SamplingProfilerTest {
   private val quickJs = QuickJs.create()
 
-  @Before fun setUp() {
+  @BeforeTest fun setUp() {
     quickJs.evaluate(
       """
       |function fib0() {
@@ -120,13 +121,14 @@ internal class SamplingProfilerTest {
     )
   }
 
-  @After fun tearDown() {
+  @AfterTest fun tearDown() {
     quickJs.close()
   }
 
   /** This test just confirms the sampling profiler completes normally. */
-  @Test fun happyPath() {
-    quickJs.startCpuSampling(File("fibonacci.hprof")).use {
+  @Test
+  fun happyPath() {
+    quickJs.startCpuSampling(SYSTEM_FILESYSTEM, "fibonacci.hprof".toPath()).use {
       for (i in 0 until 100) {
         quickJs.evaluate("""fib20()""".trimMargin())
       }
