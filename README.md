@@ -218,9 +218,10 @@ Zipline uses unstable APIs in its implementation and is sensitive to version upd
 components.
 
 | Component            | Supported Version | Notes                                                                       |
-| :------------------- | :---------------- | :-------------------------------------------------------------------------- |
+|:---------------------|:------------------|:----------------------------------------------------------------------------|
 | Kotlin Compiler      | 1.8.20            | Kotlin compiler plugins do not yet have a stable API.                       |
-| Kotlin Serialization | 1.4.0             | For `decodeFromDynamic()`, `encodeToDynamic()`, and `ContextualSerializer`. |
+| Kotlin Serialization | 1.5.1             | For `decodeFromDynamic()`, `encodeToDynamic()`, and `ContextualSerializer`. |
+| Kotlin Coroutines    | 1.7.1             | For `transformLatest()` and `Deferred.getCompleted()`.                      |
 
 We intend to use stable APIs as soon as they are available.
 
