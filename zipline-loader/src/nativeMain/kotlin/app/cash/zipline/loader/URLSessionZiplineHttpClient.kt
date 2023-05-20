@@ -19,7 +19,6 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.native.concurrent.freeze
 import kotlinx.coroutines.CancellableContinuation
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import okio.ByteString
 import okio.ByteString.Companion.toByteString

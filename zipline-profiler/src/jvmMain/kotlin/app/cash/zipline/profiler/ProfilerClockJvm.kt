@@ -18,4 +18,3 @@ package app.cash.zipline.profiler
 internal actual object DefaultProfilerClock : ProfilerClock {
   override val nanoTime: Long get() = System.nanoTime()
 }
-

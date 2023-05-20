@@ -15,8 +15,6 @@
  */
 package app.cash.zipline.profiler
 
-import okio.FileSystem
-
 internal interface ProfilerClock {
   val nanoTime: Long
 }
