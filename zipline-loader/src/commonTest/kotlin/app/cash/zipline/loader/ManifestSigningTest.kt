@@ -15,7 +15,8 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.loader.internal.fetcher.encodeToString
+import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.testing.SampleKeys
 import kotlin.test.Test
 import kotlin.test.assertFailsWith

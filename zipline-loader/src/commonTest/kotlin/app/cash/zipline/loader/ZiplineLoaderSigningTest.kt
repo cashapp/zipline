@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.loader.internal.fetcher.encodeToString
+import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl

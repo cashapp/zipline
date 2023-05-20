@@ -16,6 +16,8 @@
 package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.EventListener
+import app.cash.zipline.internal.MANIFEST_MAX_SIZE
+import app.cash.zipline.internal.decodeToManifest
 import app.cash.zipline.loader.ZiplineHttpClient
 import app.cash.zipline.loader.internal.resolveUrl
 import kotlinx.serialization.json.Json

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.loader.internal
+package app.cash.zipline.internal
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
@@ -95,13 +95,13 @@ import kotlinx.serialization.json.jsonObject
  * Note that if the manifest contains fields unknown to the signer, these fields must be copied to
  * the signature payload.
  */
-internal fun signaturePayload(manifest: JsonElement): JsonElement {
+fun signaturePayload(manifest: JsonElement): JsonElement {
   val newContent = manifest.jsonObject.toMutableMap()
   newContent.remove("unsigned")
   return JsonObject(newContent)
 }
 
-internal fun signaturePayload(manifestJson: String): String {
+fun signaturePayload(manifestJson: String): String {
   val jsonElement = Json.parseToJsonElement(manifestJson)
   val signaturePayload = signaturePayload(jsonElement)
   return Json.encodeToString(JsonElement.serializer(), signaturePayload)

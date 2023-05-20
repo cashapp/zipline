@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package app.cash.zipline.loader.internal
+package app.cash.zipline.internal
 
 /**
  * Returns a new list where each element is preceded by its results in [sourceToTarget]. The first

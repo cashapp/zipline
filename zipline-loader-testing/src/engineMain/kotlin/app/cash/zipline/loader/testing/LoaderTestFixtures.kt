@@ -17,11 +17,11 @@
 package app.cash.zipline.loader.testing
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
-import app.cash.zipline.loader.ZiplineManifest
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
-import app.cash.zipline.loader.internal.fetcher.encodeToString
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlinx.serialization.decodeFromString

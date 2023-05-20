@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.internal.SignatureAlgorithm
 import app.cash.zipline.loader.internal.get
 import okio.ByteString

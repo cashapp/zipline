@@ -17,11 +17,11 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
+import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.loadJsModule
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
-import app.cash.zipline.loader.ZiplineManifest
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import kotlin.test.assertEquals

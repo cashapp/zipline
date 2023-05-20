@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
+import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.internal.runApplication
 import app.cash.zipline.loader.internal.fetcher.FsCachingFetcher
 import app.cash.zipline.loader.internal.fetcher.FsEmbeddedFetcher

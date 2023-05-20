@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.turbine.test
 import app.cash.zipline.Zipline
+import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.internal.getLog
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
