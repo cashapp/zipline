@@ -16,7 +16,6 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.testing.SampleKeys
 import kotlin.test.Test
 import kotlin.test.assertFailsWith
@@ -230,7 +229,7 @@ class ManifestSigningTest {
    * unknown fields are preserved. For tests, we can encode directly.
    */
   private fun ManifestVerifier.verify(manifest: ZiplineManifest) {
-    val manifestBytes = manifest.encodeToString().encodeUtf8()
+    val manifestBytes = manifest.encodeJson().encodeUtf8()
     return verify(manifestBytes, manifest)
   }
 }

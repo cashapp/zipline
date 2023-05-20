@@ -17,10 +17,8 @@ package app.cash.zipline.internal
 
 import app.cash.zipline.ZiplineManifest
 import kotlinx.serialization.KSerializer
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.descriptors.PrimitiveKind
 import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
-import kotlinx.serialization.encodeToString
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.json.Json
@@ -42,7 +40,7 @@ internal object ByteStringAsHexSerializer : KSerializer<ByteString> {
   }
 }
 
-private val jsonForManifest = Json {
+internal val jsonForManifest = Json {
   // For backwards-compatibility, allow new fields to be introduced.
   ignoreUnknownKeys = true
 
@@ -54,21 +52,6 @@ private val jsonForManifest = Json {
  * Confirm the manifest is of a reasonable size before proceeding to operate on it. 10 KiB is a
  * typical size for our test applications. 640K ought to be enough for anybody.
  */
-const val MANIFEST_MAX_SIZE = 640 * 1024
+internal const val MANIFEST_MAX_SIZE = 640 * 1024
 
-fun ZiplineManifest.encodeToString(): String {
-  val result = jsonForManifest.encodeToString(this)
-  check(result.length <= MANIFEST_MAX_SIZE) {
-    "manifest larger than $MANIFEST_MAX_SIZE: ${result.length}"
-  }
-  return result
-}
-
-fun String.decodeToManifest(): ZiplineManifest {
-  check(length <= MANIFEST_MAX_SIZE) {
-    "manifest larger than $MANIFEST_MAX_SIZE: $length"
-  }
-  return jsonForManifest.decodeFromString(this)
-}
-
-fun JsonElement.decodeToManifest(): ZiplineManifest = jsonForManifest.decodeFromJsonElement(this)
+internal fun JsonElement.decodeToManifest(): ZiplineManifest = jsonForManifest.decodeFromJsonElement(this)

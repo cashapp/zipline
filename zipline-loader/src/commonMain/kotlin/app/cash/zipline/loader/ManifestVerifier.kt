@@ -16,7 +16,6 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.signaturePayload
 import app.cash.zipline.loader.internal.SignatureAlgorithm
 import app.cash.zipline.loader.internal.get
 import okio.ByteString
@@ -42,10 +41,11 @@ class ManifestVerifier private constructor(
    *
    * This throws an exception if no trusted signature is found, or if a signature doesn't verify.
    */
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
   fun verify(manifestBytes: ByteString, manifest: ZiplineManifest) {
     if (!doSignatureChecks) return
 
-    val signaturePayload = signaturePayload(manifestBytes.utf8())
+    val signaturePayload = app.cash.zipline.internal.signaturePayload(manifestBytes.utf8())
     val signaturePayloadBytes = signaturePayload.encodeUtf8()
 
     for ((keyName, signature) in manifest.signatures) {

@@ -16,11 +16,13 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.ByteStringAsHexSerializer
-import app.cash.zipline.internal.encodeToString
+import app.cash.zipline.internal.MANIFEST_MAX_SIZE
 import app.cash.zipline.internal.isTopologicallySorted
+import app.cash.zipline.internal.jsonForManifest
 import app.cash.zipline.internal.signaturePayload
 import app.cash.zipline.internal.topologicalSort
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 
@@ -135,9 +137,17 @@ data class ZiplineManifest private constructor(
    */
   val signaturePayload: ByteString
     get() {
-      val signaturePayloadString = signaturePayload(encodeToString())
+      val signaturePayloadString = signaturePayload(encodeJson())
       return signaturePayloadString.encodeUtf8()
     }
+
+  fun encodeJson(): String {
+    val result = jsonForManifest.encodeToString(this)
+    check(result.length <= MANIFEST_MAX_SIZE) {
+      "manifest larger than $MANIFEST_MAX_SIZE: ${result.length}"
+    }
+    return result
+  }
 
   companion object {
     fun create(
@@ -168,6 +178,13 @@ data class ZiplineManifest private constructor(
         mainFunction = mainFunction,
         version = version,
       )
+    }
+
+    fun decodeJson(s: String): ZiplineManifest {
+      check(s.length <= MANIFEST_MAX_SIZE) {
+        "manifest larger than $MANIFEST_MAX_SIZE: ${s.length}"
+      }
+      return jsonForManifest.decodeFromString(s)
     }
   }
 }

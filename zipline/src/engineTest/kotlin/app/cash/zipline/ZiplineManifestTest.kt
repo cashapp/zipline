@@ -16,8 +16,6 @@
 
 package app.cash.zipline
 
-import app.cash.zipline.internal.decodeToManifest
-import app.cash.zipline.internal.encodeToString
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -172,7 +170,7 @@ class ZiplineManifestTest {
       mainFunction = "zipline.ziplineMain",
     )
 
-    val serialized = original.encodeToString()
+    val serialized = original.encodeJson()
     assertEquals(
         """
         |{
@@ -205,7 +203,7 @@ class ZiplineManifestTest {
       prettyPrint(serialized),
     )
 
-    val parsed = serialized.decodeToManifest()
+    val parsed = ZiplineManifest.decodeJson(serialized)
     assertEquals(original, parsed)
   }
 
@@ -237,7 +235,7 @@ class ZiplineManifestTest {
 
     assertEquals(
       manifest,
-      serialized.decodeToManifest(),
+      ZiplineManifest.decodeJson(serialized),
     )
   }
 
@@ -269,7 +267,7 @@ class ZiplineManifestTest {
 
     assertEquals(
       manifest,
-      serialized.decodeToManifest(),
+      ZiplineManifest.decodeJson(serialized),
     )
   }
 }

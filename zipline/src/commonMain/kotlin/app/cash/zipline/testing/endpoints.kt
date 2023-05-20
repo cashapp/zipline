@@ -60,7 +60,7 @@ internal fun newEndpointPair(
   return pair.a to pair.b
 }
 
-val nullEndpointEventListener = object : EndpointEventListener {
+internal val nullEndpointEventListener = object : EndpointEventListener {
   override fun bindService(name: String, service: ZiplineService) {
   }
 

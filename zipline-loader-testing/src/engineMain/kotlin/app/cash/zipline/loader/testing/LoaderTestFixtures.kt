@@ -13,18 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package app.cash.zipline.loader.testing
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -64,13 +61,13 @@ class LoaderTestFixtures {
     baseUrl = manifestUrl,
   )
 
-  val manifestJsonString = manifest.encodeToString()
+  val manifestJsonString = manifest.encodeJson()
   val manifestByteString = manifestJsonString.encodeUtf8()
 
   val manifestNoBaseUrl = manifest.copy(
     baseUrl = null,
   )
-  val manifestNoBaseUrlJsonString = manifest.encodeToString()
+  val manifestNoBaseUrlJsonString = manifest.encodeJson()
   val manifestNoBaseUrlByteString = manifestNoBaseUrlJsonString.encodeUtf8()
 
   val embeddedManifest = manifest.copy(

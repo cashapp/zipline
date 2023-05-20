@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package app.cash.zipline.loader.internal
+package app.cash.zipline.internal
 
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.signaturePayload
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals

@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
@@ -66,7 +65,7 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(testFixtures.manifest)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifest.encodeToString().encodeUtf8(),
+      manifestUrl to manifest.encodeJson().encodeUtf8(),
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )
@@ -94,7 +93,7 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(manifestWithBadChecksum)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifest.encodeToString().encodeUtf8(),
+      manifestUrl to manifest.encodeJson().encodeUtf8(),
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.alphaByteString,
     )
@@ -115,7 +114,7 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(testFixtures.manifest)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifest.encodeToString().encodeUtf8(),
+      manifestUrl to manifest.encodeJson().encodeUtf8(),
       alphaUrl to testFixtures.alphaByteString,
       bravoUrl to testFixtures.bravoByteString,
     )

@@ -17,7 +17,6 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
-import app.cash.zipline.internal.MANIFEST_MAX_SIZE
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -58,6 +57,9 @@ class LoaderTester(
 
   internal lateinit var loader: ZiplineLoader
   internal lateinit var cache: ZiplineCache
+
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+  private val manifestMaxSize = app.cash.zipline.internal.MANIFEST_MAX_SIZE
 
   fun beforeTest() {
     systemFileSystem.createDirectories(tempDir, mustCreate = true)
@@ -179,7 +181,7 @@ class LoaderTester(
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
 
     val tooLargeManifest = Buffer()
-      .writeUtf8(" ".repeat(MANIFEST_MAX_SIZE - loadedManifest.manifestBytes.size + 1))
+      .writeUtf8(" ".repeat(manifestMaxSize - loadedManifest.manifestBytes.size + 1))
       .write(loadedManifest.manifestBytes)
       .readByteString()
     httpClient.filePathToByteString = mapOf(

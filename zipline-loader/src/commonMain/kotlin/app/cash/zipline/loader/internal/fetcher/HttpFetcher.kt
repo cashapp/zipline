@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+
 package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.EventListener

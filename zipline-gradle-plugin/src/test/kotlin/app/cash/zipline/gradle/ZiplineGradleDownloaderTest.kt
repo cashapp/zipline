@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package app.cash.zipline.gradle
 
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.assertDownloadedToEmbeddedManifest
@@ -63,7 +61,7 @@ class ZiplineGradleDownloaderTest {
       ),
       mainFunction = "zipline.ziplineMain",
     )
-    val manifestJsonString = manifest.encodeToString()
+    val manifestJsonString = manifest.encodeJson()
 
     // Enqueue the manifest
     webServer.enqueue(

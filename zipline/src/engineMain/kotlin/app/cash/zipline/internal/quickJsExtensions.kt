@@ -1,7 +1,6 @@
 package app.cash.zipline.internal
 
 import app.cash.zipline.QuickJs
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 fun QuickJs.collectModuleDependencies() {
@@ -18,7 +17,7 @@ fun QuickJs.getModuleDependencies(): List<String> {
   return dependencies
 }
 
-fun QuickJs.getGlobalThis(key: String): String? {
+internal fun QuickJs.getGlobalThis(key: String): String? {
   return evaluate("globalThis.$key", "getGlobalThis.js") as String?
 }
 
