@@ -1,0 +1,68 @@
+<!doctype html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>signaturePayload</title>
+<link href="../../images/logo-icon.svg" rel="icon" type="image/svg"><script>var pathToRoot = "../../";</script>    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../styles/style.css" rel="Stylesheet">
+<link href="../../styles/jetbrains-mono.css" rel="Stylesheet">
+<link href="../../styles/main.css" rel="Stylesheet">
+<link href="../../styles/prism.css" rel="Stylesheet">
+<link href="../../styles/logo-styles.css" rel="Stylesheet">
+<script type="text/javascript" src="../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<body>
+<div class="navigation-wrapper" id="navigation-wrapper">
+    <div id="leftToggler"><span class="icon-toggler"></span></div>
+    <div class="library-name">
+<a href="../../index.html">
+<span>zipline-root</span>            </a>    </div>
+    <div>1.0.0-SNAPSHOT
+    </div>
+    <div class="pull-right d-flex">
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector common-like" data-active="" data-filter=":zipline:dokkaHtmlPartial/engineMain">engine</button>
+        </div>
+        <button id="theme-toggle-button"><span id="theme-toggle"></span></button>
+        <div id="searchBar"></div>
+    </div>
+</div>
+<div id="container">
+    <div id="leftColumn">
+        <div id="sideMenu"></div>
+    </div>
+    <div id="main">
+<div class="main-content" data-page-type="member" id="content" pageids="zipline::app.cash.zipline.internal//signaturePayload/#kotlinx.serialization.json.JsonElement/PointingToDeclaration//-1979134320">
+  <div class="breadcrumbs"><a href="../index.html">zipline</a><span class="delimiter">/</span><a href="index.html">app.cash.zipline.internal</a><span class="delimiter">/</span><span class="current">signaturePayload</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>signature</span><wbr><span><span>Payload</span></span></h1>
+  </div>
+  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/engineMain" data-filterable-set=":zipline:dokkaHtmlPartial/engineMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/engineMain">engine</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/engineMain"><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">fun </span><a href="signature-payload.html"><span class="token function">signaturePayload</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">manifest<span class="token operator">: </span><span data-unresolved-link="kotlinx.serialization.json/JsonElement///PointingToDeclaration/">JsonElement</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><span data-unresolved-link="kotlinx.serialization.json/JsonElement///PointingToDeclaration/">JsonElement</span></div><p class="paragraph"></p><p class="paragraph">Signature Payload</p> -----------------<p></p><p class="paragraph">We’d like to embed the signature in the manifest itself. But we can’t sign the manifest if it contains the signature; that’s circular. Instead, we create a file with equivalent content and sign that.</p><p class="paragraph">To create a signature payload:</p><ol><li><p class="paragraph">Create a JSON document that is a copy of the manifest. This operates on the JSON model and     not the decoded model to ensure that unknown fields are covered by signatures.</p></li><li><p class="paragraph">Remove the <code class="lang-kotlin">unsigned</code> property.</p></li><li><p class="paragraph">Encode this new document as JSON with no unnecessary whitespace.</p></li></ol><p class="paragraph">The UTF-8 bytes of the JSON are the input to the signing function.</p><p class="paragraph"></p><p class="paragraph">Example</p> -------<p></p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">{<br>  "unsigned": {<br>    "signatures": {<br>      "kochiku20220705": "304502204b9ea1b30b065afcc38ce238a58a63c7ea341a37",<br>    },<br>    "baseUrl": "https://example.com/cdn/59044aae339f8356/"<br>  }<br>  "modules": {<br>    "./kotlin_kotlin.js": {<br>      "url": "kotlin_kotlin.zipline",<br>      "sha256": "44e6b8c5ad603fca0f38e2d45fbd610ced3315fa96756fb4df361a2a7fa6edb7"<br>    },<br>    "./sample-app.js": {<br>      "url": "cash-sample-app.zipline",<br>      "sha256": "e460f2bd8787f06f2db09aa9dd4e75de3d12961e1df1f77da16ff323007abad1",<br>      "dependsOnIds": [<br>        "./kotlin_kotlin.js"<br>      ]<br>    }<br>  },<br>  "moduleId": "./sample-app.js",<br>  "mainFunction": "com.squareup.cash.prepareSample"<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Steps 1–2 produce this intermediate JSON:</p><div class="sample-container"><pre><code class="block lang-kotlin" theme="idea">{<br>  "modules": {<br>    "./kotlin_kotlin.js": {<br>      "url": "kotlin_kotlin.zipline",<br>      "sha256": "44e6b8c5ad603fca0f38e2d45fbd610ced3315fa96756fb4df361a2a7fa6edb7"<br>    },<br>    "./sample-app.js": {<br>      "url": "cash-sample-app.zipline",<br>      "sha256": "e460f2bd8787f06f2db09aa9dd4e75de3d12961e1df1f77da16ff323007abad1",<br>      "dependsOnIds": [<br>        "./kotlin_kotlin.js"<br>      ]<br>    }<br>  },<br>  "moduleId": "./sample-app.js",<br>  "mainFunction": "com.squareup.cash.prepareSample"<br>}</code></pre><span class="top-right-position"><span class="copy-icon"></span><div class="copy-popup-wrapper popup-to-left"><span class="copy-popup-icon"></span><span>Content copied to clipboard</span></div></span></div><p class="paragraph">Before signing, we must perform step 3 (strip whitespace) and encode as UTF-8.</p><p class="paragraph">Note that if the manifest contains fields unknown to the signer, these fields must be copied to the signature payload.</p><hr><div class="symbol monospace"><span class="token keyword"></span><span class="token keyword">fun </span><a href="signature-payload.html"><span class="token function">signaturePayload</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">manifestJson<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></div></div>  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2023 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+    </div>
+</div>
+</body>
+</html>
+
