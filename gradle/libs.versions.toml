@@ -29,7 +29,7 @@ androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.10.1" }
 androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.1" }
 androidx-test-runner = { module = "androidx.test:runner", version = "1.5.2" }
-assertk = "com.willowtreeapps.assertk:assertk:0.26"
+assertk = "com.willowtreeapps.assertk:assertk:0.26.1"
 auto-service-compiler = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
 cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.2.4" }
