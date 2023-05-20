@@ -15,12 +15,10 @@
  */
 package app.cash.zipline.profiler
 
-import java.io.Closeable
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicInteger
 import okio.Buffer
 import okio.BufferedSink
 import okio.ByteString
+import okio.Closeable
 import okio.utf8Size
 
 /**
@@ -36,20 +34,22 @@ internal class HprofWriter(
   private val sink: BufferedSink,
   private val clock: ProfilerClock = DefaultProfilerClock,
 ) : Closeable by sink {
-  private val headerTime = clock.currentTimeMillis
   private val headerNanoTime = clock.nanoTime
   private val elapsedMicros: Int
-    get() = TimeUnit.NANOSECONDS.toMicros(clock.nanoTime - headerNanoTime).toInt()
+    get() = ((clock.nanoTime - headerNanoTime) / 1_000).toInt()
 
   private val stringIds = mutableMapOf<String, Int>()
   private val classIds = mutableMapOf<String, Int>()
   private val stackFrameIds = mutableMapOf<ByteString, Int>()
   private val stackTraceIds = mutableMapOf<ByteString, Int>()
-  private val cpuSamples = mutableMapOf<Int, AtomicInteger>()
+  private val cpuSamples = mutableMapOf<Int, MutableInt>()
 
   fun writeHeaderFrame() {
     sink.writeUtf8("JAVA PROFILE 1.0.1\u0000") // standard header.
     sink.writeInt(4) // size of identifiers.
+
+    // We don't bother to get the current time because it's slightly difficult in multiplatform.
+    val headerTime = 0L
     sink.writeInt((headerTime shr 32).toInt())
     sink.writeInt(headerTime.toInt())
   }
@@ -174,18 +174,22 @@ internal class HprofWriter(
   }
 
   fun addCpuSample(stackTraceId: Int) {
-    cpuSamples.getOrPut(stackTraceId) { AtomicInteger() }.incrementAndGet()
+    cpuSamples.getOrPut(stackTraceId) { MutableInt() }.value++
   }
 
   fun writeCpuSamples() {
     sink.writeByte(0x0d) // Tag.
     sink.writeInt(elapsedMicros)
     sink.writeInt(8 + 8 * cpuSamples.size) // Record length.
-    sink.writeInt(cpuSamples.values.sumOf { it.get() }) // Total samples.
+    sink.writeInt(cpuSamples.values.sumOf { it.value }) // Total samples.
     sink.writeInt(cpuSamples.size) // Number of traces.
     for ((stackTraceId, sampleCount) in cpuSamples) {
-      sink.writeInt(sampleCount.get())
+      sink.writeInt(sampleCount.value)
       sink.writeInt(stackTraceId)
     }
+  }
+
+  private class MutableInt {
+    var value = 0
   }
 }
