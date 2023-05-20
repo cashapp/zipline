@@ -28,8 +28,12 @@ import kotlinx.serialization.json.JsonElement
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
+import okio.Path.Companion.toPath
 
 expect val systemFileSystem: FileSystem
+
+internal val ziplineRoot: Path
+  get() = getEnv("ZIPLINE_ROOT")!!.toPath()
 
 fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
@@ -58,12 +62,6 @@ fun randomToken() = randomByteString(8)
 /** Returns a random byte string of size [size]. */
 expect fun randomByteString(size: Int): ByteString
 
-/**
- * Returns true if this test can load resources. (We don't currently have a mechanism to find test
- * resources like the wycheproof JSON files in the iOS simulator.)
- */
-internal expect fun canLoadTestResources(): Boolean
-
 /** We don't implement ECDSA P-256 signing on non-JNI platforms. */
 internal expect fun canSignEcdsaP256(): Boolean
 
@@ -84,3 +82,5 @@ fun prettyPrint(jsonString: String): String {
 internal fun generateKeyPairForTest(): KeyPair {
   return newKeyPairFromSeed(randomByteString(Field25519.FIELD_LEN))
 }
+
+internal expect fun getEnv(name: String): String?

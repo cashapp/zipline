@@ -15,7 +15,6 @@
 ////////////////////////////////////////////////////////////////////////////////
 package app.cash.zipline.loader.internal.tink.subtle
 
-import app.cash.zipline.loader.canLoadTestResources
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -38,8 +37,6 @@ class Ed25519VerifyTest {
 
   @Test
   fun testVerificationWithWycheproofVectors() {
-    if (!canLoadTestResources()) return
-
     var errors = 0
     val testGroups = loadEddsaTestJson().testGroups
     for (group in testGroups) {

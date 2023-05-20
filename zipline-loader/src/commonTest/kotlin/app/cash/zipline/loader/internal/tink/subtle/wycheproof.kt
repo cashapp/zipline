@@ -15,11 +15,10 @@
 package app.cash.zipline.loader.internal.tink.subtle
 
 import app.cash.zipline.loader.systemFileSystem
+import app.cash.zipline.loader.ziplineRoot
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.Path
-import okio.Path.Companion.toPath
 
 @Serializable
 class WycheproofTestJson(
@@ -72,12 +71,14 @@ class Key(
   val wy: String? = null,
 )
 
+private val wycheproofDir = ziplineRoot / "zipline-loader/src/commonTest/resources/wycheproof/"
+
 fun loadEddsaTestJson(): WycheproofTestJson {
-  return loadWycheproofTestJson("build/wycheproof/eddsa_test.json".toPath())
+  return loadWycheproofTestJson(wycheproofDir / "eddsa_test.json")
 }
 
 fun loadEcdsaP256TestJson(): WycheproofTestJson {
-  return loadWycheproofTestJson("build/wycheproof/ecdsa_secp256r1_sha256_test.json".toPath())
+  return loadWycheproofTestJson(wycheproofDir / "ecdsa_secp256r1_sha256_test.json")
 }
 
 fun loadWycheproofTestJson(path: Path): WycheproofTestJson {
