@@ -16,7 +16,6 @@ module:zipline
 app.cash.zipline
 app.cash.zipline.internal
 app.cash.zipline.internal.bridge
-app.cash.zipline.testing
 module:zipline-cli
 app.cash.zipline.cli
 module:zipline-gradle-plugin
