@@ -16,7 +16,6 @@
 package app.cash.zipline.cli
 
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.encodeToString
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlin.test.assertEquals
@@ -81,7 +80,7 @@ class DownloadTest {
       ),
       mainFunction = "zipline.ziplineMain",
     )
-    val manifestJsonString = manifest.encodeToString()
+    val manifestJsonString = manifest.encodeJson()
 
     // Enqueue the manifest
     webServer.enqueue(

@@ -16,8 +16,6 @@
 package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.decodeToManifest
-import app.cash.zipline.internal.encodeToString
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 
@@ -35,17 +33,17 @@ data class LoadedManifest(
     val freshManifest = manifest.copy(
       freshAtEpochMs = freshAtEpochMs,
     )
-    val freshManifestBytes = freshManifest.encodeToString().encodeUtf8()
+    val freshManifestBytes = freshManifest.encodeJson().encodeUtf8()
     return LoadedManifest(freshManifestBytes, freshManifest, freshAtEpochMs)
   }
 }
 
 internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): LoadedManifest {
-  val manifest = manifestBytes.utf8().decodeToManifest()
+  val manifest = ZiplineManifest.decodeJson(manifestBytes.utf8())
   return LoadedManifest(manifestBytes, manifest, freshAtEpochMs)
 }
 
 internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
-  val manifest = manifestBytes.utf8().decodeToManifest()
+  val manifest = ZiplineManifest.decodeJson(manifestBytes.utf8())
   return LoadedManifest(manifestBytes, manifest, manifest.freshAtEpochMs!!)
 }

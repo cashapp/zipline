@@ -95,13 +95,13 @@ import kotlinx.serialization.json.jsonObject
  * Note that if the manifest contains fields unknown to the signer, these fields must be copied to
  * the signature payload.
  */
-fun signaturePayload(manifest: JsonElement): JsonElement {
+internal fun signaturePayload(manifest: JsonElement): JsonElement {
   val newContent = manifest.jsonObject.toMutableMap()
   newContent.remove("unsigned")
   return JsonObject(newContent)
 }
 
-fun signaturePayload(manifestJson: String): String {
+internal fun signaturePayload(manifestJson: String): String {
   val jsonElement = Json.parseToJsonElement(manifestJson)
   val signaturePayload = signaturePayload(jsonElement)
   return Json.encodeToString(JsonElement.serializer(), signaturePayload)
