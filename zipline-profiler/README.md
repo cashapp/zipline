@@ -7,7 +7,7 @@ in [HPROF format] that is readable by [YourKit].
 Note that this profiler only observes Kotlin/JS.
 
 ```kotlin
-zipline.quickJs.startCpuSampling(File("zipline.hprof")).use {
+zipline.quickJs.startCpuSampling(fileSystem, "zipline.hprof".toPath()).use {
   // ...use Zipline...
 }
 ```
