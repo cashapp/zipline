@@ -33,7 +33,7 @@ import kotlinx.serialization.modules.SerializersModule
  * An outbound channel for delivering calls to the other platform, and an inbound channel for
  * receiving calls from the other platform.
  */
-class Endpoint internal constructor(
+internal class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val userSerializersModule: SerializersModule,
   internal val eventListener: EventListener,

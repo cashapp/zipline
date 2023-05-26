@@ -65,6 +65,7 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
+        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
         import app.cash.zipline.internal.bridge.Endpoint
@@ -77,7 +78,7 @@ class ZiplineKotlinPluginTest {
           }
         }
 
-        fun prepareJsBridges(endpoint: Endpoint) {
+        internal fun prepareJsBridges(endpoint: Endpoint) {
           endpoint.bind<EchoZiplineService>("helloService", TestingEchoService("hello"))
         }
         """,
@@ -100,11 +101,12 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
+        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
         import app.cash.zipline.internal.bridge.Endpoint
 
-        fun takeHelloService(endpoint: Endpoint): EchoZiplineService {
+        internal fun takeHelloService(endpoint: Endpoint): EchoZiplineService {
           return endpoint.take("helloService")
         }
         """,
@@ -135,11 +137,12 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
+        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
         import app.cash.zipline.internal.bridge.Endpoint
 
-        fun prepareJsBridges(endpoint: Endpoint) {
+        internal fun prepareJsBridges(endpoint: Endpoint) {
           endpoint.bind<TestingEchoService>("helloService", TestingEchoService)
         }
 
@@ -151,7 +154,7 @@ class ZiplineKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains(":6:12 The type argument to Zipline.bind() must be an interface type")
+      .contains(":7:12 The type argument to Zipline.bind() must be an interface type")
   }
 
   @Test
@@ -160,6 +163,7 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
+        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
         import app.cash.zipline.ZiplineService
@@ -167,7 +171,7 @@ class ZiplineKotlinPluginTest {
 
         class Concrete : ZiplineService
 
-        fun takeHelloService(endpoint: Endpoint): Concrete {
+        internal fun takeHelloService(endpoint: Endpoint): Concrete {
           return endpoint.take("helloService")
         }
         """,
@@ -175,7 +179,7 @@ class ZiplineKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains(":9:19 The type argument to Zipline.take() must be an interface type")
+      .contains(":10:19 The type argument to Zipline.take() must be an interface type")
   }
 
   @Test
@@ -184,6 +188,7 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
+        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
         import app.cash.zipline.internal.bridge.Endpoint
@@ -194,7 +199,7 @@ class ZiplineKotlinPluginTest {
           }
         }
 
-        fun prepareJsBridges(endpoint: Endpoint) {
+        internal fun prepareJsBridges(endpoint: Endpoint) {
           endpoint.bind<GenericEchoService<String>>(
             "genericService",
             TestingGenericEchoService()
@@ -219,11 +224,12 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
+        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
         import app.cash.zipline.internal.bridge.Endpoint
 
-        fun takeGenericService(endpoint: Endpoint): GenericEchoService<String> {
+        internal fun takeGenericService(endpoint: Endpoint): GenericEchoService<String> {
           return endpoint.take("genericService")
         }
         """,
@@ -254,11 +260,12 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
+        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
         import app.cash.zipline.internal.bridge.Endpoint
 
-        fun prepareJsBridges(endpoint: Endpoint) {
+        internal fun prepareJsBridges(endpoint: Endpoint) {
           endpoint.bind<EchoService>("helloService", object : EchoService {
             override fun echo(request: EchoRequest): EchoResponse {
               return EchoResponse("hello from anonymous, ${'$'}{request.message}")
