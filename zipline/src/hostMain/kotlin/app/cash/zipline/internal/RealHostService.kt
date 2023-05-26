@@ -17,12 +17,17 @@ package app.cash.zipline.internal
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
+import app.cash.zipline.internal.bridge.Endpoint
 
 internal class RealHostService(
+  private val endpoint: Endpoint,
   private val zipline: Zipline,
   private val eventListener: EventListener,
   private val eventLoop: CoroutineEventLoop,
 ) : HostService {
+  override val serviceNames: Set<String>
+    get() = endpoint.serviceNames
+
   override fun setTimeout(timeoutId: Int, delayMillis: Int) {
     eventLoop.setTimeout(timeoutId, delayMillis)
   }

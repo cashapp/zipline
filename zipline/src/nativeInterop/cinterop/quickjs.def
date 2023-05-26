@@ -37,11 +37,6 @@ static inline JSValue JsFalse() {
 
 // Things that could be written in Kotlin but were easier in C
 
-static inline JSCFunctionListEntry JsServiceNamesFunction(void *func) {
-  JSCFunctionListEntry entry = JS_CFUNC_DEF("serviceNamesArray", 0, func);
-  return entry;
-}
-
 static inline JSCFunctionListEntry JsCallFunction(void *func) {
   JSCFunctionListEntry entry = JS_CFUNC_DEF("call", 1, func);
   return entry;

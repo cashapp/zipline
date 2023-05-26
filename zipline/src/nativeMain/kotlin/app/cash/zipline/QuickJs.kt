@@ -80,7 +80,6 @@ import app.cash.zipline.quickjs.JS_WriteObject
 import app.cash.zipline.quickjs.JsCallFunction
 import app.cash.zipline.quickjs.JsDisconnectFunction
 import app.cash.zipline.quickjs.JsFalse
-import app.cash.zipline.quickjs.JsServiceNamesFunction
 import app.cash.zipline.quickjs.JsTrue
 import app.cash.zipline.quickjs.JsValueArrayToInstanceRef
 import app.cash.zipline.quickjs.JsValueGetBool
@@ -339,23 +338,16 @@ actual class QuickJs private constructor(
       }
 
       val functionList = nativeHeap.allocArrayOf(
-        JsServiceNamesFunction(staticCFunction(::outboundServiceNames)),
         JsCallFunction(staticCFunction(::outboundCall)),
         JsDisconnectFunction(staticCFunction(::outboundDisconnect)),
       )
-      JS_SetPropertyFunctionList(context, jsOutboundCallChannel, functionList, 3)
+      JS_SetPropertyFunctionList(context, jsOutboundCallChannel, functionList, 2)
     } finally {
       JS_FreeAtom(context, propertyName)
       JS_FreeValue(context, globalThis)
     }
 
     this.outboundChannel = outboundChannel
-  }
-
-  internal fun jsOutboundServiceNames(argc: Int): CValue<JSValue> {
-    assert(argc == 0)
-    val result = outboundChannel!!.serviceNamesArray()
-    return result.toJsValue()
   }
 
   internal fun jsOutboundCall(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
@@ -468,22 +460,6 @@ actual class QuickJs private constructor(
 internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COpaquePointer?): Int {
   val quickJs = opaque!!.asStableRef<QuickJs>().get()
   return quickJs.jsInterruptHandler(runtime)
-}
-
-@Suppress("UNUSED_PARAMETER") // API shape mandated by QuickJs.
-internal fun outboundServiceNames(
-  context: CPointer<JSContext>,
-  thisVal: CValue<JSValue>,
-  argc: Int,
-  argv: CArrayPointer<JSValue>,
-): CValue<JSValue> {
-  val quickJs = JS_GetRuntimeOpaque(JS_GetRuntime(context))!!.asStableRef<QuickJs>().get()
-  return try {
-    quickJs.jsOutboundServiceNames(argc)
-  } catch (t: Throwable) {
-    t.printStackTrace() // TODO throw to JS return null
-    throw t
-  }
 }
 
 @Suppress("UNUSED_PARAMETER") // API shape mandated by QuickJs.

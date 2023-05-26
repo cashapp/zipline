@@ -29,7 +29,6 @@ public:
 
   ~OutboundCallChannel();
 
-  static JSValue serviceNamesArray(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
   static JSValue call(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
   static JSValue disconnect(JSContext* ctx, JSValueConst this_val, int argc, JSValueConst* argv);
 
@@ -38,7 +37,6 @@ private:
   const std::string name;
   jobject javaThis;
   jclass callChannelClass;
-  jmethodID serviceNamesArrayMethod;
   jmethodID callMethod;
   jmethodID disconnectMethod;
   std::vector<JSCFunctionListEntry> functions;

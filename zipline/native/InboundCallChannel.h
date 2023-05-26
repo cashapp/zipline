@@ -28,7 +28,6 @@ public:
   InboundCallChannel(JSContext *jsContext, const char *name);
   ~InboundCallChannel();
 
-  jobjectArray serviceNamesArray(Context* context, JNIEnv*) const;
   jstring call(Context *context, JNIEnv* env, jstring callJson) const;
   jboolean disconnect(Context *context, JNIEnv* env, jstring instanceName) const;
 

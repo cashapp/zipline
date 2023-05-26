@@ -26,10 +26,6 @@ internal const val outboundChannelName = "app_cash_zipline_outboundChannel"
 
 @PublishedApi
 internal interface CallChannel {
-  /** Returns names of services that can receive calls to [call]. */
-  @JsName("serviceNamesArray")
-  fun serviceNamesArray(): Array<String>
-
   /**
    * Internal function used to bridge method calls from either Kotlin/JVM or Kotlin/Native to
    * Kotlin/JS.

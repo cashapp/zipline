@@ -19,15 +19,9 @@ import app.cash.zipline.internal.bridge.CallChannel
 
 class LoggingCallChannel : CallChannel {
   val log = mutableListOf<String>()
-  val serviceNamesResult = mutableListOf<String>()
   var callResult = ""
   var disconnectThrow = false
   var disconnectResult = true
-
-  override fun serviceNamesArray(): Array<String> {
-    log += "serviceNamesArray()"
-    return serviceNamesResult.toTypedArray()
-  }
 
   override fun call(callJson: String): String {
     log += "call($callJson)"

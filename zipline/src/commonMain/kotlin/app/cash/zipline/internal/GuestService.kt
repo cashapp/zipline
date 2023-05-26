@@ -20,7 +20,7 @@ import app.cash.zipline.ZiplineService
 /**
  * Guest functions for use by host code.
  */
-internal interface GuestService : ZiplineService {
+internal interface GuestService : EndpointService, ZiplineService {
   /** Run the job enqueued by [HostService.setTimeout]. */
   fun runJob(timeoutId: Int)
 }

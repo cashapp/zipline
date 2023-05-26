@@ -48,12 +48,9 @@ public:
 
   JNIEnv* getEnv() const;
 
-  jclass getGlobalRef(JNIEnv* env, jclass clazz);
   std::string toCppString(JNIEnv* env, jstring string) const;
   JSValue toJsString(JNIEnv* env, jstring string) const;
-  JSValue toJsStringArray(JNIEnv* env, jobjectArray javaStringArray) const;
   jstring toJavaString(JNIEnv* env, const JSValueConst& value) const;
-  jobjectArray toJavaStringArray(JNIEnv* env, const JSValueConst& value) const;
 
   JavaVM* javaVm;
   const jint jniVersion;
@@ -62,7 +59,6 @@ public:
   JSContext *jsContextForCompiling;
   JSClassID outboundCallChannelClassId;
   JSAtom lengthAtom;
-  JSAtom serviceNamesArrayAtom;
   JSAtom callAtom;
   JSAtom disconnectAtom;
   jclass booleanClass;
@@ -86,7 +82,5 @@ public:
   std::vector<InboundCallChannel*> callChannels;
   std::unordered_map<std::string, jclass> globalReferences;
 };
-
-std::string getName(JNIEnv* env, jobject javaClass);
 
 #endif //QUICKJS_ANDROID_CONTEXT_H

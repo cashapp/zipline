@@ -40,8 +40,6 @@ class QuickJsInboundChannelJvmTest {
     quickJs.evaluate(
       """
       globalThis.$inboundChannelName = {};
-      globalThis.$inboundChannelName.serviceNamesArray = function() {
-      };
       globalThis.$inboundChannelName.call = function(instanceName, funName, encodedArguments) {
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {

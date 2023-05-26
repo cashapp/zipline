@@ -31,26 +31,6 @@ internal class InboundCallChannel(
 ) : CallChannel {
   private val context = quickJs.context
 
-  override fun serviceNamesArray(): Array<String> {
-    quickJs.checkNotClosed()
-
-    val globalThis = JS_GetGlobalObject(context)
-    val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
-    val property = JS_NewAtom(context, "serviceNamesArray")
-
-    val jsResult = JS_Invoke(context, inboundChannel, property, 0, null)
-
-    @Suppress("UNCHECKED_CAST") // Our JS implementation returns an Array<String>.
-    val kotlinResult = with(quickJs) { jsResult.toKotlinInstanceOrNull() } as Array<String>
-
-    JS_FreeValue(context, jsResult)
-    JS_FreeAtom(context, property)
-    JS_FreeValue(context, inboundChannel)
-    JS_FreeValue(context, globalThis)
-
-    return kotlinResult
-  }
-
   override fun call(callJson: String): String {
     quickJs.checkNotClosed()
 
