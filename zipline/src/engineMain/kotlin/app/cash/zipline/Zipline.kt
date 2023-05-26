@@ -18,6 +18,7 @@ package app.cash.zipline
 
 import app.cash.zipline.internal.Console
 import app.cash.zipline.internal.CoroutineEventLoop
+import app.cash.zipline.internal.EventListenerAdapter
 import app.cash.zipline.internal.EventListenerService
 import app.cash.zipline.internal.EventLoop
 import app.cash.zipline.internal.HostConsole
@@ -25,7 +26,6 @@ import app.cash.zipline.internal.HostEventListenerService
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
-import app.cash.zipline.internal.bridge.EventListenerAdapter
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventListenerName

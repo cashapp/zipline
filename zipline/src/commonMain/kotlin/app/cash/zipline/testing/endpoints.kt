@@ -15,12 +15,8 @@
  */
 package app.cash.zipline.testing
 
-import app.cash.zipline.Call
-import app.cash.zipline.CallResult
-import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
-import app.cash.zipline.internal.bridge.EndpointEventListener
 import kotlin.jvm.JvmOverloads
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -31,8 +27,8 @@ import kotlinx.serialization.modules.SerializersModule
 internal fun newEndpointPair(
   scope: CoroutineScope,
   serializersModule: SerializersModule = EmptySerializersModule(),
-  listenerA: EndpointEventListener = nullEndpointEventListener,
-  listenerB: EndpointEventListener = nullEndpointEventListener,
+  listenerA: Endpoint.EventListener = Endpoint.EventListener(),
+  listenerB: Endpoint.EventListener = Endpoint.EventListener(),
 ): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
     val a: Endpoint = Endpoint(
@@ -58,20 +54,4 @@ internal fun newEndpointPair(
   }
 
   return pair.a to pair.b
-}
-
-internal val nullEndpointEventListener = object : EndpointEventListener {
-  override fun bindService(name: String, service: ZiplineService) {
-  }
-
-  override fun takeService(name: String, service: ZiplineService) {
-  }
-
-  override fun serviceLeaked(name: String) {
-  }
-
-  override fun callStart(call: Call): Any? = null
-
-  override fun callEnd(call: Call, result: CallResult, startValue: Any?) {
-  }
 }

@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.internal.bridge
 
+import app.cash.zipline.Call
+import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
@@ -34,7 +36,7 @@ import kotlinx.serialization.modules.SerializersModule
 class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val userSerializersModule: SerializersModule,
-  internal val eventListener: EndpointEventListener,
+  internal val eventListener: EventListener,
   internal val outboundChannel: CallChannel,
 ) {
   internal val inboundServices = mutableMapOf<String, InboundService<*>>()
@@ -197,5 +199,27 @@ class Endpoint internal constructor(
 
   internal fun generatePassByReferenceName(): String {
     return "$passByReferencePrefix${nextId++}"
+  }
+
+  /**
+   * Subset of the Zipline EventListener for events endpoints trigger. Unlike Zipline's
+   * EventListener, this one is used in both host and guest code.
+   */
+  open class EventListener {
+    open fun bindService(name: String, service: ZiplineService) {
+    }
+
+    open fun takeService(name: String, service: ZiplineService) {
+    }
+
+    open fun serviceLeaked(name: String) {
+    }
+
+    open fun callStart(call: Call): Any? {
+      return null
+    }
+
+    open fun callEnd(call: Call, result: CallResult, startValue: Any?) {
+    }
   }
 }

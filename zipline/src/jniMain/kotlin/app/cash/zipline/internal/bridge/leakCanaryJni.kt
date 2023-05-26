@@ -21,7 +21,7 @@ import java.lang.ref.ReferenceQueue
 import java.util.Collections.synchronizedSet
 
 internal actual fun trackLeaks(
-  eventListener: EndpointEventListener,
+  eventListener: Endpoint.EventListener,
   serviceName: String,
   callHandler: OutboundCallHandler,
   service: ZiplineService,
@@ -43,7 +43,7 @@ private val allReferencesSet = synchronizedSet(mutableSetOf<ZiplineServiceRefere
 private val allReferencesQueue = ReferenceQueue<ZiplineService>()
 
 private class ZiplineServiceReference(
-  private val eventListener: EndpointEventListener,
+  private val eventListener: Endpoint.EventListener,
   private val serviceName: String,
   private val callHandler: OutboundCallHandler,
   service: ZiplineService,
