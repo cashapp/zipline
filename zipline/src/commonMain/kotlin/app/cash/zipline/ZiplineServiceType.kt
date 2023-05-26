@@ -15,7 +15,18 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.internal.bridge.OutboundService
+
 interface ZiplineServiceType<T : ZiplineService> {
   val name: String
   val functions: List<ZiplineFunction<T>>
+}
+
+/**
+ * Returns the type of this service as described by the peer. Returns null if this service isn't an
+ * outbound service, if it is closed, or if it is unknown to the remote peer.
+ */
+val <T : ZiplineService> T.targetType : ZiplineServiceType<T>? get() {
+  if (this !is OutboundService) return null
+  return callHandler.targetType as ZiplineServiceType<T>?
 }

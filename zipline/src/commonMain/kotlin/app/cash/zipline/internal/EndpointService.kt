@@ -21,5 +21,5 @@ import app.cash.zipline.internal.bridge.SerializableZiplineServiceType
 internal interface EndpointService : ZiplineService {
   val serviceNames: Set<String>
 
-  fun serviceType(name: String): SerializableZiplineServiceType
+  fun serviceType(name: String): SerializableZiplineServiceType?
 }

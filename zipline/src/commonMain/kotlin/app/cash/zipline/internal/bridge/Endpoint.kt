@@ -32,12 +32,15 @@ import kotlinx.serialization.modules.SerializersModule
 /**
  * An outbound channel for delivering calls to the other platform, and an inbound channel for
  * receiving calls from the other platform.
+ *
+ * @param oppositeProvider this must be lazy because it's implemented on top of the two endpoints.
  */
 internal class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val userSerializersModule: SerializersModule,
   internal val eventListener: EventListener,
   internal val outboundChannel: CallChannel,
+  internal val oppositeProvider: () -> EndpointService,
 ) : EndpointService {
   internal val inboundServices = mutableMapOf<String, InboundService<*>>()
   private var nextId = 1
@@ -112,6 +115,9 @@ internal class Endpoint internal constructor(
   }
 
   private val serviceTypeCache = mutableMapOf<String, RealZiplineServiceType<*>>()
+
+  internal val opposite: EndpointService
+    get() = oppositeProvider()
 
   @Suppress("UNUSED_PARAMETER") // Parameters are used by the compiler plug-in.
   fun <T : ZiplineService> bind(name: String, instance: T) {
@@ -188,9 +194,8 @@ internal class Endpoint internal constructor(
     return "$passByReferencePrefix${nextId++}"
   }
 
-  override fun serviceType(name: String): SerializableZiplineServiceType {
-    val type = inboundServices[name]?.type
-      ?: throw IllegalArgumentException("no such service: $name")
+  override fun serviceType(name: String): SerializableZiplineServiceType? {
+    val type = inboundServices[name]?.type ?: return null
     return SerializableZiplineServiceType(type)
   }
 

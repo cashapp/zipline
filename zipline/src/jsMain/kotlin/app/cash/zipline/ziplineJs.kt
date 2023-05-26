@@ -53,6 +53,9 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
         return jsOutboundChannel.disconnect(instanceName)
       }
     },
+    oppositeProvider = {
+      host
+    }
   )
 
   actual val json = endpoint.json

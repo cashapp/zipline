@@ -65,9 +65,12 @@ actual class Zipline private constructor(
         return jsInboundBridge.disconnect(instanceName)
       }
     },
+    oppositeProvider = {
+      guest
+    }
   )
 
-  private val guest = endpoint.take<GuestService>(ziplineGuestName)
+  private val guest: GuestService = endpoint.take(ziplineGuestName)
 
   actual val json: Json
     get() = endpoint.json

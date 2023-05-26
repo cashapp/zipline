@@ -15,21 +15,24 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.EndpointService
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.GenericEchoService
+import app.cash.zipline.testing.kotlinBuiltInSerializersModule
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.runBlocking
 
 internal class ZiplineServiceTypeTest {
   @Test
-  fun serviceTypesCrossBridge() = runBlocking(Unconfined) {
+  fun targetTypeHappyPath() = runBlocking(Unconfined) {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : EchoService {
@@ -38,31 +41,115 @@ internal class ZiplineServiceTypeTest {
       }
     }
 
-    endpointA.bind<EndpointService>("endpointService", endpointA)
-    val endpointService = endpointB.take<EndpointService>("endpointService")
-
     endpointA.bind<EchoService>("helloService", service)
+    val client = endpointB.take<EchoService>("helloService")
 
-    assertEquals(
-      setOf("endpointService", "helloService"),
-      endpointService.serviceNames,
-    )
-
-    val type = endpointService.serviceType("helloService")
+    val type = client.targetType!!
     assertEquals("app.cash.zipline.testing.EchoService", type.name)
 
-    val functions = type.functions.sortedBy { it.name }
-    assertEquals(2, functions.size)
+    assertEquals(2, type.functions.size)
 
-    assertEquals("fun close(): kotlin.Unit", functions[0].name)
-    assertFalse(functions[0].isSuspending)
-    assertTrue(functions[0].isClose)
+    val close = type.functions[0]
+    assertEquals("fun close(): kotlin.Unit", close.name)
+    assertFalse(close.isSuspending)
+    assertTrue(close.isClose)
 
+    val echo = type.functions[1]
     assertEquals(
       "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-      functions[1].name,
+      echo.name,
     )
-    assertFalse(functions[1].isSuspending)
-    assertFalse(functions[1].isClose)
+    assertFalse(echo.isSuspending)
+    assertFalse(echo.isClose)
+  }
+
+  @Test
+  fun targetTypeNotAnOutboundService() = runBlocking(Unconfined) {
+    val service = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        error("unexpected call")
+      }
+    }
+
+    assertNull(service.targetType)
+  }
+
+  @Test
+  fun targetTypeWithGenerics() = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this, kotlinBuiltInSerializersModule)
+
+    val service = object : GenericEchoService<String> {
+      override fun genericEcho(request: String): List<String> {
+        error("unexpected call")
+      }
+    }
+
+    endpointA.bind<GenericEchoService<String>>("helloService", service)
+    val client = endpointB.take<GenericEchoService<String>>("helloService")
+
+    val type = client.targetType!!
+    assertEquals("app.cash.zipline.testing.GenericEchoService<kotlin.String>", type.name)
+
+    assertEquals(2, type.functions.size)
+    assertEquals("fun close(): kotlin.Unit", type.functions[0].name)
+    assertEquals("fun genericEcho(T): kotlin.collections.List<T>", type.functions[1].name)
+  }
+
+  @Test
+  fun targetTypeNotKnown(): Unit = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    // Don't bind the service yet. This just returns null.
+    val client = endpointB.take<EchoService>("helloService")
+    assertNull(client.targetType)
+
+    // When we bind it later, things begin to work.
+    val service = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        error("unexpected call")
+      }
+    }
+    endpointA.bind<EchoService>("helloService", service)
+    assertNotNull(
+      "app.cash.zipline.testing.EchoService",
+      client.targetType?.name,
+    )
+  }
+
+  /**
+   * Zipline doesn't actually enforce that the types on either end of a binding are identical. This
+   * is essential for forwards-compatibility. This test does an extreme version of that, where the
+   * types don't share anything.
+   */
+  @Test
+  fun sourceTypeAndTargetTypeAreDifferent() = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val service = object : ReverseEchoService {
+      override fun reverseEcho(response: String): String {
+        error("unexpected call")
+      }
+    }
+
+    endpointA.bind<ReverseEchoService>("helloService", service)
+    val client = endpointB.take<EchoService>("helloService")
+
+    val type = client.targetType!!
+    assertEquals("app.cash.zipline.ZiplineServiceTypeTest.ReverseEchoService", type.name)
+
+    assertEquals(2, type.functions.size)
+
+    assertEquals(
+      "fun close(): kotlin.Unit",
+      type.functions[0].name,
+    )
+    assertEquals(
+      "fun reverseEcho(kotlin.String): kotlin.String",
+      type.functions[1].name,
+    )
+  }
+
+  interface ReverseEchoService : ZiplineService {
+    fun reverseEcho(response: String): String
   }
 }

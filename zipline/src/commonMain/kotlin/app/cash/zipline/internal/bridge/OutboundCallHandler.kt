@@ -53,6 +53,10 @@ internal class OutboundCallHandler(
     )
   }
 
+  /** Returns the type of this service as reported by the opposite endpoint. */
+  val targetType: SerializableZiplineServiceType?
+    get() = endpoint.opposite.serviceType(serviceName)
+
   /** Returns a new service that uses this to send calls. */
   fun <T : ZiplineService> outboundService(): T {
     return adapter.outboundService(this) as T
