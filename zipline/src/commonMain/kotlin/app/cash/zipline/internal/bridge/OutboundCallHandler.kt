@@ -17,10 +17,10 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
-import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
+import app.cash.zipline.ZiplineServiceType
 import kotlin.coroutines.Continuation
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
@@ -31,11 +31,11 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  */
 @PublishedApi
 internal class OutboundCallHandler(
+  private val type: ZiplineServiceType<*>,
   private val serviceName: String,
   private val endpoint: Endpoint,
   private val adapter: ZiplineServiceAdapter<*>,
   internal val scope: ZiplineScope,
-  private val functionsList: List<ZiplineFunction<*>>,
   internal val serviceState: ServiceState = ServiceState(),
 ) {
   /**
@@ -44,11 +44,11 @@ internal class OutboundCallHandler(
    */
   fun withScope(scope: ZiplineScope): OutboundCallHandler {
     return OutboundCallHandler(
+      type,
       serviceName,
       endpoint,
       adapter,
       scope,
-      functionsList,
       serviceState,
     )
   }
@@ -64,7 +64,7 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
-    val function = functionsList[functionIndex] as ReturningZiplineFunction<*>
+    val function = type.functions[functionIndex] as ReturningZiplineFunction<*>
     if (function.isClose) {
       if (serviceState.closed) return Unit // ZiplineService.close() is idempotent.
       serviceState.closed = true
@@ -112,7 +112,7 @@ internal class OutboundCallHandler(
   ): Any? {
     endpoint.scope.ensureActive()
 
-    val function = functionsList[functionIndex] as SuspendingZiplineFunction<*>
+    val function = type.functions[functionIndex] as SuspendingZiplineFunction<*>
     check(!serviceState.closed) {
       """
       |$adapter $serviceName is closed, failed to call:

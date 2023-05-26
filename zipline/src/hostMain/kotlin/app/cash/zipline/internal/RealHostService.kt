@@ -28,6 +28,8 @@ internal class RealHostService(
   override val serviceNames: Set<String>
     get() = endpoint.serviceNames
 
+  override fun serviceType(name: String) = endpoint.serviceType(name)
+
   override fun setTimeout(timeoutId: Int, delayMillis: Int) {
     eventLoop.setTimeout(timeoutId, delayMillis)
   }

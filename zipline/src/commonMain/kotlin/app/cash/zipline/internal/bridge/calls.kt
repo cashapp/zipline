@@ -126,7 +126,7 @@ internal class RealCallSerializer(
             }
             1 -> {
               functionName = decodeStringElement(descriptor, index)
-              function = inboundService?.functions?.get(functionName)
+              function = inboundService?.type?.functionsByName?.get(functionName)
             }
             2 -> {
               @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
@@ -180,9 +180,12 @@ internal class RealCallSerializer(
   /** Returns a fake service that implements no functions. */
   private fun unknownService(): InboundService<*> {
     return InboundService(
+      type = RealZiplineServiceType<ZiplineService>(
+        name = "Unknown",
+        functions = listOf(),
+      ),
       service = object : ZiplineService {},
       endpoint = endpoint,
-      functionsList = listOf(),
     )
   }
 
@@ -210,7 +213,7 @@ internal class RealCallSerializer(
         append("\t\t")
         appendLine(functionName)
         appendLine("\tavailable functions:")
-        inboundService.functions.keys.joinTo(this, separator = "\n") { "\t\t$it" }
+        inboundService.type.functions.joinTo(this, separator = "\n") { "\t\t${it.name}" }
       }
     }
 

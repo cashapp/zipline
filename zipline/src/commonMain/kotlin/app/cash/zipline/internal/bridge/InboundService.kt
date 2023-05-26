@@ -17,7 +17,6 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
-import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
 import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,12 +27,10 @@ import kotlinx.coroutines.isActive
  * Inbound calls use this to call into the real service.
  */
 internal class InboundService<T : ZiplineService>(
+  internal val type: RealZiplineServiceType<T>,
   internal val service: T,
   private val endpoint: Endpoint,
-  functionsList: List<ZiplineFunction<T>>,
 ) {
-  val functions: Map<String, ZiplineFunction<T>> = functionsList.associateBy { it.name }
-
   fun call(
     internalCall: InternalCall,
     externalCall: Call,
