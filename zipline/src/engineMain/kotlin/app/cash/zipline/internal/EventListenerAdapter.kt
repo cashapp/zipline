@@ -13,27 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.internal.bridge
+package app.cash.zipline.internal
 
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineService
-
-interface EndpointEventListener {
-  fun bindService(name: String, service: ZiplineService)
-  fun takeService(name: String, service: ZiplineService)
-  fun serviceLeaked(name: String)
-  fun callStart(call: Call): Any?
-  fun callEnd(call: Call, result: CallResult, startValue: Any?)
-}
+import app.cash.zipline.internal.bridge.Endpoint
 
 /** Adapts the endpoint listener to add a constant Zipline parameter. */
 class EventListenerAdapter(
   val delegate: EventListener,
   val zipline: Zipline,
-) : EndpointEventListener {
+) : Endpoint.EventListener() {
   override fun bindService(name: String, service: ZiplineService) {
     delegate.bindService(zipline, name, service)
   }

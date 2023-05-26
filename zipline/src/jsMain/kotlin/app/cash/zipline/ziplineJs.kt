@@ -21,7 +21,6 @@ import app.cash.zipline.internal.EventLoop
 import app.cash.zipline.internal.JsPlatform
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
-import app.cash.zipline.internal.bridge.EventListenerAdapter
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.consoleName
 import app.cash.zipline.internal.eventListenerName
@@ -33,8 +32,8 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual class Zipline internal constructor(userSerializersModule: SerializersModule) {
-  private val eventListener = object : EventListener() {
-    override fun serviceLeaked(zipline: Zipline, name: String) {
+  private val eventListener = object : Endpoint.EventListener() {
+    override fun serviceLeaked(name: String) {
       eventListenerService.serviceLeaked(name)
     }
   }
@@ -43,7 +42,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
   internal val endpoint = Endpoint(
     scope = GlobalScope,
     userSerializersModule = userSerializersModule,
-    eventListener = EventListenerAdapter(eventListener, this),
+    eventListener = eventListener,
     outboundChannel = object : CallChannel {
       /** Lazily fetch the channel to call out. */
       @Suppress("UnsafeCastFromDynamic")
