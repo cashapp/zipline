@@ -27,25 +27,10 @@ kotlin {
       dependencies {
         api(libs.okio.core)
         api(libs.kotlin.test)
-      }
-    }
-
-    val engineMain by creating {
-      dependsOn(commonMain)
-      dependencies {
         implementation(projects.zipline)
         implementation(projects.ziplineLoader)
         implementation(libs.kotlinx.serialization.json)
       }
-    }
-
-    val jvmMain by getting {
-      dependsOn(engineMain)
-    }
-
-    targets.withType<KotlinNativeTarget> {
-      val main by compilations.getting
-      main.defaultSourceSet.dependsOn(engineMain)
     }
 
     sourceSets.all {

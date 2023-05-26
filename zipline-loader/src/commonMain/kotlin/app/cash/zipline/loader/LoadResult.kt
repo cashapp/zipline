@@ -23,7 +23,7 @@ import app.cash.zipline.ZiplineManifest
  */
 sealed class LoadResult {
   /**
-   * [Zipline] engine successfully loaded with code and corresponding metadata.
+   * [Zipline] successfully loaded with code and corresponding metadata.
    */
   data class Success(
     val zipline: Zipline,

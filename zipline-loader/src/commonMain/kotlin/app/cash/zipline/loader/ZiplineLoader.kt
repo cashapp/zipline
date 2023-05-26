@@ -314,7 +314,7 @@ class ZiplineLoader internal constructor(
         eventListener.initializerEnd(zipline, applicationName, initializerStartValue)
       }
 
-      // Run the application after initializer has been run on Zipline engine.
+      // Run the application after initializer has been run.
       val mainFunctionStartValue = eventListener.mainFunctionStart(zipline, applicationName)
       try {
         loadedManifest.manifest.mainFunction?.let { mainFunction ->

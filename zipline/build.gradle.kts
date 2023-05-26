@@ -59,13 +59,13 @@ kotlin {
       }
     }
 
-    val engineMain by creating {
+    val hostMain by creating {
       dependsOn(commonMain)
       dependencies {
         api(libs.okio.core)
       }
     }
-    val engineTest by creating {
+    val hostTest by creating {
       dependsOn(commonTest)
       dependencies {
         implementation(libs.kotlinx.coroutines.test)
@@ -74,7 +74,7 @@ kotlin {
     }
 
     val jniMain by creating {
-      dependsOn(engineMain)
+      dependsOn(hostMain)
       dependencies {
         api(libs.androidx.annotation)
       }
@@ -86,7 +86,7 @@ kotlin {
       dependsOn(jniMain)
     }
     val jvmTest by getting {
-      dependsOn(engineTest)
+      dependsOn(hostTest)
       kotlin.srcDir("src/jniTest/kotlin/")
       resources.srcDir(copyTestingJs)
       dependencies {
@@ -96,10 +96,10 @@ kotlin {
     }
 
     val nativeMain by creating {
-      dependsOn(engineMain)
+      dependsOn(hostMain)
     }
     val nativeTest by creating {
-      dependsOn(engineTest)
+      dependsOn(hostTest)
     }
 
     targets.withType<KotlinNativeTarget> {
@@ -159,7 +159,7 @@ buildConfig {
     topLevelConstants = true
   }
 
-  sourceSets.named("engineMain") {
+  sourceSets.named("hostMain") {
     packageName("app.cash.zipline")
     buildConfigField("String", "quickJsVersion", "\"${quickJsVersion()}\"")
   }
@@ -231,7 +231,7 @@ android {
 
   sourceSets {
     getByName("androidTest") {
-      java.srcDirs("src/engineTest/kotlin/", "src/jniTest/kotlin/")
+      java.srcDirs("src/hostTest/kotlin/", "src/jniTest/kotlin/")
       resources.srcDir("src/androidInstrumentationTest/resources/")
       resources.srcDir(copyTestingJs)
     }

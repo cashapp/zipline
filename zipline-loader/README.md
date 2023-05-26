@@ -43,7 +43,7 @@ database tracks downloaded file state, eviction, and pinning.
 
 ## Manifest
 
-The Zipline Loader uses a manifest JSON file to enumerate all Zipline files, code signatures, and other metadata required to load all code for an application into a Zipline engine instance and run the application.
+The Zipline Loader uses a manifest JSON file to enumerate all Zipline files, code signatures, and other metadata required to load all code for an application into a Zipline instance and run the application.
 
 - `unsigned`: Each Manifest is signed to provide trusted code from build to client. Some manifest fields have a lower security requirement and not signing them makes hermetic, incremental builds, and caching easier so are nested in the `unsigned` keyspace to not be included in manifest signatures.
   - `signatures`: Map of signing key names to the hex-encoded signatures.
@@ -52,7 +52,7 @@ The Zipline Loader uses a manifest JSON file to enumerate all Zipline files, cod
 - `modules`: A map of module ID to Module which captures all of the modular code to load for the application.
   - `Module.url`: A relative URL for where to load the code, this URL can be used in loading from the network or local file system.
   - `Module.sha256`: sha256 hash of the contents of the module code, used to ensure integrity of the fetched code and as cache key.
-  - `Module.dependsOnIds`: A list of module IDs which the module depends on and which must be loaded into the Zipline engine prior to this module.
+  - `Module.dependsOnIds`: A list of module IDs which the module depends on and which must be loaded into the host Zipline prior to this module.
 - `mainModuleId`: The module ID that is the entrypoint for the application. When topologically sorted based on dependencies, the `mainModuleId` will typically be the last module in the sorted list. It is used to identify the package where the `mainFunction` entrypoint for the application is located.
 - `mainFunction`: The entrypoint function for the application which is in the package identified by the `mainModuleId`. This function, if set in the manifest, is called to launch your application and must include a call to `Zipline.get()` to complete startup tasks. For now, this needs to be set explicitly in your ZiplinePlugin Gradle or ZiplineDownloader config.
 - `version`: An optional identifier for the version of the code identified in the manifest. For application code stored in a Git repo, the Git SHA would be a fitting version. The version can be helpful for debugging purposes.
