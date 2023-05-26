@@ -163,7 +163,7 @@ class EventListenerTest {
         	called service:
         		helloService
         	available services:
-        		zipline/js
+        		zipline/guest
       """.trimIndent(),
     )
     val name = "helloService"

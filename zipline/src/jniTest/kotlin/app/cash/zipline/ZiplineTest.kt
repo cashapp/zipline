@@ -15,10 +15,8 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.consoleName
-import app.cash.zipline.internal.eventListenerName
-import app.cash.zipline.internal.eventLoopName
-import app.cash.zipline.internal.jsPlatformName
+import app.cash.zipline.internal.ziplineGuestName
+import app.cash.zipline.internal.ziplineHostName
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -224,36 +222,24 @@ class ZiplineTest {
 
   @Test fun serviceNamesAndClientNames(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
-    assertThat(zipline.serviceNames).containsExactly(
-      consoleName,
-      eventLoopName,
-      eventListenerName,
-    )
-    assertThat(zipline.clientNames).containsExactly(
-      jsPlatformName,
-    )
+    assertThat(zipline.serviceNames).containsExactly(ziplineHostName)
+    assertThat(zipline.clientNames).containsExactly(ziplineGuestName)
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
-    assertThat(zipline.serviceNames).containsExactly(
-      consoleName,
-      eventLoopName,
-      eventListenerName,
-    )
+    assertThat(zipline.serviceNames).containsExactly(ziplineHostName)
     assertThat(zipline.clientNames).containsExactly(
-      jsPlatformName,
+      ziplineGuestName,
       "helloService",
       "yoService",
     )
 
     zipline.bind<EchoService>("supService", JvmEchoService("sup"))
     assertThat(zipline.serviceNames).containsExactly(
-      consoleName,
-      eventLoopName,
-      eventListenerName,
+      ziplineHostName,
       "supService",
     )
     assertThat(zipline.clientNames).containsExactly(
-      jsPlatformName,
+      ziplineGuestName,
       "helloService",
       "yoService",
     )
@@ -360,7 +346,7 @@ class ZiplineTest {
       	called service:
       		noSuchService
       	available services:
-      		zipline/js
+      		zipline/guest
       """.trimIndent(),
     )
   }
@@ -379,7 +365,7 @@ class ZiplineTest {
       	called service:
       		noSuchService
       	available services:
-      		zipline/js
+      		zipline/guest
       """.trimIndent(),
     )
   }
@@ -395,9 +381,7 @@ class ZiplineTest {
       	called service:
       		supService
       	available services:
-      		zipline/console
-      		zipline/event_loop
-      		zipline/event_listener
+      		zipline/host
       """.trimIndent(),
     )
   }
@@ -414,9 +398,7 @@ class ZiplineTest {
         	called service:
         		jvmSuspendingPotatoService
         	available services:
-        		zipline/console
-        		zipline/event_loop
-        		zipline/event_listener
+        		zipline/host
         """.trimIndent(),
       )
   }

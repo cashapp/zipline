@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Block, Inc.
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,12 @@
  */
 package app.cash.zipline.internal
 
-import app.cash.zipline.EventListener
-import app.cash.zipline.Zipline
+import android.util.Log
 
-internal class HostEventListenerService(
-  private val zipline: Zipline,
-  private val eventListener: EventListener,
-) : EventListenerService {
-  override fun serviceLeaked(name: String) {
-    eventListener.serviceLeaked(zipline, name)
+internal actual fun log(level: String, message: String, throwable: Throwable?) {
+  when (level) {
+    "warn" -> Log.w("Zipline", message, throwable)
+    "error" -> Log.e("Zipline", message, throwable)
+    else -> Log.i("Zipline", message, throwable)
   }
 }

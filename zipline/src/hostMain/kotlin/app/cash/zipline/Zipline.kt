@@ -16,23 +16,18 @@
 
 package app.cash.zipline
 
-import app.cash.zipline.internal.Console
 import app.cash.zipline.internal.CoroutineEventLoop
 import app.cash.zipline.internal.EventListenerAdapter
-import app.cash.zipline.internal.EventListenerService
-import app.cash.zipline.internal.EventLoop
-import app.cash.zipline.internal.HostConsole
-import app.cash.zipline.internal.HostEventListenerService
-import app.cash.zipline.internal.JsPlatform
+import app.cash.zipline.internal.GuestService
+import app.cash.zipline.internal.HostService
+import app.cash.zipline.internal.RealHostService
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
-import app.cash.zipline.internal.consoleName
-import app.cash.zipline.internal.eventListenerName
-import app.cash.zipline.internal.eventLoopName
 import app.cash.zipline.internal.initModuleLoader
-import app.cash.zipline.internal.jsPlatformName
 import app.cash.zipline.internal.loadJsModule
+import app.cash.zipline.internal.ziplineGuestName
+import app.cash.zipline.internal.ziplineHostName
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -88,27 +83,17 @@ actual class Zipline private constructor(
   private var closed = false
 
   init {
-    // Eagerly publish the channel so they can call us.
+    // Eagerly publish the channel so the guest can call us.
     quickJs.initOutboundChannel(endpoint.inboundChannel)
 
-    endpoint.bind<Console>(
-      name = consoleName,
-      instance = HostConsole,
-    )
-
     // Connect platforms using our newly-bootstrapped channels.
-    val jsPlatform = endpoint.take<JsPlatform>(
-      name = jsPlatformName,
-    )
-    val eventLoop = CoroutineEventLoop(dispatcher, scope, jsPlatform)
-    endpoint.bind<EventLoop>(
-      name = eventLoopName,
-      instance = eventLoop,
-    )
-    val eventListenerService = HostEventListenerService(this, eventListener)
-    endpoint.bind<EventListenerService>(
-      name = eventListenerName,
-      instance = eventListenerService,
+    val guest = endpoint.take<GuestService>(ziplineGuestName)
+
+    val eventLoop = CoroutineEventLoop(dispatcher, scope, guest)
+
+    endpoint.bind<HostService>(
+      name = ziplineHostName,
+      instance = RealHostService(this, eventListener, eventLoop),
     )
   }
 

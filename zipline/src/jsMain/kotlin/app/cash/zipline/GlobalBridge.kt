@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.JsPlatform
+import app.cash.zipline.internal.GuestService
 import app.cash.zipline.internal.bridge.CallChannel
 
 /**
@@ -25,7 +25,7 @@ import app.cash.zipline.internal.bridge.CallChannel
  * Creating this has the side effect of setting variables on `globalThis`, so we can initialize the
  * host platform and JS platform in any order.
  */
-internal object GlobalBridge : JsPlatform, CallChannel {
+internal object GlobalBridge : GuestService, CallChannel {
   private var nextTimeoutId = 1
   private val jobs = mutableMapOf<Int, Job>()
 
@@ -76,14 +76,14 @@ internal object GlobalBridge : JsPlatform, CallChannel {
   fun setTimeout(handler: dynamic, timeout: Int, vararg arguments: Any?): Int {
     val timeoutId = nextTimeoutId++
     jobs[timeoutId] = Job(handler, arguments)
-    zipline.eventLoop.setTimeout(timeoutId, timeout)
+    zipline.host.setTimeout(timeoutId, timeout)
     return timeoutId
   }
 
   @JsName("clearTimeout")
   fun clearTimeout(timeoutId: Int) {
     jobs.remove(timeoutId)
-    zipline.eventLoop.clearTimeout(timeoutId)
+    zipline.host.clearTimeout(timeoutId)
   }
 
   /**
@@ -101,7 +101,7 @@ internal object GlobalBridge : JsPlatform, CallChannel {
         argumentsList += argument
       }
     }
-    zipline.console.log(level, argumentsList.joinToString(separator = " "), throwable)
+    zipline.host.log(level, argumentsList.joinToString(separator = " "), throwable)
   }
 
   private class Job(

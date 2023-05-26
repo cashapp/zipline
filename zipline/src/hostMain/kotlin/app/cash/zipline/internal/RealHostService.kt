@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2022 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,18 +15,27 @@
  */
 package app.cash.zipline.internal
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
-import java.util.logging.Level
-import java.util.logging.Logger
 
-internal actual object HostConsole : Console {
-  private val logger = Logger.getLogger(Zipline::class.qualifiedName)
+internal class RealHostService(
+  private val zipline: Zipline,
+  private val eventListener: EventListener,
+  private val eventLoop: CoroutineEventLoop,
+) : HostService {
+  override fun setTimeout(timeoutId: Int, delayMillis: Int) {
+    eventLoop.setTimeout(timeoutId, delayMillis)
+  }
+
+  override fun clearTimeout(timeoutId: Int) {
+    eventLoop.clearTimeout(timeoutId)
+  }
 
   override fun log(level: String, message: String, throwable: Throwable?) {
-    when (level) {
-      "warn" -> logger.log(Level.WARNING, message, throwable)
-      "error" -> logger.log(Level.SEVERE, message, throwable)
-      else -> logger.log(Level.INFO, message, throwable)
-    }
+    app.cash.zipline.internal.log(level, message, throwable)
+  }
+
+  override fun serviceLeaked(name: String) {
+    eventListener.serviceLeaked(zipline, name)
   }
 }

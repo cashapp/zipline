@@ -15,33 +15,7 @@
  */
 package app.cash.zipline.internal
 
-import app.cash.zipline.ZiplineService
-
 internal const val ziplineInternalPrefix = "zipline/"
 internal expect val passByReferencePrefix: String
-internal const val eventLoopName = "${ziplineInternalPrefix}event_loop"
-internal const val consoleName = "${ziplineInternalPrefix}console"
-internal const val eventListenerName = "${ziplineInternalPrefix}event_listener"
-internal const val jsPlatformName = "${ziplineInternalPrefix}js"
-
-internal interface EventLoop : ZiplineService {
-  fun setTimeout(timeoutId: Int, delayMillis: Int)
-  fun clearTimeout(timeoutId: Int)
-}
-
-internal interface Console : ZiplineService {
-  /** @param level one of `log`, `info`, `warn`, or `error`. */
-  fun log(level: String, message: String, throwable: Throwable?)
-}
-
-internal interface JsPlatform : ZiplineService {
-  fun runJob(timeoutId: Int)
-}
-
-/**
- * Forward select events to the host event listener. We don't need to bridge all functions because
- * the peer already sees its side of those calls.
- */
-internal interface EventListenerService : ZiplineService {
-  fun serviceLeaked(name: String)
-}
+internal const val ziplineHostName = "${ziplineInternalPrefix}host"
+internal const val ziplineGuestName = "${ziplineInternalPrefix}guest"
