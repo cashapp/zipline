@@ -40,11 +40,8 @@ kotlin {
         implementation(libs.kotlinx.serialization.json)
       }
     }
-    val engineMain by creating {
-      dependsOn(commonMain)
-    }
     val jniMain by creating {
-      dependsOn(engineMain)
+      dependsOn(commonMain)
       dependencies {
         implementation(libs.okHttp.core)
       }
@@ -63,7 +60,7 @@ kotlin {
       }
     }
     val nativeMain by creating {
-      dependsOn(engineMain)
+      dependsOn(commonMain)
       dependencies {
         implementation(libs.sqldelight.driver.native)
       }
@@ -86,14 +83,8 @@ kotlin {
         implementation(libs.turbine)
       }
     }
-    val engineTest by creating {
-      dependsOn(commonTest)
-      dependencies {
-        implementation(projects.ziplineLoaderTesting)
-      }
-    }
     val jniTest by creating {
-      dependsOn(engineTest)
+      dependsOn(commonTest)
       dependencies {
         implementation(libs.junit)
         implementation(libs.okHttp.mockWebServer)

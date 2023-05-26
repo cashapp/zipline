@@ -38,17 +38,17 @@ kotlin {
       }
     }
 
-    val engineMain by creating {
+    val hostMain by creating {
       dependsOn(commonMain)
     }
 
     val jvmMain by getting {
-      dependsOn(engineMain)
+      dependsOn(hostMain)
     }
 
     targets.withType<KotlinNativeTarget> {
       val main by compilations.getting
-      main.defaultSourceSet.dependsOn(engineMain)
+      main.defaultSourceSet.dependsOn(hostMain)
     }
   }
 
