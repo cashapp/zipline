@@ -15,4 +15,10 @@
  */
 package app.cash.zipline.internal
 
-internal expect object HostConsole : Console
+internal actual fun log(level: String, message: String, throwable: Throwable?) {
+  if (throwable != null) {
+    println("Zipline[$level]: $message\n${throwable.stackTraceToString()}")
+  } else {
+    println("Zipline[$level]: $message")
+  }
+}

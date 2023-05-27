@@ -15,17 +15,13 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.Console
-import app.cash.zipline.internal.EventListenerService
-import app.cash.zipline.internal.EventLoop
-import app.cash.zipline.internal.JsPlatform
+import app.cash.zipline.internal.GuestService
+import app.cash.zipline.internal.HostService
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
-import app.cash.zipline.internal.consoleName
-import app.cash.zipline.internal.eventListenerName
-import app.cash.zipline.internal.eventLoopName
-import app.cash.zipline.internal.jsPlatformName
+import app.cash.zipline.internal.ziplineGuestName
+import app.cash.zipline.internal.ziplineHostName
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -34,7 +30,7 @@ import kotlinx.serialization.modules.SerializersModule
 actual class Zipline internal constructor(userSerializersModule: SerializersModule) {
   private val eventListener = object : Endpoint.EventListener() {
     override fun serviceLeaked(name: String) {
-      eventListenerService.serviceLeaked(name)
+      host.serviceLeaked(name)
     }
   }
 
@@ -71,9 +67,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
   internal actual val clientNames: Set<String>
     get() = endpoint.clientNames
 
-  internal val eventLoop: EventLoop = endpoint.take(eventLoopName)
-  internal val eventListenerService: EventListenerService = endpoint.take(eventListenerName)
-  internal val console: Console = endpoint.take(consoleName)
+  internal val host: HostService = endpoint.take(ziplineHostName)
 
   actual fun <T : ZiplineService> bind(name: String, instance: T) {
     error("unexpected call to Zipline.bind: is the Zipline plugin configured?")
@@ -116,7 +110,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
 
       return Zipline(serializersModule)
         .apply {
-          bind<JsPlatform>(jsPlatformName, GlobalBridge)
+          bind<GuestService>(ziplineGuestName, GlobalBridge)
           THE_ONLY_ZIPLINE = this
         }
     }

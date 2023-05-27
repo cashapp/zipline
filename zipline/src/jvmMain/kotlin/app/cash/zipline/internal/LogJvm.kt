@@ -15,14 +15,16 @@
  */
 package app.cash.zipline.internal
 
-import android.util.Log
+import app.cash.zipline.Zipline
+import java.util.logging.Level
+import java.util.logging.Logger
 
-internal actual object HostConsole : Console {
-  override fun log(level: String, message: String, throwable: Throwable?) {
-    when (level) {
-      "warn" -> Log.w("Zipline", message, throwable)
-      "error" -> Log.e("Zipline", message, throwable)
-      else -> Log.i("Zipline", message, throwable)
-    }
+private val logger = Logger.getLogger(Zipline::class.qualifiedName)
+
+internal actual fun log(level: String, message: String, throwable: Throwable?) {
+  when (level) {
+    "warn" -> logger.log(Level.WARNING, message, throwable)
+    "error" -> logger.log(Level.SEVERE, message, throwable)
+    else -> logger.log(Level.INFO, message, throwable)
   }
 }

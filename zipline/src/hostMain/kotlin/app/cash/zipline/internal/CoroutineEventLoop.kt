@@ -32,17 +32,17 @@ import kotlinx.coroutines.launch
 internal class CoroutineEventLoop(
   private val dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
-  private val jsPlatform: JsPlatform,
-) : EventLoop {
+  private val guestService: GuestService,
+) {
   private val jobs = mutableMapOf<Int, DelayedJob>()
 
-  override fun setTimeout(timeoutId: Int, delayMillis: Int) {
+  fun setTimeout(timeoutId: Int, delayMillis: Int) {
     val job = DelayedJob(timeoutId, delayMillis)
     jobs[timeoutId] = job
     dispatcher.dispatch(scope.coroutineContext, job)
   }
 
-  override fun clearTimeout(timeoutId: Int) {
+  fun clearTimeout(timeoutId: Int) {
     jobs.remove(timeoutId)?.cancel()
   }
 
@@ -58,7 +58,7 @@ internal class CoroutineEventLoop(
       this.job = scope.launch(start = UNDISPATCHED) {
         delay(delayMillis.toLong())
         scope.ensureActive() // Necessary as delay() won't detect cancellation if the duration is 0.
-        jsPlatform.runJob(timeoutId)
+        guestService.runJob(timeoutId)
         jobs.remove(timeoutId)
       }
     }

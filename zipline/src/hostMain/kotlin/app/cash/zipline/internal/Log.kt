@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Block, Inc.
+ * Copyright (C) 2021 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,4 +15,4 @@
  */
 package app.cash.zipline.internal
 
-internal actual val passByReferencePrefix = "zipline/guest-"
+internal expect fun log(level: String, message: String, throwable: Throwable?)

@@ -15,10 +15,10 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.HostConsole
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.inboundChannelName
 import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.internal.log
 import java.io.Closeable
 
 /**
@@ -158,7 +158,7 @@ actual class QuickJs private constructor(
 
   protected fun finalize() {
     if (context != 0L) {
-      HostConsole.log("warn", "QuickJs instance leaked!", null)
+      log("warn", "QuickJs instance leaked!", null)
     }
   }
 

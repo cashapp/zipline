@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2023 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,12 @@
  */
 package app.cash.zipline.internal
 
-internal actual object HostConsole : Console {
-  override fun log(level: String, message: String, throwable: Throwable?) {
-    if (throwable != null) {
-      println("Zipline[$level]: $message\n${throwable.stackTraceToString()}")
-    } else {
-      println("Zipline[$level]: $message")
-    }
-  }
+import app.cash.zipline.ZiplineService
+
+/**
+ * Guest functions for use by host code.
+ */
+internal interface GuestService : ZiplineService {
+  /** Run the job enqueued by [HostService.setTimeout]. */
+  fun runJob(timeoutId: Int)
 }
