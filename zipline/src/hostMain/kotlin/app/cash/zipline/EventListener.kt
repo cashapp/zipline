@@ -62,7 +62,7 @@ abstract class EventListener {
   /**
    * Invoked when an application load starts.
    *
-   * @return any object. This value will be passed back to [applicationLoadEnd] or
+   * @return any object. This value will be passed back to [applicationLoadSuccess] or
    *   [applicationLoadFailed] when the load is completed. The base function always returns null.
    */
   open fun applicationLoadStart(
@@ -94,6 +94,7 @@ abstract class EventListener {
   open fun applicationLoadSuccess(
     applicationName: String,
     manifestUrl: String?,
+    manifest: ZiplineManifest,
     zipline: Zipline,
     startValue: Any?,
   ) {
@@ -156,6 +157,18 @@ abstract class EventListener {
     applicationName: String,
     url: String?,
     exception: Exception,
+  ) {
+  }
+
+  /**
+   * Invoked when a the manifest verifier successfully verifies a key. Manifest verification
+   * failures are signaled with [applicationLoadFailed].
+   */
+  open fun manifestVerified(
+    applicationName: String,
+    manifestUrl: String?,
+    manifest: ZiplineManifest,
+    verifiedKey: String,
   ) {
   }
 

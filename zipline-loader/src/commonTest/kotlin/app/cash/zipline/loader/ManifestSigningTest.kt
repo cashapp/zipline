@@ -18,6 +18,7 @@ package app.cash.zipline.loader
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.testing.SampleKeys
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import okio.ByteString.Companion.encodeUtf8
 
@@ -96,7 +97,7 @@ class ManifestSigningTest {
   @Test
   fun happyPathEd25519() {
     val signedManifest = signer1.sign(manifest)
-    verifier1.verify(signedManifest)
+    assertEquals("key1", verifier1.verify(signedManifest))
   }
 
   @Test
@@ -104,32 +105,32 @@ class ManifestSigningTest {
     if (!canSignEcdsaP256()) return
 
     val signedManifest = signer4.sign(manifest)
-    verifier4.verify(signedManifest)
+    assertEquals("key4", verifier4.verify(signedManifest))
   }
 
   @Test
   fun keyRotation() {
     // In the beginning we have a single key.
     val manifestA = signer1.sign(manifest)
-    verifier1.verify(manifestA)
+    assertEquals("key1", verifier1.verify(manifestA))
 
     // Next introduce a second key, but don't verify with it yet.
     val manifestB = signer12.sign(manifest)
-    verifier1.verify(manifestB)
+    assertEquals("key1", verifier1.verify(manifestB))
 
     // Next start verifying with the new key.
-    verifier12.verify(manifestB)
+    assertEquals("key1", verifier12.verify(manifestB))
 
     // Now that key2 is always available, clients don't need to trust key1.
-    verifier2.verify(manifestB)
+    assertEquals("key2", verifier2.verify(manifestB))
 
     // Finally, we stop signing with the original key.
     val manifestC = signer2.sign(manifest)
     assertFailsWith<IllegalStateException> {
       verifier1.verify(manifestC) // Old clients stop working!
     }
-    verifier12.verify(manifestC)
-    verifier2.verify(manifestC)
+    assertEquals("key2", verifier12.verify(manifestC))
+    assertEquals("key2", verifier2.verify(manifestC))
   }
 
   @Test
@@ -205,7 +206,7 @@ class ManifestSigningTest {
       .addEd25519("key2", SampleKeys.key3Public)
       .build()
 
-    verifier12WithWrongKey2.verify(signedManifest)
+    assertEquals("key1", verifier12WithWrongKey2.verify(signedManifest))
   }
 
   @Test
@@ -228,7 +229,7 @@ class ManifestSigningTest {
    * We normally expect to be verifying bytes, since that's the only reliable way to guarantee that
    * unknown fields are preserved. For tests, we can encode directly.
    */
-  private fun ManifestVerifier.verify(manifest: ZiplineManifest) {
+  private fun ManifestVerifier.verify(manifest: ZiplineManifest): String? {
     val manifestBytes = manifest.encodeJson().encodeUtf8()
     return verify(manifestBytes, manifest)
   }

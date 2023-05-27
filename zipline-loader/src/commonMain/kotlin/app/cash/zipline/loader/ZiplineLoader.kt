@@ -225,7 +225,13 @@ class ZiplineLoader internal constructor(
         initializer,
       )
       cachingFetcher?.pin(applicationName, loadedManifest, now) // Pin after success.
-      eventListener.applicationLoadSuccess(applicationName, manifestUrl, zipline, startValue)
+      eventListener.applicationLoadSuccess(
+        applicationName,
+        manifestUrl,
+        loadedManifest.manifest,
+        zipline,
+        startValue,
+      )
       send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
       return loadedManifest.manifest
     } catch (e: CancellationException) {
@@ -260,7 +266,13 @@ class ZiplineLoader internal constructor(
         now,
         initializer,
       )
-      eventListener.applicationLoadSuccess(applicationName, null, zipline, startValue)
+      eventListener.applicationLoadSuccess(
+        applicationName,
+        null,
+        loadedManifest.manifest,
+        zipline,
+        startValue,
+      )
       send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
       return loadedManifest.manifest
     } catch (e: CancellationException) {
@@ -430,7 +442,10 @@ class ZiplineLoader internal constructor(
       ?: return null
 
     // Defend against changes to the locally-cached copy.
-    manifestVerifier.verify(result.manifestBytes, result.manifest)
+    val verifiedKey = manifestVerifier.verify(result.manifestBytes, result.manifest)
+    if (verifiedKey != null) {
+      eventListener.manifestVerified(applicationName, null, result.manifest, verifiedKey)
+    }
 
     return result
   }
@@ -448,7 +463,10 @@ class ZiplineLoader internal constructor(
     }
 
     // Defend against unauthorized changes in the supply chain.
-    manifestVerifier.verify(result.manifestBytes, result.manifest)
+    val verifiedKey = manifestVerifier.verify(result.manifestBytes, result.manifest)
+    if (verifiedKey != null) {
+      eventListener.manifestVerified(applicationName, manifestUrl, result.manifest, verifiedKey)
+    }
 
     return result
   }
