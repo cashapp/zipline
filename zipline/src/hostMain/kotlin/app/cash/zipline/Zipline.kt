@@ -56,10 +56,6 @@ actual class Zipline private constructor(
         quickJs.getInboundChannel()
       }
 
-      override fun serviceNamesArray(): Array<String> {
-        return jsInboundBridge.serviceNamesArray()
-      }
-
       override fun call(callJson: String): String {
         check(scope.isActive) { "Zipline closed" }
         return jsInboundBridge.call(callJson)
@@ -71,6 +67,8 @@ actual class Zipline private constructor(
     },
   )
 
+  private val guest = endpoint.take<GuestService>(ziplineGuestName)
+
   actual val json: Json
     get() = endpoint.json
 
@@ -78,7 +76,7 @@ actual class Zipline private constructor(
     get() = endpoint.serviceNames
 
   internal actual val clientNames: Set<String>
-    get() = endpoint.clientNames
+    get() = guest.serviceNames
 
   private var closed = false
 
@@ -86,14 +84,11 @@ actual class Zipline private constructor(
     // Eagerly publish the channel so the guest can call us.
     quickJs.initOutboundChannel(endpoint.inboundChannel)
 
-    // Connect platforms using our newly-bootstrapped channels.
-    val guest = endpoint.take<GuestService>(ziplineGuestName)
-
     val eventLoop = CoroutineEventLoop(dispatcher, scope, guest)
 
     endpoint.bind<HostService>(
       name = ziplineHostName,
-      instance = RealHostService(this, eventListener, eventLoop),
+      instance = RealHostService(endpoint, this, eventListener, eventLoop),
     )
   }
 

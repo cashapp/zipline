@@ -15,7 +15,6 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.testing.awaitEquals
 import app.cash.zipline.testing.newEndpointPair
 import kotlin.test.Test
 import kotlin.test.assertContains
@@ -77,7 +76,7 @@ internal class FlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 
   @Test
@@ -104,7 +103,7 @@ internal class FlowTest {
     // Confirm that no services or clients were leaked.
     client.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 
   @Test
@@ -155,7 +154,7 @@ internal class FlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 
   @Test
@@ -203,8 +202,8 @@ internal class FlowTest {
 
     // Confirm that no services or clients were leaked.
     scope.close()
-    awaitEquals(setOf<String>()) { endpointA.serviceNames }
-    awaitEquals(setOf<String>()) { endpointA.clientNames }
+    assertEquals(setOf(), endpointA.serviceNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 
   @Test
@@ -223,7 +222,7 @@ internal class FlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 
   @Test
@@ -240,6 +239,6 @@ internal class FlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
   }
 }

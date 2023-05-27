@@ -24,19 +24,6 @@
 #include "common/finalization-registry.h"
 #include "quickjs/quickjs.h"
 
-std::string getName(JNIEnv* env, jobject javaClass) {
-  auto classType = env->GetObjectClass(javaClass);
-  const jmethodID method = env->GetMethodID(classType, "getName", "()Ljava/lang/String;");
-  auto javaString = static_cast<jstring>(env->CallObjectMethod(javaClass, method));
-  const auto s = env->GetStringUTFChars(javaString, nullptr);
-
-  std::string str(s);
-  env->ReleaseStringUTFChars(javaString, s);
-  env->DeleteLocalRef(javaString);
-  env->DeleteLocalRef(classType);
-  return str;
-}
-
 /**
  * This signature satisfies the JSInterruptHandler typedef. It is always installed but only does
  * work if a Kotlin InterruptHandler is configured.
@@ -84,7 +71,6 @@ Context::Context(JNIEnv* env)
       jsContextForCompiling(JS_NewContext(jsRuntime)),
       outboundCallChannelClassId(0),
       lengthAtom(JS_NewAtom(jsContext, "length")),
-      serviceNamesArrayAtom(JS_NewAtom(jsContext, "serviceNamesArray")),
       callAtom(JS_NewAtom(jsContext, "call")),
       disconnectAtom(JS_NewAtom(jsContext, "disconnect")),
       booleanClass(static_cast<jclass>(env->NewGlobalRef(env->FindClass("java/lang/Boolean")))),
@@ -135,7 +121,6 @@ Context::~Context() {
   env->DeleteGlobalRef(integerClass);
   env->DeleteGlobalRef(booleanClass);
   JS_FreeAtom(jsContext, lengthAtom);
-  JS_FreeAtom(jsContext, serviceNamesArrayAtom);
   JS_FreeAtom(jsContext, callAtom);
   JS_FreeAtom(jsContext, disconnectAtom);
   JS_FreeContext(jsContext);
@@ -492,18 +477,6 @@ JNIEnv* Context::getEnv() const {
   return env;
 }
 
-jclass Context::getGlobalRef(JNIEnv* env, jclass clazz) {
-  auto name = getName(env, clazz);
-  auto i = globalReferences.find(name);
-  if (i != globalReferences.end()) {
-    return i->second;
-  }
-
-  auto globalRef = static_cast<jclass>(env->NewGlobalRef(clazz));
-  globalReferences[name] = globalRef;
-  return globalRef;
-}
-
 /*
  * Converts `string` to UTF-8. Prefer this over `GetStringUTFChars()` for any string that might
  * contain non-ASCII characters because that function returns modified UTF-8.
@@ -523,17 +496,6 @@ JSValue Context::toJsString(JNIEnv* env, jstring javaString) const {
   return JS_NewString(this->jsContext, cppString.c_str());
 }
 
-JSValue Context::toJsStringArray(JNIEnv* env, jobjectArray javaStringArray) const {
-  JSValue result = JS_NewArray(this->jsContext);
-  const auto length = env->GetArrayLength(javaStringArray);
-  for (jsize i = 0; i < length; i++) {
-    jstring javaString = static_cast<jstring>(env->GetObjectArrayElement(javaStringArray, i));
-    JS_SetPropertyUint32(this->jsContext, result, i, this->toJsString(env, javaString));
-    env->DeleteLocalRef(javaString);
-  }
-  return result;
-}
-
 /*
  * Converts `value` to a Java string. Prefer this over `NewStringUTF()` for any string that might
  * contain non-ASCII characters because that function expects modified UTF-8.
@@ -548,28 +510,5 @@ jstring Context::toJavaString(JNIEnv* env, const JSValueConst& value) const {
   JS_FreeCString(jsContext, string);
   jstring result = static_cast<jstring>(env->NewObject(stringClass, stringConstructor, utf8BytesObject, stringUtf8));
   env->DeleteLocalRef(utf8BytesObject);
-  return result;
-}
-
-jobjectArray Context::toJavaStringArray(JNIEnv* env, const JSValueConst& value) const {
-  auto jsContext = this->jsContext;
-  assert(JS_IsArray(jsContext, value));
-
-  auto jsLength = JS_GetProperty(jsContext, value, this->lengthAtom);
-  int length = 0;
-  auto convertResult = JS_ToInt32(jsContext, &length, jsLength);
-  assert(convertResult == 0);
-
-  jobjectArray result = env->NewObjectArray(length, this->stringClass, nullptr);
-  for (int i = 0; i < length && !env->ExceptionCheck(); i++) {
-    auto jsElement = JS_GetPropertyUint32(jsContext, value, i);
-    jstring element = this->toJavaString(env, jsElement);
-    JS_FreeValue(jsContext, jsElement);
-    if (env->ExceptionCheck()) break;
-    env->SetObjectArrayElement(result, i, element);
-  }
-
-  JS_FreeValue(jsContext, jsLength);
-
   return result;
 }

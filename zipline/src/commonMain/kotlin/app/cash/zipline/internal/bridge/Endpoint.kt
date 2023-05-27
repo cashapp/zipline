@@ -20,6 +20,7 @@ import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
+import app.cash.zipline.internal.EndpointService
 import app.cash.zipline.internal.passByReferencePrefix
 import app.cash.zipline.ziplineServiceSerializer
 import kotlin.coroutines.Continuation
@@ -38,17 +39,14 @@ class Endpoint internal constructor(
   internal val userSerializersModule: SerializersModule,
   internal val eventListener: EventListener,
   internal val outboundChannel: CallChannel,
-) {
+) : EndpointService {
   internal val inboundServices = mutableMapOf<String, InboundService<*>>()
   private var nextId = 1
 
   internal val incompleteContinuations = mutableSetOf<Continuation<*>>()
 
-  val serviceNames: Set<String>
+  override val serviceNames
     get() = inboundServices.keys.toSet()
-
-  val clientNames: Set<String>
-    get() = outboundChannel.serviceNamesArray().toSet()
 
   internal var takeScope: ZiplineScope? = null
 
@@ -91,10 +89,6 @@ class Endpoint internal constructor(
   internal val callCodec = CallCodec(this)
 
   internal val inboundChannel = object : CallChannel {
-    override fun serviceNamesArray(): Array<String> {
-      return serviceNames.toTypedArray()
-    }
-
     override fun call(callJson: String): String {
       val internalCall = callCodec.decodeCall(callJson)
       val inboundService = internalCall.inboundService!!

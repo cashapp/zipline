@@ -45,10 +45,6 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
       private val jsOutboundChannel: CallChannel
         get() = js("globalThis.app_cash_zipline_outboundChannel")
 
-      override fun serviceNamesArray(): Array<String> {
-        return jsOutboundChannel.serviceNamesArray()
-      }
-
       override fun call(callJson: String): String {
         return jsOutboundChannel.call(callJson)
       }
@@ -65,7 +61,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
     get() = endpoint.serviceNames
 
   internal actual val clientNames: Set<String>
-    get() = endpoint.clientNames
+    get() = host.serviceNames
 
   internal val host: HostService = endpoint.take(ziplineHostName)
 

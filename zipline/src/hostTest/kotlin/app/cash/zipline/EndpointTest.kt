@@ -180,8 +180,6 @@ internal class EndpointTest {
         val result = async {
           // In the middle of a suspending call there's a temporary reference to the callback.
           assertEquals(setOf("echoService", "zipline/host-1"), endpointA.serviceNames)
-          assertEquals(setOf("echoService", "zipline/host-1"), endpointB.clientNames)
-          assertEquals(setOf("zipline/host-1"), endpointA.clientNames)
           assertEquals(setOf("zipline/host-1"), endpointB.serviceNames)
           EchoResponse("hello, ${request.message}")
         }
@@ -197,8 +195,6 @@ internal class EndpointTest {
 
     // Confirm that these temporary references are cleaned up when the suspending call returns.
     assertEquals(setOf("echoService"), endpointA.serviceNames)
-    assertEquals(setOf("echoService"), endpointB.clientNames)
-    assertEquals(setOf(), endpointA.clientNames)
     assertEquals(setOf(), endpointB.serviceNames)
   }
 

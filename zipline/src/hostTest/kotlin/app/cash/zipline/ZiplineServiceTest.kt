@@ -52,7 +52,7 @@ internal class ZiplineServiceTest {
     assertEquals(setOf("helloService"), endpointA.serviceNames)
 
     val client = endpointB.take<EchoZiplineService>("helloService")
-    assertEquals(setOf("helloService"), endpointB.clientNames)
+    assertEquals(setOf("helloService"), endpointA.serviceNames)
 
     responses += "this is a curt response"
     val response = client.echo(EchoRequest("this is a happy request"))
@@ -61,7 +61,6 @@ internal class ZiplineServiceTest {
 
     client.close()
     assertEquals("close", events.removeFirst())
-    assertEquals(setOf(), endpointB.clientNames)
     assertEquals(setOf(), endpointA.serviceNames)
 
     assertNull(events.removeFirstOrNull())

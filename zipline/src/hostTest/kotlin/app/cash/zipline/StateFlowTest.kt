@@ -20,7 +20,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Unconfined
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -33,7 +32,6 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class StateFlowTest {
   interface StateFlowEchoService : ZiplineService {
     val flow: StateFlow<String>
@@ -94,7 +92,7 @@ internal class StateFlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
     assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
@@ -121,7 +119,7 @@ internal class StateFlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
     assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
@@ -140,7 +138,7 @@ internal class StateFlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
     assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
@@ -160,7 +158,7 @@ internal class StateFlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
     assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
@@ -188,7 +186,7 @@ internal class StateFlowTest {
     // Confirm that no services or clients were leaked.
     client.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
     assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
@@ -214,7 +212,7 @@ internal class StateFlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
     assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 
@@ -232,7 +230,7 @@ internal class StateFlowTest {
     // Confirm that no services or clients were leaked.
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
-    assertEquals(setOf(), endpointA.clientNames)
+    assertEquals(setOf(), endpointB.serviceNames)
     assertEquals(0, service.mutableFlow.subscriptionCount.first())
   }
 }

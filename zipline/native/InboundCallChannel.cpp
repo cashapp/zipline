@@ -28,30 +28,6 @@ InboundCallChannel::~InboundCallChannel() {
   JS_FreeAtom(jsContext, nameAtom);
 }
 
-jobjectArray InboundCallChannel::serviceNamesArray(Context *context, JNIEnv* env) const {
-  JSContext *jsContext = context->jsContext;
-  JSValue global = JS_GetGlobalObject(jsContext);
-  JSValue thisPointer = JS_GetProperty(jsContext, global, nameAtom);
-
-  JSValue jsResult = JS_Invoke(jsContext, thisPointer, context->serviceNamesArrayAtom, 0, NULL);
-  jobjectArray javaResult;
-  auto tag = JS_VALUE_GET_NORM_TAG(jsResult);
-  if (tag == JS_TAG_EXCEPTION) {
-    context->throwJsException(env, jsResult);
-    javaResult = nullptr;
-  } else if (tag == JS_TAG_OBJECT) {
-    javaResult = context->toJavaStringArray(env, jsResult);
-  } else {
-    assert(false); // Unexpected tag.
-  }
-
-  JS_FreeValue(jsContext, jsResult);
-  JS_FreeValue(jsContext, thisPointer);
-  JS_FreeValue(jsContext, global);
-
-  return javaResult;
-}
-
 jstring InboundCallChannel::call(Context *context, JNIEnv* env,
                                       jstring callJson) const {
   JSContext *jsContext = context->jsContext;

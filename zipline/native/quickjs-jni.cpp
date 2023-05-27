@@ -136,24 +136,6 @@ Java_app_cash_zipline_QuickJs_setMaxStackSize(JNIEnv* env, jobject type, jlong c
   context->setMaxStackSize(env, stackSize);
 }
 
-extern "C" JNIEXPORT jobjectArray JNICALL
-Java_app_cash_zipline_JniCallChannel_serviceNamesArray(JNIEnv* env, jobject thiz, jlong _context,
-                                                       jlong instance) {
-  Context* context = reinterpret_cast<Context*>(_context);
-  if (!context) {
-    throwJavaException(env, "java/lang/IllegalStateException", "QuickJs instance was closed");
-    return nullptr;
-  }
-
-  const InboundCallChannel* channel = reinterpret_cast<const InboundCallChannel*>(instance);
-  if (!channel) {
-    throwJavaException(env, "java/lang/IllegalStateException", "Invalid JavaScript object");
-    return nullptr;
-  }
-
-  return channel->serviceNamesArray(context, env);
-}
-
 extern "C" JNIEXPORT jstring JNICALL
 Java_app_cash_zipline_JniCallChannel_call(JNIEnv* env, jobject thiz, jlong _context,
                                           jlong instance, jstring callJson) {

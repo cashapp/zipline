@@ -19,7 +19,6 @@ import app.cash.zipline.internal.bridge.inboundChannelName
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -42,8 +41,6 @@ class QuickJsInboundChannelTest {
     quickJs.evaluate(
       """
       globalThis.$inboundChannelName = {};
-      globalThis.$inboundChannelName.serviceNamesArray = function() {
-      };
       globalThis.$inboundChannelName.call = function(jstring) {
       };
       globalThis.$inboundChannelName.disconnect = function(instanceName) {
@@ -65,28 +62,6 @@ class QuickJsInboundChannelTest {
     val inboundChannel = quickJs.getInboundChannel()
     val result = inboundChannel.call("firstArg")
     assertEquals("received call(firstArg) and the call was successful!", result)
-  }
-
-  @Test
-  fun serviceNamesArrayHappyPath() {
-    quickJs.evaluate(
-      """
-      var callLog = [];
-      globalThis.$inboundChannelName.serviceNamesArray = function() {
-        return ['service one', 'service two'];
-      };
-    """.trimIndent(),
-    )
-
-    val inboundChannel = quickJs.getInboundChannel()
-    val result = inboundChannel.serviceNamesArray()
-    assertContentEquals(
-      arrayOf(
-        "service one",
-        "service two",
-      ),
-      result,
-    )
   }
 
   @Test

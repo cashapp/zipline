@@ -19,7 +19,6 @@ import app.cash.zipline.internal.bridge.outboundChannelName
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
-import kotlin.test.assertContentEquals
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
@@ -51,31 +50,6 @@ class QuickJsOutboundChannelTest {
     )
     assertEquals("result one", callResult)
     assertEquals(listOf("call(firstArg)"), callChannel.log)
-  }
-
-  @Test
-  fun serviceNamesArrayHappyPath() {
-    callChannel.serviceNamesResult += "service one"
-    callChannel.serviceNamesResult += "service two"
-
-    val serviceNames = quickJs.evaluate(
-      """
-      globalThis.$outboundChannelName.serviceNamesArray();
-    """.trimIndent(),
-    ) as Array<Any>
-    assertContentEquals(
-      arrayOf(
-        "service one",
-        "service two",
-      ),
-      serviceNames,
-    )
-    assertEquals(
-      listOf(
-        "serviceNamesArray()",
-      ),
-      callChannel.log,
-    )
   }
 
   @Test

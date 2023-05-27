@@ -17,22 +17,6 @@ package app.cash.zipline.internal
 
 import app.cash.zipline.ZiplineService
 
-/**
- * Host functions for use by guest code.
- *
- * Unlike typical interfaces that collect functions that share a purpose, this interface collects
- * functions that share a common implementation mechanism: the host platform.
- */
-internal interface HostService : EndpointService, ZiplineService {
-  fun setTimeout(timeoutId: Int, delayMillis: Int)
-
-  fun clearTimeout(timeoutId: Int)
-
-  fun log(level: String, message: String, throwable: Throwable?)
-
-  /**
-   * Event forwarded to the host event listener. We don't need to bridge all event functions
-   * because the peer already sees its side of those calls.
-   */
-  fun serviceLeaked(name: String)
+internal interface EndpointService : ZiplineService {
+  val serviceNames: Set<String>
 }

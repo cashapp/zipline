@@ -21,13 +21,6 @@ internal class JniCallChannel(
   private val quickJs: QuickJs,
   private val instance: Long,
 ) : CallChannel {
-  override fun serviceNamesArray() = serviceNamesArray(quickJs.context, instance)
-
-  private external fun serviceNamesArray(
-    context: Long,
-    instance: Long,
-  ): Array<String>
-
   override fun call(callJson: String) =
     call(quickJs.context, instance, callJson)
 
