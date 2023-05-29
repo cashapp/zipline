@@ -65,10 +65,7 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
-
-        import app.cash.zipline.internal.bridge.Endpoint
 
         class TestingEchoService(
           private val greeting: String
@@ -78,7 +75,8 @@ class ZiplineKotlinPluginTest {
           }
         }
 
-        internal fun prepareJsBridges(endpoint: Endpoint) {
+        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+        private fun prepareJsBridges(endpoint: app.cash.zipline.internal.bridge.Endpoint) {
           endpoint.bind<EchoZiplineService>("helloService", TestingEchoService("hello"))
         }
         """,
@@ -88,7 +86,10 @@ class ZiplineKotlinPluginTest {
 
     val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
-    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
+    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).run {
+      isAccessible = true
+      invoke(null, bridgeA)
+    }
 
     val helloService = ZiplineTestInternals.takeEchoZiplineService(bridgeB, "helloService")
     assertThat(helloService.echo(EchoRequest("Jesse")))
@@ -101,12 +102,12 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
-        import app.cash.zipline.internal.bridge.Endpoint
-
-        internal fun takeHelloService(endpoint: Endpoint): EchoZiplineService {
+        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+        private fun takeHelloService(
+          endpoint: app.cash.zipline.internal.bridge.Endpoint,
+        ): EchoZiplineService {
           return endpoint.take("helloService")
         }
         """,
@@ -124,8 +125,10 @@ class ZiplineKotlinPluginTest {
     ZiplineTestInternals.bindEchoZiplineService(bridgeB, "helloService", testingEchoService)
 
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
-    val helloService = mainKt.getDeclaredMethod("takeHelloService", bridgeA::class.java)
-      .invoke(null, bridgeA) as EchoZiplineService
+    val helloService = mainKt.getDeclaredMethod("takeHelloService", bridgeA::class.java).run {
+      isAccessible = true
+      invoke(null, bridgeA) as EchoZiplineService
+    }
 
     assertThat(helloService.echo(EchoRequest("Jesse")))
       .isEqualTo(EchoResponse("greetings from the compiler plugin, Jesse"))
@@ -137,12 +140,12 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
-        import app.cash.zipline.internal.bridge.Endpoint
-
-        internal fun prepareJsBridges(endpoint: Endpoint) {
+        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+        private fun prepareJsBridges(
+          endpoint: app.cash.zipline.internal.bridge.Endpoint,
+        ) {
           endpoint.bind<TestingEchoService>("helloService", TestingEchoService)
         }
 
@@ -163,15 +166,16 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
         import app.cash.zipline.ZiplineService
-        import app.cash.zipline.internal.bridge.Endpoint
 
         class Concrete : ZiplineService
 
-        internal fun takeHelloService(endpoint: Endpoint): Concrete {
+        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+        private fun takeHelloService(
+          endpoint: app.cash.zipline.internal.bridge.Endpoint,
+        ): Concrete {
           return endpoint.take("helloService")
         }
         """,
@@ -179,7 +183,7 @@ class ZiplineKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.COMPILATION_ERROR, result.exitCode, result.messages)
     assertThat(result.messages)
-      .contains(":10:19 The type argument to Zipline.take() must be an interface type")
+      .contains(":11:19 The type argument to Zipline.take() must be an interface type")
   }
 
   @Test
@@ -188,10 +192,7 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
-
-        import app.cash.zipline.internal.bridge.Endpoint
 
         class TestingGenericEchoService : GenericEchoService<String> {
           override fun genericEcho(request: String): List<String> {
@@ -199,7 +200,10 @@ class ZiplineKotlinPluginTest {
           }
         }
 
-        internal fun prepareJsBridges(endpoint: Endpoint) {
+        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+        private fun prepareJsBridges(
+          endpoint: app.cash.zipline.internal.bridge.Endpoint,
+        ) {
           endpoint.bind<GenericEchoService<String>>(
             "genericService",
             TestingGenericEchoService()
@@ -212,7 +216,10 @@ class ZiplineKotlinPluginTest {
 
     val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
-    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
+    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).run {
+      isAccessible = true
+      invoke(null, bridgeA)
+    }
 
     val helloService = ZiplineTestInternals.takeGenericEchoService(bridgeB, "genericService")
     assertThat(helloService.genericEcho("Jesse")).containsExactly("received a generic Jesse!")
@@ -224,12 +231,12 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
-        import app.cash.zipline.internal.bridge.Endpoint
-
-        internal fun takeGenericService(endpoint: Endpoint): GenericEchoService<String> {
+        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+        private fun takeGenericService(
+          endpoint: app.cash.zipline.internal.bridge.Endpoint
+        ): GenericEchoService<String> {
           return endpoint.take("genericService")
         }
         """,
@@ -247,8 +254,10 @@ class ZiplineKotlinPluginTest {
     ZiplineTestInternals.bindGenericEchoService(bridgeB, "genericService", testingService)
 
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
-    val service = mainKt.getDeclaredMethod("takeGenericService", bridgeA::class.java)
-      .invoke(null, bridgeA) as GenericEchoService<String>
+    val service = mainKt.getDeclaredMethod("takeGenericService", bridgeA::class.java).run {
+      isAccessible = true
+      invoke(null, bridgeA) as GenericEchoService<String>
+    }
 
     assertThat(service.genericEcho("Jesse"))
       .containsExactly("received a generic Jesse!")
@@ -260,12 +269,10 @@ class ZiplineKotlinPluginTest {
       sourceFile = SourceFile.kotlin(
         "main.kt",
         """
-        @file:Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
         package app.cash.zipline.testing
 
-        import app.cash.zipline.internal.bridge.Endpoint
-
-        internal fun prepareJsBridges(endpoint: Endpoint) {
+        @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
+        private fun prepareJsBridges(endpoint: app.cash.zipline.internal.bridge.Endpoint) {
           endpoint.bind<EchoService>("helloService", object : EchoService {
             override fun echo(request: EchoRequest): EchoResponse {
               return EchoResponse("hello from anonymous, ${'$'}{request.message}")
@@ -279,7 +286,10 @@ class ZiplineKotlinPluginTest {
 
     val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
     val mainKt = result.classLoader.loadClass("app.cash.zipline.testing.MainKt")
-    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).invoke(null, bridgeA)
+    mainKt.getDeclaredMethod("prepareJsBridges", bridgeA::class.java).run {
+      isAccessible = true
+      invoke(null, bridgeA)
+    }
 
     val helloService = ZiplineTestInternals.takeEchoClient(bridgeB, "helloService")
     assertThat(helloService.echo(EchoRequest("Alec")))
