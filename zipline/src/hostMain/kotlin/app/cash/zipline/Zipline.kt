@@ -67,7 +67,7 @@ actual class Zipline private constructor(
     },
     oppositeProvider = {
       guest
-    }
+    },
   )
 
   private val guest: GuestService = endpoint.take(ziplineGuestName)

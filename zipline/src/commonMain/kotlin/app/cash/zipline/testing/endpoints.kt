@@ -44,7 +44,7 @@ internal fun newEndpointPair(
           return b.inboundChannel.disconnect(instanceName)
         }
       },
-      oppositeProvider = { b }
+      oppositeProvider = { b },
     )
 
     val b: Endpoint = Endpoint(

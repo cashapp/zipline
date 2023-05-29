@@ -55,7 +55,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
     },
     oppositeProvider = {
       host
-    }
+    },
   )
 
   actual val json = endpoint.json
