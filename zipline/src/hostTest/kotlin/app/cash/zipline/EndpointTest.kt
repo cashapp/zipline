@@ -19,6 +19,7 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.GenericEchoService
+import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.kotlinBuiltInSerializersModule
 import app.cash.zipline.testing.newEndpointPair
@@ -498,6 +499,46 @@ internal class EndpointTest {
     client.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointB.serviceNames)
+  }
+
+  /**
+   * The EndpointService should not be closed in practice. But if it is, we should recover
+   * gracefully when formatting a [ZiplineApiMismatchException].
+   */
+  @Test
+  fun apiMismatchExceptionWithEndpointServiceClosed(): Unit = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this)
+    endpointB.opposite.close() // Regular code should never do this.
+
+    val service = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        error("unexpected call")
+      }
+    }
+    endpointA.bind<EchoService>("service", service)
+    val client = endpointB.take<PotatoService>("service")
+
+    assertFailsWith<ZiplineApiMismatchException> {
+      client.echo()
+    }
+  }
+
+  @Test
+  fun apiMismatchExceptionDoesntClobberExistingMessage() = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val service = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse {
+        throw ZiplineApiMismatchException("boom!")
+      }
+    }
+    endpointA.bind<EchoService>("service", service)
+    val client = endpointB.take<EchoService>("service")
+
+    val e = assertFailsWith<ZiplineApiMismatchException> {
+      client.echo(EchoRequest(""))
+    }
+    assertTrue("boom!" in e.message)
   }
 
   interface ExtendsEchoService : ZiplineService, ExtendableInterface

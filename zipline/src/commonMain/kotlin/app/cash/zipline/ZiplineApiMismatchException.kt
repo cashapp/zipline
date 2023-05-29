@@ -15,4 +15,18 @@
  */
 package app.cash.zipline
 
-class ZiplineApiMismatchException(override val message: String) : Exception(message)
+class ZiplineApiMismatchException(override val message: String) : Exception(message) {
+  internal companion object {
+    /**
+     * This magic value is detected by the bridge and replaced with an actionable list of available
+     * functions.
+     */
+    const val UNKNOWN_FUNCTION = "<unknown function>"
+
+    /**
+     * This magic value is detected by the bridge and replaced with an actionable list of available
+     * services.
+     */
+    const val UNKNOWN_SERVICE = "<unknown service>"
+  }
+}
