@@ -15,7 +15,10 @@
  */
 package app.cash.zipline
 
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
+import assertk.assertions.matches
 import java.util.concurrent.LinkedBlockingDeque
 import java.util.logging.Handler
 import java.util.logging.Level
@@ -82,12 +85,14 @@ class ConsoleTest {
     assertThat(record1.level).isEqualTo(Level.SEVERE)
     assertThat(record1.message).isEqualTo("1. something went wrong")
     assertThat(record1.thrown.stackTraceToString()).matches(
-      """(?s).*IllegalStateException: boom!""" +
-        """.*at goBoom1""" +
-        """.*at goBoom2""" +
-        """.*at goBoom3""" +
-        """.*at consoleLogWithThrowable""" +
-        """.*""",
+      Regex(
+        """(?s).*IllegalStateException: boom!""" +
+          """.*at goBoom1""" +
+          """.*at goBoom2""" +
+          """.*at goBoom3""" +
+          """.*at consoleLogWithThrowable""" +
+          """.*""",
+      ),
     )
 
     val record2 = logRecords.take()

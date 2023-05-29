@@ -31,10 +31,10 @@ dependencies {
   implementation(libs.okHttp.core)
   implementation(libs.okio.core)
   testImplementation(projects.ziplineLoaderTesting)
+  testImplementation(libs.assertk)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.okHttp.mockWebServer)
-  testImplementation(libs.truth)
 }
 
 buildConfig {

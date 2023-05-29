@@ -15,7 +15,12 @@
  */
 package app.cash.zipline.bytecode
 
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isFalse
+import assertk.assertions.isGreaterThanOrEqualTo
+import assertk.assertions.isNotEqualTo
+import assertk.assertions.isTrue
 import kotlin.test.assertFailsWith
 import okio.ByteString.Companion.decodeHex
 import org.junit.Test
@@ -31,12 +36,12 @@ class AtomSetTest {
     val atomSet = MutableAtomSet(listOf(helloJsString, worldJsString))
 
     // Null and true are built-in atoms.
-    assertThat(atomSet.idOf(nullJsString)).isAtLeast(0)
-    assertThat(atomSet.idOf(trueJsString)).isAtLeast(0)
+    assertThat(atomSet.idOf(nullJsString)).isGreaterThanOrEqualTo(0)
+    assertThat(atomSet.idOf(trueJsString)).isGreaterThanOrEqualTo(0)
 
     // 'hello' and 'world' are not built-in atoms.
-    assertThat(atomSet.idOf(helloJsString)).isAtLeast(0)
-    assertThat(atomSet.idOf(worldJsString)).isAtLeast(0)
+    assertThat(atomSet.idOf(helloJsString)).isGreaterThanOrEqualTo(0)
+    assertThat(atomSet.idOf(worldJsString)).isGreaterThanOrEqualTo(0)
 
     assertFailsWith<IllegalArgumentException> {
       atomSet.idOf(noSuchJsString)
@@ -46,13 +51,13 @@ class AtomSetTest {
   @Test fun addNewAtom() {
     val atomSet = MutableAtomSet(listOf(helloJsString))
     assertThat(atomSet.add(worldJsString)).isTrue()
-    assertThat(atomSet.idOf(worldJsString)).isAtLeast(0)
+    assertThat(atomSet.idOf(worldJsString)).isGreaterThanOrEqualTo(0)
   }
 
   @Test fun addExistingAtom() {
     val atomSet = MutableAtomSet(listOf(helloJsString))
     assertThat(atomSet.add(trueJsString)).isFalse()
-    assertThat(atomSet.idOf(trueJsString)).isAtLeast(0)
+    assertThat(atomSet.idOf(trueJsString)).isGreaterThanOrEqualTo(0)
   }
 
   /**

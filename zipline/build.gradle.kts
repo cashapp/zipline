@@ -55,6 +55,7 @@ kotlin {
     }
     val commonTest by getting {
       dependencies {
+        implementation(libs.assertk)
         implementation(kotlin("test"))
       }
     }
@@ -90,7 +91,6 @@ kotlin {
       kotlin.srcDir("src/jniTest/kotlin/")
       resources.srcDir(copyTestingJs)
       dependencies {
-        implementation(libs.truth)
         implementation(projects.zipline.testing)
       }
     }
@@ -275,9 +275,9 @@ android {
 }
 
 dependencies {
+  androidTestImplementation(libs.assertk)
   androidTestImplementation(libs.junit)
   androidTestImplementation(libs.androidx.test.runner)
-  androidTestImplementation(libs.truth)
   androidTestImplementation(libs.kotlinx.coroutines.test)
   androidTestImplementation(projects.zipline.testing)
 }

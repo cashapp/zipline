@@ -20,7 +20,12 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoZiplineService
 import app.cash.zipline.testing.GenericEchoService
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.containsExactly
+import assertk.assertions.isEqualTo
+import assertk.assertions.isInstanceOf
+import assertk.assertions.isNotNull
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
@@ -56,7 +61,7 @@ class ZiplineKotlinPluginTest {
       "app.cash.zipline.testing.SampleService\$Companion\$Adapter",
     )
     assertThat(adapterClass).isNotNull()
-    assertThat(adapterClass.interfaces).asList().containsExactly(KSerializer::class.java)
+    assertThat(adapterClass.interfaces).containsExactly(KSerializer::class.java)
   }
 
   @Test
@@ -354,7 +359,7 @@ class ZiplineKotlinPluginTest {
       "app.cash.zipline.testing.SampleService\$Companion\$Adapter",
     )
     assertThat(adapterClass).isNotNull()
-    assertThat(adapterClass.interfaces).asList().containsExactly(KSerializer::class.java)
+    assertThat(adapterClass.interfaces).containsExactly(KSerializer::class.java)
   }
 
   @Test

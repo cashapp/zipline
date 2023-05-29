@@ -15,7 +15,9 @@
  */
 package app.cash.zipline.cli
 
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.isNull
+import assertk.assertions.matches
 import java.io.PrintStream
 import kotlin.test.assertFailsWith
 import okio.Buffer
@@ -29,28 +31,28 @@ class GenerateKeyPairTest {
   @Test fun happyPathDefault() {
     val generateKeyPair = fromArgs()
     generateKeyPair.run()
-    assertThat(systemOut.readUtf8Line()).matches("  ALGORITHM: Ed25519")
-    assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{64}")
-    assertThat(systemOut.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{64}")
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex("  ALGORITHM: Ed25519"))
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex(" PUBLIC KEY: [\\da-f]{64}"))
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex("PRIVATE KEY: [\\da-f]{64}"))
     assertThat(systemOut.readUtf8Line()).isNull()
   }
 
   @Test fun happyPathEd25519() {
     val generateKeyPair = fromArgs("-a", "Ed25519")
     generateKeyPair.run()
-    assertThat(systemOut.readUtf8Line()).matches("  ALGORITHM: Ed25519")
-    assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{64}")
-    assertThat(systemOut.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{64}")
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex("  ALGORITHM: Ed25519"))
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex(" PUBLIC KEY: [\\da-f]{64}"))
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex("PRIVATE KEY: [\\da-f]{64}"))
     assertThat(systemOut.readUtf8Line()).isNull()
   }
 
   @Test fun happyPathEcdsaP256() {
     val generateKeyPair = fromArgs("-a", "EcdsaP256")
     generateKeyPair.run()
-    assertThat(systemOut.readUtf8Line()).matches("  ALGORITHM: EcdsaP256")
-    assertThat(systemOut.readUtf8Line()).matches(" PUBLIC KEY: [\\da-f]{130}")
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex("  ALGORITHM: EcdsaP256"))
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex(" PUBLIC KEY: [\\da-f]{130}"))
     // Expected lengths were determined experimentally!
-    assertThat(systemOut.readUtf8Line()).matches("PRIVATE KEY: [\\da-f]{134}")
+    assertThat(systemOut.readUtf8Line()!!).matches(Regex("PRIVATE KEY: [\\da-f]{134}"))
     assertThat(systemOut.readUtf8Line()).isNull()
   }
 

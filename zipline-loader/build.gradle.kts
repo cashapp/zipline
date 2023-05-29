@@ -76,6 +76,7 @@ kotlin {
 
     val commonTest by getting {
       dependencies {
+        implementation(libs.assertk)
         implementation(kotlin("test"))
         implementation(projects.ziplineLoaderTesting)
         implementation(projects.zipline.testing)
@@ -91,7 +92,6 @@ kotlin {
         implementation(libs.okio.fakeFileSystem)
         implementation(libs.sqldelight.driver.sqlite)
         implementation(libs.sqlite.jdbc)
-        implementation(libs.truth)
       }
     }
     val jvmTest by getting {

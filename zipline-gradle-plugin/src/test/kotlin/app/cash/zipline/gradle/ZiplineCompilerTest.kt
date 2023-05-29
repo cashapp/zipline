@@ -22,12 +22,12 @@ import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.loadJsModule
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.startsWith
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.buffer
 import okio.source
