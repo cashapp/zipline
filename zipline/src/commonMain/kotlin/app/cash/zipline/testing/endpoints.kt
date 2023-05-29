@@ -32,10 +32,10 @@ internal fun newEndpointPair(
 ): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
     val a: Endpoint = Endpoint(
-      scope,
-      serializersModule,
-      listenerA,
-      object : CallChannel {
+      scope = scope,
+      userSerializersModule = serializersModule,
+      eventListener = listenerA,
+      outboundChannel = object : CallChannel {
         override fun call(callJson: String): String {
           return b.inboundChannel.call(callJson)
         }
@@ -44,9 +44,16 @@ internal fun newEndpointPair(
           return b.inboundChannel.disconnect(instanceName)
         }
       },
+      oppositeProvider = { b },
     )
 
-    val b: Endpoint = Endpoint(scope, serializersModule, listenerB, a.inboundChannel)
+    val b: Endpoint = Endpoint(
+      scope = scope,
+      userSerializersModule = serializersModule,
+      eventListener = listenerB,
+      outboundChannel = a.inboundChannel,
+      oppositeProvider = { a },
+    )
   }
 
   return pair.a to pair.b
