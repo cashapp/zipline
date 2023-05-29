@@ -61,6 +61,8 @@ internal object GlobalBridge : GuestService, CallChannel {
   override val serviceNames: Set<String>
     get() = zipline.endpoint.serviceNames
 
+  override fun serviceType(name: String) = zipline.endpoint.serviceType(name)
+
   override fun call(callJson: String) = inboundChannel.call(callJson)
 
   override fun disconnect(instanceName: String) = inboundChannel.disconnect(instanceName)

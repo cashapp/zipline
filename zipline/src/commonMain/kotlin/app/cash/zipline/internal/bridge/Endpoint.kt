@@ -17,7 +17,6 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
-import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.EndpointService
@@ -34,7 +33,7 @@ import kotlinx.serialization.modules.SerializersModule
  * An outbound channel for delivering calls to the other platform, and an inbound channel for
  * receiving calls from the other platform.
  */
-class Endpoint internal constructor(
+internal class Endpoint internal constructor(
   internal val scope: CoroutineScope,
   internal val userSerializersModule: SerializersModule,
   internal val eventListener: EventListener,
@@ -112,7 +111,7 @@ class Endpoint internal constructor(
     }
   }
 
-  private val functionsCache = mutableMapOf<String, List<ZiplineFunction<*>>>()
+  private val serviceTypeCache = mutableMapOf<String, RealZiplineServiceType<*>>()
 
   @Suppress("UNUSED_PARAMETER") // Parameters are used by the compiler plug-in.
   fun <T : ZiplineService> bind(name: String, instance: T) {
@@ -126,14 +125,8 @@ class Endpoint internal constructor(
     adapter: ZiplineServiceAdapter<T>,
   ) {
     eventListener.bindService(name, service)
-
-    // Cache the ziplineFunctions based on the adapter's generated `serialName`
-    @Suppress("UNCHECKED_CAST")
-    val functions = functionsCache.getOrPut(adapter.serialName) {
-      adapter.ziplineFunctions(json.serializersModule)
-    } as List<ZiplineFunction<T>>
-
-    inboundServices[name] = InboundService(service, this, functions)
+    val type = serviceType(adapter)
+    inboundServices[name] = InboundService(type, service, this)
   }
 
   @Suppress("UNUSED_PARAMETER") // Parameter is used by the compiler plug-in.
@@ -153,8 +146,8 @@ class Endpoint internal constructor(
     // Detect leaked old services when creating new services.
     detectLeaks()
 
-    val functions = adapter.ziplineFunctions(json.serializersModule)
-    val callHandler = OutboundCallHandler(name, this, adapter, scope, functions)
+    val type = serviceType(adapter)
+    val callHandler = OutboundCallHandler(type, name, this, adapter, scope)
     val result = callHandler.outboundService<T>()
     if (result.usesScope()) {
       scope.add(callHandler)
@@ -193,6 +186,24 @@ class Endpoint internal constructor(
 
   internal fun generatePassByReferenceName(): String {
     return "$passByReferencePrefix${nextId++}"
+  }
+
+  override fun serviceType(name: String): SerializableZiplineServiceType {
+    val type = inboundServices[name]?.type
+      ?: throw IllegalArgumentException("no such service: $name")
+    return SerializableZiplineServiceType(type)
+  }
+
+  private fun <T : ZiplineService> serviceType(
+    adapter: ZiplineServiceAdapter<T>,
+  ): RealZiplineServiceType<T> {
+    @Suppress("UNCHECKED_CAST") // The 'T' type arguments always match the keys.
+    return serviceTypeCache.getOrPut(adapter.serialName) {
+      RealZiplineServiceType(
+        adapter.serialName,
+        adapter.ziplineFunctions(json.serializersModule),
+      )
+    } as RealZiplineServiceType<T>
   }
 
   /**

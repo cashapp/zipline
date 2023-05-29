@@ -18,6 +18,7 @@ package app.cash.zipline.internal.bridge
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineService
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
 
 @PublishedApi
 internal abstract class ReturningZiplineFunction<T : ZiplineService>(
@@ -59,4 +60,15 @@ internal abstract class SuspendingZiplineFunction<T : ZiplineService>(
   abstract suspend fun callSuspending(service: T, args: List<*>): Any?
 
   override fun toString() = name
+}
+
+@Serializable
+internal class SerializableZiplineFunction(
+  override val name: String,
+  override val isSuspending: Boolean,
+) : ZiplineFunction<ZiplineService> {
+  constructor(function: ZiplineFunction<*>) : this(function.name, function.isSuspending)
+
+  override val isClose
+    get() = name == "fun close(): kotlin.Unit"
 }

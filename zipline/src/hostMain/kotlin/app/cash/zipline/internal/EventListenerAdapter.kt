@@ -23,7 +23,7 @@ import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.bridge.Endpoint
 
 /** Adapts the endpoint listener to add a constant Zipline parameter. */
-class EventListenerAdapter(
+internal class EventListenerAdapter(
   val delegate: EventListener,
   val zipline: Zipline,
 ) : Endpoint.EventListener() {

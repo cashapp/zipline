@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.internal
+package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.bridge.SerializableZiplineServiceType
+import app.cash.zipline.ZiplineServiceType
+import kotlinx.serialization.Serializable
 
-internal interface EndpointService : ZiplineService {
-  val serviceNames: Set<String>
-
-  fun serviceType(name: String): SerializableZiplineServiceType
+@Serializable
+internal class SerializableZiplineServiceType(
+  override val name: String,
+  override val functions: List<SerializableZiplineFunction>,
+) : ZiplineServiceType<ZiplineService> {
+  constructor(type: ZiplineServiceType<*>) : this(
+    type.name,
+    type.functions.map { function -> SerializableZiplineFunction(function) },
+  )
 }

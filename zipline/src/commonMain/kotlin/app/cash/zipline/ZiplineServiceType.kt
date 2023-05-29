@@ -13,13 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.internal
+package app.cash.zipline
 
-import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.bridge.SerializableZiplineServiceType
-
-internal interface EndpointService : ZiplineService {
-  val serviceNames: Set<String>
-
-  fun serviceType(name: String): SerializableZiplineServiceType
+interface ZiplineServiceType<T : ZiplineService> {
+  val name: String
+  val functions: List<ZiplineFunction<T>>
 }
