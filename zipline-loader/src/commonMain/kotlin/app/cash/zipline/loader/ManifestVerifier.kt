@@ -39,11 +39,14 @@ class ManifestVerifier private constructor(
    * Returns normally if [manifest] is signed by a trusted key in [verifiers]. This will check the
    * first key in [ZiplineManifest.signatures] that is recognized.
    *
-   * This throws an exception if no trusted signature is found, or if a signature doesn't verify.
+   * @return the key that was verified, which is also the first key that was recognized. This
+   *   will only return null if this is the special [NO_SIGNATURE_CHECKS] verifier.
+   * @throws IllegalStateException if no trusted signature is found, or if a signature doesn't
+   *   verify.
    */
   @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
-  fun verify(manifestBytes: ByteString, manifest: ZiplineManifest) {
-    if (!doSignatureChecks) return
+  fun verify(manifestBytes: ByteString, manifest: ZiplineManifest): String? {
+    if (!doSignatureChecks) return null
 
     val signaturePayload = app.cash.zipline.internal.signaturePayload(manifestBytes.utf8())
     val signaturePayloadBytes = signaturePayload.encodeUtf8()
@@ -53,15 +56,15 @@ class ManifestVerifier private constructor(
 
       check(
         verifier.algorithm.verify(
-        message = signaturePayloadBytes,
-        signature = signature.decodeHex(),
-        publicKey = verifier.trustedKey,
-      ),
+          message = signaturePayloadBytes,
+          signature = signature.decodeHex(),
+          publicKey = verifier.trustedKey,
+        ),
       ) {
         "manifest signature for key $keyName did not verify!"
       }
 
-      return // Success!
+      return keyName // Success!
     }
 
     throw IllegalStateException(

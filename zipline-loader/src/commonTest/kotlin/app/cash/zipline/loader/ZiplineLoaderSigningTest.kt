@@ -24,6 +24,7 @@ import app.cash.zipline.testing.LoggingEventListener
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
+import kotlin.test.assertContains
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -71,6 +72,8 @@ class ZiplineLoaderSigningTest {
     )
     val zipline = (tester.loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
     zipline.close()
+
+    assertContains(eventListener.takeAll(), "manifestVerified test key1")
   }
 
   /**

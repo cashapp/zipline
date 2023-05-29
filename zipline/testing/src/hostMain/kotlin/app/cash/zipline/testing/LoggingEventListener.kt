@@ -19,6 +19,7 @@ import app.cash.zipline.Call
 import app.cash.zipline.CallResult
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
+import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.bridge.CancelCallback
 import app.cash.zipline.internal.bridge.SuspendCallback
@@ -79,6 +80,7 @@ class LoggingEventListener : EventListener() {
   override fun applicationLoadSuccess(
     applicationName: String,
     manifestUrl: String?,
+    manifest: ZiplineManifest,
     zipline: Zipline,
     startValue: Any?,
   ) {
@@ -144,6 +146,18 @@ class LoggingEventListener : EventListener() {
       applicationName = applicationName,
       exception = exception,
       log = "manifestParseFailed $applicationName $url",
+    )
+  }
+
+  override fun manifestVerified(
+    applicationName: String,
+    manifestUrl: String?,
+    manifest: ZiplineManifest,
+    verifiedKey: String,
+  ) {
+    log(
+      applicationName = applicationName,
+      log = "manifestVerified $applicationName $verifiedKey",
     )
   }
 
