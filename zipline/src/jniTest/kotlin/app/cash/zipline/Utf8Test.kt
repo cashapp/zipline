@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.testing.Formatter
+import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.contains
 import kotlin.test.assertFailsWith

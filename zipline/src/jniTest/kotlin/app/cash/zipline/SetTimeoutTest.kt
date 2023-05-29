@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.testing.loadTestingJs
 import kotlin.test.assertEquals
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking

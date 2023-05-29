@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.testing.SchedulerService
+import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import kotlinx.coroutines.async

@@ -46,9 +46,13 @@ kotlin {
       dependsOn(hostMain)
     }
 
+    val nativeMain by creating {
+      dependsOn(hostMain)
+    }
+
     targets.withType<KotlinNativeTarget> {
       val main by compilations.getting
-      main.defaultSourceSet.dependsOn(hostMain)
+      main.defaultSourceSet.dependsOn(nativeMain)
     }
   }
 

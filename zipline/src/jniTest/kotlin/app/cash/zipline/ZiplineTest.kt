@@ -23,6 +23,7 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.SuspendingPotatoService
+import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isEqualTo

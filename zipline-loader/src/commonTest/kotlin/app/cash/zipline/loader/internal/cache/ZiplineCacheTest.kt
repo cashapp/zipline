@@ -18,11 +18,11 @@ package app.cash.zipline.loader.internal.cache
 import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.randomToken
-import app.cash.zipline.loader.systemFileSystem
 import app.cash.zipline.loader.testSqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
+import app.cash.zipline.testing.systemFileSystem
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals

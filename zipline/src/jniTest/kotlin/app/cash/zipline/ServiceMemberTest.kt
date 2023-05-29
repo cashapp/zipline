@@ -21,6 +21,7 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.ServiceAndPrefix
 import app.cash.zipline.testing.ServiceMemberSerializersModule
 import app.cash.zipline.testing.ServiceTransformer
+import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking

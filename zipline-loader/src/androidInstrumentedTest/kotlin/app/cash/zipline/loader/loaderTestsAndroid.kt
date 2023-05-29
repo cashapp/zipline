@@ -19,14 +19,11 @@ import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import java.security.SecureRandom
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
-import okio.FileSystem
 
 // This file is necessary to get Android tests to build.
 //
 // Note that we don't run Android tests because we don't have the right QuickJS or SQLite to run
 // them on the JVM.
-
-actual val systemFileSystem = FileSystem.SYSTEM
 
 internal actual fun testSqlDriverFactory(): SqlDriverFactory =
   error("testSqlDriverFactory not available for Android")
@@ -43,5 +40,3 @@ private fun testSecureRandom() = SecureRandom()
   }
 
 internal actual fun canSignEcdsaP256() = true
-
-internal actual fun getEnv(name: String): String? = System.getenv(name)
