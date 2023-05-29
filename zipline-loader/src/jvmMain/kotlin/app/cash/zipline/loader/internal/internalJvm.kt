@@ -29,8 +29,8 @@ internal fun generateEd25519KeyPair(): KeyPair {
   return newKeyPairFromSeed(secretSeed.toByteString())
 }
 
-internal fun SignatureAlgorithmId.generateKeyPair(): KeyPair {
-  return when (this) {
+internal fun generateKeyPair(signatureAlgorithmId: SignatureAlgorithmId): KeyPair {
+  return when (signatureAlgorithmId) {
     SignatureAlgorithmId.Ed25519 -> generateEd25519KeyPair()
     SignatureAlgorithmId.EcdsaP256 -> EcdsaP256(secureRandom()).generateKeyPair()
   }

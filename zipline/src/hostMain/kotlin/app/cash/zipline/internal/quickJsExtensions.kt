@@ -3,18 +3,14 @@ package app.cash.zipline.internal
 import app.cash.zipline.QuickJs
 import kotlinx.serialization.json.Json
 
-internal fun QuickJs.collectModuleDependencies() {
-  evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
+internal fun collectModuleDependencies(quickJs: QuickJs) {
+  quickJs.evaluate(COLLECT_DEPENDENCIES_DEFINE_JS, "collectDependencies.js")
 }
 
-internal fun QuickJs.getModuleDependencies(): List<String> {
-  val dependenciesString = getGlobalThis(CURRENT_MODULE_DEPENDENCIES)
-  val dependencies = Json.decodeFromString<List<String>>(
-    dependenciesString
-    // If define is never called, dependencies is returned as null
-      ?: "[]",
-  )
-  return dependencies
+internal fun getModuleDependencies(quickJs: QuickJs): List<String> {
+  val dependenciesString = quickJs.getGlobalThis(CURRENT_MODULE_DEPENDENCIES)
+    ?: "[]" // If define is never called, dependencies is returned as null
+  return Json.decodeFromString(dependenciesString)
 }
 
 internal fun QuickJs.getGlobalThis(key: String): String? {
@@ -23,20 +19,20 @@ internal fun QuickJs.getGlobalThis(key: String): String? {
 
 internal fun getLog(quickJs: QuickJs): String? = quickJs.getGlobalThis("log")
 
-internal fun QuickJs.initModuleLoader() {
-  evaluate(DEFINE_JS, "define.js")
+internal fun initModuleLoader(quickJs: QuickJs) {
+  quickJs.evaluate(DEFINE_JS, "define.js")
 }
 
-internal fun QuickJs.loadJsModule(script: String, id: String) {
-  evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
-  evaluate(script, id)
-  evaluate("delete globalThis.$CURRENT_MODULE_ID;")
+internal fun loadJsModule(quickJs: QuickJs, script: String, id: String) {
+  quickJs.evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
+  quickJs.evaluate(script, id)
+  quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
 }
 
-internal fun QuickJs.loadJsModule(id: String, bytecode: ByteArray) {
-  evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
-  execute(bytecode)
-  evaluate("delete globalThis.$CURRENT_MODULE_ID;")
+internal fun loadJsModule(quickJs: QuickJs, id: String, bytecode: ByteArray) {
+  quickJs.evaluate("globalThis.$CURRENT_MODULE_ID = '$id';")
+  quickJs.execute(bytecode)
+  quickJs.evaluate("delete globalThis.$CURRENT_MODULE_ID;")
 }
 
 internal fun runApplication(quickJs: QuickJs, mainModuleId: String, mainFunction: String) {

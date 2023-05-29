@@ -151,11 +151,11 @@ actual class Zipline private constructor(
   }
 
   fun loadJsModule(script: String, id: String) {
-    quickJs.loadJsModule(script, id)
+    loadJsModule(quickJs, script, id)
   }
 
   fun loadJsModule(bytecode: ByteArray, id: String) {
-    quickJs.loadJsModule(id, bytecode)
+    loadJsModule(quickJs, id, bytecode)
   }
 
   companion object {
@@ -167,7 +167,7 @@ actual class Zipline private constructor(
       val quickJs = QuickJs.create()
       // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
       quickJs.maxStackSize = 0L
-      quickJs.initModuleLoader()
+      initModuleLoader(quickJs)
 
       val scope = CoroutineScope(dispatcher)
       val result = Zipline(quickJs, serializersModule, dispatcher, scope, eventListener)

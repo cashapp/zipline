@@ -20,12 +20,9 @@ import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.bytecode.SourceMap
 import app.cash.zipline.bytecode.applySourceMapToBytecode
 import app.cash.zipline.bytecode.removeLeadingDotDots
-import app.cash.zipline.internal.collectModuleDependencies
-import app.cash.zipline.internal.getModuleDependencies
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
-import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -75,7 +72,7 @@ internal object ZiplineCompiler {
     val removedFileNames = getJsFiles(removedFiles).map { it.name }.toSet()
 
     // Get the current manifest and remove any removed or modified modules
-    val manifestFile = File(outputDir.path, MANIFEST_FILE_NAME)
+    val manifestFile = File(outputDir.path, manifestFileName)
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestFile.readText())
     val unchangedModules = manifest.modules.filter { (k, _) ->
       val moduleFileName = k.removePrefix(MODULE_PATH_PREFIX)
@@ -140,9 +137,7 @@ internal object ZiplineCompiler {
         hashingSink.hash
       }
 
-      quickJs.collectModuleDependencies()
-      quickJs.execute(bytecode)
-      val dependencies = quickJs.getModuleDependencies()
+      val dependencies = collectDependencies(quickJs, bytecode)
 
       return "$MODULE_PATH_PREFIX${jsFile.name}" to ZiplineManifest.Module(
         url = outputZiplineFilePath,
@@ -169,11 +164,21 @@ internal object ZiplineCompiler {
 
     val manifest = manifestSigner?.sign(unsignedManifest) ?: unsignedManifest
 
-    val manifestFile = File(outputDir.path, MANIFEST_FILE_NAME)
+    val manifestFile = File(outputDir.path, manifestFileName)
     manifestFile.writeText(manifest.encodeJson())
   }
 
   private fun getJsFiles(files: List<File>) = files.filter { it.path.endsWith(".js") }
+
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  private val manifestFileName = app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
+
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  private fun collectDependencies(quickJs: QuickJs, bytecode: ByteArray): List<String> {
+    app.cash.zipline.internal.collectModuleDependencies(quickJs)
+    quickJs.execute(bytecode)
+    return app.cash.zipline.internal.getModuleDependencies(quickJs)
+  }
 }
 
 /**

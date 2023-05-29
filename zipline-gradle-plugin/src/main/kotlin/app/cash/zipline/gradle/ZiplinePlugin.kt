@@ -16,7 +16,6 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.loader.SignatureAlgorithmId
-import app.cash.zipline.loader.internal.generateKeyPair
 import org.gradle.api.Project
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -127,9 +126,10 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
   }
 
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
   private fun generateKeyPair(algorithm: SignatureAlgorithmId) {
     val logger = LoggerFactory.getLogger(ZiplinePlugin::class.java)
-    val keyPair = algorithm.generateKeyPair()
+    val keyPair = app.cash.zipline.loader.internal.generateKeyPair(algorithm)
     logger.warn("---------------- ----------------------------------------------------------------")
     logger.warn("      ALGORITHM: $algorithm")
     logger.warn("     PUBLIC KEY: ${keyPair.publicKey.hex()}")

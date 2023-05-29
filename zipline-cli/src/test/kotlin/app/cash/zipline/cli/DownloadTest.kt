@@ -16,7 +16,6 @@
 package app.cash.zipline.cli
 
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -106,6 +105,10 @@ class DownloadTest {
     assertTrue(fileSystem.exists(TMP_DIR_PATH / getApplicationManifestFileName(applicationName)))
     assertTrue(fileSystem.exists(TMP_DIR_PATH / testFixtures.alphaSha256Hex))
   }
+
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
+  private fun getApplicationManifestFileName(applicationName: String) =
+    app.cash.zipline.loader.internal.getApplicationManifestFileName(applicationName)
 
   companion object {
     fun fromArgs(vararg args: String?): Download {

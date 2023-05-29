@@ -16,7 +16,6 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.assertDownloadedToEmbeddedManifest
 import java.io.File
@@ -100,4 +99,8 @@ class ZiplineGradleDownloaderTest {
       fileSystem.read(downloadDirPath / testFixtures.alphaSha256Hex) { readByteString() },
     )
   }
+
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
+  private fun getApplicationManifestFileName(applicationName: String) =
+    app.cash.zipline.loader.internal.getApplicationManifestFileName(applicationName)
 }
