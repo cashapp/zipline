@@ -125,53 +125,50 @@ class EventListenerTest {
   @Test fun jvmCallIncompatibleJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
 
-    assertThat(
-      assertFailsWith<ZiplineApiMismatchException> {
+    val e = assertFailsWith<ZiplineApiMismatchException> {
       zipline.take<PotatoService>("helloService").echo()
-    },
-    ).hasMessageThat().startsWith(
+    }
+    assertThat(e.message.replace("\t", "  ")).startsWith(
       """
-      no such method (incompatible API versions?)
-      	called service:
-      		helloService
-      	called function:
-      		fun echo(): app.cash.zipline.testing.EchoResponse
-      	available functions:
-      		fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
-      		fun close(): kotlin.Unit
-     		at
-      """.trimIndent(),
+      |no such method (incompatible API versions?)
+      |  called service:
+      |    helloService
+      |  called function:
+      |    fun echo(): app.cash.zipline.testing.EchoResponse
+      |  available functions:
+      |    fun close(): kotlin.Unit
+      |    fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      """.trimMargin(),
     )
     val name = "helloService"
     val funName = "fun echo(): app.cash.zipline.testing.EchoResponse"
     val request = "[]"
     assertThat(eventListener.take()).isEqualTo("takeService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
-    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such method")
+    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException")
   }
 
   @Test fun jvmCallUnknownJsService() = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
 
-    assertThat(
-      assertFailsWith<ZiplineApiMismatchException> {
+    val e = assertFailsWith<ZiplineApiMismatchException> {
       zipline.take<EchoService>("helloService").echo(EchoRequest("hello"))
-    },
-    ).hasMessageThat().startsWith(
+    }
+    assertThat(e.message.replace("\t", "  ")).startsWith(
       """
-        no such service (service closed?)
-        	called service:
-        		helloService
-        	available services:
-        		zipline/guest
-      """.trimIndent(),
+      |no such service (service closed?)
+      |  called service:
+      |    helloService
+      |  available services:
+      |    zipline/guest
+      """.trimMargin(),
     )
     val name = "helloService"
     val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
     val request = "[EchoRequest(message=hello)]"
     assertThat(eventListener.take()).isEqualTo("takeService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
-    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such service")
+    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException")
   }
 
   @Test fun jsCallIncompatibleJvmService() = runBlocking(dispatcher) {
@@ -182,32 +179,49 @@ class EventListenerTest {
     }
     zipline.bind<PotatoService>("supService", jvmPotatoService)
 
-    assertThat(
-      assertFailsWith<QuickJsException> {
+    val e = assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
-    },
-    ).hasMessageThat().startsWith("app.cash.zipline.ZiplineApiMismatchException: no such method")
+    }
+    assertThat(e.message?.replace("\t", "  ")).startsWith(
+      """
+      |no such method (incompatible API versions?)
+      |  called service:
+      |    supService
+      |  called function:
+      |    fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse
+      |  available functions:
+      |    fun close(): kotlin.Unit
+      |    fun echo(): app.cash.zipline.testing.EchoResponse
+      """.trimMargin(),
+    )
 
     val name = "supService"
     val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
     val request = "[]"
     assertThat(eventListener.take()).isEqualTo("bindService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
-    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such method")
+    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException")
   }
 
   @Test fun jsCallUnknownJvmService() = runBlocking(dispatcher) {
-    assertThat(
-      assertFailsWith<QuickJsException> {
+    val e = assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
-    },
-    ).hasMessageThat().startsWith("app.cash.zipline.ZiplineApiMismatchException: no such service")
+    }
+    assertThat(e.message?.replace("\t", "  ")).startsWith(
+      """
+      |no such service (service closed?)
+      |  called service:
+      |    supService
+      |  available services:
+      |    zipline/host
+      """.trimMargin(),
+    )
 
     val name = "supService"
     val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
     val request = "[]"
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
-    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException: no such service")
+    assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException")
   }
 
   @Test fun ziplineClosed() = runBlocking(dispatcher) {

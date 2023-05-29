@@ -163,10 +163,12 @@ internal class RealCallSerializer(
           serviceName = serviceName,
           inboundService = inboundService ?: unknownService(),
           function = function ?: unknownFunction<ZiplineService>(
-            serviceName,
             functionName,
-            inboundService,
             suspendCallback,
+            when (inboundService) {
+              null -> ZiplineApiMismatchException.UNKNOWN_SERVICE
+              else -> ZiplineApiMismatchException.UNKNOWN_FUNCTION
+            },
           ),
           suspendCallback = suspendCallback,
           args = args,
@@ -191,32 +193,10 @@ internal class RealCallSerializer(
 
   /** Returns a function that always throws [ZiplineApiMismatchException] when called. */
   private fun <T : ZiplineService> unknownFunction(
-    serviceName: String,
     functionName: String,
-    inboundService: InboundService<*>?,
     suspendCallback: SuspendCallback<Any?>?,
+    message: String,
   ): ZiplineFunction<T> {
-    val message = buildString {
-      if (inboundService == null) {
-        appendLine("no such service (service closed?)")
-        appendLine("\tcalled service:")
-        append("\t\t")
-        appendLine(serviceName)
-        appendLine("\tavailable services:")
-        endpoint.serviceNames.joinTo(this, separator = "\n") { "\t\t$it" }
-      } else {
-        appendLine("no such method (incompatible API versions?)")
-        appendLine("\tcalled service:")
-        append("\t\t")
-        appendLine(serviceName)
-        appendLine("\tcalled function:")
-        append("\t\t")
-        appendLine(functionName)
-        appendLine("\tavailable functions:")
-        inboundService.type.functions.joinTo(this, separator = "\n") { "\t\t${it.name}" }
-      }
-    }
-
     if (suspendCallback != null) {
       return object : SuspendingZiplineFunction<T>(
         name = functionName,
@@ -264,42 +244,6 @@ internal class ArgsListSerializer(
       }
       check(decodeElementIndex(descriptor) == DECODE_DONE)
       return@decodeStructure result
-    }
-  }
-}
-
-internal class ResultSerializer<T>(
-  internal val successSerializer: KSerializer<T>,
-) : KSerializer<Result<T>> {
-
-  override val descriptor: SerialDescriptor = buildClassSerialDescriptor("Result") {
-    element("success", successSerializer.descriptor)
-    element("failure", ThrowableSerializer.descriptor)
-  }
-
-  override fun serialize(encoder: Encoder, value: Result<T>) {
-    encoder.encodeStructure(descriptor) {
-      if (value.isSuccess) {
-        @Suppress("UNCHECKED_CAST") // We know the value of a success result is a 'T'.
-        encodeSerializableElement(descriptor, 0, successSerializer, value.getOrNull() as T)
-      } else {
-        encodeSerializableElement(descriptor, 1, ThrowableSerializer, value.exceptionOrNull()!!)
-      }
-    }
-  }
-
-  override fun deserialize(decoder: Decoder): Result<T> {
-    return decoder.decodeStructure(descriptor) {
-      var result: Result<T>? = null
-      while (true) {
-        result = when (val index = decodeElementIndex(descriptor)) {
-          0 -> Result.success(decodeSerializableElement(descriptor, 0, successSerializer))
-          1 -> Result.failure(decodeSerializableElement(descriptor, 1, ThrowableSerializer))
-          DECODE_DONE -> break
-          else -> error("Unexpected index: $index")
-        }
-      }
-      return@decodeStructure result!!
     }
   }
 }

@@ -15,8 +15,10 @@
  */
 package app.cash.zipline.testing
 
+import app.cash.zipline.internal.EndpointService
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
+import app.cash.zipline.internal.bridge.SerializableZiplineServiceType
 import kotlin.jvm.JvmOverloads
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -31,6 +33,9 @@ internal fun newEndpointPair(
   listenerB: Endpoint.EventListener = Endpoint.EventListener(),
 ): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
+    val aEndpointService = EndpointServiceProxy { a }
+    val bEndpointService = EndpointServiceProxy { b }
+
     val a: Endpoint = Endpoint(
       scope = scope,
       userSerializersModule = serializersModule,
@@ -44,7 +49,7 @@ internal fun newEndpointPair(
           return b.inboundChannel.disconnect(instanceName)
         }
       },
-      oppositeProvider = { b },
+      oppositeProvider = { bEndpointService },
     )
 
     val b: Endpoint = Endpoint(
@@ -52,9 +57,33 @@ internal fun newEndpointPair(
       userSerializersModule = serializersModule,
       eventListener = listenerB,
       outboundChannel = a.inboundChannel,
-      oppositeProvider = { a },
+      oppositeProvider = { aEndpointService },
     )
   }
 
   return pair.a to pair.b
+}
+
+/**
+ * Forward calls to [delegate] until this is closed. Note that in practice the endpoint service
+ * should never be closed.
+ */
+private class EndpointServiceProxy(
+  val delegate: () -> EndpointService,
+) : EndpointService {
+  var closed = false
+  override val serviceNames: Set<String>
+    get() {
+      require(!closed)
+      return delegate().serviceNames
+    }
+
+  override fun serviceType(name: String): SerializableZiplineServiceType? {
+    require(!closed)
+    return delegate().serviceType(name)
+  }
+
+  override fun close() {
+    closed = true
+  }
 }
