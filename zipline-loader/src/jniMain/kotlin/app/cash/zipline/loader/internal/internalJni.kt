@@ -22,7 +22,7 @@ import okhttp3.HttpUrl.Companion.toHttpUrl
 internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
   loadJsModule(bytecode, id)
 
-actual val ecdsaP256: SignatureAlgorithm = EcdsaP256(secureRandom())
+internal actual val ecdsaP256: SignatureAlgorithm = EcdsaP256(secureRandom())
 
 internal fun secureRandom(): SecureRandom {
   return SecureRandom().also { it.nextLong() } // Force seeding.
@@ -30,6 +30,6 @@ internal fun secureRandom(): SecureRandom {
 
 internal actual val systemEpochMsClock: () -> Long = System::currentTimeMillis
 
-actual fun resolveUrl(baseUrl: String, link: String): String {
+internal actual fun resolveUrl(baseUrl: String, link: String): String {
   return baseUrl.toHttpUrl().resolve(link)!!.toString()
 }

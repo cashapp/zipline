@@ -18,13 +18,13 @@ package app.cash.zipline.loader.internal.tink.subtle
 import okio.ByteString
 
 /** Defines the KeyPair consisting of a private key and its corresponding public key.  */
-class KeyPair internal constructor(
+internal class KeyPair internal constructor(
   val publicKey: ByteString,
   val privateKey: ByteString,
 )
 
 /** Returns a new `<publicKey / privateKey>` KeyPair generated from a seed. */
-fun newKeyPairFromSeed(secretSeed: ByteString): KeyPair {
+internal fun newKeyPairFromSeed(secretSeed: ByteString): KeyPair {
   require(secretSeed.size == Field25519.FIELD_LEN) {
     "Given secret seed length is not ${Field25519.FIELD_LEN}"
   }

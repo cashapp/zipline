@@ -1,0 +1,605 @@
+public final class app/cash/zipline/testing/AdaptersKt {
+	public static final fun getAdaptersRequestSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
+	public static final fun getAdaptersResponseSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
+	public static final fun getAdaptersSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
+}
+
+public final class app/cash/zipline/testing/AdaptersRequest {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lapp/cash/zipline/testing/AdaptersRequest;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/AdaptersRequest;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/testing/AdaptersRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/testing/AdaptersResponse {
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lapp/cash/zipline/testing/AdaptersResponse;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/AdaptersResponse;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/testing/AdaptersResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class app/cash/zipline/testing/AdaptersService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/AdaptersService$Companion;
+	public abstract fun echo (Lapp/cash/zipline/testing/AdaptersRequest;)Lapp/cash/zipline/testing/AdaptersResponse;
+}
+
+public final class app/cash/zipline/testing/AdaptersService$Companion {
+}
+
+public final class app/cash/zipline/testing/AdaptersService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/AdaptersService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/AdaptersService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/AdaptersService;)V
+}
+
+public final class app/cash/zipline/testing/AwaitEqualsKt {
+	public static final fun awaitEquals-WPwdCS8 (Ljava/lang/Object;JILkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun awaitEquals-WPwdCS8$default (Ljava/lang/Object;JILkotlin/jvm/functions/Function0;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+}
+
+public final class app/cash/zipline/testing/EchoRequest {
+	public static final field Companion Lapp/cash/zipline/testing/EchoRequest$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lapp/cash/zipline/testing/EchoRequest;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/EchoRequest;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/testing/EchoRequest;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/testing/EchoRequest;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/testing/EchoRequest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/testing/EchoRequest$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/testing/EchoRequest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/testing/EchoRequest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/EchoRequest$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/EchoResponse {
+	public static final field Companion Lapp/cash/zipline/testing/EchoResponse$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lapp/cash/zipline/testing/EchoResponse;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/EchoResponse;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/testing/EchoResponse;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/testing/EchoResponse;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/testing/EchoResponse$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/testing/EchoResponse$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/testing/EchoResponse;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/testing/EchoResponse;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/EchoResponse$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class app/cash/zipline/testing/EchoService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/EchoService$Companion;
+	public abstract fun echo (Lapp/cash/zipline/testing/EchoRequest;)Lapp/cash/zipline/testing/EchoResponse;
+}
+
+public final class app/cash/zipline/testing/EchoService$Companion {
+}
+
+public final class app/cash/zipline/testing/EchoService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/EchoService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/EchoService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/EchoService;)V
+}
+
+public abstract interface class app/cash/zipline/testing/EchoZiplineService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/EchoZiplineService$Companion;
+	public abstract fun echo (Lapp/cash/zipline/testing/EchoRequest;)Lapp/cash/zipline/testing/EchoResponse;
+}
+
+public final class app/cash/zipline/testing/EchoZiplineService$Companion {
+}
+
+public final class app/cash/zipline/testing/EchoZiplineService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/EchoZiplineService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/EchoZiplineService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/EchoZiplineService;)V
+}
+
+public abstract interface class app/cash/zipline/testing/Formatter : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/Formatter$Companion;
+	public abstract fun format (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class app/cash/zipline/testing/Formatter$Companion {
+}
+
+public final class app/cash/zipline/testing/Formatter$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/Formatter;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/Formatter$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/Formatter;)V
+}
+
+public abstract interface class app/cash/zipline/testing/GenericEchoService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/GenericEchoService$Companion;
+	public abstract fun genericEcho (Ljava/lang/Object;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/GenericEchoService$Companion {
+}
+
+public final class app/cash/zipline/testing/GenericEchoService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/GenericEchoService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/GenericEchoService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/GenericEchoService;)V
+}
+
+public final class app/cash/zipline/testing/InterfaceSerializersKt {
+	public static final fun getMessageInterfaceSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
+}
+
+public final class app/cash/zipline/testing/KotlinSerializersKt {
+	public static final fun getKotlinBuiltInSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
+}
+
+public final class app/cash/zipline/testing/LoggingEventListener : app/cash/zipline/EventListener {
+	public fun <init> ()V
+	public fun applicationLoadFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;Ljava/lang/Object;)V
+	public fun applicationLoadSkipped (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
+	public synthetic fun applicationLoadStart (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;
+	public fun applicationLoadStart (Ljava/lang/String;Ljava/lang/String;)V
+	public fun applicationLoadSuccess (Ljava/lang/String;Ljava/lang/String;Lapp/cash/zipline/ZiplineManifest;Lapp/cash/zipline/Zipline;Ljava/lang/Object;)V
+	public fun bindService (Lapp/cash/zipline/Zipline;Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
+	public fun callEnd (Lapp/cash/zipline/Zipline;Lapp/cash/zipline/Call;Lapp/cash/zipline/CallResult;Ljava/lang/Object;)V
+	public fun callStart (Lapp/cash/zipline/Zipline;Lapp/cash/zipline/Call;)Ljava/lang/Object;
+	public fun downloadEnd (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
+	public fun downloadFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;Ljava/lang/Object;)V
+	public synthetic fun downloadStart (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;
+	public fun downloadStart (Ljava/lang/String;Ljava/lang/String;)V
+	public fun initializerEnd (Lapp/cash/zipline/Zipline;Ljava/lang/String;Ljava/lang/Object;)V
+	public synthetic fun initializerStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)Ljava/lang/Object;
+	public fun initializerStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)V
+	public fun mainFunctionEnd (Lapp/cash/zipline/Zipline;Ljava/lang/String;Ljava/lang/Object;)V
+	public synthetic fun mainFunctionStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)Ljava/lang/Object;
+	public fun mainFunctionStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)V
+	public fun manifestParseFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;)V
+	public fun manifestVerified (Ljava/lang/String;Ljava/lang/String;Lapp/cash/zipline/ZiplineManifest;Ljava/lang/String;)V
+	public fun moduleLoadEnd (Lapp/cash/zipline/Zipline;Ljava/lang/String;Ljava/lang/Object;)V
+	public fun moduleLoadStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)Ljava/lang/Object;
+	public fun serviceLeaked (Lapp/cash/zipline/Zipline;Ljava/lang/String;)V
+	public final fun take (ZZZZ)Ljava/lang/String;
+	public static synthetic fun take$default (Lapp/cash/zipline/testing/LoggingEventListener;ZZZZILjava/lang/Object;)Ljava/lang/String;
+	public final fun takeAll (ZZZZ)Ljava/util/List;
+	public static synthetic fun takeAll$default (Lapp/cash/zipline/testing/LoggingEventListener;ZZZZILjava/lang/Object;)Ljava/util/List;
+	public final fun takeEntry (ZZZZ)Lapp/cash/zipline/testing/LoggingEventListener$LogEntry;
+	public static synthetic fun takeEntry$default (Lapp/cash/zipline/testing/LoggingEventListener;ZZZZILjava/lang/Object;)Lapp/cash/zipline/testing/LoggingEventListener$LogEntry;
+	public final fun takeException ()Ljava/lang/Exception;
+	public fun takeService (Lapp/cash/zipline/Zipline;Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
+	public fun ziplineClosed (Lapp/cash/zipline/Zipline;)V
+	public fun ziplineCreated (Lapp/cash/zipline/Zipline;)V
+}
+
+public final class app/cash/zipline/testing/LoggingEventListener$LogEntry {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Exception;Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Z
+	public final fun component6 ()Ljava/lang/Exception;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Exception;Ljava/lang/String;)Lapp/cash/zipline/testing/LoggingEventListener$LogEntry;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/LoggingEventListener$LogEntry;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ZLjava/lang/Exception;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/testing/LoggingEventListener$LogEntry;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApplicationName ()Ljava/lang/String;
+	public final fun getException ()Ljava/lang/Exception;
+	public final fun getLog ()Ljava/lang/String;
+	public final fun getModuleId ()Ljava/lang/String;
+	public final fun getServiceName ()Ljava/lang/String;
+	public final fun getServiceToString ()Ljava/lang/String;
+	public fun hashCode ()I
+	public final fun isInternalService ()Z
+	public final fun matches (ZZZZ)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class app/cash/zipline/testing/MessageInterface {
+	public abstract fun getMessage ()Ljava/lang/String;
+}
+
+public abstract interface class app/cash/zipline/testing/PotatoService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/PotatoService$Companion;
+	public abstract fun echo ()Lapp/cash/zipline/testing/EchoResponse;
+}
+
+public final class app/cash/zipline/testing/PotatoService$Companion {
+}
+
+public final class app/cash/zipline/testing/PotatoService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/PotatoService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/PotatoService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/PotatoService;)V
+}
+
+public final class app/cash/zipline/testing/RealMessageInterface : app/cash/zipline/testing/MessageInterface {
+	public static final field Companion Lapp/cash/zipline/testing/RealMessageInterface$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lapp/cash/zipline/testing/RealMessageInterface;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/RealMessageInterface;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/testing/RealMessageInterface;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/testing/RealMessageInterface;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/testing/RealMessageInterface$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/testing/RealMessageInterface$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/testing/RealMessageInterface;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/testing/RealMessageInterface;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/RealMessageInterface$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public abstract interface class app/cash/zipline/testing/RequestInterfaceService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/RequestInterfaceService$Companion;
+	public abstract fun echo (Lapp/cash/zipline/testing/MessageInterface;)Ljava/lang/String;
+}
+
+public final class app/cash/zipline/testing/RequestInterfaceService$Companion {
+}
+
+public final class app/cash/zipline/testing/RequestInterfaceService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/RequestInterfaceService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/RequestInterfaceService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/RequestInterfaceService;)V
+}
+
+public abstract interface class app/cash/zipline/testing/ResponseInterfaceService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/ResponseInterfaceService$Companion;
+	public abstract fun echo (Ljava/lang/String;)Lapp/cash/zipline/testing/MessageInterface;
+}
+
+public final class app/cash/zipline/testing/ResponseInterfaceService$Companion {
+}
+
+public final class app/cash/zipline/testing/ResponseInterfaceService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/ResponseInterfaceService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/ResponseInterfaceService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/ResponseInterfaceService;)V
+}
+
+public abstract interface class app/cash/zipline/testing/SchedulerService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/SchedulerService$Companion;
+	public abstract fun schedule (JLapp/cash/zipline/testing/SchedulerService$Callback;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class app/cash/zipline/testing/SchedulerService$Callback : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/SchedulerService$Callback$Companion;
+	public abstract fun invoke (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class app/cash/zipline/testing/SchedulerService$Callback$Companion {
+}
+
+public final class app/cash/zipline/testing/SchedulerService$Callback$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/SchedulerService$Callback;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/SchedulerService$Callback$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/SchedulerService$Callback;)V
+}
+
+public final class app/cash/zipline/testing/SchedulerService$Companion {
+}
+
+public final class app/cash/zipline/testing/SchedulerService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/SchedulerService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/SchedulerService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/SchedulerService;)V
+}
+
+public abstract interface class app/cash/zipline/testing/SealedClassMessageService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/SealedClassMessageService$Companion;
+	public abstract fun colorSwap (Lapp/cash/zipline/testing/SealedMessage;)Lapp/cash/zipline/testing/SealedMessage;
+	public abstract fun colorSwapFlow (Lkotlinx/coroutines/flow/Flow;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public final class app/cash/zipline/testing/SealedClassMessageService$Companion {
+}
+
+public final class app/cash/zipline/testing/SealedClassMessageService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/SealedClassMessageService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/SealedClassMessageService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/SealedClassMessageService;)V
+}
+
+public abstract class app/cash/zipline/testing/SealedMessage {
+	public static final field Companion Lapp/cash/zipline/testing/SealedMessage$Companion;
+	public synthetic fun <init> (ILkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public static final synthetic fun write$Self (Lapp/cash/zipline/testing/SealedMessage;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/testing/SealedMessage$BlueMessage : app/cash/zipline/testing/SealedMessage {
+	public static final field Companion Lapp/cash/zipline/testing/SealedMessage$BlueMessage$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lapp/cash/zipline/testing/SealedMessage$BlueMessage;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/SealedMessage$BlueMessage;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/testing/SealedMessage$BlueMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/testing/SealedMessage$BlueMessage;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/testing/SealedMessage$BlueMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/testing/SealedMessage$BlueMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/testing/SealedMessage$BlueMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/testing/SealedMessage$BlueMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/SealedMessage$BlueMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/SealedMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/SealedMessage$RedMessage : app/cash/zipline/testing/SealedMessage {
+	public static final field Companion Lapp/cash/zipline/testing/SealedMessage$RedMessage$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;)Lapp/cash/zipline/testing/SealedMessage$RedMessage;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/SealedMessage$RedMessage;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/testing/SealedMessage$RedMessage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getMessage ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/testing/SealedMessage$RedMessage;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/testing/SealedMessage$RedMessage$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/testing/SealedMessage$RedMessage$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/testing/SealedMessage$RedMessage;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/testing/SealedMessage$RedMessage;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/SealedMessage$RedMessage$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/ServiceAndPrefix {
+	public static final field Companion Lapp/cash/zipline/testing/ServiceAndPrefix$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lapp/cash/zipline/testing/EchoService;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lapp/cash/zipline/testing/EchoService;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lapp/cash/zipline/testing/EchoService;
+	public final fun copy (Ljava/lang/String;Lapp/cash/zipline/testing/EchoService;)Lapp/cash/zipline/testing/ServiceAndPrefix;
+	public static synthetic fun copy$default (Lapp/cash/zipline/testing/ServiceAndPrefix;Ljava/lang/String;Lapp/cash/zipline/testing/EchoService;ILjava/lang/Object;)Lapp/cash/zipline/testing/ServiceAndPrefix;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getPrefix ()Ljava/lang/String;
+	public final fun getService ()Lapp/cash/zipline/testing/EchoService;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/testing/ServiceAndPrefix;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/testing/ServiceAndPrefix$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/testing/ServiceAndPrefix$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/testing/ServiceAndPrefix;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/testing/ServiceAndPrefix;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/ServiceAndPrefix$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/testing/ServiceMemberKt {
+	public static final fun getServiceMemberSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
+}
+
+public abstract interface class app/cash/zipline/testing/ServiceTransformer : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/ServiceTransformer$Companion;
+	public abstract fun addPrefix (Lapp/cash/zipline/testing/ServiceAndPrefix;)Lapp/cash/zipline/testing/ServiceAndPrefix;
+}
+
+public final class app/cash/zipline/testing/ServiceTransformer$Companion {
+}
+
+public final class app/cash/zipline/testing/ServiceTransformer$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/ServiceTransformer;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/ServiceTransformer$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/ServiceTransformer;)V
+}
+
+public abstract interface class app/cash/zipline/testing/SuspendingEchoService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/SuspendingEchoService$Companion;
+	public abstract fun suspendingEcho (Lapp/cash/zipline/testing/EchoRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class app/cash/zipline/testing/SuspendingEchoService$Companion {
+}
+
+public final class app/cash/zipline/testing/SuspendingEchoService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/SuspendingEchoService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/SuspendingEchoService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/SuspendingEchoService;)V
+}
+
+public abstract interface class app/cash/zipline/testing/SuspendingPotatoService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/testing/SuspendingPotatoService$Companion;
+	public abstract fun echo (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class app/cash/zipline/testing/SuspendingPotatoService$Companion {
+}
+
+public final class app/cash/zipline/testing/SuspendingPotatoService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/testing/SuspendingPotatoService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/testing/SuspendingPotatoService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/testing/SuspendingPotatoService;)V
+}
+

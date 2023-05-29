@@ -18,7 +18,6 @@ package app.cash.zipline.loader
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.runApplication
 import app.cash.zipline.loader.internal.fetcher.FsCachingFetcher
 import app.cash.zipline.loader.internal.fetcher.FsEmbeddedFetcher
 import app.cash.zipline.loader.internal.fetcher.HttpFetcher
@@ -302,6 +301,7 @@ class ZiplineLoader internal constructor(
    * After identifying a manifest to load this fetches all the code, loads it into a JS runtime,
    * and runs both the user's initializer and the manifest's specified main function.
    */
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
   internal suspend fun loadFromManifest(
     applicationName: String,
     loadedManifest: LoadedManifest,
@@ -330,7 +330,11 @@ class ZiplineLoader internal constructor(
       val mainFunctionStartValue = eventListener.mainFunctionStart(zipline, applicationName)
       try {
         loadedManifest.manifest.mainFunction?.let { mainFunction ->
-          zipline.quickJs.runApplication(loadedManifest.manifest.mainModuleId, mainFunction)
+          app.cash.zipline.internal.runApplication(
+            zipline.quickJs,
+            loadedManifest.manifest.mainModuleId,
+            mainFunction,
+          )
         }
       } finally {
         eventListener.mainFunctionEnd(zipline, applicationName, mainFunctionStartValue)

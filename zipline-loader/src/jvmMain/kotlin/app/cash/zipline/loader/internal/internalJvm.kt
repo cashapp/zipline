@@ -22,14 +22,14 @@ import app.cash.zipline.loader.internal.tink.subtle.newKeyPairFromSeed
 import okio.ByteString.Companion.toByteString
 
 /** Returns a new `<publicKey / privateKey>` KeyPair. */
-fun generateEd25519KeyPair(): KeyPair {
+internal fun generateEd25519KeyPair(): KeyPair {
   val secretSeed = ByteArray(Field25519.FIELD_LEN)
   secureRandom().nextBytes(secretSeed)
 
   return newKeyPairFromSeed(secretSeed.toByteString())
 }
 
-fun SignatureAlgorithmId.generateKeyPair(): KeyPair {
+internal fun SignatureAlgorithmId.generateKeyPair(): KeyPair {
   return when (this) {
     SignatureAlgorithmId.Ed25519 -> generateEd25519KeyPair()
     SignatureAlgorithmId.EcdsaP256 -> EcdsaP256(secureRandom()).generateKeyPair()

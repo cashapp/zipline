@@ -3,6 +3,7 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import java.net.URI
+import kotlinx.validation.ApiValidationExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
@@ -21,6 +22,7 @@ buildscript {
   }
   dependencies {
     classpath(libs.android.gradle.plugin)
+    classpath(libs.binary.compatibility.validator.gradle.plugin)
     classpath(libs.mavenPublish.gradle.plugin)
     classpath(libs.kotlin.gradle.plugin)
     classpath(libs.kotlin.serialization)
@@ -224,5 +226,16 @@ allprojects {
 
   tasks.withType<KotlinJsTest>().configureEach {
     environment("ZIPLINE_ROOT", rootDir.toString())
+  }
+}
+
+subprojects {
+  plugins.withId("binary-compatibility-validator") {
+    configure<ApiValidationExtension> {
+      // Making this properly internal requires some SQLDelight work.
+      ignoredPackages += "app.cash.zipline.loader.internal.cache"
+      // Making this properly internal requires adopting test facets.
+      ignoredPackages += "app.cash.zipline.loader.internal.fetcher"
+    }
   }
 }

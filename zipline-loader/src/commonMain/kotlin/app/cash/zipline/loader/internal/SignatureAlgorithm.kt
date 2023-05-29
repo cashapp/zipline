@@ -17,7 +17,7 @@ package app.cash.zipline.loader.internal
 
 import okio.ByteString
 
-interface SignatureAlgorithm {
+internal interface SignatureAlgorithm {
   fun sign(message: ByteString, privateKey: ByteString): ByteString
 
   /** Returns true if [signature] with [message], can be verified with [publicKey]. */

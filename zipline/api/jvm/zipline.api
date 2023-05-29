@@ -1,0 +1,550 @@
+public final class app/cash/zipline/Call {
+	public fun <init> (Ljava/lang/String;Lapp/cash/zipline/ZiplineService;Lapp/cash/zipline/ZiplineFunction;Ljava/util/List;Ljava/lang/String;Ljava/util/List;)V
+	public final fun getArgs ()Ljava/util/List;
+	public final fun getEncodedCall ()Ljava/lang/String;
+	public final fun getFunction ()Lapp/cash/zipline/ZiplineFunction;
+	public final fun getService ()Lapp/cash/zipline/ZiplineService;
+	public final fun getServiceName ()Ljava/lang/String;
+	public final fun getServiceNames ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/CallResult {
+	public fun <init> (Ljava/lang/Object;Ljava/lang/String;Ljava/util/List;)V
+	public final fun getEncodedResult ()Ljava/lang/String;
+	public final fun getResult-d1pmJ48 ()Ljava/lang/Object;
+	public final fun getServiceNames ()Ljava/util/List;
+}
+
+public abstract interface annotation class app/cash/zipline/EngineApi : java/lang/annotation/Annotation {
+}
+
+public abstract class app/cash/zipline/EventListener {
+	public static final field Companion Lapp/cash/zipline/EventListener$Companion;
+	public fun <init> ()V
+	public fun applicationLoadFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;Ljava/lang/Object;)V
+	public fun applicationLoadSkipped (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
+	public fun applicationLoadStart (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;
+	public fun applicationLoadSuccess (Ljava/lang/String;Ljava/lang/String;Lapp/cash/zipline/ZiplineManifest;Lapp/cash/zipline/Zipline;Ljava/lang/Object;)V
+	public fun bindService (Lapp/cash/zipline/Zipline;Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
+	public fun callEnd (Lapp/cash/zipline/Zipline;Lapp/cash/zipline/Call;Lapp/cash/zipline/CallResult;Ljava/lang/Object;)V
+	public fun callStart (Lapp/cash/zipline/Zipline;Lapp/cash/zipline/Call;)Ljava/lang/Object;
+	public fun downloadEnd (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
+	public fun downloadFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;Ljava/lang/Object;)V
+	public fun downloadStart (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;
+	public fun initializerEnd (Lapp/cash/zipline/Zipline;Ljava/lang/String;Ljava/lang/Object;)V
+	public fun initializerStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)Ljava/lang/Object;
+	public fun mainFunctionEnd (Lapp/cash/zipline/Zipline;Ljava/lang/String;Ljava/lang/Object;)V
+	public fun mainFunctionStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)Ljava/lang/Object;
+	public fun manifestParseFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;)V
+	public fun manifestVerified (Ljava/lang/String;Ljava/lang/String;Lapp/cash/zipline/ZiplineManifest;Ljava/lang/String;)V
+	public fun moduleLoadEnd (Lapp/cash/zipline/Zipline;Ljava/lang/String;Ljava/lang/Object;)V
+	public fun moduleLoadStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)Ljava/lang/Object;
+	public fun serviceLeaked (Lapp/cash/zipline/Zipline;Ljava/lang/String;)V
+	public fun takeService (Lapp/cash/zipline/Zipline;Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
+	public fun ziplineClosed (Lapp/cash/zipline/Zipline;)V
+	public fun ziplineCreated (Lapp/cash/zipline/Zipline;)V
+}
+
+public final class app/cash/zipline/EventListener$Companion {
+	public final fun getNONE ()Lapp/cash/zipline/EventListener;
+}
+
+public abstract interface class app/cash/zipline/InterruptHandler {
+	public abstract fun poll ()Z
+}
+
+public final class app/cash/zipline/MemoryUsage {
+	public fun <init> (JJJJJJJJJJJJJJJJJJJJJJJJJJ)V
+	public final fun component1 ()J
+	public final fun component10 ()J
+	public final fun component11 ()J
+	public final fun component12 ()J
+	public final fun component13 ()J
+	public final fun component14 ()J
+	public final fun component15 ()J
+	public final fun component16 ()J
+	public final fun component17 ()J
+	public final fun component18 ()J
+	public final fun component19 ()J
+	public final fun component2 ()J
+	public final fun component20 ()J
+	public final fun component21 ()J
+	public final fun component22 ()J
+	public final fun component23 ()J
+	public final fun component24 ()J
+	public final fun component25 ()J
+	public final fun component26 ()J
+	public final fun component3 ()J
+	public final fun component4 ()J
+	public final fun component5 ()J
+	public final fun component6 ()J
+	public final fun component7 ()J
+	public final fun component8 ()J
+	public final fun component9 ()J
+	public final fun copy (JJJJJJJJJJJJJJJJJJJJJJJJJJ)Lapp/cash/zipline/MemoryUsage;
+	public static synthetic fun copy$default (Lapp/cash/zipline/MemoryUsage;JJJJJJJJJJJJJJJJJJJJJJJJJJILjava/lang/Object;)Lapp/cash/zipline/MemoryUsage;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getArraysCount ()J
+	public final fun getAtomsCount ()J
+	public final fun getAtomsSize ()J
+	public final fun getBinaryObjectsCount ()J
+	public final fun getBinaryObjectsSize ()J
+	public final fun getCFunctionsCount ()J
+	public final fun getFastArraysCount ()J
+	public final fun getFastArraysElementsCount ()J
+	public final fun getJsFunctionsCodeSize ()J
+	public final fun getJsFunctionsCount ()J
+	public final fun getJsFunctionsLineNumberTablesCount ()J
+	public final fun getJsFunctionsLineNumberTablesSize ()J
+	public final fun getJsFunctionsSize ()J
+	public final fun getMemoryAllocatedCount ()J
+	public final fun getMemoryAllocatedLimit ()J
+	public final fun getMemoryAllocatedSize ()J
+	public final fun getMemoryUsedCount ()J
+	public final fun getMemoryUsedSize ()J
+	public final fun getObjectsCount ()J
+	public final fun getObjectsSize ()J
+	public final fun getPropertiesCount ()J
+	public final fun getPropertiesSize ()J
+	public final fun getShapeCount ()J
+	public final fun getShapeSize ()J
+	public final fun getStringsCount ()J
+	public final fun getStringsSize ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/QuickJs : java/io/Closeable {
+	public static final field Companion Lapp/cash/zipline/QuickJs$Companion;
+	public synthetic fun <init> (JLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public final fun compile (Ljava/lang/String;Ljava/lang/String;)[B
+	public static final fun create ()Lapp/cash/zipline/QuickJs;
+	public static final fun createContext ()J
+	public final fun evaluate (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;
+	public static synthetic fun evaluate$default (Lapp/cash/zipline/QuickJs;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun execute ([B)Ljava/lang/Object;
+	public final fun gc ()V
+	public final fun getGcThreshold ()J
+	public final fun getInterruptHandler ()Lapp/cash/zipline/InterruptHandler;
+	public final fun getMaxStackSize ()J
+	public final fun getMemoryLimit ()J
+	public final fun getMemoryUsage ()Lapp/cash/zipline/MemoryUsage;
+	public final fun setGcThreshold (J)V
+	public final fun setInterruptHandler (Lapp/cash/zipline/InterruptHandler;)V
+	public final fun setMaxStackSize (J)V
+	public final fun setMemoryLimit (J)V
+}
+
+public final class app/cash/zipline/QuickJs$Companion {
+	public final fun create ()Lapp/cash/zipline/QuickJs;
+	public final fun createContext ()J
+	public final fun getVersion ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/QuickJsException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public static final synthetic fun addJavaScriptStack (Ljava/lang/Throwable;Ljava/lang/String;)V
+}
+
+public final class app/cash/zipline/SerializersKt {
+	public static final fun ziplineServiceSerializer ()Lkotlinx/serialization/KSerializer;
+	public static final fun ziplineServiceSerializer (Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;)Lkotlinx/serialization/KSerializer;
+	public static final fun ziplineServiceSerializer (Lkotlin/reflect/KClass;Ljava/util/List;)Lkotlinx/serialization/KSerializer;
+	public static synthetic fun ziplineServiceSerializer$default (Lkotlin/reflect/KClass;Ljava/util/List;ILjava/lang/Object;)Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/Zipline {
+	public static final field Companion Lapp/cash/zipline/Zipline$Companion;
+	public synthetic fun <init> (Lapp/cash/zipline/QuickJs;Lkotlinx/serialization/modules/SerializersModule;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlinx/coroutines/CoroutineScope;Lapp/cash/zipline/EventListener;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun bind (Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
+	public final fun bind (Ljava/lang/String;Lapp/cash/zipline/ZiplineService;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;)V
+	public final fun close ()V
+	public final fun getJson ()Lkotlinx/serialization/json/Json;
+	public final fun getQuickJs ()Lapp/cash/zipline/QuickJs;
+	public final fun loadJsModule (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun loadJsModule ([BLjava/lang/String;)V
+	public final fun take (Ljava/lang/String;Lapp/cash/zipline/ZiplineScope;)Lapp/cash/zipline/ZiplineService;
+	public final fun take (Ljava/lang/String;Lapp/cash/zipline/ZiplineScope;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;)Lapp/cash/zipline/ZiplineService;
+	public static synthetic fun take$default (Lapp/cash/zipline/Zipline;Ljava/lang/String;Lapp/cash/zipline/ZiplineScope;ILjava/lang/Object;)Lapp/cash/zipline/ZiplineService;
+	public static synthetic fun take$default (Lapp/cash/zipline/Zipline;Ljava/lang/String;Lapp/cash/zipline/ZiplineScope;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;ILjava/lang/Object;)Lapp/cash/zipline/ZiplineService;
+}
+
+public final class app/cash/zipline/Zipline$Companion {
+	public final fun create (Lkotlinx/coroutines/CoroutineDispatcher;Lkotlinx/serialization/modules/SerializersModule;Lapp/cash/zipline/EventListener;)Lapp/cash/zipline/Zipline;
+	public static synthetic fun create$default (Lapp/cash/zipline/Zipline$Companion;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlinx/serialization/modules/SerializersModule;Lapp/cash/zipline/EventListener;ILjava/lang/Object;)Lapp/cash/zipline/Zipline;
+}
+
+public final class app/cash/zipline/ZiplineApiMismatchException : java/lang/Exception {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getMessage ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/ZiplineException : java/lang/RuntimeException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public abstract interface class app/cash/zipline/ZiplineFunction {
+	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun isClose ()Z
+	public abstract fun isSuspending ()Z
+}
+
+public final class app/cash/zipline/ZiplineManifest {
+	public static final field Companion Lapp/cash/zipline/ZiplineManifest$Companion;
+	public synthetic fun <init> (ILapp/cash/zipline/ZiplineManifest$Unsigned;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public synthetic fun <init> (Lapp/cash/zipline/ZiplineManifest$Unsigned;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Lapp/cash/zipline/ZiplineManifest$Unsigned;
+	public final fun component2 ()Ljava/util/Map;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Ljava/lang/String;
+	public final fun copy (Lapp/cash/zipline/ZiplineManifest$Unsigned;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lapp/cash/zipline/ZiplineManifest;
+	public final fun copy (Ljava/util/Map;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lapp/cash/zipline/ZiplineManifest;
+	public static synthetic fun copy$default (Lapp/cash/zipline/ZiplineManifest;Lapp/cash/zipline/ZiplineManifest$Unsigned;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/ZiplineManifest;
+	public static synthetic fun copy$default (Lapp/cash/zipline/ZiplineManifest;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/ZiplineManifest;
+	public final fun encodeJson ()Ljava/lang/String;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getFreshAtEpochMs ()Ljava/lang/Long;
+	public final fun getMainFunction ()Ljava/lang/String;
+	public final fun getMainModuleId ()Ljava/lang/String;
+	public final fun getModules ()Ljava/util/Map;
+	public final fun getSignaturePayload ()Lokio/ByteString;
+	public final fun getSignatures ()Ljava/util/Map;
+	public final fun getUnsigned ()Lapp/cash/zipline/ZiplineManifest$Unsigned;
+	public final fun getVersion ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/ZiplineManifest;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/ZiplineManifest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/ZiplineManifest$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/ZiplineManifest;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/ZiplineManifest;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/ZiplineManifest$Companion {
+	public final fun create (Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;)Lapp/cash/zipline/ZiplineManifest;
+	public static synthetic fun create$default (Lapp/cash/zipline/ZiplineManifest$Companion;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/ZiplineManifest;
+	public final fun decodeJson (Ljava/lang/String;)Lapp/cash/zipline/ZiplineManifest;
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/ZiplineManifest$Module {
+	public static final field Companion Lapp/cash/zipline/ZiplineManifest$Module$Companion;
+	public synthetic fun <init> (ILjava/lang/String;Lokio/ByteString;Ljava/util/List;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;Lokio/ByteString;Ljava/util/List;)V
+	public synthetic fun <init> (Ljava/lang/String;Lokio/ByteString;Ljava/util/List;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Lokio/ByteString;
+	public final fun component3 ()Ljava/util/List;
+	public final fun copy (Ljava/lang/String;Lokio/ByteString;Ljava/util/List;)Lapp/cash/zipline/ZiplineManifest$Module;
+	public static synthetic fun copy$default (Lapp/cash/zipline/ZiplineManifest$Module;Ljava/lang/String;Lokio/ByteString;Ljava/util/List;ILjava/lang/Object;)Lapp/cash/zipline/ZiplineManifest$Module;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDependsOnIds ()Ljava/util/List;
+	public final fun getSha256 ()Lokio/ByteString;
+	public final fun getUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/ZiplineManifest$Module;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/ZiplineManifest$Module$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/ZiplineManifest$Module$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/ZiplineManifest$Module;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/ZiplineManifest$Module;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/ZiplineManifest$Module$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/ZiplineManifest$Unsigned {
+	public static final field Companion Lapp/cash/zipline/ZiplineManifest$Unsigned$Companion;
+	public fun <init> ()V
+	public synthetic fun <init> (ILjava/util/Map;Ljava/lang/Long;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
+	public fun <init> (Ljava/util/Map;Ljava/lang/Long;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/util/Map;Ljava/lang/Long;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/Map;
+	public final fun component2 ()Ljava/lang/Long;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/util/Map;Ljava/lang/Long;Ljava/lang/String;)Lapp/cash/zipline/ZiplineManifest$Unsigned;
+	public static synthetic fun copy$default (Lapp/cash/zipline/ZiplineManifest$Unsigned;Ljava/util/Map;Ljava/lang/Long;Ljava/lang/String;ILjava/lang/Object;)Lapp/cash/zipline/ZiplineManifest$Unsigned;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public final fun getFreshAtEpochMs ()Ljava/lang/Long;
+	public final fun getSignatures ()Ljava/util/Map;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public static final synthetic fun write$Self (Lapp/cash/zipline/ZiplineManifest$Unsigned;Lkotlinx/serialization/encoding/CompositeEncoder;Lkotlinx/serialization/descriptors/SerialDescriptor;)V
+}
+
+public final class app/cash/zipline/ZiplineManifest$Unsigned$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/ZiplineManifest$Unsigned$$serializer;
+	public fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/ZiplineManifest$Unsigned;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/ZiplineManifest$Unsigned;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/ZiplineManifest$Unsigned$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/ZiplineScope {
+	public fun <init> ()V
+	public final fun close ()V
+}
+
+public abstract interface class app/cash/zipline/ZiplineScoped {
+	public abstract fun getScope ()Lapp/cash/zipline/ZiplineScope;
+}
+
+public final class app/cash/zipline/ZiplineScopedKt {
+	public static final fun withScope (Lapp/cash/zipline/ZiplineService;Lapp/cash/zipline/ZiplineScope;)Lapp/cash/zipline/ZiplineService;
+}
+
+public abstract interface class app/cash/zipline/ZiplineService {
+	public abstract fun close ()V
+}
+
+public final class app/cash/zipline/ZiplineService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/ZiplineService;)V
+}
+
+public abstract interface class app/cash/zipline/internal/bridge/CallChannel {
+	public abstract fun call (Ljava/lang/String;)Ljava/lang/String;
+	public abstract fun disconnect (Ljava/lang/String;)Z
+}
+
+public abstract interface class app/cash/zipline/internal/bridge/CancelCallback : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/internal/bridge/CancelCallback$Companion;
+	public abstract fun cancel ()V
+}
+
+public final class app/cash/zipline/internal/bridge/CancelCallback$Companion {
+}
+
+public final class app/cash/zipline/internal/bridge/CancelCallback$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/internal/bridge/CancelCallback;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/internal/bridge/CancelCallback$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/internal/bridge/CancelCallback;)V
+}
+
+public final class app/cash/zipline/internal/bridge/FlowSerializer : kotlinx/serialization/KSerializer {
+	public fun <init> (Lkotlinx/serialization/KSerializer;)V
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lkotlinx/coroutines/flow/Flow;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun hashCode ()I
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lkotlinx/coroutines/flow/Flow;)V
+}
+
+public abstract interface class app/cash/zipline/internal/bridge/FlowZiplineCollector : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/internal/bridge/FlowZiplineCollector$Companion;
+	public abstract fun emit (Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class app/cash/zipline/internal/bridge/FlowZiplineCollector$Companion {
+}
+
+public final class app/cash/zipline/internal/bridge/FlowZiplineCollector$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/internal/bridge/FlowZiplineCollector;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/internal/bridge/FlowZiplineCollector$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/internal/bridge/FlowZiplineCollector;)V
+}
+
+public abstract interface class app/cash/zipline/internal/bridge/FlowZiplineService : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/internal/bridge/FlowZiplineService$Companion;
+	public abstract fun collect (Lapp/cash/zipline/internal/bridge/FlowZiplineCollector;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class app/cash/zipline/internal/bridge/FlowZiplineService$Companion {
+}
+
+public final class app/cash/zipline/internal/bridge/FlowZiplineService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/internal/bridge/FlowZiplineService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/internal/bridge/FlowZiplineService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/internal/bridge/FlowZiplineService;)V
+}
+
+public final class app/cash/zipline/internal/bridge/InternalSerializersKt {
+	public static final fun requireContextual (Lkotlinx/serialization/modules/SerializersModule;Lkotlin/reflect/KClass;Ljava/util/List;)Lkotlinx/serialization/KSerializer;
+}
+
+public final class app/cash/zipline/internal/bridge/OutboundCallHandler {
+	public fun <init> (Ljava/lang/String;Lapp/cash/zipline/internal/bridge/Endpoint;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;Lapp/cash/zipline/ZiplineScope;Ljava/util/List;Lapp/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState;)V
+	public synthetic fun <init> (Ljava/lang/String;Lapp/cash/zipline/internal/bridge/Endpoint;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;Lapp/cash/zipline/ZiplineScope;Ljava/util/List;Lapp/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun call (Lapp/cash/zipline/ZiplineService;I[Ljava/lang/Object;)Ljava/lang/Object;
+	public final fun callSuspending (Lapp/cash/zipline/ZiplineService;I[Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun outboundService ()Lapp/cash/zipline/ZiplineService;
+	public fun toString ()Ljava/lang/String;
+	public final fun withScope (Lapp/cash/zipline/ZiplineScope;)Lapp/cash/zipline/internal/bridge/OutboundCallHandler;
+}
+
+public final class app/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState {
+	public fun <init> ()V
+	public final fun getClosed ()Z
+	public final fun setClosed (Z)V
+}
+
+public abstract interface class app/cash/zipline/internal/bridge/OutboundService {
+	public abstract fun getCallHandler ()Lapp/cash/zipline/internal/bridge/OutboundCallHandler;
+}
+
+public abstract interface class app/cash/zipline/internal/bridge/PassByReference {
+}
+
+public abstract class app/cash/zipline/internal/bridge/ReturningZiplineFunction : app/cash/zipline/ZiplineFunction {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/KSerializer;)V
+	public abstract fun call (Lapp/cash/zipline/ZiplineService;Ljava/util/List;)Ljava/lang/Object;
+	public final fun getArgsListSerializer ()Lapp/cash/zipline/internal/bridge/ArgsListSerializer;
+	public fun getName ()Ljava/lang/String;
+	public final fun getResultSerializer ()Lapp/cash/zipline/internal/bridge/ResultOrCallbackSerializer;
+	public fun isClose ()Z
+	public fun isSuspending ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/internal/bridge/StateFlowSerializer : kotlinx/serialization/KSerializer {
+	public fun <init> (Lkotlinx/serialization/KSerializer;)V
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lkotlinx/coroutines/flow/StateFlow;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun hashCode ()I
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lkotlinx/coroutines/flow/StateFlow;)V
+}
+
+public abstract interface class app/cash/zipline/internal/bridge/StateFlowZiplineService : app/cash/zipline/internal/bridge/FlowZiplineService {
+	public static final field Companion Lapp/cash/zipline/internal/bridge/StateFlowZiplineService$Companion;
+	public abstract fun getValue ()Ljava/lang/Object;
+}
+
+public final class app/cash/zipline/internal/bridge/StateFlowZiplineService$Companion {
+}
+
+public final class app/cash/zipline/internal/bridge/StateFlowZiplineService$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/internal/bridge/StateFlowZiplineService;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/internal/bridge/StateFlowZiplineService$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/internal/bridge/StateFlowZiplineService;)V
+}
+
+public abstract interface class app/cash/zipline/internal/bridge/SuspendCallback : app/cash/zipline/ZiplineService {
+	public static final field Companion Lapp/cash/zipline/internal/bridge/SuspendCallback$Companion;
+	public abstract fun failure (Ljava/lang/Throwable;)V
+	public abstract fun success (Ljava/lang/Object;)V
+}
+
+public final class app/cash/zipline/internal/bridge/SuspendCallback$Companion {
+}
+
+public final class app/cash/zipline/internal/bridge/SuspendCallback$Companion$Adapter : app/cash/zipline/internal/bridge/ZiplineServiceAdapter, kotlinx/serialization/KSerializer {
+	public fun <init> (Ljava/util/List;Ljava/lang/String;)V
+	public final fun getSerialName ()Ljava/lang/String;
+	public final fun getSerializers ()Ljava/util/List;
+	public final fun getSimpleName ()Ljava/lang/String;
+	public synthetic fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/internal/bridge/SuspendCallback;
+	public fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/internal/bridge/SuspendCallback$DefaultImpls {
+	public static fun close (Lapp/cash/zipline/internal/bridge/SuspendCallback;)V
+}
+
+public abstract class app/cash/zipline/internal/bridge/SuspendingZiplineFunction : app/cash/zipline/ZiplineFunction {
+	public fun <init> (Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/KSerializer;Lkotlinx/serialization/KSerializer;)V
+	public abstract fun callSuspending (Lapp/cash/zipline/ZiplineService;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getArgsListSerializer ()Lapp/cash/zipline/internal/bridge/ArgsListSerializer;
+	public fun getName ()Ljava/lang/String;
+	public final fun getResultOrCallbackSerializer ()Lapp/cash/zipline/internal/bridge/ResultOrCallbackSerializer;
+	public final fun getSuspendCallbackSerializer ()Lkotlinx/serialization/KSerializer;
+	public fun isClose ()Z
+	public fun isSuspending ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class app/cash/zipline/internal/bridge/ZiplineServiceAdapter : kotlinx/serialization/KSerializer {
+	public fun <init> ()V
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/ZiplineService;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public abstract fun getSerialName ()Ljava/lang/String;
+	public abstract fun getSerializers ()Ljava/util/List;
+	public abstract fun getSimpleName ()Ljava/lang/String;
+	public fun hashCode ()I
+	public abstract fun outboundService (Lapp/cash/zipline/internal/bridge/OutboundCallHandler;)Lapp/cash/zipline/ZiplineService;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/ZiplineService;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun toString ()Ljava/lang/String;
+	public abstract fun ziplineFunctions (Lkotlinx/serialization/modules/SerializersModule;)Ljava/util/List;
+}
+
+public final class app/cash/zipline/internal/bridge/ZiplineServiceAdapterKt {
+	public static final fun ziplineServiceAdapter ()Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;
+	public static final fun ziplineServiceAdapter (Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;)Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;
+}
+
+public final class app/cash/zipline/testing/EndpointsKt {
+	public static final fun newEndpointPair (Lkotlinx/coroutines/CoroutineScope;)Lkotlin/Pair;
+	public static final fun newEndpointPair (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/serialization/modules/SerializersModule;)Lkotlin/Pair;
+	public static final fun newEndpointPair (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/serialization/modules/SerializersModule;Lapp/cash/zipline/internal/bridge/Endpoint$EventListener;)Lkotlin/Pair;
+}
+

@@ -11,6 +11,7 @@ plugins {
   id("com.vanniktech.maven.publish.base")
   id("com.squareup.sqldelight")
   id("de.undercouch.download")
+  id("binary-compatibility-validator")
 }
 
 kotlin {

@@ -22,14 +22,15 @@ import app.cash.zipline.loader.internal.tink.subtle.Ed25519
 // TODO: drop this once we adopt Kotlin Hierarchical Multiplatform projects
 internal expect fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String)
 
-const val MANIFEST_FILE_NAME = "manifest.zipline.json"
-fun getApplicationManifestFileName(applicationName: String) =
+internal const val MANIFEST_FILE_NAME = "manifest.zipline.json"
+
+internal fun getApplicationManifestFileName(applicationName: String) =
   "$applicationName.$MANIFEST_FILE_NAME"
 
 /** ECDSA P-256. https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm */
-expect val ecdsaP256: SignatureAlgorithm
+internal expect val ecdsaP256: SignatureAlgorithm
 
-fun SignatureAlgorithmId.get(): SignatureAlgorithm {
+internal fun SignatureAlgorithmId.get(): SignatureAlgorithm {
   return when (this) {
     SignatureAlgorithmId.Ed25519 -> Ed25519
     SignatureAlgorithmId.EcdsaP256 -> ecdsaP256
@@ -39,4 +40,4 @@ fun SignatureAlgorithmId.get(): SignatureAlgorithm {
 internal expect val systemEpochMsClock: () -> Long
 
 /** Returns the URL of [link] relative to [baseUrl]. */
-expect fun resolveUrl(baseUrl: String, link: String): String
+internal expect fun resolveUrl(baseUrl: String, link: String): String
