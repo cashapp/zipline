@@ -332,6 +332,15 @@ public final class app/cash/zipline/ZiplineService$DefaultImpls {
 	public static fun close (Lapp/cash/zipline/ZiplineService;)V
 }
 
+public abstract interface class app/cash/zipline/ZiplineServiceType {
+	public abstract fun getFunctions ()Ljava/util/List;
+	public abstract fun getName ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/ZiplineServiceTypeKt {
+	public static final fun getTargetType (Lapp/cash/zipline/ZiplineService;)Lapp/cash/zipline/ZiplineServiceType;
+}
+
 public abstract interface class app/cash/zipline/internal/bridge/CallChannel {
 	public abstract fun call (Ljava/lang/String;)Ljava/lang/String;
 	public abstract fun disconnect (Ljava/lang/String;)Z
@@ -419,10 +428,11 @@ public final class app/cash/zipline/internal/bridge/InternalSerializersKt {
 }
 
 public final class app/cash/zipline/internal/bridge/OutboundCallHandler {
-	public fun <init> (Ljava/lang/String;Lapp/cash/zipline/internal/bridge/Endpoint;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;Lapp/cash/zipline/ZiplineScope;Ljava/util/List;Lapp/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState;)V
-	public synthetic fun <init> (Ljava/lang/String;Lapp/cash/zipline/internal/bridge/Endpoint;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;Lapp/cash/zipline/ZiplineScope;Ljava/util/List;Lapp/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Lapp/cash/zipline/ZiplineServiceType;Ljava/lang/String;Lapp/cash/zipline/internal/bridge/Endpoint;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;Lapp/cash/zipline/ZiplineScope;Lapp/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState;)V
+	public synthetic fun <init> (Lapp/cash/zipline/ZiplineServiceType;Ljava/lang/String;Lapp/cash/zipline/internal/bridge/Endpoint;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;Lapp/cash/zipline/ZiplineScope;Lapp/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun call (Lapp/cash/zipline/ZiplineService;I[Ljava/lang/Object;)Ljava/lang/Object;
 	public final fun callSuspending (Lapp/cash/zipline/ZiplineService;I[Ljava/lang/Object;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getTargetType ()Lapp/cash/zipline/internal/bridge/SerializableZiplineServiceType;
 	public final fun outboundService ()Lapp/cash/zipline/ZiplineService;
 	public fun toString ()Ljava/lang/String;
 	public final fun withScope (Lapp/cash/zipline/ZiplineScope;)Lapp/cash/zipline/internal/bridge/OutboundCallHandler;
