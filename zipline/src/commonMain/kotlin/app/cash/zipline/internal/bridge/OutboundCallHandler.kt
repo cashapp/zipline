@@ -17,6 +17,8 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.Call
 import app.cash.zipline.CallResult
+import app.cash.zipline.ZiplineApiMismatchException
+import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
 import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
@@ -104,7 +106,9 @@ internal class OutboundCallHandler(
           Unit // Don't call callEnd() for suspend callbacks.
         }
       }
-      return@withTakeScope callResult.result.getOrThrow()
+      return@withTakeScope callResult.result
+        .withApiMismatchMessage(function)
+        .getOrThrow()
     }
   }
 
@@ -168,7 +172,9 @@ internal class OutboundCallHandler(
 
     endpoint.eventListener.callEnd(externalCall, callResult, suspendCallback.callStart)
 
-    return callResult.result.getOrThrow()
+    return callResult.result
+      .withApiMismatchMessage(function)
+      .getOrThrow()
   }
 
   override fun toString() = serviceName
@@ -217,5 +223,49 @@ internal class OutboundCallHandler(
     }
 
     override fun toString() = "SuspendCallback/$internalCall"
+  }
+
+  private fun <T> Result<T>.withApiMismatchMessage(
+    called: ZiplineFunction<*>,
+  ): Result<T> {
+    if (isSuccess) return this
+    val throwable = exceptionOrNull()!!
+    if (throwable !is ZiplineApiMismatchException) return this // Not an API mismatch.
+
+    return try {
+      when {
+        ZiplineApiMismatchException.UNKNOWN_FUNCTION in throwable.message -> {
+          val calledService = targetType ?: return this
+          val message = buildString {
+            appendLine("no such method (incompatible API versions?)")
+            appendLine("\tcalled service:")
+            append("\t\t")
+            appendLine(serviceName)
+            appendLine("\tcalled function:")
+            append("\t\t")
+            appendLine(called.name)
+            appendLine("\tavailable functions:")
+            calledService.functions.joinTo(this, separator = "\n") { "\t\t${it.name}" }
+          }
+          Result.failure(ZiplineApiMismatchException(message))
+        }
+
+        ZiplineApiMismatchException.UNKNOWN_SERVICE in throwable.message -> {
+          val message = buildString {
+            appendLine("no such service (service closed?)")
+            appendLine("\tcalled service:")
+            append("\t\t")
+            appendLine(serviceName)
+            appendLine("\tavailable services:")
+            endpoint.opposite.serviceNames.joinTo(this, separator = "\n") { "\t\t$it" }
+          }
+          Result.failure(ZiplineApiMismatchException(message))
+        }
+
+        else -> this
+      }
+    } catch (e: Exception) {
+      this // Unlikely edge case may occur if the EndpointService closed. Skip adding API details.
+    }
   }
 }
