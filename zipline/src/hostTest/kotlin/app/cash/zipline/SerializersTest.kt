@@ -25,28 +25,28 @@ import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 class SerializersTest {
-  @Rule @JvmField
-  val ziplineTestRule = ZiplineTestRule()
-  private val dispatcher = ziplineTestRule.dispatcher
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val dispatcher = UnconfinedTestDispatcher()
   private val zipline = Zipline.create(dispatcher, AdaptersSerializersModule)
   private val ziplineRequestOnly = Zipline.create(dispatcher, AdaptersRequestSerializersModule)
   private val ziplineResponseOnly = Zipline.create(dispatcher, AdaptersResponseSerializersModule)
 
-  @Before fun setUp() = runBlocking(dispatcher) {
+  @BeforeTest fun setUp() = runBlocking(dispatcher) {
     zipline.loadTestingJs()
     ziplineRequestOnly.loadTestingJs()
     ziplineResponseOnly.loadTestingJs()
   }
 
-  @After fun tearDown() = runBlocking(dispatcher) {
+  @AfterTest fun tearDown() = runBlocking(dispatcher) {
     zipline.close()
     ziplineRequestOnly.close()
     ziplineResponseOnly.close()
@@ -78,7 +78,7 @@ class SerializersTest {
     val e = assertFailsWith<IllegalArgumentException> {
       ziplineRequestOnly.bind<AdaptersService>(
         "adaptersService",
-        JvmAdaptersService(),
+        HostAdaptersService(),
       )
     }
     assertThat(e.message!!).contains("Serializer for class 'AdaptersResponse' is not found.")
@@ -88,7 +88,7 @@ class SerializersTest {
     val e = assertFailsWith<IllegalArgumentException> {
       ziplineResponseOnly.bind<AdaptersService>(
         "adaptersService",
-        JvmAdaptersService(),
+        HostAdaptersService(),
       )
     }
     assertThat(e.message!!)
@@ -98,13 +98,13 @@ class SerializersTest {
   @Test fun presentSetSerializersSucceeds() = runBlocking(dispatcher) {
     zipline.bind<AdaptersService>(
       "adaptersService",
-      JvmAdaptersService(),
+      HostAdaptersService(),
     )
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callAdaptersService()"))
       .isEqualTo("JavaScript received nice adapters, Jesse")
   }
 
-  private class JvmAdaptersService : AdaptersService {
+  private class HostAdaptersService : AdaptersService {
     override fun echo(request: AdaptersRequest): AdaptersResponse {
       return AdaptersResponse("nice adapters, ${request.message}")
     }

@@ -22,3 +22,5 @@ actual val systemFileSystem = FileSystem.SYSTEM
 actual val resourcesFileSystem: FileSystem? = FileSystem.RESOURCES
 
 internal actual fun getEnv(name: String): String? = System.getenv(name)
+
+actual val isJni: Boolean = true

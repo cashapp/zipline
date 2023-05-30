@@ -16,45 +16,49 @@
 package app.cash.zipline
 
 import app.cash.zipline.testing.Formatter
+import app.cash.zipline.testing.isJni
 import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.contains
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
-import kotlin.test.assertTrue
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 /**
  * This test attempts to transmit strings through each of our supported mechanisms and confirms that
  * each doesn't mangle content. We've had bugs where non-ASCII characters weren't encoded properly.
  */
 class Utf8Test {
-  @Rule @JvmField
-  val ziplineTestRule = ZiplineTestRule()
-  private val dispatcher = ziplineTestRule.dispatcher
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val dispatcher = UnconfinedTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
   private val quickjs = zipline.quickJs
 
-  @Before fun setUp() = runBlocking(dispatcher) {
+  @BeforeTest
+  fun setUp() = runBlocking(dispatcher) {
     zipline.loadTestingJs()
   }
 
-  @After fun tearDown() = runBlocking(dispatcher) {
+  @AfterTest
+  fun tearDown() = runBlocking(dispatcher) {
     zipline.close()
   }
 
-  @Test fun nonAsciiInInputAndOutput() = runBlocking(dispatcher) {
+  @Test
+  fun nonAsciiInInputAndOutput() = runBlocking(dispatcher) {
     assertEquals(
       "(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)",
-        quickjs.evaluate("var s = \"a\uD83D\uDC1Dcdefg\"; '(' + s + ', ' + s + ')';"),
+      quickjs.evaluate("var s = \"a\uD83D\uDC1Dcdefg\"; '(' + s + ', ' + s + ')';"),
     )
   }
 
-  @Test fun nonAsciiInFileName() = runBlocking(dispatcher) {
+  @Test
+  fun nonAsciiInFileName() = runBlocking(dispatcher) {
     val t = assertFailsWith<QuickJsException> {
       quickjs.evaluate(
         """
@@ -69,31 +73,38 @@ class Utf8Test {
       )
       quickjs.evaluate("formatter.format();")
     }
-    assertEquals("JavaScript.f1(a\uD83D\uDC1Dcdefg.js:4)", t.stackTrace[0].toString())
+    val expectedSubstring = when {
+      isJni -> "JavaScript.f1(a\uD83D\uDC1Dcdefg.js:4)"
+      else -> "at f1 (a\uD83D\uDC1Dcdefg.js:4)"
+    }
+    assertThat(t.stackTraceToString()).contains(expectedSubstring)
   }
 
-  @Test fun nonAsciiInboundCalls() = runBlocking(dispatcher) {
+  @Test
+  fun nonAsciiInboundCalls() = runBlocking(dispatcher) {
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiInputAndOutput()")
     val formatter = zipline.take<Formatter>("formatter")
     assertEquals("(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)", formatter.format("a\uD83D\uDC1Dcdefg"))
   }
 
-  @Test fun nonAsciiOutboundCalls() = runBlocking(dispatcher) {
+  @Test
+  fun nonAsciiOutboundCalls() = runBlocking(dispatcher) {
     zipline.bind<Formatter>(
       "formatter",
       object : Formatter {
-      override fun format(message: String): String {
-        return "($message, $message)"
-      }
-    },
+        override fun format(message: String): String {
+          return "($message, $message)"
+        }
+      },
     )
     assertEquals(
       "(a\uD83D\uDC1Dcdefg, a\uD83D\uDC1Dcdefg)",
-        quickjs.evaluate("testing.app.cash.zipline.testing.callFormatter('a\uD83D\uDC1Dcdefg');"),
+      quickjs.evaluate("testing.app.cash.zipline.testing.callFormatter('a\uD83D\uDC1Dcdefg');"),
     )
   }
 
-  @Test fun nonAsciiInExceptionThrownInJs() = runBlocking(dispatcher) {
+  @Test
+  fun nonAsciiInExceptionThrownInJs() = runBlocking(dispatcher) {
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareNonAsciiThrower()")
     val formatter = zipline.take<Formatter>("formatter")
     val t = assertFailsWith<Exception> {
@@ -102,18 +113,19 @@ class Utf8Test {
     assertThat(t.message!!).contains("a\uD83D\uDC1Dcdefg")
   }
 
-  @Test fun nonAsciiInExceptionThrownInJava() = runBlocking(dispatcher) {
+  @Test
+  fun nonAsciiInExceptionThrownInJava() = runBlocking(dispatcher) {
     zipline.bind<Formatter>(
       "formatter",
       object : Formatter {
-      override fun format(message: String): String {
-        throw RuntimeException("a\uD83D\uDC1Dcdefg")
-      }
-    },
+        override fun format(message: String): String {
+          throw RuntimeException("a\uD83D\uDC1Dcdefg")
+        }
+      },
     )
     val t = assertFailsWith<RuntimeException> {
       quickjs.evaluate("testing.app.cash.zipline.testing.callFormatter('');")
     }
-    assertTrue(t.message?.contains("java.lang.RuntimeException: a\uD83D\uDC1Dcdefg") ?: false)
+    assertThat(t.message!!).contains("RuntimeException: a\uD83D\uDC1Dcdefg")
   }
 }

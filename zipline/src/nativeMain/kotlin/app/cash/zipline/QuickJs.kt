@@ -43,7 +43,6 @@ import app.cash.zipline.quickjs.JS_HasProperty
 import app.cash.zipline.quickjs.JS_IsArray
 import app.cash.zipline.quickjs.JS_IsException
 import app.cash.zipline.quickjs.JS_IsUndefined
-import app.cash.zipline.quickjs.JS_NewArray
 import app.cash.zipline.quickjs.JS_NewAtom
 import app.cash.zipline.quickjs.JS_NewClass
 import app.cash.zipline.quickjs.JS_NewClassID
@@ -63,7 +62,6 @@ import app.cash.zipline.quickjs.JS_SetMaxStackSize
 import app.cash.zipline.quickjs.JS_SetMemoryLimit
 import app.cash.zipline.quickjs.JS_SetProperty
 import app.cash.zipline.quickjs.JS_SetPropertyFunctionList
-import app.cash.zipline.quickjs.JS_SetPropertyUint32
 import app.cash.zipline.quickjs.JS_SetRuntimeOpaque
 import app.cash.zipline.quickjs.JS_TAG_BOOL
 import app.cash.zipline.quickjs.JS_TAG_EXCEPTION
@@ -106,6 +104,7 @@ import kotlinx.cinterop.readBytes
 import kotlinx.cinterop.refTo
 import kotlinx.cinterop.staticCFunction
 import kotlinx.cinterop.toKStringFromUtf8
+import kotlinx.cinterop.utf8
 import kotlinx.cinterop.value
 import platform.posix.size_tVar
 
@@ -253,8 +252,14 @@ actual class QuickJs private constructor(
   actual fun compile(sourceCode: String, fileName: String): ByteArray {
     checkNotClosed()
 
-    val compiled =
-      JS_Eval(contextForCompiling, sourceCode, sourceCode.length.convert(), fileName, JS_EVAL_FLAG_COMPILE_ONLY or JS_EVAL_FLAG_STRICT)
+    val sourceCodeUtf8 = sourceCode.utf8
+    val compiled = JS_Eval(
+      contextForCompiling,
+      sourceCodeUtf8,
+      (sourceCodeUtf8.size - 1).convert(), // drop trailing '\0'.
+      fileName.utf8,
+      JS_EVAL_FLAG_COMPILE_ONLY or JS_EVAL_FLAG_STRICT,
+    )
     if (JS_IsException(compiled) != 0) {
       throwJsException()
     }
@@ -354,7 +359,7 @@ actual class QuickJs private constructor(
     assert(argc == 1)
     val arg0 = JsValueArrayToInstanceRef(argv, 0).toKotlinInstanceOrNull() as String
     val result = outboundChannel!!.call(arg0)
-    return JS_NewString(context, result)
+    return JS_NewString(context, result.utf8)
   }
 
   internal fun jsOutboundDisconnect(argc: Int, argv: CArrayPointer<JSValue>): CValue<JSValue> {
@@ -411,9 +416,7 @@ actual class QuickJs private constructor(
     JS_FreeValue(context, stackValue)
     JS_FreeValue(context, exceptionValue)
 
-    // TODO extract cause
-
-    throw QuickJsException(message) // TODO add stack
+    throw QuickJsException(message, stack)
   }
 
   internal fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? {
@@ -442,14 +445,6 @@ actual class QuickJs private constructor(
       }
       else -> null
     }
-  }
-
-  internal fun Array<String>.toJsValue(): CValue<JSValue> {
-    val array = JS_NewArray(context)
-    forEachIndexed { index, string ->
-      JS_SetPropertyUint32(context, array, index.convert(), JS_NewString(context, string))
-    }
-    return array
   }
 
   private fun Boolean.toJsValue(): CValue<JSValue> {
