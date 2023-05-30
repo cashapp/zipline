@@ -22,9 +22,9 @@ dependencies {
   api(libs.kotlinx.serialization.core)
   implementation(libs.kotlinx.serialization.json)
 
+  testImplementation(libs.assertk)
   testImplementation(libs.junit)
   testImplementation(libs.kotlin.test)
-  testImplementation(libs.truth)
 }
 
 configure<MavenPublishBaseExtension> {

@@ -19,7 +19,8 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.LoggingEventListener
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before

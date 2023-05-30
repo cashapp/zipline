@@ -15,7 +15,8 @@
  */
 package app.cash.zipline
 
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Before

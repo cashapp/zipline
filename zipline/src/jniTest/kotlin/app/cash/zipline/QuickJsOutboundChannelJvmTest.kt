@@ -16,7 +16,9 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.outboundChannelName
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
 import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Before
@@ -60,8 +62,7 @@ class QuickJsOutboundChannelJvmTest {
         "explode.js",
       )
     }
-    assertThat(t)
-      .hasMessageThat()
+    assertThat(t.message!!)
       .isEqualTo("boom!")
     val stackTrace = t.stackTraceToString()
 

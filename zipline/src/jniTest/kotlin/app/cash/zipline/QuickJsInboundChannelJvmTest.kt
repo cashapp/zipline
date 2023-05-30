@@ -16,7 +16,9 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.inboundChannelName
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
 import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Before
@@ -68,8 +70,7 @@ class QuickJsInboundChannelJvmTest {
     val t = assertFailsWith<QuickJsException> {
       inboundChannel.disconnect("service one")
     }
-    assertThat(t)
-      .hasMessageThat()
+    assertThat(t.message!!)
       .isEqualTo("'noSuchMethod' is not defined")
     assertThat(t.stackTraceToString()).contains("JavaScript.goBoom(explode.js:2)")
   }

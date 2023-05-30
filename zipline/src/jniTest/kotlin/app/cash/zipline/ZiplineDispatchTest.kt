@@ -16,7 +16,8 @@
 package app.cash.zipline
 
 import app.cash.zipline.testing.SchedulerService
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
