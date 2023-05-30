@@ -18,8 +18,6 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.initModuleLoader
-import app.cash.zipline.internal.loadJsModule
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
 import com.google.common.truth.Truth.assertThat
@@ -27,7 +25,6 @@ import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.buffer
 import okio.source
@@ -39,9 +36,10 @@ class ZiplineCompilerTest {
   private val quickJs = QuickJs.create()
 
   @Before
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
   fun setUp() {
     // Configure QuickJS to support module loading.
-    quickJs.initModuleLoader()
+    app.cash.zipline.internal.initModuleLoader(quickJs)
   }
 
   @After
@@ -53,7 +51,7 @@ class ZiplineCompilerTest {
   fun `write to and read from zipline`() {
     val moduleNameToFile = compile("src/test/resources/happyPath/", true)
     for ((moduleName, ziplineFile) in moduleNameToFile) {
-      quickJs.loadJsModule(moduleName, ziplineFile.quickjsBytecode.toByteArray())
+      loadJsModule(quickJs, moduleName, ziplineFile.quickjsBytecode.toByteArray())
     }
 
     val exception = assertFailsWith<Exception> {
@@ -86,7 +84,7 @@ class ZiplineCompilerTest {
   fun `js with imports and exports`() {
     val moduleNameToFile = compile("src/test/resources/jsWithImportsExports/", false)
     for ((name, ziplineFile) in moduleNameToFile) {
-      quickJs.loadJsModule(name, ziplineFile.quickjsBytecode.toByteArray())
+      loadJsModule(quickJs, name, ziplineFile.quickjsBytecode.toByteArray())
     }
   }
 
@@ -217,5 +215,10 @@ class ZiplineCompilerTest {
       result[key] = readZiplineFile(File(outputDir, module.url))
     }
     return result
+  }
+
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  private fun loadJsModule(quickJs: QuickJs, id: String, bytecode: ByteArray) {
+    return app.cash.zipline.internal.loadJsModule(quickJs, id, bytecode)
   }
 }

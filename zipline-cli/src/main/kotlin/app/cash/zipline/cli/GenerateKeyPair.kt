@@ -19,7 +19,6 @@ package app.cash.zipline.cli
 import app.cash.zipline.cli.GenerateKeyPair.Companion.NAME
 import app.cash.zipline.loader.SignatureAlgorithmId
 import app.cash.zipline.loader.SignatureAlgorithmId.Ed25519
-import app.cash.zipline.loader.internal.generateKeyPair
 import java.io.PrintStream
 import picocli.CommandLine.Command
 import picocli.CommandLine.Option
@@ -41,8 +40,9 @@ class GenerateKeyPair(
   )
   var algorithm: SignatureAlgorithmId = Ed25519
 
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
   override fun run() {
-    val keyPair = algorithm.generateKeyPair()
+    val keyPair = app.cash.zipline.loader.internal.generateKeyPair(algorithm)
     out.println("  ALGORITHM: $algorithm")
     out.println(" PUBLIC KEY: ${keyPair.publicKey.hex()}")
     out.println("PRIVATE KEY: ${keyPair.privateKey.hex()}")

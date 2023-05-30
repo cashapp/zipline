@@ -18,7 +18,6 @@ package app.cash.zipline.loader
 import app.cash.turbine.test
 import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.getLog
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.internal.systemEpochMsClock
@@ -77,7 +76,7 @@ class ZiplineLoaderTest {
     )
     val zipline = loader.loadOrFail("test", testFixtures.manifest)
     assertEquals(
-      zipline.quickJs.getLog(),
+      zipline.getLog(),
       """
       |alpha loaded
       |bravo loaded
@@ -96,7 +95,7 @@ class ZiplineLoaderTest {
     )
     val zipline = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
     assertEquals(
-      zipline.quickJs.getLog(),
+      zipline.getLog(),
       """
       |alpha loaded
       |bravo loaded
@@ -160,7 +159,7 @@ class ZiplineLoaderTest {
     )
     val zipline = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
     assertEquals(
-      zipline.quickJs.getLog(),
+      zipline.getLog(),
       """
       |alpha loaded
       |bravo loaded
@@ -206,7 +205,7 @@ class ZiplineLoaderTest {
     // Load into Zipline.
     val zipline = loader.loadOrFail("test", testFixtures.manifest)
     assertEquals(
-      zipline.quickJs.getLog(),
+      zipline.getLog(),
       """
       |alpha loaded
       |bravo loaded
@@ -303,6 +302,9 @@ class ZiplineLoaderTest {
       awaitComplete()
     }
   }
+
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
+  private fun Zipline.getLog(): String? = app.cash.zipline.internal.getLog(quickJs)
 
   private suspend fun ZiplineLoader.loadOrFail(
     applicationName: String,

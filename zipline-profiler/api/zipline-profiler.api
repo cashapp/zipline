@@ -1,0 +1,5 @@
+public final class app/cash/zipline/profiler/SamplingProfilerKt {
+	public static final fun startCpuSampling (Lapp/cash/zipline/QuickJs;Lokio/BufferedSink;)Ljava/io/Closeable;
+	public static final fun startCpuSampling (Lapp/cash/zipline/QuickJs;Lokio/FileSystem;Lokio/Path;)Ljava/io/Closeable;
+}
+

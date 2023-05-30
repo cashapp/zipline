@@ -17,7 +17,6 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineManifest
-import app.cash.zipline.internal.getLog
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
@@ -81,7 +80,7 @@ class ProductionFetcherReceiverTest {
       |bravo loaded
       |
       """.trimMargin(),
-      zipline.quickJs.getLog(),
+      getLog(),
     )
   }
 
@@ -106,7 +105,7 @@ class ProductionFetcherReceiverTest {
       |bravo loaded
       |
       """.trimMargin(),
-      zipline.quickJs.getLog(),
+      getLog(),
     )
   }
 
@@ -128,7 +127,7 @@ class ProductionFetcherReceiverTest {
       |bravo loaded
       |
       """.trimMargin(),
-      zipline.quickJs.getLog(),
+      getLog(),
     )
 
     val ziplineFileFromCache = cache.getOrPut("app1", testFixtures.alphaSha256, nowMillis) {
@@ -136,6 +135,9 @@ class ProductionFetcherReceiverTest {
     }
     assertEquals(testFixtures.alphaByteString, ziplineFileFromCache)
   }
+
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
+  private fun getLog() = app.cash.zipline.internal.getLog(zipline.quickJs)
 
   private suspend fun ZiplineLoader.loadOrFail(
     applicationName: String,

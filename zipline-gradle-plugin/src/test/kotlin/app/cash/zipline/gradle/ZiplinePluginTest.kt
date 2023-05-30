@@ -16,7 +16,6 @@
 
 package app.cash.zipline.gradle
 
-import app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 import com.google.common.truth.Truth.assertThat
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
@@ -36,7 +35,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/js/main/productionExecutable/kotlinZipline",
     )
-    assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
+    assertThat(ziplineOut.resolve(manifestFileName).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
   }
 
@@ -56,7 +55,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline",
     )
-    assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
+    assertThat(ziplineOut.resolve(manifestFileName).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
   }
 
@@ -77,7 +76,7 @@ class ZiplinePluginTest {
       "lib/build/distributionsZipline",
     )
     assertThat(ziplineOut.listFiles()?.size).isEqualTo(2)
-    assertThat(ziplineOut.resolve(MANIFEST_FILE_NAME).exists()).isTrue()
+    assertThat(ziplineOut.resolve(manifestFileName).exists()).isTrue()
     assertThat(ziplineOut.resolve("lib.zipline").exists()).isTrue()
   }
 
@@ -129,7 +128,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline",
     )
-    val manifest = ziplineOut.resolve(MANIFEST_FILE_NAME)
+    val manifest = ziplineOut.resolve(manifestFileName)
     assertThat(manifest.exists()).isTrue()
     assertThat(manifest.readText())
       .containsMatch(""""version":"1.2.3"""")
@@ -148,7 +147,7 @@ class ZiplinePluginTest {
     val ziplineOut = projectDir.resolve(
       "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline",
     )
-    val manifest = ziplineOut.resolve(MANIFEST_FILE_NAME)
+    val manifest = ziplineOut.resolve(manifestFileName)
     assertThat(manifest.readText())
       .containsMatch(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}""")
   }
@@ -201,5 +200,8 @@ class ZiplinePluginTest {
   companion object {
     val SUCCESS_OUTCOMES = listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE)
     val versionProperty = "-PziplineVersion=${System.getProperty("ziplineVersion")}"
+
+    @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+    private val manifestFileName = app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
   }
 }

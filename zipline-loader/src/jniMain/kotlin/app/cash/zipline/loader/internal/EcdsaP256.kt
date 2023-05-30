@@ -35,7 +35,7 @@ import okio.Buffer
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 
-class EcdsaP256(
+internal class EcdsaP256(
   private val random: SecureRandom,
 ) : SignatureAlgorithm {
 

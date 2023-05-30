@@ -24,7 +24,8 @@ import app.cash.zipline.ZiplineService
  * It is not necessary for the receiving endpoint to [ZiplineService.close] this; that's handled
  * automatically by the calling service.
  */
-interface SuspendCallback<T> : ZiplineService {
+@PublishedApi
+internal interface SuspendCallback<T> : ZiplineService {
   fun success(result: T)
   fun failure(result: Throwable)
 }

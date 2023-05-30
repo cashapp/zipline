@@ -24,6 +24,7 @@ import app.cash.zipline.ZiplineService
  * It is not necessary for the calling endpoint to [ZiplineService.close] this; that's handled
  * automatically by the receiving service.
  */
-interface CancelCallback : ZiplineService {
+@PublishedApi
+internal interface CancelCallback : ZiplineService {
   fun cancel()
 }

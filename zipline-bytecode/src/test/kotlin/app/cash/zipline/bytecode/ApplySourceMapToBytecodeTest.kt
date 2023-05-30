@@ -16,8 +16,6 @@
 package app.cash.zipline.bytecode
 
 import app.cash.zipline.QuickJs
-import app.cash.zipline.internal.initModuleLoader
-import app.cash.zipline.internal.loadJsModule
 import com.google.common.truth.Truth.assertThat
 import kotlin.test.assertFailsWith
 import org.junit.After
@@ -40,9 +38,10 @@ class ApplySourceMapToBytecodeTest {
   )
 
   @Before
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
   fun setUp() {
     // Configure QuickJS to support module loading.
-    quickJs.initModuleLoader()
+    app.cash.zipline.internal.initModuleLoader(quickJs)
   }
 
   @After fun tearDown() {
@@ -115,7 +114,7 @@ class ApplySourceMapToBytecodeTest {
     // Use QuickJS to compile a script into bytecode.
     val bytecode = quickJs.compile(js, "demo.js")
     val updatedBytecode = applySourceMapToBytecode(bytecode, SourceMap.parse(sourceMap))
-    quickJs.loadJsModule("demo", updatedBytecode)
+    loadJsModule("demo", updatedBytecode)
     val exception = assertFailsWith<Exception> {
       quickJs.evaluate("require('demo').sayHello()")
     }
@@ -168,7 +167,7 @@ class ApplySourceMapToBytecodeTest {
     // Use QuickJS to compile a script into bytecode.
     val bytecode = quickJs.compile(js, "goBoom.js")
     val updatedBytecode = applySourceMapToBytecode(bytecode, sourceMap)
-    quickJs.loadJsModule("goBoom", updatedBytecode)
+    loadJsModule("goBoom", updatedBytecode)
     val exception = assertFailsWith<Exception> {
       quickJs.evaluate("require('goBoom').app.cash.zipline.testing.goBoom(3)")
     }
@@ -190,7 +189,7 @@ class ApplySourceMapToBytecodeTest {
       |function doNothing() {
       |}
       |
-""".trimMargin()
+      """.trimMargin()
 
     // Just confirm the empty function can be transformed successfully.
     val bytecode = quickJs.compile(js, "demo.js")
@@ -198,7 +197,7 @@ class ApplySourceMapToBytecodeTest {
   }
 
   /**
-   * We had a bug where we assume we can roundtrip JS strings through UTF-8. For true string values
+   * We had a bug where we assume we can round-trip JS strings through UTF-8. For true string values
    * this is safe, but QuickJS also uses the 'string' type for non-string things, notably regular
    * expression bytecode.
    */
@@ -213,11 +212,16 @@ class ApplySourceMapToBytecodeTest {
       |    });
       |}
       |
-""".trimMargin()
+      """.trimMargin()
 
     val bytecode = quickJs.compile(js, "demo.js")
     val bytecodeWithSourceMap = applySourceMapToBytecode(bytecode, emptySourceMap)
     quickJs.execute(bytecodeWithSourceMap)
     assertThat(quickJs.evaluate("doubleToDisplayString('1000.0')")).isEqualTo("1000.0")
+  }
+
+  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  private fun loadJsModule(id: String, bytecode: ByteArray) {
+    app.cash.zipline.internal.loadJsModule(quickJs, id, bytecode)
   }
 }

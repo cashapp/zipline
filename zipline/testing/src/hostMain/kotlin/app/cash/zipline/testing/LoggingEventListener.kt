@@ -21,8 +21,6 @@ import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.ZiplineService
-import app.cash.zipline.internal.bridge.CancelCallback
-import app.cash.zipline.internal.bridge.SuspendCallback
 
 class LoggingEventListener : EventListener() {
   private var nextCallId = 1
@@ -267,7 +265,7 @@ class LoggingEventListener : EventListener() {
     }
   }
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   private fun log(
     moduleId: String? = null,
     service: ZiplineService? = null,
@@ -277,8 +275,8 @@ class LoggingEventListener : EventListener() {
     log: String,
   ) {
     service.toString()
-    val isInternalService = service is CancelCallback ||
-      service is SuspendCallback<*> ||
+    val isInternalService = service is app.cash.zipline.internal.bridge.CancelCallback ||
+      service is app.cash.zipline.internal.bridge.SuspendCallback<*> ||
       serviceName?.startsWith(app.cash.zipline.internal.ziplineInternalPrefix) == true
     this.log += LogEntry(
       moduleId = moduleId,

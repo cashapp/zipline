@@ -17,6 +17,7 @@ plugins {
   id("com.vanniktech.maven.publish.base")
   id("co.touchlab.cklib")
   id("com.github.gmazzo.buildconfig")
+  id("binary-compatibility-validator")
 }
 
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {

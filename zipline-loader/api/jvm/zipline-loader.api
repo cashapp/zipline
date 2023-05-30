@@ -1,0 +1,132 @@
+public final class app/cash/zipline/loader/FastCodeUpdatesKt {
+	public static final fun schemeAndAuthority (Ljava/lang/String;)Ljava/lang/String;
+	public static final fun withDevelopmentServerPush-SxA4cEA (Lkotlinx/coroutines/flow/Flow;Lapp/cash/zipline/loader/ZiplineHttpClient;J)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun withDevelopmentServerPush-SxA4cEA$default (Lkotlinx/coroutines/flow/Flow;Lapp/cash/zipline/loader/ZiplineHttpClient;JILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract class app/cash/zipline/loader/LoadResult {
+}
+
+public final class app/cash/zipline/loader/LoadResult$Failure : app/cash/zipline/loader/LoadResult {
+	public fun <init> (Ljava/lang/Exception;)V
+	public final fun component1 ()Ljava/lang/Exception;
+	public final fun copy (Ljava/lang/Exception;)Lapp/cash/zipline/loader/LoadResult$Failure;
+	public static synthetic fun copy$default (Lapp/cash/zipline/loader/LoadResult$Failure;Ljava/lang/Exception;ILjava/lang/Object;)Lapp/cash/zipline/loader/LoadResult$Failure;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getException ()Ljava/lang/Exception;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/loader/LoadResult$Success : app/cash/zipline/loader/LoadResult {
+	public fun <init> (Lapp/cash/zipline/Zipline;Lapp/cash/zipline/ZiplineManifest;J)V
+	public final fun component1 ()Lapp/cash/zipline/Zipline;
+	public final fun component2 ()Lapp/cash/zipline/ZiplineManifest;
+	public final fun component3 ()J
+	public final fun copy (Lapp/cash/zipline/Zipline;Lapp/cash/zipline/ZiplineManifest;J)Lapp/cash/zipline/loader/LoadResult$Success;
+	public static synthetic fun copy$default (Lapp/cash/zipline/loader/LoadResult$Success;Lapp/cash/zipline/Zipline;Lapp/cash/zipline/ZiplineManifest;JILjava/lang/Object;)Lapp/cash/zipline/loader/LoadResult$Success;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getFreshAtEpochMs ()J
+	public final fun getManifest ()Lapp/cash/zipline/ZiplineManifest;
+	public final fun getZipline ()Lapp/cash/zipline/Zipline;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class app/cash/zipline/loader/LoaderJniKt {
+	public static final fun ZiplineLoader (Lkotlinx/coroutines/CoroutineDispatcher;Lapp/cash/zipline/loader/ManifestVerifier;Lokhttp3/OkHttpClient;Lapp/cash/zipline/EventListener;Lkotlin/jvm/functions/Function0;)Lapp/cash/zipline/loader/ZiplineLoader;
+	public static synthetic fun ZiplineLoader$default (Lkotlinx/coroutines/CoroutineDispatcher;Lapp/cash/zipline/loader/ManifestVerifier;Lokhttp3/OkHttpClient;Lapp/cash/zipline/EventListener;Lkotlin/jvm/functions/Function0;ILjava/lang/Object;)Lapp/cash/zipline/loader/ZiplineLoader;
+	public static final fun asZiplineHttpClient (Lokhttp3/OkHttpClient;)Lapp/cash/zipline/loader/ZiplineHttpClient;
+}
+
+public final class app/cash/zipline/loader/LoaderJvmKt {
+	public static final fun ZiplineCache (Lokio/FileSystem;Lokio/Path;J)Lapp/cash/zipline/loader/ZiplineCache;
+}
+
+public final class app/cash/zipline/loader/ManifestSigner {
+	public synthetic fun <init> (Ljava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun sign (Lapp/cash/zipline/ZiplineManifest;)Lapp/cash/zipline/ZiplineManifest;
+}
+
+public final class app/cash/zipline/loader/ManifestSigner$Builder {
+	public fun <init> ()V
+	public final fun add (Lapp/cash/zipline/loader/SignatureAlgorithmId;Ljava/lang/String;Lokio/ByteString;)Lapp/cash/zipline/loader/ManifestSigner$Builder;
+	public final fun addEcdsaP256 (Ljava/lang/String;Lokio/ByteString;)Lapp/cash/zipline/loader/ManifestSigner$Builder;
+	public final fun addEd25519 (Ljava/lang/String;Lokio/ByteString;)Lapp/cash/zipline/loader/ManifestSigner$Builder;
+	public final fun build ()Lapp/cash/zipline/loader/ManifestSigner;
+}
+
+public final class app/cash/zipline/loader/ManifestVerifier {
+	public static final field Companion Lapp/cash/zipline/loader/ManifestVerifier$Companion;
+	public synthetic fun <init> (ZLjava/util/Map;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun verify (Lokio/ByteString;Lapp/cash/zipline/ZiplineManifest;)Ljava/lang/String;
+}
+
+public final class app/cash/zipline/loader/ManifestVerifier$Builder {
+	public fun <init> ()V
+	public final fun add (Lapp/cash/zipline/loader/SignatureAlgorithmId;Ljava/lang/String;Lokio/ByteString;)Lapp/cash/zipline/loader/ManifestVerifier$Builder;
+	public final fun addEcdsaP256 (Ljava/lang/String;Lokio/ByteString;)Lapp/cash/zipline/loader/ManifestVerifier$Builder;
+	public final fun addEd25519 (Ljava/lang/String;Lokio/ByteString;)Lapp/cash/zipline/loader/ManifestVerifier$Builder;
+	public final fun build ()Lapp/cash/zipline/loader/ManifestVerifier;
+}
+
+public final class app/cash/zipline/loader/ManifestVerifier$Companion {
+	public final fun getNO_SIGNATURE_CHECKS ()Lapp/cash/zipline/loader/ManifestVerifier;
+}
+
+public final class app/cash/zipline/loader/SignatureAlgorithmId : java/lang/Enum {
+	public static final field EcdsaP256 Lapp/cash/zipline/loader/SignatureAlgorithmId;
+	public static final field Ed25519 Lapp/cash/zipline/loader/SignatureAlgorithmId;
+	public static fun valueOf (Ljava/lang/String;)Lapp/cash/zipline/loader/SignatureAlgorithmId;
+	public static fun values ()[Lapp/cash/zipline/loader/SignatureAlgorithmId;
+}
+
+public final class app/cash/zipline/loader/ZiplineCache : java/io/Closeable {
+	public fun close ()V
+}
+
+public final class app/cash/zipline/loader/ZiplineFile {
+	public static final field Companion Lapp/cash/zipline/loader/ZiplineFile$Companion;
+	public fun <init> (ILokio/ByteString;)V
+	public final fun component1 ()I
+	public final fun component2 ()Lokio/ByteString;
+	public final fun copy (ILokio/ByteString;)Lapp/cash/zipline/loader/ZiplineFile;
+	public static synthetic fun copy$default (Lapp/cash/zipline/loader/ZiplineFile;ILokio/ByteString;ILjava/lang/Object;)Lapp/cash/zipline/loader/ZiplineFile;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getQuickjsBytecode ()Lokio/ByteString;
+	public final fun getZiplineVersion ()I
+	public fun hashCode ()I
+	public final fun toByteString ()Lokio/ByteString;
+	public fun toString ()Ljava/lang/String;
+	public final fun writeTo (Lokio/BufferedSink;)V
+}
+
+public final class app/cash/zipline/loader/ZiplineFile$Companion {
+	public final fun read (Lokio/BufferedSource;)Lapp/cash/zipline/loader/ZiplineFile;
+	public final fun toZiplineFile (Lokio/ByteString;)Lapp/cash/zipline/loader/ZiplineFile;
+}
+
+public final class app/cash/zipline/loader/ZiplineFileKt {
+	public static final fun getCURRENT_ZIPLINE_VERSION ()I
+}
+
+public abstract class app/cash/zipline/loader/ZiplineHttpClient {
+	public fun <init> ()V
+	public abstract fun download (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun openDevelopmentServerWebSocket (Ljava/lang/String;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class app/cash/zipline/loader/ZiplineLoader {
+	public fun <init> (Lkotlinx/coroutines/CoroutineDispatcher;Lapp/cash/zipline/loader/ManifestVerifier;Lapp/cash/zipline/loader/ZiplineHttpClient;Lapp/cash/zipline/EventListener;Lkotlin/jvm/functions/Function0;)V
+	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineDispatcher;Lapp/cash/zipline/loader/ManifestVerifier;Lapp/cash/zipline/loader/ZiplineHttpClient;Lapp/cash/zipline/EventListener;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun download (Ljava/lang/String;Lokio/Path;Lokio/FileSystem;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getConcurrentDownloads ()I
+	public final fun load (Ljava/lang/String;Lkotlinx/coroutines/flow/Flow;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun load$default (Lapp/cash/zipline/loader/ZiplineLoader;Ljava/lang/String;Lkotlinx/coroutines/flow/Flow;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun loadOnce (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun loadOnce$default (Lapp/cash/zipline/loader/ZiplineLoader;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun setConcurrentDownloads (I)V
+	public final fun withCache (Lapp/cash/zipline/loader/ZiplineCache;)Lapp/cash/zipline/loader/ZiplineLoader;
+	public final fun withEmbedded (Lokio/Path;Lokio/FileSystem;)Lapp/cash/zipline/loader/ZiplineLoader;
+}
+
