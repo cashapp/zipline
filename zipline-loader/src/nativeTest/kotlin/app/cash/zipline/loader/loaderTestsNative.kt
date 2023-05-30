@@ -17,13 +17,8 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import kotlin.random.Random
-import kotlinx.cinterop.toKString
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
-import okio.FileSystem
-import platform.posix.getenv
-
-actual val systemFileSystem = FileSystem.SYSTEM
 
 internal actual fun testSqlDriverFactory() = SqlDriverFactory()
 
@@ -32,5 +27,3 @@ actual fun randomByteString(size: Int): ByteString {
 }
 
 internal actual fun canSignEcdsaP256() = false
-
-internal actual fun getEnv(name: String): String? = getenv(name)?.toKString()

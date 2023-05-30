@@ -21,6 +21,7 @@ import app.cash.zipline.testing.AdaptersResponse
 import app.cash.zipline.testing.AdaptersResponseSerializersModule
 import app.cash.zipline.testing.AdaptersSerializersModule
 import app.cash.zipline.testing.AdaptersService
+import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo

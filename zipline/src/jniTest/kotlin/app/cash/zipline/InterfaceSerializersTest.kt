@@ -20,6 +20,7 @@ import app.cash.zipline.testing.MessageInterfaceSerializersModule
 import app.cash.zipline.testing.RealMessageInterface
 import app.cash.zipline.testing.RequestInterfaceService
 import app.cash.zipline.testing.ResponseInterfaceService
+import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo

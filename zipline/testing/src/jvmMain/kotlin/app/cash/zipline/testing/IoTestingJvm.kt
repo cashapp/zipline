@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2023 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,15 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline
+package app.cash.zipline.testing
 
-/**
- * See FinalizationTester for discussion on how to best trigger GC in tests.
- * https://android.googlesource.com/platform/libcore/+/master/support/src/test/java/libcore/
- * java/lang/ref/FinalizationTester.java
- */
-fun awaitGarbageCollection() {
-  Runtime.getRuntime().gc()
-  Thread.sleep(100)
-  System.runFinalization()
-}
+import okio.FileSystem
+
+actual val systemFileSystem = FileSystem.SYSTEM
+
+actual val resourcesFileSystem: FileSystem? = FileSystem.RESOURCES
+
+internal actual fun getEnv(name: String): String? = System.getenv(name)

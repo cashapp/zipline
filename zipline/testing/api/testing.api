@@ -203,6 +203,17 @@ public final class app/cash/zipline/testing/InterfaceSerializersKt {
 	public static final fun getMessageInterfaceSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
 }
 
+public final class app/cash/zipline/testing/IoTestingCommonKt {
+	public static final fun getZiplineRoot ()Lokio/Path;
+	public static final fun getZiplineRootOrNull ()Lokio/Path;
+	public static final fun loadTestingJs (Lapp/cash/zipline/Zipline;)V
+}
+
+public final class app/cash/zipline/testing/IoTestingJvmKt {
+	public static final fun getResourcesFileSystem ()Lokio/FileSystem;
+	public static final fun getSystemFileSystem ()Lokio/FileSystem;
+}
+
 public final class app/cash/zipline/testing/KotlinSerializersKt {
 	public static final fun getKotlinBuiltInSerializersModule ()Lkotlinx/serialization/modules/SerializersModule;
 }

@@ -28,6 +28,7 @@ import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
+import app.cash.zipline.testing.systemFileSystem
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

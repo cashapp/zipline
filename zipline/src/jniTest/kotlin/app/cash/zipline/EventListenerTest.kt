@@ -21,6 +21,7 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.LoggingEventListener
 import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
+import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEmpty

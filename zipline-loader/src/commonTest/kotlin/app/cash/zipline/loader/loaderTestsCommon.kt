@@ -28,12 +28,6 @@ import kotlinx.serialization.json.JsonElement
 import okio.ByteString
 import okio.FileSystem
 import okio.Path
-import okio.Path.Companion.toPath
-
-expect val systemFileSystem: FileSystem
-
-internal val ziplineRoot: Path
-  get() = getEnv("ZIPLINE_ROOT")!!.toPath()
 
 fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
@@ -82,5 +76,3 @@ fun prettyPrint(jsonString: String): String {
 internal fun generateKeyPairForTest(): KeyPair {
   return newKeyPairFromSeed(randomByteString(Field25519.FIELD_LEN))
 }
-
-internal expect fun getEnv(name: String): String?

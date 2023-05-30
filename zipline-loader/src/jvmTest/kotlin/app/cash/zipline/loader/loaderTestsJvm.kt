@@ -19,9 +19,6 @@ import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import java.security.SecureRandom
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
-import okio.FileSystem
-
-actual val systemFileSystem = FileSystem.SYSTEM
 
 internal actual fun testSqlDriverFactory() = SqlDriverFactory()
 
@@ -37,5 +34,3 @@ private fun testSecureRandom() = SecureRandom()
   }
 
 internal actual fun canSignEcdsaP256() = true
-
-internal actual fun getEnv(name: String): String? = System.getenv(name)

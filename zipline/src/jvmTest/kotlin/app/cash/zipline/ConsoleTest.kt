@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
