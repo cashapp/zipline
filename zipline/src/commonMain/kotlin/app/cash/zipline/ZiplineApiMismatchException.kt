@@ -21,12 +21,12 @@ class ZiplineApiMismatchException(override val message: String) : Exception(mess
      * This magic value is detected by the bridge and replaced with an actionable list of available
      * functions.
      */
-    const val UNKNOWN_FUNCTION = "<unknown function>"
+    internal const val UNKNOWN_FUNCTION = "<unknown function>"
 
     /**
      * This magic value is detected by the bridge and replaced with an actionable list of available
      * services.
      */
-    const val UNKNOWN_SERVICE = "<unknown service>"
+    internal const val UNKNOWN_SERVICE = "<unknown service>"
   }
 }
