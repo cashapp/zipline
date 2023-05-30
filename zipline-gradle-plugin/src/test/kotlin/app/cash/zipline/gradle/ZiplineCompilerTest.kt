@@ -20,7 +20,8 @@ import app.cash.zipline.QuickJs
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ZiplineFile
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.startsWith
 import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

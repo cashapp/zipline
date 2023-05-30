@@ -16,7 +16,9 @@
 package app.cash.zipline.bytecode
 
 import app.cash.zipline.QuickJs
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.startsWith
 import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Before

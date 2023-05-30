@@ -61,12 +61,12 @@ dependencies {
   kapt(libs.picocli.compiler)
 
   testImplementation(projects.ziplineLoaderTesting)
+  testImplementation(libs.assertk)
   testImplementation(libs.junit)
   testImplementation(libs.kotlinx.serialization.json)
   testImplementation(libs.kotlin.test)
   testImplementation(libs.okio.core)
   testImplementation(libs.okHttp.mockWebServer)
-  testImplementation(libs.truth)
 }
 
 mavenPublishing {

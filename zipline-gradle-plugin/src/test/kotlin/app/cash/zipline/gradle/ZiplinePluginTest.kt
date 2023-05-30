@@ -16,7 +16,11 @@
 
 package app.cash.zipline.gradle
 
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.containsMatch
+import assertk.assertions.isEqualTo
+import assertk.assertions.isTrue
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
@@ -131,7 +135,7 @@ class ZiplinePluginTest {
     val manifest = ziplineOut.resolve(manifestFileName)
     assertThat(manifest.exists()).isTrue()
     assertThat(manifest.readText())
-      .containsMatch(""""version":"1.2.3"""")
+      .containsMatch(Regex(""""version":"1.2.3""""))
     assertThat(ziplineOut.resolve("multipleJsTargets-lib-blue.zipline").exists()).isTrue()
   }
 
@@ -149,7 +153,7 @@ class ZiplinePluginTest {
     )
     val manifest = ziplineOut.resolve(manifestFileName)
     assertThat(manifest.readText())
-      .containsMatch(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}""")
+      .containsMatch(Regex(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}"""))
   }
 
   @Test
@@ -160,12 +164,14 @@ class ZiplinePluginTest {
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(":lib:generateZiplineManifestKeyPairEd25519")!!.outcome)
     assertThat(result.output).containsMatch(
-      """
-      |      ALGORITHM: Ed25519
-      |     PUBLIC KEY: [\da-f]{64}
-      |    PRIVATE KEY: [\da-f]{64}
-      |
-      """.trimMargin(),
+      Regex(
+        """
+        |      ALGORITHM: Ed25519
+        |     PUBLIC KEY: [\da-f]{64}
+        |    PRIVATE KEY: [\da-f]{64}
+        |
+        """.trimMargin(),
+      ),
     )
   }
 
@@ -178,12 +184,14 @@ class ZiplinePluginTest {
       .contains(result.task(":lib:generateZiplineManifestKeyPairEcdsaP256")!!.outcome)
     // Expected lengths were determined experimentally!
     assertThat(result.output).containsMatch(
-      """
-      |      ALGORITHM: EcdsaP256
-      |     PUBLIC KEY: [\da-f]{130}
-      |    PRIVATE KEY: [\da-f]{134}
-      |
-""".trimMargin(),
+      Regex(
+        """
+        |      ALGORITHM: EcdsaP256
+        |     PUBLIC KEY: [\da-f]{130}
+        |    PRIVATE KEY: [\da-f]{134}
+        |
+        """.trimMargin(),
+      ),
     )
   }
 

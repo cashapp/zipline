@@ -16,7 +16,8 @@
 package app.cash.zipline
 
 import app.cash.zipline.testing.Formatter
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
@@ -97,7 +98,7 @@ class Utf8Test {
     val t = assertFailsWith<Exception> {
       formatter.format("")
     }
-    assertThat(t).hasMessageThat().contains("a\uD83D\uDC1Dcdefg")
+    assertThat(t.message!!).contains("a\uD83D\uDC1Dcdefg")
   }
 
   @Test fun nonAsciiInExceptionThrownInJava() = runBlocking(dispatcher) {

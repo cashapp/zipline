@@ -18,7 +18,9 @@ package app.cash.zipline
 import app.cash.zipline.testing.SealedClassMessageService
 import app.cash.zipline.testing.SealedMessage.BlueMessage
 import app.cash.zipline.testing.SealedMessage.RedMessage
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.containsExactly
+import assertk.assertions.isEqualTo
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking

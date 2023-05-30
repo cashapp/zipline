@@ -21,7 +21,11 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.LoggingEventListener
 import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEmpty
+import assertk.assertions.isEqualTo
+import assertk.assertions.startsWith
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -182,7 +186,7 @@ class EventListenerTest {
     val e = assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
     }
-    assertThat(e.message?.replace("\t", "  ")).startsWith(
+    assertThat(e.message!!.replace("\t", "  ")).startsWith(
       """
       |no such method (incompatible API versions?)
       |  called service:
@@ -207,7 +211,7 @@ class EventListenerTest {
     val e = assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callSupService('homie')")
     }
-    assertThat(e.message?.replace("\t", "  ")).startsWith(
+    assertThat(e.message!!.replace("\t", "  ")).startsWith(
       """
       |no such service (service closed?)
       |  called service:
@@ -248,17 +252,17 @@ class EventListenerTest {
 
     val event1 = eventListener.takeEntry(skipInternalServices = false)
     assertThat(event1.log).isEqualTo("takeService jsSuspendingEchoService")
-    assertThat(event1.serviceToString)
+    assertThat(event1.serviceToString!!)
       .contains(outboundServiceToString)
 
     val event2 = eventListener.takeEntry(skipInternalServices = false)
     assertThat(event2.log).startsWith("bindService zipline/host-1")
-    assertThat(event2.serviceToString)
+    assertThat(event2.serviceToString!!)
       .startsWith("SuspendCallback/Call(receiver=jsSuspendingEchoService")
 
     val event3 = eventListener.takeEntry(skipInternalServices = false)
     assertThat(event3.log).startsWith("callStart 1 jsSuspendingEchoService")
-    assertThat(event3.serviceToString)
+    assertThat(event3.serviceToString!!)
       .contains(outboundServiceToString)
   }
 }

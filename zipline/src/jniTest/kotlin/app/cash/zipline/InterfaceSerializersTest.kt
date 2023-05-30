@@ -20,7 +20,9 @@ import app.cash.zipline.testing.MessageInterfaceSerializersModule
 import app.cash.zipline.testing.RealMessageInterface
 import app.cash.zipline.testing.RequestInterfaceService
 import app.cash.zipline.testing.ResponseInterfaceService
-import com.google.common.truth.Truth.assertThat
+import assertk.assertThat
+import assertk.assertions.contains
+import assertk.assertions.isEqualTo
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.SerializationException
@@ -103,7 +105,7 @@ class InterfaceSerializersTest {
         "testing.app.cash.zipline.testing.callInterfaceRequest()",
       )
     }
-    assertThat(exception).hasMessageThat()
+    assertThat(exception.message!!)
       .contains("Class 'app.cash.zipline.testing.RealMessageInterface' is not registered")
   }
 
@@ -118,7 +120,7 @@ class InterfaceSerializersTest {
         "testing.app.cash.zipline.testing.callInterfaceResponse()",
       )
     }
-    assertThat(exception).hasMessageThat()
+    assertThat(exception.message!!)
       .contains("Class 'RealMessageInterface' is not registered")
   }
 
