@@ -22,6 +22,7 @@ import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.newEndpointPair
+import app.cash.zipline.testing.signatureHash
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -76,7 +77,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "echoService",
-      |  "function": "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "function": "${"fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse".signatureHash()}",
       |  "args": [
       |    {
       |      "message": "ping"
@@ -100,7 +101,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "echoService",
-      |  "function": "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "function": "${"fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse".signatureHash()}",
       |  "args": [
       |    {
       |      "message": "ping"
@@ -175,7 +176,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "echoService",
-      |  "function": "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "function": "${"suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse".signatureHash()}",
       |  "callback": "zipline/host-1",
       |  "args": [
       |    {
@@ -200,7 +201,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "echoService",
-      |  "function": "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "function": "${"suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse".signatureHash()}",
       |  "callback": "zipline/host-1",
       |  "args": [
       |    {
@@ -219,7 +220,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "zipline/host-1",
-      |  "function": "fun success(T): kotlin.Unit",
+      |  "function": "${"fun success(T): kotlin.Unit".signatureHash()}",
       |  "args": [
       |    {
       |      "message": "pong"
@@ -237,7 +238,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "zipline/host-1",
-      |  "function": "fun success(T): kotlin.Unit",
+      |  "function": "${"fun success(T): kotlin.Unit".signatureHash()}",
       |  "args": [
       |    {
       |      "message": "pong"
@@ -280,7 +281,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "echoService",
-      |  "function": "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "function": "${"suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse".signatureHash()}",
       |  "callback": "zipline/host-1",
       |  "args": [
       |    {
@@ -305,7 +306,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "echoService",
-      |  "function": "suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "function": "${"suspend fun suspendingEcho(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse".signatureHash()}",
       |  "callback": "zipline/host-1",
       |  "args": [
       |    {
@@ -390,7 +391,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "echoTransformer",
-      |  "function": "fun transform(kotlin.String, app.cash.zipline.testing.EchoService): app.cash.zipline.testing.EchoService",
+      |  "function": "${"fun transform(kotlin.String, app.cash.zipline.testing.EchoService): app.cash.zipline.testing.EchoService".signatureHash()}",
       |  "args": [
       |    "hello",
       |    "zipline/host-1"
@@ -415,7 +416,7 @@ internal class EventListenerEndpointTest {
       """
       |{
       |  "service": "echoTransformer",
-      |  "function": "fun transform(kotlin.String, app.cash.zipline.testing.EchoService): app.cash.zipline.testing.EchoService",
+      |  "function": "${"fun transform(kotlin.String, app.cash.zipline.testing.EchoService): app.cash.zipline.testing.EchoService".signatureHash()}",
       |  "args": [
       |    "hello",
       |    "zipline/host-1"

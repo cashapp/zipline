@@ -40,6 +40,9 @@ kotlin {
 
     val hostMain by creating {
       dependsOn(commonMain)
+      dependencies {
+        implementation(libs.okio.core)
+      }
     }
 
     val jvmMain by getting {

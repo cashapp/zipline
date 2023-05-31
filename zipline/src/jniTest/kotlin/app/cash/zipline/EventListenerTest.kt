@@ -201,7 +201,7 @@ class EventListenerTest {
     )
 
     val name = "supService"
-    val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
+    val funName = "fun unknownFunction(): kotlin.Unit"
     val request = "[]"
     assertThat(eventListener.take()).isEqualTo("bindService $name")
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
@@ -223,7 +223,7 @@ class EventListenerTest {
     )
 
     val name = "supService"
-    val funName = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
+    val funName = "fun unknownFunction(): kotlin.Unit"
     val request = "[]"
     assertThat(eventListener.take()).isEqualTo("callStart 1 $name $funName $request")
     assertThat(eventListener.take()).startsWith("callEnd 1 $name $funName $request Failure(app.cash.zipline.ZiplineApiMismatchException")

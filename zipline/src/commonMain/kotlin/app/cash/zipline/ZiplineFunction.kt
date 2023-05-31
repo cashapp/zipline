@@ -19,6 +19,12 @@ package app.cash.zipline
  * A function defined on an interface that extends [ZiplineService] and that may be bridged.
  */
 interface ZiplineFunction<T : ZiplineService> {
+  /**
+   * A randomly generated unique id for this function. By default this is the first 6 bytes of the
+   * SHA-256 of the function's signature, base64-encoded.
+   */
+  val id: String
+
   val name: String
 
   /** True if this function completes asynchronously. */

@@ -89,7 +89,7 @@ internal class RealCallSerializer(
   override fun serialize(encoder: Encoder, value: InternalCall) {
     encoder.encodeStructure(descriptor) {
       encodeStringElement(descriptor, 0, value.serviceName)
-      encodeStringElement(descriptor, 1, value.function.name)
+      encodeStringElement(descriptor, 1, value.function.id)
       if (value.suspendCallback != null) {
         val function = value.function as SuspendingZiplineFunction<*>
         @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
@@ -113,7 +113,7 @@ internal class RealCallSerializer(
       return decoder.decodeStructure(descriptor) {
         var serviceName = ""
         var inboundService: InboundService<*>? = null
-        var functionName = ""
+        var functionId = ""
         var function: ZiplineFunction<*>? = null
         var suspendCallback: SuspendCallback<Any?>? = null
         var args = listOf<Any?>()
@@ -125,8 +125,8 @@ internal class RealCallSerializer(
               endpoint.takeScope = (inboundService?.service as? ZiplineScoped)?.scope
             }
             1 -> {
-              functionName = decodeStringElement(descriptor, index)
-              function = inboundService?.type?.functionsByName?.get(functionName)
+              functionId = decodeStringElement(descriptor, index)
+              function = inboundService?.type?.functionsById?.get(functionId)
             }
             2 -> {
               @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
@@ -163,7 +163,7 @@ internal class RealCallSerializer(
           serviceName = serviceName,
           inboundService = inboundService ?: unknownService(),
           function = function ?: unknownFunction<ZiplineService>(
-            functionName,
+            functionId,
             suspendCallback,
             when (inboundService) {
               null -> ZiplineApiMismatchException.UNKNOWN_SERVICE
@@ -193,13 +193,14 @@ internal class RealCallSerializer(
 
   /** Returns a function that always throws [ZiplineApiMismatchException] when called. */
   private fun <T : ZiplineService> unknownFunction(
-    functionName: String,
+    functionId: String,
     suspendCallback: SuspendCallback<Any?>?,
     message: String,
   ): ZiplineFunction<T> {
     if (suspendCallback != null) {
       return object : SuspendingZiplineFunction<T>(
-        name = functionName,
+        id = functionId,
+        name = "suspend fun unknownFunction(): kotlin.Unit",
         argSerializers = listOf(),
         resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
         suspendCallbackSerializer = failureSuspendCallbackSerializer,
@@ -209,7 +210,8 @@ internal class RealCallSerializer(
       }
     } else {
       return object : ReturningZiplineFunction<T>(
-        name = functionName,
+        id = functionId,
+        name = "fun unknownFunction(): kotlin.Unit",
         argSerializers = listOf(),
         resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
       ) {

@@ -71,6 +71,7 @@ interface SampleService<T> : ZiplineService {
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
       ) : ReturningZiplineFunction<SampleService<TF>>(
+        "abcd1234",
         "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
         argSerializers,
         resultSerializer,
@@ -84,6 +85,7 @@ interface SampleService<T> : ZiplineService {
         resultSerializer: KSerializer<*>,
         suspendCallbackSerializer: KSerializer<*>,
       ) : SuspendingZiplineFunction<SampleService<TF>>(
+        "efgh5678",
         "suspend fun reduce(List<T>): T",
         argSerializers,
         resultSerializer,
@@ -97,6 +99,7 @@ interface SampleService<T> : ZiplineService {
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
       ) : ReturningZiplineFunction<SampleService<TF>>(
+        "jklm9012",
         "fun close(): kotlin.Unit",
         argSerializers,
         resultSerializer,

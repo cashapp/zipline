@@ -460,6 +460,7 @@ internal class AdapterGenerator(
   //   argSerializers: List<KSerializer<out Any?>>,
   //   resultSerializer: KSerializer<out Any?>,
   // ) : ReturningZiplineFunction<SampleService>(
+  //   "abcd1234",
   //   "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
   //   argSerializers,
   //   resultSerializer,
@@ -512,9 +513,9 @@ internal class AdapterGenerator(
           name = Name.identifier("suspendCallbackSerializer")
           type = ziplineApis.kSerializer.starProjectedType
         }
-        valueArgumentsCount = 4
+        valueArgumentsCount = 5
       } else {
-        valueArgumentsCount = 3
+        valueArgumentsCount = 4
       }
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
@@ -524,11 +525,12 @@ internal class AdapterGenerator(
           typeArgumentsCount = 1,
         ) {
           putTypeArgument(0, bridgedInterfaceT)
-          putValueArgument(0, irString(bridgedFunction.owner.signature))
-          putValueArgument(1, irGet(valueParameters[0]))
-          putValueArgument(2, irGet(valueParameters[1]))
+          putValueArgument(0, irString(bridgedFunction.owner.id))
+          putValueArgument(1, irString(bridgedFunction.owner.signature))
+          putValueArgument(2, irGet(valueParameters[0]))
+          putValueArgument(3, irGet(valueParameters[1]))
           if (bridgedFunction.isSuspend) {
-            putValueArgument(3, irGet(valueParameters[2]))
+            putValueArgument(4, irGet(valueParameters[2]))
           }
         }
         statements += irInstanceInitializerCall(

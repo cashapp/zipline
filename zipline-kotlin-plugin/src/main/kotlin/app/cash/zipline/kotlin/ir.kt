@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.kotlin
 
+import okio.ByteString.Companion.encodeUtf8
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
@@ -101,6 +102,10 @@ internal val IrSimpleFunction.signature: String
       )
     }
   }
+
+/** See signatureHash(). */
+internal val IrSimpleFunction.id: String
+  get() = signature.encodeUtf8().sha256().substring(0, 6).base64()
 
 /** Thrown on invalid or unexpected input code. */
 class ZiplineCompilationException(
