@@ -212,6 +212,7 @@ public final class app/cash/zipline/testing/IoTestingCommonKt {
 public final class app/cash/zipline/testing/IoTestingJvmKt {
 	public static final fun getResourcesFileSystem ()Lokio/FileSystem;
 	public static final fun getSystemFileSystem ()Lokio/FileSystem;
+	public static final fun isJni ()Z
 }
 
 public final class app/cash/zipline/testing/KotlinSerializersKt {
