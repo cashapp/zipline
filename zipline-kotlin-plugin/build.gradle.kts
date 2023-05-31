@@ -13,7 +13,6 @@ plugins {
 dependencies {
   compileOnly(kotlin("compiler-embeddable"))
   compileOnly(kotlin("stdlib"))
-  implementation(libs.okio.core)
 
   kapt(libs.auto.service.compiler)
   compileOnly(libs.auto.service.annotations)

@@ -15,7 +15,8 @@
  */
 package app.cash.zipline.kotlin
 
-import okio.ByteString.Companion.encodeUtf8
+import java.security.MessageDigest
+import java.util.Base64
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.backend.common.lower.DeclarationIrBuilder
@@ -105,7 +106,13 @@ internal val IrSimpleFunction.signature: String
 
 /** See signatureHash(). */
 internal val IrSimpleFunction.id: String
-  get() = signature.encodeUtf8().sha256().substring(0, 6).base64()
+  get() {
+    // This would be more compact with Okio, but adding that dependency is tricky.
+    val signatureUtf8 = signature.encodeToByteArray()
+    val sha256 = MessageDigest.getInstance("SHA-256").digest(signatureUtf8)
+    val sha256Prefix = sha256.sliceArray(0 until 6)
+    return String(Base64.getEncoder().encode(sha256Prefix))
+  }
 
 /** Thrown on invalid or unexpected input code. */
 class ZiplineCompilationException(
