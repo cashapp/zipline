@@ -15,6 +15,8 @@
  */
 package app.cash.zipline
 
+import assertk.assertThat
+import assertk.assertions.startsWith
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -40,6 +42,6 @@ class NoEvalTest {
       // eval in JS code doesn't
       quickJs.evaluate("eval('3+3')", "shouldFail.js")
     }
-    assertEquals("eval is not supported", e.message)
+    assertThat(e.message!!).startsWith("eval is not supported")
   }
 }

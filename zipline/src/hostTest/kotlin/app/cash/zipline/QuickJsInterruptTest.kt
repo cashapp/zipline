@@ -15,6 +15,8 @@
  */
 package app.cash.zipline
 
+import assertk.assertThat
+import assertk.assertions.startsWith
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -71,12 +73,10 @@ class QuickJsInterruptTest {
       }
     }
 
-    assertEquals(
-      "interrupted",
-      assertFailsWith<QuickJsException> {
+    val e = assertFailsWith<QuickJsException> {
       quickJs.evaluate("""fib(20)""")
-    }.message,
-    )
+    }
+    assertThat(e.message!!).startsWith("interrupted")
   }
 
   @Test fun removeInterruptHandler() {

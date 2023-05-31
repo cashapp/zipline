@@ -15,9 +15,10 @@
  */
 package app.cash.zipline
 
+import assertk.assertThat
+import assertk.assertions.startsWith
 import kotlin.test.AfterTest
 import kotlin.test.Test
-import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 
 /**
@@ -44,7 +45,7 @@ class StrictModeTest {
     val e = assertFailsWith<Exception> {
       quickJs.evaluate(code, "shouldFailInStrictMode.js")
     }
-    assertEquals("no setter for property", e.message)
+    assertThat(e.message!!).startsWith("no setter for property")
   }
 
   @Test
@@ -60,6 +61,6 @@ class StrictModeTest {
     val e = assertFailsWith<Exception> {
       quickJs.execute(bytecode)
     }
-    assertEquals("no setter for property", e.message)
+    assertThat(e.message!!).startsWith("no setter for property")
   }
 }

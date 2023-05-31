@@ -8,6 +8,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
+import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 
 plugins {
   kotlin("multiplatform")
@@ -24,6 +25,9 @@ val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
   dependsOn(":zipline:testing:compileDevelopmentLibraryKotlinJs")
   destinationDir = buildDir.resolve("generated/testingJs")
   from(projectDir.resolve("testing/build/compileSync/js/main/developmentLibrary/kotlin"))
+}
+tasks.withType<KotlinNativeTest>().configureEach {
+  dependsOn(":zipline:testing:compileDevelopmentLibraryKotlinJs")
 }
 
 kotlin {
