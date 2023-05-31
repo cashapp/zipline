@@ -25,6 +25,7 @@ import app.cash.zipline.quickjs.JS_Invoke
 import app.cash.zipline.quickjs.JS_NewAtom
 import app.cash.zipline.quickjs.JS_NewString
 import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.utf8
 
 internal class InboundCallChannel(
   private val quickJs: QuickJs,
@@ -37,7 +38,7 @@ internal class InboundCallChannel(
     val globalThis = JS_GetGlobalObject(context)
     val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
     val property = JS_NewAtom(context, "call")
-    val arg0 = JS_NewString(context, callJson)
+    val arg0 = JS_NewString(context, callJson.utf8)
 
     val jsResult = memScoped {
       val args = allocArrayOf(arg0)
@@ -60,7 +61,7 @@ internal class InboundCallChannel(
     val globalThis = JS_GetGlobalObject(context)
     val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
     val property = JS_NewAtom(context, "disconnect")
-    val arg0 = JS_NewString(context, instanceName)
+    val arg0 = JS_NewString(context, instanceName.utf8)
 
     val jsResult = memScoped {
       val args = allocArrayOf(arg0)

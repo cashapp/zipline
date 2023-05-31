@@ -21,28 +21,28 @@ import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.matches
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertFailsWith
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 
 class ExceptionsTest {
-  @Rule @JvmField
-  val ziplineTestRule = ZiplineTestRule()
-  private val dispatcher = ziplineTestRule.dispatcher
+  @OptIn(ExperimentalCoroutinesApi::class)
+  private val dispatcher = UnconfinedTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @BeforeTest fun setUp(): Unit = runBlocking(dispatcher) {
     zipline.loadTestingJs()
   }
 
-  @After fun tearDown() = runBlocking(dispatcher) {
+  @AfterTest fun tearDown() = runBlocking(dispatcher) {
     zipline.close()
   }
 
-  @Test fun jvmCallJsServiceThatThrows(): Unit = runBlocking(dispatcher) {
+  @Test fun hostCallGuestServiceThatThrows(): Unit = runBlocking(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareThrowingJsBridges()")
 
     val service = zipline.take<EchoService>("throwingService")
@@ -61,26 +61,27 @@ class ExceptionsTest {
     )
   }
 
-  @Test fun jsCallJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
-    zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
+  @Test fun guestCallsHostServiceThatThrows(): Unit = runBlocking(dispatcher) {
+    zipline.bind<EchoService>("throwingService", HostThrowingEchoService())
 
     val e = assertFailsWith<QuickJsException> {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.callThrowingService('homie')")
     }
     assertThat(e.stackTraceToString()).matches(
       Regex(
-        """(?s).*java\.lang\.IllegalStateException: boom!""" +
-        """.*JvmThrowingEchoService\.goBoom1""" +
-        """.*JvmThrowingEchoService\.goBoom2""" +
-        """.*JvmThrowingEchoService\.goBoom3""" +
-        """.*JvmThrowingEchoService\.echo""" +
+        """(?s).*(java\.lang|kotlin)\.IllegalStateException: boom!""" +
+        """.*HostThrowingEchoService\.goBoom1""" +
+        """.*HostThrowingEchoService\.goBoom2""" +
+        """.*HostThrowingEchoService\.goBoom3""" +
+        """.*HostThrowingEchoService\.echo""" +
         """.*""",
       ),
     )
   }
 
-  @Test fun jvmCallJsCallsJvmServiceThatThrows(): Unit = runBlocking(dispatcher) {
-    zipline.bind<EchoService>("throwingService", JvmThrowingEchoService())
+  @Test
+  fun hostCallsGuestCallsHostServiceThatThrows(): Unit = runBlocking(dispatcher) {
+    zipline.bind<EchoService>("throwingService", HostThrowingEchoService())
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareDelegatingService()")
 
     val service = zipline.take<EchoService>("delegatingService")
@@ -91,10 +92,10 @@ class ExceptionsTest {
     assertThat(e.stackTraceToString()).matches(
       Regex(
         """(?s).*IllegalStateException: boom!""" +
-        """.*at .*JvmThrowingEchoService\.goBoom1""" +
-        """.*at .*JvmThrowingEchoService\.goBoom2""" +
-        """.*at .*JvmThrowingEchoService\.goBoom3""" +
-        """.*at .*JvmThrowingEchoService\.echo""" +
+        """.*at .*HostThrowingEchoService\.goBoom1""" +
+        """.*at .*HostThrowingEchoService\.goBoom2""" +
+        """.*at .*HostThrowingEchoService\.goBoom3""" +
+        """.*at .*HostThrowingEchoService\.echo""" +
         """.*at delegate1""" +
         """.*at delegate2""" +
         """.*at delegate3""" +
@@ -103,7 +104,7 @@ class ExceptionsTest {
     )
   }
 
-  private class JvmThrowingEchoService : EchoService {
+  private class HostThrowingEchoService : EchoService {
     override fun echo(request: EchoRequest): EchoResponse {
       goBoom3()
     }

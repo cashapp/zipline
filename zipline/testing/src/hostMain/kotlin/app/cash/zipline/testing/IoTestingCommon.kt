@@ -73,3 +73,6 @@ private fun readJsAsResourceOrFile(fileName: String): String {
     it.readUtf8()
   }
 }
+
+/** True on Android and JVM platforms. */
+expect val isJni: Boolean

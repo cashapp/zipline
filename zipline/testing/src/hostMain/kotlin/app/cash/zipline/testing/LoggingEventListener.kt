@@ -105,10 +105,12 @@ class LoggingEventListener : EventListener() {
     exception: Exception,
     startValue: Any?,
   ) {
+    // On Kotlin/Native the message may include stacktrace lines. Strip those.
+    val exceptionToString = exception.toString().substringBefore("\n")
     log(
       applicationName = applicationName,
       exception = exception,
-      log = "applicationLoadFailed $applicationName $exception",
+      log = "applicationLoadFailed $applicationName $exceptionToString",
     )
   }
 

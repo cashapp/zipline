@@ -15,6 +15,8 @@
  */
 package app.cash.zipline
 
+import assertk.assertThat
+import assertk.assertions.startsWith
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -44,7 +46,7 @@ class QuickJsCompileTest {
     val t = assertFailsWith<QuickJsException> {
       quickJs.compile("@#%(*W#(UF(E", "myFile.js")
     }
-    assertEquals("unexpected token in expression: '@'", t.message)
+    assertThat(t.message!!).startsWith("unexpected token in expression: '@'")
   }
 
   @Test fun multipleParts() {
@@ -61,7 +63,7 @@ class QuickJsCompileTest {
     val t = assertFailsWith<QuickJsException> {
       quickJs.execute(code)
     }
-    assertEquals("'myFunction' is not defined", t.message)
+    assertThat(t.message!!).startsWith("'myFunction' is not defined")
 
     assertNull(quickJs.execute(functionDef))
     assertEquals("this is the answer", quickJs.execute(code))

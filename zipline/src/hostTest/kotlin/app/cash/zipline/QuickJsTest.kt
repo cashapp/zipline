@@ -15,6 +15,8 @@
  */
 package app.cash.zipline
 
+import assertk.assertThat
+import assertk.assertions.startsWith
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertContentEquals
@@ -45,7 +47,7 @@ class QuickJsTest {
     val t = assertFailsWith<QuickJsException> {
       quickJs.evaluate("nope();")
     }
-    assertEquals("'nope' is not defined", t.message)
+    assertThat(t.message!!).startsWith("'nope' is not defined")
   }
 
   @Test fun returnTypes() {
