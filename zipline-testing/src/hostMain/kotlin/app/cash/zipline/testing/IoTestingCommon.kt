@@ -43,8 +43,8 @@ fun Zipline.loadTestingJs() {
   loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-json-js-ir.js")
   loadJsModuleFromResource("./kotlinx.coroutines-kotlinx-coroutines-core-js-ir.js")
   loadJsModuleFromResource("./zipline-root-zipline.js")
-  loadJsModuleFromResource("./zipline-root-testing.js")
-  quickJs.evaluate("globalThis['testing'] = require('./zipline-root-testing.js');")
+  loadJsModuleFromResource("./zipline-root-zipline-testing.js")
+  quickJs.evaluate("globalThis['testing'] = require('./zipline-root-zipline-testing.js');")
 }
 
 private fun Zipline.loadJsModuleFromResource(fileName: String) {
@@ -60,7 +60,7 @@ private fun readJsAsResourceOrFile(fileName: String): String {
   val source = when {
     root != null -> {
       systemFileSystem.source(
-        root / "zipline/testing/build/compileSync/js/main/developmentLibrary/kotlin" / fileName,
+        root / "zipline-testing/build/compileSync/js/main/developmentLibrary/kotlin" / fileName,
       )
     }
 
