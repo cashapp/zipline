@@ -24,7 +24,7 @@ plugins {
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
   dependsOn(":zipline-testing:compileDevelopmentLibraryKotlinJs")
   destinationDir = buildDir.resolve("generated/testingJs")
-  from(rootDir.resolve("zipline/testing/build/compileSync/js/main/developmentLibrary/kotlin"))
+  from(rootDir.resolve("zipline-testing/build/compileSync/js/main/developmentLibrary/kotlin"))
 }
 tasks.withType<KotlinNativeTest>().configureEach {
   dependsOn(":zipline-testing:compileDevelopmentLibraryKotlinJs")
