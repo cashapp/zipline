@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.18] - 2022-04-17
+## [0.9.19] - 2023-06-01
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -11,6 +11,24 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * Breaking: Change the calling convention between host and guest code to identify functions by IDs
+   instead of by their signatures. We renamed `ZiplineFunction.name` to `signature` and added a new
+   `id` property.
+ * Breaking: Change the built-in services to share a single identifier rather than bridging them
+   separately based on feature (`console`, `event_loop`, `event_listener`.)
+ * Breaking: Move `ZiplineManifest` from `app.cash.zipline.loader` to `app.cash.zipline`. It was
+   also promoted to the main `zipline` artifact.
+ * New: `ZiplineService.targetType` can be used to inspect the function declarations on the peer's
+   version of a service.
+ * New: `EventListener.manifestVerified()` signals successful signature checks of the manifest.
+ * New: Convert `zipline-profiler` into a multiplatform artifact.
+ * Upgrade: [Kotlin 1.8.21][kotlin_1_8_21].
+ * Upgrade: [kotlinx.coroutines 1.7.1][kotlinx_coroutines_1_7_1].
+ * Upgrade: [Kotlin Serialization 1.5.1][kotlin_serialization_1_5_1].
+
+
+## [0.9.18] - 2023-04-17
 
  * New: Support pass-by-reference of `StateFlow` values.
  * Upgrade: [Kotlin 1.8.20][kotlin_1_8_20].
@@ -22,7 +40,7 @@ The project's new Maven coordinates are `app.cash.zipline:zipline`.
    web socket updates when fresh code is available.
 
 
-## [0.9.17] - 2022-03-15
+## [0.9.17] - 2023-03-15
 
  * Upgrade: [Kotlin 1.8.10][kotlin_1_8_10].
  * Upgrade: [Kotlin Serialization 1.5.0][kotlin_serialization_1_5_0].
@@ -31,14 +49,14 @@ The project's new Maven coordinates are `app.cash.zipline:zipline`.
    a `js(...)` literal.
 
 
-## [0.9.16] - 2022-02-09
+## [0.9.16] - 2023-02-09
 
  * New `withDevelopmentServerPush()` subscribes to the local development server's websocket to
    trigger hot reloads. This is lower-latency and more efficient than polling.
  * Upgrade: [Kotlin 1.8.0][kotlin_1_8_0].
 
 
-## [0.9.15] - 2022-01-25
+## [0.9.15] - 2023-01-25
 
  * Fix: Don't crash if canceled with a 0-delay job enqueued. We had a bug where calling
    `Zipline.close()` could race with an enqueued job.
@@ -52,7 +70,7 @@ The project's new Maven coordinates are `app.cash.zipline:zipline`.
  * New: We've added event listener events for the loader's initializer and main function.
 
 
-## [0.9.14] - 2022-01-16
+## [0.9.14] - 2023-01-16
 
  * Fix: Don’t force `suspend` functions to suspend. We've changed our calling convention so
    suspendable functions are executed inline and on the same call stack until they suspend. If such
@@ -319,5 +337,8 @@ Initial release.
 [kotlin_1_8_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.0
 [kotlin_1_8_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.10
 [kotlin_1_8_20]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.20
+[kotlin_1_8_21]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.21
 [kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
+[kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
+[kotlinx_coroutines_1_7_1]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.1
