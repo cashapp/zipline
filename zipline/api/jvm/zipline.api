@@ -191,7 +191,7 @@ public final class app/cash/zipline/ZiplineException : java/lang/RuntimeExceptio
 
 public abstract interface class app/cash/zipline/ZiplineFunction {
 	public abstract fun getId ()Ljava/lang/String;
-	public abstract fun getName ()Ljava/lang/String;
+	public abstract fun getSignature ()Ljava/lang/String;
 	public abstract fun isClose ()Z
 	public abstract fun isSuspending ()Z
 }
@@ -457,8 +457,8 @@ public abstract class app/cash/zipline/internal/bridge/ReturningZiplineFunction 
 	public abstract fun call (Lapp/cash/zipline/ZiplineService;Ljava/util/List;)Ljava/lang/Object;
 	public final fun getArgsListSerializer ()Lapp/cash/zipline/internal/bridge/ArgsListSerializer;
 	public fun getId ()Ljava/lang/String;
-	public fun getName ()Ljava/lang/String;
 	public final fun getResultSerializer ()Lapp/cash/zipline/internal/bridge/ResultOrCallbackSerializer;
+	public fun getSignature ()Ljava/lang/String;
 	public fun isClose ()Z
 	public fun isSuspending ()Z
 	public fun toString ()Ljava/lang/String;
@@ -525,8 +525,8 @@ public abstract class app/cash/zipline/internal/bridge/SuspendingZiplineFunction
 	public abstract fun callSuspending (Lapp/cash/zipline/ZiplineService;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getArgsListSerializer ()Lapp/cash/zipline/internal/bridge/ArgsListSerializer;
 	public fun getId ()Ljava/lang/String;
-	public fun getName ()Ljava/lang/String;
 	public final fun getResultOrCallbackSerializer ()Lapp/cash/zipline/internal/bridge/ResultOrCallbackSerializer;
+	public fun getSignature ()Ljava/lang/String;
 	public final fun getSuspendCallbackSerializer ()Lkotlinx/serialization/KSerializer;
 	public fun isClose ()Z
 	public fun isSuspending ()Z
