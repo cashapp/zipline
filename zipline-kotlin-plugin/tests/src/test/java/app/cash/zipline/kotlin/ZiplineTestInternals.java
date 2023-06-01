@@ -28,6 +28,7 @@ import app.cash.zipline.testing.EchoService;
 import app.cash.zipline.testing.EchoZiplineService;
 import app.cash.zipline.testing.GenericEchoService;
 import app.cash.zipline.testing.KotlinSerializersKt;
+import app.cash.zipline.testing.SignatureHashKt;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -113,9 +114,9 @@ public final class ZiplineTestInternals {
         = (KSerializer) SerializersKt.serializer(serializersModule, echoRequestKt);
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, echoResponseKt);
+      String name = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse";
       return Arrays.asList(
-        new ReturningZiplineFunction<EchoService>(
-            "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+        new ReturningZiplineFunction<EchoService>(SignatureHashKt.signatureHash(name), name,
             Arrays.asList(requestSerializer), responseSerializer) {
           @Override
           public Object call(EchoService service, List<?> args) {
@@ -174,10 +175,11 @@ public final class ZiplineTestInternals {
         = (KSerializer) SerializersKt.serializer(serializersModule, stringKt);
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, listOfStringKt);
+      String name = "fun genericEcho(T): kotlin.collections.List<T>";
       return Arrays.asList(
         new ReturningZiplineFunction<GenericEchoService<String>>(
-            "fun genericEcho(T): kotlin.collections.List<T>",
-            Arrays.asList(requestSerializer), responseSerializer) {
+            SignatureHashKt.signatureHash(name), name, Arrays.asList(requestSerializer),
+            responseSerializer) {
           @Override public Object call(GenericEchoService<String> service, List<?> args) {
             return service.genericEcho((String) args.get(0));
           }
@@ -232,9 +234,9 @@ public final class ZiplineTestInternals {
         = (KSerializer) SerializersKt.serializer(serializersModule, echoRequestKt);
       KSerializer<?> responseSerializer
         = (KSerializer) SerializersKt.serializer(serializersModule, echoResponseKt);
+      String name = "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse";
       return Arrays.asList(
-        new ReturningZiplineFunction<EchoZiplineService>(
-            "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+        new ReturningZiplineFunction<EchoZiplineService>(SignatureHashKt.signatureHash(name), name,
             Arrays.asList(requestSerializer), responseSerializer) {
           @Override public Object call(EchoZiplineService service, List<?> args) {
             return service.echo((EchoRequest) args.get(0));
