@@ -22,6 +22,7 @@ import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
