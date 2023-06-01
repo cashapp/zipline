@@ -5,7 +5,7 @@ plugins {
 dependencies {
   testImplementation(projects.ziplineKotlinPlugin)
   testImplementation(projects.zipline)
-  testImplementation(projects.zipline.testing)
+  testImplementation(projects.ziplineTesting)
   testImplementation(kotlin("compiler-embeddable"))
   testImplementation(kotlin("test-junit"))
   testImplementation(libs.assertk)
