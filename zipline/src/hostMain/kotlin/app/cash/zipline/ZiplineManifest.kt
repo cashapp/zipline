@@ -22,6 +22,7 @@ import app.cash.zipline.internal.jsonForManifest
 import app.cash.zipline.internal.signaturePayload
 import app.cash.zipline.internal.topologicalSort
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8

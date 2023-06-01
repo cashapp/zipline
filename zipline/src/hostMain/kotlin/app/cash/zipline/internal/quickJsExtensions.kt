@@ -1,6 +1,7 @@
 package app.cash.zipline.internal
 
 import app.cash.zipline.QuickJs
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
 internal fun collectModuleDependencies(quickJs: QuickJs) {

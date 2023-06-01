@@ -26,6 +26,7 @@ import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.buffer
 import okio.source

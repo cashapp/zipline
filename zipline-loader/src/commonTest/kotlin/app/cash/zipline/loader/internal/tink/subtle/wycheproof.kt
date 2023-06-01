@@ -17,6 +17,7 @@ package app.cash.zipline.loader.internal.tink.subtle
 import app.cash.zipline.testing.systemFileSystem
 import app.cash.zipline.testing.ziplineRoot
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.Path
 
