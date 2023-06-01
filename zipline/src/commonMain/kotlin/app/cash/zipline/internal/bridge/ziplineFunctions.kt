@@ -22,6 +22,7 @@ import kotlinx.serialization.Serializable
 
 @PublishedApi
 internal abstract class ReturningZiplineFunction<T : ZiplineService>(
+  override val id: String,
   override val name: String,
   argSerializers: List<KSerializer<*>>,
   resultSerializer: KSerializer<*>,
@@ -43,6 +44,7 @@ internal abstract class ReturningZiplineFunction<T : ZiplineService>(
 
 @PublishedApi
 internal abstract class SuspendingZiplineFunction<T : ZiplineService>(
+  override val id: String,
   override val name: String,
   argSerializers: List<KSerializer<*>>,
   resultSerializer: KSerializer<*>,
@@ -64,10 +66,13 @@ internal abstract class SuspendingZiplineFunction<T : ZiplineService>(
 
 @Serializable
 internal class SerializableZiplineFunction(
+  override val id: String,
   override val name: String,
   override val isSuspending: Boolean,
 ) : ZiplineFunction<ZiplineService> {
-  constructor(function: ZiplineFunction<*>) : this(function.name, function.isSuspending)
+  constructor(
+    function: ZiplineFunction<*>,
+  ) : this(function.id, function.name, function.isSuspending)
 
   override val isClose
     get() = name == "fun close(): kotlin.Unit"

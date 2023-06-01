@@ -19,6 +19,7 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.newEndpointPair
+import app.cash.zipline.testing.signatureHash
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.Dispatchers.Unconfined
@@ -48,7 +49,7 @@ internal class ManualCallEncodingTest {
       """
       |{
       |  "service": "helloService",
-      |  "function": "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
+      |  "function": "${"fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse".signatureHash()}",
       |  "args": [
       |    {
       |      "message": "hello"
@@ -88,7 +89,7 @@ internal class ManualCallEncodingTest {
       """
       |{
       |  "service": "service",
-      |  "function": "fun send(app.cash.zipline.ManualCallEncodingTest.MessageWithDefaults): kotlin.Unit",
+      |  "function": "${"fun send(app.cash.zipline.ManualCallEncodingTest.MessageWithDefaults): kotlin.Unit".signatureHash()}",
       |  "args": [
       |    {
       |    }
@@ -128,7 +129,7 @@ internal class ManualCallEncodingTest {
       """
       |{
       |  "service": "service",
-      |  "function": "fun receive(): app.cash.zipline.ManualCallEncodingTest.MessageWithDefaults",
+      |  "function": "${"fun receive(): app.cash.zipline.ManualCallEncodingTest.MessageWithDefaults".signatureHash()}",
       |  "args": [
       |  ]
       |}
@@ -165,7 +166,7 @@ internal class ManualCallEncodingTest {
       """
       |{
       |  "service": "service",
-      |  "function": "fun flip(kotlin.collections.Map<kotlin.collections.List<kotlin.String>,kotlin.collections.List<kotlin.Int>>): kotlin.collections.Map<kotlin.collections.List<kotlin.Int>,kotlin.collections.List<kotlin.String>>",
+      |  "function": "${"fun flip(kotlin.collections.Map<kotlin.collections.List<kotlin.String>,kotlin.collections.List<kotlin.Int>>): kotlin.collections.Map<kotlin.collections.List<kotlin.Int>,kotlin.collections.List<kotlin.String>>".signatureHash()}",
       |  "args": [
       |    [
       |      [

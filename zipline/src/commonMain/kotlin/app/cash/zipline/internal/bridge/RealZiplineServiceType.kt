@@ -23,5 +23,5 @@ internal class RealZiplineServiceType<T : ZiplineService>(
   override val name: String,
   override val functions: List<ZiplineFunction<T>>,
 ) : ZiplineServiceType<T> {
-  val functionsByName: Map<String, ZiplineFunction<T>> = functions.associateBy { it.name }
+  val functionsById: Map<String, ZiplineFunction<T>> = functions.associateBy { it.id }
 }
