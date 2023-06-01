@@ -60,5 +60,5 @@ kotlin {
 }
 
 configure<MavenPublishBaseExtension> {
-  configure(KotlinMultiplatform(javadocJar = JavadocJar.Dokka("dokkaGfm")))
+  configure(KotlinMultiplatform(javadocJar = JavadocJar.Empty()))
 }

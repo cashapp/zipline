@@ -78,7 +78,7 @@ tasks {
 configure<MavenPublishBaseExtension> {
   configure(
     GradlePlugin(
-      javadocJar = JavadocJar.Empty(), sourcesJar = true
+      javadocJar = JavadocJar.Empty()
     )
   )
 }

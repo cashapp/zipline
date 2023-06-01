@@ -6,7 +6,6 @@ plugins {
   kotlin("kapt")
   application
   id("com.github.gmazzo.buildconfig")
-  id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
 }
 
@@ -26,14 +25,6 @@ buildConfig {
 // Disable .tar that no one wants.
 tasks.named("distTar").configure {
   enabled = false
-}
-
-// https://github.com/Kotlin/dokka/issues/1833
-tasks.named("dokkaGfm").configure {
-  dependsOn(tasks.named("kaptKotlin"))
-}
-tasks.named("dokkaHtmlPartial").configure {
-  dependsOn(tasks.named("kaptKotlin"))
 }
 
 // Remove default .jar output artifact.
@@ -70,5 +61,5 @@ dependencies {
 }
 
 mavenPublishing {
-  configure(KotlinJvm(javadocJar = JavadocJar.Dokka("dokkaGfm")))
+  configure(KotlinJvm(javadocJar = JavadocJar.Empty()))
 }

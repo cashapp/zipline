@@ -6,7 +6,6 @@ plugins {
   kotlin("jvm")
   kotlin("kapt")
   id("com.github.gmazzo.buildconfig")
-  id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
 }
 
@@ -33,12 +32,4 @@ configure<MavenPublishBaseExtension> {
       javadocJar = JavadocJar.Empty()
     )
   )
-}
-
-// https://github.com/Kotlin/dokka/issues/1833
-tasks.named("dokkaGfm").configure {
-  dependsOn(tasks.named("kaptKotlin"))
-}
-tasks.named("dokkaHtmlPartial").configure {
-  dependsOn(tasks.named("kaptKotlin"))
 }
