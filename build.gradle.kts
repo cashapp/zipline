@@ -102,7 +102,6 @@ subprojects {
 
 tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
   moduleName.set("Zipline")
-  outputDirectory.set(project.file("${project.rootDir}/docs/0.x"))
 }
 
 allprojects {
