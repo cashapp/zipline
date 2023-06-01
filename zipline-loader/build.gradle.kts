@@ -80,7 +80,7 @@ kotlin {
         implementation(libs.assertk)
         implementation(kotlin("test"))
         implementation(projects.ziplineLoaderTesting)
-        implementation(projects.zipline.testing)
+        implementation(projects.ziplineTesting)
         implementation(libs.kotlinx.coroutines.test)
         implementation(libs.turbine)
       }
