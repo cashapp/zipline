@@ -243,9 +243,9 @@ internal class OutboundCallHandler(
             appendLine(serviceName)
             appendLine("\tcalled function:")
             append("\t\t")
-            appendLine(called.name)
+            appendLine(called.signature)
             appendLine("\tavailable functions:")
-            calledService.functions.joinTo(this, separator = "\n") { "\t\t${it.name}" }
+            calledService.functions.joinTo(this, separator = "\n") { "\t\t${it.signature}" }
           }
           Result.failure(ZiplineApiMismatchException(message))
         }

@@ -47,7 +47,7 @@ class LoggingEventListener : EventListener() {
     log(
       service = call.service,
       serviceName = call.serviceName,
-      log = "callStart $callId ${call.serviceName} ${call.function.name} ${call.args}",
+      log = "callStart $callId ${call.serviceName} ${call.function.signature} ${call.args}",
     )
     return callId
   }
@@ -57,7 +57,7 @@ class LoggingEventListener : EventListener() {
       service = call.service,
       serviceName = call.serviceName,
       log = "callEnd $startValue " +
-        "${call.serviceName} ${call.function.name} ${call.args} ${result.result}",
+        "${call.serviceName} ${call.function.signature} ${call.args} ${result.result}",
     )
   }
 

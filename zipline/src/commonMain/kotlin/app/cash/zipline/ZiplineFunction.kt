@@ -20,12 +20,30 @@ package app.cash.zipline
  */
 interface ZiplineFunction<T : ZiplineService> {
   /**
-   * A randomly generated unique id for this function. By default this is the first 6 bytes of the
-   * SHA-256 of the function's signature, base64-encoded.
+   * A unique id for this function. By default this is the first 6 bytes of the SHA-256 of the
+   * function's signature, base64-encoded.
+   *
+   * These are sample values that correspond to the sample values in [signature].
+   *
+   *  * "PnpfScGS"
+   *  * "TTdM8O+x"
+   *  * "o+Bha3Rq"
+   *  * "qr+8pXgn"
    */
   val id: String
 
-  val name: String
+  /**
+   * Returns a string that uniquely identifies this function. Parameter names are omitted. Parameter
+   * types are fully-qualified.
+   *
+   * These are sample values:
+   *
+   *  * "var count: kotlin.Int"
+   *  * "val count: kotlin.Int"
+   *  * "fun echo(request: EchoRequest): EchoResponse"
+   *  * "suspend fun echo(request: EchoRequest): EchoResponse"
+   */
+  val signature: String
 
   /** True if this function completes asynchronously. */
   val isSuspending: Boolean

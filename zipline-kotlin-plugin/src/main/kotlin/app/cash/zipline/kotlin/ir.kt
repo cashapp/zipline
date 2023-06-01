@@ -77,7 +77,7 @@ import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.StandardClassIds
 
-// Should produce a string like "var count: kotlin.Int" or "val count: kotlin.Int" or "fun echo(request: EchoRequest): EchoResponse"
+/** Returns a string as specified by ZiplineFunction.signature. */
 internal val IrSimpleFunction.signature: String
   get() = buildString {
     val property = correspondingPropertySymbol
@@ -104,7 +104,7 @@ internal val IrSimpleFunction.signature: String
     }
   }
 
-/** See signatureHash(). */
+/** Returns a string as specified by ZiplineFunction.id. */
 internal val IrSimpleFunction.id: String
   get() {
     // This would be more compact with Okio, but adding that dependency is tricky.

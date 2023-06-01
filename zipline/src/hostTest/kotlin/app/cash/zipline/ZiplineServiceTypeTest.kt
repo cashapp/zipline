@@ -50,9 +50,9 @@ internal class ZiplineServiceTypeTest {
     assertEquals(2, type.functions.size)
 
     val close = type.functions[0]
-    assertEquals("fun close(): kotlin.Unit", close.name)
+    assertEquals("fun close(): kotlin.Unit", close.signature)
     assertEquals(
-      "moYx+T3e", // close.name.compactHash().
+      "moYx+T3e", // close.name.signatureHash().
       close.id,
     )
     assertFalse(close.isSuspending)
@@ -61,10 +61,10 @@ internal class ZiplineServiceTypeTest {
     val echo = type.functions[1]
     assertEquals(
       "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse",
-      echo.name,
+      echo.signature,
     )
     assertEquals(
-      "tksid3cr", // echo.name.compactHash().
+      "tksid3cr", // echo.name.signatureHash().
       echo.id,
     )
     assertFalse(echo.isSuspending)
@@ -99,8 +99,8 @@ internal class ZiplineServiceTypeTest {
     assertEquals("app.cash.zipline.testing.GenericEchoService<kotlin.String>", type.name)
 
     assertEquals(2, type.functions.size)
-    assertEquals("fun close(): kotlin.Unit", type.functions[0].name)
-    assertEquals("fun genericEcho(T): kotlin.collections.List<T>", type.functions[1].name)
+    assertEquals("fun close(): kotlin.Unit", type.functions[0].signature)
+    assertEquals("fun genericEcho(T): kotlin.collections.List<T>", type.functions[1].signature)
   }
 
   @Test
@@ -149,11 +149,11 @@ internal class ZiplineServiceTypeTest {
 
     assertEquals(
       "fun close(): kotlin.Unit",
-      type.functions[0].name,
+      type.functions[0].signature,
     )
     assertEquals(
       "fun reverseEcho(kotlin.String): kotlin.String",
-      type.functions[1].name,
+      type.functions[1].signature,
     )
   }
 

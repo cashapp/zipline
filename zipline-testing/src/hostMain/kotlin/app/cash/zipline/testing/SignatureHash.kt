@@ -26,6 +26,10 @@ import okio.ByteString.Companion.encodeUtf8
  * Note that no hashing occurs at runtime. Instead, function signatures are hashed in the Zipline
  * Kotlin compiler plugin and the outputs of those hashes are inlined in the generated code.
  *
+ * The probability of a collision in a service declaring 1,000 functions is 0.000,000,002. This
+ * is not a security mechanism and an attacker seeking to create a collision could name their
+ * functions to do so.
+ *
  * Don't change how this works! Doing so will break upgrades for programs compiled with different
  * identifiers.
  */

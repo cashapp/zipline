@@ -71,10 +71,10 @@ interface SampleService<T> : ZiplineService {
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
       ) : ReturningZiplineFunction<SampleService<TF>>(
-        "abcd1234",
-        "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
-        argSerializers,
-        resultSerializer,
+        id = "abcd1234",
+        signature = "fun ping(app.cash.zipline.SampleRequest): app.cash.zipline.SampleResponse",
+        argSerializers = argSerializers,
+        resultSerializer = resultSerializer,
       ) {
         override fun call(service: SampleService<TF>, args: List<*>): Any? =
           service.ping(args[0] as SampleRequest)
@@ -85,11 +85,11 @@ interface SampleService<T> : ZiplineService {
         resultSerializer: KSerializer<*>,
         suspendCallbackSerializer: KSerializer<*>,
       ) : SuspendingZiplineFunction<SampleService<TF>>(
-        "efgh5678",
-        "suspend fun reduce(List<T>): T",
-        argSerializers,
-        resultSerializer,
-        suspendCallbackSerializer,
+        id = "efgh5678",
+        signature = "suspend fun reduce(List<T>): T",
+        argSerializers = argSerializers,
+        resultSerializer = resultSerializer,
+        suspendCallbackSerializer = suspendCallbackSerializer,
       ) {
         override suspend fun callSuspending(service: SampleService<TF>, args: List<*>) =
           service.reduce(args[0] as List<TF>)
@@ -99,10 +99,10 @@ interface SampleService<T> : ZiplineService {
         argSerializers: List<KSerializer<*>>,
         resultSerializer: KSerializer<*>,
       ) : ReturningZiplineFunction<SampleService<TF>>(
-        "jklm9012",
-        "fun close(): kotlin.Unit",
-        argSerializers,
-        resultSerializer,
+        id = "jklm9012",
+        signature = "fun close(): kotlin.Unit",
+        argSerializers = argSerializers,
+        resultSerializer = resultSerializer,
       ) {
         override fun call(service: SampleService<TF>, args: List<*>): Any? = service.close()
       }

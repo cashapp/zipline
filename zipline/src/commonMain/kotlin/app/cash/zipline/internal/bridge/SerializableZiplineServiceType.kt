@@ -27,6 +27,6 @@ internal class SerializableZiplineServiceType(
   constructor(type: ZiplineServiceType<*>) : this(
     type.name,
     type.functions.map { function -> SerializableZiplineFunction(function) }
-      .sortedBy { it.name },
+      .sortedBy { it.signature },
   )
 }
