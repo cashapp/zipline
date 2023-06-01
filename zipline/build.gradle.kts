@@ -293,8 +293,6 @@ fun quickJsVersion(): String {
 
 configure<MavenPublishBaseExtension> {
   configure(
-    KotlinMultiplatform(
-      javadocJar = JavadocJar.Dokka("dokkaGfm")
-    )
+    KotlinMultiplatform(javadocJar = JavadocJar.Empty())
   )
 }

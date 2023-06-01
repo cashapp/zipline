@@ -45,7 +45,7 @@ import platform.Security.kSecAttrKeyTypeECSECPrimeRandom
 import platform.Security.kSecKeyAlgorithmECDSASignatureDigestX962SHA256
 
 /** Note that we only implement [verify] on iOS because that's all we need (currently). */
-class EcdsaP256 : SignatureAlgorithm {
+internal class EcdsaP256 : SignatureAlgorithm {
   override fun sign(message: ByteString, privateKey: ByteString): ByteString {
     error("signing is not implemented on iOS")
   }

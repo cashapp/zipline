@@ -180,23 +180,3 @@ internal object ZiplineCompiler {
     return app.cash.zipline.internal.getModuleDependencies(quickJs)
   }
 }
-
-/**
- * Compile .js files to .zipline files. This is intended for internal use only; callers should
- * instead use the Gradle plugin.
- */
-fun main(vararg args: String) {
-  val argsList = args.toMutableList()
-
-  val inputDir = File(argsList.removeFirst())
-  val outputDir = File(argsList.removeFirst())
-  outputDir.mkdirs()
-  ZiplineCompiler.compile(
-    inputDir = inputDir,
-    outputDir = outputDir,
-    mainFunction = argsList.removeFirstOrNull(),
-    mainModuleId = argsList.removeFirstOrNull(),
-    manifestSigner = null,
-    version = argsList.removeFirstOrNull(),
-  )
-}

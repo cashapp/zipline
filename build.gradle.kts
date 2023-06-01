@@ -3,11 +3,13 @@ import com.diffplug.gradle.spotless.SpotlessExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import com.vanniktech.maven.publish.SonatypeHost
 import java.net.URI
+import java.net.URL
 import kotlinx.validation.ApiValidationExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.dokka.DokkaConfiguration.Visibility
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
-import org.jetbrains.dokka.gradle.DokkaTask
+import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
@@ -40,10 +42,6 @@ plugins {
 }
 
 apply(plugin = "org.jetbrains.dokka")
-tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
-  removeChildTask(":zipline-cli")
-  removeChildTask(":zipline-kotlin-plugin")
-}
 
 apply(plugin = "com.vanniktech.maven.publish.base")
 
@@ -102,19 +100,35 @@ subprojects {
   }
 }
 
+tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
+  moduleName.set("Zipline")
+  outputDirectory.set(project.file("${project.rootDir}/docs/0.x"))
+}
+
 allprojects {
-  tasks.withType<DokkaTask>().configureEach {
+  tasks.withType<DokkaTaskPartial>().configureEach {
     dokkaSourceSets.configureEach {
+      documentedVisibilities.set(setOf(
+        Visibility.PUBLIC,
+        Visibility.PROTECTED
+      ))
       reportUndocumented.set(false)
-      skipDeprecated.set(true)
       jdkVersion.set(8)
+
       perPackageOption {
-        matchingRegex.set("app\\.cash\\.zipline\\.internal\\.*")
+        matchingRegex.set("app\\.cash\\.zipline\\.internal\\..*")
         suppress.set(true)
       }
-    }
-    if (name == "dokkaGfm") {
-      outputDirectory.set(project.file("${project.rootDir}/docs/0.x"))
+      perPackageOption {
+        matchingRegex.set("app\\.cash\\.zipline\\.loader\\.internal\\..*")
+        suppress.set(true)
+      }
+
+      sourceLink {
+        localDirectory.set(rootProject.projectDir)
+        remoteUrl.set(URL("https://github.com/cashapp/zipline/tree/trunk/"))
+        remoteLineSuffix.set("#L")
+      }
     }
   }
 
