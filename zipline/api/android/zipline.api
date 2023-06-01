@@ -190,6 +190,7 @@ public final class app/cash/zipline/ZiplineException : java/lang/RuntimeExceptio
 }
 
 public abstract interface class app/cash/zipline/ZiplineFunction {
+	public abstract fun getId ()Ljava/lang/String;
 	public abstract fun getName ()Ljava/lang/String;
 	public abstract fun isClose ()Z
 	public abstract fun isSuspending ()Z
@@ -452,9 +453,10 @@ public abstract interface class app/cash/zipline/internal/bridge/PassByReference
 }
 
 public abstract class app/cash/zipline/internal/bridge/ReturningZiplineFunction : app/cash/zipline/ZiplineFunction {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/KSerializer;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/KSerializer;)V
 	public abstract fun call (Lapp/cash/zipline/ZiplineService;Ljava/util/List;)Ljava/lang/Object;
 	public final fun getArgsListSerializer ()Lapp/cash/zipline/internal/bridge/ArgsListSerializer;
+	public fun getId ()Ljava/lang/String;
 	public fun getName ()Ljava/lang/String;
 	public final fun getResultSerializer ()Lapp/cash/zipline/internal/bridge/ResultOrCallbackSerializer;
 	public fun isClose ()Z
@@ -519,9 +521,10 @@ public final class app/cash/zipline/internal/bridge/SuspendCallback$DefaultImpls
 }
 
 public abstract class app/cash/zipline/internal/bridge/SuspendingZiplineFunction : app/cash/zipline/ZiplineFunction {
-	public fun <init> (Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/KSerializer;Lkotlinx/serialization/KSerializer;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Lkotlinx/serialization/KSerializer;Lkotlinx/serialization/KSerializer;)V
 	public abstract fun callSuspending (Lapp/cash/zipline/ZiplineService;Ljava/util/List;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getArgsListSerializer ()Lapp/cash/zipline/internal/bridge/ArgsListSerializer;
+	public fun getId ()Ljava/lang/String;
 	public fun getName ()Ljava/lang/String;
 	public final fun getResultOrCallbackSerializer ()Lapp/cash/zipline/internal/bridge/ResultOrCallbackSerializer;
 	public final fun getSuspendCallbackSerializer ()Lkotlinx/serialization/KSerializer;
