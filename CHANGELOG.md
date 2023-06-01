@@ -2,7 +2,7 @@
 
 ## [Unreleased]
 
-## [0.9.19] - 2023-06-01
+## [0.9.20] - 2023-06-01
 
 We've changed this project to focus exclusively on executing Kotlin/JS libraries.
 
@@ -11,6 +11,12 @@ QuickJS Java (this project's name until September 2021) or Duktape Android (this
 until June 2021), those projects remain as git branches but will not receive further updates.
 
 The project's new Maven coordinates are `app.cash.zipline:zipline`.
+
+ * Downgrade: [Kotlin 1.8.20][kotlin_1_8_20]. (Our users aren't ready for 1.8.21 yet.)
+ * Downgrade: [Kotlin Serialization 1.5.0][kotlin_serialization_1_5_1]. (Requires Kotlin 1.8.21.)
+
+
+## [0.9.19] - 2023-06-01
 
  * Breaking: Change the calling convention between host and guest code to identify functions by IDs
    instead of by their signatures. We renamed `ZiplineFunction.name` to `signature` and added a new
