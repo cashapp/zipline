@@ -59,5 +59,5 @@ class Call(
    */
   val serviceNames: List<String> = serviceNames.toList() // Defensive copy.
 
-  override fun toString() = "Call(receiver=$service, function=${function.name}, args=$args)"
+  override fun toString() = "Call(receiver=$service, function=${function.signature}, args=$args)"
 }

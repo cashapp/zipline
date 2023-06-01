@@ -54,7 +54,8 @@ internal class InternalCall(
 
   val args: List<*>,
 ) {
-  override fun toString() = "Call(receiver=$serviceName, function=${function.name}, args=$args)"
+  override fun toString() =
+    "Call(receiver=$serviceName, function=${function.signature}, args=$args)"
 }
 
 /** This uses [Int] as a placeholder; in practice the element type depends on the argument type. */
@@ -200,7 +201,7 @@ internal class RealCallSerializer(
     if (suspendCallback != null) {
       return object : SuspendingZiplineFunction<T>(
         id = functionId,
-        name = "suspend fun unknownFunction(): kotlin.Unit",
+        signature = "suspend fun unknownFunction(): kotlin.Unit",
         argSerializers = listOf(),
         resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
         suspendCallbackSerializer = failureSuspendCallbackSerializer,
@@ -211,7 +212,7 @@ internal class RealCallSerializer(
     } else {
       return object : ReturningZiplineFunction<T>(
         id = functionId,
-        name = "fun unknownFunction(): kotlin.Unit",
+        signature = "fun unknownFunction(): kotlin.Unit",
         argSerializers = listOf(),
         resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
       ) {
