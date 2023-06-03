@@ -10,7 +10,7 @@ kotlinx-serialization = "1.5.0"
 okHttp = "4.11.0"
 okio = "3.3.0"
 minSdk = "18"
-picocli = "4.7.3"
+picocli = "4.7.4"
 sqldelight = "1.5.5"
 
 [libraries]
