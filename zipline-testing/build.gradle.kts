@@ -53,6 +53,23 @@ kotlin {
       dependsOn(hostMain)
     }
 
+    val appleMain by creating {
+      dependsOn(nativeMain)
+    }
+    val macosX64Main by getting { dependsOn(appleMain) }
+    val macosArm64Main by getting { dependsOn(appleMain) }
+    val iosArm64Main by getting { dependsOn(appleMain) }
+    val iosX64Main by getting { dependsOn(appleMain) }
+    val iosSimulatorArm64Main by getting { dependsOn(appleMain) }
+    val tvosArm64Main by getting { dependsOn(appleMain) }
+    val tvosSimulatorArm64Main by getting { dependsOn(appleMain) }
+    val tvosX64Main by getting { dependsOn(appleMain) }
+
+    val linuxMain by creating {
+      dependsOn(nativeMain)
+    }
+    val linuxX64Main by getting { dependsOn(linuxMain) }
+
     targets.withType<KotlinNativeTarget> {
       val main by compilations.getting
       main.defaultSourceSet.dependsOn(nativeMain)

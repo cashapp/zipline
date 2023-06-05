@@ -16,26 +16,24 @@
 package app.cash.zipline
 
 import app.cash.zipline.testing.loadTestingJs
+import app.cash.zipline.testing.singleThreadCoroutineDispatcher
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
-import org.junit.After
-import org.junit.Before
-import org.junit.Rule
-import org.junit.Test
 
 class SetTimeoutTest {
-  @Rule @JvmField
-  val ziplineTestRule = ZiplineTestRule()
-  private val dispatcher = ziplineTestRule.dispatcher
+  private val dispatcher = singleThreadCoroutineDispatcher("SetTimeoutTest")
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp(): Unit = runBlocking(dispatcher) {
+  @BeforeTest fun setUp(): Unit = runBlocking(dispatcher) {
     zipline.loadTestingJs()
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
   }
 
-  @After fun tearDown() = runBlocking(dispatcher) {
+  @AfterTest fun tearDown() = runBlocking(dispatcher) {
     zipline.close()
   }
 
