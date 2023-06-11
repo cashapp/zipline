@@ -371,6 +371,19 @@ fun irBlockBodyBuilder(
   )
 }
 
+fun irBlockBuilder(
+  irPluginContext: IrGeneratorContext,
+  scopeWithIr: ScopeWithIr,
+  original: IrElement,
+): IrBlockBuilder {
+  return IrBlockBuilder(
+    context = irPluginContext,
+    scope = scopeWithIr.scope,
+    startOffset = original.startOffset.toSyntheticIfUnknown(),
+    endOffset = original.endOffset.toSyntheticIfUnknown(),
+  )
+}
+
 /** This creates `companion object` if it doesn't exist already. */
 fun getOrCreateCompanion(
   enclosing: IrClass,

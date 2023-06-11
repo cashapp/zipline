@@ -45,12 +45,13 @@ import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParametersContainer
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
+import org.jetbrains.kotlin.ir.expressions.IrContainerExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.expressions.IrFunctionAccessExpression
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
+import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.types.starProjectedType
@@ -143,24 +144,54 @@ internal class AdapterGenerator(
    * Given a type like `GenericEchoService` and a list of type parameters like
    * `listOf(String.serializer(), Long.serializer())`, this generates a call to the constructor
    * of that type.
+   *
+   * ```
+   * val serializers = listOf(
+   *   String.serializer(),
+   *   Long.serializer(),
+   * )
+   * GenericEchoService(
+   *   serializers,
+   *   serialName("GenericEchoService", serializers),
+   * )
+   * ```
    */
   fun adapterExpression(
     serializersListExpression: IrExpression,
-    serialName: String,
-  ): IrFunctionAccessExpression {
+    adapterType: IrType,
+  ): IrContainerExpression {
     val adapterClass = generateAdapterIfAbsent()
-    return with(irBlockBodyBuilder(pluginContext, scope, original)) {
-      irCall(
+    return irBlockBuilder(pluginContext, scope, original).block {
+      val serializersListLocal = irTemporary(
+        value = serializersListExpression,
+        nameHint = "serializers",
+        isMutable = false,
+      ).apply {
+        origin = IrDeclarationOrigin.DEFINED
+      }
+
+      // Skip the call to serialName() if there aren't any type arguments.
+      val hasTypeArguments = adapterType !is IrSimpleType || adapterType.arguments.isNotEmpty()
+
+      val serialNameExpression = when {
+        hasTypeArguments -> {
+          irCall(
+            callee = ziplineApis.serialNameFunction
+          ).apply {
+            putValueArgument(0, irString(adapterType.classFqName!!.asString()))
+            putValueArgument(1, irGet(serializersListLocal))
+          }
+        }
+        else -> {
+          irString((adapterType as IrSimpleType).asString())
+        }
+      }
+
+      +irCall(
         callee = adapterClass.constructors.single(),
       ).apply {
-        putValueArgument(
-          0,
-          serializersListExpression,
-        )
-        putValueArgument(
-          1,
-          irString(serialName),
-        )
+        putValueArgument(0, irGet(serializersListLocal))
+        putValueArgument(1, serialNameExpression)
       }
     }
   }

@@ -87,6 +87,10 @@ internal class ZiplineApis(
           it.owner.typeParameters.size == 1
       }
 
+  val serialNameFunction: IrSimpleFunctionSymbol
+    get() = pluginContext.referenceFunctions(bridgeFqPackage.callableId("serialName"))
+      .single()
+
   val requireContextual: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
       bridgeFqPackage.callableId("requireContextual"),

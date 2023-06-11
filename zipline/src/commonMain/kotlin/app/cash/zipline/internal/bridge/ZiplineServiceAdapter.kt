@@ -76,3 +76,17 @@ internal fun <T : ZiplineService> ziplineServiceAdapter(
 ): ZiplineServiceAdapter<T> {
   return ziplineServiceAdapter
 }
+
+/**
+ * Returns a string like `kotlinx.coroutines.Flow<kotlin.String>`. This can be used as a unique
+ * key to identify a serializer for [typeName] that has [serializers] for its type arguments.
+ */
+@PublishedApi
+internal fun serialName(typeName: String, serializers: List<KSerializer<*>>): String {
+  return buildString {
+    append(typeName)
+    serializers.joinTo(this, separator = ",", prefix = "<", postfix = ">") {
+      it.descriptor.serialName
+    }
+  }
+}

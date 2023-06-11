@@ -21,7 +21,6 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
 import org.jetbrains.kotlin.ir.expressions.IrCall
 import org.jetbrains.kotlin.ir.expressions.IrClassReference
 import org.jetbrains.kotlin.ir.expressions.IrExpression
-import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
 import org.jetbrains.kotlin.ir.util.patchDeclarationParents
 
@@ -38,7 +37,10 @@ import org.jetbrains.kotlin.ir.util.patchDeclarationParents
  * is rewritten to:
  *
  * ```
- * val serializer = SampleService.Companion.Adapter(serializers)
+ * val serializer = ServiceType.Companion.Adapter(
+ *   serializers,
+ *   serialName("com.example.SampleService", serializers),
+ * )
  * ```
  *
  * Note this only works if the `KClass` argument is a constant, as that's how this decides which
@@ -54,9 +56,6 @@ internal class CallAdapterConstructorRewriter(
   fun rewrite(): IrExpression {
     val kClassArgument = original.getValueArgument(0) ?: return original
     val serializersListExpression = original.getValueArgument(1) ?: return original
-
-    // my.package.AdapterClass<package.Type1, package.Type2>
-    val serialName = (original.getTypeArgument(0) as IrSimpleType).asString()
 
     val bridgedInterfaceType = when (kClassArgument) {
       is IrClassReference -> kClassArgument.classType
@@ -79,7 +78,10 @@ internal class CallAdapterConstructorRewriter(
       ziplineApis,
       scope,
       bridgedInterface.typeIrClass,
-    ).adapterExpression(serializersListExpression, serialName)
+    ).adapterExpression(
+      serializersListExpression = serializersListExpression,
+      adapterType = original.getTypeArgument(0)!!,
+    )
     result.patchDeclarationParents(declarationParent)
     return result
   }
