@@ -204,7 +204,10 @@ internal class BridgedInterface(
       }
 
       type.isSubtypeOfClass(ziplineApis.ziplineService) -> {
-        // ServiceType.Companion.Adapter(serializers)
+        // ServiceType.Companion.Adapter(
+        //   serializers,
+        //   serialName("com.example.ServiceType", serializers),
+        // )
         AdapterGenerator(
           pluginContext,
           ziplineApis,
@@ -212,7 +215,7 @@ internal class BridgedInterface(
           pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner,
         ).adapterExpression(
           serializersListExpression = parameterList,
-          serialName = type.asString(),
+          adapterType = type,
         )
       }
 

@@ -551,6 +551,7 @@ public abstract class app/cash/zipline/internal/bridge/ZiplineServiceAdapter : k
 }
 
 public final class app/cash/zipline/internal/bridge/ZiplineServiceAdapterKt {
+	public static final fun serialName (Ljava/lang/String;Ljava/util/List;)Ljava/lang/String;
 	public static final fun ziplineServiceAdapter ()Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;
 	public static final fun ziplineServiceAdapter (Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;)Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;
 }

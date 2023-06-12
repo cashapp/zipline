@@ -16,6 +16,8 @@
 package app.cash.zipline
 
 import app.cash.zipline.testing.newEndpointPair
+import assertk.assertThat
+import assertk.assertions.containsExactly
 import kotlin.test.Test
 import kotlin.test.assertContains
 import kotlin.test.assertEquals
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.consumeAsFlow
 import kotlinx.coroutines.flow.count
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.supervisorScope
@@ -240,5 +243,29 @@ internal class FlowTest {
     scope.close()
     assertEquals(setOf(), endpointA.serviceNames)
     assertEquals(setOf(), endpointB.serviceNames)
+  }
+
+  /** https://github.com/cashapp/zipline/issues/1039 */
+  @Test
+  fun differentFlowTypes() = runBlocking(Unconfined) {
+    val scope = ZiplineScope()
+    val (endpointA, endpointB) = newEndpointPair(this)
+    val service = object : DifferentFlowTypesService {
+      override fun stringFlow(): Flow<String> = flowOf("a")
+      override fun intFlow(): Flow<Int> = flowOf(1)
+    }
+
+    endpointA.bind<DifferentFlowTypesService>("service", service)
+    val client = endpointB.take<DifferentFlowTypesService>("service", scope)
+
+    assertThat(client.stringFlow().toList()).containsExactly("a")
+    assertThat(client.intFlow().toList()).containsExactly(1)
+
+    scope.close()
+  }
+
+  interface DifferentFlowTypesService : ZiplineService {
+    fun stringFlow(): Flow<String>
+    fun intFlow(): Flow<Int>
   }
 }
