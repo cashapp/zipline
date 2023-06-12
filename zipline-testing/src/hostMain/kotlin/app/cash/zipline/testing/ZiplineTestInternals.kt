@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 @file:Suppress(
-  // Access :zipline internals.j
+  // Access :zipline internals
   "CANNOT_OVERRIDE_INVISIBLE_MEMBER",
   "EXPOSED_FUNCTION_RETURN_TYPE",
   "EXPOSED_PARAMETER_TYPE",
@@ -27,6 +27,7 @@ package app.cash.zipline.testing
 
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
+import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.OutboundCallHandler
 import app.cash.zipline.internal.bridge.OutboundService
@@ -39,7 +40,12 @@ import kotlinx.serialization.KSerializer
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.serializer
 
-/** Suppress visibility warnings to directly call internal functions annotated [PublishedApi]. */
+/**
+ * Suppress visibility warnings to directly call internal functions annotated [PublishedApi].
+ *
+ * Note that when overriding functions from invisible members, this class uses the base generic type
+ * because that interferes the least with our suppressed warnings.
+ */
 object ZiplineTestInternals {
   private val echoResponseKt = typeOf<EchoResponse>()
   private val echoRequestKt = typeOf<EchoRequest>()
@@ -98,26 +104,28 @@ object ZiplineTestInternals {
     val serializers: List<KSerializer<*>>
       get() = emptyList()
 
-    fun ziplineFunctions(serializersModule: SerializersModule): List<ZiplineFunction<EchoService>> {
+    override fun ziplineFunctions(
+      serializersModule: SerializersModule,
+    ): List<ZiplineFunction<ZiplineService>> {
       val requestSerializer = serializersModule.serializer(echoRequestKt) as KSerializer<*>
       val responseSerializer = serializersModule.serializer(echoResponseKt) as KSerializer<*>
       val name =
         "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
-      return listOf<ZiplineFunction<EchoService>>(
-        object : ReturningZiplineFunction<EchoService>(
+      return listOf<ZiplineFunction<ZiplineService>>(
+        object : ReturningZiplineFunction<ZiplineService>(
           name.signatureHash(),
           name,
           listOf(requestSerializer),
           responseSerializer,
         ) {
-          override fun call(service: EchoService, args: List<*>): Any {
-            return service.echo(args[0] as EchoRequest)
+          override fun call(service: ZiplineService, args: List<*>): Any {
+            return (service as EchoService).echo(args[0] as EchoRequest)
           }
         },
       )
     }
 
-    override fun outboundService(callHandler: OutboundCallHandler): EchoService {
+    override fun outboundService(callHandler: OutboundCallHandler): ZiplineService {
       return GeneratedOutboundService(callHandler)
     }
 
@@ -140,27 +148,27 @@ object ZiplineTestInternals {
     val serializers: List<KSerializer<*>>
       get() = emptyList()
 
-    fun ziplineFunctions(
+    override fun ziplineFunctions(
       serializersModule: SerializersModule,
-    ): List<ZiplineFunction<GenericEchoService<String>>> {
+    ): List<ZiplineFunction<ZiplineService>> {
       val requestSerializer = serializersModule.serializer(stringKt) as KSerializer<*>
       val responseSerializer = serializersModule.serializer(listOfStringKt) as KSerializer<*>
       val name = "fun genericEcho(T): kotlin.collections.List<T>"
-      return listOf<ZiplineFunction<GenericEchoService<String>>>(
-        object : ReturningZiplineFunction<GenericEchoService<String>>(
+      return listOf<ZiplineFunction<ZiplineService>>(
+        object : ReturningZiplineFunction<ZiplineService>(
           name.signatureHash(),
           name,
           listOf(requestSerializer),
           responseSerializer,
         ) {
-          override fun call(service: GenericEchoService<String>, args: List<*>): Any {
-            return service.genericEcho(args[0] as String)
+          override fun call(service: ZiplineService, args: List<*>): Any {
+            return (service as GenericEchoService<String>).genericEcho(args[0] as String)
           }
         },
       )
     }
 
-    override fun outboundService(callHandler: OutboundCallHandler): GenericEchoService<String> {
+    override fun outboundService(callHandler: OutboundCallHandler): ZiplineService {
       return GeneratedOutboundService(callHandler)
     }
 
@@ -182,28 +190,28 @@ object ZiplineTestInternals {
     val serializers: List<KSerializer<*>>
       get() = emptyList()
 
-    fun ziplineFunctions(
+    override fun ziplineFunctions(
       serializersModule: SerializersModule,
-    ): List<ZiplineFunction<EchoZiplineService>> {
+    ): List<ZiplineFunction<ZiplineService>> {
       val requestSerializer = serializersModule.serializer(echoRequestKt) as KSerializer<*>
       val responseSerializer = serializersModule.serializer(echoResponseKt) as KSerializer<*>
       val name =
         "fun echo(app.cash.zipline.testing.EchoRequest): app.cash.zipline.testing.EchoResponse"
-      return listOf<ZiplineFunction<EchoZiplineService>>(
-        object : ReturningZiplineFunction<EchoZiplineService>(
+      return listOf<ZiplineFunction<ZiplineService>>(
+        object : ReturningZiplineFunction<ZiplineService>(
           name.signatureHash(),
           name,
           listOf(requestSerializer),
           responseSerializer,
         ) {
-          override fun call(service: EchoZiplineService, args: List<*>): Any {
-            return service.echo(args[0] as EchoRequest)
+          override fun call(service: ZiplineService, args: List<*>): Any {
+            return (service as EchoZiplineService).echo(args[0] as EchoRequest)
           }
         },
       )
     }
 
-    override fun outboundService(callHandler: OutboundCallHandler): EchoZiplineService {
+    override fun outboundService(callHandler: OutboundCallHandler): ZiplineService {
       return GeneratedOutboundService(callHandler)
     }
 
