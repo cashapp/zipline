@@ -13,6 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress(
+  // Access :zipline internals.j
+  "CANNOT_OVERRIDE_INVISIBLE_MEMBER",
+  "EXPOSED_FUNCTION_RETURN_TYPE",
+  "EXPOSED_PARAMETER_TYPE",
+  "INVISIBLE_MEMBER",
+  "INVISIBLE_REFERENCE",
+)
 package app.cash.zipline.testing
 
 import app.cash.zipline.internal.EndpointService
@@ -26,7 +34,7 @@ import kotlinx.serialization.modules.SerializersModule
 
 /** Returns a pair of endpoints connected to each other for testing. */
 @JvmOverloads
-internal fun newEndpointPair(
+fun newEndpointPair(
   scope: CoroutineScope,
   serializersModule: SerializersModule = EmptySerializersModule(),
   listenerA: Endpoint.EventListener = Endpoint.EventListener(),
