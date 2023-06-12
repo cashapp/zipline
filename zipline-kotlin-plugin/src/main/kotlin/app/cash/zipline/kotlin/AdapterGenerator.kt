@@ -176,7 +176,7 @@ internal class AdapterGenerator(
       val serialNameExpression = when {
         hasTypeArguments -> {
           irCall(
-            callee = ziplineApis.serialNameFunction
+            callee = ziplineApis.serialNameFunction,
           ).apply {
             putValueArgument(0, irString(adapterType.classFqName!!.asString()))
             putValueArgument(1, irGet(serializersListLocal))
