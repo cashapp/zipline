@@ -22,6 +22,7 @@
   "INVISIBLE_MEMBER",
   "INVISIBLE_REFERENCE",
 )
+
 package app.cash.zipline.testing
 
 import app.cash.zipline.ZiplineFunction
@@ -112,7 +113,7 @@ object ZiplineTestInternals {
           override fun call(service: EchoService, args: List<*>): Any {
             return service.echo(args[0] as EchoRequest)
           }
-        }
+        },
       )
     }
 
@@ -121,7 +122,7 @@ object ZiplineTestInternals {
     }
 
     private class GeneratedOutboundService(
-      val callHandler: OutboundCallHandler
+      val callHandler: OutboundCallHandler,
     ) : EchoService, OutboundService {
 
       override fun echo(request: EchoRequest): EchoResponse {
@@ -140,7 +141,7 @@ object ZiplineTestInternals {
       get() = emptyList()
 
     fun ziplineFunctions(
-      serializersModule: SerializersModule
+      serializersModule: SerializersModule,
     ): List<ZiplineFunction<GenericEchoService<String>>> {
       val requestSerializer = serializersModule.serializer(stringKt) as KSerializer<*>
       val responseSerializer = serializersModule.serializer(listOfStringKt) as KSerializer<*>
@@ -155,7 +156,7 @@ object ZiplineTestInternals {
           override fun call(service: GenericEchoService<String>, args: List<*>): Any {
             return service.genericEcho(args[0] as String)
           }
-        }
+        },
       )
     }
 
@@ -182,7 +183,7 @@ object ZiplineTestInternals {
       get() = emptyList()
 
     fun ziplineFunctions(
-      serializersModule: SerializersModule
+      serializersModule: SerializersModule,
     ): List<ZiplineFunction<EchoZiplineService>> {
       val requestSerializer = serializersModule.serializer(echoRequestKt) as KSerializer<*>
       val responseSerializer = serializersModule.serializer(echoResponseKt) as KSerializer<*>
@@ -198,7 +199,7 @@ object ZiplineTestInternals {
           override fun call(service: EchoZiplineService, args: List<*>): Any {
             return service.echo(args[0] as EchoRequest)
           }
-        }
+        },
       )
     }
 
