@@ -90,7 +90,7 @@ internal class Endpoint internal constructor(
 
   internal val callCodec = CallCodec(this)
 
-  internal val inboundChannel = object : CallChannel {
+  val inboundChannel = object : CallChannel {
     override fun call(callJson: String): String {
       val internalCall = callCodec.decodeCall(callJson)
       val inboundService = internalCall.inboundService!!

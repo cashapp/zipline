@@ -20,6 +20,7 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoZiplineService
 import app.cash.zipline.testing.GenericEchoService
+import app.cash.zipline.testing.ZiplineTestInternals
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsExactly

@@ -556,9 +556,3 @@ public final class app/cash/zipline/internal/bridge/ZiplineServiceAdapterKt {
 	public static final fun ziplineServiceAdapter (Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;)Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;
 }
 
-public final class app/cash/zipline/testing/EndpointsKt {
-	public static final fun newEndpointPair (Lkotlinx/coroutines/CoroutineScope;)Lkotlin/Pair;
-	public static final fun newEndpointPair (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/serialization/modules/SerializersModule;)Lkotlin/Pair;
-	public static final fun newEndpointPair (Lkotlinx/coroutines/CoroutineScope;Lkotlinx/serialization/modules/SerializersModule;Lapp/cash/zipline/internal/bridge/Endpoint$EventListener;)Lkotlin/Pair;
-}
-
