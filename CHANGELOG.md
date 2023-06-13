@@ -2,15 +2,34 @@
 
 ## [Unreleased]
 
+## [1.0.0] - 2023-06-12
+
+This is Zipline's initial stable release.
+
+With this release we commit to compatibility between host and guest programs. In particular, host
+applications built with any Zipline 1.x release will be able to execute guest applications built
+with any other 1.y release. (Application developers must write compatible interfaces to take
+advantage of this!)
+
+The following are now stable:
+
+ * The manifest file format (`manifest.zipline.json`)
+ * The library file format and bytecode within (`my-library.zipline`)
+ * The host-guest call protocol
+ * The internal host-guest APIs for async calls, console logging, and leak notifications
+
+As we add features and performance improvements to future releases, we will test compatibility
+with 1.0.
+
+We expect to someday do ‘Zipline 2.0’ that uses WebAssembly. When that happens we’ll make sure the
+2.x tools can also produce programs that run on 1.x hosts.
+
+ * Fix: Don't allow services with the different generic parameters to collide in the cache. We had
+   a severe bug where two services would share serializers for unrelated types. This would typically
+   result in a `ClassCastException` at runtime.
+
+
 ## [0.9.20] - 2023-06-01
-
-We've changed this project to focus exclusively on executing Kotlin/JS libraries.
-
-We plan to drop support for executing arbitrary JavaScript code. If you've been using either
-QuickJS Java (this project's name until September 2021) or Duktape Android (this project's name
-until June 2021), those projects remain as git branches but will not receive further updates.
-
-The project's new Maven coordinates are `app.cash.zipline:zipline`.
 
  * Downgrade: [Kotlin 1.8.20][kotlin_1_8_20]. (Our users aren't ready for 1.8.21 yet.)
  * Downgrade: [Kotlin Serialization 1.5.0][kotlin_serialization_1_5_1]. (Requires Kotlin 1.8.21.)
@@ -210,6 +229,14 @@ The project's new Maven coordinates are `app.cash.zipline:zipline`.
 
 
 ## [0.1.0] - 2021-09-30
+
+We've changed this project to focus exclusively on executing Kotlin/JS libraries.
+
+We plan to drop support for executing arbitrary JavaScript code. If you've been using either
+QuickJS Java (this project's name until September 2021) or Duktape Android (this project's name
+until June 2021), those projects remain as git branches but will not receive further updates.
+
+The project's new Maven coordinates are `app.cash.zipline:zipline`.
 
 ### Added
 
