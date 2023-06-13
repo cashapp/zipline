@@ -34,7 +34,7 @@
     <div class="library-name">
 <a href="../../../../index.html">
 <span>Zipline</span>            </a>    </div>
-    <div>0.9.20
+    <div>1.0.0
     </div>
     <div class="pull-right d-flex">
         <div class="filter-section" id="filter-section">
@@ -56,7 +56,7 @@
     <div class="platform-hinted " data-platform-hinted="data-platform-hinted"><div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline-loader:dokkaHtmlPartial/commonMain"><div class="symbol monospace"><div class="block"><a href="index.html">EcdsaP256</a></div></div><p class="paragraph">ECDSA using the P-256 (secp256r1) curve.</p><p class="paragraph">We've got (at least) two choices for encoding public keys as bytes:</p><ul><li><p class="paragraph">Java's format. This is the ASN.1 of the <code class="lang-kotlin">SubjectPublicKeyInfo</code> from X.509, encoded with the     <code class="lang-kotlin">X509EncodedKeySpec</code> class.</p></li><li><p class="paragraph">Apple's format. This is ANSI X9.62, encoded as 3 fixed-width values concatenated together,     <code class="lang-kotlin">0x04 || X || Y</code>. The encoded key is always 1 + 32 + 32 = 65 bytes.</p></li></ul><p class="paragraph">We use Apple's format because it's more compact, and because it's easy enough to support on both platforms.</p><p class="paragraph">Private keys are encoded using PKCS8.</p><p class="paragraph">https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm https://developer.apple.com/documentation/security/certificate_key_and_trust_services/keys/storing_keys_as_data</p></div></div>
   </div>
   <div class="tabbedcontent">
-    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,FUNCTION,PROPERTY">Members</button></div>
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
     <div class="tabs-section-body">
       <div data-togglable="PROPERTY">
         <h2 class="">Properties</h2>
