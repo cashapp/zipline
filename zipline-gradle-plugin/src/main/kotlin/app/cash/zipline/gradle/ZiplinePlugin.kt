@@ -27,6 +27,8 @@ import org.jetbrains.kotlin.gradle.plugin.SubpluginOption
 import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 import org.slf4j.LoggerFactory
 
 @Suppress("unused") // Created reflectively by Gradle.
@@ -74,6 +76,12 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
         it.dependsOn(kotlinWebpack)
       }
     }
+
+    target.tasks.withType(KotlinCompile::class.java) { kotlinCompile ->
+      if (kotlinCompile.name == "compileKotlinJvm") {
+        registerZiplineApiDumpTask(target, kotlinCompile)
+      }
+    }
   }
 
   private fun registerCompileZiplineTask(
@@ -103,6 +111,24 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
 
     return ziplineCompileTask
+  }
+
+  private fun registerZiplineApiDumpTask(
+    project: Project,
+    kotlinCompileTool: KotlinCompileTool,
+  ): TaskProvider<ZiplineApiDumpTask> {
+    val result = project.tasks.register(
+      "ziplineApiDump",
+      ZiplineApiDumpTask::class.java,
+    )
+
+    result.configure {
+      it.ziplineApiFile.set(project.file("api/zipline-api.toml"))
+      it.sourcepath.setFrom(kotlinCompileTool.sources)
+      it.classpath.setFrom(kotlinCompileTool.libraries)
+    }
+
+    return result
   }
 
   override fun applyToCompilation(

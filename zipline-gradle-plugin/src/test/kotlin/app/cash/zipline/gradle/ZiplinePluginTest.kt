@@ -195,6 +195,36 @@ class ZiplinePluginTest {
     )
   }
 
+  @Test
+  fun ziplineApiDumpCreatesTomlFile() {
+    val projectDir = File("src/test/projects/basic")
+    val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")
+
+    try {
+      val taskName = ":lib:ziplineApiDump"
+      val result = createRunner(projectDir, "clean", taskName).build()
+      assertThat(SUCCESS_OUTCOMES)
+        .contains(result.task(taskName)!!.outcome)
+
+      assertThat(ziplineApiToml.readText()).isEqualTo(
+        """
+        |[app.cash.zipline.tests.GreetService]
+        |
+        |functions = [
+        |  # fun close(): kotlin.Unit
+        |  "moYx+T3e",
+        |
+        |  # fun greet(kotlin.String): kotlin.String
+        |  "ipvircui",
+        |]
+        |
+        """.trimMargin(),
+      )
+    } finally {
+      ziplineApiToml.delete()
+    }
+  }
+
   private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {
     val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
     File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)
