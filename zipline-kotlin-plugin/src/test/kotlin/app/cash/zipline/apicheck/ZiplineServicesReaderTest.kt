@@ -42,7 +42,7 @@ internal class ZiplineServicesReaderTest {
           DeclaredZiplineFunction("fun echo(kotlin.String): kotlin.String"),
           DeclaredZiplineFunction("val greeting: kotlin.String"),
           DeclaredZiplineFunction("var terse: kotlin.Boolean"),
-        )
+        ),
       ),
       DeclaredZiplineService(
         name = ExtendedEchoService::class.qualifiedName!!,
@@ -52,7 +52,7 @@ internal class ZiplineServicesReaderTest {
           DeclaredZiplineFunction("fun echoAll(kotlin.collections.List<kotlin.String>): kotlin.collections.List<kotlin.String>"),
           DeclaredZiplineFunction("val greeting: kotlin.String"),
           DeclaredZiplineFunction("var terse: kotlin.Boolean"),
-        )
+        ),
       ),
       DeclaredZiplineService(
         name = UnnecessaryEchoService::class.qualifiedName!!,
@@ -61,7 +61,7 @@ internal class ZiplineServicesReaderTest {
           DeclaredZiplineFunction("fun echo(kotlin.String): kotlin.String"),
           DeclaredZiplineFunction("val greeting: kotlin.String"),
           DeclaredZiplineFunction("var terse: kotlin.Boolean"),
-        )
+        ),
       ),
     )
   }

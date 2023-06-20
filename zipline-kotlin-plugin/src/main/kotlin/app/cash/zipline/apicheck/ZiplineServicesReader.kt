@@ -91,7 +91,7 @@ internal class ZiplineServicesReader(
 
   private fun bridgedFunctions(type: FirRegularClass): List<DeclaredZiplineFunction> {
     val result = sortedSetOf<DeclaredZiplineFunction>(
-      { a, b -> a.signature.compareTo(b.signature) }
+      { a, b -> a.signature.compareTo(b.signature) },
     )
 
     for (supertype in type.getAllSupertypes(session)) {
