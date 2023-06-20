@@ -13,13 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.apicheck
+package app.cash.zipline.api.fir
 
-import app.cash.zipline.kotlin.signatureHash
-
-data class DeclaredZiplineFunction(
-  val id: String,
-  val signature: String,
-) {
-  internal constructor(signature: String) : this(signature.signatureHash(), signature)
-}
+data class FirZiplineApi(
+  val services: List<FirZiplineService>,
+)

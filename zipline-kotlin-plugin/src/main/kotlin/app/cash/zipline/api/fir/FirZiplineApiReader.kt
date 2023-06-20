@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.apicheck
+package app.cash.zipline.api.fir
 
 import app.cash.zipline.kotlin.BridgedInterface.Companion.NON_INTERFACE_FUNCTION_NAMES
 import app.cash.zipline.kotlin.FqPackageName
@@ -40,13 +40,13 @@ import org.jetbrains.kotlin.fir.types.FirTypeRef
 import org.jetbrains.kotlin.fir.types.FirUserTypeRef
 import org.jetbrains.kotlin.types.Variance
 
-fun readZiplineServices(
+fun readFirZiplineApi(
   sources: Collection<File>,
   dependencies: Collection<File>,
-): List<DeclaredZiplineService> {
+): FirZiplineApi {
   return KotlinFirLoader(sources, dependencies).use { loader ->
     val output = loader.load("zipline-api-dump")
-    ZiplineServicesReader(output).read()
+    FirZiplineApiReader(output).read()
   }
 }
 
@@ -57,7 +57,7 @@ private val ziplineServiceClassId = ziplineFqPackage.classId("ZiplineService")
  * Read the frontend intermediate representation of a program and emit its ZiplineService
  * interfaces. These are subject to strict API compatibility requirements.
  */
-internal class ZiplineServicesReader(
+internal class FirZiplineApiReader(
   output: FirResult,
 ) {
   private val platformOutput = output.platformOutput
@@ -66,14 +66,16 @@ internal class ZiplineServicesReader(
   private val ziplineServiceClass: FirClassLikeSymbol<*>? =
     session.symbolProvider.getClassLikeSymbolByClassId(ziplineServiceClassId)
 
-  fun read(): List<DeclaredZiplineService> {
+  fun read(): FirZiplineApi {
     val types = platformOutput.fir
       .flatMap { it.declarations.findRegularClassesRecursive() }
       .filter { it.isInterface && it.isZiplineService }
 
-    return types
+    val services = types
       .map { it.asDeclaredZiplineService() }
       .sortedBy { it.name }
+
+    return FirZiplineApi(services)
   }
 
   private val FirRegularClass.isZiplineService: Boolean
@@ -82,15 +84,15 @@ internal class ZiplineServicesReader(
       return ziplineServiceClssSymbol.isSupertypeOf(symbol, session)
     }
 
-  private fun FirRegularClass.asDeclaredZiplineService(): DeclaredZiplineService {
-    return DeclaredZiplineService(
+  private fun FirRegularClass.asDeclaredZiplineService(): FirZiplineService {
+    return FirZiplineService(
       symbol.classId.asSingleFqName().asString(),
       bridgedFunctions(this),
     )
   }
 
-  private fun bridgedFunctions(type: FirRegularClass): List<DeclaredZiplineFunction> {
-    val result = sortedSetOf<DeclaredZiplineFunction>(
+  private fun bridgedFunctions(type: FirRegularClass): List<FirZiplineFunction> {
+    val result = sortedSetOf<FirZiplineFunction>(
       { a, b -> a.signature.compareTo(b.signature) },
     )
 
@@ -119,7 +121,7 @@ internal class ZiplineServicesReader(
   private val FirFunction.isNonInterfaceFunction: Boolean
     get() = symbol.name.identifier in NON_INTERFACE_FUNCTION_NAMES
 
-  private fun FirFunction.asDeclaredZiplineFunction(): DeclaredZiplineFunction {
+  private fun FirFunction.asDeclaredZiplineFunction(): FirZiplineFunction {
     val signature = buildString {
       if (isSuspend) append("suspend ")
       append("fun ${symbol.name.identifier}(")
@@ -127,15 +129,15 @@ internal class ZiplineServicesReader(
       append("): ${returnTypeRef.asString()}")
     }
 
-    return DeclaredZiplineFunction(signature)
+    return FirZiplineFunction(signature)
   }
 
-  private fun FirProperty.asDeclaredZiplineFunction(): DeclaredZiplineFunction {
+  private fun FirProperty.asDeclaredZiplineFunction(): FirZiplineFunction {
     val signature = when {
       isVar -> "var ${symbol.name.identifier}: ${returnTypeRef.asString()}"
       else -> "val ${symbol.name.identifier}: ${returnTypeRef.asString()}"
     }
-    return DeclaredZiplineFunction(signature)
+    return FirZiplineFunction(signature)
   }
 
   /** See [app.cash.zipline.kotlin.asString]. */

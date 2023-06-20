@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.apicheck
+package app.cash.zipline.api.fir
 
 import app.cash.zipline.ZiplineService
 import assertk.assertThat
-import assertk.assertions.containsExactly
+import assertk.assertions.isEqualTo
 import java.io.File
 import org.junit.Test
 
-internal class ZiplineServicesReaderTest {
+internal class FirZiplineApiReaderTest {
   private val sources = System.getProperty("zipline.internal.sources")
     .split(File.pathSeparator)
     .map(::File)
@@ -33,34 +33,38 @@ internal class ZiplineServicesReaderTest {
 
   @Test
   fun happyPath() {
-    val ziplineServices = readZiplineServices(sources, classpath)
-    assertThat(ziplineServices).containsExactly(
-      DeclaredZiplineService(
-        name = EchoService::class.qualifiedName!!,
-        functions = listOf(
-          DeclaredZiplineFunction("fun close(): kotlin.Unit"),
-          DeclaredZiplineFunction("fun echo(kotlin.String): kotlin.String"),
-          DeclaredZiplineFunction("val greeting: kotlin.String"),
-          DeclaredZiplineFunction("var terse: kotlin.Boolean"),
-        ),
-      ),
-      DeclaredZiplineService(
-        name = ExtendedEchoService::class.qualifiedName!!,
-        functions = listOf(
-          DeclaredZiplineFunction("fun close(): kotlin.Unit"),
-          DeclaredZiplineFunction("fun echo(kotlin.String): kotlin.String"),
-          DeclaredZiplineFunction("fun echoAll(kotlin.collections.List<kotlin.String>): kotlin.collections.List<kotlin.String>"),
-          DeclaredZiplineFunction("val greeting: kotlin.String"),
-          DeclaredZiplineFunction("var terse: kotlin.Boolean"),
-        ),
-      ),
-      DeclaredZiplineService(
-        name = UnnecessaryEchoService::class.qualifiedName!!,
-        functions = listOf(
-          DeclaredZiplineFunction("fun close(): kotlin.Unit"),
-          DeclaredZiplineFunction("fun echo(kotlin.String): kotlin.String"),
-          DeclaredZiplineFunction("val greeting: kotlin.String"),
-          DeclaredZiplineFunction("var terse: kotlin.Boolean"),
+    val ziplineApi = readFirZiplineApi(sources, classpath)
+    assertThat(ziplineApi).isEqualTo(
+      FirZiplineApi(
+        listOf(
+          FirZiplineService(
+            name = EchoService::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
+              FirZiplineFunction("val greeting: kotlin.String"),
+              FirZiplineFunction("var terse: kotlin.Boolean"),
+            ),
+          ),
+          FirZiplineService(
+            name = ExtendedEchoService::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
+              FirZiplineFunction("fun echoAll(kotlin.collections.List<kotlin.String>): kotlin.collections.List<kotlin.String>"),
+              FirZiplineFunction("val greeting: kotlin.String"),
+              FirZiplineFunction("var terse: kotlin.Boolean"),
+            ),
+          ),
+          FirZiplineService(
+            name = UnnecessaryEchoService::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
+              FirZiplineFunction("val greeting: kotlin.String"),
+              FirZiplineFunction("var terse: kotlin.Boolean"),
+            ),
+          ),
         ),
       ),
     )
