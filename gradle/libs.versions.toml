@@ -64,7 +64,7 @@ sqldelight-driver-native = { module = "com.squareup.sqldelight:native-driver", v
 sqldelight-driver-sqlite = { module = "com.squareup.sqldelight:sqlite-driver", version.ref = "sqldelight" }
 sqldelight-runtime = { module = "com.squareup.sqldelight:runtime", version.ref = "sqldelight" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.42.0.0" }
-turbine = { module = "app.cash.turbine:turbine", version = "0.13.0" }
+turbine = { module = "app.cash.turbine:turbine", version = "1.0.0" }
 downloadTask-gradle-plugin = { module = "de.undercouch:gradle-download-task", version = "5.4.0" }
 
 [plugins]
