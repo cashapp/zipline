@@ -17,6 +17,7 @@ dependencies {
 
   kapt(libs.auto.service.compiler)
   compileOnly(libs.auto.service.annotations)
+  api(libs.okio.core)
 
   testImplementation(projects.zipline)
   testImplementation(libs.assertk)
