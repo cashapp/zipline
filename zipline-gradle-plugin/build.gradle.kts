@@ -22,6 +22,7 @@ dependencies {
   implementation(kotlin("gradle-plugin-api"))
   implementation(projects.zipline)
   implementation(projects.ziplineBytecode)
+  implementation(projects.ziplineKotlinPlugin)
   implementation(projects.ziplineLoader)
   implementation(libs.http4k.core)
   implementation(libs.http4k.server.jetty)
