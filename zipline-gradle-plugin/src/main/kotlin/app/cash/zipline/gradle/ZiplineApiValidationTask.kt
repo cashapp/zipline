@@ -32,13 +32,15 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.file.FileCollectionFactory
 import org.gradle.api.tasks.Classpath
+import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 @Suppress("unused") // Public API for Gradle plugin users.
-abstract class ZiplineApiDumpTask @Inject constructor(
+abstract class ZiplineApiValidationTask @Inject constructor(
   fileCollectionFactory: FileCollectionFactory,
+  @Input val mode: Mode,
 ) : DefaultTask() {
 
   @get:OutputFile
@@ -72,12 +74,44 @@ abstract class ZiplineApiDumpTask @Inject constructor(
       }
 
       is ExpectedApiRequiresUpdates -> {
-        tomlFile.sink().buffer().use { it.writeZiplineApi(decision.updatedApi) }
+        val tomlFileRelative = tomlFile.relativeTo(project.projectDir)
+        when (mode) {
+          Mode.Check -> {
+            throw Exception(
+              """
+              |Zipline API file is incomplete. Run :ziplineApiDump to update it.
+              |  $tomlFileRelative
+              """.trimMargin(),
+            )
+          }
+
+          Mode.Dump -> {
+            logger.info("Updated $tomlFileRelative because Zipline API has changed")
+            tomlFile.sink().buffer().use { it.writeZiplineApi(decision.updatedApi) }
+          }
+        }
       }
 
       ExpectedApiIsUpToDate -> {
         // Do nothing.
       }
     }
+  }
+
+  /**
+   * This enum decides what happens when the actual API (.kt files) declares more services or
+   * functions than expected (.toml file):
+   *
+   *  * ziplineApiCheck fails the build.
+   *  * ziplineApiDump updates the TOML file.
+   *
+   * Both modes fail the build if the converse is true; ie. the actual API declares fewer services
+   * or functions than expected.
+   *
+   * Both modes succeed if the actual APIs are equal to the expectations.
+   */
+  enum class Mode {
+    Check,
+    Dump,
   }
 }
