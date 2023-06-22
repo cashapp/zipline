@@ -245,6 +245,11 @@ class ZiplinePluginTest {
     ziplineApiTaskFailsOnDroppedApi(":lib:ziplineApiDump")
   }
 
+  @Test
+  fun checkTaskIncludesZiplineApiCheck() {
+    ziplineApiTaskFailsOnDroppedApi(":lib:check")
+  }
+
   private fun ziplineApiTaskFailsOnDroppedApi(taskName: String) {
     val projectDir = File("src/test/projects/basic")
     val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")

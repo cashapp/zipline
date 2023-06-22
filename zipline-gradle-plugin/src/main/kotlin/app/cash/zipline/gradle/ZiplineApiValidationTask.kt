@@ -52,6 +52,18 @@ abstract class ZiplineApiValidationTask @Inject constructor(
   @get:Classpath
   internal val classpath = fileCollectionFactory.configurableFiles("classpath")
 
+  init {
+    when (mode) {
+      Mode.Check -> {
+        group = "verification"
+        description = "Confirm that the current Zipline API matches the expectations file"
+      }
+      Mode.Dump -> {
+        description = "Write the current Zipline APIs to the expectations file"
+      }
+    }
+  }
+
   @TaskAction
   fun task() {
     val tomlFile = ziplineApiFile.get().asFile
