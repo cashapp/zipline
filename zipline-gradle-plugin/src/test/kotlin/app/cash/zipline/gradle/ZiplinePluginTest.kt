@@ -196,16 +196,101 @@ class ZiplinePluginTest {
   }
 
   @Test
-  fun ziplineApiDumpCreatesTomlFile() {
+  fun ziplineApiDumpDoesNothingOnApiMatch() {
+    ziplineApiTaskDoesNothingOnApiMatch(":lib:ziplineApiDump")
+  }
+
+  @Test
+  fun ziplineApiCheckDoesNothingOnApiMatch() {
+    ziplineApiTaskDoesNothingOnApiMatch(":lib:ziplineApiCheck")
+  }
+
+  private fun ziplineApiTaskDoesNothingOnApiMatch(taskName: String) {
     val projectDir = File("src/test/projects/basic")
     val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")
+    ziplineApiToml.parentFile.mkdirs()
+
+    val ziplineApiTomlContent = """
+      |# This comment will be clobbered if this file is overwritten
+      |# by the Gradle task.
+      |
+      |[app.cash.zipline.tests.GreetService]
+      |
+      |functions = [
+      |  # fun close(): kotlin.Unit
+      |  "moYx+T3e",
+      |
+      |  # This comment will also be clobbered on an unexpected update.
+      |  "ipvircui",
+      |]
+      """.trimMargin()
+    ziplineApiToml.writeText(ziplineApiTomlContent)
+
+    try {
+      createRunner(projectDir, "clean", taskName).build()
+      assertThat(ziplineApiToml.readText())
+        .isEqualTo(ziplineApiTomlContent)
+    } finally {
+      ziplineApiToml.delete()
+    }
+  }
+
+  @Test
+  fun ziplineApiCheckFailsOnDroppedApi() {
+    ziplineApiTaskFailsOnDroppedApi(":lib:ziplineApiCheck")
+  }
+
+  @Test
+  fun ziplineApiDumpFailsOnDroppedApi() {
+    ziplineApiTaskFailsOnDroppedApi(":lib:ziplineApiDump")
+  }
+
+  private fun ziplineApiTaskFailsOnDroppedApi(taskName: String) {
+    val projectDir = File("src/test/projects/basic")
+    val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")
+    ziplineApiToml.parentFile.mkdirs()
+
+    // Expect an API that contains a function not offered.
+    ziplineApiToml.writeText(
+      """
+      |[app.cash.zipline.tests.GreetService]
+      |
+      |functions = [
+      |  # fun close(): kotlin.Unit
+      |  "moYx+T3e",
+      |
+      |  # fun greet(kotlin.String): kotlin.String
+      |  "ipvircui",
+      |
+      |  # fun hello(kotlin.String): kotlin.String
+      |  "Cw62Cti7",
+      |]
+      |
+      """.trimMargin(),
+    )
+
+    try {
+      val result = createRunner(projectDir, "clean", taskName).buildAndFail()
+      assertThat(result.output).contains(
+        """
+        |    Expected function Cw62Cti7 of app.cash.zipline.tests.GreetService not found:
+        |      fun hello(kotlin.String): kotlin.String
+        """.trimMargin(),
+      )
+    } finally {
+      ziplineApiToml.delete()
+    }
+  }
+
+  @Test
+  fun ziplineApiDumpCreatesNewTomlFile() {
+    val projectDir = File("src/test/projects/basic")
+    val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")
+    ziplineApiToml.delete() // In case a previous execution crashed.
 
     try {
       val taskName = ":lib:ziplineApiDump"
-      val result = createRunner(projectDir, "clean", taskName).build()
-      assertThat(SUCCESS_OUTCOMES)
-        .contains(result.task(taskName)!!.outcome)
-
+      createRunner(projectDir, "clean", taskName).build()
       assertThat(ziplineApiToml.readText()).isEqualTo(
         """
         |[app.cash.zipline.tests.GreetService]
@@ -218,6 +303,98 @@ class ZiplinePluginTest {
         |  "ipvircui",
         |]
         |
+        """.trimMargin(),
+      )
+    } finally {
+      ziplineApiToml.delete()
+    }
+  }
+
+  @Test
+  fun ziplineApiCheckFailsOnMissingTomlFile() {
+    val projectDir = File("src/test/projects/basic")
+    val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")
+    ziplineApiToml.delete() // In case a previous execution crashed.
+
+    val taskName = ":lib:ziplineApiCheck"
+    val result = createRunner(projectDir, "clean", taskName).buildAndFail()
+    assertThat(result.output).contains(
+      """
+      |Zipline API file is incomplete. Run :ziplineApiDump to update it.
+      |  api/zipline-api.toml
+      """.trimMargin(),
+    )
+  }
+
+  @Test
+  fun ziplineApiDumpUpdatesIncompleteFile() {
+    val projectDir = File("src/test/projects/basic")
+    val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")
+    ziplineApiToml.parentFile.mkdirs()
+
+    // Expect an API that doesn't declare 'greet'.
+    ziplineApiToml.writeText(
+      """
+      |[app.cash.zipline.tests.GreetService]
+      |
+      |functions = [
+      |  # fun close(): kotlin.Unit
+      |  "moYx+T3e",
+      |]
+      |
+      """.trimMargin(),
+    )
+
+    try {
+      val taskName = ":lib:ziplineApiDump"
+      createRunner(projectDir, "clean", taskName).build()
+
+      // The task updates the file to include the 'greet' function.
+      assertThat(ziplineApiToml.readText()).isEqualTo(
+        """
+        |[app.cash.zipline.tests.GreetService]
+        |
+        |functions = [
+        |  # fun close(): kotlin.Unit
+        |  "moYx+T3e",
+        |
+        |  # fun greet(kotlin.String): kotlin.String
+        |  "ipvircui",
+        |]
+        |
+        """.trimMargin(),
+      )
+    } finally {
+      ziplineApiToml.delete()
+    }
+  }
+
+  @Test
+  fun ziplineApiCheckFailsOnIncompleteFile() {
+    val projectDir = File("src/test/projects/basic")
+    val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")
+    ziplineApiToml.parentFile.mkdirs()
+
+    // Expect an API that doesn't declare 'greet'.
+    ziplineApiToml.writeText(
+      """
+      |[app.cash.zipline.tests.GreetService]
+      |
+      |functions = [
+      |  # fun close(): kotlin.Unit
+      |  "moYx+T3e",
+      |]
+      |
+      """.trimMargin(),
+    )
+
+    try {
+      val taskName = ":lib:ziplineApiCheck"
+      val result = createRunner(projectDir, "clean", taskName).buildAndFail()
+      assertThat(result.output).contains(
+        """
+        |Zipline API file is incomplete. Run :ziplineApiDump to update it.
+        |  api/zipline-api.toml
         """.trimMargin(),
       )
     } finally {

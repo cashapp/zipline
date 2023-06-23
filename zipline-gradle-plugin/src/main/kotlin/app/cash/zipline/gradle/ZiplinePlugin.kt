@@ -79,7 +79,8 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
     target.tasks.withType(KotlinCompile::class.java) { kotlinCompile ->
       if (kotlinCompile.name == "compileKotlinJvm") {
-        registerZiplineApiDumpTask(target, kotlinCompile)
+        registerZiplineApiTask(target, kotlinCompile, ZiplineApiValidationTask.Mode.Check)
+        registerZiplineApiTask(target, kotlinCompile, ZiplineApiValidationTask.Mode.Dump)
       }
     }
   }
@@ -113,22 +114,22 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     return ziplineCompileTask
   }
 
-  private fun registerZiplineApiDumpTask(
+  private fun registerZiplineApiTask(
     project: Project,
     kotlinCompileTool: KotlinCompileTool,
-  ): TaskProvider<ZiplineApiDumpTask> {
-    val result = project.tasks.register(
-      "ziplineApiDump",
-      ZiplineApiDumpTask::class.java,
+    mode: ZiplineApiValidationTask.Mode,
+  ) {
+    val task = project.tasks.register(
+      "ziplineApi$mode",
+      ZiplineApiValidationTask::class.java,
+      mode,
     )
 
-    result.configure {
+    task.configure {
       it.ziplineApiFile.set(project.file("api/zipline-api.toml"))
       it.sourcepath.setFrom(kotlinCompileTool.sources)
       it.classpath.setFrom(kotlinCompileTool.libraries)
     }
-
-    return result
   }
 
   override fun applyToCompilation(
