@@ -116,7 +116,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
   private fun registerZiplineApiTask(
     project: Project,
-    kotlinCompileTool: KotlinCompileTool,
+    compileTask: KotlinCompileTool,
     mode: ZiplineApiValidationTask.Mode,
   ) {
     val task = project.tasks.register(
@@ -125,10 +125,16 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       mode,
     )
 
-    task.configure {
-      it.ziplineApiFile.set(project.file("api/zipline-api.toml"))
-      it.sourcepath.setFrom(kotlinCompileTool.sources)
-      it.classpath.setFrom(kotlinCompileTool.libraries)
+    if (mode == ZiplineApiValidationTask.Mode.Check) {
+      project.tasks.named("check").configure { checkTask ->
+        checkTask.dependsOn(task)
+      }
+    }
+
+    task.configure { task ->
+      task.ziplineApiFile.set(project.file("api/zipline-api.toml"))
+      task.sourcepath.setFrom(compileTask.sources)
+      task.classpath.setFrom(compileTask.libraries)
     }
   }
 
