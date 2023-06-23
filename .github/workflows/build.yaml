@@ -57,9 +57,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y libtinfo5
 
-      # Build unless this is a cross-compile.
-      - run: ./gradlew build --stacktrace
+      # Build unless this is a cross-compile (we can't test cross-compiled code)
+      - name: Build Zipline
+        run: ./gradlew build --stacktrace
         if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
+
+      - name: Build samples
+        run: ../gradlew check --stacktrace
+        working-directory: ./samples
 
       - uses: actions/upload-artifact@v3
         with:

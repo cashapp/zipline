@@ -15,8 +15,10 @@
  */
 package app.cash.zipline.gradle
 
+import app.cash.zipline.gradle.ZiplineApiValidationTask.Mode
 import app.cash.zipline.loader.SignatureAlgorithmId
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -77,11 +79,15 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       }
     }
 
+    val ziplineApiCheck = target.tasks.register("ziplineApiCheck")
+    target.tasks.named("check").configure { checkTask ->
+      checkTask.dependsOn(ziplineApiCheck)
+    }
+    val ziplineApiDump = target.tasks.register("ziplineApiDump")
     target.tasks.withType(KotlinCompile::class.java) { kotlinCompile ->
-      if (kotlinCompile.name == "compileKotlinJvm") {
-        registerZiplineApiTask(target, kotlinCompile, ZiplineApiValidationTask.Mode.Check)
-        registerZiplineApiTask(target, kotlinCompile, ZiplineApiValidationTask.Mode.Dump)
-      }
+      if ("Test" in kotlinCompile.name) return@withType
+      registerZiplineApiTask(target, kotlinCompile, Mode.Check, ziplineApiCheck)
+      registerZiplineApiTask(target, kotlinCompile, Mode.Dump, ziplineApiDump)
     }
   }
 
@@ -117,18 +123,17 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   private fun registerZiplineApiTask(
     project: Project,
     compileTask: KotlinCompileTool,
-    mode: ZiplineApiValidationTask.Mode,
+    mode: Mode,
+    rollupTask: TaskProvider<Task>,
   ) {
     val task = project.tasks.register(
-      "ziplineApi$mode",
+      "${compileTask.name}ZiplineApi$mode", // Like 'compileKotlinJvmZiplineApiCheck'
       ZiplineApiValidationTask::class.java,
       mode,
     )
 
-    if (mode == ZiplineApiValidationTask.Mode.Check) {
-      project.tasks.named("check").configure { checkTask ->
-        checkTask.dependsOn(task)
-      }
+    rollupTask.configure {
+      it.dependsOn(task)
     }
 
     task.configure { task ->

@@ -112,7 +112,7 @@ allprojects {
         Visibility.PROTECTED
       ))
       reportUndocumented.set(false)
-      jdkVersion.set(8)
+      jdkVersion.set(11)
 
       perPackageOption {
         matchingRegex.set("app\\.cash\\.zipline\\.internal\\..*")
