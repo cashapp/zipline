@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.api.fir
 
+import app.cash.zipline.ZiplineId
 import app.cash.zipline.ZiplineService
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -40,15 +41,17 @@ internal class FirZiplineApiReaderTest {
           FirZiplineService(
             name = EchoService::class.qualifiedName!!,
             functions = listOf(
+              FirZiplineFunction("Annotated_ID", "fun annotated(): kotlin.String"),
               FirZiplineFunction("fun close(): kotlin.Unit"),
               FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
               FirZiplineFunction("val greeting: kotlin.String"),
               FirZiplineFunction("var terse: kotlin.Boolean"),
-            ),
+              ),
           ),
           FirZiplineService(
             name = ExtendedEchoService::class.qualifiedName!!,
             functions = listOf(
+              FirZiplineFunction("Annotated_ID", "fun annotated(): kotlin.String"),
               FirZiplineFunction("fun close(): kotlin.Unit"),
               FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
               FirZiplineFunction("fun echoAll(kotlin.collections.List<kotlin.String>): kotlin.collections.List<kotlin.String>"),
@@ -59,6 +62,7 @@ internal class FirZiplineApiReaderTest {
           FirZiplineService(
             name = UnnecessaryEchoService::class.qualifiedName!!,
             functions = listOf(
+              FirZiplineFunction("Annotated_ID", "fun annotated(): kotlin.String"),
               FirZiplineFunction("fun close(): kotlin.Unit"),
               FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
               FirZiplineFunction("val greeting: kotlin.String"),
@@ -75,6 +79,9 @@ internal class FirZiplineApiReaderTest {
     val greeting: String
     var terse: Boolean
     fun echo(request: String): String
+
+    @ZiplineId("Annotated_ID")
+    fun annotated(): String
   }
 
   /** This should be included in the output. */
@@ -97,5 +104,6 @@ internal class FirZiplineApiReaderTest {
       set(value) = error("unexpected call")
 
     override fun echo(request: String) = error("unexpected call")
+    override fun annotated(): String = error("unexpected call")
   }
 }

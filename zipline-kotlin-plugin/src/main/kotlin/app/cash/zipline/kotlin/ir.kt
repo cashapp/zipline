@@ -74,6 +74,7 @@ import org.jetbrains.kotlin.ir.util.createDispatchReceiverParameter
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.getAnnotation
+import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.StandardClassIds
 import org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction
@@ -433,4 +434,8 @@ fun getOrCreateCompanion(
 
   enclosing.declarations.add(companionClass)
   return companionClass
+}
+
+internal fun ClassId.getArgument(argument: String): Name {
+  return Name.identifier("${asFqNameString()}.$argument")
 }

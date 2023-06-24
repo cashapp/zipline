@@ -18,6 +18,7 @@ package app.cash.zipline.api.fir
 import app.cash.zipline.kotlin.BridgedInterface.Companion.NON_INTERFACE_FUNCTION_NAMES
 import app.cash.zipline.kotlin.FqPackageName
 import app.cash.zipline.kotlin.classId
+import app.cash.zipline.kotlin.getArgument
 import java.io.File
 import org.jetbrains.kotlin.fir.FirAnnotationContainer
 import org.jetbrains.kotlin.fir.FirSession
@@ -28,9 +29,9 @@ import org.jetbrains.kotlin.fir.declarations.FirFunction
 import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
+import org.jetbrains.kotlin.fir.declarations.getStringArgument
 import org.jetbrains.kotlin.fir.declarations.utils.isInterface
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
-import org.jetbrains.kotlin.fir.expressions.FirConstExpression
 import org.jetbrains.kotlin.fir.pipeline.FirResult
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
@@ -42,8 +43,6 @@ import org.jetbrains.kotlin.fir.types.FirTypeProjectionWithVariance
 import org.jetbrains.kotlin.fir.types.FirTypeRef
 import org.jetbrains.kotlin.fir.types.FirUserTypeRef
 import org.jetbrains.kotlin.types.Variance
-import org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction
-import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 fun readFirZiplineApi(
   sources: Collection<File>,
@@ -186,12 +185,11 @@ internal class FirZiplineApiReader(
     }
   }
 
-  @OptIn(UnsafeCastFunction::class)
   private fun FirAnnotationContainer.getZiplineId(): String? {
     return getAnnotationByClassId(
       ziplineIdClassId,
       session,
-    )?.cast<FirConstExpression<String>>()?.value
+    )?.getStringArgument(ziplineIdClassId.getArgument("id"))
   }
 
   private fun List<FirDeclaration>.findRegularClassesRecursive(): List<FirRegularClass> {
