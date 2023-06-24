@@ -196,6 +196,10 @@ public abstract interface class app/cash/zipline/ZiplineFunction {
 	public abstract fun isSuspending ()Z
 }
 
+public abstract interface annotation class app/cash/zipline/ZiplineId : java/lang/annotation/Annotation {
+	public abstract fun id ()Ljava/lang/String;
+}
+
 public final class app/cash/zipline/ZiplineManifest {
 	public static final field Companion Lapp/cash/zipline/ZiplineManifest$Companion;
 	public synthetic fun <init> (ILapp/cash/zipline/ZiplineManifest$Unsigned;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/internal/SerializationConstructorMarker;)V
