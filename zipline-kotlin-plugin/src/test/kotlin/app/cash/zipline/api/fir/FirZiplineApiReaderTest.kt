@@ -41,31 +41,37 @@ internal class FirZiplineApiReaderTest {
           FirZiplineService(
             name = EchoService::class.qualifiedName!!,
             functions = listOf(
-              FirZiplineFunction("Annotated_ID", "fun annotated(): kotlin.String"),
+              FirZiplineFunction("annotatedFun", "fun annotatedFun(): kotlin.String"),
               FirZiplineFunction("fun close(): kotlin.Unit"),
               FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
+              FirZiplineFunction("annotatedVal", "val annotatedVal: kotlin.String"),
               FirZiplineFunction("val greeting: kotlin.String"),
+              FirZiplineFunction("annotatedVar", "var annotatedVar: kotlin.String"),
               FirZiplineFunction("var terse: kotlin.Boolean"),
               ),
           ),
           FirZiplineService(
             name = ExtendedEchoService::class.qualifiedName!!,
             functions = listOf(
-              FirZiplineFunction("Annotated_ID", "fun annotated(): kotlin.String"),
+              FirZiplineFunction("annotatedFun", "fun annotatedFun(): kotlin.String"),
               FirZiplineFunction("fun close(): kotlin.Unit"),
               FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
               FirZiplineFunction("fun echoAll(kotlin.collections.List<kotlin.String>): kotlin.collections.List<kotlin.String>"),
+              FirZiplineFunction("annotatedVal", "val annotatedVal: kotlin.String"),
               FirZiplineFunction("val greeting: kotlin.String"),
+              FirZiplineFunction("annotatedVar", "var annotatedVar: kotlin.String"),
               FirZiplineFunction("var terse: kotlin.Boolean"),
             ),
           ),
           FirZiplineService(
             name = UnnecessaryEchoService::class.qualifiedName!!,
             functions = listOf(
-              FirZiplineFunction("Annotated_ID", "fun annotated(): kotlin.String"),
+              FirZiplineFunction("annotatedFunOverride", "fun annotatedFun(): kotlin.String"),
               FirZiplineFunction("fun close(): kotlin.Unit"),
               FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
+              FirZiplineFunction("annotatedValOverride", "val annotatedVal: kotlin.String"),
               FirZiplineFunction("val greeting: kotlin.String"),
+              FirZiplineFunction("annotatedVarOverride", "var annotatedVar: kotlin.String"),
               FirZiplineFunction("var terse: kotlin.Boolean"),
             ),
           ),
@@ -78,10 +84,16 @@ internal class FirZiplineApiReaderTest {
   interface EchoService : ZiplineService {
     val greeting: String
     var terse: Boolean
+
+    @ZiplineId("annotatedVal")
+    val annotatedVal: String
+
+    @ZiplineId("annotatedVar")
+    var annotatedVar: String
     fun echo(request: String): String
 
-    @ZiplineId("Annotated_ID")
-    fun annotated(): String
+    @ZiplineId("annotatedFun")
+    fun annotatedFun(): String
   }
 
   /** This should be included in the output. */
@@ -91,8 +103,18 @@ internal class FirZiplineApiReaderTest {
 
   /** This should be included in the output, but without additional methods. */
   interface UnnecessaryEchoService : EchoService {
+
+    @ZiplineId("annotatedValOverride")
+    override val annotatedVal: String
+
+    @ZiplineId("annotatedVarOverride")
+    override var annotatedVar: String
+
     override fun echo(request: String): String
     override fun equals(other: Any?): Boolean
+
+    @ZiplineId("annotatedFunOverride")
+    override fun annotatedFun(): String
   }
 
   /** This shouldn't be included in the output. */
@@ -102,8 +124,13 @@ internal class FirZiplineApiReaderTest {
     override var terse: Boolean
       get() = error("unexpected call")
       set(value) = error("unexpected call")
+    override val annotatedVal: String
+      get() = error("unexpected call")
+    override var annotatedVar: String
+      get() = error("unexpected call")
+      set(value) { error("unexpected call") }
 
     override fun echo(request: String) = error("unexpected call")
-    override fun annotated(): String = error("unexpected call")
+    override fun annotatedFun(): String = error("unexpected call")
   }
 }
