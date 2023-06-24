@@ -111,9 +111,8 @@ private fun <T> IrElement.getConstValue(): T {
   return cast<IrConst<T>>().value
 }
 
-private val ziplineFqPackageName =  FqPackageName("app.cash.zipline")
+private val ziplineFqPackageName = FqPackageName("app.cash.zipline")
 private val ziplineIdAnnotationFqName = ziplineFqPackageName.classId("ZiplineId").asSingleFqName()
-
 
 /** Returns a string as specified by ZiplineFunction.id. */
 @OptIn(UnsafeCastFunction::class)

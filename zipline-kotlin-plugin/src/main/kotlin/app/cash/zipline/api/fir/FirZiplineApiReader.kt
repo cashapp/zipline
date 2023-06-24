@@ -145,7 +145,7 @@ internal class FirZiplineApiReader(
       else -> "val ${symbol.name.identifier}: ${returnTypeRef.asString()}"
     }
     return getZiplineId()?.let {
-       FirZiplineFunction(it,signature)
+       FirZiplineFunction(it, signature)
     } ?: FirZiplineFunction(signature)
   }
 
@@ -190,7 +190,7 @@ internal class FirZiplineApiReader(
   private fun FirAnnotationContainer.getZiplineId(): String? {
     return getAnnotationByClassId(
       ziplineIdClassId,
-      session
+      session,
     )?.cast<FirConstExpression<String>>()?.value
   }
 
