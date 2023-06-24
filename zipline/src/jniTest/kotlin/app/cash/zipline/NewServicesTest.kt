@@ -411,6 +411,18 @@ class NewSerializersTest {
     suspend fun echo(): @Contextual RequiresContextual
   }
 
+  @Test
+  fun ziplineIdIsAppliedToGeneratedService() {
+    val function =
+      onlyZiplineFunction(serviceSerializer = ziplineServiceSerializer<SimpleZiplineService>()) as ZiplineFunction<*>
+
+    assertEquals(function.id, testZiplineId)
+  }
+  interface SimpleZiplineService : ZiplineService {
+    @ZiplineId(testZiplineId)
+    fun annotatedFunction()
+  }
+
   private fun <T> suspendCallbackSerializer(
     resultSerializer: KSerializer<T>,
   ): KSerializer<SuspendCallback<T>> {
@@ -474,5 +486,8 @@ class NewSerializersTest {
       sampleValue,
       json.decodeFromString(actual, json.encodeToString(expected, sampleValue)),
     )
+  }
+  companion object {
+    private const val testZiplineId = "TEST_ZIPLINE_ID"
   }
 }

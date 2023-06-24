@@ -46,6 +46,7 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.expressions.IrConst
 import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
@@ -72,8 +73,11 @@ import org.jetbrains.kotlin.ir.util.constructors
 import org.jetbrains.kotlin.ir.util.createDispatchReceiverParameter
 import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
 import org.jetbrains.kotlin.ir.util.defaultType
+import org.jetbrains.kotlin.ir.util.getAnnotation
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.StandardClassIds
+import org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 /** Returns a string as specified by ZiplineFunction.signature. */
 internal val IrSimpleFunction.signature: String
@@ -102,9 +106,23 @@ internal val IrSimpleFunction.signature: String
     }
   }
 
+@UnsafeCastFunction
+private fun <T> IrElement.getConstValue(): T {
+  return cast<IrConst<T>>().value
+}
+
+private val ziplineFqPackageName =  FqPackageName("app.cash.zipline")
+private val ziplineIdAnnotationFqName = ziplineFqPackageName.classId("ZiplineId").asSingleFqName()
+
+
 /** Returns a string as specified by ZiplineFunction.id. */
+@OptIn(UnsafeCastFunction::class)
 internal val IrSimpleFunction.id: String
-  get() = signature.signatureHash()
+  get() {
+
+    return getAnnotation(ziplineIdAnnotationFqName)?.getValueArgument(0)
+      ?.getConstValue() ?: signature.signatureHash()
+  }
 
 /** Thrown on invalid or unexpected input code. */
 class ZiplineCompilationException(

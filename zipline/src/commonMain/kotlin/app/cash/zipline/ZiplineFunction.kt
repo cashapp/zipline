@@ -21,7 +21,7 @@ package app.cash.zipline
 interface ZiplineFunction<T : ZiplineService> {
   /**
    * A unique id for this function. By default this is the first 6 bytes of the SHA-256 of the
-   * function's signature, base64-encoded.
+   * function's signature, base64-encoded. To provide your own id, annotate your function with [ZiplineId].
    *
    * These are sample values that correspond to the sample values in [signature].
    *

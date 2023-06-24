@@ -19,6 +19,7 @@ import app.cash.zipline.kotlin.BridgedInterface.Companion.NON_INTERFACE_FUNCTION
 import app.cash.zipline.kotlin.FqPackageName
 import app.cash.zipline.kotlin.classId
 import java.io.File
+import org.jetbrains.kotlin.fir.FirAnnotationContainer
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.isSupertypeOf
 import org.jetbrains.kotlin.fir.analysis.checkers.toRegularClassSymbol
@@ -26,8 +27,10 @@ import org.jetbrains.kotlin.fir.declarations.FirDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirFunction
 import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import org.jetbrains.kotlin.fir.declarations.getAnnotationByClassId
 import org.jetbrains.kotlin.fir.declarations.utils.isInterface
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
+import org.jetbrains.kotlin.fir.expressions.FirConstExpression
 import org.jetbrains.kotlin.fir.pipeline.FirResult
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
@@ -39,6 +42,8 @@ import org.jetbrains.kotlin.fir.types.FirTypeProjectionWithVariance
 import org.jetbrains.kotlin.fir.types.FirTypeRef
 import org.jetbrains.kotlin.fir.types.FirUserTypeRef
 import org.jetbrains.kotlin.types.Variance
+import org.jetbrains.kotlin.utils.addToStdlib.UnsafeCastFunction
+import org.jetbrains.kotlin.utils.addToStdlib.cast
 
 fun readFirZiplineApi(
   sources: Collection<File>,
@@ -52,6 +57,7 @@ fun readFirZiplineApi(
 
 private val ziplineFqPackage = FqPackageName("app.cash.zipline")
 private val ziplineServiceClassId = ziplineFqPackage.classId("ZiplineService")
+private val ziplineIdClassId = ziplineFqPackage.classId("ZiplineId")
 
 /**
  * Read the frontend intermediate representation of a program and emit its ZiplineService
@@ -128,8 +134,9 @@ internal class FirZiplineApiReader(
       append(valueParameters.joinToString { it.returnTypeRef.asString() })
       append("): ${returnTypeRef.asString()}")
     }
-
-    return FirZiplineFunction(signature)
+    return getZiplineId()?.let {
+       FirZiplineFunction(it, signature)
+    } ?: FirZiplineFunction(signature)
   }
 
   private fun FirProperty.asDeclaredZiplineFunction(): FirZiplineFunction {
@@ -137,7 +144,9 @@ internal class FirZiplineApiReader(
       isVar -> "var ${symbol.name.identifier}: ${returnTypeRef.asString()}"
       else -> "val ${symbol.name.identifier}: ${returnTypeRef.asString()}"
     }
-    return FirZiplineFunction(signature)
+    return getZiplineId()?.let {
+       FirZiplineFunction(it,signature)
+    } ?: FirZiplineFunction(signature)
   }
 
   /** See [app.cash.zipline.kotlin.asString]. */
@@ -175,6 +184,14 @@ internal class FirZiplineApiReader(
         error("Unexpected kind of FirTypeProjection: " + javaClass.simpleName)
       }
     }
+  }
+
+  @OptIn(UnsafeCastFunction::class)
+  private fun FirAnnotationContainer.getZiplineId(): String? {
+    return getAnnotationByClassId(
+      ziplineIdClassId,
+      session
+    )?.cast<FirConstExpression<String>>()?.value
   }
 
   private fun List<FirDeclaration>.findRegularClassesRecursive(): List<FirRegularClass> {
