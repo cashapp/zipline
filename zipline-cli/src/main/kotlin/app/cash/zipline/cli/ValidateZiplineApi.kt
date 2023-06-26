@@ -25,10 +25,12 @@ import app.cash.zipline.api.validator.toml.readTomlZiplineApi
 import app.cash.zipline.api.validator.toml.writeTomlZiplineApi
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.CliktError
-import com.github.ajalt.clikt.parameters.options.convert
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
+import com.github.ajalt.clikt.parameters.options.split
+import com.github.ajalt.clikt.parameters.types.file
 import com.github.ajalt.clikt.parameters.types.path
 import java.io.File
 import kotlin.io.path.exists
@@ -64,12 +66,17 @@ class ValidateZiplineApi(
     .help("Path to the TOML file that this command will read and write")
 
   private val sources by option("--sources")
-    .convert { it.split(File.pathSeparator).map(::File) }
+    .file()
+    .split(File.pathSeparator)
     .required()
 
   private val classpath by option("--class-path")
-    .convert { it.split(File.pathSeparator).map(::File) }
+    .file()
+    .split(File.pathSeparator)
     .required()
+
+  private val dumpCommandName by option("--dump-command-name", hidden = true)
+    .default(NAME_DUMP)
 
   override fun run() {
     val expectedZiplineApi = when {
@@ -94,7 +101,7 @@ class ValidateZiplineApi(
           NAME_CHECK -> {
             throw CliktError(
               """
-              |Zipline API file is incomplete. Run $NAME_DUMP to update it.
+              |Zipline API file is incomplete. Run $dumpCommandName to update it.
               |  $tomlFile
               """.trimMargin(),
             )

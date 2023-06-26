@@ -122,6 +122,8 @@ private abstract class ZiplineApiValidatorWorker @Inject constructor(
         parameters.sources.files.joinToString(File.pathSeparator),
         "--class-path",
         parameters.classpath.files.joinToString(File.pathSeparator),
+        "--dump-command-name",
+        ":ziplineApiDump",
       )
     }
 
