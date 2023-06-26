@@ -15,7 +15,9 @@
  */
 package app.cash.zipline.gradle
 
+import app.cash.zipline.gradle.BuildConfig.ziplineVersion
 import java.util.Locale
+import org.gradle.api.Project
 import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.provider.Provider
 
@@ -29,4 +31,15 @@ internal fun <T> Iterable<Provider<T>>.flatten(): Provider<List<T>> {
 internal fun String.capitalize(): String {
   return lowercase(locale = Locale.US)
     .replaceFirstChar { it.titlecase(locale = Locale.US) }
+}
+
+internal fun Project.ziplineDependency(artifactId: String): Any {
+  // Indicates when the plugin is applied inside the Zipline repo to Zipline's own modules. This
+  // changes dependencies from being external Maven coordinates to internal project references.
+  val isInternalBuild = properties["app.cash.zipline.internal"].toString() == "true"
+
+  return when {
+    isInternalBuild -> project(":$artifactId")
+    else -> "app.cash.zipline:$artifactId:$ziplineVersion"
+  }
 }

@@ -3,7 +3,6 @@ import com.vanniktech.maven.publish.KotlinJvm
 
 plugins {
   kotlin("jvm")
-  kotlin("kapt")
   application
   id("com.github.gmazzo.buildconfig")
   id("com.vanniktech.maven.publish.base")
@@ -47,10 +46,8 @@ kotlin {
 dependencies {
   api(projects.ziplineApiValidator)
   api(projects.ziplineLoader)
+  implementation(libs.clikt)
   implementation(libs.okHttp.core)
-  implementation(libs.picocli)
-
-  kapt(libs.picocli.compiler)
 
   testImplementation(projects.ziplineLoaderTesting)
   testImplementation(libs.assertk)

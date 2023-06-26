@@ -278,8 +278,8 @@ class ZiplinePluginTest {
       val result = createRunner(projectDir, "clean", taskName).buildAndFail()
       assertThat(result.output).contains(
         """
-        |    Expected function Cw62Cti7 of app.cash.zipline.tests.GreetService not found:
-        |      fun hello(kotlin.String): kotlin.String
+        |  Expected function Cw62Cti7 of app.cash.zipline.tests.GreetService not found:
+        |    fun hello(kotlin.String): kotlin.String
         """.trimMargin(),
       )
     } finally {
@@ -325,7 +325,7 @@ class ZiplinePluginTest {
     val result = createRunner(projectDir, "clean", taskName).buildAndFail()
     assertThat(result.output).contains(
       """
-      |Zipline API file is incomplete. Run :ziplineApiDump to update it.
+      |Zipline API file is incomplete. Run zipline-api-dump to update it.
       |  api/zipline-api.toml
       """.trimMargin(),
     )
@@ -398,7 +398,7 @@ class ZiplinePluginTest {
       val result = createRunner(projectDir, "clean", taskName).buildAndFail()
       assertThat(result.output).contains(
         """
-        |Zipline API file is incomplete. Run :ziplineApiDump to update it.
+        |Zipline API file is incomplete. Run zipline-api-dump to update it.
         |  api/zipline-api.toml
         """.trimMargin(),
       )

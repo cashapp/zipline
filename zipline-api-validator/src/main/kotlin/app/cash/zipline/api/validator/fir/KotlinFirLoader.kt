@@ -51,7 +51,7 @@ import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
  */
 internal class KotlinFirLoader(
   private val sources: Collection<File>,
-  private val dependencies: Collection<File>,
+  private val classpath: Collection<File>,
 ) : AutoCloseable {
   private val disposable = Disposer.newDisposable()
 
@@ -79,7 +79,7 @@ internal class KotlinFirLoader(
     configuration.addKotlinSourceRoots(sources.map { it.absolutePath })
     // TODO Figure out how to add the JDK modules to the classpath. Currently importing the stdlib
     //  allows a typealias to resolve to a JDK type which doesn't exist and thus breaks analysis.
-    configuration.addJvmClasspathRoots(dependencies.filter { "kotlin-stdlib-" !in it.path })
+    configuration.addJvmClasspathRoots(classpath.filter { "kotlin-stdlib-" !in it.path })
 
     val environment = KotlinCoreEnvironment.createForProduction(
       disposable,

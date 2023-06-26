@@ -16,36 +16,33 @@
 
 package app.cash.zipline.cli
 
-import app.cash.zipline.cli.GenerateKeyPair.Companion.NAME
 import app.cash.zipline.loader.SignatureAlgorithmId
 import app.cash.zipline.loader.SignatureAlgorithmId.Ed25519
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.help
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.enum
 import java.io.PrintStream
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
 
-@Command(
-  name = NAME,
-  description = [
-    "Generate an Ed25519 key pair for ManifestSigner and ManifestVerifier",
-  ],
-  mixinStandardHelpOptions = true,
-  versionProvider = Main.VersionProvider::class,
-)
 class GenerateKeyPair(
   private val out: PrintStream = System.out,
-) : Runnable {
-  @Option(
-    names = ["-a", "--algorithm"],
-    description = ["Signing algorithm to use."],
-  )
-  var algorithm: SignatureAlgorithmId = Ed25519
+) : CliktCommand(NAME) {
+  private val algorithm by option("-a", "--algorithm")
+    .enum<SignatureAlgorithmId>()
+    .default(Ed25519)
+    .help("Signing algorithm to use.")
 
   @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
   override fun run() {
     val keyPair = app.cash.zipline.loader.internal.generateKeyPair(algorithm)
-    out.println("  ALGORITHM: $algorithm")
-    out.println(" PUBLIC KEY: ${keyPair.publicKey.hex()}")
-    out.println("PRIVATE KEY: ${keyPair.privateKey.hex()}")
+    out.println(
+      """
+      |  ALGORITHM: $algorithm
+      | PUBLIC KEY: ${keyPair.publicKey.hex()}
+      |PRIVATE KEY: ${keyPair.privateKey.hex()}
+      """.trimMargin(),
+    )
   }
 
   companion object {

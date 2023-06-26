@@ -17,6 +17,7 @@ package app.cash.zipline.cli
 
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
+import com.github.ajalt.clikt.core.MissingOption
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue
@@ -25,8 +26,6 @@ import okhttp3.mockwebserver.MockWebServer
 import okio.Buffer
 import okio.FileSystem
 import org.junit.Test
-import picocli.CommandLine
-import picocli.CommandLine.MissingParameterException
 
 class DownloadTest {
   private val TMP_DIR_PATH = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "zipline-download"
@@ -35,29 +34,25 @@ class DownloadTest {
   private val testFixtures = LoaderTestFixtures()
   private val fileSystem = FileSystem.SYSTEM
 
-  @Test fun downloadWithParameters() {
-    fromArgs("-A", "app1", "-D", TMP_DIR_PATH.toString(), "-M", "test.cash.app")
-  }
-
   @Test fun downloadMissingApplicationName() {
-    val exception = assertFailsWith<MissingParameterException> {
-      fromArgs("-D", TMP_DIR_PATH.toString(), "-M", "test.cash.app")
+    val exception = assertFailsWith<MissingOption> {
+      runCommand("-D", TMP_DIR_PATH.toString(), "-M", "test.cash.app")
     }
-    assertEquals("Missing required option: '--application-name=<applicationName>'", exception.message)
+    assertEquals("Missing option \"--application-name\"", exception.message)
   }
 
   @Test fun downloadMissingManifestUrl() {
-    val exception = assertFailsWith<MissingParameterException> {
-      fromArgs("-A", "app1", "-D", TMP_DIR_PATH.toString())
+    val exception = assertFailsWith<MissingOption> {
+      runCommand("-A", "app1", "-D", TMP_DIR_PATH.toString())
     }
-    assertEquals("Missing required option: '--manifest-url=<manifestUrl>'", exception.message)
+    assertEquals("Missing option \"--manifest-url\"", exception.message)
   }
 
   @Test fun downloadMissingDownloadDir() {
-    val exception = assertFailsWith<MissingParameterException> {
-      fromArgs("-A", "app1", "-M", "test.cash.app")
+    val exception = assertFailsWith<MissingOption> {
+      runCommand("-A", "app1", "-M", "test.cash.app")
     }
-    assertEquals("Missing required option: '--download-dir=<downloadDir>'", exception.message)
+    assertEquals("Missing option \"--download-dir\"", exception.message)
   }
 
   @Test fun downloadFromMockWebServer() {
@@ -98,7 +93,7 @@ class DownloadTest {
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
 
     // Download using the CLI
-    CommandLine(Download()).execute("-A", applicationName, "-D", TMP_DIR_PATH.toString(), "-M", manifestUrl)
+    runCommand("-A", applicationName, "-D", TMP_DIR_PATH.toString(), "-M", manifestUrl)
 
     // Check that files were downloaded
     assertTrue(fileSystem.exists(TMP_DIR_PATH))
@@ -111,8 +106,9 @@ class DownloadTest {
     app.cash.zipline.loader.internal.getApplicationManifestFileName(applicationName)
 
   companion object {
-    fun fromArgs(vararg args: String?): Download {
-      return CommandLine.populateCommand(Download(), *args)
+    private fun runCommand(vararg s: String) {
+      val command = Download()
+      command.parse(s.toList())
     }
   }
 }

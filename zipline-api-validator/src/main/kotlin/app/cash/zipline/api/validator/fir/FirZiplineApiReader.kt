@@ -42,9 +42,9 @@ import org.jetbrains.kotlin.types.Variance
 
 fun readFirZiplineApi(
   sources: Collection<File>,
-  dependencies: Collection<File>,
+  classpath: Collection<File>,
 ): FirZiplineApi {
-  return KotlinFirLoader(sources, dependencies).use { loader ->
+  return KotlinFirLoader(sources, classpath).use { loader ->
     val output = loader.load("zipline-api-dump")
     FirZiplineApiReader(output).read()
   }

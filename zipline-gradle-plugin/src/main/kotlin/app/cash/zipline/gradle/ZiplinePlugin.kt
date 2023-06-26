@@ -15,10 +15,11 @@
  */
 package app.cash.zipline.gradle
 
-import app.cash.zipline.gradle.ZiplineApiValidatorTask.Mode
+import app.cash.zipline.gradle.ValidateZiplineApiTask.Mode
 import app.cash.zipline.loader.SignatureAlgorithmId
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
@@ -79,15 +80,27 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       }
     }
 
+    val cliConfiguration: Configuration = target.configurations.create("ziplineCli")
+      .apply {
+        isCanBeConsumed = false
+        isVisible = false
+      }
+    target.dependencies.add(
+      cliConfiguration.name,
+      target.ziplineDependency("zipline-cli"),
+    )
+
     val ziplineApiCheck = target.tasks.register("ziplineApiCheck")
     target.tasks.named("check").configure { checkTask ->
       checkTask.dependsOn(ziplineApiCheck)
     }
+
     val ziplineApiDump = target.tasks.register("ziplineApiDump")
+
     target.tasks.withType(KotlinCompile::class.java) { kotlinCompile ->
       if ("Test" in kotlinCompile.name) return@withType
-      registerZiplineApiTask(target, kotlinCompile, Mode.Check, ziplineApiCheck)
-      registerZiplineApiTask(target, kotlinCompile, Mode.Dump, ziplineApiDump)
+      registerZiplineApiTask(target, kotlinCompile, cliConfiguration, Mode.Check, ziplineApiCheck)
+      registerZiplineApiTask(target, kotlinCompile, cliConfiguration, Mode.Dump, ziplineApiDump)
     }
   }
 
@@ -123,12 +136,13 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   private fun registerZiplineApiTask(
     project: Project,
     compileTask: KotlinCompileTool,
+    cliConfiguration: Configuration,
     mode: Mode,
     rollupTask: TaskProvider<Task>,
   ) {
     val task = project.tasks.register(
       "${compileTask.name}ZiplineApi$mode", // Like 'compileKotlinJvmZiplineApiCheck'
-      ZiplineApiValidatorTask::class.java,
+      ValidateZiplineApiTask::class.java,
       mode,
     )
 
@@ -137,6 +151,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
 
     task.configure { task ->
+      task.cliClasspath.from(cliConfiguration)
       task.ziplineApiFile.set(project.file("api/zipline-api.toml"))
       task.sourcepath.setFrom(compileTask.sources)
       task.classpath.setFrom(compileTask.libraries)
