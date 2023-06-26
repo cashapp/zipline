@@ -1,0 +1,12 @@
+[app.cash.zipline.samples.trivia.TriviaService]
+
+functions = [
+  # fun answer(kotlin.Int, kotlin.Int, kotlin.String): app.cash.zipline.samples.trivia.AnswerResult
+  "zqfiWcT7",
+
+  # fun close(): kotlin.Unit
+  "moYx+T3e",
+
+  # fun games(): kotlin.collections.List<app.cash.zipline.samples.trivia.TriviaGame>
+  "CpVBWiWi",
+]

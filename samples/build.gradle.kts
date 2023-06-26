@@ -1,3 +1,7 @@
+import org.jetbrains.kotlin.gradle.dsl.KotlinAndroidProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+
 buildscript {
   dependencies {
     classpath(libs.android.gradle.plugin)
@@ -18,5 +22,23 @@ allprojects {
   repositories {
     mavenCentral()
     google()
+  }
+}
+
+allprojects {
+  plugins.withId("org.jetbrains.kotlin.multiplatform") {
+    configure<KotlinMultiplatformExtension> {
+      jvmToolchain(11)
+    }
+  }
+  plugins.withId("org.jetbrains.kotlin.jvm") {
+    configure<KotlinJvmProjectExtension> {
+      jvmToolchain(11)
+    }
+  }
+  plugins.withId("org.jetbrains.kotlin.android") {
+    configure<KotlinAndroidProjectExtension> {
+      jvmToolchain(11)
+    }
   }
 }

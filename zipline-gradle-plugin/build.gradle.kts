@@ -64,12 +64,19 @@ gradlePlugin {
 
 tasks {
   test {
+    // The test in 'src/test/projects/android' needs Java 17+.
+    javaLauncher.set(
+      project.javaToolchains.launcherFor {
+        languageVersion.set(JavaLanguageVersion.of(17))
+      }
+    )
     systemProperty("ziplineVersion", project.version)
     dependsOn(":zipline-bytecode:publishAllPublicationsToTestMavenRepository")
     dependsOn(":zipline-gradle-plugin:publishAllPublicationsToTestMavenRepository")
     dependsOn(":zipline-kotlin-plugin:publishAllPublicationsToTestMavenRepository")
     dependsOn(":zipline-loader:publishJvmPublicationToTestMavenRepository")
     dependsOn(":zipline-loader:publishKotlinMultiplatformPublicationToTestMavenRepository")
+    dependsOn(":zipline:publishAndroidReleasePublicationToTestMavenRepository")
     dependsOn(":zipline:publishJsPublicationToTestMavenRepository")
     dependsOn(":zipline:publishJvmPublicationToTestMavenRepository")
     dependsOn(":zipline:publishKotlinMultiplatformPublicationToTestMavenRepository")

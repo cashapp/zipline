@@ -11,14 +11,13 @@ android {
 
   defaultConfig {
     applicationId = "com.example.zipline.worldclock"
-    minSdk = 21
-    targetSdk = 33
+    minSdk = libs.versions.compileSdk.get().toInt()
   }
 
   compileOptions {
     isCoreLibraryDesugaringEnabled = true
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
+    sourceCompatibility = JavaVersion.VERSION_11
+    targetCompatibility = JavaVersion.VERSION_11
   }
 
   buildFeatures {

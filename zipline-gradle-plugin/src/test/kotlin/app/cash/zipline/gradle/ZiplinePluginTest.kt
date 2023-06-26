@@ -407,6 +407,22 @@ class ZiplinePluginTest {
     }
   }
 
+  /** Confirm ziplineApiDump tasks are available on non-JVM projects. */
+  @Test
+  fun ziplineApiDumpOnAndroidProject() {
+    val projectDir = File("src/test/projects/android")
+    val ziplineApiToml = projectDir.resolve("lib/api/zipline-api.toml")
+    ziplineApiToml.delete() // In case a previous execution crashed.
+
+    try {
+      val taskName = ":lib:ziplineApiDump"
+      createRunner(projectDir, "clean", taskName).build()
+      assertThat(ziplineApiToml.exists()).isTrue()
+    } finally {
+      ziplineApiToml.delete()
+    }
+  }
+
   private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {
     val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
     File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)

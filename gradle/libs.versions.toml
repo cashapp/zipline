@@ -1,6 +1,6 @@
 [versions]
 androidx-compose = "1.4.3"
-androidx-compose-compiler = "1.4.7"
+androidx-compose-compiler = "1.4.5"
 auto-service="1.1.1"
 compileSdk = "33"
 http4k = "4.48.0.0"
@@ -22,7 +22,7 @@ androidx-annotation = { module = "androidx.annotation:annotation", version = "1.
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version = "1.6.1" }
 # This isn't strictly used, but allows Renovate to see us using the Compose Compiler artifact
 androidx-compose-compiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose-compiler" }
-androidx-compose-material = { module = "androidx.compose.material:material", version = "androidx-compose" }
+androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "androidx-compose" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "androidx-compose" }
