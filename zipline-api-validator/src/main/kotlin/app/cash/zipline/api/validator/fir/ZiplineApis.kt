@@ -13,8 +13,16 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.fir
+package app.cash.zipline.api.validator.fir
 
-data class FirZiplineApi(
-  val services: List<FirZiplineService>,
+import okio.ByteString.Companion.encodeUtf8
+
+internal fun String.signatureHash(): String =
+  encodeUtf8().sha256().substring(0, 6).base64() // In base64, 6 bytes takes 8 chars.
+
+/** Don't bridge these. */
+internal val NON_INTERFACE_FUNCTION_NAMES = setOf(
+  "equals",
+  "hashCode",
+  "toString",
 )

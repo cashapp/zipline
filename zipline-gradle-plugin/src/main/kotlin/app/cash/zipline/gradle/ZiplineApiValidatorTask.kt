@@ -16,14 +16,14 @@
 
 package app.cash.zipline.gradle
 
-import app.cash.zipline.api.compatibility.ActualApiHasProblems
-import app.cash.zipline.api.compatibility.ExpectedApiIsUpToDate
-import app.cash.zipline.api.compatibility.ExpectedApiRequiresUpdates
-import app.cash.zipline.api.compatibility.makeApiCompatibilityDecision
-import app.cash.zipline.api.fir.readFirZiplineApi
-import app.cash.zipline.api.toml.TomlZiplineApi
-import app.cash.zipline.api.toml.readZiplineApi
-import app.cash.zipline.api.toml.writeZiplineApi
+import app.cash.zipline.api.validator.ActualApiHasProblems
+import app.cash.zipline.api.validator.ExpectedApiIsUpToDate
+import app.cash.zipline.api.validator.ExpectedApiRequiresUpdates
+import app.cash.zipline.api.validator.fir.readFirZiplineApi
+import app.cash.zipline.api.validator.makeApiCompatibilityDecision
+import app.cash.zipline.api.validator.toml.TomlZiplineApi
+import app.cash.zipline.api.validator.toml.readTomlZiplineApi
+import app.cash.zipline.api.validator.toml.writeTomlZiplineApi
 import javax.inject.Inject
 import okio.buffer
 import okio.sink
@@ -38,7 +38,7 @@ import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
 
 @Suppress("unused") // Public API for Gradle plugin users.
-abstract class ZiplineApiValidationTask @Inject constructor(
+abstract class ZiplineApiValidatorTask @Inject constructor(
   fileCollectionFactory: FileCollectionFactory,
   @Input val mode: Mode,
 ) : DefaultTask() {
@@ -69,7 +69,7 @@ abstract class ZiplineApiValidationTask @Inject constructor(
     val tomlFile = ziplineApiFile.get().asFile
 
     val expectedZiplineApi = when {
-      tomlFile.exists() -> tomlFile.source().buffer().use { it.readZiplineApi() }
+      tomlFile.exists() -> tomlFile.source().buffer().use { it.readTomlZiplineApi() }
       else -> TomlZiplineApi(listOf())
     }
 
@@ -99,7 +99,7 @@ abstract class ZiplineApiValidationTask @Inject constructor(
 
           Mode.Dump -> {
             logger.info("Updated $tomlFileRelative because Zipline API has changed")
-            tomlFile.sink().buffer().use { it.writeZiplineApi(decision.updatedApi) }
+            tomlFile.sink().buffer().use { it.writeTomlZiplineApi(decision.updatedApi) }
           }
         }
       }

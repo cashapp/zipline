@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.fir
+package app.cash.zipline.api.validator.fir
 
-import app.cash.zipline.kotlin.BridgedInterface.Companion.NON_INTERFACE_FUNCTION_NAMES
-import app.cash.zipline.kotlin.FqPackageName
-import app.cash.zipline.kotlin.classId
 import java.io.File
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.isSupertypeOf
@@ -38,6 +35,9 @@ import org.jetbrains.kotlin.fir.types.FirTypeProjection
 import org.jetbrains.kotlin.fir.types.FirTypeProjectionWithVariance
 import org.jetbrains.kotlin.fir.types.FirTypeRef
 import org.jetbrains.kotlin.fir.types.FirUserTypeRef
+import org.jetbrains.kotlin.name.ClassId
+import org.jetbrains.kotlin.name.FqName
+import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.types.Variance
 
 fun readFirZiplineApi(
@@ -50,8 +50,8 @@ fun readFirZiplineApi(
   }
 }
 
-private val ziplineFqPackage = FqPackageName("app.cash.zipline")
-private val ziplineServiceClassId = ziplineFqPackage.classId("ZiplineService")
+private val ziplineServiceClassId =
+  ClassId(FqName("app.cash.zipline"), Name.identifier("ZiplineService"))
 
 /**
  * Read the frontend intermediate representation of a program and emit its ZiplineService

@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.gradle
 
-import app.cash.zipline.gradle.ZiplineApiValidationTask.Mode
+import app.cash.zipline.gradle.ZiplineApiValidatorTask.Mode
 import app.cash.zipline.loader.SignatureAlgorithmId
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -128,7 +128,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   ) {
     val task = project.tasks.register(
       "${compileTask.name}ZiplineApi$mode", // Like 'compileKotlinJvmZiplineApiCheck'
-      ZiplineApiValidationTask::class.java,
+      ZiplineApiValidatorTask::class.java,
       mode,
     )
 

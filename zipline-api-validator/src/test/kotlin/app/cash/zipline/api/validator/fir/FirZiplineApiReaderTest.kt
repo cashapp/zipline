@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.fir
+package app.cash.zipline.api.validator.fir
 
 import app.cash.zipline.ZiplineService
 import assertk.assertThat

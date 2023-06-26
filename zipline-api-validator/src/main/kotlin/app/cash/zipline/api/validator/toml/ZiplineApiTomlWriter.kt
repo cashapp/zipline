@@ -13,11 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.toml
+package app.cash.zipline.api.validator.toml
 
 import okio.BufferedSink
 
-fun BufferedSink.writeZiplineApi(api: TomlZiplineApi) {
+fun BufferedSink.writeTomlZiplineApi(api: TomlZiplineApi) {
   TomlZiplineApiWriter(this).writeApi(api)
 }
 
