@@ -63,8 +63,7 @@ jobs:
         if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
 
       - name: Build samples
-        run: ../gradlew check --stacktrace
-        working-directory: ./samples
+        run: ./gradlew -p samples check --stacktrace
 
       - uses: actions/upload-artifact@v3
         with:
