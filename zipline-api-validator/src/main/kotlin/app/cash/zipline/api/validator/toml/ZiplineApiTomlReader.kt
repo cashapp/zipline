@@ -13,14 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.toml
+package app.cash.zipline.api.validator.toml
 
 import okio.BufferedSource
 import okio.ByteString.Companion.encodeUtf8
 import okio.IOException
 import okio.Options
 
-fun BufferedSource.readZiplineApi(): TomlZiplineApi {
+fun BufferedSource.readTomlZiplineApi(): TomlZiplineApi {
   return TomlZiplineApiReader(this).readServices()
 }
 

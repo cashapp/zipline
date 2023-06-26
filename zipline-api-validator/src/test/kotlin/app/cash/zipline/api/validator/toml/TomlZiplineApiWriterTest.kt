@@ -13,18 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.toml
+package app.cash.zipline.api.validator.toml
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import okio.Buffer
 import org.junit.Test
 
-internal class ZiplineApiTomlWriterTest {
+internal class TomlZiplineApiWriterTest {
   @Test
   fun happyPath() {
     val buffer = Buffer().apply {
-      writeZiplineApi(
+      writeTomlZiplineApi(
         TomlZiplineApi(
           services = listOf(
             TomlZiplineService(
@@ -64,7 +64,7 @@ internal class ZiplineApiTomlWriterTest {
   @Test
   fun multipleServices() {
     val buffer = Buffer().apply {
-      writeZiplineApi(
+      writeTomlZiplineApi(
         TomlZiplineApi(
           services = listOf(
             TomlZiplineService(

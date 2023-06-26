@@ -21,6 +21,7 @@ kotlin {
 dependencies {
   implementation(kotlin("gradle-plugin-api"))
   implementation(projects.zipline)
+  implementation(projects.ziplineApiValidator)
   implementation(projects.ziplineBytecode)
   implementation(projects.ziplineKotlinPlugin)
   implementation(projects.ziplineLoader)
@@ -71,6 +72,7 @@ tasks {
       }
     )
     systemProperty("ziplineVersion", project.version)
+    dependsOn(":zipline-api-validator:publishAllPublicationsToTestMavenRepository")
     dependsOn(":zipline-bytecode:publishAllPublicationsToTestMavenRepository")
     dependsOn(":zipline-gradle-plugin:publishAllPublicationsToTestMavenRepository")
     dependsOn(":zipline-kotlin-plugin:publishAllPublicationsToTestMavenRepository")

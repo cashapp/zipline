@@ -45,6 +45,7 @@ kotlin {
 }
 
 dependencies {
+  api(projects.ziplineApiValidator)
   api(projects.ziplineLoader)
   implementation(libs.okHttp.core)
   implementation(libs.picocli)

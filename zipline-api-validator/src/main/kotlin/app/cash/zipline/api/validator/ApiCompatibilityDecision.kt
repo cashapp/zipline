@@ -13,12 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.compatibility
+package app.cash.zipline.api.validator
 
-import app.cash.zipline.api.fir.FirZiplineApi
-import app.cash.zipline.api.toml.TomlZiplineApi
-import app.cash.zipline.api.toml.TomlZiplineFunction
-import app.cash.zipline.api.toml.TomlZiplineService
+import app.cash.zipline.api.validator.fir.FirZiplineApi
+import app.cash.zipline.api.validator.toml.TomlZiplineApi
+import app.cash.zipline.api.validator.toml.TomlZiplineFunction
+import app.cash.zipline.api.validator.toml.TomlZiplineService
 
 sealed interface ApiCompatibilityDecision
 

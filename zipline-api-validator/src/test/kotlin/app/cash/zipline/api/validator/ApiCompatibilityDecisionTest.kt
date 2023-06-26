@@ -13,15 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.compatibility
+package app.cash.zipline.api.validator
 
-import app.cash.zipline.api.fir.FirZiplineApi
-import app.cash.zipline.api.fir.FirZiplineFunction
-import app.cash.zipline.api.fir.FirZiplineService
-import app.cash.zipline.api.toml.TomlZiplineApi
-import app.cash.zipline.api.toml.TomlZiplineFunction
-import app.cash.zipline.api.toml.TomlZiplineService
-import app.cash.zipline.kotlin.signatureHash
+import app.cash.zipline.api.validator.fir.FirZiplineApi
+import app.cash.zipline.api.validator.fir.FirZiplineFunction
+import app.cash.zipline.api.validator.fir.FirZiplineService
+import app.cash.zipline.api.validator.fir.signatureHash
+import app.cash.zipline.api.validator.toml.TomlZiplineApi
+import app.cash.zipline.api.validator.toml.TomlZiplineFunction
+import app.cash.zipline.api.validator.toml.TomlZiplineService
 import assertk.assertThat
 import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo

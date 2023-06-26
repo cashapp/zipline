@@ -13,13 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.fir
+package app.cash.zipline.api.validator.toml
 
-import app.cash.zipline.kotlin.signatureHash
+data class TomlZiplineApi(
+  val services: List<TomlZiplineService>,
+)
 
-data class FirZiplineFunction(
+data class TomlZiplineService(
+  val name: String,
+  val functions: List<TomlZiplineFunction>,
+)
+
+data class TomlZiplineFunction(
+  val leadingComment: String,
   val id: String,
-  val signature: String,
-) {
-  internal constructor(signature: String) : this(signature.signatureHash(), signature)
-}
+)
