@@ -16,9 +16,13 @@
 
 package app.cash.zipline.cli
 
-import app.cash.zipline.cli.Download.Companion.NAME
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineLoader
+import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.parameters.options.help
+import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.required
+import com.github.ajalt.clikt.parameters.types.path
 import java.io.File
 import java.util.concurrent.Executors
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -26,36 +30,20 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okio.FileSystem
 import okio.Path.Companion.toOkioPath
-import picocli.CommandLine.Command
-import picocli.CommandLine.Option
 
-@Command(
-  name = NAME,
-  description = ["Recursively download Zipline code to a directory from a URL"],
-  mixinStandardHelpOptions = true,
-  versionProvider = Main.VersionProvider::class,
-)
-class Download : Runnable {
-  @Option(
-    names = ["-A", "--application-name"],
-    description = ["Application name for the Zipline Manifest."],
-    required = true,
-  )
-  lateinit var applicationName: String
+class Download : CliktCommand(NAME) {
+  private val applicationName by option("-A", "--application-name")
+    .required()
+    .help("Application name for the Zipline Manifest.")
 
-  @Option(
-    names = ["-M", "--manifest-url"],
-    description = ["URL to the Zipline Manifest for the code to download."],
-    required = true,
-  )
-  lateinit var manifestUrl: String
+  private val manifestUrl by option("-M", "--manifest-url")
+    .required()
+    .help("URL to the Zipline Manifest for the code to download.")
 
-  @Option(
-    names = ["-D", "--download-dir"],
-    description = ["Directory where code will be downloaded to."],
-    required = true,
-  )
-  lateinit var downloadDir: File
+  private val downloadDir by option("-D", "--download-dir")
+    .path(canBeFile = false)
+    .required()
+    .help("Directory where code will be downloaded to.")
 
   private val executorService = Executors.newSingleThreadExecutor { Thread(it, "Zipline") }
   private val dispatcher = executorService.asCoroutineDispatcher()
@@ -82,7 +70,7 @@ class Download : Runnable {
     download(
       applicationName = applicationName,
       manifestUrl = manifestUrl,
-      downloadDir = downloadDir,
+      downloadDir = downloadDir.toFile(),
     )
   }
 

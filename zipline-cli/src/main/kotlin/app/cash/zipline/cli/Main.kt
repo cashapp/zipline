@@ -13,62 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:JvmName("Main")
 
 package app.cash.zipline.cli
 
-import app.cash.zipline.cli.Main.Companion.NAME
-import kotlin.system.exitProcess
-import picocli.CommandLine
-import picocli.CommandLine.Command
-import picocli.CommandLine.HelpCommand
-import picocli.CommandLine.IVersionProvider
-import picocli.CommandLine.Model.CommandSpec
-import picocli.CommandLine.Option
-import picocli.CommandLine.ParameterException
-import picocli.CommandLine.Spec
+import app.cash.zipline.cli.ValidateZiplineApi.Companion.NAME_CHECK
+import app.cash.zipline.cli.ValidateZiplineApi.Companion.NAME_DUMP
+import com.github.ajalt.clikt.core.NoOpCliktCommand
+import com.github.ajalt.clikt.core.subcommands
+import com.github.ajalt.clikt.parameters.options.versionOption
 
-@Command(
-  name = NAME,
-  description = ["Use Zipline without Gradle."],
-  mixinStandardHelpOptions = true,
-  synopsisSubcommandLabel = "COMMAND",
-  subcommands = [Download::class, GenerateKeyPair::class, HelpCommand::class],
-  versionProvider = Main.VersionProvider::class,
-)
-class Main : Runnable {
-  @Spec
-  lateinit var spec: CommandSpec
-
-  @Option(names = ["--completionScript"], hidden = true)
-  var completionScript: Boolean = false
-
-  override fun run() {
-    if (completionScript) {
-      println(picocli.AutoComplete.bash("zipline-cli", CommandLine(Main())))
-      return
-    }
-
-    throw ParameterException(spec.commandLine(), "Missing required subcommand")
+fun main(vararg args: String) {
+  if (System.getProperty("javax.net.debug") == null) {
+    System.setProperty("javax.net.debug", "")
   }
 
-  class VersionProvider : IVersionProvider {
-    override fun getVersion(): Array<String> {
-      return arrayOf(
-        "$NAME ${BuildConfig.VERSION}",
-      )
-    }
-  }
-
-  companion object {
-    internal const val NAME = "zipline-cli"
-
-    @JvmStatic
-    fun main(args: Array<String>) {
-      if (System.getProperty("javax.net.debug") == null) {
-        System.setProperty("javax.net.debug", "")
-      }
-
-      exitProcess(CommandLine(Main()).execute(*args))
-    }
-  }
+  NoOpCliktCommand()
+    .subcommands(
+      Download(),
+      GenerateKeyPair(),
+      ValidateZiplineApi(NAME_CHECK),
+      ValidateZiplineApi(NAME_DUMP),
+    )
+    .versionOption(BuildConfig.VERSION)
+    .main(args)
 }

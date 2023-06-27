@@ -278,8 +278,8 @@ class ZiplinePluginTest {
       val result = createRunner(projectDir, "clean", taskName).buildAndFail()
       assertThat(result.output).contains(
         """
-        |    Expected function Cw62Cti7 of app.cash.zipline.tests.GreetService not found:
-        |      fun hello(kotlin.String): kotlin.String
+        |  Expected function Cw62Cti7 of app.cash.zipline.tests.GreetService not found:
+        |    fun hello(kotlin.String): kotlin.String
         """.trimMargin(),
       )
     } finally {

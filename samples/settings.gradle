@@ -17,15 +17,11 @@ dependencyResolutionManagement {
 
 includeBuild('..') {
   dependencySubstitution {
-    substitute module("app.cash.zipline:zipline") using project(
-      ":zipline")
-    substitute module("app.cash.zipline:zipline-gradle-plugin") using project(
-      ":zipline-gradle-plugin")
-    substitute module("app.cash.zipline:zipline-kotlin-plugin") using project(
-      ":zipline-kotlin-plugin")
-    substitute module("app.cash.zipline:zipline-loader") using project(
-      ":zipline-loader")
-    substitute module("app.cash.zipline:zipline-profiler") using project(
-      ":zipline-profiler")
+    substitute module("app.cash.zipline:zipline") using project(":zipline")
+    substitute module("app.cash.zipline:zipline-cli") using project(":zipline-cli")
+    substitute module("app.cash.zipline:zipline-gradle-plugin") using project(":zipline-gradle-plugin")
+    substitute module("app.cash.zipline:zipline-kotlin-plugin") using project(":zipline-kotlin-plugin")
+    substitute module("app.cash.zipline:zipline-loader") using project(":zipline-loader")
+    substitute module("app.cash.zipline:zipline-profiler") using project(":zipline-profiler")
   }
 }

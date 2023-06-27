@@ -18,19 +18,17 @@ package app.cash.zipline.cli
 import assertk.assertThat
 import assertk.assertions.isNull
 import assertk.assertions.matches
+import com.github.ajalt.clikt.core.NoSuchOption
 import java.io.PrintStream
 import kotlin.test.assertFailsWith
 import okio.Buffer
 import org.junit.Test
-import picocli.CommandLine
-import picocli.CommandLine.UnmatchedArgumentException
 
 class GenerateKeyPairTest {
   private val systemOut = Buffer()
 
   @Test fun happyPathDefault() {
-    val generateKeyPair = fromArgs()
-    generateKeyPair.run()
+    runCommand()
     assertThat(systemOut.readUtf8Line()!!).matches(Regex("  ALGORITHM: Ed25519"))
     assertThat(systemOut.readUtf8Line()!!).matches(Regex(" PUBLIC KEY: [\\da-f]{64}"))
     assertThat(systemOut.readUtf8Line()!!).matches(Regex("PRIVATE KEY: [\\da-f]{64}"))
@@ -38,8 +36,7 @@ class GenerateKeyPairTest {
   }
 
   @Test fun happyPathEd25519() {
-    val generateKeyPair = fromArgs("-a", "Ed25519")
-    generateKeyPair.run()
+    runCommand("-a", "Ed25519")
     assertThat(systemOut.readUtf8Line()!!).matches(Regex("  ALGORITHM: Ed25519"))
     assertThat(systemOut.readUtf8Line()!!).matches(Regex(" PUBLIC KEY: [\\da-f]{64}"))
     assertThat(systemOut.readUtf8Line()!!).matches(Regex("PRIVATE KEY: [\\da-f]{64}"))
@@ -47,8 +44,7 @@ class GenerateKeyPairTest {
   }
 
   @Test fun happyPathEcdsaP256() {
-    val generateKeyPair = fromArgs("-a", "EcdsaP256")
-    generateKeyPair.run()
+    runCommand("-a", "EcdsaP256")
     assertThat(systemOut.readUtf8Line()!!).matches(Regex("  ALGORITHM: EcdsaP256"))
     assertThat(systemOut.readUtf8Line()!!).matches(Regex(" PUBLIC KEY: [\\da-f]{130}"))
     // Expected lengths were determined experimentally!
@@ -57,15 +53,13 @@ class GenerateKeyPairTest {
   }
 
   @Test fun unmatchedArgument() {
-    assertFailsWith<UnmatchedArgumentException> {
-      fromArgs("-unexpected")
+    assertFailsWith<NoSuchOption> {
+      runCommand("-unexpected")
     }
   }
 
-  private fun fromArgs(vararg args: String?): GenerateKeyPair {
-    return CommandLine.populateCommand(
-      GenerateKeyPair(PrintStream(systemOut.outputStream())),
-      *args,
-    )
+  private fun runCommand(vararg args: String) {
+    val command = GenerateKeyPair(PrintStream(systemOut.outputStream()))
+    command.parse(args.toList())
   }
 }
