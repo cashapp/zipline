@@ -18,7 +18,7 @@ package app.cash.zipline.api.validator.fir
 import java.io.File
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.isSupertypeOf
-import org.jetbrains.kotlin.fir.analysis.checkers.toRegularClassSymbol
+import org.jetbrains.kotlin.fir.analysis.checkers.toClassLikeSymbol
 import org.jetbrains.kotlin.fir.declarations.FirDeclaration
 import org.jetbrains.kotlin.fir.declarations.FirFunction
 import org.jetbrains.kotlin.fir.declarations.FirProperty
@@ -41,10 +41,12 @@ import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.types.Variance
 
 fun readFirZiplineApi(
+  javaHome: File,
+  jdkRelease: Int,
   sources: Collection<File>,
   classpath: Collection<File>,
 ): FirZiplineApi {
-  return KotlinFirLoader(sources, classpath).use { loader ->
+  return KotlinFirLoader(javaHome, jdkRelease, sources, classpath).use { loader ->
     val output = loader.load("zipline-api-dump")
     FirZiplineApiReader(output).read()
   }
@@ -142,7 +144,7 @@ internal class FirZiplineApiReader(
 
   /** See [app.cash.zipline.kotlin.asString]. */
   private fun FirTypeRef.asString(): String {
-    val classSymbol = toRegularClassSymbol(session) ?: error("unexpected class: $this")
+    val classLikeSymbol = toClassLikeSymbol(session) ?: error("unexpected class: $this")
 
     val typeRef = when (this) {
       is FirResolvedTypeRef -> delegatedTypeRef ?: this
@@ -150,7 +152,7 @@ internal class FirZiplineApiReader(
     }
 
     return buildString {
-      append(classSymbol.classId.asSingleFqName().asString())
+      append(classLikeSymbol.classId.asSingleFqName().asString())
 
       if (typeRef is FirUserTypeRef) {
         val typeArguments = typeRef.qualifier.lastOrNull()?.typeArgumentList?.typeArguments

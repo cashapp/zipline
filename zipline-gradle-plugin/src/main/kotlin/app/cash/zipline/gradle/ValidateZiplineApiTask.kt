@@ -48,6 +48,12 @@ abstract class ValidateZiplineApiTask @Inject constructor(
   @get:OutputFile
   abstract val ziplineApiFile: RegularFileProperty
 
+  @get:Input
+  abstract val javaHome: Property<String>
+
+  @get:Input
+  abstract val jdkRelease: Property<Int>
+
   @get:InputFiles
   internal val sourcepath = fileCollectionFactory.configurableFiles("sourcepath")
 
@@ -76,6 +82,8 @@ abstract class ValidateZiplineApiTask @Inject constructor(
       it.mode.set(mode)
       it.projectDirectory.set(project.projectDir)
       it.tomlFile.set(tomlFileRelative)
+      it.javaHome.set(File(javaHome.get()))
+      it.jdkRelease.set(jdkRelease.get())
       it.sources.setFrom(sourcepath)
       it.classpath.setFrom(classpath)
     }
@@ -92,6 +100,8 @@ private interface ZiplineApiValidatorParameters : WorkParameters {
   val mode: Property<Mode>
   val projectDirectory: DirectoryProperty
   val tomlFile: RegularFileProperty
+  val javaHome: RegularFileProperty
+  val jdkRelease: Property<Int>
   val sources: ConfigurableFileCollection
   val classpath: ConfigurableFileCollection
 }
@@ -118,6 +128,10 @@ private abstract class ZiplineApiValidatorWorker @Inject constructor(
         subcommand,
         "--toml-file",
         parameters.tomlFile.get().asFile.toRelativeString(workingDirectory),
+        "--java-home",
+        parameters.javaHome.get().asFile.toString(),
+        "--jdk-release",
+        parameters.jdkRelease.get().toString(),
         "--sources",
         parameters.sources.files.joinToString(File.pathSeparator),
         "--class-path",

@@ -31,6 +31,7 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.options.split
 import com.github.ajalt.clikt.parameters.types.file
+import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.path
 import java.io.File
 import kotlin.io.path.exists
@@ -65,6 +66,16 @@ class ValidateZiplineApi(
     .required()
     .help("Path to the TOML file that this command will read and write")
 
+  private val javaHome by option("--java-home")
+    .path()
+    .required()
+    .help("JAVA_HOME to build against")
+
+  private val jdkRelease by option("--jdk-release")
+    .int()
+    .required()
+    .help("JDK release version to build against")
+
   private val sources by option("--sources")
     .file()
     .split(File.pathSeparator)
@@ -84,7 +95,7 @@ class ValidateZiplineApi(
       else -> TomlZiplineApi(listOf())
     }
 
-    val actualZiplineApi = readFirZiplineApi(sources, classpath)
+    val actualZiplineApi = readFirZiplineApi(javaHome.toFile(), jdkRelease, sources, classpath)
 
     when (val decision = makeApiCompatibilityDecision(expectedZiplineApi, actualZiplineApi)) {
       is ActualApiHasProblems -> {

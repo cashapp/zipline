@@ -22,6 +22,7 @@ import org.gradle.api.Task
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
+import org.gradle.internal.jvm.Jvm
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
@@ -31,7 +32,6 @@ import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
 import org.jetbrains.kotlin.gradle.targets.js.ir.KotlinJsIrTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpack
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompileTool
 import org.slf4j.LoggerFactory
 
 @Suppress("unused") // Created reflectively by Gradle.
@@ -135,7 +135,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
   private fun registerZiplineApiTask(
     project: Project,
-    compileTask: KotlinCompileTool,
+    compileTask: KotlinCompile,
     cliConfiguration: Configuration,
     mode: Mode,
     rollupTask: TaskProvider<Task>,
@@ -153,6 +153,17 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     task.configure { task ->
       task.cliClasspath.from(cliConfiguration)
       task.ziplineApiFile.set(project.file("api/zipline-api.toml"))
+
+      // TODO: the validation uses the wrong JDK. We should be getting the JDK from the
+      //     KotlinCompile task (as defaultKotlinJavaToolchain.get().buildJvm), but it doesn't
+      //     make that available for querying. Hack it to use Gradle's 'current' JVM.
+      val buildJvm = Jvm.current()
+      task.javaHome.set(buildJvm.javaHome.path)
+      task.jdkRelease.set(
+        buildJvm.javaVersion?.getMajorVersion()?.toInt()
+        ?: Runtime.version().feature(),
+      )
+
       task.sourcepath.setFrom(compileTask.sources)
       task.classpath.setFrom(compileTask.libraries)
     }
