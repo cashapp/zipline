@@ -157,6 +157,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       // TODO: the validation uses the wrong JDK. We should be getting the JDK from the
       //     KotlinCompile task (as defaultKotlinJavaToolchain.get().buildJvm), but it doesn't
       //     make that available for querying. Hack it to use Gradle's 'current' JVM.
+      //     https://youtrack.jetbrains.com/issue/KT-59735
       val buildJvm = Jvm.current()
       task.javaHome.set(buildJvm.javaHome.path)
       task.jdkRelease.set(
