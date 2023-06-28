@@ -22,6 +22,8 @@ import java.io.File
 import org.junit.Test
 
 internal class FirZiplineApiReaderTest {
+  private val javaHome = File(System.getProperty("java.home"))
+  private val jdkRelease = Runtime.version().feature()
   private val sources = System.getProperty("zipline.internal.sources")
     .split(File.pathSeparator)
     .map(::File)
@@ -33,7 +35,7 @@ internal class FirZiplineApiReaderTest {
 
   @Test
   fun happyPath() {
-    val ziplineApi = readFirZiplineApi(sources, classpath)
+    val ziplineApi = readFirZiplineApi(javaHome, jdkRelease, sources, classpath)
     assertThat(ziplineApi).isEqualTo(
       FirZiplineApi(
         listOf(
@@ -57,6 +59,14 @@ internal class FirZiplineApiReaderTest {
             ),
           ),
           FirZiplineService(
+            name = ImportsJdkTypes::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun jvmIoException(java.io.IOException): kotlin.String"),
+              FirZiplineFunction("fun okioIoException(okio.IOException): kotlin.String"),
+            ),
+          ),
+          FirZiplineService(
             name = UnnecessaryEchoService::class.qualifiedName!!,
             functions = listOf(
               FirZiplineFunction("fun close(): kotlin.Unit"),
@@ -72,14 +82,29 @@ internal class FirZiplineApiReaderTest {
 
   /** This should be included in the output. */
   interface EchoService : ZiplineService {
+    fun echo(request: String): String
     val greeting: String
     var terse: Boolean
-    fun echo(request: String): String
   }
 
   /** This should be included in the output. */
   interface ExtendedEchoService : EchoService {
     fun echoAll(requests: List<String>): List<String>
+  }
+
+  /** This uses externally-defined types. */
+  interface ImportsJdkTypes : ZiplineService {
+    /**
+     * In this test we can also use a JDK class directly. This isn't the case for production code,
+     * where `ZiplineService` declarations should be defined in `commonMain`.
+     */
+    fun jvmIoException(e: java.io.IOException): String
+
+    /**
+     * Okio's IOException is a 3rd-party class that's typealiased to a JDK class. In the generated
+     * TOML file this should use the `okio.IOExeption` name, and not the name it's aliased to.
+     */
+    fun okioIoException(e: okio.IOException): String
   }
 
   /** This should be included in the output, but without additional methods. */

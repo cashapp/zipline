@@ -35,6 +35,7 @@ import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileManager
 import org.jetbrains.kotlin.com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
+import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporterFactory
 import org.jetbrains.kotlin.fir.pipeline.FirResult
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
@@ -50,6 +51,8 @@ import org.jetbrains.kotlin.platform.jvm.JvmPlatforms
  * https://github.com/cashapp/redwood/blob/afe1c9f5f95eec3cff46837a4b2749cbaf72af8b/redwood-tooling-schema/src/main/kotlin/app/cash/redwood/tooling/schema/schemaParserFir.kt#L28
  */
 internal class KotlinFirLoader(
+  private val javaHome: File,
+  private val jdkRelease: Int,
   private val sources: Collection<File>,
   private val classpath: Collection<File>,
 ) : AutoCloseable {
@@ -76,10 +79,10 @@ internal class KotlinFirLoader(
     configuration.put(CommonConfigurationKeys.MODULE_NAME, targetName)
     configuration.put(CLIConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector)
     configuration.put(CommonConfigurationKeys.USE_FIR, true)
+    configuration.put(JVMConfigurationKeys.JDK_HOME, javaHome)
+    configuration.put(JVMConfigurationKeys.JDK_RELEASE, jdkRelease)
     configuration.addKotlinSourceRoots(sources.map { it.absolutePath })
-    // TODO Figure out how to add the JDK modules to the classpath. Currently importing the stdlib
-    //  allows a typealias to resolve to a JDK type which doesn't exist and thus breaks analysis.
-    configuration.addJvmClasspathRoots(classpath.filter { "kotlin-stdlib-" !in it.path })
+    configuration.addJvmClasspathRoots(classpath.toList())
 
     val environment = KotlinCoreEnvironment.createForProduction(
       disposable,
