@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+## [1.1.0] - 2023-07-30
+
+ * New: Gradle tasks `ziplineApiCheck` and `ziplineApiDump`. These tasks work like Kotlin’s
+   [Binary compatibility validator](https://github.com/Kotlin/binary-compatibility-validator):
+   the _Dump_ task writes your public API to a file (`api/zipline-api.toml`) and the the _Check_
+   task confirms that your public API matches that file. These two tasks expose the IDs Zipline uses
+   for functions. The `:ziplineApiCheck` task configures itself a dependency of Gradle's `:check`
+   task: you'll need to run `:ziplineApiDump` when applying this update and each time your public
+   API changes going forward.
+ * Upgrade: [Kotlin 1.8.21][kotlin_1_8_21].
+ * Upgrade: [kotlinx.coroutines 1.7.2][kotlinx_coroutines_1_7_2].
+ * Upgrade: [Kotlin Serialization 1.5.1][kotlin_serialization_1_5_1].
+
+
 ## [1.0.0] - 2023-06-12
 
 This is Zipline's initial stable release.
@@ -375,3 +389,4 @@ Initial release.
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
 [kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
 [kotlinx_coroutines_1_7_1]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.1
+[kotlinx_coroutines_1_7_2]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.2
