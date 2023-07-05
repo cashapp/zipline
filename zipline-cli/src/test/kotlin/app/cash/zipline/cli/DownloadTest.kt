@@ -38,21 +38,21 @@ class DownloadTest {
     val exception = assertFailsWith<MissingOption> {
       runCommand("-D", TMP_DIR_PATH.toString(), "-M", "test.cash.app")
     }
-    assertEquals("Missing option \"--application-name\"", exception.message)
+    assertEquals("--application-name", exception.paramName)
   }
 
   @Test fun downloadMissingManifestUrl() {
     val exception = assertFailsWith<MissingOption> {
       runCommand("-A", "app1", "-D", TMP_DIR_PATH.toString())
     }
-    assertEquals("Missing option \"--manifest-url\"", exception.message)
+    assertEquals("--manifest-url", exception.paramName)
   }
 
   @Test fun downloadMissingDownloadDir() {
     val exception = assertFailsWith<MissingOption> {
       runCommand("-A", "app1", "-M", "test.cash.app")
     }
-    assertEquals("Missing option \"--download-dir\"", exception.message)
+    assertEquals("--download-dir", exception.paramName)
   }
 
   @Test fun downloadFromMockWebServer() {
