@@ -20,6 +20,7 @@ import app.cash.zipline.ZiplineService
 import kotlinx.serialization.ContextualSerializer
 import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
+import kotlinx.serialization.descriptors.SerialDescriptor
 import kotlinx.serialization.encoding.Decoder
 import kotlinx.serialization.encoding.Encoder
 import kotlinx.serialization.modules.SerializersModule
@@ -86,7 +87,27 @@ internal fun serialName(typeName: String, serializers: List<KSerializer<*>>): St
   return buildString {
     append(typeName)
     serializers.joinTo(this, separator = ",", prefix = "<", postfix = ">") {
-      it.descriptor.serialName
+      descriptorName(it.descriptor)
+    }
+  }
+}
+
+private fun descriptorName(typeName: SerialDescriptor): String {
+  return buildString {
+    append(typeName.serialName)
+
+    if (typeName.elementsCount > 0) {
+      append('<')
+
+      val elementIndices = 0 until typeName.elementsCount
+      for (i in elementIndices) {
+        append(descriptorName(typeName.getElementDescriptor(i)))
+        if (i < elementIndices.last) {
+          append(',')
+        }
+      }
+
+      append('>')
     }
   }
 }
