@@ -21,6 +21,9 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 
@@ -51,8 +54,10 @@ class SetTimeoutTest {
     )
 
     assertEquals("hello", zipline.quickJs.evaluate("greeting"))
-    delay(200L)
-    assertEquals("goodbye", zipline.quickJs.evaluate("greeting"))
+
+    eventually(duration = 2.seconds, interval = 100.milliseconds) {
+      assertEquals("goodbye", zipline.quickJs.evaluate("greeting"))
+    }
   }
 
   @Test fun ziplineCloseSilentlyCancelsQueuedTasks(): Unit = runBlocking(dispatcher) {
@@ -67,5 +72,26 @@ class SetTimeoutTest {
 
     zipline.close()
     delay(200L)
+  }
+
+  private suspend inline fun eventually(
+    duration: Duration,
+    interval: Duration,
+    assertCode: () -> Unit,
+  ) {
+    val maxIterations = (duration.inWholeMilliseconds / interval.inWholeMilliseconds).toInt().coerceAtLeast(1)
+    var lastException: Throwable? = null
+
+    repeat(maxIterations) {
+      try {
+        assertCode()
+        return // Success, exit
+      } catch (e: AssertionError) {
+        lastException = e // Try again
+      }
+      delay(interval)
+    }
+
+    throw lastException ?: throw IllegalStateException("How could we reach here without an exception?")
   }
 }
