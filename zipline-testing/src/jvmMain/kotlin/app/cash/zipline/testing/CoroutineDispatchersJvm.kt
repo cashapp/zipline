@@ -19,8 +19,10 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CloseableCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.asCoroutineDispatcher
 
+@ExperimentalCoroutinesApi
 actual fun singleThreadCoroutineDispatcher(
   name: String,
   stackSize: Int,

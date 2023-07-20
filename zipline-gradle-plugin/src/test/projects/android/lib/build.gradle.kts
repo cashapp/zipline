@@ -5,7 +5,7 @@ plugins {
 }
 
 kotlin {
-  android()
+  androidTarget()
   js {
     browser()
     binaries.executable()

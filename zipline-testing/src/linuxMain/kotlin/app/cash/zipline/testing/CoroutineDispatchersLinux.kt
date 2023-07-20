@@ -16,8 +16,10 @@
 package app.cash.zipline.testing
 
 import kotlinx.coroutines.CloseableCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.newSingleThreadContext
 
+@ExperimentalCoroutinesApi
 actual fun singleThreadCoroutineDispatcher(
   name: String,
   stackSize: Int,

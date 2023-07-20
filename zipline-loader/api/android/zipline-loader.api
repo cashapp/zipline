@@ -77,6 +77,7 @@ public final class app/cash/zipline/loader/ManifestVerifier$Companion {
 public final class app/cash/zipline/loader/SignatureAlgorithmId : java/lang/Enum {
 	public static final field EcdsaP256 Lapp/cash/zipline/loader/SignatureAlgorithmId;
 	public static final field Ed25519 Lapp/cash/zipline/loader/SignatureAlgorithmId;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
 	public static fun valueOf (Ljava/lang/String;)Lapp/cash/zipline/loader/SignatureAlgorithmId;
 	public static fun values ()[Lapp/cash/zipline/loader/SignatureAlgorithmId;
 }

@@ -1,4 +1,6 @@
 import app.cash.zipline.gradle.ZiplineCompileTask
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
   kotlin("multiplatform")
@@ -34,4 +36,8 @@ kotlin {
 zipline {
   mainFunction.set("")
   version.set("1.2.3")
+}
+
+plugins.withType<YarnPlugin> {
+  the<YarnRootExtension>().yarnLockAutoReplace = true
 }

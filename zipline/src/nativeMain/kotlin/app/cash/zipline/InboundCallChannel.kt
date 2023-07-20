@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(ExperimentalForeignApi::class)
+
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.CallChannel
@@ -24,6 +26,7 @@ import app.cash.zipline.quickjs.JS_GetPropertyStr
 import app.cash.zipline.quickjs.JS_Invoke
 import app.cash.zipline.quickjs.JS_NewAtom
 import app.cash.zipline.quickjs.JS_NewString
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.utf8
 

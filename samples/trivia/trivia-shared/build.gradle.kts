@@ -1,3 +1,6 @@
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
+
 apply(plugin = "app.cash.zipline")
 
 plugins {
@@ -21,4 +24,8 @@ kotlin {
       }
     }
   }
+}
+
+plugins.withType<YarnPlugin> {
+  the<YarnRootExtension>().yarnLockAutoReplace = true
 }

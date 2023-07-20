@@ -31,7 +31,7 @@ tasks.withType<KotlinNativeTest>().configureEach {
 }
 
 kotlin {
-  android {
+  androidTarget {
     publishLibraryVariants("release")
   }
   jvm()
@@ -87,6 +87,9 @@ kotlin {
     }
     val androidMain by getting {
       dependsOn(jniMain)
+    }
+    val androidInstrumentedTest by getting {
+      dependsOn(hostTest)
     }
     val jvmMain by getting {
       dependsOn(jniMain)
@@ -214,7 +217,7 @@ android {
       }
     }
 
-    packagingOptions {
+    packaging {
       // We get multiple copies of some license files via JNA, which is a transitive dependency of
       // kotlinx-coroutines-test. Don't fail the build on these duplicates.
       resources {
