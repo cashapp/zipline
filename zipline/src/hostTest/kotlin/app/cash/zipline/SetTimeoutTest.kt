@@ -92,6 +92,6 @@ class SetTimeoutTest {
       delay(interval)
     }
 
-    throw lastException ?: throw IllegalStateException("How could we reach here without an exception?")
+    throw lastException!!
   }
 }
