@@ -55,6 +55,7 @@ class SetTimeoutTest {
 
     assertEquals("hello", zipline.quickJs.evaluate("greeting"))
 
+    // TODO: Figure out why this requires retries.
     eventually(duration = 2.seconds, interval = 100.milliseconds) {
       assertEquals("goodbye", zipline.quickJs.evaluate("greeting"))
     }
