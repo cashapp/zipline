@@ -23,11 +23,11 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.withContext
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -35,25 +35,19 @@ import org.junit.Test
  * stacks. Confirm that recursive suspend functions don't crash.
  */
 class ZiplineDispatchTest {
-  @Rule @JvmField
-  val ziplineTestRule = ZiplineTestRule()
-  private val dispatcher = ziplineTestRule.dispatcher
+  private val dispatcher = StandardTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp() {
-    runBlocking(dispatcher) {
-      zipline.loadTestingJs()
-    }
+  @Before fun setUp() = runTest(dispatcher) {
+    zipline.loadTestingJs()
   }
 
-  @After fun tearDown() {
-    runBlocking(dispatcher) {
-      zipline.close()
-    }
+  @After fun tearDown() = runTest(dispatcher) {
+    zipline.close()
   }
 
   @Test
-  fun callbacksCalledInSequence() = runBlocking(dispatcher) {
+  fun callbacksCalledInSequence() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -101,7 +95,7 @@ class ZiplineDispatchTest {
   }
 
   @Test
-  fun recursiveCallbacksInterleaved() = runBlocking(dispatcher) {
+  fun recursiveCallbacksInterleaved() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -165,7 +159,7 @@ class ZiplineDispatchTest {
   }
 
   @Test
-  fun recursiveSuspendingFunctionsDontStackOverflow() = runBlocking(dispatcher) {
+  fun recursiveSuspendingFunctionsDontStackOverflow() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
@@ -190,7 +184,7 @@ class ZiplineDispatchTest {
   }
 
   @Test
-  fun recursiveDelayingFunctionsDontStackOverflow() = runBlocking(dispatcher) {
+  fun recursiveDelayingFunctionsDontStackOverflow() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareSchedulerService()")
     val schedulerService = zipline.take<SchedulerService>("schedulerService")
 
