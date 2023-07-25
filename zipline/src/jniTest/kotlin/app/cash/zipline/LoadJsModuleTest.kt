@@ -17,10 +17,9 @@ package app.cash.zipline
 
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.After
-import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 
 /**
@@ -28,19 +27,14 @@ import org.junit.Test
  * modules in the standard forms that the Kotlin compiler produces.
  */
 class LoadJsModuleTest {
-  @Rule @JvmField
-  val ziplineTestRule = ZiplineTestRule()
-  private val dispatcher = ziplineTestRule.dispatcher
+  private val dispatcher = StandardTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  @Before fun setUp() = runBlocking(dispatcher) {
-  }
-
-  @After fun tearDown() = runBlocking(dispatcher) {
+  @After fun tearDown() = runTest(dispatcher) {
     zipline.close()
   }
 
-  @Test fun factoryPopulatesExports() = runBlocking(dispatcher) {
+  @Test fun factoryPopulatesExports() = runTest(dispatcher) {
     val moduleJs = """
       (function (root, factory) {
         if (typeof define === 'function' && define.amd)
@@ -58,7 +52,7 @@ class LoadJsModuleTest {
       .isEqualTo("""{"someValue":4321}""")
   }
 
-  @Test fun factoryReturnsExports() = runBlocking(dispatcher) {
+  @Test fun factoryReturnsExports() = runTest(dispatcher) {
     val moduleJs = """
       (function webpackUniversalModuleDefinition(root, factory) {
         if(typeof exports === 'object' && typeof module === 'object')
@@ -80,7 +74,7 @@ class LoadJsModuleTest {
       .isEqualTo("""{"someValue":1234}""")
   }
 
-  @Test fun loadModuleBytecode() = runBlocking(dispatcher) {
+  @Test fun loadModuleBytecode() = runTest(dispatcher) {
     val moduleJs = """
       define(function () {
         return {
