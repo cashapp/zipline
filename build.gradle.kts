@@ -8,6 +8,7 @@ import kotlinx.validation.ApiValidationExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
 import org.jetbrains.dokka.DokkaConfiguration.Visibility
+import org.jetbrains.dokka.gradle.AbstractDokkaTask
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
@@ -128,6 +129,16 @@ allprojects {
         remoteUrl.set(URL("https://github.com/cashapp/zipline/tree/trunk/"))
         remoteLineSuffix.set("#L")
       }
+    }
+  }
+
+  // Workaround for https://github.com/Kotlin/dokka/issues/2977.
+  // We disable the C Interop IDE metadata task when generating documentation using Dokka.
+  tasks.withType<AbstractDokkaTask> {
+    @Suppress("UNCHECKED_CAST")
+    val taskClass = Class.forName("org.jetbrains.kotlin.gradle.targets.native.internal.CInteropMetadataDependencyTransformationTask") as Class<Task>
+    parent?.subprojects?.forEach {
+      dependsOn(it.tasks.withType(taskClass))
     }
   }
 
