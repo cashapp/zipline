@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.testing
 
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.toKString
 import okio.FileSystem
 import platform.posix.getenv
@@ -23,6 +24,7 @@ actual val systemFileSystem = FileSystem.SYSTEM
 
 actual val resourcesFileSystem: FileSystem? = null
 
+@OptIn(ExperimentalForeignApi::class)
 internal actual fun getEnv(name: String): String? = getenv(name)?.toKString()
 
 actual val isJni: Boolean = false

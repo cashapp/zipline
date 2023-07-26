@@ -16,13 +16,17 @@
 package app.cash.zipline.testing
 
 import kotlin.coroutines.CoroutineContext
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.convert
 import kotlinx.coroutines.CloseableCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Runnable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.runBlocking
 import platform.Foundation.NSThread
 
+@OptIn(ExperimentalForeignApi::class)
+@ExperimentalCoroutinesApi
 actual fun singleThreadCoroutineDispatcher(
   name: String,
   stackSize: Int,

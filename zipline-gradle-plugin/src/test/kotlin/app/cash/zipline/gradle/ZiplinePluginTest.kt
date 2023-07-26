@@ -77,7 +77,7 @@ class ZiplinePluginTest {
       .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = projectDir.resolve(
-      "lib/build/distributionsZipline",
+      "lib/build/dist/js/productionExecutableZipline",
     )
     assertThat(ziplineOut.listFiles()?.size).isEqualTo(2)
     assertThat(ziplineOut.resolve(manifestFileName).exists()).isTrue()
@@ -130,7 +130,7 @@ class ZiplinePluginTest {
       .contains(result.task(taskName)!!.outcome)
 
     val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline",
+      "lib/build/compileSync/blue/main/developmentExecutable/kotlinZipline",
     )
     val manifest = ziplineOut.resolve(manifestFileName)
     assertThat(manifest.exists()).isTrue()

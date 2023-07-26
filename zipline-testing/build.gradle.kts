@@ -1,6 +1,7 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 
 plugins {
   kotlin("multiplatform")
@@ -87,11 +88,18 @@ kotlin {
   }
 }
 
-// TODO upstream this to ZiplinePlugin
 tasks {
-  withType(KotlinJsCompile::class.java).all {
+  // TODO upstream this to ZiplinePlugin
+  withType<KotlinJsCompile>().all {
     kotlinOptions {
       freeCompilerArgs += listOf("-Xir-per-module")
+    }
+  }
+
+  // https://kotlinlang.org/docs/whatsnew19.html#library-linkage-in-kotlin-native
+  withType<KotlinNativeCompile>().all {
+    kotlinOptions {
+      freeCompilerArgs += listOf("-Xpartial-linkage-loglevel=ERROR")
     }
   }
 

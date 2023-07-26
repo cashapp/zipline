@@ -1,4 +1,6 @@
 import app.cash.zipline.gradle.ZiplineCompileTask
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
   kotlin("multiplatform")
@@ -40,4 +42,8 @@ val launchGreetService by tasks.creating(JavaExec::class) {
 
 zipline {
   mainFunction.set("app.cash.zipline.tests.launchGreetService")
+}
+
+plugins.withType<YarnPlugin> {
+  the<YarnRootExtension>().yarnLockAutoReplace = true
 }

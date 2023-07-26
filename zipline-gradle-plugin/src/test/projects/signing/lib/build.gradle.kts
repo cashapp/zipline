@@ -1,4 +1,6 @@
 import app.cash.zipline.loader.SignatureAlgorithmId.Ed25519
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
   kotlin("multiplatform")
@@ -34,4 +36,8 @@ zipline {
       algorithmId.set(Ed25519)
     }
   }
+}
+
+plugins.withType<YarnPlugin> {
+  the<YarnRootExtension>().yarnLockAutoReplace = true
 }

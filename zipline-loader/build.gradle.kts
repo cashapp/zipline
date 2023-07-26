@@ -16,7 +16,7 @@ plugins {
 
 kotlin {
   jvm()
-  android {
+  androidTarget {
     publishAllLibraryVariants()
   }
   if (false) {
@@ -84,6 +84,9 @@ kotlin {
         implementation(libs.kotlinx.coroutines.test)
         implementation(libs.turbine)
       }
+    }
+    val androidInstrumentedTest by getting {
+      dependsOn(commonTest)
     }
     val jniTest by creating {
       dependsOn(commonTest)
