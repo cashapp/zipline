@@ -428,11 +428,6 @@ fun compile(
   return KotlinCompilation().apply {
     sources = sourceFiles
     useIR = true
-    // https://github.com/ZacSweers/kotlin-compile-testing/pull/124
-    commandLineProcessors = listOf(object : CommandLineProcessor {
-      override val pluginId get() = ""
-      override val pluginOptions get() = emptySet<AbstractCliOption>()
-    })
     compilerPluginRegistrars = listOf(plugin)
     inheritClassPath = true
   }.compile()
