@@ -27,6 +27,7 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
+import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
@@ -419,11 +420,11 @@ class ZiplineKotlinPluginTest {
   }
 }
 
-@OptIn(ExperimentalCompilerApi::class)
+@ExperimentalCompilerApi
 fun compile(
   sourceFiles: List<SourceFile>,
   plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
-): KotlinCompilation.Result {
+): JvmCompilationResult {
   return KotlinCompilation().apply {
     sources = sourceFiles
     useIR = true
@@ -437,10 +438,10 @@ fun compile(
   }.compile()
 }
 
-@OptIn(ExperimentalCompilerApi::class)
+@ExperimentalCompilerApi
 fun compile(
   sourceFile: SourceFile,
   plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
-): KotlinCompilation.Result {
+): JvmCompilationResult {
   return compile(listOf(sourceFile), plugin)
 }
