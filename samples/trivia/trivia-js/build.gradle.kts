@@ -1,4 +1,6 @@
 import app.cash.zipline.gradle.ZiplineCompileTask
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
   kotlin("multiplatform")
@@ -22,8 +24,10 @@ kotlin {
   }
 }
 
-
 zipline {
   mainFunction.set("app.cash.zipline.samples.trivia.launchZipline")
 }
 
+plugins.withType<YarnPlugin> {
+  the<YarnRootExtension>().yarnLockAutoReplace = true
+}

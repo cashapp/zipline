@@ -219,9 +219,9 @@ components.
 
 | Component            | Supported Version | Notes                                                                       |
 |:---------------------|:------------------|:----------------------------------------------------------------------------|
-| Kotlin Compiler      | 1.8.20            | Kotlin compiler plugins do not yet have a stable API.                       |
+| Kotlin Compiler      | 1.9.0             | Kotlin compiler plugins do not yet have a stable API.                       |
 | Kotlin Serialization | 1.5.1             | For `decodeFromDynamic()`, `encodeToDynamic()`, and `ContextualSerializer`. |
-| Kotlin Coroutines    | 1.7.1             | For `transformLatest()` and `Deferred.getCompleted()`.                      |
+| Kotlin Coroutines    | 1.7.3             | For `transformLatest()` and `Deferred.getCompleted()`.                      |
 
 We intend to use stable APIs as soon as they are available.
 
@@ -268,3 +268,4 @@ in this repo as are the release tags. Available versions are listed on
 [qjs]: https://bellard.org/quickjs/
 [trivia.kt]: samples/trivia/trivia-shared/src/commonMain/kotlin/app/cash/zipline/samples/trivia/trivia.kt
 [triviaJs.kt]: samples/trivia/trivia-js/src/jsMain/kotlin/app/cash/zipline/samples/trivia/triviaJs.kt
+

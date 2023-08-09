@@ -22,16 +22,14 @@ import app.cash.zipline.testing.LoggingEventListener
 import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.isEqualTo
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 
 class LeakedServicesTest {
-  @Rule @JvmField
-  val ziplineTestRule = ZiplineTestRule()
-  private val dispatcher = ziplineTestRule.dispatcher
+  private val dispatcher = StandardTestDispatcher()
   private val eventListener = LoggingEventListener()
   private val zipline = Zipline.create(dispatcher, eventListener = eventListener)
 
@@ -44,7 +42,7 @@ class LeakedServicesTest {
     zipline.close()
   }
 
-  @Test fun jvmLeaksService() = runBlocking(dispatcher) {
+  @Test fun jvmLeaksService() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
     allocateAndLeakService()
     awaitGarbageCollection()
@@ -54,7 +52,7 @@ class LeakedServicesTest {
     assertThat(eventListener.take()).isEqualTo("serviceLeaked $name")
   }
 
-  @Test fun jsLeaksService() = runBlocking(dispatcher) {
+  @Test fun jsLeaksService() = runTest(dispatcher) {
     val supService = object : EchoService {
       override fun echo(request: EchoRequest): EchoResponse = error("unexpected call")
     }

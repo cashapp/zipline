@@ -1,4 +1,6 @@
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
+import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
   kotlin("multiplatform")
@@ -12,7 +14,7 @@ kotlin {
   iosX64()
   iosSimulatorArm64()
 
-  android()
+  androidTarget()
 
   js {
     browser()
@@ -63,4 +65,8 @@ android {
 
 zipline {
   mainFunction.set("app.cash.zipline.samples.worldclock.main")
+}
+
+plugins.withType<YarnPlugin> {
+  the<YarnRootExtension>().yarnLockAutoReplace = true
 }

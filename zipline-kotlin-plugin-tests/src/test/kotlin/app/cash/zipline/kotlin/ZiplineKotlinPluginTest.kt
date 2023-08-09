@@ -27,12 +27,11 @@ import assertk.assertions.containsExactly
 import assertk.assertions.isEqualTo
 import assertk.assertions.isInstanceOf
 import assertk.assertions.isNotNull
+import com.tschuchort.compiletesting.JvmCompilationResult
 import com.tschuchort.compiletesting.KotlinCompilation
 import com.tschuchort.compiletesting.SourceFile
 import kotlin.test.assertEquals
 import kotlinx.serialization.KSerializer
-import org.jetbrains.kotlin.compiler.plugin.AbstractCliOption
-import org.jetbrains.kotlin.compiler.plugin.CommandLineProcessor
 import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
 import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.junit.Test
@@ -419,28 +418,23 @@ class ZiplineKotlinPluginTest {
   }
 }
 
-@OptIn(ExperimentalCompilerApi::class)
+@ExperimentalCompilerApi
 fun compile(
   sourceFiles: List<SourceFile>,
   plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
-): KotlinCompilation.Result {
+): JvmCompilationResult {
   return KotlinCompilation().apply {
     sources = sourceFiles
     useIR = true
-    // https://github.com/ZacSweers/kotlin-compile-testing/pull/124
-    commandLineProcessors = listOf(object : CommandLineProcessor {
-      override val pluginId get() = ""
-      override val pluginOptions get() = emptySet<AbstractCliOption>()
-    })
     compilerPluginRegistrars = listOf(plugin)
     inheritClassPath = true
   }.compile()
 }
 
-@OptIn(ExperimentalCompilerApi::class)
+@ExperimentalCompilerApi
 fun compile(
   sourceFile: SourceFile,
   plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
-): KotlinCompilation.Result {
+): JvmCompilationResult {
   return compile(listOf(sourceFile), plugin)
 }

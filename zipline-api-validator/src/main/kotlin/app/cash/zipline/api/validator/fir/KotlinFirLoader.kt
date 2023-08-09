@@ -25,6 +25,7 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.VfsBasedProjectEnvironment
+import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.GroupedKtSources
 import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.ModuleCompilerEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.ModuleCompilerInput
 import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.compileModuleToAnalyzedFir
@@ -102,12 +103,16 @@ internal class KotlinFirLoader(
       }
     }
 
+    val sourceFiles = files.mapTo(mutableSetOf(), ::KtVirtualFileSourceFile)
     val input = ModuleCompilerInput(
       targetId = TargetId(JvmProtoBufUtil.DEFAULT_MODULE_NAME, targetName),
+      groupedSources = GroupedKtSources(
+        platformSources = sourceFiles,
+        commonSources = emptyList(),
+        sourcesByModuleName = mapOf(JvmProtoBufUtil.DEFAULT_MODULE_NAME to sourceFiles),
+      ),
       commonPlatform = CommonPlatforms.defaultCommonPlatform,
-      commonSources = emptyList(),
       platform = JvmPlatforms.unspecifiedJvmPlatform,
-      platformSources = files.map(::KtVirtualFileSourceFile),
       configuration = configuration,
     )
 
