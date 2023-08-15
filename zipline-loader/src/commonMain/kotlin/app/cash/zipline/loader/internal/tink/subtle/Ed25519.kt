@@ -993,18 +993,40 @@ internal object Ed25519 : SignatureAlgorithm {
     // s18 = 0;
 
     // Reduce the bit length of limbs from s6 to s15 to 21-bits.
-    var carry6: Long = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
-    var carry8: Long = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
-    var carry10: Long = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
-    val carry12: Long = s12 + (1 shl 20) shr 21; s13 += carry12; s12 -= carry12 shl 21
-    val carry14: Long = s14 + (1 shl 20) shr 21; s15 += carry14; s14 -= carry14 shl 21
-    val carry16: Long = s16 + (1 shl 20) shr 21; s17 += carry16; s16 -= carry16 shl 21
+    var carry6: Long = s6 + (1 shl 20) shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    var carry8: Long = s8 + (1 shl 20) shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    var carry10: Long = s10 + (1 shl 20) shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
+    val carry12: Long = s12 + (1 shl 20) shr 21
+    s13 += carry12
+    s12 -= carry12 shl 21
+    val carry14: Long = s14 + (1 shl 20) shr 21
+    s15 += carry14
+    s14 -= carry14 shl 21
+    val carry16: Long = s16 + (1 shl 20) shr 21
+    s17 += carry16
+    s16 -= carry16 shl 21
 
-    var carry7: Long = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
-    var carry9: Long = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
-    var carry11: Long = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
-    val carry13: Long = s13 + (1 shl 20) shr 21; s14 += carry13; s13 -= carry13 shl 21
-    val carry15: Long = s15 + (1 shl 20) shr 21; s16 += carry15; s15 -= carry15 shl 21
+    var carry7: Long = s7 + (1 shl 20) shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    var carry9: Long = s9 + (1 shl 20) shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    var carry11: Long = s11 + (1 shl 20) shr 21
+    s12 += carry11
+    s11 -= carry11 shl 21
+    val carry13: Long = s13 + (1 shl 20) shr 21
+    s14 += carry13
+    s13 -= carry13 shl 21
+    val carry15: Long = s15 + (1 shl 20) shr 21
+    s16 += carry15
+    s15 -= carry15 shl 21
 
     // Resume reduction where we left off.
     s5 += s17 * 666643
@@ -1056,19 +1078,43 @@ internal object Ed25519 : SignatureAlgorithm {
     s12 = 0
 
     // Reduce the range of limbs from s0 to s11 to 21-bits.
-    var carry0: Long = s0 + (1 shl 20) shr 21; s1 += carry0; s0 -= carry0 shl 21
-    var carry2: Long = s2 + (1 shl 20) shr 21; s3 += carry2; s2 -= carry2 shl 21
-    var carry4: Long = s4 + (1 shl 20) shr 21; s5 += carry4; s4 -= carry4 shl 21
-    carry6 = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry8 = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry10 = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
+    var carry0: Long = s0 + (1 shl 20) shr 21
+    s1 += carry0
+    s0 -= carry0 shl 21
+    var carry2: Long = s2 + (1 shl 20) shr 21
+    s3 += carry2
+    s2 -= carry2 shl 21
+    var carry4: Long = s4 + (1 shl 20) shr 21
+    s5 += carry4
+    s4 -= carry4 shl 21
+    carry6 = s6 + (1 shl 20) shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    carry8 = s8 + (1 shl 20) shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    carry10 = s10 + (1 shl 20) shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
 
-    var carry1: Long = s1 + (1 shl 20) shr 21; s2 += carry1; s1 -= carry1 shl 21
-    var carry3: Long = s3 + (1 shl 20) shr 21; s4 += carry3; s3 -= carry3 shl 21
-    var carry5: Long = s5 + (1 shl 20) shr 21; s6 += carry5; s5 -= carry5 shl 21
-    carry7 = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry9 = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry11 = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
+    var carry1: Long = s1 + (1 shl 20) shr 21
+    s2 += carry1
+    s1 -= carry1 shl 21
+    var carry3: Long = s3 + (1 shl 20) shr 21
+    s4 += carry3
+    s3 -= carry3 shl 21
+    var carry5: Long = s5 + (1 shl 20) shr 21
+    s6 += carry5
+    s5 -= carry5 shl 21
+    carry7 = s7 + (1 shl 20) shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    carry9 = s9 + (1 shl 20) shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    carry11 = s11 + (1 shl 20) shr 21
+    s12 += carry11
+    s11 -= carry11 shl 21
 
     s0 += s12 * 666643
     s1 += s12 * 470296
@@ -1079,18 +1125,42 @@ internal object Ed25519 : SignatureAlgorithm {
     s12 = 0
 
     // Carry chain reduction to propagate excess bits from s0 to s5 to the most significant limbs.
-    carry0 = s0 shr 21; s1 += carry0; s0 -= carry0 shl 21
-    carry1 = s1 shr 21; s2 += carry1; s1 -= carry1 shl 21
-    carry2 = s2 shr 21; s3 += carry2; s2 -= carry2 shl 21
-    carry3 = s3 shr 21; s4 += carry3; s3 -= carry3 shl 21
-    carry4 = s4 shr 21; s5 += carry4; s4 -= carry4 shl 21
-    carry5 = s5 shr 21; s6 += carry5; s5 -= carry5 shl 21
-    carry6 = s6 shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry7 = s7 shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry8 = s8 shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry9 = s9 shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry10 = s10 shr 21; s11 += carry10; s10 -= carry10 shl 21
-    carry11 = s11 shr 21; s12 += carry11; s11 -= carry11 shl 21
+    carry0 = s0 shr 21
+    s1 += carry0
+    s0 -= carry0 shl 21
+    carry1 = s1 shr 21
+    s2 += carry1
+    s1 -= carry1 shl 21
+    carry2 = s2 shr 21
+    s3 += carry2
+    s2 -= carry2 shl 21
+    carry3 = s3 shr 21
+    s4 += carry3
+    s3 -= carry3 shl 21
+    carry4 = s4 shr 21
+    s5 += carry4
+    s4 -= carry4 shl 21
+    carry5 = s5 shr 21
+    s6 += carry5
+    s5 -= carry5 shl 21
+    carry6 = s6 shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    carry7 = s7 shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    carry8 = s8 shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    carry9 = s9 shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    carry10 = s10 shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
+    carry11 = s11 shr 21
+    s12 += carry11
+    s11 -= carry11 shl 21
 
     // Do one last reduction as s12 might be 1.
     s0 += s12 * 666643
@@ -1101,17 +1171,39 @@ internal object Ed25519 : SignatureAlgorithm {
     s5 -= s12 * 683901
     // s12 = 0;
 
-    carry0 = s0 shr 21; s1 += carry0; s0 -= carry0 shl 21
-    carry1 = s1 shr 21; s2 += carry1; s1 -= carry1 shl 21
-    carry2 = s2 shr 21; s3 += carry2; s2 -= carry2 shl 21
-    carry3 = s3 shr 21; s4 += carry3; s3 -= carry3 shl 21
-    carry4 = s4 shr 21; s5 += carry4; s4 -= carry4 shl 21
-    carry5 = s5 shr 21; s6 += carry5; s5 -= carry5 shl 21
-    carry6 = s6 shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry7 = s7 shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry8 = s8 shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry9 = s9 shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry10 = s10 shr 21; s11 += carry10; s10 -= carry10 shl 21
+    carry0 = s0 shr 21
+    s1 += carry0
+    s0 -= carry0 shl 21
+    carry1 = s1 shr 21
+    s2 += carry1
+    s1 -= carry1 shl 21
+    carry2 = s2 shr 21
+    s3 += carry2
+    s2 -= carry2 shl 21
+    carry3 = s3 shr 21
+    s4 += carry3
+    s3 -= carry3 shl 21
+    carry4 = s4 shr 21
+    s5 += carry4
+    s4 -= carry4 shl 21
+    carry5 = s5 shr 21
+    s6 += carry5
+    s5 -= carry5 shl 21
+    carry6 = s6 shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    carry7 = s7 shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    carry8 = s8 shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    carry9 = s9 shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    carry10 = s10 shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
 
     // Serialize the result into the s.
     s[0] = s0.toByte()
@@ -1228,30 +1320,76 @@ internal object Ed25519 : SignatureAlgorithm {
     var s22: Long = a11 * b11
     var s23: Long = 0
 
-    var carry0: Long = s0 + (1 shl 20) shr 21; s1 += carry0; s0 -= carry0 shl 21
-    var carry2: Long = s2 + (1 shl 20) shr 21; s3 += carry2; s2 -= carry2 shl 21
-    var carry4: Long = s4 + (1 shl 20) shr 21; s5 += carry4; s4 -= carry4 shl 21
-    var carry6: Long = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
-    var carry8: Long = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
-    var carry10: Long = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
-    var carry12: Long = s12 + (1 shl 20) shr 21; s13 += carry12; s12 -= carry12 shl 21
-    var carry14: Long = s14 + (1 shl 20) shr 21; s15 += carry14; s14 -= carry14 shl 21
-    var carry16: Long = s16 + (1 shl 20) shr 21; s17 += carry16; s16 -= carry16 shl 21
-    val carry18: Long = s18 + (1 shl 20) shr 21; s19 += carry18; s18 -= carry18 shl 21
-    val carry20: Long = s20 + (1 shl 20) shr 21; s21 += carry20; s20 -= carry20 shl 21
-    val carry22: Long = s22 + (1 shl 20) shr 21; s23 += carry22; s22 -= carry22 shl 21
+    var carry0: Long = s0 + (1 shl 20) shr 21
+    s1 += carry0
+    s0 -= carry0 shl 21
+    var carry2: Long = s2 + (1 shl 20) shr 21
+    s3 += carry2
+    s2 -= carry2 shl 21
+    var carry4: Long = s4 + (1 shl 20) shr 21
+    s5 += carry4
+    s4 -= carry4 shl 21
+    var carry6: Long = s6 + (1 shl 20) shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    var carry8: Long = s8 + (1 shl 20) shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    var carry10: Long = s10 + (1 shl 20) shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
+    var carry12: Long = s12 + (1 shl 20) shr 21
+    s13 += carry12
+    s12 -= carry12 shl 21
+    var carry14: Long = s14 + (1 shl 20) shr 21
+    s15 += carry14
+    s14 -= carry14 shl 21
+    var carry16: Long = s16 + (1 shl 20) shr 21
+    s17 += carry16
+    s16 -= carry16 shl 21
+    val carry18: Long = s18 + (1 shl 20) shr 21
+    s19 += carry18
+    s18 -= carry18 shl 21
+    val carry20: Long = s20 + (1 shl 20) shr 21
+    s21 += carry20
+    s20 -= carry20 shl 21
+    val carry22: Long = s22 + (1 shl 20) shr 21
+    s23 += carry22
+    s22 -= carry22 shl 21
 
-    var carry1: Long = s1 + (1 shl 20) shr 21; s2 += carry1; s1 -= carry1 shl 21
-    var carry3: Long = s3 + (1 shl 20) shr 21; s4 += carry3; s3 -= carry3 shl 21
-    var carry5: Long = s5 + (1 shl 20) shr 21; s6 += carry5; s5 -= carry5 shl 21
-    var carry7: Long = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
-    var carry9: Long = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
-    var carry11: Long = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
-    var carry13: Long = s13 + (1 shl 20) shr 21; s14 += carry13; s13 -= carry13 shl 21
-    var carry15: Long = s15 + (1 shl 20) shr 21; s16 += carry15; s15 -= carry15 shl 21
-    val carry17: Long = s17 + (1 shl 20) shr 21; s18 += carry17; s17 -= carry17 shl 21
-    val carry19: Long = s19 + (1 shl 20) shr 21; s20 += carry19; s19 -= carry19 shl 21
-    val carry21: Long = s21 + (1 shl 20) shr 21; s22 += carry21; s21 -= carry21 shl 21
+    var carry1: Long = s1 + (1 shl 20) shr 21
+    s2 += carry1
+    s1 -= carry1 shl 21
+    var carry3: Long = s3 + (1 shl 20) shr 21
+    s4 += carry3
+    s3 -= carry3 shl 21
+    var carry5: Long = s5 + (1 shl 20) shr 21
+    s6 += carry5
+    s5 -= carry5 shl 21
+    var carry7: Long = s7 + (1 shl 20) shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    var carry9: Long = s9 + (1 shl 20) shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    var carry11: Long = s11 + (1 shl 20) shr 21
+    s12 += carry11
+    s11 -= carry11 shl 21
+    var carry13: Long = s13 + (1 shl 20) shr 21
+    s14 += carry13
+    s13 -= carry13 shl 21
+    var carry15: Long = s15 + (1 shl 20) shr 21
+    s16 += carry15
+    s15 -= carry15 shl 21
+    val carry17: Long = s17 + (1 shl 20) shr 21
+    s18 += carry17
+    s17 -= carry17 shl 21
+    val carry19: Long = s19 + (1 shl 20) shr 21
+    s20 += carry19
+    s19 -= carry19 shl 21
+    val carry21: Long = s21 + (1 shl 20) shr 21
+    s22 += carry21
+    s21 -= carry21 shl 21
 
     s11 += s23 * 666643
     s12 += s23 * 470296
@@ -1301,18 +1439,40 @@ internal object Ed25519 : SignatureAlgorithm {
     s11 -= s18 * 683901
     // s18 = 0;
 
-    carry6 = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry8 = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry10 = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
-    carry12 = s12 + (1 shl 20) shr 21; s13 += carry12; s12 -= carry12 shl 21
-    carry14 = s14 + (1 shl 20) shr 21; s15 += carry14; s14 -= carry14 shl 21
-    carry16 = s16 + (1 shl 20) shr 21; s17 += carry16; s16 -= carry16 shl 21
+    carry6 = s6 + (1 shl 20) shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    carry8 = s8 + (1 shl 20) shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    carry10 = s10 + (1 shl 20) shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
+    carry12 = s12 + (1 shl 20) shr 21
+    s13 += carry12
+    s12 -= carry12 shl 21
+    carry14 = s14 + (1 shl 20) shr 21
+    s15 += carry14
+    s14 -= carry14 shl 21
+    carry16 = s16 + (1 shl 20) shr 21
+    s17 += carry16
+    s16 -= carry16 shl 21
 
-    carry7 = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry9 = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry11 = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
-    carry13 = s13 + (1 shl 20) shr 21; s14 += carry13; s13 -= carry13 shl 21
-    carry15 = s15 + (1 shl 20) shr 21; s16 += carry15; s15 -= carry15 shl 21
+    carry7 = s7 + (1 shl 20) shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    carry9 = s9 + (1 shl 20) shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    carry11 = s11 + (1 shl 20) shr 21
+    s12 += carry11
+    s11 -= carry11 shl 21
+    carry13 = s13 + (1 shl 20) shr 21
+    s14 += carry13
+    s13 -= carry13 shl 21
+    carry15 = s15 + (1 shl 20) shr 21
+    s16 += carry15
+    s15 -= carry15 shl 21
 
     s5 += s17 * 666643
     s6 += s17 * 470296
@@ -1362,19 +1522,43 @@ internal object Ed25519 : SignatureAlgorithm {
     s5 -= s12 * 683901
     s12 = 0
 
-    carry0 = s0 + (1 shl 20) shr 21; s1 += carry0; s0 -= carry0 shl 21
-    carry2 = s2 + (1 shl 20) shr 21; s3 += carry2; s2 -= carry2 shl 21
-    carry4 = s4 + (1 shl 20) shr 21; s5 += carry4; s4 -= carry4 shl 21
-    carry6 = s6 + (1 shl 20) shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry8 = s8 + (1 shl 20) shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry10 = s10 + (1 shl 20) shr 21; s11 += carry10; s10 -= carry10 shl 21
+    carry0 = s0 + (1 shl 20) shr 21
+    s1 += carry0
+    s0 -= carry0 shl 21
+    carry2 = s2 + (1 shl 20) shr 21
+    s3 += carry2
+    s2 -= carry2 shl 21
+    carry4 = s4 + (1 shl 20) shr 21
+    s5 += carry4
+    s4 -= carry4 shl 21
+    carry6 = s6 + (1 shl 20) shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    carry8 = s8 + (1 shl 20) shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    carry10 = s10 + (1 shl 20) shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
 
-    carry1 = s1 + (1 shl 20) shr 21; s2 += carry1; s1 -= carry1 shl 21
-    carry3 = s3 + (1 shl 20) shr 21; s4 += carry3; s3 -= carry3 shl 21
-    carry5 = s5 + (1 shl 20) shr 21; s6 += carry5; s5 -= carry5 shl 21
-    carry7 = s7 + (1 shl 20) shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry9 = s9 + (1 shl 20) shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry11 = s11 + (1 shl 20) shr 21; s12 += carry11; s11 -= carry11 shl 21
+    carry1 = s1 + (1 shl 20) shr 21
+    s2 += carry1
+    s1 -= carry1 shl 21
+    carry3 = s3 + (1 shl 20) shr 21
+    s4 += carry3
+    s3 -= carry3 shl 21
+    carry5 = s5 + (1 shl 20) shr 21
+    s6 += carry5
+    s5 -= carry5 shl 21
+    carry7 = s7 + (1 shl 20) shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    carry9 = s9 + (1 shl 20) shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    carry11 = s11 + (1 shl 20) shr 21
+    s12 += carry11
+    s11 -= carry11 shl 21
 
     s0 += s12 * 666643
     s1 += s12 * 470296
@@ -1384,18 +1568,42 @@ internal object Ed25519 : SignatureAlgorithm {
     s5 -= s12 * 683901
     s12 = 0
 
-    carry0 = s0 shr 21; s1 += carry0; s0 -= carry0 shl 21
-    carry1 = s1 shr 21; s2 += carry1; s1 -= carry1 shl 21
-    carry2 = s2 shr 21; s3 += carry2; s2 -= carry2 shl 21
-    carry3 = s3 shr 21; s4 += carry3; s3 -= carry3 shl 21
-    carry4 = s4 shr 21; s5 += carry4; s4 -= carry4 shl 21
-    carry5 = s5 shr 21; s6 += carry5; s5 -= carry5 shl 21
-    carry6 = s6 shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry7 = s7 shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry8 = s8 shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry9 = s9 shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry10 = s10 shr 21; s11 += carry10; s10 -= carry10 shl 21
-    carry11 = s11 shr 21; s12 += carry11; s11 -= carry11 shl 21
+    carry0 = s0 shr 21
+    s1 += carry0
+    s0 -= carry0 shl 21
+    carry1 = s1 shr 21
+    s2 += carry1
+    s1 -= carry1 shl 21
+    carry2 = s2 shr 21
+    s3 += carry2
+    s2 -= carry2 shl 21
+    carry3 = s3 shr 21
+    s4 += carry3
+    s3 -= carry3 shl 21
+    carry4 = s4 shr 21
+    s5 += carry4
+    s4 -= carry4 shl 21
+    carry5 = s5 shr 21
+    s6 += carry5
+    s5 -= carry5 shl 21
+    carry6 = s6 shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    carry7 = s7 shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    carry8 = s8 shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    carry9 = s9 shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    carry10 = s10 shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
+    carry11 = s11 shr 21
+    s12 += carry11
+    s11 -= carry11 shl 21
 
     s0 += s12 * 666643
     s1 += s12 * 470296
@@ -1405,17 +1613,39 @@ internal object Ed25519 : SignatureAlgorithm {
     s5 -= s12 * 683901
     // s12 = 0;
 
-    carry0 = s0 shr 21; s1 += carry0; s0 -= carry0 shl 21
-    carry1 = s1 shr 21; s2 += carry1; s1 -= carry1 shl 21
-    carry2 = s2 shr 21; s3 += carry2; s2 -= carry2 shl 21
-    carry3 = s3 shr 21; s4 += carry3; s3 -= carry3 shl 21
-    carry4 = s4 shr 21; s5 += carry4; s4 -= carry4 shl 21
-    carry5 = s5 shr 21; s6 += carry5; s5 -= carry5 shl 21
-    carry6 = s6 shr 21; s7 += carry6; s6 -= carry6 shl 21
-    carry7 = s7 shr 21; s8 += carry7; s7 -= carry7 shl 21
-    carry8 = s8 shr 21; s9 += carry8; s8 -= carry8 shl 21
-    carry9 = s9 shr 21; s10 += carry9; s9 -= carry9 shl 21
-    carry10 = s10 shr 21; s11 += carry10; s10 -= carry10 shl 21
+    carry0 = s0 shr 21
+    s1 += carry0
+    s0 -= carry0 shl 21
+    carry1 = s1 shr 21
+    s2 += carry1
+    s1 -= carry1 shl 21
+    carry2 = s2 shr 21
+    s3 += carry2
+    s2 -= carry2 shl 21
+    carry3 = s3 shr 21
+    s4 += carry3
+    s3 -= carry3 shl 21
+    carry4 = s4 shr 21
+    s5 += carry4
+    s4 -= carry4 shl 21
+    carry5 = s5 shr 21
+    s6 += carry5
+    s5 -= carry5 shl 21
+    carry6 = s6 shr 21
+    s7 += carry6
+    s6 -= carry6 shl 21
+    carry7 = s7 shr 21
+    s8 += carry7
+    s7 -= carry7 shl 21
+    carry8 = s8 shr 21
+    s9 += carry8
+    s8 -= carry8 shl 21
+    carry9 = s9 shr 21
+    s10 += carry9
+    s9 -= carry9 shl 21
+    carry10 = s10 shr 21
+    s11 += carry10
+    s10 -= carry10 shl 21
 
     s[0] = s0.toByte()
     s[1] = (s0 shr 8).toByte()
