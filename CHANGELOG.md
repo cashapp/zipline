@@ -3,7 +3,7 @@
 ## Unreleased
 
 
-## 1.2.0 - 2023-08-09
+## [1.2.0] - 2023-08-09
 
  * Upgrade: [Kotlin 1.9.0](https://github.com/JetBrains/kotlin/releases/tag/v1.9.0)
  * Upgrade: [kotlinx.coroutines 1.7.3](https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.3)
