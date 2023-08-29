@@ -67,5 +67,5 @@ turbine = { module = "app.cash.turbine:turbine", version = "1.0.0" }
 downloadTask-gradle-plugin = { module = "de.undercouch:gradle-download-task", version = "5.5.0" }
 
 [plugins]
-spotless = { id = "com.diffplug.spotless", version = "6.20.0" }
+spotless = { id = "com.diffplug.spotless", version = "6.21.0" }
 zipline-kotlin = { id = "app.cash.zipline.kotlin" }
