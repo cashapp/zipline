@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.testing
 
+import app.cash.zipline.EngineApi
 import app.cash.zipline.Zipline
 import okio.FileSystem
 import okio.Path
@@ -35,12 +36,13 @@ val ziplineRootOrNull: Path?
 internal expect fun getEnv(name: String): String?
 
 /** Load our testing libraries into QuickJS. */
+@OptIn(EngineApi::class)
 fun Zipline.loadTestingJs() {
   // Load modules in topologically-sorted order. In production the zipline-manifest does this.
   loadJsModuleFromResource("./kotlin-kotlin-stdlib-js-ir.js")
   loadJsModuleFromResource("./88b0986a7186d029-atomicfu-js-ir.js")
-  loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-core-js-ir.js")
-  loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-json-js-ir.js")
+  loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-core.js")
+  loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-json.js")
   loadJsModuleFromResource("./kotlinx.coroutines-kotlinx-coroutines-core-js-ir.js")
   loadJsModuleFromResource("./zipline-root-zipline.js")
   loadJsModuleFromResource("./zipline-root-zipline-testing.js")

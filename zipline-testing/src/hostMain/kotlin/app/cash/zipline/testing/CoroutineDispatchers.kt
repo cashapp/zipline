@@ -16,6 +16,7 @@
 package app.cash.zipline.testing
 
 import kotlinx.coroutines.CloseableCoroutineDispatcher
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 /**
  * Returns a CoroutineDispatcher that's confined to a single thread, appropriate for executing
@@ -24,6 +25,7 @@ import kotlinx.coroutines.CloseableCoroutineDispatcher
  * On Apple platforms we need to explicitly set the stack size for background threads; otherwise we
  * get the default of 512 KiB which isn't sufficient for our QuickJS programs.
  */
+@ExperimentalCoroutinesApi
 expect fun singleThreadCoroutineDispatcher(
   name: String,
   stackSize: Int = 1024 * 1024,

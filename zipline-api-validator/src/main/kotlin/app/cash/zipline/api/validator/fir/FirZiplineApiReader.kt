@@ -62,7 +62,7 @@ private val ziplineServiceClassId =
 internal class FirZiplineApiReader(
   output: FirResult,
 ) {
-  private val platformOutput = output.platformOutput
+  private val platformOutput = output.outputs.first()
   private val session: FirSession = platformOutput.session
 
   private val ziplineServiceClass: FirClassLikeSymbol<*>? =

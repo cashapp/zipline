@@ -20,29 +20,28 @@ import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.matches
-import java.util.concurrent.LinkedBlockingDeque
 import java.util.logging.Handler
 import java.util.logging.Level
 import java.util.logging.LogRecord
 import java.util.logging.Logger
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
 
 class ConsoleTest {
-  @Rule @JvmField
-  val ziplineTestRule = ZiplineTestRule()
-  private val dispatcher = ziplineTestRule.dispatcher
+  private val dispatcher = StandardTestDispatcher()
   private val zipline = Zipline.create(dispatcher)
 
-  private val logRecords = LinkedBlockingDeque<LogRecord>()
+  private val logRecords = Channel<LogRecord>(UNLIMITED)
   private val logHandler = object : Handler() {
     override fun publish(record: LogRecord) {
-      logRecords += record
+      logRecords.trySend(record)
     }
 
     override fun flush() {
@@ -55,7 +54,7 @@ class ConsoleTest {
   }
 
   @Before
-  fun setUp(): Unit = runBlocking(dispatcher) {
+  fun setUp(): Unit = runTest(dispatcher) {
     zipline.loadTestingJs()
     Logger.getLogger(Zipline::class.qualifiedName).apply {
       level = Level.FINEST
@@ -64,25 +63,41 @@ class ConsoleTest {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
   }
 
-  @After fun tearDown() = runBlocking(dispatcher) {
+  @After fun tearDown() = runTest(dispatcher) {
     Logger.getLogger(Zipline::class.qualifiedName).removeHandler(logHandler)
     zipline.close()
   }
 
-  @Test fun logAllLevels() = runBlocking(dispatcher) {
+  @Test fun logAllLevels() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogAllLevels()")
-    assertEquals("INFO: 1. this is message 1 of 5. Its level is 'info'.", takeLogMessage())
-    assertEquals("INFO: 2. this message has level 'log'.", takeLogMessage())
-    assertEquals("WARNING: 3. this message has level 'warn'.", takeLogMessage())
-    assertEquals("SEVERE: 4. this message has level 'error'.", takeLogMessage())
-    assertEquals("INFO: 5. this is the last message", takeLogMessage())
+
+    val record1 = logRecords.receive()
+    assertEquals(Level.INFO, record1.level)
+    assertEquals("1. this is message 1 of 5. Its level is 'info'.", record1.message)
+
+    val record2 = logRecords.receive()
+    assertEquals(Level.INFO, record2.level)
+    assertEquals("2. this message has level 'log'.", record2.message)
+
+    val record3 = logRecords.receive()
+    assertEquals(Level.WARNING, record3.level)
+    assertEquals("3. this message has level 'warn'.", record3.message)
+
+    val record4 = logRecords.receive()
+    assertEquals(Level.SEVERE, record4.level)
+    assertEquals("4. this message has level 'error'.", record4.message)
+
+    val record5 = logRecords.receive()
+    assertEquals(Level.INFO, record5.level)
+    assertEquals("5. this is the last message", record5.message)
+
     assertNull(takeLogMessage())
   }
 
-  @Test fun logWithThrowable() = runBlocking(dispatcher) {
+  @Test fun logWithThrowable() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogWithThrowable()")
 
-    val record1 = logRecords.take()
+    val record1 = logRecords.receive()
     assertThat(record1.level).isEqualTo(Level.SEVERE)
     assertThat(record1.message).isEqualTo("1. something went wrong")
     assertThat(record1.thrown.stackTraceToString()).matches(
@@ -96,22 +111,22 @@ class ConsoleTest {
       ),
     )
 
-    val record2 = logRecords.take()
+    val record2 = logRecords.receive()
     assertThat(record2.message).isEqualTo("")
     assertThat(record2.thrown.stackTraceToString()).contains("2. exception only")
 
-    val record3 = logRecords.take()
+    val record3 = logRecords.receive()
     assertThat(record3.message)
       .isEqualTo("3. multiple exceptions IllegalStateException: number two!")
     assertThat(record3.thrown.stackTraceToString()).contains("IllegalStateException: number one!")
 
-    val record4 = logRecords.take()
+    val record4 = logRecords.receive()
     assertThat(record4.message)
       .isEqualTo("4. message second")
     assertThat(record4.thrown.stackTraceToString())
       .contains("IllegalStateException: exception first!")
 
-    val record5 = logRecords.take()
+    val record5 = logRecords.receive()
     assertThat(record5.level).isEqualTo(Level.INFO)
     assertThat(record5.message)
       .isEqualTo("5. info with exception")
@@ -124,14 +139,18 @@ class ConsoleTest {
    * Note that this test is checking our expected behavior, but our behavior falls short of what
    * browsers implement. In particular, we don't do string replacement for `%s`, `%d`, etc.
    */
-  @Test fun logWithArguments() = runBlocking(dispatcher) {
+  @Test fun logWithArguments() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.consoleLogWithArguments()")
-    assertEquals("INFO: this message for %s is a %d out of %d Jesse 8 10", takeLogMessage())
+
+    val record = logRecords.receive()
+    assertEquals(Level.INFO, record.level)
+    assertEquals("this message for %s is a %d out of %d Jesse 8 10", record.message)
+
     assertNull(takeLogMessage())
   }
 
   private fun takeLogMessage(): String? {
-    val record = logRecords.poll() ?: return null
+    val record = logRecords.tryReceive().getOrNull() ?: return null
     return "${record.level}: ${record.message}"
   }
 }

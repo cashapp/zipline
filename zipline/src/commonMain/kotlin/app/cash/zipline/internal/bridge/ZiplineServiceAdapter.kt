@@ -83,6 +83,7 @@ internal fun <T : ZiplineService> ziplineServiceAdapter(
  * key to identify a serializer for [typeName] that has [serializers] for its type arguments.
  */
 @PublishedApi
+@OptIn(ExperimentalSerializationApi::class) // Zipline must track ContextualSerializer API changes.
 internal fun serialName(typeName: String, serializers: List<KSerializer<*>>): String {
   return buildString {
     append(typeName)
