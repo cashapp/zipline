@@ -253,6 +253,8 @@ internal class FlowTest {
     val service = object : DifferentFlowTypesService {
       override fun stringFlow(): Flow<String> = flowOf("a")
       override fun intFlow(): Flow<Int> = flowOf(1)
+      override fun stringListFlow(): Flow<List<String>> = flowOf(listOf("a"))
+      override fun intListFlow(): Flow<List<Int>> = flowOf(listOf(1))
     }
 
     endpointA.bind<DifferentFlowTypesService>("service", service)
@@ -261,11 +263,16 @@ internal class FlowTest {
     assertThat(client.stringFlow().toList()).containsExactly("a")
     assertThat(client.intFlow().toList()).containsExactly(1)
 
+    assertThat(client.stringListFlow().toList()).containsExactly(listOf("a"))
+    assertThat(client.intListFlow().toList()).containsExactly(listOf(1))
+
     scope.close()
   }
 
   interface DifferentFlowTypesService : ZiplineService {
     fun stringFlow(): Flow<String>
     fun intFlow(): Flow<Int>
+    fun stringListFlow(): Flow<List<String>>
+    fun intListFlow(): Flow<List<Int>>
   }
 }
