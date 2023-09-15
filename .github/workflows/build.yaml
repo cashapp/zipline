@@ -21,10 +21,10 @@ jobs:
         arch: [amd64]
         cmake-arch: [x86_64]
         include:
-          - os: macOS-latest
+          - os: macos-11
             arch: x86_64
             cmake-arch: x86_64
-          - os: macOS-latest
+          - os: macos-11
             arch: aarch64
             cmake-arch: arm64
           # TODO: build on 'windows-latest'
