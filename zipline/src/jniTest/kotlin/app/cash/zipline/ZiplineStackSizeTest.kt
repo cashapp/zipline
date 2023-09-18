@@ -66,9 +66,9 @@ class ZiplineStackSizeTest {
     runBlocking(dispatcher) {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareRecursingService()")
 
-      val recurseCount = 1000
+      val recurseCount = 2000
       val service = zipline.take<EchoService>("recursingService")
-      val e = assertFailsWith<ZiplineException> {
+      val e = assertFailsWith<QuickJsException> {
         service.echo(EchoRequest("$recurseCount"))
       }
       assertThat(e.message).isEqualTo("stack overflow")
