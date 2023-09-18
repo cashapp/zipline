@@ -36,10 +36,11 @@ class ZiplineStackSizeTest {
      Thread(null, runnable, "Treehouse", 8 * 1024 * 1024)
   }
   private val dispatcher = executorService.asCoroutineDispatcher()
-  private val zipline = Zipline.create(dispatcher)
+  private lateinit var zipline: Zipline
 
   @Before
   fun setUp() = runBlocking(dispatcher) {
+    zipline = Zipline.create(dispatcher)
     zipline.loadTestingJs()
   }
 
@@ -53,7 +54,7 @@ class ZiplineStackSizeTest {
     runBlocking(dispatcher) {
       zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareRecursingService()")
 
-      val recurseCount = 300
+      val recurseCount = 500
       val service = zipline.take<EchoService>("recursingService")
       val echoResponse = service.echo(EchoRequest("$recurseCount"))
       assertThat(echoResponse).isEqualTo(EchoResponse("recursed $recurseCount times!"))
