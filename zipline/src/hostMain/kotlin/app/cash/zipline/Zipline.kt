@@ -165,8 +165,10 @@ actual class Zipline private constructor(
       eventListener: EventListener = EventListener.NONE,
     ): Zipline {
       val quickJs = QuickJs.create()
-      // TODO(jwilson): figure out a 512 KiB limit caused intermittent stack overflow failures.
-      quickJs.maxStackSize = 0L
+      // The default stack size is 256 KiB. QuickJS is not graceful when the stack size is exceeded
+      // so we set a high limit so it only fails on definitely buggy code, not just recursive code.
+      // Expect callers to use 8 MiB stack sizes for their calling threads.
+      quickJs.maxStackSize = 4 * 1024 * 1024L
       initModuleLoader(quickJs)
 
       val scope = CoroutineScope(dispatcher)
