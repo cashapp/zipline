@@ -3,6 +3,17 @@
 ## Unreleased
 
 
+## [1.3.0] - 2023-09-20
+
+ * Fix: Configure a 6 MiB stack size by default. Previously Zipline didn't enforce any stack
+   size limit, which resulted in difficult-to-diagnose crashes when the stack size was exceeded.
+   Callers must manually ensure their calling stack sizes are larger than 6 MiB!
+ * Fix: Always include type parameters for nested parameterized types.
+ * Fix: Don't double-free when calling `NSData.dataWithBytesNoCopy`. We had a bug where we were
+   double-freeing memory in the Kotlin/Native `EcdsaP256` signature verifier.
+ * Upgrade: [Kotlin Serialization 1.6.0][kotlin_serialization_1_6_0].
+
+
 ## [1.2.0] - 2023-08-09
 
  * Upgrade: [Kotlin 1.9.0](https://github.com/JetBrains/kotlin/releases/tag/v1.9.0)
@@ -395,5 +406,6 @@ Initial release.
 [kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
 [kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
+[kotlin_serialization_1_6_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.6.0
 [kotlinx_coroutines_1_7_1]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.1
 [kotlinx_coroutines_1_7_2]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.2
