@@ -279,7 +279,7 @@ class LoggingEventListener : EventListener() {
     service.toString()
     val isInternalService = service is app.cash.zipline.internal.bridge.CancelCallback ||
       service is app.cash.zipline.internal.bridge.SuspendCallback<*> ||
-      serviceName?.startsWith(app.cash.zipline.internal.ziplineInternalPrefix) == true
+      serviceName?.startsWith(app.cash.zipline.internal.ZIPLINE_INTERNAL_PREFIX) == true
     this.log += LogEntry(
       moduleId = moduleId,
       serviceToString = service?.toString(),

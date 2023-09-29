@@ -81,7 +81,8 @@ data class JsVarDef(
   val name: String,
   val scopeLevel: Int,
   val scopeNext: Int,
-  val kind: Int, // JsVarKindEnum
+  // JsVarKindEnum
+  val kind: Int,
   val isConst: Boolean,
   val isLexical: Boolean,
   val isCaptured: Boolean,
@@ -94,7 +95,8 @@ data class JsClosureVar(
   val isArg: Boolean,
   val isConst: Boolean,
   val isLexical: Boolean,
-  val kind: Int, // JsVarKindEnum
+  // JsVarKindEnum
+  val kind: Int,
 )
 
 data class Debug(

@@ -16,8 +16,8 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.ALPHA_URL
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.BRAVO_URL
 import app.cash.zipline.testing.systemFileSystem
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -45,8 +45,8 @@ class DownloadOnlyFetcherReceiverTest {
   @Test
   fun getFileFromNetworkSaveToFs() = runBlocking {
     httpClient.filePathToByteString = mapOf(
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
 
     loader.download("test", downloadDir, fileSystem, testFixtures.embeddedLoadedManifest)

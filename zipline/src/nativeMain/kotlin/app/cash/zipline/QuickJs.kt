@@ -18,8 +18,8 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.CallChannel
-import app.cash.zipline.internal.bridge.inboundChannelName
-import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.internal.bridge.INBOUND_CHANNEL_NAME
+import app.cash.zipline.internal.bridge.OUTBOUND_CHANNEL_NAME
 import app.cash.zipline.quickjs.JSClassDef
 import app.cash.zipline.quickjs.JSClassIDVar
 import app.cash.zipline.quickjs.JSContext
@@ -260,7 +260,8 @@ actual class QuickJs private constructor(
     val compiled = JS_Eval(
       contextForCompiling,
       sourceCodeUtf8,
-      (sourceCodeUtf8.size - 1).convert(), // drop trailing '\0'.
+      // Drop trailing '\0':
+      (sourceCodeUtf8.size - 1).convert(),
       fileName.utf8,
       JS_EVAL_FLAG_COMPILE_ONLY or JS_EVAL_FLAG_STRICT,
     )
@@ -322,10 +323,10 @@ actual class QuickJs private constructor(
     checkNotClosed()
 
     val globalThis = JS_GetGlobalObject(context)
-    val propertyName = JS_NewAtom(context, outboundChannelName)
+    val propertyName = JS_NewAtom(context, OUTBOUND_CHANNEL_NAME)
     try {
       if (JS_HasProperty(context, globalThis, propertyName) != 0) {
-        throw IllegalStateException("A global object called $outboundChannelName already exists")
+        throw IllegalStateException("A global object called $OUTBOUND_CHANNEL_NAME already exists")
       }
 
       val outboundCallChannelClassId = memScoped {
@@ -377,11 +378,11 @@ actual class QuickJs private constructor(
     checkNotClosed()
 
     val globalThis = JS_GetGlobalObject(context)
-    val inboundChannelAtom = JS_NewAtom(context, inboundChannelName)
+    val inboundChannelAtom = JS_NewAtom(context, INBOUND_CHANNEL_NAME)
     val hasProperty = JS_HasProperty(context, globalThis, inboundChannelAtom) != 0
     JS_FreeValue(context, globalThis)
     JS_FreeAtom(context, inboundChannelAtom)
-    check(hasProperty) { "A global JavaScript object called $inboundChannelName was not found. Try confirming that Zipline.get() has been called." }
+    check(hasProperty) { "A global JavaScript object called $INBOUND_CHANNEL_NAME was not found. Try confirming that Zipline.get() has been called." }
 
     return InboundCallChannel(this)
   }

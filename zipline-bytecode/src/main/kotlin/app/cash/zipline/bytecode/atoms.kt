@@ -74,7 +74,8 @@ class MutableAtomSet(
 
 /** This is computed dynamically at QuickJS boot, and depends on build flags. */
 private val BUILT_IN_ATOMS: List<JsString> = listOf(
-  "\u0000", // JS_ATOM_NULL
+  // JS_ATOM_NULL
+  "\u0000",
   "null",
   "false",
   "true",
@@ -270,18 +271,19 @@ private val BUILT_IN_ATOMS: List<JsString> = listOf(
   "TypeError",
   "URIError",
   "InternalError",
-  "<brand>", // Symbols
-  "Symbol.toPrimitive", // Symbols
-  "Symbol.iterator", // Symbols
-  "Symbol.match", // Symbols
-  "Symbol.matchAll", // Symbols
-  "Symbol.replace", // Symbols
-  "Symbol.search", // Symbols
-  "Symbol.split", // Symbols
-  "Symbol.toStringTag", // Symbols
-  "Symbol.isConcatSpreadable", // Symbols
-  "Symbol.hasInstance", // Symbols
-  "Symbol.species", // Symbols
-  "Symbol.unscopables", // Symbols
-  "Symbol.asyncIterator", // Symbols
+  // Symbols:
+  "<brand>",
+  "Symbol.toPrimitive",
+  "Symbol.iterator",
+  "Symbol.match",
+  "Symbol.matchAll",
+  "Symbol.replace",
+  "Symbol.search",
+  "Symbol.split",
+  "Symbol.toStringTag",
+  "Symbol.isConcatSpreadable",
+  "Symbol.hasInstance",
+  "Symbol.species",
+  "Symbol.unscopables",
+  "Symbol.asyncIterator",
 ).map { it.toJsString() }

@@ -22,7 +22,6 @@ import app.cash.zipline.loader.ZiplineFile
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -48,18 +47,18 @@ class LoaderTestFixtures {
   val manifest = ZiplineManifest.create(
     modules = mapOf(
       "bravo" to ZiplineManifest.Module(
-        url = bravoRelativeUrl,
+        url = BRAVO_RELATIVE_URL,
         sha256 = bravoByteString.sha256(),
         dependsOnIds = listOf("alpha"),
       ),
       "alpha" to ZiplineManifest.Module(
-        url = alphaRelativeUrl,
+        url = ALPHA_RELATIVE_URL,
         sha256 = alphaByteString.sha256(),
         dependsOnIds = listOf(),
       ),
     ),
     mainFunction = "zipline.ziplineMain",
-    baseUrl = manifestUrl,
+    baseUrl = MANIFEST_URL,
   )
 
   val manifestJsonString = manifest.encodeJson()
@@ -99,11 +98,11 @@ class LoaderTestFixtures {
   }
 
   companion object {
-    const val alphaRelativeUrl = "alpha.zipline"
-    const val bravoRelativeUrl = "bravo.zipline"
-    const val alphaUrl = "https://example.com/files/alpha.zipline"
-    const val bravoUrl = "https://example.com/files/bravo.zipline"
-    const val manifestUrl = "https://example.com/files/default.manifest.zipline.json"
+    const val ALPHA_RELATIVE_URL = "alpha.zipline"
+    const val BRAVO_RELATIVE_URL = "bravo.zipline"
+    const val ALPHA_URL = "https://example.com/files/alpha.zipline"
+    const val BRAVO_URL = "https://example.com/files/bravo.zipline"
+    const val MANIFEST_URL = "https://example.com/files/default.manifest.zipline.json"
 
     fun createRelativeManifest(
       seed: String,

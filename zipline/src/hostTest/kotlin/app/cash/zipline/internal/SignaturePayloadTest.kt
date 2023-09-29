@@ -80,8 +80,10 @@ class SignaturePayloadTest {
 
     val manifestB = manifestA.copy(
       signatures = mapOf(
-        "sigA" to "0f91508b8451a8ed4eedf723f22613ff", // Last character is changed.
-        "sigB" to "55a3605081f20817859d494103bc43d8", // Last character is changed.
+        // Last character is changed.
+        "sigA" to "0f91508b8451a8ed4eedf723f22613ff",
+        // Last character is changed.
+        "sigB" to "55a3605081f20817859d494103bc43d8",
       ),
     )
 

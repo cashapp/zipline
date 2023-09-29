@@ -308,7 +308,8 @@ class ApiCompatibilityDecisionTest {
           functions = listOf(
             FirZiplineFunction(
               "fun echo(kotlin.String): kotlin.String".signatureHash(),
-              "fun renamedFromEcho(kotlin.String): kotlin.String", // Renamed function!
+              // Renamed function!
+              "fun renamedFromEcho(kotlin.String): kotlin.String",
             ),
           ),
         ),

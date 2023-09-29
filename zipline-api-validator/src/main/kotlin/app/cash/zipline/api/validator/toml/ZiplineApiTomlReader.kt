@@ -48,7 +48,7 @@ internal class TomlZiplineApiReader(
       val token = source.select(readServicesToken)
       when {
         // [com.example.SampleService]
-        token == readServicesTokenOpenBrace -> {
+        token == READ_SERVICES_TOKEN_OPEN_BRACE -> {
           val serviceName = readTableHeader()
           services += readService(serviceName)
         }
@@ -68,7 +68,7 @@ internal class TomlZiplineApiReader(
 
       when (source.select(readServiceToken)) {
         // functions = [ ... ]
-        readServicesTokenFunctions -> {
+        READ_SERVICES_TOKEN_FUNCTIONS -> {
           skipWhitespace()
           if (source.select(equals) == -1) throw IOException("expected '='")
           skipWhitespace()
@@ -93,17 +93,17 @@ internal class TomlZiplineApiReader(
     while (true) {
       val comment = readComment()
       when (source.select(readFunctionToken)) {
-        readFunctionQuote -> {
+        READ_FUNCTION_QUOTE -> {
           val functionId = readString()
           skipWhitespace()
           result += TomlZiplineFunction(comment ?: "", functionId)
           when (source.select(afterFunctionToken)) {
-            afterFunctionComma -> Unit
-            afterFunctionCloseBrace -> break
+            AFTER_FUNCTION_COMMA -> Unit
+            AFTER_FUNCTION_CLOSE_BRACE -> break
             else -> throw IOException("expected ',' or ']'")
           }
         }
-        readFunctionCloseBrace -> break
+        READ_FUNCTION_CLOSE_BRACE -> break
         else -> throw IOException("expected '\"' or ']'")
       }
     }
@@ -159,29 +159,29 @@ internal class TomlZiplineApiReader(
       "[".encodeUtf8(),
     )
 
-    const val readServicesTokenOpenBrace = 0
+    const val READ_SERVICES_TOKEN_OPEN_BRACE = 0
 
     val readServiceToken = Options.of(
       "functions".encodeUtf8(),
     )
 
-    const val readServicesTokenFunctions = 0
+    const val READ_SERVICES_TOKEN_FUNCTIONS = 0
 
     val readFunctionToken = Options.of(
       "\"".encodeUtf8(),
       "]".encodeUtf8(),
     )
 
-    const val readFunctionQuote = 0
-    const val readFunctionCloseBrace = 1
+    const val READ_FUNCTION_QUOTE = 0
+    const val READ_FUNCTION_CLOSE_BRACE = 1
 
     val afterFunctionToken = Options.of(
       ",".encodeUtf8(),
       "]".encodeUtf8(),
     )
 
-    const val afterFunctionComma = 0
-    const val afterFunctionCloseBrace = 1
+    const val AFTER_FUNCTION_COMMA = 0
+    const val AFTER_FUNCTION_CLOSE_BRACE = 1
 
     val whitespace = Options.of(
       " ".encodeUtf8(),
@@ -191,7 +191,8 @@ internal class TomlZiplineApiReader(
     )
 
     val comment = Options.of(
-      "# ".encodeUtf8(), // Prefer to skip a space after a comment.
+      // Prefer to skip a space after a comment.
+      "# ".encodeUtf8(),
       "#".encodeUtf8(),
     )
 

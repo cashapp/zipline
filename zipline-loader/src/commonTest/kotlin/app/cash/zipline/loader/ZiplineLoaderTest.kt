@@ -22,12 +22,12 @@ import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.internal.systemEpochMsClock
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.ALPHA_URL
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.BRAVO_URL
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.MANIFEST_URL
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.assertDownloadedToEmbeddedManifest
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createJs
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.createRelativeManifest
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
 import app.cash.zipline.testing.systemFileSystem
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
@@ -72,8 +72,8 @@ class ZiplineLoaderTest {
   @Test
   fun happyPath() = runBlocking {
     httpClient.filePathToByteString = mapOf(
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
     val zipline = loader.loadOrFail("test", testFixtures.manifest)
     assertEquals(
@@ -90,11 +90,11 @@ class ZiplineLoaderTest {
   @Test
   fun loadManifestFromUrl() = runBlocking {
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      MANIFEST_URL to testFixtures.manifestNoBaseUrlByteString,
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
-    val zipline = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
+    val zipline = (loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
     assertEquals(
       zipline.getLog(),
       """
@@ -110,11 +110,11 @@ class ZiplineLoaderTest {
   fun loaderUsesCache() = runBlocking {
     // load, no cache hit, download
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      MANIFEST_URL to testFixtures.manifestNoBaseUrlByteString,
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
-    val ziplineColdCache = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
+    val ziplineColdCache = (loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
     assertEquals(
       ziplineColdCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -127,10 +127,10 @@ class ZiplineLoaderTest {
 
     // load, cache hit, no download
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
+      MANIFEST_URL to testFixtures.manifestNoBaseUrlByteString,
       // Note no actual alpha/bravo files are available on the network
     )
-    val ziplineWarmedCache = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
+    val ziplineWarmedCache = (loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
     assertEquals(
       ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -155,10 +155,10 @@ class ZiplineLoaderTest {
 
     // load, resources hit, no download via cache
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestByteString,
+      MANIFEST_URL to testFixtures.manifestByteString,
       // Note no actual alpha/bravo files are available on the cache / network
     )
-    val zipline = (loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
+    val zipline = (loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
     assertEquals(
       zipline.getLog(),
       """
@@ -180,11 +180,11 @@ class ZiplineLoaderTest {
     assertFalse(downloadFileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
 
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestNoBaseUrlByteString,
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      MANIFEST_URL to testFixtures.manifestNoBaseUrlByteString,
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
-    loader.download("test", downloadDir, downloadFileSystem, manifestUrl)
+    loader.download("test", downloadDir, downloadFileSystem, MANIFEST_URL)
 
     assertDownloadedToEmbeddedManifest(
       testFixtures.manifest,
@@ -226,9 +226,9 @@ class ZiplineLoaderTest {
     assertFalse(fileSystem.exists(downloadDir / testFixtures.bravoSha256Hex))
 
     httpClient.filePathToByteString = mapOf(
-      manifestUrl to testFixtures.manifestByteString,
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      MANIFEST_URL to testFixtures.manifestByteString,
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
     loader.download("test", downloadDir, fileSystem, testFixtures.embeddedLoadedManifest)
 

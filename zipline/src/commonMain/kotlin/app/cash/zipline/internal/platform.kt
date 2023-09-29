@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.internal
 
-internal const val ziplineInternalPrefix = "zipline/"
+internal const val ZIPLINE_INTERNAL_PREFIX = "zipline/"
 internal expect val passByReferencePrefix: String
-internal const val ziplineHostName = "${ziplineInternalPrefix}host"
-internal const val ziplineGuestName = "${ziplineInternalPrefix}guest"
+internal const val ZIPLINE_HOST_NAME = "${ZIPLINE_INTERNAL_PREFIX}host"
+internal const val ZIPLINE_GUEST_NAME = "${ZIPLINE_INTERNAL_PREFIX}guest"

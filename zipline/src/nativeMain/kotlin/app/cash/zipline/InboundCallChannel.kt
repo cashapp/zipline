@@ -18,7 +18,7 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.CallChannel
-import app.cash.zipline.internal.bridge.inboundChannelName
+import app.cash.zipline.internal.bridge.INBOUND_CHANNEL_NAME
 import app.cash.zipline.quickjs.JS_FreeAtom
 import app.cash.zipline.quickjs.JS_FreeValue
 import app.cash.zipline.quickjs.JS_GetGlobalObject
@@ -39,7 +39,7 @@ internal class InboundCallChannel(
     quickJs.checkNotClosed()
 
     val globalThis = JS_GetGlobalObject(context)
-    val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
+    val inboundChannel = JS_GetPropertyStr(context, globalThis, INBOUND_CHANNEL_NAME)
     val property = JS_NewAtom(context, "call")
     val arg0 = JS_NewString(context, callJson.utf8)
 
@@ -62,7 +62,7 @@ internal class InboundCallChannel(
     quickJs.checkNotClosed()
 
     val globalThis = JS_GetGlobalObject(context)
-    val inboundChannel = JS_GetPropertyStr(context, globalThis, inboundChannelName)
+    val inboundChannel = JS_GetPropertyStr(context, globalThis, INBOUND_CHANNEL_NAME)
     val property = JS_NewAtom(context, "disconnect")
     val arg0 = JS_NewString(context, instanceName.utf8)
 

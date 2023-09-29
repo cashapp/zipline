@@ -16,9 +16,9 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.manifestUrl
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.ALPHA_URL
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.BRAVO_URL
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.MANIFEST_URL
 import app.cash.zipline.loader.testing.SampleKeys
 import app.cash.zipline.testing.LoggingEventListener
 import kotlin.test.AfterTest
@@ -66,11 +66,11 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(testFixtures.manifest)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifest.encodeJson().encodeUtf8(),
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      MANIFEST_URL to manifest.encodeJson().encodeUtf8(),
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
-    val zipline = (tester.loader.loadOnce("test", manifestUrl) as LoadResult.Success).zipline
+    val zipline = (tester.loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
     zipline.close()
 
     assertContains(eventListener.takeAll(), "manifestVerified test key1")
@@ -96,11 +96,11 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(manifestWithBadChecksum)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifest.encodeJson().encodeUtf8(),
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.alphaByteString,
+      MANIFEST_URL to manifest.encodeJson().encodeUtf8(),
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.alphaByteString,
     )
-    val result = tester.loader.loadOnce("test", manifestUrl)
+    val result = tester.loader.loadOnce("test", MANIFEST_URL)
     assertTrue(result is LoadResult.Failure)
     assertTrue(result.exception is IllegalStateException)
     assertEquals("checksum mismatch for bravo", result.exception.message)
@@ -117,11 +117,11 @@ class ZiplineLoaderSigningTest {
     val manifest = signer.sign(testFixtures.manifest)
 
     tester.httpClient.filePathToByteString = mapOf(
-      manifestUrl to manifest.encodeJson().encodeUtf8(),
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      MANIFEST_URL to manifest.encodeJson().encodeUtf8(),
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
-    val loadResult = tester.loader.loadOnce("test", manifestUrl)
+    val loadResult = tester.loader.loadOnce("test", MANIFEST_URL)
     assertEquals(
       "manifest signature for key key1 did not verify!",
       (loadResult as LoadResult.Failure).exception.message,

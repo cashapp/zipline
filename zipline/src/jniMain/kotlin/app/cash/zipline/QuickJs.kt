@@ -16,8 +16,8 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.CallChannel
-import app.cash.zipline.internal.bridge.inboundChannelName
-import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.internal.bridge.INBOUND_CHANNEL_NAME
+import app.cash.zipline.internal.bridge.OUTBOUND_CHANNEL_NAME
 import app.cash.zipline.internal.log
 import java.io.Closeable
 
@@ -113,11 +113,11 @@ actual class QuickJs private constructor(
   }
 
   internal actual fun initOutboundChannel(outboundChannel: CallChannel) {
-    setOutboundCallChannel(context, outboundChannelName, outboundChannel)
+    setOutboundCallChannel(context, OUTBOUND_CHANNEL_NAME, outboundChannel)
   }
 
   internal actual fun getInboundChannel(): CallChannel {
-    val instance = getInboundCallChannel(context, inboundChannelName)
+    val instance = getInboundCallChannel(context, INBOUND_CHANNEL_NAME)
     if (instance == 0L) {
       throw OutOfMemoryError("Cannot create QuickJs proxy to inbound channel")
     }

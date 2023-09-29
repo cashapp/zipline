@@ -30,7 +30,7 @@ internal object GlobalBridge : GuestService, CallChannel {
   private val jobs = mutableMapOf<Int, Job>()
 
   private val zipline: Zipline
-    get() = THE_ONLY_ZIPLINE ?: error("Zipline isn't ready: did you call Zipline.get() yet?")
+    get() = theOnlyZipline ?: error("Zipline isn't ready: did you call Zipline.get() yet?")
 
   private val inboundChannel: CallChannel
     get() = zipline.endpoint.inboundChannel

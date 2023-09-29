@@ -52,7 +52,8 @@ internal class ZiplineServiceTypeTest {
     val close = type.functions[0]
     assertEquals("fun close(): kotlin.Unit", close.signature)
     assertEquals(
-      "moYx+T3e", // close.name.signatureHash().
+      // close.name.signatureHash().
+      "moYx+T3e",
       close.id,
     )
     assertFalse(close.isSuspending)
@@ -64,7 +65,8 @@ internal class ZiplineServiceTypeTest {
       echo.signature,
     )
     assertEquals(
-      "tksid3cr", // echo.name.signatureHash().
+      // echo.name.signatureHash().
+      "tksid3cr",
       echo.id,
     )
     assertFalse(echo.isSuspending)

@@ -17,11 +17,11 @@ package app.cash.zipline
 
 import app.cash.zipline.internal.GuestService
 import app.cash.zipline.internal.HostService
+import app.cash.zipline.internal.ZIPLINE_GUEST_NAME
+import app.cash.zipline.internal.ZIPLINE_HOST_NAME
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
-import app.cash.zipline.internal.ziplineGuestName
-import app.cash.zipline.internal.ziplineHostName
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -66,7 +66,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
   internal actual val clientNames: Set<String>
     get() = host.serviceNames
 
-  internal val host: HostService = endpoint.take(ziplineHostName)
+  internal val host: HostService = endpoint.take(ZIPLINE_HOST_NAME)
 
   actual fun <T : ZiplineService> bind(name: String, instance: T) {
     error("unexpected call to Zipline.bind: is the Zipline plugin configured?")
@@ -99,8 +99,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
 
   companion object {
     fun get(serializersModule: SerializersModule = EmptySerializersModule()): Zipline {
-      val theOnlyZipline = THE_ONLY_ZIPLINE
-      if (theOnlyZipline != null) {
+      theOnlyZipline?.let { theOnlyZipline ->
         require(serializersModule == theOnlyZipline.endpoint.userSerializersModule) {
           "get() called multiple times with non-equal serializersModule instances"
         }
@@ -109,8 +108,8 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
 
       return Zipline(serializersModule)
         .apply {
-          bind<GuestService>(ziplineGuestName, GlobalBridge)
-          THE_ONLY_ZIPLINE = this
+          bind<GuestService>(ZIPLINE_GUEST_NAME, GlobalBridge)
+          theOnlyZipline = this
         }
     }
   }
@@ -123,4 +122,4 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
  * Note that the host platform won't necessarily have a singleton Zipline; it'll have one Zipline
  * instance per QuickJS VM.
  */
-internal var THE_ONLY_ZIPLINE: Zipline? = null
+internal var theOnlyZipline: Zipline? = null

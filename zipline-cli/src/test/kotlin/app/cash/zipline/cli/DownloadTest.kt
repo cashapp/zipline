@@ -28,7 +28,7 @@ import okio.FileSystem
 import org.junit.Test
 
 class DownloadTest {
-  private val TMP_DIR_PATH = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "zipline-download"
+  private val tmpDirPath = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "zipline-download"
 
   private val webServer = MockWebServer()
   private val testFixtures = LoaderTestFixtures()
@@ -36,14 +36,14 @@ class DownloadTest {
 
   @Test fun downloadMissingApplicationName() {
     val exception = assertFailsWith<MissingOption> {
-      runCommand("-D", TMP_DIR_PATH.toString(), "-M", "test.cash.app")
+      runCommand("-D", tmpDirPath.toString(), "-M", "test.cash.app")
     }
     assertEquals("--application-name", exception.paramName)
   }
 
   @Test fun downloadMissingManifestUrl() {
     val exception = assertFailsWith<MissingOption> {
-      runCommand("-A", "app1", "-D", TMP_DIR_PATH.toString())
+      runCommand("-A", "app1", "-D", tmpDirPath.toString())
     }
     assertEquals("--manifest-url", exception.paramName)
   }
@@ -57,9 +57,9 @@ class DownloadTest {
 
   @Test fun downloadFromMockWebServer() {
     // Wipe and re-create local test download directory
-    fileSystem.deleteRecursively(TMP_DIR_PATH)
-    fileSystem.createDirectories(TMP_DIR_PATH)
-    assertEquals(0, fileSystem.list(TMP_DIR_PATH).size)
+    fileSystem.deleteRecursively(tmpDirPath)
+    fileSystem.createDirectories(tmpDirPath)
+    assertEquals(0, fileSystem.list(tmpDirPath).size)
 
     // Seed mock web server with zipline manifest and files
     // Zipline files
@@ -93,12 +93,12 @@ class DownloadTest {
     val manifestUrl = webServer.url("/latest/app/manifest.zipline.json").toString()
 
     // Download using the CLI
-    runCommand("-A", applicationName, "-D", TMP_DIR_PATH.toString(), "-M", manifestUrl)
+    runCommand("-A", applicationName, "-D", tmpDirPath.toString(), "-M", manifestUrl)
 
     // Check that files were downloaded
-    assertTrue(fileSystem.exists(TMP_DIR_PATH))
-    assertTrue(fileSystem.exists(TMP_DIR_PATH / getApplicationManifestFileName(applicationName)))
-    assertTrue(fileSystem.exists(TMP_DIR_PATH / testFixtures.alphaSha256Hex))
+    assertTrue(fileSystem.exists(tmpDirPath))
+    assertTrue(fileSystem.exists(tmpDirPath / getApplicationManifestFileName(applicationName)))
+    assertTrue(fileSystem.exists(tmpDirPath / testFixtures.alphaSha256Hex))
   }
 
   @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.

@@ -141,7 +141,8 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     rollupTask: TaskProvider<Task>,
   ) {
     val task = project.tasks.register(
-      "${compileTask.name}ZiplineApi$mode", // Like 'compileKotlinJvmZiplineApiCheck'
+      // Like 'compileKotlinJvmZiplineApiCheck'
+      "${compileTask.name}ZiplineApi$mode",
       ValidateZiplineApiTask::class.java,
       mode,
     )

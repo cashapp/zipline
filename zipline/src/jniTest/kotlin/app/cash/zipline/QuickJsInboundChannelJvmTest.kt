@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.inboundChannelName
+import app.cash.zipline.internal.bridge.INBOUND_CHANNEL_NAME
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
@@ -41,10 +41,10 @@ class QuickJsInboundChannelJvmTest {
   fun setUp() {
     quickJs.evaluate(
       """
-      globalThis.$inboundChannelName = {};
-      globalThis.$inboundChannelName.call = function(instanceName, funName, encodedArguments) {
+      globalThis.$INBOUND_CHANNEL_NAME = {};
+      globalThis.$INBOUND_CHANNEL_NAME.call = function(instanceName, funName, encodedArguments) {
       };
-      globalThis.$inboundChannelName.disconnect = function(instanceName) {
+      globalThis.$INBOUND_CHANNEL_NAME.disconnect = function(instanceName) {
       };
     """.trimIndent(),
     )
@@ -60,7 +60,7 @@ class QuickJsInboundChannelJvmTest {
       function goBoom() {
         noSuchMethod();
       }
-      globalThis.$inboundChannelName.disconnect = function(instanceName) {
+      globalThis.$INBOUND_CHANNEL_NAME.disconnect = function(instanceName) {
         goBoom();
       };
     """.trimIndent(),
