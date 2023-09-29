@@ -21,13 +21,13 @@ import app.cash.zipline.internal.EventListenerAdapter
 import app.cash.zipline.internal.GuestService
 import app.cash.zipline.internal.HostService
 import app.cash.zipline.internal.RealHostService
+import app.cash.zipline.internal.ZIPLINE_GUEST_NAME
+import app.cash.zipline.internal.ZIPLINE_HOST_NAME
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.loadJsModule
-import app.cash.zipline.internal.ziplineGuestName
-import app.cash.zipline.internal.ziplineHostName
 import kotlin.coroutines.resumeWithException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
@@ -70,7 +70,7 @@ actual class Zipline private constructor(
     },
   )
 
-  private val guest: GuestService = endpoint.take(ziplineGuestName)
+  private val guest: GuestService = endpoint.take(ZIPLINE_GUEST_NAME)
 
   actual val json: Json
     get() = endpoint.json
@@ -90,7 +90,7 @@ actual class Zipline private constructor(
     val eventLoop = CoroutineEventLoop(dispatcher, scope, guest)
 
     endpoint.bind<HostService>(
-      name = ziplineHostName,
+      name = ZIPLINE_HOST_NAME,
       instance = RealHostService(endpoint, this, eventListener, eventLoop),
     )
   }

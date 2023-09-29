@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.internal.bridge.OUTBOUND_CHANNEL_NAME
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
@@ -50,7 +50,7 @@ class QuickJsOutboundChannelJvmTest {
       quickJs.evaluate(
         """
         function f1() {
-          globalThis.$outboundChannelName.disconnect('theInstanceName');
+          globalThis.$OUTBOUND_CHANNEL_NAME.disconnect('theInstanceName');
         }
 
         function f2() {

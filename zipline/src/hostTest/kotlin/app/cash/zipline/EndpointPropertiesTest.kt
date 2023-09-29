@@ -99,7 +99,10 @@ internal class EndpointPropertiesTest {
 
   @Serializable
   enum class Baz {
-    BLEEP, BLOOP, BONGO, BINGO
+    BLEEP,
+    BLOOP,
+    BONGO,
+    BINGO,
   }
 
   @Test

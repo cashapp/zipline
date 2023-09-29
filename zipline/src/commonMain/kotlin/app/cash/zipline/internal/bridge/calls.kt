@@ -203,7 +203,8 @@ internal class RealCallSerializer(
         id = functionId,
         signature = "suspend fun unknownFunction(): kotlin.Unit",
         argSerializers = listOf(),
-        resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
+        // Placeholder; we're only encoding failures.
+        resultSerializer = Int.serializer(),
         suspendCallbackSerializer = failureSuspendCallbackSerializer,
       ) {
         override suspend fun callSuspending(service: T, args: List<*>) =
@@ -214,7 +215,8 @@ internal class RealCallSerializer(
         id = functionId,
         signature = "fun unknownFunction(): kotlin.Unit",
         argSerializers = listOf(),
-        resultSerializer = Int.serializer(), // Placeholder; we're only encoding failures.
+        // Placeholder; we're only encoding failures.
+        resultSerializer = Int.serializer(),
       ) {
         override fun call(service: T, args: List<*>) =
           throw ZiplineApiMismatchException(message)

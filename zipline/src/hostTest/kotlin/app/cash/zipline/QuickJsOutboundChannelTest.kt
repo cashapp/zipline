@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.outboundChannelName
+import app.cash.zipline.internal.bridge.OUTBOUND_CHANNEL_NAME
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -45,7 +45,7 @@ class QuickJsOutboundChannelTest {
     callChannel.callResult = "result one"
     val callResult = quickJs.evaluate(
       """
-      globalThis.$outboundChannelName.call('firstArg');
+      globalThis.$OUTBOUND_CHANNEL_NAME.call('firstArg');
     """.trimIndent(),
     )
     assertEquals("result one", callResult)
@@ -58,7 +58,7 @@ class QuickJsOutboundChannelTest {
 
     val disconnectResult = quickJs.evaluate(
       """
-      globalThis.$outboundChannelName.disconnect('theInstanceName');
+      globalThis.$OUTBOUND_CHANNEL_NAME.disconnect('theInstanceName');
     """.trimIndent(),
     ) as Boolean
     assertTrue(disconnectResult)
@@ -76,7 +76,7 @@ class QuickJsOutboundChannelTest {
       """
       |var count = 0;
       |for (var i = 0; i < 100000; i++) {
-      |  var result = globalThis.$outboundChannelName.disconnect('theInstanceName');
+      |  var result = globalThis.$OUTBOUND_CHANNEL_NAME.disconnect('theInstanceName');
       |  if (result) count++;
       |}
       |count;

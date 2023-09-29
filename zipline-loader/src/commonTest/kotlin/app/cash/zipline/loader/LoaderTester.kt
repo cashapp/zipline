@@ -211,7 +211,8 @@ class LoaderTester(
       .write(
         byteString = loadedManifest.manifestBytes,
         offset = 0,
-        byteCount = loadedManifest.manifestBytes.size - 1, // Drop trailing '}'.
+        // Drop trailing '}'.
+        byteCount = loadedManifest.manifestBytes.size - 1,
       )
       .readByteString()
     httpClient.filePathToByteString = mapOf(

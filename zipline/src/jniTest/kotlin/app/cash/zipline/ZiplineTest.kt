@@ -15,8 +15,8 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.ziplineGuestName
-import app.cash.zipline.internal.ziplineHostName
+import app.cash.zipline.internal.ZIPLINE_GUEST_NAME
+import app.cash.zipline.internal.ZIPLINE_HOST_NAME
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
@@ -225,24 +225,24 @@ class ZiplineTest {
 
   @Test fun serviceNamesAndClientNames(): Unit = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.initZipline()")
-    assertThat(zipline.serviceNames).containsExactlyInAnyOrder(ziplineHostName)
-    assertThat(zipline.clientNames).containsExactlyInAnyOrder(ziplineGuestName)
+    assertThat(zipline.serviceNames).containsExactlyInAnyOrder(ZIPLINE_HOST_NAME)
+    assertThat(zipline.clientNames).containsExactlyInAnyOrder(ZIPLINE_GUEST_NAME)
 
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
-    assertThat(zipline.serviceNames).containsExactlyInAnyOrder(ziplineHostName)
+    assertThat(zipline.serviceNames).containsExactlyInAnyOrder(ZIPLINE_HOST_NAME)
     assertThat(zipline.clientNames).containsExactlyInAnyOrder(
-      ziplineGuestName,
+      ZIPLINE_GUEST_NAME,
       "helloService",
       "yoService",
     )
 
     zipline.bind<EchoService>("supService", JvmEchoService("sup"))
     assertThat(zipline.serviceNames).containsExactlyInAnyOrder(
-      ziplineHostName,
+      ZIPLINE_HOST_NAME,
       "supService",
     )
     assertThat(zipline.clientNames).containsExactlyInAnyOrder(
-      ziplineGuestName,
+      ZIPLINE_GUEST_NAME,
       "helloService",
       "yoService",
     )

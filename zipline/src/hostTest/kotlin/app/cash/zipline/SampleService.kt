@@ -52,7 +52,7 @@ interface SampleService<T> : ZiplineService {
     internal inline fun <reified T> manualAdapter(): ManualAdapter<T> {
       return ManualAdapter<T>(
         listOf(serializer<T>()),
-        typeOf<ManualAdapter<T>>().toString(), // this is resolved at build time
+        typeOf<ManualAdapter<T>>().toString(),
       )
     }
 

@@ -19,8 +19,8 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.alphaUrl
-import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.bravoUrl
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.ALPHA_URL
+import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.BRAVO_URL
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -115,8 +115,8 @@ class ProductionFetcherReceiverTest {
     assertNull(cache.read(testFixtures.bravoSha256, nowMillis))
 
     tester.httpClient.filePathToByteString = mapOf(
-      alphaUrl to testFixtures.alphaByteString,
-      bravoUrl to testFixtures.bravoByteString,
+      ALPHA_URL to testFixtures.alphaByteString,
+      BRAVO_URL to testFixtures.bravoByteString,
     )
 
     zipline = loader.loadOrFail("test", testFixtures.manifest)

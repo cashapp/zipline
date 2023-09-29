@@ -15,7 +15,7 @@
  */
 package app.cash.zipline
 
-import app.cash.zipline.internal.bridge.inboundChannelName
+import app.cash.zipline.internal.bridge.INBOUND_CHANNEL_NAME
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -40,10 +40,10 @@ class QuickJsInboundChannelTest {
   fun setUp() {
     quickJs.evaluate(
       """
-      globalThis.$inboundChannelName = {};
-      globalThis.$inboundChannelName.call = function(jstring) {
+      globalThis.$INBOUND_CHANNEL_NAME = {};
+      globalThis.$INBOUND_CHANNEL_NAME.call = function(jstring) {
       };
-      globalThis.$inboundChannelName.disconnect = function(instanceName) {
+      globalThis.$INBOUND_CHANNEL_NAME.disconnect = function(instanceName) {
       };
     """.trimIndent(),
     )
@@ -53,7 +53,7 @@ class QuickJsInboundChannelTest {
   fun callHappyPath() {
     quickJs.evaluate(
       """
-      globalThis.$inboundChannelName.call = function(callJson) {
+      globalThis.$INBOUND_CHANNEL_NAME.call = function(callJson) {
         return 'received call(' + callJson + ') and the call was successful!';
       };
     """.trimIndent(),
@@ -69,12 +69,12 @@ class QuickJsInboundChannelTest {
     quickJs.evaluate(
       """
       var callLog = "";
-      globalThis.$inboundChannelName.call = function(callJson) {
+      globalThis.$INBOUND_CHANNEL_NAME.call = function(callJson) {
         var result = callLog;
         callLog = "";
         return result;
       };
-      globalThis.$inboundChannelName.disconnect = function(instanceName) {
+      globalThis.$INBOUND_CHANNEL_NAME.disconnect = function(instanceName) {
         callLog += 'disconnect(' + instanceName + ')';
         return true;
       };
@@ -91,14 +91,14 @@ class QuickJsInboundChannelTest {
   fun noInboundChannelThrows() {
     quickJs.evaluate(
       """
-      delete globalThis.$inboundChannelName;
+      delete globalThis.$INBOUND_CHANNEL_NAME;
     """.trimIndent(),
     )
 
     val t = assertFailsWith<IllegalStateException> {
       quickJs.getInboundChannel()
     }
-    assertEquals("A global JavaScript object called $inboundChannelName was not found. Try confirming that Zipline.get() has been called.", t.message)
+    assertEquals("A global JavaScript object called $INBOUND_CHANNEL_NAME was not found. Try confirming that Zipline.get() has been called.", t.message)
   }
 
   @Test
