@@ -16,7 +16,7 @@ sqldelight = "1.5.5"
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.3" }
 android-gradle-plugin = { module = "com.android.tools.build:gradle", version = "8.1.1" }
 android-material = { module = "com.google.android.material:material", version = "1.9.0" }
-androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.7.2" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.8.0" }
 androidx-annotation = { module = "androidx.annotation:annotation", version = "1.7.0" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version = "1.6.1" }
 # This isn't strictly used, but allows Renovate to see us using the Compose Compiler artifact
