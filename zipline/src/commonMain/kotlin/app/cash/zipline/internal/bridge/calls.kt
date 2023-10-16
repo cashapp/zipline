@@ -21,6 +21,7 @@ import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScoped
 import app.cash.zipline.ZiplineService
 import app.cash.zipline.ziplineServiceSerializer
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
@@ -225,6 +226,7 @@ internal class RealCallSerializer(
   }
 }
 
+@OptIn(ExperimentalSerializationApi::class)
 internal class ArgsListSerializer(
   internal val serializers: List<KSerializer<*>>,
 ) : KSerializer<List<*>> {
@@ -235,7 +237,7 @@ internal class ArgsListSerializer(
     encoder.encodeStructure(descriptor) {
       for (i in serializers.indices) {
         @Suppress("UNCHECKED_CAST") // We don't have a type argument T for each parameter.
-        encodeSerializableElement(descriptor, i, serializers[i] as KSerializer<Any?>, value[i])
+        encodeNullableSerializableElement(descriptor, i, serializers[i] as KSerializer<Any?>, value[i])
       }
     }
   }
@@ -245,7 +247,7 @@ internal class ArgsListSerializer(
       val result = mutableListOf<Any?>()
       for (i in serializers.indices) {
         check(decodeElementIndex(descriptor) == i)
-        result += decodeSerializableElement(descriptor, i, serializers[i])
+        result += decodeNullableSerializableElement(descriptor, i, serializers[i])
       }
       check(decodeElementIndex(descriptor) == DECODE_DONE)
       return@decodeStructure result

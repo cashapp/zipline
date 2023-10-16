@@ -28,7 +28,9 @@ import kotlinx.coroutines.Dispatchers.Unconfined
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
+import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.modules.SerializersModule
+import kotlinx.serialization.modules.contextual
 
 internal class ZiplineServiceTest {
   @Test
@@ -132,6 +134,28 @@ internal class ZiplineServiceTest {
       failure.message,
     )
     assertEquals(setOf("factory"), endpointA.serviceNames)
+  }
+
+  @Test
+  fun contextualNullableParameter() = runBlocking(Unconfined) {
+    val serializersModule = SerializersModule {
+      contextual(String.serializer())
+    }
+    val (endpointA, endpointB) = newEndpointPair(this, serializersModule)
+
+    endpointA.bind<ContextualNullableParameter>("factory", RealContextualNullableParameter())
+    val factoryClient = endpointB.take<ContextualNullableParameter>("factory")
+
+    factoryClient.create("hello")
+    factoryClient.create(null)
+  }
+
+  interface ContextualNullableParameter : ZiplineService {
+    fun create(string: @Contextual String?)
+  }
+
+  class RealContextualNullableParameter : ContextualNullableParameter {
+    override fun create(string: String?) = Unit
   }
 
   interface EchoServiceFactory : ZiplineService {
