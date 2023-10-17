@@ -36,6 +36,7 @@ internal class ZiplineApis(
   private val ziplineFqPackage = FqPackageName("app.cash.zipline")
   private val bridgeFqPackage = FqPackageName("app.cash.zipline.internal.bridge")
   private val serializationFqPackage = FqPackageName("kotlinx.serialization")
+  private val serializationBuiltInsFqPackage = FqPackageName("kotlinx.serialization.builtins")
   private val collectionsFqPackage = FqPackageName(StandardClassIds.BASE_COLLECTIONS_PACKAGE)
   val contextualClassId = serializationFqPackage.classId("Contextual")
   private val serializationModulesFqPackage = FqPackageName("kotlinx.serialization.modules")
@@ -95,6 +96,10 @@ internal class ZiplineApis(
     get() = pluginContext.referenceFunctions(
       bridgeFqPackage.callableId("requireContextual"),
     ).single()
+
+  val nullableSerializer: IrPropertySymbol
+    get() = pluginContext.referenceProperties(serializationBuiltInsFqPackage.callableId("nullable"))
+      .single()
 
   /** This symbol for `ziplineServiceSerializer(KClass<*>, List<KSerializer<*>>)`. */
   val ziplineServiceSerializerTwoArg: IrSimpleFunctionSymbol

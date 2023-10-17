@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.ir.builders.declarations.IrFunctionBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrValueParameterBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
+import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetField
 import org.jetbrains.kotlin.ir.builders.irReturn
@@ -50,6 +51,7 @@ import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
 import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
+import org.jetbrains.kotlin.ir.expressions.IrMemberAccessExpression
 import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
@@ -57,6 +59,7 @@ import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrReturnImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrConstructorSymbol
+import org.jetbrains.kotlin.ir.symbols.IrFunctionSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrReturnTargetSymbol
 import org.jetbrains.kotlin.ir.symbols.IrSymbol
@@ -417,3 +420,33 @@ fun getOrCreateCompanion(
   enclosing.declarations.add(companionClass)
   return companionClass
 }
+
+// https://github.com/JetBrains/kotlin/blob/d625d9a988f3a7a344ce1687b085ff7c811e916c/plugins/kotlinx-serialization/kotlinx-serialization.backend/src/org/jetbrains/kotlinx/serialization/compiler/backend/ir/IrBuilderWithPluginContext.kt#L199-L211
+fun IrBuilderWithScope.irInvoke(
+  dispatchReceiver: IrExpression? = null,
+  callee: IrFunctionSymbol,
+  vararg args: IrExpression,
+  typeHint: IrType? = null,
+): IrMemberAccessExpression<*> {
+  assert(callee.isBound) { "Symbol $callee expected to be bound" }
+  val returnType = typeHint ?: callee.owner.returnType
+  val call = irCall(callee, type = returnType)
+  call.dispatchReceiver = dispatchReceiver
+  args.forEachIndexed(call::putValueArgument)
+  return call
+}
+
+// https://github.com/JetBrains/kotlin/blob/d625d9a988f3a7a344ce1687b085ff7c811e916c/plugins/kotlinx-serialization/kotlinx-serialization.backend/src/org/jetbrains/kotlinx/serialization/compiler/backend/ir/IrBuilderWithPluginContext.kt#L213-L225
+fun IrBuilderWithScope.irInvoke(
+  dispatchReceiver: IrExpression? = null,
+  callee: IrFunctionSymbol,
+  typeArguments: List<IrType?>,
+  valueArguments: List<IrExpression>,
+  returnTypeHint: IrType? = null,
+): IrMemberAccessExpression<*> =
+  irInvoke(
+    dispatchReceiver,
+    callee,
+    *valueArguments.toTypedArray(),
+    typeHint = returnTypeHint,
+  ).also { call -> typeArguments.forEachIndexed(call::putTypeArgument) }
