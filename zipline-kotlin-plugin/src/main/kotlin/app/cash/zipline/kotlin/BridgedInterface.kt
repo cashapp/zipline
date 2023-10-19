@@ -31,12 +31,15 @@ import org.jetbrains.kotlin.ir.declarations.IrValueParameter
 import org.jetbrains.kotlin.ir.declarations.IrVariable
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
+import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
 import org.jetbrains.kotlin.ir.types.IrSimpleType
 import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.getClass
+import org.jetbrains.kotlin.ir.types.isMarkedNullable
 import org.jetbrains.kotlin.ir.types.isSubtypeOfClass
+import org.jetbrains.kotlin.ir.types.makeNotNull
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.classId
@@ -221,7 +224,7 @@ internal class BridgedInterface(
 
       hasTypeParameter || contextual || type.isFlow || type.isStateFlow -> {
         // serializersModule.requireContextual<T>(root KClass, recurse on type args)
-        irCall(
+        val contextualSerializerExpression = irCall(
           callee = ziplineApis.requireContextual,
           type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
@@ -234,6 +237,7 @@ internal class BridgedInterface(
           )
           putValueArgument(1, parameterList)
         }
+        wrapWithNullableSerializerIfNeeded(type, contextualSerializerExpression, ziplineApis.nullableSerializer)
       }
 
       else -> {
@@ -303,4 +307,26 @@ internal class BridgedInterface(
       )
     }
   }
+}
+
+// https://github.com/JetBrains/kotlin/blob/d625d9a988f3a7a344ce1687b085ff7c811e916c/plugins/kotlinx-serialization/kotlinx-serialization.backend/src/org/jetbrains/kotlinx/serialization/compiler/backend/ir/IrBuilderWithPluginContext.kt#L213-L225
+private fun IrBuilderWithScope.wrapWithNullableSerializerIfNeeded(
+  type: IrType,
+  expression: IrExpression,
+  nullableProp: IrPropertySymbol,
+): IrExpression = if (type.isMarkedNullable()) {
+  val resultType = type.makeNotNull()
+  val typeArguments = listOf(resultType)
+  val callee = nullableProp.owner.getter!!
+
+  val returnType = callee.returnType.substitute(callee.typeParameters, typeArguments)
+
+  irInvoke(
+    callee = callee.symbol,
+    typeArguments = typeArguments,
+    valueArguments = emptyList(),
+    returnTypeHint = returnType,
+  ).apply { extensionReceiver = expression }
+} else {
+  expression
 }
