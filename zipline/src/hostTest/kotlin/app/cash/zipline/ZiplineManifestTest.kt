@@ -170,6 +170,7 @@ class ZiplineManifestTest {
         ),
       ),
       mainFunction = "zipline.ziplineMain",
+      metadata = mapOf("build_timestamp" to "2023-10-25T12:00:00T"),
     )
 
     val serialized = original.encodeJson()
@@ -201,6 +202,7 @@ class ZiplineManifestTest {
         |  "mainFunction": "zipline.ziplineMain",
         |  "version": null,
         |  "metadata": {
+        |    "build_timestamp": "2023-10-25T12:00:00T"
         |  }
         |}
         """.trimMargin(),

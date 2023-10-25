@@ -151,6 +151,7 @@ class ZiplineCompilerTest {
       mainModuleId = mainModuleId,
       manifestSigner = null,
       version = null,
+      metadata = mapOf(),
     )
 
     val expectedNumberFiles = if (dirHasSourceMaps) inputDir.listFiles()!!.size / 2 else inputDir.listFiles()!!.size
@@ -182,6 +183,7 @@ class ZiplineCompilerTest {
       removedFiles = removedFiles,
       manifestSigner = null,
       version = null,
+      metadata = mapOf(),
     )
 
     val expectedNumberFiles = inputDir.listFiles()!!.size + addedFiles.size - removedFiles.size

@@ -84,6 +84,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
     mainModuleId.set(extension.mainModuleId)
     mainFunction.set(extension.mainFunction)
     version.set(extension.version)
+    metadata.set(extension.metadata)
 
     signingKeys.set(
       project.provider {

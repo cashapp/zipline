@@ -140,6 +140,26 @@ class ZiplinePluginTest {
   }
 
   @Test
+  fun versionAndMetadata() {
+    val projectDir = File("src/test/projects/basic")
+
+    val taskName = ":lib:compileDevelopmentExecutableKotlinJsZipline"
+    val result = createRunner(projectDir, "clean", taskName).build()
+    assertThat(SUCCESS_OUTCOMES)
+      .contains(result.task(taskName)!!.outcome)
+
+    val ziplineOut = projectDir.resolve(
+      "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline",
+    )
+    val manifest = ziplineOut.resolve(manifestFileName)
+    val manifestText = manifest.readText()
+    assertThat(manifestText)
+      .contains(""""version":"1.2.3"""")
+    assertThat(manifestText)
+      .contains(""""metadata":{"build_timestamp":"2023-10-25T12:00:00T"}""")
+  }
+
+  @Test
   fun manifestSigning() {
     val projectDir = File("src/test/projects/signing")
 

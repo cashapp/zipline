@@ -8,17 +8,9 @@ plugins {
 }
 
 kotlin {
-  js() {
+  js {
     browser()
     binaries.executable()
-  }
-
-  sourceSets {
-    commonMain {
-      dependencies {
-        implementation("app.cash.zipline:zipline:${project.property("ziplineVersion")}")
-      }
-    }
   }
 }
 
