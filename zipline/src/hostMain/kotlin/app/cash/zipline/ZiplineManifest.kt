@@ -138,6 +138,25 @@ data class ZiplineManifest private constructor(
     metadata = this.metadata,
   )
 
+  @Deprecated(
+    message = "This is here for binary-compatibility only",
+    level = DeprecationLevel.HIDDEN,
+  )
+  fun copy(
+    unsigned: Unsigned = this.unsigned,
+    modules: Map<String, Module> = this.modules,
+    mainModuleId: String = this.mainModuleId,
+    mainFunction: String? = this.mainFunction,
+    version: String? = this.version,
+  ): ZiplineManifest = copy(
+    unsigned = unsigned,
+    modules = modules,
+    mainModuleId = mainModuleId,
+    mainFunction = mainFunction,
+    version = version,
+    metadata = this.metadata,
+  )
+
   fun copy(
     signatures: Map<String, String> = this.signatures,
     freshAtEpochMs: Long? = this.freshAtEpochMs,
