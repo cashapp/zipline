@@ -17,6 +17,7 @@ package app.cash.zipline.gradle
 
 import app.cash.zipline.loader.SignatureAlgorithmId
 import org.gradle.api.NamedDomainObjectContainer
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 
 abstract class ZiplineExtension {
@@ -25,6 +26,7 @@ abstract class ZiplineExtension {
   abstract val version: Property<String>
   abstract val signingKeys: NamedDomainObjectContainer<SigningKey>
   abstract val httpServerPort: Property<Int>
+  abstract val metadata: MapProperty<String, String>
 
   abstract class SigningKey(val name: String) {
     abstract val algorithmId: Property<SignatureAlgorithmId>

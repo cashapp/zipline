@@ -173,6 +173,29 @@ class SignaturePayloadTest {
   }
 
   @Test
+  fun metadataIsSignificant() {
+    val manifestA = ZiplineManifest.create(
+      modules = mapOf(
+        "./kotlin_kotlin.js" to ZiplineManifest.Module(
+          url = "kotlin_kotlin.zipline",
+          sha256 = "6bd4baa9f46afa62477fec8c9e95528de7539f036d26fc13885177b32fc0d6ab".decodeHex(),
+          dependsOnIds = listOf(),
+        ),
+      ),
+      metadata = mapOf("build_timestamp" to "2023-10-25T12:00:00T"),
+    )
+
+    val manifestB = manifestA.copy(
+      metadata = mapOf(),
+    )
+
+    assertNotEquals(
+      manifestA.signaturePayload,
+      manifestB.signaturePayload,
+    )
+  }
+
+  @Test
   fun signaturePayloadStripsBaseUrlsAndSignatures() {
     val manifestJson = """
       |{

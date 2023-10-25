@@ -42,6 +42,8 @@ val launchGreetService by tasks.creating(JavaExec::class) {
 
 zipline {
   mainFunction.set("app.cash.zipline.tests.launchGreetService")
+  version.set("1.2.3")
+  metadata.put("build_timestamp", "2023-10-25T12:00:00T")
 }
 
 plugins.withType<YarnPlugin> {

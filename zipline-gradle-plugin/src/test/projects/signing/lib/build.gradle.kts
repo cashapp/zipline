@@ -8,7 +8,7 @@ plugins {
 }
 
 kotlin {
-  js() {
+  js {
     browser()
     binaries.executable()
   }
