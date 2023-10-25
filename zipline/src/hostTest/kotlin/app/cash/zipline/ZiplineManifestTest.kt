@@ -19,6 +19,8 @@ package app.cash.zipline
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotSame
+import kotlin.test.assertSame
 import okio.ByteString.Companion.encodeUtf8
 
 class ZiplineManifestTest {
@@ -197,7 +199,9 @@ class ZiplineManifestTest {
         |  },
         |  "mainModuleId": "bravo",
         |  "mainFunction": "zipline.ziplineMain",
-        |  "version": null
+        |  "version": null,
+        |  "metadata": {
+        |  }
         |}
         """.trimMargin(),
       prettyPrint(serialized),
@@ -269,5 +273,51 @@ class ZiplineManifestTest {
       manifest,
       ZiplineManifest.decodeJson(serialized),
     )
+  }
+
+  /**
+   * Confirm we attempt to make defensive copies. Note that this isn't perfect and we observe
+   * mutable instances with [copy].
+   */
+  @Test
+  fun metadataIsDefensivelyCopiedByCreate() {
+    val mutableMetadata = mutableMapOf<String, String>()
+    val manifest = ZiplineManifest.create(
+      modules = mapOf(
+        "alpha" to ZiplineManifest.Module(
+          url = "/alpha.zipline",
+          sha256 = "abc123".encodeUtf8(),
+          dependsOnIds = listOf(),
+        ),
+      ),
+      mainFunction = "zipline.ziplineMain",
+      metadata = mutableMetadata,
+    )
+
+    assertNotSame(mutableMetadata, manifest.metadata)
+
+    mutableMetadata["build_timestamp"] = "2023-10-25T12:00:00T"
+    assertEquals(mapOf(), manifest.metadata)
+  }
+
+  @Test
+  fun metadataIsNotDefensivelyCopiedByDataClassCopy() {
+    val mutableMetadata = mutableMapOf<String, String>()
+    val manifest = ZiplineManifest.create(
+      modules = mapOf(
+        "alpha" to ZiplineManifest.Module(
+          url = "/alpha.zipline",
+          sha256 = "abc123".encodeUtf8(),
+          dependsOnIds = listOf(),
+        ),
+      ),
+      mainFunction = "zipline.ziplineMain",
+    ).copy(
+      metadata = mutableMetadata,
+    )
+
+    // This isn't the behavior we want, but it's the behavior we get. There's no good way to do
+    // defensive copies with data classes, and ZiplineManifest should have used POKO. Sigh.
+    assertSame(mutableMetadata, manifest.metadata)
   }
 }

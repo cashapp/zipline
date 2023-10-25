@@ -22,7 +22,6 @@ import app.cash.zipline.internal.jsonForManifest
 import app.cash.zipline.internal.signaturePayload
 import app.cash.zipline.internal.topologicalSort
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
@@ -51,6 +50,12 @@ data class ZiplineManifest private constructor(
 
   /** Version to represent the code as defined in this manifest, by default it will be Git commit SHA. */
   val version: String? = null,
+
+  /**
+   * Arbitrary application-layer metadata about this release. Use this to embed build or diagnostic
+   * metadata, such as the timestamp that this application was built.
+   */
+  val metadata: Map<String, String> = mapOf(),
 ) {
   init {
     require(modules.keys.toList().isTopologicallySorted { id -> modules[id]!!.dependsOnIds }) {
@@ -108,6 +113,10 @@ data class ZiplineManifest private constructor(
   val baseUrl: String?
     get() = unsigned.baseUrl
 
+  @Deprecated(
+    message = "This is here for binary-compatibility only",
+    level = DeprecationLevel.HIDDEN,
+  )
   fun copy(
     signatures: Map<String, String> = this.signatures,
     freshAtEpochMs: Long? = this.freshAtEpochMs,
@@ -116,7 +125,7 @@ data class ZiplineManifest private constructor(
     mainModuleId: String = this.mainModuleId,
     mainFunction: String? = this.mainFunction,
     version: String? = this.version,
-  ) = copy(
+  ): ZiplineManifest = copy(
     unsigned = unsigned.copy(
       freshAtEpochMs = freshAtEpochMs,
       signatures = signatures,
@@ -126,6 +135,30 @@ data class ZiplineManifest private constructor(
     mainModuleId = mainModuleId,
     mainFunction = mainFunction,
     version = version,
+    metadata = this.metadata,
+  )
+
+  fun copy(
+    signatures: Map<String, String> = this.signatures,
+    freshAtEpochMs: Long? = this.freshAtEpochMs,
+    baseUrl: String? = this.baseUrl,
+    modules: Map<String, Module> = this.modules,
+    mainModuleId: String = this.mainModuleId,
+    mainFunction: String? = this.mainFunction,
+    version: String? = this.version,
+    metadata: Map<String, String> = this.metadata,
+  ): ZiplineManifest = copy(
+    unsigned = unsigned.copy(
+      freshAtEpochMs = freshAtEpochMs,
+      signatures = signatures,
+      baseUrl = baseUrl,
+    ),
+    modules = modules,
+    mainModuleId = mainModuleId,
+    mainFunction = mainFunction,
+    version = version,
+    // Defensive copy!
+    metadata = metadata.toMap(),
   )
 
   /**
@@ -151,6 +184,10 @@ data class ZiplineManifest private constructor(
   }
 
   companion object {
+    @Deprecated(
+      message = "This is here for binary-compatibility only",
+      level = DeprecationLevel.HIDDEN,
+    )
     fun create(
       modules: Map<String, Module>,
       mainFunction: String? = null,
@@ -158,6 +195,26 @@ data class ZiplineManifest private constructor(
       version: String? = null,
       builtAtEpochMs: Long? = null,
       baseUrl: String? = null,
+    ): ZiplineManifest {
+      return create(
+        modules = modules,
+        mainFunction = mainFunction,
+        mainModuleId = mainModuleId,
+        version = version,
+        builtAtEpochMs = builtAtEpochMs,
+        baseUrl = baseUrl,
+        metadata = mapOf(),
+      )
+    }
+
+    fun create(
+      modules: Map<String, Module>,
+      mainFunction: String? = null,
+      mainModuleId: String? = null,
+      version: String? = null,
+      builtAtEpochMs: Long? = null,
+      baseUrl: String? = null,
+      metadata: Map<String, String> = mapOf(),
     ): ZiplineManifest {
       val sortedModuleIds = modules.keys
         .toList()
@@ -178,6 +235,8 @@ data class ZiplineManifest private constructor(
         mainModuleId = mainModuleId ?: sortedModuleIds.last(),
         mainFunction = mainFunction,
         version = version,
+        // Defensive copy!
+        metadata = metadata.toMap(),
       )
     }
 

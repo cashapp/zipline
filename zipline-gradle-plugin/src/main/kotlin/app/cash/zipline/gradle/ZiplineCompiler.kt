@@ -46,6 +46,7 @@ internal object ZiplineCompiler {
     mainModuleId: String?,
     manifestSigner: ManifestSigner?,
     version: String?,
+    metadata: Map<String, String>,
   ) {
     val jsFiles = getJsFiles(inputDir.listFiles()!!.asList())
     val modules = compileFilesInParallel(jsFiles, outputDir)
@@ -56,6 +57,7 @@ internal object ZiplineCompiler {
       manifestSigner = manifestSigner,
       modules = modules,
       version = version,
+      metadata = metadata,
     )
   }
 
@@ -68,6 +70,7 @@ internal object ZiplineCompiler {
     mainModuleId: String?,
     manifestSigner: ManifestSigner?,
     version: String?,
+    metadata: Map<String, String>,
   ) {
     val modifiedFileNames = getJsFiles(modifiedFiles).map { it.name }.toSet()
     val removedFileNames = getJsFiles(removedFiles).map { it.name }.toSet()
@@ -95,6 +98,7 @@ internal object ZiplineCompiler {
       manifestSigner = manifestSigner,
       modules = unchangedModules + compiledModules,
       version = version,
+      metadata = metadata,
     )
   }
 
@@ -150,17 +154,19 @@ internal object ZiplineCompiler {
 
   private fun writeManifest(
     outputDir: File,
-    mainFunction: String? = null,
-    mainModuleId: String? = null,
-    manifestSigner: ManifestSigner? = null,
+    mainFunction: String?,
+    mainModuleId: String?,
+    manifestSigner: ManifestSigner?,
     modules: Map<String, ZiplineManifest.Module>,
-    version: String? = null,
+    version: String?,
+    metadata: Map<String, String>,
   ) {
     val unsignedManifest = ZiplineManifest.create(
       modules = modules,
       mainFunction = mainFunction,
       mainModuleId = mainModuleId,
       version = version,
+      metadata = metadata,
     )
 
     val manifest = manifestSigner?.sign(unsignedManifest) ?: unsignedManifest

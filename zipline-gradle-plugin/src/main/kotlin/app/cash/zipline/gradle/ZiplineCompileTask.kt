@@ -25,6 +25,7 @@ import okio.ByteString.Companion.decodeHex
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
+import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
@@ -61,6 +62,10 @@ abstract class ZiplineCompileTask : DefaultTask() {
   @get:Optional
   @get:Input
   abstract val version: Property<String>
+
+  @get:Optional
+  @get:Input
+  abstract val metadata: MapProperty<String, String>
 
   internal fun configure(
     jsProductionTask: JsProductionTask,
@@ -111,6 +116,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
       else -> null
     }
     val version = version.orNull
+    val metadata = metadata.orNull ?: mapOf()
 
     if (inputChanges.isIncremental) {
       fun filterByChangeType(filter: (ChangeType) -> Boolean): List<File> {
@@ -128,6 +134,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
         mainModuleId = mainModuleId,
         manifestSigner = manifestSigner,
         version = version,
+        metadata = metadata,
       )
     } else {
       ZiplineCompiler.compile(
@@ -137,6 +144,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
         mainModuleId = mainModuleId,
         manifestSigner = manifestSigner,
         version = version,
+        metadata = metadata,
       )
     }
   }
