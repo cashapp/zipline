@@ -32,14 +32,14 @@ import okio.ByteString.Companion.encodeUtf8
 
 /**
  * Download resources from the network. If the download fails, the exception is reported to
- * [eventListener] and this fetcher returns null.
+ * [EventListener] and this fetcher returns null.
  */
 internal class HttpFetcher(
   private val httpClient: ZiplineHttpClient,
-  private val eventListener: EventListener,
 ) : Fetcher {
   override suspend fun fetch(
     applicationName: String,
+    eventListener: EventListener,
     id: String,
     sha256: ByteString,
     nowEpochMs: Long,
@@ -47,6 +47,7 @@ internal class HttpFetcher(
     url: String,
   ) = fetchByteString(
     applicationName = applicationName,
+    eventListener = eventListener,
     baseUrl = baseUrl,
     url = url,
     requestHeaders = ZIPLINE_REQUEST_HEADERS,
@@ -54,11 +55,13 @@ internal class HttpFetcher(
 
   suspend fun fetchManifest(
     applicationName: String,
+    eventListener: EventListener,
     url: String,
     freshAtEpochMs: Long,
   ): LoadedManifest {
     val manifestBytesWithoutBaseUrlUtf8 = fetchByteString(
       applicationName = applicationName,
+      eventListener = eventListener,
       baseUrl = null,
       url = url,
       requestHeaders = MANIFEST_REQUEST_HEADERS,
@@ -112,6 +115,7 @@ internal class HttpFetcher(
 
   private suspend fun fetchByteString(
     applicationName: String,
+    eventListener: EventListener,
     baseUrl: String?,
     url: String,
     requestHeaders: List<Pair<String, String>>,

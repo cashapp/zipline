@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.ALPHA_URL
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.BRAVO_URL
@@ -37,6 +38,7 @@ class DownloadOnlyFetcherReceiverTest {
     dispatcher = dispatcher,
     httpClient = httpClient,
     nowEpochMs = { 1 },
+    eventListenerFactory = EventListenerNoneFactory,
   )
 
   private val fileSystem = systemFileSystem
@@ -49,7 +51,13 @@ class DownloadOnlyFetcherReceiverTest {
       BRAVO_URL to testFixtures.bravoByteString,
     )
 
-    loader.download("test", downloadDir, fileSystem, testFixtures.embeddedLoadedManifest)
+    loader.download(
+      "test",
+      EventListener.NONE,
+      downloadDir,
+      fileSystem,
+      testFixtures.embeddedLoadedManifest,
+    )
 
     assertTrue(fileSystem.exists(downloadDir / testFixtures.alphaSha256Hex))
     assertEquals(

@@ -129,5 +129,6 @@ public final class app/cash/zipline/loader/ZiplineLoader {
 	public final fun setConcurrentDownloads (I)V
 	public final fun withCache (Lapp/cash/zipline/loader/ZiplineCache;)Lapp/cash/zipline/loader/ZiplineLoader;
 	public final fun withEmbedded (Lokio/Path;Lokio/FileSystem;)Lapp/cash/zipline/loader/ZiplineLoader;
+	public final fun withEventListenerFactory (Lapp/cash/zipline/EventListener$Factory;)Lapp/cash/zipline/loader/ZiplineLoader;
 }
 

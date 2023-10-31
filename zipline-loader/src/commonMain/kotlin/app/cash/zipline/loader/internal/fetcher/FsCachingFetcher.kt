@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineCache
 import okio.ByteString
 
@@ -27,6 +28,7 @@ internal class FsCachingFetcher(
 ) : Fetcher {
   override suspend fun fetch(
     applicationName: String,
+    eventListener: EventListener,
     id: String,
     sha256: ByteString,
     nowEpochMs: Long,
@@ -34,7 +36,7 @@ internal class FsCachingFetcher(
     url: String,
   ): ByteString? {
     return cache.getOrPut(applicationName, sha256, nowEpochMs) {
-      delegate.fetch(applicationName, id, sha256, nowEpochMs, baseUrl, url)
+      delegate.fetch(applicationName, eventListener, id, sha256, nowEpochMs, baseUrl, url)
     }
   }
 

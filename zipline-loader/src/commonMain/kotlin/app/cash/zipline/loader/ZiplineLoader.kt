@@ -58,7 +58,7 @@ class ZiplineLoader internal constructor(
   private val dispatcher: CoroutineDispatcher,
   private val manifestVerifier: ManifestVerifier,
   private val httpFetcher: HttpFetcher,
-  private val eventListener: EventListener,
+  private val eventListenerFactory: EventListener.Factory,
   private val nowEpochMs: () -> Long,
   private val embeddedDir: Path?,
   private val embeddedFileSystem: FileSystem?,
@@ -73,8 +73,8 @@ class ZiplineLoader internal constructor(
   ) : this(
     dispatcher = dispatcher,
     manifestVerifier = manifestVerifier,
-    httpFetcher = HttpFetcher(httpClient, eventListener),
-    eventListener = eventListener,
+    httpFetcher = HttpFetcher(httpClient),
+    eventListenerFactory = EventListener.Factory { _, _ -> eventListener },
     nowEpochMs = nowEpochMs,
     embeddedDir = null,
     embeddedFileSystem = null,
@@ -95,16 +95,23 @@ class ZiplineLoader internal constructor(
     cache = cache,
   )
 
+  fun withEventListenerFactory(
+    eventListenerFactory: EventListener.Factory,
+  ): ZiplineLoader = copy(
+    eventListenerFactory = eventListenerFactory,
+  )
+
   private fun copy(
     embeddedDir: Path? = this.embeddedDir,
     embeddedFileSystem: FileSystem? = this.embeddedFileSystem,
     cache: ZiplineCache? = this.cache,
+    eventListenerFactory: EventListener.Factory = this.eventListenerFactory,
   ): ZiplineLoader {
     return ZiplineLoader(
       dispatcher = dispatcher,
       manifestVerifier = manifestVerifier,
       httpFetcher = httpFetcher,
-      eventListener = eventListener,
+      eventListenerFactory = eventListenerFactory,
       nowEpochMs = nowEpochMs,
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
@@ -204,11 +211,13 @@ class ZiplineLoader internal constructor(
     serializersModule: SerializersModule,
     initializer: (Zipline) -> Unit,
   ): ZiplineManifest? {
+    val eventListener = eventListenerFactory.create(applicationName, manifestUrl)
+
     val startValue = eventListener.applicationLoadStart(applicationName, manifestUrl)
     var loadedManifest: LoadedManifest? = null
 
     try {
-      loadedManifest = fetchManifestFromNetwork(applicationName, manifestUrl)
+      loadedManifest = fetchManifestFromNetwork(applicationName, eventListener, manifestUrl)
       if (loadedManifest.manifest == previousManifest) {
         // Unchanged. Update freshness timestamp in cache DB.
         cachingFetcher?.updateFreshAt(applicationName, loadedManifest, now)
@@ -218,6 +227,7 @@ class ZiplineLoader internal constructor(
 
       val zipline = loadFromManifest(
         applicationName,
+        eventListener,
         loadedManifest,
         serializersModule,
         now,
@@ -253,13 +263,16 @@ class ZiplineLoader internal constructor(
     serializersModule: SerializersModule,
     initializer: (Zipline) -> Unit,
   ): ZiplineManifest? {
-    val loadedManifest = loadCachedOrEmbeddedManifest(applicationName, now)
+    val eventListener = eventListenerFactory.create(applicationName, null)
+
+    val loadedManifest = loadCachedOrEmbeddedManifest(applicationName, eventListener, now)
       ?: return null
 
     val startValue = eventListener.applicationLoadStart(applicationName, null)
     try {
       val zipline = loadFromManifest(
         applicationName,
+        eventListener,
         loadedManifest,
         serializersModule,
         now,
@@ -304,6 +317,7 @@ class ZiplineLoader internal constructor(
   @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
   internal suspend fun loadFromManifest(
     applicationName: String,
+    eventListener: EventListener,
     loadedManifest: LoadedManifest,
     serializersModule: SerializersModule,
     nowEpochMs: Long,
@@ -315,6 +329,7 @@ class ZiplineLoader internal constructor(
         ZiplineLoadReceiver(zipline, eventListener),
         loadedManifest,
         applicationName,
+        eventListener,
         nowEpochMs,
       )
 
@@ -353,10 +368,12 @@ class ZiplineLoader internal constructor(
     downloadFileSystem: FileSystem,
     manifestUrl: String,
   ) {
-    val manifest = fetchManifestFromNetwork(applicationName, manifestUrl)
+    val eventListener = eventListenerFactory.create(applicationName, manifestUrl)
+    val manifest = fetchManifestFromNetwork(applicationName, eventListener, manifestUrl)
     val manifestWithFreshAt = manifest.encodeFreshAtMs()
     download(
       applicationName = applicationName,
+      eventListener = eventListener,
       downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
       loadedManifest = manifestWithFreshAt,
@@ -365,6 +382,7 @@ class ZiplineLoader internal constructor(
 
   internal suspend fun download(
     applicationName: String,
+    eventListener: EventListener,
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     loadedManifest: LoadedManifest,
@@ -374,19 +392,27 @@ class ZiplineLoader internal constructor(
     downloadFileSystem.write(downloadDir / getApplicationManifestFileName(applicationName)) {
       write(loadedManifest.manifestBytes)
     }
-    receive(FsSaveReceiver(downloadFileSystem, downloadDir), loadedManifest, applicationName, now)
+    receive(
+      FsSaveReceiver(downloadFileSystem, downloadDir),
+      loadedManifest,
+      applicationName,
+      eventListener,
+      now,
+    )
   }
 
   private suspend fun receive(
     receiver: Receiver,
     loadedManifest: LoadedManifest,
     applicationName: String,
+    eventListener: EventListener,
     nowEpochMs: Long,
   ) {
     coroutineScope {
       val loads = loadedManifest.manifest.modules.map {
         ModuleJob(
           applicationName = applicationName,
+          eventListener = eventListener,
           id = it.key,
           baseUrl = loadedManifest.manifest.baseUrl,
           nowEpochMs = nowEpochMs,
@@ -406,6 +432,7 @@ class ZiplineLoader internal constructor(
 
   private inner class ModuleJob(
     val applicationName: String,
+    val eventListener: EventListener,
     val id: String,
     val baseUrl: String?,
     val module: ZiplineManifest.Module,
@@ -421,6 +448,7 @@ class ZiplineLoader internal constructor(
       val byteString = moduleFetchers.fetch(
         concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
         applicationName = applicationName,
+        eventListener = eventListener,
         id = id,
         sha256 = module.sha256,
         nowEpochMs = nowEpochMs,
@@ -439,6 +467,7 @@ class ZiplineLoader internal constructor(
 
   private fun loadCachedOrEmbeddedManifest(
     applicationName: String,
+    eventListener: EventListener,
     nowEpochMs: Long,
   ): LoadedManifest? {
     val result = cachingFetcher?.loadPinnedManifest(applicationName, nowEpochMs)
@@ -456,11 +485,13 @@ class ZiplineLoader internal constructor(
 
   private suspend fun fetchManifestFromNetwork(
     applicationName: String,
+    eventListener: EventListener,
     manifestUrl: String,
   ): LoadedManifest {
     val result = concurrentDownloadsSemaphore.withPermit {
       httpFetcher.fetchManifest(
         applicationName = applicationName,
+        eventListener = eventListener,
         url = manifestUrl,
         freshAtEpochMs = nowEpochMs(),
       )

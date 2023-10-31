@@ -16,6 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.turbine.test
+import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
@@ -230,7 +231,13 @@ class ZiplineLoaderTest {
       ALPHA_URL to testFixtures.alphaByteString,
       BRAVO_URL to testFixtures.bravoByteString,
     )
-    loader.download("test", downloadDir, fileSystem, testFixtures.embeddedLoadedManifest)
+    loader.download(
+      "test",
+      EventListener.NONE,
+      downloadDir,
+      fileSystem,
+      testFixtures.embeddedLoadedManifest,
+    )
 
     // check that files have been downloaded to downloadDir as expected
     assertTrue(fileSystem.exists(downloadDir / getApplicationManifestFileName("test")))
@@ -314,6 +321,7 @@ class ZiplineLoaderTest {
   ): Zipline {
     return loadFromManifest(
       applicationName = applicationName,
+      eventListener = EventListener.NONE,
       loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
       serializersModule = EmptySerializersModule(),
       initializer = initializer,

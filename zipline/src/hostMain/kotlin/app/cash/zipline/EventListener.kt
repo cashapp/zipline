@@ -230,6 +230,20 @@ abstract class EventListener {
   open fun ziplineClosed(zipline: Zipline) {
   }
 
+  fun interface Factory {
+    /**
+     * Creates an event listener to receive all events of a single [Zipline] instance.
+     *
+     * This may be used to group events from the same load, without tracking distinct [Zipline]
+     * instances in a map. For example, it could be used to connect a [serviceLeaked] event to the
+     * offending code's `manifestUrl` or [ZiplineManifest.version].
+     */
+    fun create(
+      applicationName: String,
+      manifestUrl: String?,
+    ): EventListener
+  }
+
   companion object {
     val NONE: EventListener = object : EventListener() {
     }

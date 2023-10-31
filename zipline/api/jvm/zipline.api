@@ -50,6 +50,10 @@ public final class app/cash/zipline/EventListener$Companion {
 	public final fun getNONE ()Lapp/cash/zipline/EventListener;
 }
 
+public abstract interface class app/cash/zipline/EventListener$Factory {
+	public abstract fun create (Ljava/lang/String;Ljava/lang/String;)Lapp/cash/zipline/EventListener;
+}
+
 public abstract interface class app/cash/zipline/InterruptHandler {
 	public abstract fun poll ()Z
 }

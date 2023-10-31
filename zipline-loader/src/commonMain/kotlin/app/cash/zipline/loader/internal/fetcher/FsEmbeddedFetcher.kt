@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import okio.ByteString
 import okio.FileSystem
@@ -29,6 +30,7 @@ internal class FsEmbeddedFetcher(
 ) : Fetcher {
   override suspend fun fetch(
     applicationName: String,
+    eventListener: EventListener,
     id: String,
     sha256: ByteString,
     nowEpochMs: Long,
