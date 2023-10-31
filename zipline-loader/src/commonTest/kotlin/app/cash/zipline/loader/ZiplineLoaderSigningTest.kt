@@ -40,7 +40,7 @@ import okio.ByteString.Companion.encodeUtf8
 class ZiplineLoaderSigningTest {
   private val eventListener = LoggingEventListener()
   private val tester = LoaderTester(
-    eventListener = eventListener,
+    eventListenerFactory = eventListener,
     manifestVerifier = ManifestVerifier.Builder()
       .addEd25519("key1", SampleKeys.key1Public)
       .build(),

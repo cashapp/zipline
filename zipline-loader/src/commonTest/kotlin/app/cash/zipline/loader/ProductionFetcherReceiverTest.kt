@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
@@ -146,6 +147,7 @@ class ProductionFetcherReceiverTest {
   ): Zipline {
     return loadFromManifest(
       applicationName = applicationName,
+      eventListener = EventListener.NONE,
       loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
       serializersModule = EmptySerializersModule(),
       initializer = initializer,

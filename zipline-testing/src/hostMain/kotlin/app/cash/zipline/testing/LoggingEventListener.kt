@@ -22,9 +22,11 @@ import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.ZiplineService
 
-class LoggingEventListener : EventListener() {
+class LoggingEventListener : EventListener(), EventListener.Factory {
   private var nextCallId = 1
   private val log = ArrayDeque<LogEntry>()
+
+  override fun create(applicationName: String, manifestUrl: String?) = this
 
   override fun bindService(zipline: Zipline, name: String, service: ZiplineService) {
     log(

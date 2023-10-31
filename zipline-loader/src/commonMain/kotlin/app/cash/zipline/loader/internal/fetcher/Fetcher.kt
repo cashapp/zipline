@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
+import app.cash.zipline.EventListener
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import okio.ByteString
@@ -31,6 +32,7 @@ internal interface Fetcher {
    */
   suspend fun fetch(
     applicationName: String,
+    eventListener: EventListener,
     id: String,
     sha256: ByteString,
     nowEpochMs: Long,
@@ -45,6 +47,7 @@ internal interface Fetcher {
 internal suspend fun List<Fetcher>.fetch(
   concurrentDownloadsSemaphore: Semaphore,
   applicationName: String,
+  eventListener: EventListener,
   id: String,
   sha256: ByteString,
   nowEpochMs: Long,
@@ -56,6 +59,7 @@ internal suspend fun List<Fetcher>.fetch(
     try {
       return@withPermit fetcher.fetch(
         applicationName = applicationName,
+        eventListener = eventListener,
         id = id,
         sha256 = sha256,
         nowEpochMs = nowEpochMs,

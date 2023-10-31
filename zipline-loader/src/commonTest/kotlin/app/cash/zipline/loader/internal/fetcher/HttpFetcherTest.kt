@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
-import app.cash.zipline.EventListener
 import app.cash.zipline.loader.FakeZiplineHttpClient
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,7 +22,7 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonElement
 
 class HttpFetcherTest {
-  private val httpFetcher = HttpFetcher(FakeZiplineHttpClient(), EventListener.NONE)
+  private val httpFetcher = HttpFetcher(FakeZiplineHttpClient())
   private val json = Json {
     prettyPrint = true
   }

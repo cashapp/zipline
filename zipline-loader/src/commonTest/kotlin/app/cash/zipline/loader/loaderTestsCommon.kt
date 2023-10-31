@@ -29,19 +29,20 @@ import okio.ByteString
 import okio.FileSystem
 import okio.Path
 
+val EventListenerNoneFactory = EventListener.Factory { _, _ -> EventListener.NONE }
+
 fun testZiplineLoader(
   dispatcher: CoroutineDispatcher,
   manifestVerifier: ManifestVerifier = NO_SIGNATURE_CHECKS,
   httpClient: ZiplineHttpClient,
   nowEpochMs: () -> Long,
-  eventListener: EventListener = EventListener.NONE,
+  eventListenerFactory: EventListener.Factory,
 ) = ZiplineLoader(
-  dispatcher,
-  manifestVerifier,
-  httpClient,
-  eventListener,
-  nowEpochMs,
-)
+  dispatcher = dispatcher,
+  manifestVerifier = manifestVerifier,
+  httpClient = httpClient,
+  nowEpochMs = nowEpochMs,
+).withEventListenerFactory(eventListenerFactory)
 
 fun testZiplineCache(
   fileSystem: FileSystem,

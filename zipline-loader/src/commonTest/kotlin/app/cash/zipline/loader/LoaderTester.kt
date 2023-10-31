@@ -33,7 +33,7 @@ import okio.FileSystem
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class LoaderTester(
-  private val eventListener: EventListener = EventListener.NONE,
+  private val eventListenerFactory: EventListener.Factory = EventListenerNoneFactory,
   private val manifestVerifier: ManifestVerifier = NO_SIGNATURE_CHECKS,
 ) {
   val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "okio-${randomToken().hex()}"
@@ -75,7 +75,7 @@ class LoaderTester(
       manifestVerifier = manifestVerifier,
       httpClient = httpClient,
       nowEpochMs = { nowMillis },
-      eventListener = eventListener,
+      eventListenerFactory = eventListenerFactory,
     ).withEmbedded(
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,

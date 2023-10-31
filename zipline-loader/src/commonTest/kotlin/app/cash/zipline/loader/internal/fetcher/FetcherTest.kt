@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.fetcher
 
+import app.cash.zipline.EventListener
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -36,6 +37,7 @@ class FetcherTest {
   private val fetcherAlpha = object : Fetcher {
     override suspend fun fetch(
       applicationName: String,
+      eventListener: EventListener,
       id: String,
       sha256: ByteString,
       nowEpochMs: Long,
@@ -50,6 +52,7 @@ class FetcherTest {
   private val fetcherBravo = object : Fetcher {
     override suspend fun fetch(
       applicationName: String,
+      eventListener: EventListener,
       id: String,
       sha256: ByteString,
       nowEpochMs: Long,
@@ -73,6 +76,7 @@ class FetcherTest {
     val actualByteString = fetchers.fetch(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       applicationName = "foxtrot",
+      eventListener = EventListener.NONE,
       id = "alpha",
       sha256 = "alpha".encodeUtf8().sha256(),
       nowEpochMs = 1_000L,
@@ -82,6 +86,7 @@ class FetcherTest {
     fetchers.fetch(
       concurrentDownloadsSemaphore = concurrentDownloadsSemaphore,
       applicationName = "foxtrot",
+      eventListener = EventListener.NONE,
       id = "bravo",
       sha256 = "bravo".encodeUtf8().sha256(),
       nowEpochMs = 1_000L,
