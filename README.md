@@ -219,8 +219,8 @@ components.
 
 | Component            | Supported Version | Notes                                                                       |
 |:---------------------|:------------------|:----------------------------------------------------------------------------|
-| Kotlin Compiler      | 1.9.0             | Kotlin compiler plugins do not yet have a stable API.                       |
-| Kotlin Serialization | 1.5.1             | For `decodeFromDynamic()`, `encodeToDynamic()`, and `ContextualSerializer`. |
+| Kotlin Compiler      | 1.9.20            | Kotlin compiler plugins do not yet have a stable API.                       |
+| Kotlin Serialization | 1.6.0             | For `decodeFromDynamic()`, `encodeToDynamic()`, and `ContextualSerializer`. |
 | Kotlin Coroutines    | 1.7.3             | For `transformLatest()` and `Deferred.getCompleted()`.                      |
 
 We intend to use stable APIs as soon as they are available.
