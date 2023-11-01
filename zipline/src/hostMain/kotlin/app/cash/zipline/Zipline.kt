@@ -44,7 +44,7 @@ actual class Zipline private constructor(
   userSerializersModule: SerializersModule,
   dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
-  private val eventListener: EventListener,
+  val eventListener: EventListener,
 ) {
   private val endpoint = Endpoint(
     scope = scope,
