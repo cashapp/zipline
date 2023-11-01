@@ -167,6 +167,7 @@ public final class app/cash/zipline/Zipline {
 	public final fun bind (Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
 	public final fun bind (Ljava/lang/String;Lapp/cash/zipline/ZiplineService;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;)V
 	public final fun close ()V
+	public final fun getEventListener ()Lapp/cash/zipline/EventListener;
 	public final fun getJson ()Lkotlinx/serialization/json/Json;
 	public final fun getQuickJs ()Lapp/cash/zipline/QuickJs;
 	public final fun loadJsModule (Ljava/lang/String;Ljava/lang/String;)V
