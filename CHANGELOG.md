@@ -3,6 +3,23 @@
 ## Unreleased
 
 
+## [1.4.0] - 2023-10-31
+
+ * New: `EventListener.Factory` can be used to scope events to a particular `Zipline` instance.
+ * New: Support arbitrary metadata in the `ZiplineManifest`. This new `Map<String, String>` can be
+   produced in your `build.gradle.kts` file, and consumed from the `ZiplineManifest` instance.
+
+    ```kotlin
+    zipline {
+      ...
+      metadata.put("build_timestamp", "2023-10-25T12:00:00T")
+    }
+    ```
+
+ * Upgrade: [OkHttp 4.12.0](https://square.github.io/okhttp/changelogs/changelog_4x/#version-4120)
+ * Upgrade: [Okio 3.6.0](https://square.github.io/okio/changelog/#version-360)
+
+
 ## [1.3.0] - 2023-09-20
 
  * Fix: Configure a 6 MiB stack size by default. Previously Zipline didn't enforce any stack
