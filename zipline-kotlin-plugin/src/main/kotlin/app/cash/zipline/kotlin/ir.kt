@@ -47,6 +47,7 @@ import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrFile
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
+import org.jetbrains.kotlin.ir.declarations.createBlockBody
 import org.jetbrains.kotlin.ir.expressions.IrDelegatingConstructorCall
 import org.jetbrains.kotlin.ir.expressions.IrExpression
 import org.jetbrains.kotlin.ir.expressions.IrExpressionBody
@@ -302,24 +303,24 @@ fun irVal(
     this.initializer = initializerBuilder.initializer()
   }
 
-  result.getter = irFactory.createFunction(
+  result.getter = irFactory.createSimpleFunction(
     startOffset = declaringClass.startOffset,
     endOffset = declaringClass.endOffset,
     origin = IrDeclarationOrigin.DEFAULT_PROPERTY_ACCESSOR,
     name = Name.special("<get-${propertyName.identifier}>"),
     visibility = overriddenProperty?.owner?.getter?.visibility ?: DescriptorVisibilities.PRIVATE,
-    isExternal = false,
-    symbol = IrSimpleFunctionSymbolImpl(),
-    modality = Modality.FINAL,
-    returnType = propertyType,
     isInline = false,
+    isExpect = false,
+    returnType = propertyType,
+    modality = Modality.FINAL,
+    symbol = IrSimpleFunctionSymbolImpl(),
     isTailrec = false,
     isSuspend = false,
     isOperator = false,
     isInfix = false,
-    isExpect = false,
-    isFakeOverride = false,
+    isExternal = false,
     containerSource = null,
+    isFakeOverride = false,
   ).apply {
     parent = declaringClass
     correspondingPropertySymbol = result.symbol

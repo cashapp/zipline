@@ -425,7 +425,6 @@ fun compile(
 ): JvmCompilationResult {
   return KotlinCompilation().apply {
     sources = sourceFiles
-    useIR = true
     compilerPluginRegistrars = listOf(plugin)
     inheritClassPath = true
   }.compile()

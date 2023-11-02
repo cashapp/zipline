@@ -1,10 +1,10 @@
 [versions]
 androidx-compose = "1.5.4"
-androidx-compose-compiler = "1.5.2"
+androidx-compose-compiler = "1.5.4-dev-k1.9.20-50f08dfa4b4"
 auto-service="1.1.1"
 compileSdk = "34"
 http4k = "4.48.0.0"
-kotlin = "1.9.0"
+kotlin = "1.9.20"
 kotlinx-coroutines = "1.7.3"
 kotlinx-serialization = "1.6.0"
 okHttp = "4.12.0"
@@ -32,7 +32,7 @@ assertk = "com.willowtreeapps.assertk:assertk:0.27.0"
 auto-service-compiler = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
 binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.13.2" }
-cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.2.4" }
+cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.3.0" }
 coil-compose = { module = "io.coil-kt:coil-compose", version = "2.5.0" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "1.9.10" }
 duktape = { module = "com.squareup.duktape:duktape-android", version = "1.4.0" }
@@ -40,7 +40,7 @@ http4k-core = { module = "org.http4k:http4k-core", version.ref = "http4k" }
 http4k-server-jetty = { module = "org.http4k:http4k-server-jetty", version.ref = "http4k" }
 http4k-client-websocket = { module = "org.http4k:http4k-client-websocket", version.ref = "http4k" }
 junit = { module = "junit:junit", version = "4.13.2" }
-kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.3.2" }
+kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.4.0" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
 kotlin-serialization = { module = "org.jetbrains.kotlin:kotlin-serialization", version.ref = "kotlin" }

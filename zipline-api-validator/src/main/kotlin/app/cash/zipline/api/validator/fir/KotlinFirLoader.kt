@@ -18,6 +18,7 @@ package app.cash.zipline.api.validator.fir
 import java.io.File
 import org.jetbrains.kotlin.KtVirtualFileSourceFile
 import org.jetbrains.kotlin.cli.common.CLIConfigurationKeys
+import org.jetbrains.kotlin.cli.common.GroupedKtSources
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR
@@ -28,7 +29,6 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.VfsBasedProjectEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.GroupedKtSources
 import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.ModuleCompilerEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.ModuleCompilerInput
 import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.compileModuleToAnalyzedFir
