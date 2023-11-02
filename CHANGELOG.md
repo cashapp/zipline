@@ -3,6 +3,12 @@
 ## Unreleased
 
 
+## [1.5.0] - 2023-11-02
+
+ * New: `Zipline.eventListener` can be used to get the `EventListener` from a `Zipline` instance.
+ * Upgrade: [Kotlin 1.9.20](https://square.github.io/okio/changelog/#version-360)
+
+
 ## [1.4.0] - 2023-10-31
 
  * New: `EventListener.Factory` can be used to scope events to a particular `Zipline` instance.
@@ -420,6 +426,7 @@ Initial release.
 [kotlin_1_8_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.10
 [kotlin_1_8_20]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.20
 [kotlin_1_8_21]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.21
+[kotlin_1_9_20]: https://github.com/JetBrains/kotlin/releases/tag/v1.9.20
 [kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
 [kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
