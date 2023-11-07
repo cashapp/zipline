@@ -15,9 +15,6 @@ buildscript {
     mavenCentral()
     google()
     gradlePluginPortal()
-
-    // TODO: remove this once a stable Compose compiler is released for Kotlin 1.9.20.
-    maven(url = "https://androidx.dev/storage/compose-compiler/repository/")
   }
 }
 
@@ -25,9 +22,6 @@ allprojects {
   repositories {
     mavenCentral()
     google()
-
-    // TODO: remove this once a stable Compose compiler is released for Kotlin 1.9.20.
-    maven(url = "https://androidx.dev/storage/compose-compiler/repository/")
   }
 }
 
