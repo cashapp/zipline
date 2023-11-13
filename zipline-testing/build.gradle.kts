@@ -1,6 +1,5 @@
 import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 
 plugins {
@@ -28,6 +27,8 @@ kotlin {
   tvosSimulatorArm64()
   tvosX64()
 
+  applyDefaultHierarchyTemplate()
+
   sourceSets {
     all {
       languageSettings.optIn("kotlin.js.ExperimentalJsExport")
@@ -50,30 +51,8 @@ kotlin {
       dependsOn(hostMain)
     }
 
-    val nativeMain by creating {
+    val nativeMain by getting {
       dependsOn(hostMain)
-    }
-
-    val appleMain by creating {
-      dependsOn(nativeMain)
-    }
-    val macosX64Main by getting { dependsOn(appleMain) }
-    val macosArm64Main by getting { dependsOn(appleMain) }
-    val iosArm64Main by getting { dependsOn(appleMain) }
-    val iosX64Main by getting { dependsOn(appleMain) }
-    val iosSimulatorArm64Main by getting { dependsOn(appleMain) }
-    val tvosArm64Main by getting { dependsOn(appleMain) }
-    val tvosSimulatorArm64Main by getting { dependsOn(appleMain) }
-    val tvosX64Main by getting { dependsOn(appleMain) }
-
-    val linuxMain by creating {
-      dependsOn(nativeMain)
-    }
-    val linuxX64Main by getting { dependsOn(linuxMain) }
-
-    targets.withType<KotlinNativeTarget> {
-      val main by compilations.getting
-      main.defaultSourceSet.dependsOn(nativeMain)
     }
   }
 

@@ -1,5 +1,4 @@
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
   kotlin("multiplatform")
@@ -21,6 +20,8 @@ kotlin {
   tvosArm64()
   tvosSimulatorArm64()
   tvosX64()
+
+  applyDefaultHierarchyTemplate()
 
   sourceSets {
     val commonMain by getting {

@@ -1,7 +1,6 @@
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
   kotlin("multiplatform")
@@ -30,6 +29,8 @@ kotlin {
   tvosArm64()
   tvosSimulatorArm64()
   tvosX64()
+
+  applyDefaultHierarchyTemplate()
 
   sourceSets {
     val commonMain by getting {
@@ -60,17 +61,8 @@ kotlin {
         implementation(libs.sqldelight.driver.android)
       }
     }
-    val nativeMain by creating {
-      dependsOn(commonMain)
+    val nativeMain by getting {
       dependencies {
-        implementation(libs.sqldelight.driver.native)
-      }
-    }
-    targets.withType<KotlinNativeTarget> {
-      val main by compilations.getting {
-        defaultSourceSet.dependsOn(nativeMain)
-      }
-      main.dependencies {
         implementation(libs.sqldelight.driver.native)
       }
     }
@@ -84,9 +76,6 @@ kotlin {
         implementation(libs.kotlinx.coroutines.test)
         implementation(libs.turbine)
       }
-    }
-    val androidInstrumentedTest by getting {
-      dependsOn(commonTest)
     }
     val jniTest by creating {
       dependsOn(commonTest)
@@ -105,17 +94,13 @@ kotlin {
       }
     }
 
-    val nativeTest by creating {
+    val nativeTest by getting {
       dependencies {
         implementation(projects.ziplineLoaderTesting)
       }
     }
-    targets.withType<KotlinNativeTarget> {
-      val test by compilations.getting
-      test.defaultSourceSet.dependsOn(nativeTest)
-    }
 
-    sourceSets.all {
+    all {
       languageSettings {
         optIn("app.cash.zipline.EngineApi")
       }
