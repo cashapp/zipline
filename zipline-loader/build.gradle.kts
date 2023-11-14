@@ -77,6 +77,9 @@ kotlin {
         implementation(libs.turbine)
       }
     }
+    val androidInstrumentedTest by getting {
+      dependsOn(commonTest)
+    }
     val jniTest by creating {
       dependsOn(commonTest)
       dependencies {
