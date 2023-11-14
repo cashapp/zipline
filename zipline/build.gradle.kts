@@ -50,6 +50,8 @@ kotlin {
   tvosSimulatorArm64()
   tvosX64()
 
+  applyDefaultHierarchyTemplate()
+
   sourceSets {
     val commonMain by getting {
       dependencies {
@@ -103,16 +105,15 @@ kotlin {
       }
     }
 
-    val nativeMain by creating {
+    val nativeMain by getting {
       dependsOn(hostMain)
     }
-    val nativeTest by creating {
+    val nativeTest by getting {
       dependsOn(hostTest)
     }
 
     targets.withType<KotlinNativeTarget> {
       val main by compilations.getting
-      main.defaultSourceSet.dependsOn(nativeMain)
 
       main.cinterops {
         create("quickjs") {
@@ -126,9 +127,6 @@ kotlin {
       binaries.withType<Framework> {
         linkerOpts += "-lsqlite3"
       }
-
-      val test by compilations.getting
-      test.defaultSourceSet.dependsOn(nativeTest)
     }
 
     targets.withType<KotlinNativeTargetWithTests<*>> {
@@ -153,7 +151,7 @@ kotlin {
       }
     }
 
-    sourceSets.all {
+    all {
       languageSettings {
         optIn("app.cash.zipline.EngineApi")
       }

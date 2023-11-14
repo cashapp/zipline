@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
@@ -10,16 +9,18 @@ plugins {
 }
 
 kotlin {
-  iosArm64()
-  iosX64()
-  iosSimulatorArm64()
-
   androidTarget()
 
   js {
     browser()
     binaries.executable()
   }
+
+  iosArm64()
+  iosX64()
+  iosSimulatorArm64()
+
+  applyDefaultHierarchyTemplate()
 
   sourceSets {
     val commonMain by getting {
@@ -41,12 +42,8 @@ kotlin {
         implementation(libs.okHttp.core)
       }
     }
-    val iosMain by creating {
+    val iosMain by getting {
       dependsOn(hostMain)
-    }
-    targets.withType<KotlinNativeTarget> {
-      val main by compilations.getting
-      main.defaultSourceSet.dependsOn(iosMain)
     }
   }
 }

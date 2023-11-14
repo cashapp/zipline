@@ -1,7 +1,6 @@
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 
 plugins {
   kotlin("multiplatform")
@@ -35,26 +34,12 @@ kotlin {
         api(libs.okio.core)
       }
     }
-    val nativeMain by creating {
-      dependsOn(commonMain)
-    }
 
     val commonTest by getting {
       dependencies {
         implementation(libs.assertk)
         implementation(kotlin("test"))
       }
-    }
-    val nativeTest by creating {
-      dependsOn(commonTest)
-    }
-
-    targets.withType<KotlinNativeTarget> {
-      val main by compilations.getting
-      main.defaultSourceSet.dependsOn(nativeMain)
-
-      val test by compilations.getting
-      test.defaultSourceSet.dependsOn(nativeTest)
     }
   }
 }
