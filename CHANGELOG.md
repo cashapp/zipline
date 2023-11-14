@@ -3,6 +3,12 @@
 ## Unreleased
 
 
+## [1.5.1] - 2023-11-14
+
+ * Fix: remove the Zipline version from the `klib` metadata in the `zipline-cinterop-quickjs`
+   artifact. This restores the behavior from 1.4.0 to work around [KT-62515].
+
+
 ## [1.5.0] - 2023-11-02
 
  * New: `Zipline.eventListener` can be used to get the `EventListener` from a `Zipline` instance.
@@ -421,6 +427,7 @@ The API and behavior should otherwise be unchanged.
 Initial release.
 
 
+[KT-62515]: https://youtrack.jetbrains.com/issue/KT-62515
 [kotlin_1_7_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.7.10
 [kotlin_1_8_0]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.0
 [kotlin_1_8_10]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.10
