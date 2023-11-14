@@ -21,8 +21,6 @@ kotlin {
   tvosSimulatorArm64()
   tvosX64()
 
-  applyDefaultHierarchyTemplate()
-
   sourceSets {
     all {
       languageSettings {
