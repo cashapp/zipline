@@ -16,6 +16,7 @@ import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
 
 buildscript {
   repositories {
@@ -235,6 +236,17 @@ allprojects {
 
   tasks.withType<KotlinJsTest>().configureEach {
     environment("ZIPLINE_ROOT", rootDir.toString())
+  }
+}
+
+// Kotlin 1.9.20 started putting the library version in the klib manifest, but that broke resolution
+// in downstream projects! Hack the klib library version to be 'unspecified', which is what the
+// CInteropProcess task did in prior releases. https://youtrack.jetbrains.com/issue/KT-62515/
+allprojects {
+  tasks.withType<CInteropProcess>().configureEach {
+    val libraryVersionField = CInteropProcess::class.java.getDeclaredField("libraryVersion")
+    libraryVersionField.isAccessible = true
+    libraryVersionField.set(this, "unspecified")
   }
 }
 
