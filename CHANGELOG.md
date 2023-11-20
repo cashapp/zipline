@@ -3,6 +3,11 @@
 ## Unreleased
 
 
+## [1.6.0] - 2023-11-20
+
+* Upgrade: [SQLDelight 2.0.0][sqldelight_2_0_0]
+
+
 ## [1.5.1] - 2023-11-14
 
  * Fix: remove the Zipline version from the `klib` metadata in the `zipline-cinterop-quickjs`
@@ -440,3 +445,4 @@ Initial release.
 [kotlin_serialization_1_6_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.6.0
 [kotlinx_coroutines_1_7_1]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.1
 [kotlinx_coroutines_1_7_2]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.2
+[sqldelight_2_0_0]: https://cashapp.github.io/sqldelight/2.0.0/changelog/#200-2023-07-26
