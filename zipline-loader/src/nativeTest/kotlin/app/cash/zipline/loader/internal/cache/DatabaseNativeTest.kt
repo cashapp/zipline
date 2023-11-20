@@ -39,6 +39,7 @@ class DatabaseNativeTest {
       schema = Produce.Schema,
     )
     val database = Produce(driver)
+    Produce.Schema.create(driver)
     assertEquals(0, database.produceQueries.count().executeAsOne())
     driver.close()
   }

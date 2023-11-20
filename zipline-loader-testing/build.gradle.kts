@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
-  id("com.squareup.sqldelight")
+  id("app.cash.sqldelight")
 }
 
 kotlin {
@@ -51,7 +51,9 @@ kotlin {
 }
 
 sqldelight {
-  database("Produce") {
-    packageName = "app.cash.zipline.loader.internal.cache.testing"
+  databases {
+    create("Produce") {
+      packageName.set("app.cash.zipline.loader.internal.cache.testing")
+    }
   }
 }

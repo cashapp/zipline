@@ -15,11 +15,11 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.sqldelight.db.SqlDriver
 import app.cash.zipline.loader.randomToken
 import app.cash.zipline.loader.testSqlDriverFactory
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.testing.systemFileSystem
-import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test

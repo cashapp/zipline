@@ -15,25 +15,28 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlSchema
+import app.cash.sqldelight.driver.native.NativeSqliteDriver
+import app.cash.sqldelight.driver.native.wrapConnection
 import co.touchlab.sqliter.DatabaseConfiguration
 import co.touchlab.sqliter.interop.SQLiteException
-import com.squareup.sqldelight.db.SqlDriver
-import com.squareup.sqldelight.drivers.native.NativeSqliteDriver
-import com.squareup.sqldelight.drivers.native.wrapConnection
 import okio.Path
 
 internal actual class SqlDriverFactory {
-  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
+  actual fun create(path: Path, schema: SqlSchema<*>): SqlDriver {
     validateDbPath(path)
     return NativeSqliteDriver(
       configuration = DatabaseConfiguration(
         name = path.name,
-        version = schema.version,
+        version = schema.version.toInt(),
         create = { connection ->
-          wrapConnection(connection) { schema.create(it) }
+          wrapConnection(connection, Database.Schema::create)
         },
         upgrade = { connection, oldVersion, newVersion ->
-          wrapConnection(connection) { schema.migrate(it, oldVersion, newVersion) }
+          wrapConnection(connection) {
+            schema.migrate(it, oldVersion.toLong(), newVersion.toLong())
+          }
         },
         extendedConfig = DatabaseConfiguration.Extended(
           basePath = path.parent!!.toString(),
