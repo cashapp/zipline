@@ -17,6 +17,7 @@ package app.cash.zipline.loader.internal.cache
 
 import android.content.Context
 import android.database.SQLException
+import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
@@ -25,7 +26,7 @@ import okio.Path
 internal actual class SqlDriverFactory(
   private val context: Context,
 ) {
-  actual fun create(path: Path, schema: SqlSchema<*>): SqlDriver {
+  actual fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>): SqlDriver {
     validateDbPath(path)
     return AndroidSqliteDriver(
       schema = schema,
