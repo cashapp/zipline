@@ -15,8 +15,8 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.sqldelight.db.SqlDriver
 import app.cash.zipline.loader.internal.cache.testing.Produce
-import com.squareup.sqldelight.db.SqlDriver
 import kotlin.test.assertEquals
 import okio.Path.Companion.toOkioPath
 import org.junit.After

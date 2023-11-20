@@ -15,13 +15,15 @@
  */
 package app.cash.zipline.loader.internal.cache
 
-import com.squareup.sqldelight.db.SqlDriver
-import com.squareup.sqldelight.sqlite.driver.JdbcSqliteDriver
+import app.cash.sqldelight.db.QueryResult
+import app.cash.sqldelight.db.SqlDriver
+import app.cash.sqldelight.db.SqlSchema
+import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import java.sql.SQLException
 import okio.Path
 
 internal actual class SqlDriverFactory {
-  actual fun create(path: Path, schema: SqlDriver.Schema): SqlDriver {
+  actual fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>): SqlDriver {
     validateDbPath(path)
     val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:$path")
     try {

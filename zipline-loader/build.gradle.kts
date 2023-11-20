@@ -8,7 +8,7 @@ plugins {
   kotlin("plugin.serialization")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
-  id("com.squareup.sqldelight")
+  id("app.cash.sqldelight")
   id("de.undercouch.download")
   id("binary-compatibility-validator")
 }
@@ -135,8 +135,10 @@ android {
 }
 
 sqldelight {
-  database("Database") {
-    packageName = "app.cash.zipline.loader.internal.cache"
+  databases {
+    create("Database") {
+      packageName.set("app.cash.zipline.loader.internal.cache")
+    }
   }
 }
 
