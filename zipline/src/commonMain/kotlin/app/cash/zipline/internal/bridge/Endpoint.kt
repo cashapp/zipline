@@ -68,6 +68,7 @@ internal class Endpoint internal constructor(
     serializersModule = SerializersModule {
       contextual(PassByReference::class, PassByReferenceSerializer(this@Endpoint))
       contextual(Throwable::class, ThrowableSerializer)
+      contextual(Long::class, LongSerializer)
       contextual(Flow::class) { serializers ->
         FlowSerializer(
           ziplineServiceSerializer<FlowZiplineService<Any?>>(
