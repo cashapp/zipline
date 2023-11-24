@@ -60,7 +60,7 @@ internal abstract class WriteWebpackConfigTask : DefaultTask() {
       |    },
       |  }),
       |];
-      """.trimMargin()
+      """.trimMargin(),
     )
   }
 
