@@ -52,7 +52,8 @@ internal abstract class WriteWebpackConfigTask : DefaultTask() {
       |      compress: {
       |        sequences: false,
       |      },
-      |      mangle: false,
+      |      mangle: {
+      |      },
       |      format: {
       |        beautify: true,
       |        braces: true,
@@ -60,6 +61,7 @@ internal abstract class WriteWebpackConfigTask : DefaultTask() {
       |    },
       |  }),
       |];
+      |
       """.trimMargin(),
     )
   }
