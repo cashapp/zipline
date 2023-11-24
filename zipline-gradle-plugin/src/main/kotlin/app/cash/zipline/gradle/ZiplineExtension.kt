@@ -28,6 +28,71 @@ abstract class ZiplineExtension {
   abstract val httpServerPort: Property<Int>
   abstract val metadata: MapProperty<String, String>
 
+  /**
+   * True to strip line number information from the encoded QuickJS bytecode in production builds.
+   * Line numbers will not be included in stack traces. This is false by default.
+   */
+  abstract val stripLineNumbers: Property<Boolean>
+
+  /**
+   * JSON-encoded options for the Webpack Terser plugin that is applied to production builds. The
+   * interpretation of the JSON is specified by the Terser tool.
+   *
+   * If null, the default configuration is used.
+   *
+   * https://github.com/terser/terser#minify-options
+   */
+  abstract val terserOptionsJson: Property<String>
+
+  /**
+   * Configure production builds to get a small artifact, by removing information used for stack
+   * traces and the sampling profiler.
+   *
+   * Note that this is not necessarily the most-compact configuration. It is merely a compact
+   * configuration that we recommend. This configuration may change between Zipline releases.
+   *
+   * The current implementation retains file name information but discards class and function names.
+   */
+  fun optimizeForSmallArtifactSize() {
+    stripLineNumbers.set(true)
+    terserOptionsJson.set(
+      """
+      |{
+      |  compress: {
+      |    sequences: false,
+      |  },
+      |  mangle: {
+      |  },
+      |  format: {
+      |    beautify: true,
+      |    braces: true,
+      |  }
+      |}
+      """.trimMargin(),
+    )
+  }
+
+  /**
+   * Configure production builds to get good stack traces and profiling, at a cost of artifact size.
+   */
+  fun optimizeForDeveloperExperience() {
+    stripLineNumbers.set(false)
+    terserOptionsJson.set(
+      """
+      |{
+      |  compress: {
+      |    sequences: false,
+      |  },
+      |  mangle: false,
+      |  format: {
+      |    beautify: true,
+      |    braces: true,
+      |  }
+      |}
+      """.trimMargin(),
+    )
+  }
+
   abstract class SigningKey(val name: String) {
     abstract val algorithmId: Property<SignatureAlgorithmId>
     abstract val privateKeyHex: Property<String>

@@ -19,6 +19,7 @@ import app.cash.zipline.gradle.ValidateZiplineApiTask.Mode
 import app.cash.zipline.loader.SignatureAlgorithmId
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
@@ -80,7 +81,10 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
         it.dependsOn(kotlinWebpack)
       }
 
-      val writeWebpackConfigTask = registerWriteZiplineWebpackConfig(target)
+      val writeWebpackConfigTask = registerWriteZiplineWebpackConfig(
+        project = target,
+        extension = ziplineExtension,
+      )
       kotlinWebpack.dependsOn(writeWebpackConfigTask)
     }
 
@@ -139,11 +143,20 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
   private fun registerWriteZiplineWebpackConfig(
     project: Project,
-  ): WriteWebpackConfigTask {
-    return project.tasks.maybeCreate(
-      "writeZiplineWebpackConfig",
-      WriteWebpackConfigTask::class.java,
-    )
+    extension: ZiplineExtension,
+  ): TaskProvider<out Task> {
+    // Gradle doesn't have a configuration-avoidance version of maybeCreate() so try/catch instead.
+    // https://github.com/gradle/gradle/issues/6243
+    return try {
+      project.tasks.named("writeZiplineWebpackConfig")
+    } catch (e: UnknownTaskException) {
+      project.tasks.register(
+        "writeZiplineWebpackConfig",
+        WriteWebpackConfigTask::class.java,
+      ) {
+        it.terserOptionsJson.set(extension.terserOptionsJson)
+      }
+    }
   }
 
   private fun registerZiplineApiTask(
