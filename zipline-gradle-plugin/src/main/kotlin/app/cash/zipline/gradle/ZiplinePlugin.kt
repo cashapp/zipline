@@ -67,17 +67,21 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
 
     target.tasks.withType(KotlinWebpack::class.java) { kotlinWebpack ->
-      if (!kotlinWebpack.name.endsWith("Webpack")) {
-        return@withType
-      }
+      if (!kotlinWebpack.name.endsWith("Webpack")) return@withType
+
+      val jsProductionTask = kotlinWebpack.asJsProductionTask()
+
       val ziplineCompileTask = registerCompileZiplineTask(
         project = target,
-        jsProductionTask = kotlinWebpack.asJsProductionTask(),
+        jsProductionTask = jsProductionTask,
         extension = ziplineExtension,
       )
       ziplineCompileTask.configure {
         it.dependsOn(kotlinWebpack)
       }
+
+      val writeWebpackConfigTask = registerWriteZiplineWebpackConfig(target)
+      kotlinWebpack.dependsOn(writeWebpackConfigTask)
     }
 
     val cliConfiguration: Configuration = target.configurations.create("ziplineCli")
@@ -131,6 +135,15 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
 
     return ziplineCompileTask
+  }
+
+  private fun registerWriteZiplineWebpackConfig(
+    project: Project,
+  ): WriteWebpackConfigTask {
+    return project.tasks.maybeCreate(
+      "writeZiplineWebpackConfig",
+      WriteWebpackConfigTask::class.java,
+    )
   }
 
   private fun registerZiplineApiTask(

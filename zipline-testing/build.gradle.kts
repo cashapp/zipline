@@ -68,7 +68,6 @@ kotlin {
 }
 
 tasks {
-  // TODO upstream this to ZiplinePlugin
   withType<KotlinJsCompile>().all {
     kotlinOptions {
       freeCompilerArgs += listOf("-Xir-per-module")
