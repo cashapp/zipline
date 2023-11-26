@@ -92,9 +92,11 @@ abstract class ZiplineCompileTask : DefaultTask() {
     metadata.set(extension.metadata)
 
     // Only ever strip line numbers in production builds.
-    stripLineNumbers.set(extension.stripLineNumbers.map {
-      it && jsProductionTask.mode == KotlinJsBinaryMode.PRODUCTION
-    })
+    stripLineNumbers.set(
+      extension.stripLineNumbers.map {
+        it && jsProductionTask.mode == KotlinJsBinaryMode.PRODUCTION
+      },
+    )
 
     signingKeys.set(
       project.provider {
