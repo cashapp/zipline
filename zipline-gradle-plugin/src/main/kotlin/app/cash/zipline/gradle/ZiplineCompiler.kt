@@ -20,6 +20,7 @@ import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.bytecode.SourceMap
 import app.cash.zipline.bytecode.applySourceMapToBytecode
 import app.cash.zipline.bytecode.removeLeadingDotDots
+import app.cash.zipline.bytecode.stripLineNumbers
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.ZiplineFile
@@ -28,54 +29,45 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.runBlocking
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.ByteString.Companion.toByteString
 import okio.HashingSink
 import okio.buffer
 import okio.sink
 
-internal object ZiplineCompiler {
-  private const val MODULE_PATH_PREFIX = "./"
-  private const val ZIPLINE_EXTENSION = ".zipline"
+internal class ZiplineCompiler(
+  private val outputDir: File,
+  private val mainFunction: String?,
+  private val mainModuleId: String?,
+  private val manifestSigner: ManifestSigner?,
+  private val version: String?,
+  private val metadata: Map<String, String>,
+  private val stripLineNumbers: Boolean,
+) {
+  companion object {
+    private const val MODULE_PATH_PREFIX = "./"
+    private const val ZIPLINE_EXTENSION = ".zipline"
+  }
 
   fun compile(
     inputDir: File,
-    outputDir: File,
-    mainFunction: String?,
-    mainModuleId: String?,
-    manifestSigner: ManifestSigner?,
-    version: String?,
-    metadata: Map<String, String>,
   ) {
     val jsFiles = getJsFiles(inputDir.listFiles()!!.asList())
-    val modules = compileFilesInParallel(jsFiles, outputDir)
+    val modules = compileFilesInParallel(jsFiles)
     writeManifest(
-      outputDir = outputDir,
-      mainFunction = mainFunction,
-      mainModuleId = mainModuleId,
-      manifestSigner = manifestSigner,
       modules = modules,
-      version = version,
-      metadata = metadata,
     )
   }
 
   fun incrementalCompile(
-    outputDir: File,
     modifiedFiles: List<File>,
     addedFiles: List<File>,
     removedFiles: List<File>,
-    mainFunction: String?,
-    mainModuleId: String?,
-    manifestSigner: ManifestSigner?,
-    version: String?,
-    metadata: Map<String, String>,
   ) {
     val modifiedFileNames = getJsFiles(modifiedFiles).map { it.name }.toSet()
     val removedFileNames = getJsFiles(removedFiles).map { it.name }.toSet()
 
-    // Get the current manifest and remove any removed or modified modules
+    // Get the current manifest and remove any removed or modified modules.
     val manifestFile = File(outputDir.path, manifestFileName)
     val manifest = Json.decodeFromString<ZiplineManifest>(manifestFile.readText())
     val unchangedModules = manifest.modules.filter { (k, _) ->
@@ -83,33 +75,28 @@ internal object ZiplineCompiler {
       moduleFileName !in removedFileNames && moduleFileName !in modifiedFileNames
     }
 
-    // Delete Zipline files for any removed JS files
-    removedFileNames.forEach { File(outputDir.path + "/" + it.removeSuffix(".js") + ZIPLINE_EXTENSION).delete() }
+    // Delete Zipline files for any removed JS files.
+    removedFileNames.forEach {
+      File(outputDir.path + "/" + it.removeSuffix(".js") + ZIPLINE_EXTENSION).delete()
+    }
 
-    // Compile the newly added or modified files and add them into the module list
+    // Compile the newly added or modified files and add them into the module list.
     val addedOrModifiedFiles = getJsFiles(addedFiles) + getJsFiles(modifiedFiles)
-    val compiledModules = compileFilesInParallel(addedOrModifiedFiles, outputDir)
+    val compiledModules = compileFilesInParallel(addedOrModifiedFiles)
 
-    // Write back a new up-to-date manifest
+    // Write back a new up-to-date manifest.
     writeManifest(
-      outputDir = outputDir,
-      mainFunction = mainFunction,
-      mainModuleId = mainModuleId,
-      manifestSigner = manifestSigner,
       modules = unchangedModules + compiledModules,
-      version = version,
-      metadata = metadata,
     )
   }
 
   private fun compileFilesInParallel(
     files: List<File>,
-    outputDir: File,
   ) = runBlocking {
     files
       .map { file ->
         async(Dispatchers.Default) {
-          compileSingleFile(file, outputDir)
+          compileSingleFile(file)
         }
       }
       .awaitAll()
@@ -118,7 +105,6 @@ internal object ZiplineCompiler {
 
   private fun compileSingleFile(
     jsFile: File,
-    outputDir: File,
   ): Pair<String, ZiplineManifest.Module> {
     val jsSourceMapFile = File("${jsFile.path}.map")
     val outputZiplineFilePath = jsFile.nameWithoutExtension + ZIPLINE_EXTENSION
@@ -129,10 +115,15 @@ internal object ZiplineCompiler {
       var bytecode = quickJs.compile(jsFile.readText(), jsFile.name)
 
       if (jsSourceMapFile.exists()) {
-        // rewrite the bytecode with source line numbers.
+        // Rewrite the bytecode with source line numbers.
         val sourceMap = SourceMap.parse(jsSourceMapFile.readText()).removeLeadingDotDots()
         bytecode = applySourceMapToBytecode(bytecode, sourceMap)
       }
+
+      if (stripLineNumbers) {
+        bytecode = stripLineNumbers(bytecode)
+      }
+
       val ziplineFile = ZiplineFile(CURRENT_ZIPLINE_VERSION, bytecode.toByteString())
       val sha256 = outputZiplineFile.sink().use { fileSink ->
         val hashingSink = HashingSink.sha256(fileSink)
@@ -153,13 +144,7 @@ internal object ZiplineCompiler {
   }
 
   private fun writeManifest(
-    outputDir: File,
-    mainFunction: String?,
-    mainModuleId: String?,
-    manifestSigner: ManifestSigner?,
     modules: Map<String, ZiplineManifest.Module>,
-    version: String?,
-    metadata: Map<String, String>,
   ) {
     val unsignedManifest = ZiplineManifest.create(
       modules = modules,

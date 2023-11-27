@@ -26,7 +26,6 @@ import java.io.File
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
-import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import okio.buffer
 import okio.source
@@ -144,14 +143,16 @@ class ZiplineCompilerTest {
 
     val mainModuleId = "./app.js"
     val mainFunction = "zipline.ziplineMain"
-    ZiplineCompiler.compile(
-      inputDir = inputDir,
+    ZiplineCompiler(
       outputDir = outputDir,
       mainFunction = mainFunction,
       mainModuleId = mainModuleId,
       manifestSigner = null,
       version = null,
       metadata = mapOf(),
+      stripLineNumbers = false,
+    ).compile(
+      inputDir = inputDir,
     )
 
     val expectedNumberFiles = if (dirHasSourceMaps) inputDir.listFiles()!!.size / 2 else inputDir.listFiles()!!.size
@@ -174,16 +175,18 @@ class ZiplineCompilerTest {
 
     val mainModuleId = "./app.js"
     val mainFunction = "zipline.ziplineMain"
-    ZiplineCompiler.incrementalCompile(
+    ZiplineCompiler(
       outputDir = outputDir,
       mainFunction = mainFunction,
       mainModuleId = mainModuleId,
-      modifiedFiles = modifiedFiles,
-      addedFiles = addedFiles,
-      removedFiles = removedFiles,
       manifestSigner = null,
       version = null,
       metadata = mapOf(),
+      stripLineNumbers = false,
+    ).incrementalCompile(
+      modifiedFiles = modifiedFiles,
+      addedFiles = addedFiles,
+      removedFiles = removedFiles,
     )
 
     val expectedNumberFiles = inputDir.listFiles()!!.size + addedFiles.size - removedFiles.size

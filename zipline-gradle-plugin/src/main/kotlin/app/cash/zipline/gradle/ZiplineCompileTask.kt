@@ -35,6 +35,7 @@ import org.gradle.api.tasks.TaskAction
 import org.gradle.work.ChangeType
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
+import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
 
 /**
  * Compiles `.js` files to `.zipline` files.
@@ -67,6 +68,10 @@ abstract class ZiplineCompileTask : DefaultTask() {
   @get:Input
   abstract val metadata: MapProperty<String, String>
 
+  @get:Optional
+  @get:Input
+  abstract val stripLineNumbers: Property<Boolean>
+
   internal fun configure(
     jsProductionTask: JsProductionTask,
     extension: ZiplineExtension,
@@ -85,6 +90,13 @@ abstract class ZiplineCompileTask : DefaultTask() {
     mainFunction.set(extension.mainFunction)
     version.set(extension.version)
     metadata.set(extension.metadata)
+
+    // Only ever strip line numbers in production builds.
+    stripLineNumbers.set(
+      extension.stripLineNumbers.map {
+        it && jsProductionTask.mode == KotlinJsBinaryMode.PRODUCTION
+      },
+    )
 
     signingKeys.set(
       project.provider {
@@ -118,6 +130,17 @@ abstract class ZiplineCompileTask : DefaultTask() {
     }
     val version = version.orNull
     val metadata = metadata.orNull ?: mapOf()
+    val stripLineNumbers = stripLineNumbers.orNull ?: false
+
+    val ziplineCompiler = ZiplineCompiler(
+      outputDir = outputDirFile,
+      mainFunction = mainFunction,
+      mainModuleId = mainModuleId,
+      manifestSigner = manifestSigner,
+      version = version,
+      metadata = metadata,
+      stripLineNumbers = stripLineNumbers,
+    )
 
     if (inputChanges.isIncremental) {
       fun filterByChangeType(filter: (ChangeType) -> Boolean): List<File> {
@@ -126,26 +149,14 @@ abstract class ZiplineCompileTask : DefaultTask() {
           .map { outputDir.file(it.normalizedPath).get().asFile }
       }
 
-      ZiplineCompiler.incrementalCompile(
-        outputDir = outputDirFile,
+      ziplineCompiler.incrementalCompile(
         modifiedFiles = filterByChangeType { changeType -> changeType == ChangeType.MODIFIED },
         addedFiles = filterByChangeType { changeType -> changeType == ChangeType.ADDED },
         removedFiles = filterByChangeType { changeType -> changeType == ChangeType.REMOVED },
-        mainFunction = mainFunction,
-        mainModuleId = mainModuleId,
-        manifestSigner = manifestSigner,
-        version = version,
-        metadata = metadata,
       )
     } else {
-      ZiplineCompiler.compile(
+      ziplineCompiler.compile(
         inputDir = inputDirFile,
-        outputDir = outputDirFile,
-        mainFunction = mainFunction,
-        mainModuleId = mainModuleId,
-        manifestSigner = manifestSigner,
-        version = version,
-        metadata = metadata,
       )
     }
   }
