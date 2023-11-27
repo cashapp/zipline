@@ -68,12 +68,6 @@ kotlin {
 }
 
 tasks {
-  withType<KotlinJsCompile>().all {
-    kotlinOptions {
-      freeCompilerArgs += listOf("-Xir-per-module")
-    }
-  }
-
   // https://kotlinlang.org/docs/whatsnew19.html#library-linkage-in-kotlin-native
   withType<KotlinNativeCompile>().all {
     kotlinOptions {
