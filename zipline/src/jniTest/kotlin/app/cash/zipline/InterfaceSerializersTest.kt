@@ -104,8 +104,9 @@ class InterfaceSerializersTest {
         "testing.app.cash.zipline.testing.callInterfaceRequest()",
       )
     }
-    assertThat(exception.message!!)
-      .contains("Class 'app.cash.zipline.testing.RealMessageInterface' is not registered")
+    assertThat(exception.message!!).contains(
+      "Serializer for subclass '${RealMessageInterface::class.qualifiedName}' is not found"
+    )
   }
 
   @Test fun jsToJvmInterfaceResponseFailsLate() = runTest(dispatcher) {
@@ -119,8 +120,9 @@ class InterfaceSerializersTest {
         "testing.app.cash.zipline.testing.callInterfaceResponse()",
       )
     }
-    assertThat(exception.message!!)
-      .contains("Class 'RealMessageInterface' is not registered")
+    assertThat(exception.message!!).contains(
+      "Serializer for subclass '${RealMessageInterface::class.simpleName}' is not found"
+    )
   }
 
   private class JvmMessageInterfaceService : RequestInterfaceService, ResponseInterfaceService {
