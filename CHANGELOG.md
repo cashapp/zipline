@@ -3,6 +3,21 @@
 ## Unreleased
 
 
+## [1.7.0] - 2023-11-30
+
+* New: Gradle APIs to optimize production builds for either small artifact size or developer
+  experience. Call the appropriate functions in the `zipline {}` block of your build file:
+    ```kotlin
+    zipline {
+      ...
+      optimizeForSmallArtifactSize()
+    }
+    ```
+ * Fix: Don't crash when very large `Long` values are sent over a bridged API. Zipline uses JSON to
+   encode values shared between host and guest, and that converts all primitive numeric types to
+   `Double`. It is necessary to add `@Contextual` to all serialized `Long` values to get this fix.
+
+
 ## [1.6.0] - 2023-11-20
 
 * Upgrade: [SQLDelight 2.0.0][sqldelight_2_0_0]
