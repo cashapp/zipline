@@ -121,7 +121,7 @@ class InterfaceSerializersTest {
       )
     }
     assertThat(exception.message!!).contains(
-      "Serializer for subclass '${RealMessageInterface::class.simpleName}' is not found"
+      "Serializer for subclass '${RealMessageInterface::class.simpleName}' is not found",
     )
   }
 
