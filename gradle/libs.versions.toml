@@ -14,7 +14,7 @@ sqldelight = "2.0.0"
 
 [libraries]
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.0.4" }
-android-gradle-plugin = { module = "com.android.tools.build:gradle", version = "8.1.1" }
+android-gradle-plugin = { module = "com.android.tools.build:gradle", version = "8.2.0" }
 android-material = { module = "com.google.android.material:material", version = "1.10.0" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.8.1" }
 androidx-annotation = { module = "androidx.annotation:annotation", version = "1.7.0" }
