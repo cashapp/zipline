@@ -17,7 +17,6 @@ package app.cash.zipline.loader.internal
 
 import app.cash.zipline.loader.internal.tink.subtle.KeyPair
 import java.math.BigInteger
-import java.security.AlgorithmParameters
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.PrivateKey
@@ -26,10 +25,12 @@ import java.security.SecureRandom
 import java.security.Signature
 import java.security.SignatureException
 import java.security.interfaces.ECPublicKey
+import java.security.spec.ECFieldFp
 import java.security.spec.ECGenParameterSpec
 import java.security.spec.ECParameterSpec
 import java.security.spec.ECPoint
 import java.security.spec.ECPublicKeySpec
+import java.security.spec.EllipticCurve
 import java.security.spec.PKCS8EncodedKeySpec
 import okio.Buffer
 import okio.ByteString
@@ -99,17 +100,42 @@ internal fun ByteString.decodeAnsiX963(): ECPublicKey {
   val y = buffer.readByteArray(32)
   require(buffer.exhausted())
   val point = ECPoint(BigInteger(1, x), BigInteger(1, y))
-
-  val keySpecParameters = AlgorithmParameters.getInstance("EC").apply {
-    init(ECGenParameterSpec("secp256r1"))
-  }
-  val keySpec = ECPublicKeySpec(
-    point,
-    keySpecParameters.getParameterSpec(ECParameterSpec::class.java),
-  )
-
+  val keySpec = ECPublicKeySpec(point, secp256r1ParamSpec)
   val keyFactory = KeyFactory.getInstance("EC")
   return keyFactory.generatePublic(keySpec) as ECPublicKey
+}
+
+/**
+ * The Elliptic Curve parameters for the named curve "secp256r1" (also known as P-256 and
+ * prime256v1).
+ *
+ * On Android API 26+ this curve is available via a built-in API:
+ *
+ * ```
+ * AlgorithmParameters.getInstance("EC")
+ *   .apply { init(ECGenParameterSpec("secp256r1")) }
+ *   .getParameterSpec(ECParameterSpec::class.java)
+ * ```
+ *
+ * https://developer.android.com/reference/java/security/AlgorithmParameters
+ * https://datatracker.ietf.org/doc/html/rfc6090
+ */
+private val secp256r1ParamSpec: ECParameterSpec by lazy {
+  ECParameterSpec(
+    EllipticCurve(
+      ECFieldFp(
+        BigInteger("ffffffff00000001000000000000000000000000ffffffffffffffffffffffff", 16),
+      ),
+      BigInteger("ffffffff00000001000000000000000000000000fffffffffffffffffffffffc", 16),
+      BigInteger("5ac635d8aa3a93e7b3ebbd55769886bc651d06b0cc53b0f63bce3c3e27d2604b", 16),
+    ),
+    ECPoint(
+      BigInteger("6b17d1f2e12c4247f8bce6e563a440f277037d812deb33a0f4a13945d898c296", 16),
+      BigInteger("4fe342e2fe1a7f9b8ee7eb4a7c0f9e162bce33576b315ececbb6406837bf51f5", 16),
+    ),
+    BigInteger("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551", 16),
+    1,
+  )
 }
 
 /**
