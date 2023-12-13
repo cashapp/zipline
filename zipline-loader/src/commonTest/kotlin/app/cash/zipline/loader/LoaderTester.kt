@@ -17,6 +17,7 @@ package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.Zipline
+import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
@@ -133,6 +134,7 @@ class LoaderTester(
     return loader.load(
       applicationName = applicationName,
       manifestUrlFlow = List(count) { manifestUrl }.asFlow(),
+      freshnessChecker = FakeFreshnessCheckerFresh(),
     )
   }
 
@@ -256,7 +258,7 @@ class LoaderTester(
       LoaderTestFixtures.createFailureJs(
         seed,
       ),
-        "$seed.js",
+      "$seed.js",
     )
     val loadedManifest = LoaderTestFixtures.createRelativeManifest(
       seed,
@@ -310,7 +312,24 @@ class LoaderTester(
     manifestUrl: String,
     initializer: (Zipline) -> Unit = {},
   ) {
-    val results = loader.load(applicationName, flowOf(manifestUrl), initializer = initializer)
+    val results = loader.load(
+      applicationName = applicationName,
+      freshnessChecker = FakeFreshnessCheckerFresh(),
+      manifestUrlFlow = flowOf(manifestUrl),
+      initializer = initializer,
+    )
     zipline = (results.last() as LoadResult.Success).zipline
+  }
+}
+
+class FakeFreshnessCheckerFresh : FreshnessChecker {
+  override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
+    return true
+  }
+}
+
+class FakeFreshnessCheckerNotFresh : FreshnessChecker {
+  override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
+    return false
   }
 }

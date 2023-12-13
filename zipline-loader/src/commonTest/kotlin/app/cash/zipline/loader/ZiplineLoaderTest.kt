@@ -95,7 +95,11 @@ class ZiplineLoaderTest {
       ALPHA_URL to testFixtures.alphaByteString,
       BRAVO_URL to testFixtures.bravoByteString,
     )
-    val zipline = (loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
+    val zipline = (loader.loadOnce(
+      applicationName = "test",
+      freshnessChecker = FakeFreshnessCheckerFresh(),
+      manifestUrl = MANIFEST_URL,
+    ) as LoadResult.Success).zipline
     assertEquals(
       zipline.getLog(),
       """
@@ -115,7 +119,11 @@ class ZiplineLoaderTest {
       ALPHA_URL to testFixtures.alphaByteString,
       BRAVO_URL to testFixtures.bravoByteString,
     )
-    val ziplineColdCache = (loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
+    val ziplineColdCache = (loader.loadOnce(
+      applicationName = "test",
+      freshnessChecker = FakeFreshnessCheckerFresh(),
+      manifestUrl = MANIFEST_URL
+    ) as LoadResult.Success).zipline
     assertEquals(
       ziplineColdCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -131,7 +139,10 @@ class ZiplineLoaderTest {
       MANIFEST_URL to testFixtures.manifestNoBaseUrlByteString,
       // Note no actual alpha/bravo files are available on the network
     )
-    val ziplineWarmedCache = (loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
+    val ziplineWarmedCache = (loader.loadOnce(
+      applicationName = "test",
+      freshnessChecker = FakeFreshnessCheckerFresh(),
+      manifestUrl = MANIFEST_URL) as LoadResult.Success).zipline
     assertEquals(
       ziplineWarmedCache.quickJs.evaluate("globalThis.log", "assert.js"),
       """
@@ -159,7 +170,11 @@ class ZiplineLoaderTest {
       MANIFEST_URL to testFixtures.manifestByteString,
       // Note no actual alpha/bravo files are available on the cache / network
     )
-    val zipline = (loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
+    val zipline = (loader.loadOnce(
+      applicationName = "test",
+      freshnessChecker = FakeFreshnessCheckerFresh(),
+      manifestUrl = MANIFEST_URL
+    ) as LoadResult.Success).zipline
     assertEquals(
       zipline.getLog(),
       """
@@ -282,6 +297,7 @@ class ZiplineLoaderTest {
     val manifestUrlFlow = flowOf(appleManifestUrl, firetruckManifestUrl)
     loader.load(
       applicationName = "red",
+      freshnessChecker = FakeFreshnessCheckerNotFresh(),
       manifestUrlFlow = manifestUrlFlow,
       initializer = {},
     ).test {
@@ -296,16 +312,11 @@ class ZiplineLoaderTest {
           " loaded\n",
         ),
       )
-      assertEquals(
-        "firetruck",
-        (
+      assertEquals("firetruck",(
           (awaitItem() as LoadResult.Success).zipline.quickJs.evaluate(
-          "globalThis.log",
+            "globalThis.log",
             "assert.js",
-        ) as String
-        ).removeSuffix(
-          " loaded\n",
-        ),
+          ) as String).removeSuffix(" loaded\n"),
       )
       awaitComplete()
     }
