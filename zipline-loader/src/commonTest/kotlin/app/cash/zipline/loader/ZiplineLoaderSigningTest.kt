@@ -70,7 +70,7 @@ class ZiplineLoaderSigningTest {
       ALPHA_URL to testFixtures.alphaByteString,
       BRAVO_URL to testFixtures.bravoByteString,
     )
-    val zipline = (tester.loader.loadOnce("test", MANIFEST_URL) as LoadResult.Success).zipline
+    val zipline = (tester.loader.loadOnce("test", DefaultFreshnessCheckerNotFresh, MANIFEST_URL) as LoadResult.Success).zipline
     zipline.close()
 
     assertContains(eventListener.takeAll(), "manifestVerified test key1")
@@ -100,7 +100,7 @@ class ZiplineLoaderSigningTest {
       ALPHA_URL to testFixtures.alphaByteString,
       BRAVO_URL to testFixtures.alphaByteString,
     )
-    val result = tester.loader.loadOnce("test", MANIFEST_URL)
+    val result = tester.loader.loadOnce("test", DefaultFreshnessCheckerNotFresh, MANIFEST_URL)
     assertTrue(result is LoadResult.Failure)
     assertTrue(result.exception is IllegalStateException)
     assertEquals("checksum mismatch for bravo", result.exception.message)
@@ -121,7 +121,7 @@ class ZiplineLoaderSigningTest {
       ALPHA_URL to testFixtures.alphaByteString,
       BRAVO_URL to testFixtures.bravoByteString,
     )
-    val loadResult = tester.loader.loadOnce("test", MANIFEST_URL)
+    val loadResult = tester.loader.loadOnce("test", DefaultFreshnessCheckerNotFresh, MANIFEST_URL)
     assertEquals(
       "manifest signature for key key1 did not verify!",
       (loadResult as LoadResult.Failure).exception.message,

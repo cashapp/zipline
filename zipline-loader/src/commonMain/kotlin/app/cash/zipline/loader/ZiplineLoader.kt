@@ -147,20 +147,16 @@ class ZiplineLoader internal constructor(
   private val moduleFetchers = listOfNotNull(embeddedFetcher, cachingFetcher ?: httpFetcher)
 
   /**
-   * Each time when [manifestUrlFlow] emits: Emits a fresh ZiplineManifest and loads Zipline with
-   * the fresh ZiplineManifest.
+   * If local ZiplineManifest is presented and is fresh (this is expected for almost all the time),
+   * loads Zipline with local ZiplineManifest.
    *
-   * If the local ZiplineManifest is fresh, emits it and load Zipline without downloading from the
-   * network.
+   * Each time when [manifestUrlFlow] emits: if there was a previously loaded ZiplineManifest and
+   * it's still fresh, return directly; if there wasn't a previously loaded ZiplineManifest or it's
+   * not fresh, downloads a new ZiplineManifest from network and loads Zipline with the newly
+   * downloaded ZiplineManifest, newly downloaded ZiplineManifest is always considered fresh. If the
+   * network is unreachable: returns null, and emits a LoadResult.Failure
    *
-   * If the local ZiplineManifest is not fresh, download a new ZiplineManifest from network.
-   *
-   * Newly downloaded ZiplineManifest is always considered fresh.
-   *
-   * If the network is unreachable : returns null, and emits a LoadResult.Failure
-   *
-   * @param manifestUrlFlow a flow that emits whenever a copy of ZiplineManifest is requested by the
-   *  downstream service.
+   * @param manifestUrlFlow a flow that emits whenever by the downstream service.
    * @param freshnessChecker checks if a cached ZiplineManifest is considered fresh.
    */
   fun load(
@@ -172,17 +168,23 @@ class ZiplineLoader internal constructor(
   ): Flow<LoadResult> {
     return channelFlow {
       var previousManifest: ZiplineManifest? = null
+      val now = nowEpochMs()
+      val localManifest = loadFromLocal(
+        now,
+        applicationName,
+        freshnessChecker,
+        serializersModule,
+        initializer,
+      )
+      if (localManifest != null) {
+        previousManifest = localManifest
+        return@channelFlow
+      }
       manifestUrlFlow.collect { manifestUrl ->
-        val now = nowEpochMs()
-        val localManifest = loadFromLocal(
-          now,
-          applicationName,
-          freshnessChecker,
-          serializersModule,
-          initializer,
-        )
-        if (localManifest != null) {
-          previousManifest = localManifest
+        if (previousManifest != null &&
+          freshnessChecker.isFresh(previousManifest!!, previousManifest!!.freshAtEpochMs ?: Long.MIN_VALUE)
+        ) {
+          return@collect
         } else {
           val loadedFromNetwork = loadFromNetwork(
             previousManifest,
@@ -198,6 +200,37 @@ class ZiplineLoader internal constructor(
         }
       }
     }
+  }
+
+  /**
+   * Downloads ZiplineManifest each time [manifestUrlFlow] emits and loads Zipline with the newly
+   * downloaded ZiplineManifest, skipping loads if the code to load is the same as what's already
+   * loaded.
+   *
+   * Always loads from network, never from local.
+   *
+   * @param manifestUrlFlow a flow that should emit each time a load should be attempted. This
+   *     may emit periodically to trigger polling. It should also emit for loading triggers like
+   *     app launch, app foregrounding, and network connectivity changed.
+   */
+  @Deprecated(
+    message = "Deprecated, will be removed in 1.9",
+    level = DeprecationLevel.ERROR,
+    replaceWith = ReplaceWith("load with FreshnessChecker in parameter list"),
+  )
+  fun load(
+    applicationName: String,
+    manifestUrlFlow: Flow<String>,
+    serializersModule: SerializersModule = EmptySerializersModule(),
+    initializer: (Zipline) -> Unit = {},
+  ): Flow<LoadResult> {
+    return load(
+      applicationName = applicationName,
+      freshnessChecker = DefaultFreshnessCheckerNotFresh,
+      manifestUrlFlow = manifestUrlFlow,
+      serializersModule = serializersModule,
+      initializer = initializer,
+    )
   }
 
   /**
@@ -274,7 +307,10 @@ class ZiplineLoader internal constructor(
     val loadedManifest = loadCachedOrEmbeddedManifest(applicationName, eventListener, now)
       ?: return null
     val startValue = eventListener.applicationLoadStart(applicationName, null)
-    if (freshnessChecker.isFresh(loadedManifest.manifest, loadedManifest.freshAtEpochMs)) {
+    if (!freshnessChecker.isFresh(loadedManifest.manifest, loadedManifest.freshAtEpochMs)) {
+      // TODO: add an informational eventListener.applicationLoadSkipped for reason
+      return null
+    } else {
       try {
         val zipline = loadFromManifest(
           applicationName,
@@ -302,9 +338,6 @@ class ZiplineLoader internal constructor(
         eventListener.applicationLoadFailed(applicationName, null, e, startValue)
         return null
       }
-    } else {
-      // TODO: consider to add a informational eventListener.applicationLoadSkipped for reason
-      return null
     }
   }
 
@@ -317,6 +350,25 @@ class ZiplineLoader internal constructor(
   ): LoadResult = load(
     applicationName = applicationName,
     freshnessChecker = freshnessChecker,
+    manifestUrlFlow = flowOf(manifestUrl),
+    serializersModule = serializersModule,
+    initializer = initializer,
+  ).first()
+
+  /** Always loads from the network, never from local. */
+  @Deprecated(
+    message = "Deprecated, will be removed in 1.9",
+    level = DeprecationLevel.ERROR,
+    replaceWith = ReplaceWith("loadOnce with FreshnessChecker in parameter list"),
+  )
+  suspend fun loadOnce(
+    applicationName: String,
+    manifestUrl: String,
+    serializersModule: SerializersModule = EmptySerializersModule(),
+    initializer: (Zipline) -> Unit = {},
+  ): LoadResult = load(
+    applicationName = applicationName,
+    freshnessChecker = DefaultFreshnessCheckerNotFresh,
     manifestUrlFlow = flowOf(manifestUrl),
     serializersModule = serializersModule,
     initializer = initializer,

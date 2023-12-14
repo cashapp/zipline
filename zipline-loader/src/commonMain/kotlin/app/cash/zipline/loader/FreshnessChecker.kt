@@ -16,17 +16,30 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.ZiplineManifest
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.hours
 
-
-/** Checks if a given ZiplineManifest is considered fresh, therefore safe to be served. */
+/**
+ * Checks if a given ZiplineManifest is considered fresh.
+ *
+ * For local development that requires continuous loading (or hot loading), supply a
+ * FreshnessChecker that always returns false.
+ */
 interface FreshnessChecker {
 
-  /** Returns true if the manifest is considered fresh. */
+  /**
+   * Decides whether the [manifest] is eligible to be used.
+   *
+   * Returns true to launch the [manifest] immediately; false to download a fresh
+   * ZiplineManifest and launch that.
+   */
   fun isFresh(
     manifest: ZiplineManifest,
     freshAtEpochMs: Long,
-    //shelfLife: Duration = 168.hours
   ): Boolean
+}
+
+/** A FreshnessChecker that always returns true. */
+object DefaultFreshnessCheckerNotFresh : FreshnessChecker {
+  override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
+    return false
+  }
 }

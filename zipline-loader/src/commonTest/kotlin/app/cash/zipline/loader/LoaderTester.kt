@@ -28,6 +28,7 @@ import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.last
+import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import okio.Buffer
 import okio.FileSystem
@@ -112,13 +113,23 @@ class LoaderTester(
     }
   }
 
-  suspend fun success(applicationName: String, seed: String): String {
-    val success = load(applicationName, seed, count = 1).first() as LoadResult.Success
+  suspend fun success(
+    applicationName: String,
+    seed: String,
+    freshnessChecker: FreshnessChecker,
+  ): String {
+    val success =
+      load(applicationName, seed, count = 1, freshnessChecker).first() as LoadResult.Success
     val log = success.zipline.quickJs.evaluate("globalThis.log", "assert.js") as String
     return log.removeSuffix(" loaded\n")
   }
 
-  fun load(applicationName: String, seed: String, count: Int = 1): Flow<LoadResult> {
+  fun load(
+    applicationName: String,
+    seed: String,
+    count: Int = 1,
+    freshnessChecker: FreshnessChecker,
+  ): Flow<LoadResult> {
     val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
@@ -134,7 +145,44 @@ class LoaderTester(
     return loader.load(
       applicationName = applicationName,
       manifestUrlFlow = List(count) { manifestUrl }.asFlow(),
-      freshnessChecker = FakeFreshnessCheckerFresh(),
+      freshnessChecker = freshnessChecker,
+    )
+  }
+
+  // Used to test the deprecated load function, and should be deleted when the deprecated function
+  // is removed.
+  suspend fun successForDeprecatedLoad(
+    applicationName: String,
+    seed: String,
+  ): String {
+    val success = deprecatedLoad(applicationName, seed, count = 1).first() as LoadResult.Success
+    val log = success.zipline.quickJs.evaluate("globalThis.log", "assert.js") as String
+    return log.removeSuffix(" loaded\n")
+  }
+
+  // Used to test the deprecated load function, and should be deleted when the deprecated function
+  // is removed.
+  private fun deprecatedLoad(
+    applicationName: String,
+    seed: String,
+    count: Int = 1,
+  ): Flow<LoadResult> {
+    val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+    val ziplineFileByteString =
+      testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
+    val loadedManifest = LoaderTestFixtures.createRelativeManifest(
+      seed,
+      ziplineFileByteString.sha256(),
+      includeUnknownFieldInJson,
+    )
+    httpClient.filePathToByteString = mapOf(
+      manifestUrl to loadedManifest.manifestBytes,
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
+    )
+    @Suppress("DEPRECATION_ERROR")
+    return loader.load(
+      applicationName = applicationName,
+      manifestUrlFlow = List(count) { manifestUrl }.asFlow(),
     )
   }
 
@@ -169,6 +217,18 @@ class LoaderTester(
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n",
     )
+  }
+
+  suspend fun failureManifestFetchingFails(applicationName: String): LoadResult {
+    val seed = "fail"
+    val ziplineFileByteString = testFixtures.createZiplineFile(
+      LoaderTestFixtures.createJs(seed),
+      "$seed.js",
+    )
+    httpClient.filePathToByteString = mapOf(
+      "$baseUrl/$applicationName/$seed.zipline" to ziplineFileByteString,
+    )
+    return loader.load(applicationName, FakeFreshnessCheckerFresh, flowOf("bogusUrl")).single()
   }
 
   suspend fun failureManifestTooLarge(applicationName: String): String {
@@ -227,6 +287,18 @@ class LoaderTester(
     return (zipline.quickJs.evaluate("globalThis.log", "assert.js") as String).removeSuffix(
       " loaded\n",
     )
+  }
+
+  suspend fun failureCacheNotFresh(applicationName: String): LoadResult {
+    val manifestUrl = "$baseUrl/$applicationName/${getApplicationManifestFileName(applicationName)}"
+
+    httpClient.filePathToByteString = mapOf()
+
+    return load(
+      applicationName,
+      manifestUrl,
+      freshnessChecker = DefaultFreshnessCheckerNotFresh,
+    ).first()
   }
 
   suspend fun failureCodeFetchFails(applicationName: String): String {
@@ -314,7 +386,7 @@ class LoaderTester(
   ) {
     val results = loader.load(
       applicationName = applicationName,
-      freshnessChecker = FakeFreshnessCheckerFresh(),
+      freshnessChecker = FakeFreshnessCheckerFresh,
       manifestUrlFlow = flowOf(manifestUrl),
       initializer = initializer,
     )
@@ -322,14 +394,8 @@ class LoaderTester(
   }
 }
 
-class FakeFreshnessCheckerFresh : FreshnessChecker {
+object FakeFreshnessCheckerFresh : FreshnessChecker {
   override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
     return true
-  }
-}
-
-class FakeFreshnessCheckerNotFresh : FreshnessChecker {
-  override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
-    return false
   }
 }

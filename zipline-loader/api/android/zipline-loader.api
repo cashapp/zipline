@@ -1,7 +1,16 @@
+public final class app/cash/zipline/loader/DefaultFreshnessCheckerNotFresh : app/cash/zipline/loader/FreshnessChecker {
+	public static final field INSTANCE Lapp/cash/zipline/loader/DefaultFreshnessCheckerNotFresh;
+	public fun isFresh (Lapp/cash/zipline/ZiplineManifest;J)Z
+}
+
 public final class app/cash/zipline/loader/FastCodeUpdatesKt {
 	public static final fun schemeAndAuthority (Ljava/lang/String;)Ljava/lang/String;
 	public static final fun withDevelopmentServerPush-SxA4cEA (Lkotlinx/coroutines/flow/Flow;Lapp/cash/zipline/loader/ZiplineHttpClient;J)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun withDevelopmentServerPush-SxA4cEA$default (Lkotlinx/coroutines/flow/Flow;Lapp/cash/zipline/loader/ZiplineHttpClient;JILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+}
+
+public abstract interface class app/cash/zipline/loader/FreshnessChecker {
+	public abstract fun isFresh (Lapp/cash/zipline/ZiplineManifest;J)Z
 }
 
 public abstract class app/cash/zipline/loader/LoadResult {
@@ -122,9 +131,13 @@ public final class app/cash/zipline/loader/ZiplineLoader {
 	public synthetic fun <init> (Lkotlinx/coroutines/CoroutineDispatcher;Lapp/cash/zipline/loader/ManifestVerifier;Lapp/cash/zipline/loader/ZiplineHttpClient;Lapp/cash/zipline/EventListener;Lkotlin/jvm/functions/Function0;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun download (Ljava/lang/String;Lokio/Path;Lokio/FileSystem;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getConcurrentDownloads ()I
+	public final fun load (Ljava/lang/String;Lapp/cash/zipline/loader/FreshnessChecker;Lkotlinx/coroutines/flow/Flow;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
 	public final fun load (Ljava/lang/String;Lkotlinx/coroutines/flow/Flow;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;)Lkotlinx/coroutines/flow/Flow;
+	public static synthetic fun load$default (Lapp/cash/zipline/loader/ZiplineLoader;Ljava/lang/String;Lapp/cash/zipline/loader/FreshnessChecker;Lkotlinx/coroutines/flow/Flow;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
 	public static synthetic fun load$default (Lapp/cash/zipline/loader/ZiplineLoader;Ljava/lang/String;Lkotlinx/coroutines/flow/Flow;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;ILjava/lang/Object;)Lkotlinx/coroutines/flow/Flow;
+	public final fun loadOnce (Ljava/lang/String;Lapp/cash/zipline/loader/FreshnessChecker;Ljava/lang/String;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun loadOnce (Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun loadOnce$default (Lapp/cash/zipline/loader/ZiplineLoader;Ljava/lang/String;Lapp/cash/zipline/loader/FreshnessChecker;Ljava/lang/String;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun loadOnce$default (Lapp/cash/zipline/loader/ZiplineLoader;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun setConcurrentDownloads (I)V
 	public final fun withCache (Lapp/cash/zipline/loader/ZiplineCache;)Lapp/cash/zipline/loader/ZiplineLoader;

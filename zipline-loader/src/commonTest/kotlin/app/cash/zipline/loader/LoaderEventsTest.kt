@@ -20,10 +20,10 @@ import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
-import okio.IOException
 
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
@@ -43,8 +43,8 @@ class LoaderEventsTest {
   }
 
   @Test
-  fun happyPathEvents() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
+  fun happyPathEventsWithoutLocalManifest() = runBlocking {
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
     assertEquals(
       listOf(
         "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
@@ -66,8 +66,29 @@ class LoaderEventsTest {
   }
 
   @Test
+  fun happyPathEventsWithLocalManifest() = runBlocking {
+    tester.seedEmbedded("red", "apple")
+    assertEquals("apple", tester.success("red", "apple", FakeFreshnessCheckerFresh))
+    assertEquals(
+      listOf(
+        "applicationLoadStart red null",
+        "ziplineCreated",
+        "moduleLoadStart apple",
+        "moduleLoadEnd apple",
+        "initializerStart red",
+        "initializerEnd red",
+        "mainFunctionStart red",
+        "mainFunctionEnd red",
+        "applicationLoadSuccess red null",
+      ),
+      eventListener.takeAll(skipServiceEvents = true),
+    )
+  }
+
+  @Test
   fun loadSkippedIfManifestHasNotChanged() = runBlocking {
-    val flow = tester.load("red", "apple", count = 2)
+    // downloading from network twice
+    val flow = tester.load("red", "apple", count = 2, DefaultFreshnessCheckerNotFresh)
     assertEquals(1, flow.toList().size)
     assertEquals(
       listOf(
@@ -95,13 +116,15 @@ class LoaderEventsTest {
 
   @Test
   fun loadAlreadyCached() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
+    // TODO
+    assertEquals("apple", tester.success("red", "apple", FakeFreshnessCheckerFresh))
     eventListener.takeAll()
 
-    // On the 2nd load, the manifest is fetched again but the module is not.
-    assertEquals("apple", tester.success("red", "apple"))
+    // On the 2nd load, the manifest is fetched again and module loaded again.
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
     assertEquals(
       listOf(
+        "applicationLoadStart red null",
         "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
@@ -119,26 +142,14 @@ class LoaderEventsTest {
   }
 
   @Test
-  fun manifestDownloadFails() = runBlocking {
-    tester.seedEmbedded("red", "firetruck")
-    assertEquals("firetruck", tester.failureManifestFetchFails("red"))
+  fun manifestDownloadFailsWithoutFreshLocal() = runBlocking {
+    assertTrue(tester.failureManifestFetchingFails("red") is LoadResult.Failure)
     assertEquals(
       listOf(
-        "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
-        "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
-        "downloadFailed red https://example.com/files/red/red.manifest.zipline.json " +
-          "${IOException::class.qualifiedName}: 404: https://example.com/files/red/red.manifest.zipline.json not found",
-        "applicationLoadFailed red " +
-          "${IOException::class.qualifiedName}: 404: https://example.com/files/red/red.manifest.zipline.json not found",
-        "applicationLoadStart red null",
-        "ziplineCreated",
-        "moduleLoadStart firetruck",
-        "moduleLoadEnd firetruck",
-        "initializerStart red",
-        "initializerEnd red",
-        "mainFunctionStart red",
-        "mainFunctionEnd red",
-        "applicationLoadSuccess red null",
+        "applicationLoadStart red bogusUrl",
+        "downloadStart red bogusUrl",
+        "downloadFailed red bogusUrl java.io.IOException: 404: bogusUrl not found",
+        "applicationLoadFailed red java.io.IOException: 404: bogusUrl not found",
       ),
       eventListener.takeAll(skipServiceEvents = true),
     )
@@ -150,16 +161,6 @@ class LoaderEventsTest {
     assertEquals("firetruck", tester.failureCodeFetchFails("red"))
     assertEquals(
       listOf(
-        "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
-        "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
-        "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
-        "ziplineCreated",
-        "downloadStart red https://example.com/files/red/unreachable.zipline",
-        "downloadFailed red https://example.com/files/red/unreachable.zipline " +
-          "${IOException::class.qualifiedName}: 404: https://example.com/files/red/unreachable.zipline not found",
-        "ziplineClosed",
-        "applicationLoadFailed red " +
-          "${IOException::class.qualifiedName}: 404: https://example.com/files/red/unreachable.zipline not found",
         "applicationLoadStart red null",
         "ziplineCreated",
         "moduleLoadStart firetruck",
@@ -180,16 +181,6 @@ class LoaderEventsTest {
     assertEquals("firetruck", tester.failureCodeLoadFails("red"))
     assertEquals(
       listOf(
-        "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
-        "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
-        "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
-        "ziplineCreated",
-        "downloadStart red https://example.com/files/red/broken.zipline",
-        "downloadEnd red https://example.com/files/red/broken.zipline",
-        "moduleLoadStart broken",
-        "moduleLoadEnd broken",
-        "ziplineClosed",
-        "applicationLoadFailed red app.cash.zipline.QuickJsException: broken",
         "applicationLoadStart red null",
         "ziplineCreated",
         "moduleLoadStart firetruck",
@@ -210,18 +201,6 @@ class LoaderEventsTest {
     assertEquals("firetruck", tester.failureCodeRunFails("red"))
     assertEquals(
       listOf(
-        "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
-        "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
-        "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
-        "ziplineCreated",
-        "downloadStart red https://example.com/files/red/crashes.zipline",
-        "downloadEnd red https://example.com/files/red/crashes.zipline",
-        "moduleLoadStart crashes",
-        "moduleLoadEnd crashes",
-        "initializerStart red",
-        "initializerEnd red",
-        "ziplineClosed",
-        "applicationLoadFailed red ${IllegalArgumentException::class.qualifiedName}: Zipline code run failed",
         "applicationLoadStart red null",
         "ziplineCreated",
         "moduleLoadStart firetruck",
