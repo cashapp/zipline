@@ -122,7 +122,7 @@ jobs:
           distribution: 'zulu'
           java-version: 20
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
       - run: |
           mkdir -p zipline/src/jvmMain/resources/
           cp -av jvm-native-libraries/* zipline/src/jvmMain/resources/
