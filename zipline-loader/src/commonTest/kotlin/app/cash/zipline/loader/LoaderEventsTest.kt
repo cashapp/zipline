@@ -116,7 +116,6 @@ class LoaderEventsTest {
 
   @Test
   fun loadAlreadyCached() = runBlocking {
-    // TODO
     assertEquals("apple", tester.success("red", "apple", FakeFreshnessCheckerFresh))
     eventListener.takeAll()
 

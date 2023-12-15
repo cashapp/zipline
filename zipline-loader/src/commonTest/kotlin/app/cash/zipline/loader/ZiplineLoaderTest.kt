@@ -115,13 +115,11 @@ class ZiplineLoaderTest {
       initializer = {},
     ).test {
       assertEquals(
-        "firetruck",
-        (
+        "firetruck loaded\n",
         (awaitItem() as LoadResult.Success).zipline.quickJs.evaluate(
           "globalThis.log",
           "assert.js",
-        ) as String
-        ).removeSuffix(" loaded\n"),
+        ),
       )
       awaitComplete()
     }

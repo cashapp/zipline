@@ -157,20 +157,20 @@ class ZiplineLoader internal constructor(
    * network is unreachable: returns null, and emits a LoadResult.Failure
    *
    * @param manifestUrlFlow a flow that emits whenever by the downstream service.
-   * @param freshnessChecker checks if a cached ZiplineManifest is considered fresh.
+   * @param freshnessChecker checks if a cached ZiplineManifest is considered fresh. Defaulted to
+   * always return false, which means always load from network when [manifestUrlFlow] emits.
    */
   fun load(
     applicationName: String,
-    freshnessChecker: FreshnessChecker,
+    freshnessChecker: FreshnessChecker = DefaultFreshnessCheckerNotFresh,
     manifestUrlFlow: Flow<String>,
     serializersModule: SerializersModule = EmptySerializersModule(),
     initializer: (Zipline) -> Unit = {},
   ): Flow<LoadResult> {
     return channelFlow {
       var previousManifest: ZiplineManifest? = null
-      val now = nowEpochMs()
       val localManifest = loadFromLocal(
-        now,
+        nowEpochMs(),
         applicationName,
         freshnessChecker,
         serializersModule,
@@ -188,7 +188,7 @@ class ZiplineLoader internal constructor(
         } else {
           val loadedFromNetwork = loadFromNetwork(
             previousManifest,
-            now,
+            nowEpochMs(),
             applicationName,
             manifestUrl,
             serializersModule,
