@@ -86,6 +86,19 @@ abstract class EventListener {
   }
 
   /**
+   * Invoked when an application load was skipped because the code is stale.
+   *
+   * @param startValue the value returned by [applicationLoadStart] for the start of this call. This
+   *   is null unless [applicationLoadStart] is overridden to return something else.
+   */
+  open fun applicationLoadSkippedNotFresh(
+    applicationName: String,
+    manifestUrl: String?,
+    startValue: Any?,
+  ) {
+  }
+
+  /**
    * Invoked when an application load succeeds.
    *
    * @param startValue the value returned by [applicationLoadStart] for the start of this call. This

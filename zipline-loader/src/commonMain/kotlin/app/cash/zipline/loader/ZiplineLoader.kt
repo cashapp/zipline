@@ -308,7 +308,7 @@ class ZiplineLoader internal constructor(
       ?: return null
     val startValue = eventListener.applicationLoadStart(applicationName, null)
     if (!freshnessChecker.isFresh(loadedManifest.manifest, loadedManifest.freshAtEpochMs)) {
-      // TODO: add an informational eventListener.applicationLoadSkipped for reason
+      eventListener.applicationLoadSkippedNotFresh(applicationName, null, startValue)
       return null
     } else {
       try {
