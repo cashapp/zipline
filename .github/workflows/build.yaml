@@ -73,6 +73,13 @@ jobs:
           path: zipline/src/jvmMain/resources/*
           if-no-files-found: error
 
+      - uses: actions/upload-artifact@v3
+        if: ${{ always() }}
+        with:
+          name: test-report-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.cmake-arch }}
+          path: '**/build/reports/tests/**'
+          retention-days: 1
+
   android:
     # We build on a Mac to get hardware acceleration for the Android emulator.
     runs-on: macos-latest
@@ -129,19 +136,19 @@ jobs:
 
       - run: ./gradlew assemble :dokkaHtmlMultiModule
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: zipline-jvm.jar
           path: zipline/build/libs/zipline-jvm-*.jar
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: zipline-android.aar
           path: zipline/build/outputs/aar/*-release.aar
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           name: zipline-cli.zip
           path: zipline-cli/build/distributions/zipline-cli-*.zip
