@@ -29,6 +29,7 @@ import kotlin.test.assertNull
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.After
 import org.junit.Before
@@ -146,6 +147,7 @@ class ConsoleTest {
     assertEquals(Level.INFO, record.level)
     assertEquals("this message for %s is a %d out of %d Jesse 8 10", record.message)
 
+    advanceUntilIdle()
     assertNull(takeLogMessage())
   }
 
