@@ -79,6 +79,7 @@ jobs:
           name: test-report-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.cmake-arch }}
           path: '**/build/reports/tests/**'
           retention-days: 1
+          compression-level: 9
 
   android:
     # We build on a Mac to get hardware acceleration for the Android emulator.
