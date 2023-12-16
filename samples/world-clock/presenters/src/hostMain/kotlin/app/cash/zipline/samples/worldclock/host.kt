@@ -16,6 +16,7 @@
 package app.cash.zipline.samples.worldclock
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.DefaultFreshnessCheckerNotFresh
 import app.cash.zipline.loader.LoadResult
 import app.cash.zipline.loader.ZiplineLoader
 import kotlinx.coroutines.CoroutineDispatcher
@@ -41,6 +42,7 @@ fun startWorldClockZipline(
   scope.launch(ziplineDispatcher + SupervisorJob()) {
     val loadResultFlow: Flow<LoadResult> = ziplineLoader.load(
       applicationName = "world-clock",
+      freshnessChecker = DefaultFreshnessCheckerNotFresh,
       manifestUrlFlow = repeatFlow(manifestUrl, 500L),
       initializer = { zipline: Zipline ->
         zipline.bind("WorldClockHost", host)

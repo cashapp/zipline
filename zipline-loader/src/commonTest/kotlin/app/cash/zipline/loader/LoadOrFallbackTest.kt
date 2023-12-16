@@ -41,12 +41,12 @@ class LoadOrFallbackTest {
 
   @Test
   fun preferNetworkWhenThatWorks() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
   }
 
   @Test
   fun fallBackToPreviousNetworkWhenSomethingFails() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
     assertEquals("apple", tester.failureManifestFetchFails("red"))
   }
 
@@ -76,16 +76,16 @@ class LoadOrFallbackTest {
 
   @Test
   fun successfulNetworkUpdatesFallback() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
     assertEquals("apple", tester.failureManifestFetchFails("red"))
-    assertEquals("firetruck", tester.success("red", "firetruck"))
+    assertEquals("firetruck", tester.success("red", "firetruck", DefaultFreshnessCheckerNotFresh))
     assertEquals("firetruck", tester.failureManifestFetchFails("red"))
   }
 
   @Test
   fun eachApplicationHasItsOwnLastWorkingNetwork() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
-    assertEquals("sky", tester.success("blue", "sky"))
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
+    assertEquals("sky", tester.success("blue", "sky", DefaultFreshnessCheckerNotFresh))
     assertEquals("apple", tester.failureManifestFetchFails("red"))
     assertEquals("sky", tester.failureManifestFetchFails("blue"))
   }
@@ -100,8 +100,8 @@ class LoadOrFallbackTest {
 
   @Test
   fun anyLastWorkingNetworkNotPruned() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
-    assertEquals("sky", tester.success("blue", "sky"))
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
+    assertEquals("sky", tester.success("blue", "sky", DefaultFreshnessCheckerNotFresh))
     assertEquals(0, tester.prune())
     assertEquals("apple", tester.failureManifestFetchFails("red"))
     assertEquals("sky", tester.failureManifestFetchFails("blue"))
@@ -109,25 +109,26 @@ class LoadOrFallbackTest {
 
   @Test
   fun successfulNetworkMakesPreviousNetworkPrunable() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
     assertEquals(
       2,
       tester.countFiles {
-      assertEquals("firetruck", tester.success("red", "firetruck"))
-    },
+        assertEquals("firetruck", tester.success("red", "firetruck", DefaultFreshnessCheckerNotFresh))
+      },
     )
   }
 
   @Test
-  fun loadFailureIsPrunable() = runBlocking {
-    assertEquals("apple", tester.success("red", "apple"))
+  fun loadFailureFromNetworkIsNotPrunable() = runBlocking {
+    assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
+    //assertEquals("apple", tester.success("red", "apple", DefaultFreshnessCheckerNotFresh))
     assertEquals(
-      1,
+      0,
       tester.countFiles {
-      assertEquals("apple", tester.failureCodeLoadFails("red"))
-    },
+        assertEquals("apple", tester.failureCodeLoadFails("red"))
+      },
     )
-    assertEquals(-1, tester.prune())
+    assertEquals(0, tester.prune())
   }
 
   @Test
@@ -137,7 +138,7 @@ class LoadOrFallbackTest {
     assertEquals("firetruck", tester.failureManifestFetchFails("red"))
     assertEquals("firetruck", tester.failureCodeRunFails("red"))
     assertEquals("firetruck", tester.failureCodeLoadFails("red"))
-    assertEquals("firetruck", tester.success("red", "firetruck"))
+    assertEquals("firetruck", tester.success("red", "firetruck", DefaultFreshnessCheckerNotFresh))
     assertEquals("firetruck", tester.failureCodeFetchFails("red"))
   }
 
@@ -156,12 +157,12 @@ class LoadOrFallbackTest {
   @Test
   fun freshAtMillisForSubsequentNetworkCalls() = runBlocking {
     tester.nowMillis = 1_000L
-    val load1 = tester.load("red", "apple").single() as LoadResult.Success
+    val load1 = tester.load(applicationName = "red", seed = "apple", freshnessChecker = DefaultFreshnessCheckerNotFresh).single() as LoadResult.Success
     assertEquals(1_000L, load1.freshAtEpochMs)
     assertNull(load1.manifest.freshAtEpochMs) // Network manifests don't track this.
 
     tester.nowMillis = 2_000L
-    val load2 = tester.load("red", "apple").single() as LoadResult.Success
+    val load2 = tester.load(applicationName = "red", seed = "apple", freshnessChecker = DefaultFreshnessCheckerNotFresh).single() as LoadResult.Success
     assertEquals(2_000L, load2.freshAtEpochMs)
     assertNull(load2.manifest.freshAtEpochMs) // Network manifests don't track this.
   }

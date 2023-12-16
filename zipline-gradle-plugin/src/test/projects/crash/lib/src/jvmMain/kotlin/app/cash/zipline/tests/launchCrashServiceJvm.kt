@@ -17,6 +17,7 @@ package app.cash.zipline.tests
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.ZiplineException
+import app.cash.zipline.loader.DefaultFreshnessCheckerNotFresh
 import app.cash.zipline.loader.LoadResult
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineHttpClient
@@ -56,6 +57,7 @@ suspend fun launchZipline(
 
   val loadResult = loader.loadOnce(
     "test",
+    DefaultFreshnessCheckerNotFresh,
     "https://localhost/manifest.zipline.json",
   ) as LoadResult.Success
 

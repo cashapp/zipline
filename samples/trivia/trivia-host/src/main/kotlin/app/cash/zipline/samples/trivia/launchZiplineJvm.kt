@@ -16,12 +16,12 @@
 package app.cash.zipline.samples.trivia
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.loader.DefaultFreshnessCheckerNotFresh
 import app.cash.zipline.loader.LoadResult
 import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineLoader
 import kotlinx.coroutines.CoroutineDispatcher
 import okhttp3.OkHttpClient
-
 fun getTriviaService(zipline: Zipline): TriviaService {
   return zipline.take("triviaService")
 }
@@ -33,7 +33,7 @@ suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
     NO_SIGNATURE_CHECKS,
     OkHttpClient(),
   )
-  return when (val result = loader.loadOnce("trivia", manifestUrl)) {
+  return when (val result = loader.loadOnce("trivia", DefaultFreshnessCheckerNotFresh, manifestUrl)) {
     is LoadResult.Success -> result.zipline
     is LoadResult.Failure -> error(result.exception)
   }
