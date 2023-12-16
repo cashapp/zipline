@@ -24,6 +24,7 @@ import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.runBlocking
+import okio.IOException
 
 @Suppress("UnstableApiUsage")
 @ExperimentalCoroutinesApi
@@ -147,8 +148,8 @@ class LoaderEventsTest {
       listOf(
         "applicationLoadStart red bogusUrl",
         "downloadStart red bogusUrl",
-        "downloadFailed red bogusUrl java.io.IOException: 404: bogusUrl not found",
-        "applicationLoadFailed red java.io.IOException: 404: bogusUrl not found",
+        "downloadFailed red bogusUrl " + "${IOException::class.qualifiedName}: 404: bogusUrl not found",
+        "applicationLoadFailed red " + "${IOException::class.qualifiedName}: 404: bogusUrl not found",
       ),
       eventListener.takeAll(skipServiceEvents = true),
     )
