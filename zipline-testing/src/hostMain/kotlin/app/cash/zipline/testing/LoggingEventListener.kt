@@ -101,6 +101,17 @@ class LoggingEventListener : EventListener(), EventListener.Factory {
     )
   }
 
+  override fun applicationLoadSkippedNotFresh(
+    applicationName: String,
+    manifestUrl: String?,
+    startValue: Any?,
+  ) {
+    log(
+      applicationName = applicationName,
+      log = "applicationLoadSkipped $applicationName $manifestUrl manifest not fresh",
+    )
+  }
+
   override fun applicationLoadFailed(
     applicationName: String,
     manifestUrl: String?,

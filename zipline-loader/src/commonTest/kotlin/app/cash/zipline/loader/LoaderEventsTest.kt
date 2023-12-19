@@ -125,6 +125,7 @@ class LoaderEventsTest {
     assertEquals(
       listOf(
         "applicationLoadStart red null",
+        "applicationLoadSkipped red null manifest not fresh",
         "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",

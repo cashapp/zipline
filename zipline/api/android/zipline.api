@@ -24,6 +24,7 @@ public abstract class app/cash/zipline/EventListener {
 	public fun <init> ()V
 	public fun applicationLoadFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;Ljava/lang/Object;)V
 	public fun applicationLoadSkipped (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
+	public fun applicationLoadSkippedNotFresh (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
 	public fun applicationLoadStart (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;
 	public fun applicationLoadSuccess (Ljava/lang/String;Ljava/lang/String;Lapp/cash/zipline/ZiplineManifest;Lapp/cash/zipline/Zipline;Ljava/lang/Object;)V
 	public fun bindService (Lapp/cash/zipline/Zipline;Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
