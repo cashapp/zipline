@@ -73,7 +73,7 @@ jobs:
           path: zipline/src/jvmMain/resources/*
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v3
         if: ${{ always() }}
         with:
           name: test-report-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.cmake-arch }}
