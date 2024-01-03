@@ -4,7 +4,7 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 
 plugins {
   kotlin("jvm")
-  kotlin("kapt")
+  id("com.google.devtools.ksp")
   id("com.github.gmazzo.buildconfig")
   id("com.vanniktech.maven.publish.base")
 }
@@ -13,7 +13,7 @@ dependencies {
   compileOnly(kotlin("compiler-embeddable"))
   compileOnly(kotlin("stdlib"))
 
-  kapt(libs.auto.service.compiler)
+  ksp(libs.auto.service.compiler)
   compileOnly(libs.auto.service.annotations)
 }
 

@@ -1,12 +1,12 @@
 [versions]
 androidx-compose = "1.5.4"
 androidx-compose-compiler = "1.5.7"
-auto-service="1.1.1"
 compileSdk = "34"
 http4k = "4.48.0.0"
 kotlin = "1.9.21"
 kotlinx-coroutines = "1.7.3"
 kotlinx-serialization = "1.6.2"
+ksp = "1.9.21-1.0.16"
 okHttp = "4.12.0"
 okio = "3.7.0"
 minSdk = "18"
@@ -29,8 +29,8 @@ androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.12.0" }
 androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.6.2" }
 androidx-test-runner = { module = "androidx.test:runner", version = "1.5.2" }
 assertk = "com.willowtreeapps.assertk:assertk:0.28.0"
-auto-service-compiler = { module = "com.google.auto.service:auto-service", version.ref = "auto-service" }
-auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version.ref = "auto-service" }
+auto-service-compiler = { module = "dev.zacsweers.autoservice:auto-service-ksp", version = "1.1.0" }
+auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version = "1.1.1" }
 binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.13.2" }
 cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.3.0" }
 coil-compose = { module = "io.coil-kt:coil-compose", version = "2.5.0" }

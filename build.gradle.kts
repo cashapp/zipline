@@ -40,6 +40,7 @@ buildscript {
 
 plugins {
   id("com.github.gmazzo.buildconfig") version "3.1.0" apply false
+  id("com.google.devtools.ksp") version libs.versions.ksp apply false
   alias(libs.plugins.spotless)
 }
 
