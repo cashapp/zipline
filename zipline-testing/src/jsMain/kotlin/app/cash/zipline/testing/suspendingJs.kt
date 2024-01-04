@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(ExperimentalJsExport::class)
+
 package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -49,6 +52,7 @@ fun unblockSuspendingJs() {
   mutex.unlock()
 }
 
+@OptIn(DelicateCoroutinesApi::class)
 @JsExport
 fun callSuspendingEchoService(message: String) {
   val service = zipline.take<SuspendingEchoService>("jvmSuspendingEchoService")

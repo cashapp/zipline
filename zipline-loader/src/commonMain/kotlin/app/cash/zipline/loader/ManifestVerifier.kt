@@ -44,7 +44,7 @@ class ManifestVerifier private constructor(
    * @throws IllegalStateException if no trusted signature is found, or if a signature doesn't
    *   verify.
    */
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   fun verify(manifestBytes: ByteString, manifest: ZiplineManifest): String? {
     if (!doSignatureChecks) return null
 

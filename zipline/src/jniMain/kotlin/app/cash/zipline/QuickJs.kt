@@ -174,3 +174,5 @@ actual class QuickJs private constructor(
   private external fun gc(context: Long)
   private external fun setMaxStackSize(context: Long, stackSize: Long)
 }
+
+internal expect fun loadNativeLibrary()

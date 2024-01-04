@@ -535,7 +535,7 @@ class ZiplineGradlePluginTest {
     val SUCCESS_OUTCOMES = listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE)
     val versionProperty = "-PziplineVersion=${System.getProperty("ziplineVersion")}"
 
-    @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
     private val manifestFileName = app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
   }
 }

@@ -204,12 +204,16 @@ internal class ZiplineApis(
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
   private fun rewritePair(funName: CallableId): Pair<String, IrSimpleFunctionSymbol> {
     val overloads = pluginContext.referenceFunctions(funName)
-    val rewriteTarget = overloads.single {
-      it.owner.valueParameters.lastOrNull()?.type?.getClass()?.classId == ziplineServiceAdapterClassId
+    try {
+      val rewriteTarget = overloads.single {
+        it.owner.valueParameters.lastOrNull()?.type?.getClass()?.classId == ziplineServiceAdapterClassId
+      }
+      val original = overloads.single {
+        it.owner.valueParameters.size + 1 == rewriteTarget.owner.valueParameters.size
+      }
+      return original.toString() to rewriteTarget
+    } catch (e: Exception) {
+      throw Exception(overloads.toString())
     }
-    val original = overloads.single {
-      it.owner.valueParameters.size + 1 == rewriteTarget.owner.valueParameters.size
-    }
-    return original.toString() to rewriteTarget
   }
 }

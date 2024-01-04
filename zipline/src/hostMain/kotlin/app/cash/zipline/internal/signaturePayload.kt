@@ -101,7 +101,7 @@ internal fun signaturePayload(manifest: JsonElement): JsonElement {
   return JsonObject(newContent)
 }
 
-internal fun signaturePayload(manifestJson: String): String {
+fun signaturePayload(manifestJson: String): String {
   val jsonElement = Json.parseToJsonElement(manifestJson)
   val signaturePayload = signaturePayload(jsonElement)
   return Json.encodeToString(JsonElement.serializer(), signaturePayload)

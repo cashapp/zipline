@@ -162,10 +162,10 @@ internal class ZiplineCompiler(
 
   private fun getJsFiles(files: List<File>) = files.filter { it.path.endsWith(".js") }
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   private val manifestFileName = app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   private fun collectDependencies(quickJs: QuickJs, bytecode: ByteArray): List<String> {
     app.cash.zipline.internal.collectModuleDependencies(quickJs)
     quickJs.execute(bytecode)

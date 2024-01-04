@@ -11,6 +11,7 @@ reports
 jacoco.exec
 .externalNativeBuild
 .cxx
+.kotlin
 
 # iOS
 *.pbxuser

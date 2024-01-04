@@ -19,4 +19,6 @@ internal interface ProfilerClock {
   val nanoTime: Long
 }
 
-internal expect object DefaultProfilerClock : ProfilerClock
+internal expect object DefaultProfilerClock : ProfilerClock {
+  override val nanoTime: Long
+}

@@ -29,7 +29,6 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.VfsBasedProjectEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.ModuleCompilerEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.ModuleCompilerInput
 import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.compileModuleToAnalyzedFir
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
@@ -136,10 +135,7 @@ internal class KotlinFirLoader(
 
     return compileModuleToAnalyzedFir(
       input = input,
-      environment = ModuleCompilerEnvironment(
-        projectEnvironment = projectEnvironment,
-        diagnosticsReporter = reporter,
-      ),
+      projectEnvironment = projectEnvironment,
       previousStepsSymbolProviders = emptyList(),
       incrementalExcludesScope = null,
       diagnosticsReporter = reporter,

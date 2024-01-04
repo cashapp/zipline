@@ -153,6 +153,17 @@ allprojects {
   plugins.withId("org.jetbrains.kotlin.multiplatform") {
     configure<KotlinMultiplatformExtension> {
       jvmToolchain(11)
+
+      targets.configureEach {
+        compilations.configureEach {
+          compilerOptions.configure {
+            freeCompilerArgs.addAll(
+              // https://youtrack.jetbrains.com/issue/KT-61573
+              "-Xexpect-actual-classes",
+            )
+          }
+        }
+      }
     }
   }
 
