@@ -47,6 +47,7 @@ fun Zipline.loadTestingJs() {
   loadJsModuleFromResource("./kotlinx.coroutines-kotlinx-coroutines-core-js-ir.js")
   loadJsModuleFromResource("./kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js")
   loadJsModuleFromResource("./zipline-root-zipline.js")
+  loadJsModuleFromResource("./zipline-root-zipline-security.js")
   loadJsModuleFromResource("./zipline-root-zipline-testing.js")
   quickJs.evaluate("globalThis['testing'] = require('./zipline-root-zipline-testing.js');")
 }
