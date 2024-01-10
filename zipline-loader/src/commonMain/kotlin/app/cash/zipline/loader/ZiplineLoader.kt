@@ -45,6 +45,7 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 import okio.FileSystem
+import okio.IOException
 import okio.Path
 
 /**
@@ -281,6 +282,9 @@ class ZiplineLoader internal constructor(
       // If emit() threw a CancellationException, consider that emit to be successful.
       // That's 'cause loadOnce() accepts an element and then immediately cancels the flow.
       throw e
+    } catch (e: IOException) {
+      send(LoadResult.Failure(e))
+      return null
     } catch (e: Exception) {
       eventListener.applicationLoadFailed(applicationName, manifestUrl, e, startValue)
       if (loadedManifest != null) {
