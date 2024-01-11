@@ -186,6 +186,17 @@ abstract class EventListener {
   }
 
   /**
+   * Invoked when the loader has successfully fetched a manifest, verified it (if necessary), and
+   * will proceed to download and load each of its modules.
+   */
+  open fun manifestReady(
+    applicationName: String,
+    manifestUrl: String?,
+    manifest: ZiplineManifest,
+  ) {
+  }
+
+  /**
    * Invoked when a module load starts. This is the process of loading code into QuickJS.
    *
    * @return any object. This value will be passed back to [moduleLoadEnd] when the call is
