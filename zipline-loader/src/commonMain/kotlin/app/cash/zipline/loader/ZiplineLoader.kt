@@ -150,11 +150,18 @@ class ZiplineLoader internal constructor(
    * If local ZiplineManifest is presented and is fresh (this is expected for almost all the time),
    * loads Zipline with local ZiplineManifest.
    *
+   * The [manifestUrlFlow] should emit whenever a load attempt should be made. Some examples:
+   *
+   *  - If the URL to load code from changes, as occurs when switching from development to
+   *    production code.
+   *  - If hot-reloading is enabled, and an update should be made
+   *  - If the most recent load attempt is [LoadResult.Failure] and that load should be retried.
+   *
    * Each time when [manifestUrlFlow] emits: if there was a previously loaded ZiplineManifest and
    * it's still fresh, return directly; if there wasn't a previously loaded ZiplineManifest or it's
    * not fresh, downloads a new ZiplineManifest from network and loads Zipline with the newly
    * downloaded ZiplineManifest, newly downloaded ZiplineManifest is always considered fresh. If the
-   * network is unreachable: returns null, and emits a LoadResult.Failure
+   * network is unreachable, a LoadResult.Failure is emitted.
    *
    * @param manifestUrlFlow a flow that emits whenever by the downstream service.
    * @param freshnessChecker checks if a cached ZiplineManifest is considered fresh. Defaulted to
