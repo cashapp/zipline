@@ -59,7 +59,7 @@ jobs:
 
       # Build unless this is a cross-compile (we can't test cross-compiled code)
       - name: Build Zipline
-        run: ./gradlew build --stacktrace
+        run: pwd && ./gradlew build --stacktrace
         if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
 
       # Build unless this is a cross-compile
@@ -77,8 +77,9 @@ jobs:
         if: ${{ always() }}
         with:
           name: test-report-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.cmake-arch }}
-          path: '**/build/reports/tests/**'
+          path: '**/zipline/build/reports/tests/**'
           retention-days: 1
+      - run: du -a .
 
   android:
     # We build on a Mac to get hardware acceleration for the Android emulator.
