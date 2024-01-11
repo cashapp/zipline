@@ -37,7 +37,7 @@ interface FreshnessChecker {
   ): Boolean
 }
 
-/** A FreshnessChecker that always returns true. */
+/** A FreshnessChecker that always returns false. */
 object DefaultFreshnessCheckerNotFresh : FreshnessChecker {
   override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
     return false
