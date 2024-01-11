@@ -38,6 +38,7 @@ public abstract class app/cash/zipline/EventListener {
 	public fun mainFunctionEnd (Lapp/cash/zipline/Zipline;Ljava/lang/String;Ljava/lang/Object;)V
 	public fun mainFunctionStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)Ljava/lang/Object;
 	public fun manifestParseFailed (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Exception;)V
+	public fun manifestReady (Ljava/lang/String;Ljava/lang/String;Lapp/cash/zipline/ZiplineManifest;)V
 	public fun manifestVerified (Ljava/lang/String;Ljava/lang/String;Lapp/cash/zipline/ZiplineManifest;Ljava/lang/String;)V
 	public fun moduleLoadEnd (Lapp/cash/zipline/Zipline;Ljava/lang/String;Ljava/lang/Object;)V
 	public fun moduleLoadStart (Lapp/cash/zipline/Zipline;Ljava/lang/String;)Ljava/lang/Object;

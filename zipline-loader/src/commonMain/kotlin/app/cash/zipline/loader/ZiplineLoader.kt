@@ -259,6 +259,8 @@ class ZiplineLoader internal constructor(
         return null
       }
 
+      eventListener.manifestReady(applicationName, manifestUrl, loadedManifest.manifest)
+
       val zipline = loadFromManifest(
         applicationName,
         eventListener,
@@ -312,6 +314,8 @@ class ZiplineLoader internal constructor(
       return null
     } else {
       try {
+        eventListener.manifestReady(applicationName, null, loadedManifest.manifest)
+
         val zipline = loadFromManifest(
           applicationName,
           eventListener,
