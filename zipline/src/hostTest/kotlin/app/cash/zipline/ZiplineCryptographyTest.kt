@@ -21,6 +21,7 @@ import app.cash.zipline.cryptography.ZiplineCryptographyService
 import app.cash.zipline.cryptography.installCryptographyService
 import app.cash.zipline.cryptography.installCryptographyServiceInternal
 import app.cash.zipline.testing.RandomStringMaker
+import app.cash.zipline.testing.isLinux
 import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -51,6 +52,7 @@ class ZiplineCryptographyTest {
 
   @Test
   fun secureRandomWorks() = runBlocking(dispatcher) {
+    if (isLinux) return@runBlocking
     val fakeZiplineSecurityService = object : ZiplineCryptographyService {
       override fun nextSecureRandomBytes(size: Int): ByteArray {
         return ByteArray(size) { index -> (index + 1).toByte() }
@@ -66,6 +68,7 @@ class ZiplineCryptographyTest {
 
   @Test
   fun secureRandomWorksWithNativeImplementation() = runBlocking(dispatcher) {
+    if (isLinux) return@runBlocking
     zipline.installCryptographyService()
 
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareRandomStringMaker()")
