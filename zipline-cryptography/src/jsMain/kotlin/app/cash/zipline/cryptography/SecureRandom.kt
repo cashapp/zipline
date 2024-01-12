@@ -18,9 +18,12 @@ package app.cash.zipline.cryptography
 class SecureRandom internal constructor(
   private val securityService: ZiplineCryptographyService,
 ) : Random {
-  override fun nextBytes(sink: ByteArray) {
+  override fun nextBytes(sink: ByteArray, offset: Int, count: Int) {
+    if (sink.size < count) {
+      throw IllegalArgumentException("count: $count > sink.size: ${sink.size}")
+    }
     val byteArray = securityService.nextSecureRandomBytes(sink.size)
-    byteArray.copyInto(sink)
+    byteArray.copyInto(sink, offset, 0, count)
   }
 
   override fun nextLong(): Long {

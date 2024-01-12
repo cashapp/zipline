@@ -16,7 +16,7 @@
 package app.cash.zipline.cryptography
 
 interface Random {
-  fun nextBytes(sink: ByteArray)
+  fun nextBytes(sink: ByteArray, offset: Int = 0, count: Int = sink.size - offset)
 
   fun nextLong(): Long
 }

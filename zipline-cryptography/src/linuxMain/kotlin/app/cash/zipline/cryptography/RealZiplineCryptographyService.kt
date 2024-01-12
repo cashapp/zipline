@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.cryptography
 
-class RealZiplineCryptographyService : ZiplineCryptographyService {
+internal class RealZiplineCryptographyService : ZiplineCryptographyService {
   override fun nextSecureRandomBytes(size: Int): ByteArray {
     TODO("Security module does not support Linux yet")
   }

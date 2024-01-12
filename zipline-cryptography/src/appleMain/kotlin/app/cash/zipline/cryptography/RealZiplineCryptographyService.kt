@@ -20,7 +20,7 @@ package app.cash.zipline.cryptography
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
-import kotlinx.cinterop.pin
+import kotlinx.cinterop.usePinned
 import platform.Security.SecRandomCopyBytes
 import platform.Security.errSecSuccess
 import platform.Security.kSecRandomDefault
@@ -28,21 +28,19 @@ import platform.Security.kSecRandomDefault
 internal class RealZiplineCryptographyService : ZiplineCryptographyService {
   override fun nextSecureRandomBytes(size: Int): ByteArray {
     val result = ByteArray(size)
-    val pin = result.pin()
-    val bytesPointer = when {
-      result.isNotEmpty() -> pin.addressOf(0)
-      else -> null
-    }
 
-    val status = SecRandomCopyBytes(
-      kSecRandomDefault,
-      result.size.convert(),
-      bytesPointer,
-    )
-    pin.unpin()
+    if (size != 0) {
+      val status = result.usePinned {
+        SecRandomCopyBytes(
+          kSecRandomDefault,
+          result.size.convert(),
+          it.addressOf(0),
+        )
+      }
 
-    require(status == errSecSuccess) {
-      "failed to generate random bytes."
+      require(status == errSecSuccess) {
+        "failed to generate random bytes."
+      }
     }
 
     return result
