@@ -51,6 +51,7 @@ class LoaderEventsTest {
         "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "manifestReady red",
         "ziplineCreated",
         "downloadStart red https://example.com/files/red/apple.zipline",
         "downloadEnd red https://example.com/files/red/apple.zipline",
@@ -73,6 +74,7 @@ class LoaderEventsTest {
     assertEquals(
       listOf(
         "applicationLoadStart red null",
+        "manifestReady red",
         "ziplineCreated",
         "moduleLoadStart apple",
         "moduleLoadEnd apple",
@@ -96,6 +98,7 @@ class LoaderEventsTest {
         "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "manifestReady red",
         "ziplineCreated",
         "downloadStart red https://example.com/files/red/apple.zipline",
         "downloadEnd red https://example.com/files/red/apple.zipline",
@@ -129,6 +132,7 @@ class LoaderEventsTest {
         "applicationLoadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadStart red https://example.com/files/red/red.manifest.zipline.json",
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
+        "manifestReady red",
         "ziplineCreated",
         "moduleLoadStart apple",
         "moduleLoadEnd apple",
@@ -163,6 +167,7 @@ class LoaderEventsTest {
     assertEquals(
       listOf(
         "applicationLoadStart red null",
+        "manifestReady red",
         "ziplineCreated",
         "moduleLoadStart firetruck",
         "moduleLoadEnd firetruck",
@@ -183,6 +188,7 @@ class LoaderEventsTest {
     assertEquals(
       listOf(
         "applicationLoadStart red null",
+        "manifestReady red",
         "ziplineCreated",
         "moduleLoadStart firetruck",
         "moduleLoadEnd firetruck",
@@ -203,6 +209,7 @@ class LoaderEventsTest {
     assertEquals(
       listOf(
         "applicationLoadStart red null",
+        "manifestReady red",
         "ziplineCreated",
         "moduleLoadStart firetruck",
         "moduleLoadEnd firetruck",

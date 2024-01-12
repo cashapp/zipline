@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [1.8.0] - 2024-01-11
+
+ * Fix: Don't crash validating signatures on Android 7.x. We incorrectly used an API that wasn't
+   available until API 26+.
+ * New: `FreshnessChecker` decides whether to load cached code. If it returns false,
+   `EventListener.applicationLoadSkippedNotFresh()` will be called.
+ * New: `EventListener.manifestReady()` is called when the manifest is fetched and verified, but
+   before any code is downloaded.
+ * Upgrade: [Okio 3.7.0](https://square.github.io/okio/changelog/#version-370)
+
 
 ## [1.7.0] - 2023-11-30
 

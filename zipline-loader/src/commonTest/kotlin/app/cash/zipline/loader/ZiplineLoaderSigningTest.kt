@@ -21,6 +21,8 @@ import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.BRAVO_URL
 import app.cash.zipline.loader.testing.LoaderTestFixtures.Companion.MANIFEST_URL
 import app.cash.zipline.loader.testing.SampleKeys
 import app.cash.zipline.testing.LoggingEventListener
+import assertk.assertThat
+import assertk.assertions.isLessThan
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -73,7 +75,13 @@ class ZiplineLoaderSigningTest {
     val zipline = (tester.loader.loadOnce("test", DefaultFreshnessCheckerNotFresh, MANIFEST_URL) as LoadResult.Success).zipline
     zipline.close()
 
-    assertContains(eventListener.takeAll(), "manifestVerified test key1")
+    val events = eventListener.takeAll()
+    assertContains(events, "manifestVerified test key1")
+    assertContains(events, "manifestReady test")
+
+    // The manifestReady event should follow the manifestVerified event.
+    assertThat(events.indexOf("manifestVerified test key1"))
+      .isLessThan(events.indexOf("manifestReady test"))
   }
 
   /**

@@ -174,6 +174,17 @@ class LoggingEventListener : EventListener(), EventListener.Factory {
     )
   }
 
+  override fun manifestReady(
+    applicationName: String,
+    manifestUrl: String?,
+    manifest: ZiplineManifest,
+  ) {
+    log(
+      applicationName = applicationName,
+      log = "manifestReady $applicationName",
+    )
+  }
+
   override fun moduleLoadStart(zipline: Zipline, moduleId: String): Any? {
     log(
       moduleId = moduleId,
