@@ -67,16 +67,16 @@ jobs:
         run: ./gradlew -p samples check --stacktrace
         if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
-          name: jvm-native-libraries
+          name: jvm-native-libraries-${{ matrix.os }}-${{ matrix.arch }}
           path: zipline/src/jvmMain/resources/*
           if-no-files-found: error
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         if: ${{ always() }}
         with:
-          name: test-report-${{ matrix.os }}-${{ matrix.arch }}-${{ matrix.cmake-arch }}
+          name: test-report-${{ matrix.os }}-${{ matrix.arch }}
           path: '**/build/reports/tests/**'
           retention-days: 1
 
@@ -129,10 +129,11 @@ jobs:
           distribution: 'zulu'
           java-version: 20
 
-      - uses: actions/download-artifact@v3
-      - run: |
-          mkdir -p zipline/src/jvmMain/resources/
-          cp -av jvm-native-libraries/* zipline/src/jvmMain/resources/
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: jvm-native-libraries-*
+          path: zipline/src/jvmMain/resources
+          merge-multiple: true
 
       - run: ./gradlew assemble :dokkaHtmlMultiModule
 
