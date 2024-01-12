@@ -92,6 +92,13 @@ kotlin {
     }
     val androidInstrumentedTest by getting {
       dependsOn(hostTest)
+      dependencies {
+        implementation(libs.assertk)
+        implementation(libs.junit)
+        implementation(libs.androidx.test.runner)
+        implementation(libs.kotlinx.coroutines.test)
+        implementation(projects.ziplineTesting)
+      }
     }
     val jvmMain by getting {
       dependsOn(jniMain)
@@ -278,14 +285,6 @@ android {
       path = file("src/androidMain/CMakeLists.txt")
     }
   }
-}
-
-dependencies {
-  androidTestImplementation(libs.assertk)
-  androidTestImplementation(libs.junit)
-  androidTestImplementation(libs.androidx.test.runner)
-  androidTestImplementation(libs.kotlinx.coroutines.test)
-  androidTestImplementation(projects.ziplineTesting)
 }
 
 fun quickJsVersion(): String {
