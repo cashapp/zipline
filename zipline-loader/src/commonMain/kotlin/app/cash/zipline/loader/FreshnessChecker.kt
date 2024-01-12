@@ -18,18 +18,17 @@ package app.cash.zipline.loader
 import app.cash.zipline.ZiplineManifest
 
 /**
- * Checks if a given ZiplineManifest is considered fresh.
+ * Decides whether a locally-cached application is fresh enough to use at the current time.
  *
- * For local development that requires continuous loading (or hot loading), supply a
- * FreshnessChecker that always returns false.
+ * This is unused for downloaded applications, which are considered to be fresh by definition.
  */
 interface FreshnessChecker {
 
   /**
-   * Decides whether the [manifest] is eligible to be used.
+   * Returns true if [manifest] is eligible to be used.
    *
-   * Returns true to launch the [manifest] immediately; false to download a fresh
-   * ZiplineManifest and launch that.
+   * @param freshAtEpochMs the time that [manifest] was fetched from the server by this client.
+   *     This could be significantly newer than the time the application was built.
    */
   fun isFresh(
     manifest: ZiplineManifest,
@@ -37,7 +36,7 @@ interface FreshnessChecker {
   ): Boolean
 }
 
-/** A FreshnessChecker that always returns false. */
+/** A FreshnessChecker that never loads locally-cached applications. */
 object DefaultFreshnessCheckerNotFresh : FreshnessChecker {
   override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
     return false

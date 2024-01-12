@@ -147,18 +147,53 @@ class ZiplineLoader internal constructor(
   private val moduleFetchers = listOfNotNull(embeddedFetcher, cachingFetcher ?: httpFetcher)
 
   /**
-   * If local ZiplineManifest is presented and is fresh (this is expected for almost all the time),
-   * loads Zipline with local ZiplineManifest.
+   * Returns a flow of loaded applications.
    *
-   * Each time when [manifestUrlFlow] emits: if there was a previously loaded ZiplineManifest and
-   * it's still fresh, return directly; if there wasn't a previously loaded ZiplineManifest or it's
-   * not fresh, downloads a new ZiplineManifest from network and loads Zipline with the newly
-   * downloaded ZiplineManifest, newly downloaded ZiplineManifest is always considered fresh. If the
-   * network is unreachable: returns null, and emits a LoadResult.Failure
+   * Local or Remote
+   * ===============
+   *
+   * If either caching or embedded code are enabled in this loader, this will attempt to load that
+   * local code. If the local code is fresh and loading it succeeds, the returned flow will
+   * finish.
+   *
+   * Otherwise, this will load code from the network each time that [manifestUrlFlow] emits. It
+   * will skip loads when the code is unchanged.
+   *
+   * Triggering Load Attempts
+   * ========================
+   *
+   * The [manifestUrlFlow] should emit whenever a load attempt should be made. Some examples:
+   *
+   *  * If the URL to load the manifest from changes, as occurs when switching from development to
+   *    production code.
+   *  * If hot-reloading is enabled, and a hot reload should be attempted because the code may have
+   *    changed.
+   *  * If the most recent load attempt is [LoadResult.Failure] and that load should be retried.
+   *
+   * Loading Starts on Collect
+   * =========================
+   *
+   * The returned flow is a _cold_ flow. No work will be performed unless there's a collect in
+   * flight.
+   *
+   * Skips, Failures and Successes
+   * =============================
+   *
+   * Each code update yields a few potential outcomes:
+   *
+   *  * Skipped, because the cached or embedded code is too old
+   *  * Skipped, because the new code is the same as what's already loaded
+   *  * Failed, due to a problem downloading a manifest
+   *  * Failed, due to a problem downloading a binary
+   *  * Failed, due to a crash initializing the code
+   *  * Success
+   *
+   * Failures and success results are emitted to the returned flow.
    *
    * @param manifestUrlFlow a flow that emits whenever by the downstream service.
-   * @param freshnessChecker checks if a cached ZiplineManifest is considered fresh. Defaulted to
-   * always return false, which means always load from network when [manifestUrlFlow] emits.
+   * @param freshnessChecker checks if a cached ZiplineManifest is considered fresh. The default
+   *     value is [DefaultFreshnessCheckerNotFresh] which completely prevents the cache and embedded
+   *     code from being used.
    */
   fun load(
     applicationName: String,
@@ -176,27 +211,24 @@ class ZiplineLoader internal constructor(
         serializersModule,
         initializer,
       )
+
+      // If we successfully loaded local code, don't collect the remote code. We're done!
       if (localManifest != null) {
         previousManifest = localManifest
         return@channelFlow
       }
+
       manifestUrlFlow.collect { manifestUrl ->
-        if (previousManifest != null &&
-          freshnessChecker.isFresh(previousManifest!!, previousManifest!!.freshAtEpochMs ?: Long.MIN_VALUE)
-        ) {
-          return@collect
-        } else {
-          val loadedFromNetwork = loadFromNetwork(
-            previousManifest,
-            nowEpochMs(),
-            applicationName,
-            manifestUrl,
-            serializersModule,
-            initializer,
-          )
-          if (loadedFromNetwork != null) {
-            previousManifest = loadedFromNetwork
-          }
+        val loadedFromNetwork = loadFromNetwork(
+          previousManifest,
+          nowEpochMs(),
+          applicationName,
+          manifestUrl,
+          serializersModule,
+          initializer,
+        )
+        if (loadedFromNetwork != null) {
+          previousManifest = loadedFromNetwork
         }
       }
     }
@@ -294,8 +326,9 @@ class ZiplineLoader internal constructor(
   }
 
   /**
-   * Checks if the local ZiplineManifest is considered fresh, if so returns it and loads Zipline
-   * from cashed ZiplineManifest, if not returns null, and does not load Zipline.
+   * Loads the locally-cached or embedded application if it is fresh, and returns its manifest.
+   * This returns null if there is no cached or embedded application, if that application is not
+   * fresh, or if loading it fails.
    */
   private suspend fun ProducerScope<LoadResult>.loadFromLocal(
     now: Long,
@@ -308,40 +341,41 @@ class ZiplineLoader internal constructor(
 
     val loadedManifest = loadCachedOrEmbeddedManifest(applicationName, eventListener, now)
       ?: return null
+
     val startValue = eventListener.applicationLoadStart(applicationName, null)
     if (!freshnessChecker.isFresh(loadedManifest.manifest, loadedManifest.freshAtEpochMs)) {
       eventListener.applicationLoadSkippedNotFresh(applicationName, null, startValue)
       return null
-    } else {
-      try {
-        eventListener.manifestReady(applicationName, null, loadedManifest.manifest)
+    }
 
-        val zipline = loadFromManifest(
-          applicationName,
-          eventListener,
-          loadedManifest,
-          serializersModule,
-          now,
-          initializer,
-        )
-        eventListener.applicationLoadSuccess(
-          applicationName,
-          null,
-          loadedManifest.manifest,
-          zipline,
-          startValue,
-        )
-        send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
-        return loadedManifest.manifest
-      } catch (e: CancellationException) {
-        // If emit() threw a CancellationException, consider that emit to be successful.
-        // That's 'cause loadOnce() accepts an element and then immediately cancels the flow.
-        throw e
-      } catch (e: Exception) {
-        send(LoadResult.Failure(e))
-        eventListener.applicationLoadFailed(applicationName, null, e, startValue)
-        return null
-      }
+    try {
+      eventListener.manifestReady(applicationName, null, loadedManifest.manifest)
+
+      val zipline = loadFromManifest(
+        applicationName,
+        eventListener,
+        loadedManifest,
+        serializersModule,
+        now,
+        initializer,
+      )
+      eventListener.applicationLoadSuccess(
+        applicationName,
+        null,
+        loadedManifest.manifest,
+        zipline,
+        startValue,
+      )
+      send(LoadResult.Success(zipline, loadedManifest.manifest, loadedManifest.freshAtEpochMs))
+      return loadedManifest.manifest
+    } catch (e: CancellationException) {
+      // If emit() threw a CancellationException, consider that emit to be successful.
+      // That's 'cause loadOnce() accepts an element and then immediately cancels the flow.
+      throw e
+    } catch (e: Exception) {
+      send(LoadResult.Failure(e))
+      eventListener.applicationLoadFailed(applicationName, null, e, startValue)
+      return null
     }
   }
 
