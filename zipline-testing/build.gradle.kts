@@ -76,14 +76,17 @@ tasks {
 
   // https://youtrack.jetbrains.com/issue/KT-56025
   // https://youtrack.jetbrains.com/issue/KT-57203
+  // Required for K1.
   findByName("jsBrowserProductionWebpack")?.apply {
     dependsOn(named("jsProductionLibraryCompileSync"))
     dependsOn(named("jsDevelopmentLibraryCompileSync"))
   }
+  // Required for K1.
   findByName("jsBrowserProductionLibraryPrepare")?.apply {
     dependsOn(named("jsProductionExecutableCompileSync"))
     dependsOn(named("jsDevelopmentLibraryCompileSync"))
   }
+  // Required for K2.
   findByName("jsBrowserProductionLibraryDistribution")?.apply {
     dependsOn(named("jsProductionExecutableCompileSync"))
     dependsOn(named("jsDevelopmentLibraryCompileSync"))
