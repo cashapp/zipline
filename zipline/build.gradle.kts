@@ -64,7 +64,7 @@ kotlin {
       dependencies {
         implementation(libs.assertk)
         implementation(kotlin("test"))
-        implementation(projects.ziplineSecurity)
+        implementation(projects.ziplineCryptography)
       }
     }
 

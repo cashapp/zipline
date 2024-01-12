@@ -16,11 +16,11 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
-import app.cash.zipline.security.SecureRandom
-import app.cash.zipline.security.ZiplineSecurity
+import app.cash.zipline.cryptography.SecureRandom
+import app.cash.zipline.cryptography.ZiplineCryptography
 
 private val zipline by lazy { Zipline.get() }
-private val ziplineSecurity = ZiplineSecurity(zipline)
+private val ziplineCryptography = ZiplineCryptography(zipline)
 
 class RealRandomStringMaker(
   private val secureRandom: SecureRandom,
@@ -34,5 +34,5 @@ class RealRandomStringMaker(
 
 @JsExport
 fun prepareRandomStringMaker() {
-  zipline.bind<RandomStringMaker>("randomStringMaker", RealRandomStringMaker(ziplineSecurity.secureRandom))
+  zipline.bind<RandomStringMaker>("randomStringMaker", RealRandomStringMaker(ziplineCryptography.secureRandom))
 }
