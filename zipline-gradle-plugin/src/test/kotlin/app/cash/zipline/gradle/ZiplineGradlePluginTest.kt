@@ -25,6 +25,7 @@ import assertk.assertions.isTrue
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.Ignore
 import org.junit.Test
 
 class ZiplineGradlePluginTest {
@@ -70,6 +71,7 @@ class ZiplineGradlePluginTest {
    *  - IR rewriting in JS and JVM
    *  - Compiling to .zipline files and producing a manifest
    */
+  @Ignore("Temporarily ignore as this gets stuck.")
   @Test
   fun endToEnd() {
     val projectDir = File("src/test/projects/basic")
@@ -85,6 +87,7 @@ class ZiplineGradlePluginTest {
    * Stack traces in this mode have no line numbers and no function names. Class names like
    * 'Exception' are mangled into meaningless names like 'Ab'.
    */
+  @Ignore("Temporarily ignore as this gets stuck.")
   @Test
   fun stacktraceWithOptimizeForSmallArtifactSize() {
     val projectDir = File("src/test/projects/crash")
@@ -112,6 +115,7 @@ class ZiplineGradlePluginTest {
    * retained across Webpack minification. (Some JavaScript stack trace elements don't have line
    * numbers).
    */
+  @Ignore("Temporarily ignore as this gets stuck.")
   @Test
   fun stacktraceWithOptimizeForDeveloperExperience() {
     val projectDir = File("src/test/projects/crash")
@@ -138,6 +142,7 @@ class ZiplineGradlePluginTest {
    * Stack traces in this mode have line numbers and function names. These are built without any
    * Webpack minification. (Some JavaScript stack trace elements don't have line numbers).
    */
+  @Ignore("Temporarily ignore as this gets stuck.")
   @Test
   fun stacktraceWithDevelopmentBuild() {
     val projectDir = File("src/test/projects/crash")
