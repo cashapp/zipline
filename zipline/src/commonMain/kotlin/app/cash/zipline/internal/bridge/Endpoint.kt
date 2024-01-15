@@ -233,6 +233,4 @@ internal class Endpoint internal constructor(
     open fun callEnd(call: Call, result: CallResult, startValue: Any?) {
     }
   }
-
-  internal companion object
 }
