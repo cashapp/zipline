@@ -91,12 +91,13 @@ kotlin {
       dependsOn(jniMain)
     }
     val androidInstrumentedTest by getting {
-      dependsOn(hostTest)
+      kotlin.srcDir("src/hostTest/kotlin/")
       dependencies {
         implementation(libs.assertk)
         implementation(libs.junit)
         implementation(libs.androidx.test.runner)
         implementation(libs.kotlinx.coroutines.test)
+        implementation(kotlin("test"))
         implementation(projects.ziplineTesting)
       }
     }
@@ -108,6 +109,7 @@ kotlin {
       kotlin.srcDir("src/jniTest/kotlin/")
       resources.srcDir(copyTestingJs)
       dependencies {
+        implementation(libs.junit)
         implementation(projects.ziplineTesting)
       }
     }
