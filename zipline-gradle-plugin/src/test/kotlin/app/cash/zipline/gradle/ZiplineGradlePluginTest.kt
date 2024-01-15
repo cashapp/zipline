@@ -25,10 +25,15 @@ import assertk.assertions.isTrue
 import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
-import org.junit.Ignore
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
 
-class ZiplineGradlePluginTest {
+@RunWith(Parameterized::class)
+class ZiplineGradlePluginTest(
+  private val enableK2: Boolean,
+) {
   @Test
   fun productionBuilds() {
     val projectDir = File("src/test/projects/basic")
@@ -71,7 +76,6 @@ class ZiplineGradlePluginTest {
    *  - IR rewriting in JS and JVM
    *  - Compiling to .zipline files and producing a manifest
    */
-  @Ignore("Temporarily ignore as this gets stuck.")
   @Test
   fun endToEnd() {
     val projectDir = File("src/test/projects/basic")
@@ -87,7 +91,6 @@ class ZiplineGradlePluginTest {
    * Stack traces in this mode have no line numbers and no function names. Class names like
    * 'Exception' are mangled into meaningless names like 'Ab'.
    */
-  @Ignore("Temporarily ignore as this gets stuck.")
   @Test
   fun stacktraceWithOptimizeForSmallArtifactSize() {
     val projectDir = File("src/test/projects/crash")
@@ -115,7 +118,6 @@ class ZiplineGradlePluginTest {
    * retained across Webpack minification. (Some JavaScript stack trace elements don't have line
    * numbers).
    */
-  @Ignore("Temporarily ignore as this gets stuck.")
   @Test
   fun stacktraceWithOptimizeForDeveloperExperience() {
     val projectDir = File("src/test/projects/crash")
@@ -142,7 +144,6 @@ class ZiplineGradlePluginTest {
    * Stack traces in this mode have line numbers and function names. These are built without any
    * Webpack minification. (Some JavaScript stack trace elements don't have line numbers).
    */
-  @Ignore("Temporarily ignore as this gets stuck.")
   @Test
   fun stacktraceWithDevelopmentBuild() {
     val projectDir = File("src/test/projects/crash")
@@ -506,13 +507,17 @@ class ZiplineGradlePluginTest {
     }
   }
 
-  private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {
+  private fun createRunner(
+    projectDir: File,
+    vararg taskNames: String,
+  ): GradleRunner {
     val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
     File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)
+    val arguments = arrayOf("--info", "--stacktrace", "--continue", "-PenableK2=$enableK2")
     return GradleRunner.create()
       .withProjectDir(projectDir)
       .withDebug(true) // Run in-process.
-      .withArguments("--info", "--stacktrace", "--continue", *taskNames, versionProperty)
+      .withArguments(*arguments, *taskNames, versionProperty)
       .forwardOutput()
   }
 
@@ -542,5 +547,12 @@ class ZiplineGradlePluginTest {
 
     @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
     private val manifestFileName = app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
+
+    @JvmStatic
+    @Parameters
+    fun data() = listOf(
+      arrayOf(true),
+      arrayOf(false),
+    )
   }
 }
