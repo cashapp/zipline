@@ -150,12 +150,6 @@ kotlin {
         project.dependencies.add(pluginConfigurationName, projects.ziplineKotlinPlugin)
       }
     }
-
-    all {
-      languageSettings {
-        optIn("app.cash.zipline.EngineApi")
-      }
-    }
   }
 }
 

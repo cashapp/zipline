@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.testing
 
-import app.cash.zipline.EngineApi
 import app.cash.zipline.Zipline
 import okio.FileSystem
 import okio.Path
@@ -36,7 +35,6 @@ val ziplineRootOrNull: Path?
 internal expect fun getEnv(name: String): String?
 
 /** Load our testing libraries into QuickJS. */
-@OptIn(EngineApi::class)
 fun Zipline.loadTestingJs() {
   // Load modules in topologically-sorted order. In production the zipline-manifest does this.
   loadJsModuleFromResource("./kotlin-kotlin-stdlib.js")

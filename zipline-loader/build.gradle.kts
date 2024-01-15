@@ -102,12 +102,6 @@ kotlin {
         implementation(projects.ziplineLoaderTesting)
       }
     }
-
-    all {
-      languageSettings {
-        optIn("app.cash.zipline.EngineApi")
-      }
-    }
   }
 }
 

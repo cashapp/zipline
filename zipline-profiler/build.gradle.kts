@@ -22,12 +22,6 @@ kotlin {
   tvosX64()
 
   sourceSets {
-    all {
-      languageSettings {
-        optIn("app.cash.zipline.EngineApi")
-      }
-    }
-
     val commonMain by getting {
       dependencies {
         api(projects.zipline)

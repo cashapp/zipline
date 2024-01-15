@@ -9,10 +9,10 @@ plugins {
 }
 
 kotlin {
-  sourceSets.all {
-    languageSettings {
-      optIn("app.cash.zipline.EngineApi")
-    }
+  compilerOptions {
+    freeCompilerArgs.addAll(
+      "-opt-in=app.cash.zipline.EngineApi",
+    )
   }
 }
 
