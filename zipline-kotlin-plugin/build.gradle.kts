@@ -34,13 +34,3 @@ configure<MavenPublishBaseExtension> {
     )
   )
 }
-
-tasks {
-  withType<KotlinCompile>().configureEach {
-    compilerOptions {
-      freeCompilerArgs.addAll(
-        "-opt-in=org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI"
-      )
-    }
-  }
-}
