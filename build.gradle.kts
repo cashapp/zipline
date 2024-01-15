@@ -167,7 +167,7 @@ allprojects {
       repositories {
         maven {
           name = "testMaven"
-          url = file("${rootProject.buildDir}/testMaven").toURI()
+          url = file("${rootProject.layout.buildDirectory.asFile.get()}/testMaven").toURI()
         }
 
         /*
