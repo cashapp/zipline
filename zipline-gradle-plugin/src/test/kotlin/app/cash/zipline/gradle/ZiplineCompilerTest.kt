@@ -37,7 +37,7 @@ class ZiplineCompilerTest {
   private val quickJs = QuickJs.create()
 
   @Before
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   fun setUp() {
     // Configure QuickJS to support module loading.
     app.cash.zipline.internal.initModuleLoader(quickJs)
@@ -224,7 +224,7 @@ class ZiplineCompilerTest {
     return result
   }
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   private fun loadJsModule(quickJs: QuickJs, id: String, bytecode: ByteArray) {
     return app.cash.zipline.internal.loadJsModule(quickJs, id, bytecode)
   }

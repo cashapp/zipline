@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(ExperimentalSerializationApi::class) // Zipline must track ContextualSerializer API changes.
+
 package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineFunction
@@ -29,7 +31,6 @@ import kotlinx.serialization.modules.SerializersModule
  * Adapts [ZiplineService] implementations to receive incoming and send outgoing calls. Most
  * implementations are generated.
  */
-@OptIn(ExperimentalSerializationApi::class) // Zipline must track ContextualSerializer API changes.
 @PublishedApi
 internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<T> {
   private val contextualSerializer = ContextualSerializer(PassByReference::class)
@@ -83,7 +84,6 @@ internal fun <T : ZiplineService> ziplineServiceAdapter(
  * key to identify a serializer for [typeName] that has [serializers] for its type arguments.
  */
 @PublishedApi
-@OptIn(ExperimentalSerializationApi::class) // Zipline must track ContextualSerializer API changes.
 internal fun serialName(typeName: String, serializers: List<KSerializer<*>>): String {
   return buildString {
     append(typeName)

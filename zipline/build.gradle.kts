@@ -23,7 +23,7 @@ plugins {
 
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
   dependsOn(":zipline-testing:compileDevelopmentLibraryKotlinJs")
-  destinationDir = buildDir.resolve("generated/testingJs")
+  destinationDir = rootProject.layout.buildDirectory.dir("generated/testingJs").get().asFile
   from(rootDir.resolve("zipline-testing/build/compileSync/js/main/developmentLibrary/kotlin"))
 }
 tasks.withType<KotlinNativeTest>().configureEach {
@@ -92,6 +92,14 @@ kotlin {
     }
     val androidInstrumentedTest by getting {
       dependsOn(hostTest)
+      dependencies {
+        implementation(libs.assertk)
+        implementation(libs.junit)
+        implementation(libs.androidx.test.runner)
+        implementation(libs.kotlinx.coroutines.test)
+        implementation(kotlin("test"))
+        implementation(projects.ziplineTesting)
+      }
     }
     val jvmMain by getting {
       dependsOn(jniMain)
@@ -101,6 +109,7 @@ kotlin {
       kotlin.srcDir("src/jniTest/kotlin/")
       resources.srcDir(copyTestingJs)
       dependencies {
+        implementation(libs.junit)
         implementation(projects.ziplineTesting)
       }
     }
@@ -272,14 +281,6 @@ android {
       path = file("src/androidMain/CMakeLists.txt")
     }
   }
-}
-
-dependencies {
-  androidTestImplementation(libs.assertk)
-  androidTestImplementation(libs.junit)
-  androidTestImplementation(libs.androidx.test.runner)
-  androidTestImplementation(libs.kotlinx.coroutines.test)
-  androidTestImplementation(projects.ziplineTesting)
 }
 
 fun quickJsVersion(): String {

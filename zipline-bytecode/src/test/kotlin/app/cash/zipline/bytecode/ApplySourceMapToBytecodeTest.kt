@@ -40,7 +40,7 @@ class ApplySourceMapToBytecodeTest {
   )
 
   @Before
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   fun setUp() {
     // Configure QuickJS to support module loading.
     app.cash.zipline.internal.initModuleLoader(quickJs)
@@ -222,7 +222,7 @@ class ApplySourceMapToBytecodeTest {
     assertThat(quickJs.evaluate("doubleToDisplayString('1000.0')")).isEqualTo("1000.0")
   }
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   private fun loadJsModule(id: String, bytecode: ByteArray) {
     app.cash.zipline.internal.loadJsModule(quickJs, id, bytecode)
   }

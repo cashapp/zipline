@@ -1,4 +1,3 @@
-import org.jetbrains.kotlin.gradle.dsl.KotlinJsCompile
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 
@@ -69,19 +68,26 @@ kotlin {
 
 tasks {
   // https://kotlinlang.org/docs/whatsnew19.html#library-linkage-in-kotlin-native
-  withType<KotlinNativeCompile>().all {
-    kotlinOptions {
-      freeCompilerArgs += listOf("-Xpartial-linkage-loglevel=ERROR")
+  withType<KotlinNativeCompile>().configureEach {
+    compilerOptions {
+      freeCompilerArgs.addAll("-Xpartial-linkage-loglevel=ERROR")
     }
   }
 
   // https://youtrack.jetbrains.com/issue/KT-56025
   // https://youtrack.jetbrains.com/issue/KT-57203
-  named("jsBrowserProductionWebpack").configure {
+  // Required for K1.
+  findByName("jsBrowserProductionWebpack")?.apply {
     dependsOn(named("jsProductionLibraryCompileSync"))
     dependsOn(named("jsDevelopmentLibraryCompileSync"))
   }
-  named("jsBrowserProductionLibraryPrepare").configure {
+  // Required for K1.
+  findByName("jsBrowserProductionLibraryPrepare")?.apply {
+    dependsOn(named("jsProductionExecutableCompileSync"))
+    dependsOn(named("jsDevelopmentLibraryCompileSync"))
+  }
+  // Required for K2.
+  findByName("jsBrowserProductionLibraryDistribution")?.apply {
     dependsOn(named("jsProductionExecutableCompileSync"))
     dependsOn(named("jsDevelopmentLibraryCompileSync"))
   }

@@ -137,7 +137,7 @@ class ProductionFetcherReceiverTest {
     assertEquals(testFixtures.alphaByteString, ziplineFileFromCache)
   }
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline-loader internals.
   private fun getLog() = app.cash.zipline.internal.getLog(zipline.quickJs)
 
   private suspend fun ZiplineLoader.loadOrFail(

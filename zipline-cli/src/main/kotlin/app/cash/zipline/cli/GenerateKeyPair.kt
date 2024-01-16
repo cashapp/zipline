@@ -33,7 +33,7 @@ class GenerateKeyPair(
     .default(Ed25519)
     .help("Signing algorithm to use.")
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline-loader internals.
   override fun run() {
     val keyPair = app.cash.zipline.loader.internal.generateKeyPair(algorithm)
     out.println(

@@ -100,7 +100,7 @@ class ZiplineGradleDownloaderTest {
     )
   }
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline-loader internals.
   private fun getApplicationManifestFileName(applicationName: String) =
     app.cash.zipline.loader.internal.getApplicationManifestFileName(applicationName)
 }

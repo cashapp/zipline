@@ -15,6 +15,6 @@
  */
 package app.cash.zipline
 
-internal fun loadNativeLibrary() {
+internal actual fun loadNativeLibrary() {
   System.loadLibrary("quickjs")
 }

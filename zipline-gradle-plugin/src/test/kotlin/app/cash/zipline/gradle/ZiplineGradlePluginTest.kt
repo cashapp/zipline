@@ -26,8 +26,14 @@ import java.io.File
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Test
+import org.junit.runner.RunWith
+import org.junit.runners.Parameterized
+import org.junit.runners.Parameterized.Parameters
 
-class ZiplineGradlePluginTest {
+@RunWith(Parameterized::class)
+class ZiplineGradlePluginTest(
+  private val enableK2: Boolean,
+) {
   @Test
   fun productionBuilds() {
     val projectDir = File("src/test/projects/basic")
@@ -501,13 +507,17 @@ class ZiplineGradlePluginTest {
     }
   }
 
-  private fun createRunner(projectDir: File, vararg taskNames: String): GradleRunner {
+  private fun createRunner(
+    projectDir: File,
+    vararg taskNames: String,
+  ): GradleRunner {
     val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
     File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)
+    val arguments = arrayOf("--info", "--stacktrace", "--continue", "-PenableK2=$enableK2")
     return GradleRunner.create()
       .withProjectDir(projectDir)
       .withDebug(true) // Run in-process.
-      .withArguments("--info", "--stacktrace", "--continue", *taskNames, versionProperty)
+      .withArguments(*arguments, *taskNames, versionProperty)
       .forwardOutput()
   }
 
@@ -535,7 +545,14 @@ class ZiplineGradlePluginTest {
     val SUCCESS_OUTCOMES = listOf(TaskOutcome.SUCCESS, TaskOutcome.UP_TO_DATE)
     val versionProperty = "-PziplineVersion=${System.getProperty("ziplineVersion")}"
 
-    @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+    @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
     private val manifestFileName = app.cash.zipline.loader.internal.MANIFEST_FILE_NAME
+
+    @JvmStatic
+    @Parameters
+    fun data() = listOf(
+      arrayOf(true),
+      arrayOf(false),
+    )
   }
 }

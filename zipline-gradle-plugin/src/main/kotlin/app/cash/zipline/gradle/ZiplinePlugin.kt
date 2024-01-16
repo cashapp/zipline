@@ -218,7 +218,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     }
   }
 
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline-loader internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline-loader internals.
   private fun generateKeyPair(algorithm: SignatureAlgorithmId) {
     val logger = LoggerFactory.getLogger(ZiplinePlugin::class.java)
     val keyPair = app.cash.zipline.loader.internal.generateKeyPair(algorithm)

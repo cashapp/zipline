@@ -416,7 +416,7 @@ class ZiplineLoader internal constructor(
    * After identifying a manifest to load this fetches all the code, loads it into a JS runtime,
    * and runs both the user's initializer and the manifest's specified main function.
    */
-  @Suppress("INVISIBLE_MEMBER") // Access :zipline internals.
+  @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
   internal suspend fun loadFromManifest(
     applicationName: String,
     eventListener: EventListener,

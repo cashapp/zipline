@@ -179,7 +179,7 @@ allprojects {
       repositories {
         maven {
           name = "testMaven"
-          url = file("${rootProject.buildDir}/testMaven").toURI()
+          url = rootProject.layout.buildDirectory.dir("testMaven").get().asFile.toURI()
         }
 
         /*

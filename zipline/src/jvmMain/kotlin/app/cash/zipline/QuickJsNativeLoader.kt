@@ -22,7 +22,7 @@ import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.util.Locale.US
 
 @Suppress("UnsafeDynamicallyLoadedCode") // Only loading from our own JAR contents.
-internal fun loadNativeLibrary() {
+internal actual fun loadNativeLibrary() {
   val osName = System.getProperty("os.name").lowercase(US)
   val osArch = System.getProperty("os.arch").lowercase(US)
   val nativeLibraryJarPath = if (osName.contains("linux")) {
