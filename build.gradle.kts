@@ -153,6 +153,18 @@ allprojects {
   plugins.withId("org.jetbrains.kotlin.multiplatform") {
     configure<KotlinMultiplatformExtension> {
       jvmToolchain(11)
+      @Suppress("OPT_IN_USAGE")
+      compilerOptions {
+        freeCompilerArgs.addAll("-opt-in=app.cash.zipline.EngineApi")
+      }
+      // https://youtrack.jetbrains.com/issue/KT-61573
+      targets.configureEach {
+        compilations.configureEach {
+          compilerOptions.configure {
+            freeCompilerArgs.addAll("-Xexpect-actual-classes")
+          }
+        }
+      }
     }
   }
 

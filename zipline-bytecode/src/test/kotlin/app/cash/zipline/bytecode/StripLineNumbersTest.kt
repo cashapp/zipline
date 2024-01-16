@@ -15,7 +15,6 @@
  */
 package app.cash.zipline.bytecode
 
-import app.cash.zipline.EngineApi
 import app.cash.zipline.QuickJs
 import assertk.assertThat
 import assertk.assertions.startsWith
@@ -23,7 +22,6 @@ import kotlin.test.assertFailsWith
 import org.junit.After
 import org.junit.Test
 
-@OptIn(EngineApi::class)
 class StripLineNumbersTest {
   private val quickJs = QuickJs.create()
 

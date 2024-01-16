@@ -31,12 +31,6 @@ kotlin {
         implementation(libs.kotlinx.serialization.json)
       }
     }
-
-    sourceSets.all {
-      languageSettings {
-        optIn("app.cash.zipline.EngineApi")
-      }
-    }
   }
 
   targets.all {
