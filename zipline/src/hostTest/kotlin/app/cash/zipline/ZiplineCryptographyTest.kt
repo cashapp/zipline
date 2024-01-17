@@ -53,13 +53,13 @@ class ZiplineCryptographyTest {
   @Test
   fun secureRandomWorks() = runBlocking(dispatcher) {
     if (isLinux) return@runBlocking
-    val fakeZiplineSecurityService = object : ZiplineCryptographyService {
+    val fakeZiplineCryptographyService = object : ZiplineCryptographyService {
       override fun nextSecureRandomBytes(size: Int): ByteArray {
         return ByteArray(size) { index -> (index + 1).toByte() }
       }
     }
 
-    zipline.installCryptographyServiceInternal(fakeZiplineSecurityService)
+    zipline.installCryptographyServiceInternal(fakeZiplineCryptographyService)
 
     quickjs.evaluate("testing.app.cash.zipline.testing.prepareRandomStringMaker()")
     val randomStringMaker = zipline.take<RandomStringMaker>("randomStringMaker")

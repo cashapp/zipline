@@ -1,4 +1,4 @@
-public final class app/cash/zipline/cryptography/ZiplineSecurityJvmKt {
+public final class app/cash/zipline/cryptography/ZiplineCryptographyJvmKt {
 	public static final fun installCryptographyService (Lapp/cash/zipline/Zipline;)V
 }
 

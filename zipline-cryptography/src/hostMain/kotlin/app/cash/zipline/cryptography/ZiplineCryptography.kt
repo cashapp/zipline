@@ -20,5 +20,5 @@ import app.cash.zipline.Zipline
 expect fun Zipline.installCryptographyService()
 
 internal fun Zipline.installCryptographyServiceInternal(ziplineCryptographyService: ZiplineCryptographyService) {
-  bind("zipline/security", ziplineCryptographyService)
+  bind("zipline/cryptography", ziplineCryptographyService)
 }

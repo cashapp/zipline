@@ -19,7 +19,7 @@ import app.cash.zipline.Zipline
 
 /** Guest-side API to Zipline's security services. */
 class ZiplineCryptography(zipline: Zipline) {
-  private val cryptographyService = zipline.take<ZiplineCryptographyService>("zipline/security")
+  private val cryptographyService = zipline.take<ZiplineCryptographyService>("zipline/cryptography")
 
   val secureRandom: SecureRandom = SecureRandom(cryptographyService)
 }
