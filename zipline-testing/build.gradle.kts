@@ -36,6 +36,7 @@ kotlin {
     val commonMain by getting {
       dependencies {
         implementation(projects.zipline)
+        implementation(projects.ziplineCryptography)
       }
     }
 
@@ -55,6 +56,7 @@ kotlin {
     }
   }
 
+  // TODO(jessewilson): move this to a common build module, shared with zipline-cryptography.
   targets.all {
     compilations.all {
       // Naming logic from https://github.com/JetBrains/kotlin/blob/a0e6fb03f0288f0bff12be80c402d8a62b5b045a/libraries/tools/kotlin-gradle-plugin/src/main/kotlin/org/jetbrains/kotlin/gradle/plugin/KotlinTargetConfigurator.kt#L519-L520
