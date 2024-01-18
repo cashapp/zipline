@@ -180,6 +180,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     task.configure { task ->
       task.cliClasspath.from(cliConfiguration)
       task.ziplineApiFile.set(project.file("api/zipline-api.toml"))
+      task.projectDirectory.set(project.projectDir.path)
 
       // TODO: the validation uses the wrong JDK. We should be getting the JDK from the
       //     KotlinCompile task (as defaultKotlinJavaToolchain.get().buildJvm), but it doesn't
