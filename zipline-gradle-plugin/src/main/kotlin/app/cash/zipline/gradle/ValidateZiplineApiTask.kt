@@ -22,7 +22,6 @@ import javax.inject.Inject
 import okio.Buffer
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
-import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.file.FileCollectionFactory
 import org.gradle.api.provider.Property
@@ -47,6 +46,9 @@ abstract class ValidateZiplineApiTask @Inject constructor(
 
   @get:OutputFile
   abstract val ziplineApiFile: RegularFileProperty
+
+  @get:Input
+  abstract val projectDirectory: Property<String>
 
   @get:Input
   abstract val javaHome: Property<String>
@@ -75,12 +77,13 @@ abstract class ValidateZiplineApiTask @Inject constructor(
   @TaskAction
   fun task() {
     val tomlFile = ziplineApiFile.get().asFile
-    val tomlFileRelative = tomlFile.relativeTo(project.projectDir)
+    val projectDirectory = projectDirectory.get()
+    val tomlFileRelative = tomlFile.relativeTo(File(projectDirectory))
     val queue = workerExecutor.noIsolation()
     queue.submit(ZiplineApiValidatorWorker::class.java) {
       it.cliClasspath.from(cliClasspath)
       it.mode.set(mode)
-      it.projectDirectory.set(project.projectDir)
+      it.projectDirectory.set(projectDirectory)
       it.tomlFile.set(tomlFileRelative)
       it.javaHome.set(File(javaHome.get()))
       it.jdkRelease.set(jdkRelease.get())
@@ -98,7 +101,7 @@ abstract class ValidateZiplineApiTask @Inject constructor(
 private interface ZiplineApiValidatorParameters : WorkParameters {
   val cliClasspath: ConfigurableFileCollection
   val mode: Property<Mode>
-  val projectDirectory: DirectoryProperty
+  val projectDirectory: Property<String>
   val tomlFile: RegularFileProperty
   val javaHome: RegularFileProperty
   val jdkRelease: Property<Int>
@@ -112,7 +115,7 @@ private abstract class ZiplineApiValidatorWorker @Inject constructor(
   override fun execute() {
     val errorOutput = Buffer()
     val execResult = execOperations.javaexec { exec ->
-      val workingDirectory = parameters.projectDirectory.asFile.get()
+      val workingDirectory = File(parameters.projectDirectory.get())
 
       exec.isIgnoreExitValue = true
       exec.classpath = parameters.cliClasspath
