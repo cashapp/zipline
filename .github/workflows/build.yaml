@@ -81,8 +81,7 @@ jobs:
           retention-days: 1
 
   android:
-    # We build on a Mac to get hardware acceleration for the Android emulator.
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -90,6 +89,12 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: 20
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
 
       - run: ./gradlew assembleAndroidTest
 
