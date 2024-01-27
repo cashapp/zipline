@@ -111,7 +111,7 @@ jobs:
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.SONATYPE_NEXUS_PASSWORD }}
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.ARTIFACT_SIGNING_PRIVATE_KEY }}
 
-      - uses: ffurrer2/extract-release-notes@v1
+      - uses: ffurrer2/extract-release-notes@v2
         id: release_notes
 
       - uses: softprops/action-gh-release@v1
