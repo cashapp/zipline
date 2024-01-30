@@ -21,10 +21,10 @@ jobs:
         arch: [amd64]
         cmake-arch: [x86_64]
         include:
-          - os: macOS-latest
+          - os: macos-14
             arch: x86_64
             cmake-arch: x86_64
-          - os: macOS-latest
+          - os: macos-14
             arch: aarch64
             cmake-arch: arm64
           # TODO: build on 'windows-latest'
@@ -50,7 +50,7 @@ jobs:
           cp -v ../zipline-dockerbuild/build/jni/amd64/libquickjs.* zipline/src/jvmMain/resources/jni/amd64/
 
       - name: Build native library (macOS)
-        if: matrix.os == 'macOS-latest'
+        if: matrix.os == 'macos-14'
         run: ./.github/workflows/build-mac.sh -a ${{ matrix.arch }} -c ${{ matrix.cmake-arch }}
 
       - name: Install libtinfo5
@@ -105,7 +105,7 @@ jobs:
           script: ./gradlew connectedCheck
 
   ios:
-    runs-on: macos-latest
+    runs-on: macos-14
 
     steps:
       - uses: actions/checkout@v4
@@ -121,7 +121,7 @@ jobs:
           xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
 
   publish:
-    runs-on: macos-latest
+    runs-on: macos-14
     needs:
       - build
       - android
