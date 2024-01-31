@@ -57,6 +57,10 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y libtinfo5
 
+      - name: Install Rosetta 2
+        if: matrix.arch == 'x86_64'
+        run: softwareupdate --install-rosetta
+
       # Build unless this is a cross-compile (we can't test cross-compiled code)
       - name: Build Zipline
         run: ./gradlew build --stacktrace
