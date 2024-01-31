@@ -57,7 +57,7 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y libtinfo5
 
-      - name: Install Rosetta 2
+      - name: Install Rosetta
         if: matrix.arch == 'x86_64'
         run: softwareupdate --install-rosetta --agree-to-license
 
