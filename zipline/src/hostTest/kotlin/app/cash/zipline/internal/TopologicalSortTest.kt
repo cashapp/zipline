@@ -16,6 +16,8 @@
 
 package app.cash.zipline.internal
 
+import assertk.assertThat
+import assertk.assertions.hasMessage
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -80,10 +82,46 @@ class TopologicalSortTest {
 
   @Test
   fun cycleCrashes() {
-    assertFailsWith<IllegalArgumentException> {
+    val exception = assertFailsWith<IllegalArgumentException> {
       listOf("a", "b")
         .topologicalSort(edges("ab", "ba"))
     }
+    assertThat(exception).hasMessage(
+      """
+      |No topological ordering is possible for these items:
+      |  a (b)
+      |  b (a)
+      """.trimMargin(),
+    )
+  }
+
+  @Test
+  fun elementConsumedButNotDeclaredCrashes() {
+    val exception = assertFailsWith<IllegalArgumentException> {
+      listOf("a", "b")
+        .topologicalSort(edges("ab", "ac"))
+    }
+    assertThat(exception).hasMessage(
+      """
+      |No topological ordering is possible for these items:
+      |  a (c)
+      """.trimMargin(),
+    )
+  }
+
+  @Test
+  fun exceptionMessageOnlyIncludesProblematicItems() {
+    val exception = assertFailsWith<IllegalArgumentException> {
+      listOf("a", "b", "c", "d", "e")
+        .topologicalSort(edges("ab", "bc", "da", "de", "db", "ed", "ef"))
+    }
+    assertThat(exception).hasMessage(
+      """
+      |No topological ordering is possible for these items:
+      |  d (e)
+      |  e (d, f)
+      """.trimMargin(),
+    )
   }
 
   private fun assertTopologicalSort(unsorted: List<String>, sorted: List<String>, vararg edges: String) {

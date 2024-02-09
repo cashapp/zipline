@@ -108,7 +108,10 @@ class ZiplineManifestTest {
       )
     }
     assertEquals(
-      "No topological ordering is possible for [alpha]",
+      """
+      |No topological ordering is possible for these items:
+      |  alpha (alpha)
+      """.trimMargin(),
       selfDependencyException.message,
     )
 
@@ -129,7 +132,11 @@ class ZiplineManifestTest {
       )
     }
     assertEquals(
-      "No topological ordering is possible for [alpha, bravo]",
+      """
+      |No topological ordering is possible for these items:
+      |  alpha (bravo)
+      |  bravo (alpha)
+      """.trimMargin(),
       cyclicalException.message,
     )
   }

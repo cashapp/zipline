@@ -59,7 +59,17 @@ internal fun <T> List<T>.topologicalSort(sourceToTarget: (T) -> Iterable<T>): Li
   }
 
   require(result.size == this.size) {
-    "No topological ordering is possible for $this"
+    buildString {
+      append("No topological ordering is possible for these items:")
+
+      val unorderedItems = this@topologicalSort.toSet() - result.toSet()
+      for (unorderedItem in unorderedItems) {
+        append("\n  ")
+        append(unorderedItem)
+        val unsatisfiedDeps = sourceToTarget(unorderedItem).toSet() - result.toSet()
+        unsatisfiedDeps.joinTo(this, separator = ", ", prefix = " (", postfix = ")")
+      }
+    }
   }
 
   return result
