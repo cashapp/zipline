@@ -62,18 +62,11 @@ internal fun <T> List<T>.topologicalSort(sourceToTarget: (T) -> Iterable<T>): Li
     buildString {
       append("No topological ordering is possible for these items:")
 
-      val unorderedItems = toMutableSet()
-        .apply {
-          removeAll(result.toSet())
-        }
-
+      val unorderedItems = this@topologicalSort.toSet() - result.toSet()
       for (unorderedItem in unorderedItems) {
         append("\n  ")
         append(unorderedItem)
-        val unsatisfiedDeps = sourceToTarget(unorderedItem).toMutableSet()
-          .apply {
-            removeAll(result.toSet())
-          }
+        val unsatisfiedDeps = sourceToTarget(unorderedItem).toSet() - result.toSet()
         unsatisfiedDeps.joinTo(this, separator = ", ", prefix = " (", postfix = ")")
       }
     }

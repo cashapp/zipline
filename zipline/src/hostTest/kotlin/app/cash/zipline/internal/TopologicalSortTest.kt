@@ -91,7 +91,7 @@ class TopologicalSortTest {
       |No topological ordering is possible for these items:
       |  a (b)
       |  b (a)
-      """.trimMargin()
+      """.trimMargin(),
     )
   }
 
@@ -105,7 +105,7 @@ class TopologicalSortTest {
       """
       |No topological ordering is possible for these items:
       |  a (c)
-      """.trimMargin()
+      """.trimMargin(),
     )
   }
 
@@ -120,7 +120,7 @@ class TopologicalSortTest {
       |No topological ordering is possible for these items:
       |  d (e)
       |  e (d, f)
-      """.trimMargin()
+      """.trimMargin(),
     )
   }
 
