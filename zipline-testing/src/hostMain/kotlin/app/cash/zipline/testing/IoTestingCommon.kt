@@ -38,11 +38,11 @@ internal expect fun getEnv(name: String): String?
 fun Zipline.loadTestingJs() {
   // Load modules in topologically-sorted order. In production the zipline-manifest does this.
   loadJsModuleFromResource("./kotlin-kotlin-stdlib.js")
-  loadJsModuleFromResource("./88b0986a7186d029-atomicfu-js-ir.js")
-  loadJsModuleFromResource("./kotlin-kotlinx-atomicfu-runtime-js-ir.js")
+  loadJsModuleFromResource("./kotlinx-atomicfu.js")
+  loadJsModuleFromResource("./kotlin-kotlinx-atomicfu-runtime.js")
   loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-core.js")
   loadJsModuleFromResource("./kotlinx-serialization-kotlinx-serialization-json.js")
-  loadJsModuleFromResource("./kotlinx.coroutines-kotlinx-coroutines-core-js-ir.js")
+  loadJsModuleFromResource("./kotlinx-coroutines-core.js")
   loadJsModuleFromResource("./kotlin_org_jetbrains_kotlin_kotlin_dom_api_compat.js")
   loadJsModuleFromResource("./zipline-root-zipline.js")
   loadJsModuleFromResource("./zipline-root-zipline-cryptography.js")
