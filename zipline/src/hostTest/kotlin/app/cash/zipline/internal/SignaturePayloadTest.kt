@@ -273,8 +273,7 @@ class SignaturePayloadTest {
     val manifestJson = """
       |{
       |    "unsigned": {
-      |        "signatures": {
-      |        }
+      |        "signatures": {}
       |    },
       |    "modules": {
       |        "./kotlin_kotlin.js": {
@@ -303,16 +302,14 @@ class SignaturePayloadTest {
     val manifestJson = """
       |{
       |    "unsigned": {
-      |        "signatures": {
-      |        }
+      |        "signatures": {}
       |    }
       |}
       """.trimMargin()
 
     assertEquals(
       """
-      |{
-      |}
+      |{}
       """.trimMargin(),
       signaturePayloadPretty(manifestJson),
     )

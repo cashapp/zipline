@@ -37,8 +37,7 @@ class ThrowableSerializerTest {
 
     val exceptionJson = """
       |{
-      |    "types": [
-      |    ],
+      |    "types": [],
       |    "stacktraceString": "java.lang.Exception: boom\n\tat ThrowableSerializerTest.goBoom(test.kt:5)"
       |}
       """.trimMargin()
