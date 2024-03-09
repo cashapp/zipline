@@ -22,6 +22,8 @@ import app.cash.zipline.internal.ZIPLINE_HOST_NAME
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
+import kotlin.reflect.KClass
+import kotlin.reflect.cast
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -68,6 +70,8 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
 
   internal val host: HostService = endpoint.take(ZIPLINE_HOST_NAME)
 
+  private val attachments = mutableMapOf<KClass<*>, Any>()
+
   actual fun <T : ZiplineService> bind(name: String, instance: T) {
     error("unexpected call to Zipline.bind: is the Zipline plugin configured?")
   }
@@ -95,6 +99,11 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
     adapter: ZiplineServiceAdapter<T>,
   ): T {
     return endpoint.take(name, scope, adapter)
+  }
+
+  actual fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T): T {
+    val value = attachments.getOrPut(key, compute)
+    return key.cast(value)
   }
 
   companion object {

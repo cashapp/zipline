@@ -17,10 +17,10 @@ package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
 import app.cash.zipline.cryptography.SecureRandom
-import app.cash.zipline.cryptography.ZiplineCryptography
+import app.cash.zipline.cryptography.cryptography
 
 private val zipline by lazy { Zipline.get() }
-private val ziplineCryptography = ZiplineCryptography(zipline)
+private val ziplineCryptography = zipline.cryptography
 
 class RealRandomStringMaker(
   private val secureRandom: SecureRandom,

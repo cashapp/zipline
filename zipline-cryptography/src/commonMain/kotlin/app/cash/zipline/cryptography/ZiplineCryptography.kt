@@ -15,8 +15,7 @@
  */
 package app.cash.zipline.cryptography
 
-interface Random {
-  fun nextBytes(sink: ByteArray, offset: Int = 0, count: Int = sink.size - offset)
-
-  fun nextLong(): Long
+/** Guest-side API to Zipline's security services. */
+interface ZiplineCryptography {
+  val secureRandom: SecureRandom
 }

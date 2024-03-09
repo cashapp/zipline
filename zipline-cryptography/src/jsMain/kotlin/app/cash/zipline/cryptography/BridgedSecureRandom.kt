@@ -15,9 +15,9 @@
  */
 package app.cash.zipline.cryptography
 
-class SecureRandom internal constructor(
+internal class BridgedSecureRandom internal constructor(
   private val securityService: ZiplineCryptographyService,
-) : Random {
+) : SecureRandom {
   override fun nextBytes(sink: ByteArray, offset: Int, count: Int) {
     require(offset + count <= sink.size) {
       "offset: $offset + count: $count > sink.size: ${sink.size}"

@@ -29,6 +29,8 @@ import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.loadJsModule
 import kotlin.coroutines.resumeWithException
+import kotlin.reflect.KClass
+import kotlin.reflect.cast
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -82,6 +84,8 @@ actual class Zipline private constructor(
     get() = guest.serviceNames
 
   private var closed = false
+
+  private val attachments = mutableMapOf<KClass<*>, Any>()
 
   init {
     // Eagerly publish the channel so the guest can call us.
@@ -156,6 +160,11 @@ actual class Zipline private constructor(
 
   fun loadJsModule(bytecode: ByteArray, id: String) {
     loadJsModule(quickJs, id, bytecode)
+  }
+
+  actual fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T) : T {
+    val value = attachments.getOrPut(key, compute)
+    return key.cast(value)
   }
 
   companion object {
