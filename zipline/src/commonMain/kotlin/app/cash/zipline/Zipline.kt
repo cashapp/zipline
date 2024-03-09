@@ -46,5 +46,5 @@ expect class Zipline {
    * Use this API to attach services, features, or other application data to a Zipline instance so
    * that you may read it later.
    */
-  fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T) : T
+  fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T): T
 }

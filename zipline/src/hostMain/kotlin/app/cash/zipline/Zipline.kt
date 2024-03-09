@@ -162,7 +162,7 @@ actual class Zipline private constructor(
     loadJsModule(quickJs, id, bytecode)
   }
 
-  actual fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T) : T {
+  actual fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T): T {
     val value = attachments.getOrPut(key, compute)
     return key.cast(value)
   }
