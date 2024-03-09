@@ -114,7 +114,7 @@ jobs:
       - uses: ffurrer2/extract-release-notes@v2
         id: release_notes
 
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v2
         with:
           body: ${{ steps.release_notes.outputs.release_notes }}
           files: |
