@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2024 Cash App
+ * Copyright (C) 2024 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,21 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.cryptography
+package app.cash.zipline.testing
 
-import java.security.SecureRandom
-import okio.ByteString.Companion.toByteString
+import app.cash.zipline.ZiplineService
 
-internal class RealZiplineCryptographyService(
-  private val secureRandom: SecureRandom,
-) : ZiplineCryptographyService {
-  override fun nextSecureRandomBytes(size: Int): ByteArray {
-    val result = ByteArray(size)
-    secureRandom.nextBytes(result)
-    return result
-  }
-
-  override fun sha256(data: ByteArray): String {
-    return data.toByteString().sha256().hex()
-  }
+interface CryptoHasher : ZiplineService {
+  // take data string as input and return a hex string
+  fun sha256(data: String): String
 }

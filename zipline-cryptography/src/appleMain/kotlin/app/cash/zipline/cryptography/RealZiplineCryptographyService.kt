@@ -21,6 +21,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.usePinned
+import okio.ByteString.Companion.toByteString
 import platform.Security.SecRandomCopyBytes
 import platform.Security.errSecSuccess
 import platform.Security.kSecRandomDefault
@@ -44,5 +45,9 @@ internal class RealZiplineCryptographyService : ZiplineCryptographyService {
     }
 
     return result
+  }
+
+  override fun sha256(data: ByteArray): String {
+    return data.toByteString().sha256().hex()
   }
 }

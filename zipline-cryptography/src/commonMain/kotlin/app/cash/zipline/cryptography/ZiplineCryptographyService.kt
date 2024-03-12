@@ -22,4 +22,5 @@ import app.cash.zipline.ZiplineService
  */
 internal interface ZiplineCryptographyService : ZiplineService {
   fun nextSecureRandomBytes(size: Int): ByteArray
+  fun sha256(data: ByteArray): String
 }

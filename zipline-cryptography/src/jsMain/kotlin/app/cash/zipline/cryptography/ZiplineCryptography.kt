@@ -22,4 +22,5 @@ class ZiplineCryptography(zipline: Zipline) {
   private val cryptographyService = zipline.take<ZiplineCryptographyService>("zipline/cryptography")
 
   val secureRandom: SecureRandom = SecureRandom(cryptographyService)
+  val hash: SecureHash = SecureHash(cryptographyService)
 }
