@@ -91,8 +91,7 @@ internal class ManualCallEncodingTest {
       |  "service": "service",
       |  "function": "${"fun send(app.cash.zipline.ManualCallEncodingTest.MessageWithDefaults): kotlin.Unit".signatureHash()}",
       |  "args": [
-      |    {
-      |    }
+      |    {}
       |  ]
       |}
       """.trimMargin(),
@@ -101,8 +100,7 @@ internal class ManualCallEncodingTest {
     assertEquals(
       """
       |{
-      |  "success": {
-      |  }
+      |  "success": {}
       |}
       """.trimMargin(),
       prettyPrint(responseJson),
@@ -130,8 +128,7 @@ internal class ManualCallEncodingTest {
       |{
       |  "service": "service",
       |  "function": "${"fun receive(): app.cash.zipline.ManualCallEncodingTest.MessageWithDefaults".signatureHash()}",
-      |  "args": [
-      |  ]
+      |  "args": []
       |}
       """.trimMargin(),
     )

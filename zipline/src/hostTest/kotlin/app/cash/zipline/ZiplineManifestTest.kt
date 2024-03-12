@@ -185,8 +185,7 @@ class ZiplineManifestTest {
         """
         |{
         |  "unsigned": {
-        |    "signatures": {
-        |    },
+        |    "signatures": {},
         |    "freshAtEpochMs": null,
         |    "baseUrl": null
         |  },
@@ -194,8 +193,7 @@ class ZiplineManifestTest {
         |    "alpha": {
         |      "url": "/alpha.zipline",
         |      "sha256": "616263313233",
-        |      "dependsOnIds": [
-        |      ]
+        |      "dependsOnIds": []
         |    },
         |    "bravo": {
         |      "url": "/bravo.zipline",
