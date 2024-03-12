@@ -1,3 +1,16 @@
+public abstract interface class app/cash/zipline/cryptography/SecureRandom {
+	public abstract fun nextBytes ([BII)V
+	public abstract fun nextLong ()J
+}
+
+public final class app/cash/zipline/cryptography/SecureRandom$DefaultImpls {
+	public static synthetic fun nextBytes$default (Lapp/cash/zipline/cryptography/SecureRandom;[BIIILjava/lang/Object;)V
+}
+
+public abstract interface class app/cash/zipline/cryptography/ZiplineCryptography {
+	public abstract fun getSecureRandom ()Lapp/cash/zipline/cryptography/SecureRandom;
+}
+
 public final class app/cash/zipline/cryptography/ZiplineCryptographyJvmKt {
 	public static final fun installCryptographyService (Lapp/cash/zipline/Zipline;)V
 }

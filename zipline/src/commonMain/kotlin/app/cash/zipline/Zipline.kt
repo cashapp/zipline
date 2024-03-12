@@ -15,6 +15,7 @@
  */
 package app.cash.zipline
 
+import kotlin.reflect.KClass
 import kotlinx.serialization.json.Json
 
 expect class Zipline {
@@ -38,4 +39,12 @@ expect class Zipline {
     name: String,
     scope: ZiplineScope = ZiplineScope(),
   ): T
+
+  /**
+   * Attaches a computed to this Zipline using [key] as a key.
+   *
+   * Use this API to attach services, features, or other application data to a Zipline instance so
+   * that you may read it later.
+   */
+  fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T): T
 }

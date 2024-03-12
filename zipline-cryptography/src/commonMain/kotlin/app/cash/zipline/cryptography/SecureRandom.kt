@@ -15,12 +15,8 @@
  */
 package app.cash.zipline.cryptography
 
-import app.cash.zipline.Zipline
+interface SecureRandom {
+  fun nextBytes(sink: ByteArray, offset: Int = 0, count: Int = sink.size - offset)
 
-val Zipline.cryptography: ZiplineCryptography
-  get() = getOrPutAttachment(ZiplineCryptography::class) {
-    val cryptographyService = take<ZiplineCryptographyService>("zipline/cryptography")
-    object : ZiplineCryptography {
-      override val secureRandom = BridgedSecureRandom(cryptographyService)
-    }
-  }
+  fun nextLong(): Long
+}

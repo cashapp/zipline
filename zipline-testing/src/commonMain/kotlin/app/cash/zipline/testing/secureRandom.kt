@@ -18,5 +18,5 @@ package app.cash.zipline.testing
 import app.cash.zipline.ZiplineService
 
 interface RandomStringMaker : ZiplineService {
-  fun randomString(): String
+    fun randomString(): String
 }

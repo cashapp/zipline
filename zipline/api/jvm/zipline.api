@@ -171,6 +171,7 @@ public final class app/cash/zipline/Zipline {
 	public final fun close ()V
 	public final fun getEventListener ()Lapp/cash/zipline/EventListener;
 	public final fun getJson ()Lkotlinx/serialization/json/Json;
+	public final fun getOrPutAttachment (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
 	public final fun getQuickJs ()Lapp/cash/zipline/QuickJs;
 	public final fun loadJsModule (Ljava/lang/String;Ljava/lang/String;)V
 	public final fun loadJsModule ([BLjava/lang/String;)V
