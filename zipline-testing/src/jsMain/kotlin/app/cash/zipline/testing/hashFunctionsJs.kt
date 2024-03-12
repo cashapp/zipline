@@ -16,23 +16,18 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
-import app.cash.zipline.cryptography.SecureRandom
 import app.cash.zipline.cryptography.ZiplineCryptography
 
 private val zipline by lazy { Zipline.get() }
 private val ziplineCryptography = ZiplineCryptography(zipline)
 
-class RealRandomStringMaker(
-  private val secureRandom: SecureRandom,
-) : RandomStringMaker {
-  override fun randomString(): String {
-    val byteArray = ByteArray(5)
-    secureRandom.nextBytes(byteArray)
-    return byteArray.contentToString()
+class RealCryptoHasher() : CryptoHasher {
+  override fun sha256(data: String): String {
+    return ziplineCryptography.hash.sha256(data.encodeToByteArray())
   }
 }
 
 @JsExport
-fun prepareRandomStringMaker() {
-  zipline.bind<RandomStringMaker>("randomStringMaker", RealRandomStringMaker(ziplineCryptography.secureRandom))
+fun prepareCryptoHasher() {
+  zipline.bind<CryptoHasher>("cryptoHasher", RealCryptoHasher())
 }

@@ -16,6 +16,7 @@
 package app.cash.zipline.cryptography
 
 import java.security.SecureRandom
+import okio.ByteString.Companion.toByteString
 
 internal class RealZiplineCryptographyService(
   private val secureRandom: SecureRandom,
@@ -24,5 +25,9 @@ internal class RealZiplineCryptographyService(
     val result = ByteArray(size)
     secureRandom.nextBytes(result)
     return result
+  }
+
+  override fun sha256(data: ByteArray): String {
+    return data.toByteString().sha256().hex()
   }
 }

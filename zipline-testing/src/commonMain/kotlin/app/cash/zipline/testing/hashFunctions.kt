@@ -17,6 +17,7 @@ package app.cash.zipline.testing
 
 import app.cash.zipline.ZiplineService
 
-interface RandomStringMaker : ZiplineService {
-  fun randomString(): String
+interface CryptoHasher : ZiplineService {
+  // take data string as input and return a hex string
+  fun sha256(data: String): String
 }
