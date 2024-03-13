@@ -8,7 +8,7 @@ kotlinx-coroutines = "1.8.0"
 kotlinx-serialization = "1.6.3"
 ksp = "1.9.21-1.0.16"
 okHttp = "4.12.0"
-okio = "3.8.0"
+okio = "3.9.0"
 minSdk = "18"
 sqldelight = "2.0.1"
 
