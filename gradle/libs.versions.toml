@@ -1,9 +1,9 @@
 [versions]
 androidx-compose = "1.6.3"
-androidx-compose-compiler = "1.5.10"
+androidx-compose-compiler = "1.5.11"
 compileSdk = "34"
 http4k = "4.48.0.0"
-kotlin = "1.9.22"
+kotlin = "1.9.23"
 kotlinx-coroutines = "1.8.0"
 kotlinx-serialization = "1.6.3"
 ksp = "1.9.21-1.0.16"
