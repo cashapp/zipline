@@ -61,6 +61,8 @@ jobs:
       - name: Build Zipline
         run: ./gradlew build --stacktrace
         if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
+      - run: ./gradlew -p samples build --stacktrace
+        if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
 
       # Build unless this is a cross-compile
       - name: Build samples
