@@ -113,6 +113,8 @@ android {
   defaultConfig {
     minSdk = libs.versions.minSdk.get().toInt()
     multiDexEnabled = true
+
+    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
   }
 
   // TODO: Remove when https://issuetracker.google.com/issues/260059413 is resolved.
@@ -143,6 +145,10 @@ afterEvaluate {
   tasks.named("compileReleaseUnitTestKotlinAndroid") {
     enabled = false
   }
+}
+
+dependencies {
+  androidTestImplementation(libs.androidx.test.runner)
 }
 
 configure<MavenPublishBaseExtension> {
