@@ -143,6 +143,12 @@ actual class Zipline private constructor(
     closed = true
 
     scope.cancel()
+
+    // The inboundChannel is leaking for reasons unknown. Clean up all bound services
+    // to limit the blast radius.
+    for (serviceName in endpoint.inboundServices.keys.toTypedArray()) {
+       endpoint.inboundChannel.disconnect(serviceName)
+    }
     quickJs.close()
 
     // Don't wait for a JS continuation to resume, it never will. Canceling `scope` doesn't do this
