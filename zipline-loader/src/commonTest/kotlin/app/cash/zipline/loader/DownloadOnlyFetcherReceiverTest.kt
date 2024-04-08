@@ -54,8 +54,8 @@ class DownloadOnlyFetcherReceiverTest {
     loader.download(
       "test",
       EventListener.NONE,
-      downloadDir,
       fileSystem,
+      downloadDir,
       testFixtures.embeddedLoadedManifest,
     )
 

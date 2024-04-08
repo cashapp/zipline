@@ -285,7 +285,7 @@ class ZiplineLoaderTest {
       ALPHA_URL to testFixtures.alphaByteString,
       BRAVO_URL to testFixtures.bravoByteString,
     )
-    loader.download("test", downloadDir, downloadFileSystem, MANIFEST_URL)
+    loader.download("test", downloadFileSystem, downloadDir, MANIFEST_URL)
 
     assertDownloadedToEmbeddedManifest(
       testFixtures.manifest,
@@ -334,8 +334,8 @@ class ZiplineLoaderTest {
     loader.download(
       "test",
       EventListener.NONE,
-      downloadDir,
       fileSystem,
+      downloadDir,
       testFixtures.embeddedLoadedManifest,
     )
 
