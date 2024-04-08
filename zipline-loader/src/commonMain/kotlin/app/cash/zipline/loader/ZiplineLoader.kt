@@ -83,7 +83,7 @@ class ZiplineLoader internal constructor(
 
   @Deprecated(
     message = "Use `withEmbedded` which has FileSystem came first instead.",
-    level = DeprecationLevel.HIDDEN
+    level = DeprecationLevel.HIDDEN,
   )
   fun withEmbedded(
     embeddedDir: Path,
@@ -475,7 +475,7 @@ class ZiplineLoader internal constructor(
 
   @Deprecated(
     message = "Use `download` which has FileSystem came first instead.",
-    level = DeprecationLevel.HIDDEN
+    level = DeprecationLevel.HIDDEN,
   )
   suspend fun download(
     applicationName: String,
