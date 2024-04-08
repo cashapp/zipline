@@ -482,7 +482,7 @@ class ZiplineLoader internal constructor(
     downloadDir: Path,
     downloadFileSystem: FileSystem,
     manifestUrl: String,
-  ) = download(applicationName, downloadFileSystem, downloadDir, manifestUrl,)
+  ) = download(applicationName, downloadFileSystem, downloadDir, manifestUrl)
 
   suspend fun download(
     applicationName: String,
