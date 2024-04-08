@@ -40,8 +40,8 @@ internal class ZiplineGradleDownloader {
     runBlocking {
       ziplineLoader.download(
         applicationName = applicationName,
-        downloadDir = downloadDir.toOkioPath(),
         downloadFileSystem = FileSystem.SYSTEM,
+        downloadDir = downloadDir.toOkioPath(),
         manifestUrl = manifestUrl,
       )
     }

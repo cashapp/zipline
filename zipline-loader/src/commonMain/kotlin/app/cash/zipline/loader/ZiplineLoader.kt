@@ -81,9 +81,18 @@ class ZiplineLoader internal constructor(
     cache = null,
   )
 
+  @Deprecated(
+    message = "Use `withEmbedded` which has FileSystem came first instead.",
+    level = DeprecationLevel.HIDDEN
+  )
   fun withEmbedded(
     embeddedDir: Path,
     embeddedFileSystem: FileSystem,
+  ): ZiplineLoader = withEmbedded(embeddedFileSystem, embeddedDir)
+
+  fun withEmbedded(
+    embeddedFileSystem: FileSystem,
+    embeddedDir: Path,
   ): ZiplineLoader = copy(
     embeddedDir = embeddedDir,
     embeddedFileSystem = embeddedFileSystem,
@@ -131,8 +140,8 @@ class ZiplineLoader internal constructor(
 
   private val embeddedFetcher: FsEmbeddedFetcher? = run {
     FsEmbeddedFetcher(
-      embeddedDir = embeddedDir ?: return@run null,
       embeddedFileSystem = embeddedFileSystem ?: return@run null,
+      embeddedDir = embeddedDir ?: return@run null,
     )
   }
 
@@ -464,10 +473,21 @@ class ZiplineLoader internal constructor(
     }
   }
 
+  @Deprecated(
+    message = "Use `download` which has FileSystem came first instead.",
+    level = DeprecationLevel.HIDDEN
+  )
   suspend fun download(
     applicationName: String,
     downloadDir: Path,
     downloadFileSystem: FileSystem,
+    manifestUrl: String,
+  ) = download(applicationName, downloadFileSystem, downloadDir, manifestUrl,)
+
+  suspend fun download(
+    applicationName: String,
+    downloadFileSystem: FileSystem,
+    downloadDir: Path,
     manifestUrl: String,
   ) {
     val eventListener = eventListenerFactory.create(applicationName, manifestUrl)
@@ -476,8 +496,8 @@ class ZiplineLoader internal constructor(
     download(
       applicationName = applicationName,
       eventListener = eventListener,
-      downloadDir = downloadDir,
       downloadFileSystem = downloadFileSystem,
+      downloadDir = downloadDir,
       loadedManifest = manifestWithFreshAt,
     )
   }
@@ -485,8 +505,8 @@ class ZiplineLoader internal constructor(
   internal suspend fun download(
     applicationName: String,
     eventListener: EventListener,
-    downloadDir: Path,
     downloadFileSystem: FileSystem,
+    downloadDir: Path,
     loadedManifest: LoadedManifest,
   ) {
     val now = nowEpochMs()

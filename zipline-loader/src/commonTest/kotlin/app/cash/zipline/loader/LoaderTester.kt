@@ -79,8 +79,8 @@ class LoaderTester(
       nowEpochMs = { nowMillis },
       eventListenerFactory = eventListenerFactory,
     ).withEmbedded(
-      embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
+      embeddedDir = embeddedDir,
     ).withCache(
       cache,
     )
