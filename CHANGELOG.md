@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+## [1.9.0] - 2024-04-11
+
+ * Breaking: Reorder the parameters in `ZiplineLoader` so `FileSystem` always precedes `Path`.
+ * Fix: Release unused services in `Zipline.close()`. This was a memory leak.
+ * Fix: Don't break Gradle's configuration cache in the `ziplineApiDump` task.
+ * New: `ZiplineCryptography` adds a `SecureRandom` API for guest code.
+ * New: `Zipline.getOrPutAttachment()` lets you attach application data to a Zipline instance.
+ * New: Support building Zipline with the new Kotlin K2 compiler.
+ * Upgrade: [Kotlin 1.9.23][kotlin_1_9_23]
+ * Upgrade: [kotlinx.coroutines 1.8.0][kotlinx_coroutines_1_8_0]
+ * Upgrade: [Okio 3.9.0][okio_3_9_0]
+ * Upgrade: [SQLDelight 2.0.2][sqldelight_2_0_2]
+
+
 ## [1.8.0] - 2024-01-11
 
  * Fix: Don't crash validating signatures on Android 7.x. We incorrectly used an API that wasn't
@@ -10,7 +24,7 @@
    `EventListener.applicationLoadSkippedNotFresh()` will be called.
  * New: `EventListener.manifestReady()` is called when the manifest is fetched and verified, but
    before any code is downloaded.
- * Upgrade: [Okio 3.7.0](https://square.github.io/okio/changelog/#version-370)
+ * Upgrade: [Okio 3.7.0][okio_3_7_0]
 
 
 ## [1.7.0] - 2023-11-30
@@ -76,7 +90,7 @@
 ## [1.2.0] - 2023-08-09
 
  * Upgrade: [Kotlin 1.9.0](https://github.com/JetBrains/kotlin/releases/tag/v1.9.0)
- * Upgrade: [kotlinx.coroutines 1.7.3](https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.3)
+ * Upgrade: [kotlinx.coroutines 1.7.3][kotlinx_coroutines_1_7_3]
 
 
 ## [1.1.0] - 2023-07-30
@@ -464,10 +478,16 @@ Initial release.
 [kotlin_1_8_20]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.20
 [kotlin_1_8_21]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.21
 [kotlin_1_9_20]: https://github.com/JetBrains/kotlin/releases/tag/v1.9.20
+[kotlin_1_9_23]: https://github.com/JetBrains/kotlin/releases/tag/v1.9.23
 [kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
 [kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
 [kotlin_serialization_1_6_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.6.0
 [kotlinx_coroutines_1_7_1]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.1
 [kotlinx_coroutines_1_7_2]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.2
+[kotlinx_coroutines_1_7_3]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.3
+[kotlinx_coroutines_1_8_0]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.8.0
+[okio_3_7_0]: https://square.github.io/okio/changelog/#version-370
+[okio_3_9_0]: https://square.github.io/okio/changelog/#version-390
 [sqldelight_2_0_0]: https://cashapp.github.io/sqldelight/2.0.0/changelog/#200-2023-07-26
+[sqldelight_2_0_2]: https://cashapp.github.io/sqldelight/2.0.2/changelog/#202-2024-04-05
