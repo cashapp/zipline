@@ -6,6 +6,8 @@ $dokka.location:app.cash.zipline/Zipline.Companion/create/#kotlinx.coroutines.Co
 $dokka.location:app.cash.zipline/Zipline.Companion/get/#kotlinx.serialization.modules.SerializersModule/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/get.html
 module:zipline
 app.cash.zipline
+module:zipline-cryptography
+app.cash.zipline.cryptography
 module:zipline-gradle-plugin
 app.cash.zipline.gradle
 module:zipline-loader
