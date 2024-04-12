@@ -21,18 +21,29 @@ import java.lang.ref.ReferenceQueue
 import java.util.Collections.synchronizedSet
 
 internal actual fun trackLeaks(
-  eventListener: Endpoint.EventListener,
+  endpoint: Endpoint,
   serviceName: String,
   callHandler: OutboundCallHandler,
   service: ZiplineService,
 ) {
-  allReferencesSet += ZiplineServiceReference(eventListener, serviceName, callHandler, service)
+  allReferencesSet += ZiplineServiceReference(endpoint, serviceName, callHandler, service)
 }
 
 internal actual fun detectLeaks() {
   while (true) {
     val reference = allReferencesQueue.poll() ?: break
     (reference as ZiplineServiceReference).afterGc()
+  }
+}
+
+internal actual fun stopTrackingLeaks(
+  endpoint: Endpoint,
+) {
+  val i = allReferencesSet.iterator()
+  while (i.hasNext()) {
+    if (i.next().endpoint == endpoint) {
+      i.remove()
+    }
   }
 }
 
@@ -43,7 +54,7 @@ private val allReferencesSet = synchronizedSet(mutableSetOf<ZiplineServiceRefere
 private val allReferencesQueue = ReferenceQueue<ZiplineService>()
 
 private class ZiplineServiceReference(
-  private val eventListener: Endpoint.EventListener,
+  val endpoint: Endpoint,
   private val serviceName: String,
   private val callHandler: OutboundCallHandler,
   service: ZiplineService,
@@ -51,7 +62,7 @@ private class ZiplineServiceReference(
   fun afterGc() {
     allReferencesSet.remove(this)
     if (!callHandler.serviceState.closed) {
-      eventListener.serviceLeaked(serviceName)
+      endpoint.eventListener.serviceLeaked(serviceName)
     }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2022 Block, Inc.
+ * Copyright (C) 2024 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,11 @@
  */
 package app.cash.zipline.internal.bridge
 
-import app.cash.zipline.ZiplineService
-
-internal actual fun trackLeaks(
+/**
+ * Undo the leak tracking created by prior calls to [trackLeaks] with [endpoint]. This is called
+ * when the endpoint itself is closed, which means its no longer at risk of holding a bound service
+ * longer than required.
+ */
+internal expect fun stopTrackingLeaks(
   endpoint: Endpoint,
-  serviceName: String,
-  callHandler: OutboundCallHandler,
-  service: ZiplineService,
-) {
-  // TODO: can we implement this with ARC?
-}
-
-internal actual fun detectLeaks() {
-  // TODO: can we implement this with ARC?
-}
-
-internal actual fun stopTrackingLeaks(
-  endpoint: Endpoint,
-) {
-}
+)

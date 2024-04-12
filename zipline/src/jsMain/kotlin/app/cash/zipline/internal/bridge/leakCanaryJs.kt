@@ -32,12 +32,12 @@ internal val registry = run {
 }
 
 internal actual fun trackLeaks(
-  eventListener: Endpoint.EventListener,
+  endpoint: Endpoint,
   serviceName: String,
   callHandler: OutboundCallHandler,
   service: ZiplineService,
 ) {
-  registry.register(service, ZiplineServiceReference(eventListener, serviceName, callHandler))
+  registry.register(service, ZiplineServiceReference(endpoint, serviceName, callHandler))
 }
 
 internal actual fun detectLeaks() {
@@ -48,13 +48,13 @@ internal actual fun detectLeaks() {
 }
 
 private class ZiplineServiceReference(
-  private val eventListener: Endpoint.EventListener,
+  private val endpoint: Endpoint,
   private val name: String,
   private val callHandler: OutboundCallHandler,
 ) {
   fun afterGc() {
     if (!callHandler.serviceState.closed) {
-      eventListener.serviceLeaked(name)
+      endpoint.eventListener.serviceLeaked(name)
     }
   }
 }

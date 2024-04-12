@@ -160,7 +160,7 @@ internal class Endpoint internal constructor(
       scope.add(callHandler)
     }
     eventListener.takeService(name, result)
-    trackLeaks(eventListener, name, callHandler, result)
+    trackLeaks(this, name, callHandler, result)
     return result
   }
 
