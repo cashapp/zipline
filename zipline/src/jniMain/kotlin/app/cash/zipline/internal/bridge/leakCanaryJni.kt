@@ -39,12 +39,7 @@ internal actual fun detectLeaks() {
 internal actual fun stopTrackingLeaks(
   endpoint: Endpoint,
 ) {
-  val i = allReferencesSet.iterator()
-  while (i.hasNext()) {
-    if (i.next().endpoint == endpoint) {
-      i.remove()
-    }
-  }
+  allReferencesSet.removeAll { it.endpoint == endpoint }
 }
 
 /** Keep every [ZiplineServiceReference] reachable until its target is GC'd. */
