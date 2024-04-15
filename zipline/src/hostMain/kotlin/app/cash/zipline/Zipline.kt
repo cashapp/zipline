@@ -26,6 +26,7 @@ import app.cash.zipline.internal.ZIPLINE_HOST_NAME
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
+import app.cash.zipline.internal.bridge.stopTrackingLeaks
 import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.loadJsModule
 import kotlin.coroutines.resumeWithException
@@ -144,11 +145,6 @@ actual class Zipline private constructor(
 
     scope.cancel()
 
-    // The inboundChannel is leaking for reasons unknown. Clean up all bound services
-    // to limit the blast radius.
-    for (serviceName in endpoint.inboundServices.keys.toTypedArray()) {
-       endpoint.inboundChannel.disconnect(serviceName)
-    }
     quickJs.close()
 
     // Don't wait for a JS continuation to resume, it never will. Canceling `scope` doesn't do this
@@ -157,6 +153,7 @@ actual class Zipline private constructor(
       continuation.resumeWithException(CancellationException("Zipline closed"))
     }
     endpoint.incompleteContinuations.clear()
+    stopTrackingLeaks(endpoint)
     eventListener.ziplineClosed(this)
   }
 

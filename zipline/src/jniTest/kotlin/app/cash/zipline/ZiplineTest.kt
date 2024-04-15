@@ -26,7 +26,6 @@ import app.cash.zipline.testing.SuspendingPotatoService
 import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.containsExactlyInAnyOrder
-import assertk.assertions.doesNotContain
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNull
@@ -76,16 +75,6 @@ class ZiplineTest {
       service.echo(EchoRequest("Jake"))
     }
     assertThat(e.message).isEqualTo("Zipline closed")
-  }
-
-  @Test fun inboundServicesReleasedOnClose() = runTest(dispatcher) {
-    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareJsBridges()")
-    val service = JvmEchoService("echo, echo, echo")
-    zipline.bind<EchoService>("helloService", service)
-
-    zipline.close()
-
-    assertThat(zipline.serviceNames).doesNotContain("helloService")
   }
 
   @Test fun jvmCallJsService() = runTest(dispatcher) {

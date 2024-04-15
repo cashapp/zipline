@@ -22,7 +22,7 @@ import app.cash.zipline.ZiplineService
  * closed.
  */
 internal expect fun trackLeaks(
-  eventListener: Endpoint.EventListener,
+  endpoint: Endpoint,
   serviceName: String,
   callHandler: OutboundCallHandler,
   service: ZiplineService,
