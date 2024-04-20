@@ -9,10 +9,7 @@ plugins {
 }
 
 kotlin {
-  jvm {
-    withJava()
-  }
-
+  jvm()
   js {
     browser()
   }
