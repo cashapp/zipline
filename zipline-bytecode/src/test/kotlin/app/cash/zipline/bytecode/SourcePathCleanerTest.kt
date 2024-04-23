@@ -57,19 +57,19 @@ internal class SourcePathCleanerTest {
     // From the Kotlin stdlib.
     assertCleaned(
       "src/kotlin/collections/Maps.kt",
-      "kotlin/collections/Maps.kt"
+      "kotlin/collections/Maps.kt",
     )
     assertCleaned(
       "js-ir/builtins/Char.kt",
-      "js-ir/builtins/Char.kt"
+      "js-ir/builtins/Char.kt",
     )
     assertCleaned(
       "js-ir/src/generated/_LetterChars.kt",
-      "generated/_LetterChars.kt"
+      "generated/_LetterChars.kt",
     )
     assertCleaned(
       "common/src/generated/_Strings.kt",
-      "generated/_Strings.kt"
+      "generated/_Strings.kt",
     )
   }
 
