@@ -15,27 +15,10 @@
  */
 package app.cash.zipline.bytecode
 
-/**
- * Kotlin/JS builds paths relative to the `rootDir/build/js/packages/moduleName/kotlin` directory,
- * which means source maps typically have several leading `../` segments that aren't useful when
- * diagnosing crashes.
- *
- * For example, here's a sample file path from a Kotlin/JS-generated source map:
- *
- * ```
- * ../../../../../go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt
- * ```
- *
- * This strips off the leading `../` segments for more legible stacktraces, yielding a string like
- * this:
- *
- * ```
- * go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt
- * ```
- */
-fun SourceMap.removeLeadingDotDots(): SourceMap {
+fun SourceMap.clean(): SourceMap {
+  val cleaner = SourcePathCleaner()
   return transformFilePaths { path ->
-    path.replace(Regex("^(\\.\\./)+"), "")
+    cleaner.clean(path)
   }
 }
 
