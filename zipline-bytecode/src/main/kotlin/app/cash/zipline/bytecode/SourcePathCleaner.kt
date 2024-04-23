@@ -23,7 +23,7 @@ package app.cash.zipline.bytecode
  * was in when it was compiled.
  */
 internal class SourcePathCleaner {
-  private val sourceDirectories = mutableListOf(
+  private val sourceDirectories = listOf(
     "/sources/",
     "/kotlin/",
     "/src/",
