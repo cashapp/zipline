@@ -30,7 +30,7 @@ internal class SourcePathCleaner {
     "/source/",
   )
 
-  private val packagePrefixes = mutableListOf(
+  private val packagePrefixes = listOf(
     "/com/",
   )
 
