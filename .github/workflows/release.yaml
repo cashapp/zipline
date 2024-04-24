@@ -54,9 +54,8 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y libtinfo5
 
-      # Build unless this is a cross-compile.
-      - run: ./gradlew build --stacktrace
-        if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
+      - name: Build Zipline
+        run: ./gradlew build --stacktrace
 
       - uses: actions/upload-artifact@v4
         with:
@@ -64,9 +63,8 @@ jobs:
           path: zipline/src/jvmMain/resources/*
           if-no-files-found: error
 
-  android-emulator:
-    # We build on a Mac to get hardware acceleration for the Android emulator.
-    runs-on: macos-latest-large
+  android:
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v4
@@ -84,10 +82,10 @@ jobs:
           script: ./gradlew connectedCheck
 
   publish:
-    runs-on: macos-latest-large
+    runs-on: ubuntu-latest
     needs:
       - build
-      - android-emulator
+      - android
 
     steps:
       - uses: actions/checkout@v4
