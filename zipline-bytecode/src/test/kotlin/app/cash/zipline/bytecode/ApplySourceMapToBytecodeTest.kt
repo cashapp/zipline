@@ -164,7 +164,7 @@ class ApplySourceMapToBytecodeTest {
         "mappings": ";;;;;;;;QAGM,aAAa,C;"
       }
       """.trimIndent()
-    val sourceMap = SourceMap.parse(originalSourceMap).removeLeadingDotDots()
+    val sourceMap = SourceMap.parse(originalSourceMap).clean()
 
     // Use QuickJS to compile a script into bytecode.
     val bytecode = quickJs.compile(js, "goBoom.js")
@@ -176,10 +176,10 @@ class ApplySourceMapToBytecodeTest {
     assertThat(exception.stackTraceToString().replace("\t", "  ")).startsWith(
       """
       |app.cash.zipline.QuickJsException: boom
-      |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:4)
-      |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
-      |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
-      |  at JavaScript.<anonymous>(go-boom/src/jsMain/kotlin/app/cash/zipline/testing/goBoom.kt:10)
+      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:4)
+      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10)
+      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10)
+      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10)
       |  at JavaScript.<eval>(?)
       |
       """.trimMargin(),

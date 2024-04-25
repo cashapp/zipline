@@ -19,7 +19,7 @@ import app.cash.zipline.QuickJs
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.bytecode.SourceMap
 import app.cash.zipline.bytecode.applySourceMapToBytecode
-import app.cash.zipline.bytecode.removeLeadingDotDots
+import app.cash.zipline.bytecode.clean
 import app.cash.zipline.bytecode.stripLineNumbers
 import app.cash.zipline.loader.CURRENT_ZIPLINE_VERSION
 import app.cash.zipline.loader.ManifestSigner
@@ -116,7 +116,7 @@ internal class ZiplineCompiler(
 
       if (jsSourceMapFile.exists()) {
         // Rewrite the bytecode with source line numbers.
-        val sourceMap = SourceMap.parse(jsSourceMapFile.readText()).removeLeadingDotDots()
+        val sourceMap = SourceMap.parse(jsSourceMapFile.readText()).clean()
         bytecode = applySourceMapToBytecode(bytecode, sourceMap)
       }
 
