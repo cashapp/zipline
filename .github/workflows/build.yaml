@@ -21,10 +21,10 @@ jobs:
         arch: [amd64]
         cmake-arch: [x86_64]
         include:
-          - os: macOS-latest
+          - os: macos-latest-large
             arch: x86_64
             cmake-arch: x86_64
-          - os: macOS-latest
+          - os: macos-latest
             arch: aarch64
             cmake-arch: arm64
           # TODO: build on 'windows-latest'
@@ -50,22 +50,17 @@ jobs:
           cp -v ../zipline-dockerbuild/build/jni/amd64/libquickjs.* zipline/src/jvmMain/resources/jni/amd64/
 
       - name: Build native library (macOS)
-        if: matrix.os == 'macOS-latest'
         run: ./.github/workflows/build-mac.sh -a ${{ matrix.arch }} -c ${{ matrix.cmake-arch }}
 
       - name: Install libtinfo5
         if: matrix.os == 'ubuntu-latest'
         run: sudo apt-get install -y libtinfo5
 
-      # Build unless this is a cross-compile (we can't test cross-compiled code)
       - name: Build Zipline
         run: ./gradlew build --stacktrace
-        if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
 
-      # Build unless this is a cross-compile
       - name: Build samples
         run: ./gradlew -p samples check --stacktrace
-        if: matrix.arch == 'amd64' || matrix.arch == 'x86_64'
 
       - uses: actions/upload-artifact@v4
         with:
@@ -121,7 +116,7 @@ jobs:
           xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
 
   publish:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     needs:
       - build
       - android
