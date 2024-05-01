@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [1.10.0] - 2024-05-01
+
+ * Fix: Clean source paths that show up in stack traces.
+ * Fix: Don't leak Zipline instances. We had a bug where our memory-leak detection itself introduced
+   a memory leak. We held a reference to a Zipline instance that was intended to be used to report
+   services that were garbage collected but not closed.
+
+
 ## [1.9.0] - 2024-04-11
 
  * Breaking: Reorder the parameters in `ZiplineLoader` so `FileSystem` always precedes `Path`.
