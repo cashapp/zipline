@@ -147,7 +147,6 @@ class ConsoleTest {
     assertEquals(Level.INFO, record.level)
     assertEquals("this message for %s is a %d out of %d Jesse 8 10", record.message)
 
-    advanceUntilIdle()
     assertNull(takeLogMessage())
   }
 
