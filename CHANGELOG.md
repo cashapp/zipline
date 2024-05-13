@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [1.10.1] - 2024-05-13
+
+ * Fix: Build the released artifact on macOS instead of Linux to work around an issue packaging
+   native dependencies.
+
+
 ## [1.10.0] - 2024-05-01
 
  * Fix: Clean source paths that show up in stack traces.
