@@ -70,13 +70,16 @@ class ZiplineTest {
   @Test fun closeClosesBoundServices(): Unit = runTest(dispatcher) {
     var closed = false
 
-    zipline.bind<EchoService>("helloService", object : EchoService {
+    zipline.bind<EchoService>(
+      "helloService",
+      object : EchoService {
       override fun echo(request: EchoRequest) = error("unexpected call")
 
       override fun close() {
         closed = true
       }
-    })
+    },
+    )
 
     zipline.close()
     assertThat(closed).isTrue()
