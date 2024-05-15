@@ -29,6 +29,7 @@ import assertk.assertions.containsExactlyInAnyOrder
 import assertk.assertions.isEqualTo
 import assertk.assertions.isFalse
 import assertk.assertions.isNull
+import assertk.assertions.isTrue
 import assertk.assertions.startsWith
 import kotlin.test.assertFailsWith
 import kotlinx.coroutines.CancellationException
@@ -64,6 +65,21 @@ class ZiplineTest {
     assertFailsWith<IllegalStateException> {
       zipline.bind<EchoService>("supService", JvmEchoService("sup"))
     }
+  }
+
+  @Test fun closeClosesBoundServices(): Unit = runTest(dispatcher) {
+    var closed = false
+
+    zipline.bind<EchoService>("helloService", object : EchoService {
+      override fun echo(request: EchoRequest) = error("unexpected call")
+
+      override fun close() {
+        closed = true
+      }
+    })
+
+    zipline.close()
+    assertThat(closed).isTrue()
   }
 
   @Test fun callServiceAfterCloseFailsGracefully() = runTest(dispatcher) {

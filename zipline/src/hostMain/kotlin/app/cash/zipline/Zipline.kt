@@ -143,7 +143,21 @@ actual class Zipline private constructor(
     if (closed) return
     closed = true
 
+    var thrown: Throwable? = null
+
     scope.cancel()
+
+    // Close all caller-provided services that are still open. We clear the map to prevent possible
+    // retain cycles on Kotlin/Native where some objects may be reference-counted.
+    val inboundServicesToClose = endpoint.inboundServices.values.toTypedArray()
+    endpoint.inboundServices.clear()
+    for (inboundService in inboundServicesToClose) {
+      try {
+        inboundService.service.close()
+      } catch (e: Throwable) {
+        if (thrown != null) thrown = e
+      }
+    }
 
     quickJs.close()
 
@@ -155,6 +169,10 @@ actual class Zipline private constructor(
     endpoint.incompleteContinuations.clear()
     stopTrackingLeaks(endpoint)
     eventListener.ziplineClosed(this)
+
+    if (thrown != null) {
+      throw thrown
+    }
   }
 
   fun loadJsModule(script: String, id: String) {

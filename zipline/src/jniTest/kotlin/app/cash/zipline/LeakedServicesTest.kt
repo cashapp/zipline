@@ -22,6 +22,9 @@ import app.cash.zipline.testing.LoggingEventListener
 import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import assertk.assertions.isSameInstanceAs
+import java.lang.ref.PhantomReference
+import java.lang.ref.ReferenceQueue
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.After
@@ -73,5 +76,30 @@ class LeakedServicesTest {
   /** Just attempting to take a service causes Zipline to process leaked services. */
   private fun triggerJvmLeakDetection() {
     zipline.take<EchoService>("noSuchService")
+  }
+
+  /**
+   * Confirm that [Zipline.close] clears the index of services. This isn't useful in fully
+   * garbage-collected platforms like Kotlin/JVM, but it prevents retain cycle on Kotlin/Native
+   * where Kotlin objects are garbage collected and native objects are reference counted.
+   */
+  @Test fun servicesCollectedAfterZiplineClose() = runTest(dispatcher) {
+    val referenceQueue = ReferenceQueue<Any>()
+    val reference = allocateAndBindService(zipline, referenceQueue)
+    zipline.close()
+    awaitGarbageCollection()
+    assertThat(referenceQueue.poll()).isSameInstanceAs(reference) // Successfully released.
+  }
+
+  /** Use a separate method so there's no hidden reference remaining on the stack. */
+  private fun allocateAndBindService(
+    zipline: Zipline,
+    referenceQueue: ReferenceQueue<Any>,
+  ): PhantomReference<Any> {
+    val helloService = object : EchoService {
+      override fun echo(request: EchoRequest): EchoResponse = error("unexpected call")
+    }
+    zipline.bind<EchoService>("helloService", helloService)
+    return PhantomReference(helloService, referenceQueue)
   }
 }
