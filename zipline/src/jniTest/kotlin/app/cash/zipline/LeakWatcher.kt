@@ -37,7 +37,7 @@ class LeakWatcher<T>(
   /**
    * Asserts that the subject is not strongly reachable from any garbage collection roots.
    *
-   * This function is works by requesting a garbage collection and confirming that the object is
+   * This function works by requesting a garbage collection and confirming that the object is
    * collected in the process. An alternate, more robust implementation could do a heap dump and
    * report the shortest paths from GC roots if any exist.
    */
