@@ -17,10 +17,6 @@ package app.cash.zipline
 
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.loadTestingJs
-import assertk.assertThat
-import assertk.assertions.isSameInstanceAs
-import java.lang.ref.PhantomReference
-import java.lang.ref.ReferenceQueue
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
 import org.junit.Test
@@ -36,20 +32,16 @@ import org.junit.Test
 class LeakedZiplinesTest {
   private val dispatcher = StandardTestDispatcher()
 
-  @Test fun ziplineDoesntLeak() = runTest(dispatcher) {
-    val referenceQueue = ReferenceQueue<Any>()
-    val reference = createUseAndCloseZipline(referenceQueue)
-    awaitGarbageCollection()
-    assertThat(referenceQueue.poll()).isSameInstanceAs(reference) // Successfully released.
-  }
+  @Test
+  fun ziplineDoesntLeak() = runTest(dispatcher) {
+    val leakWatcher = LeakWatcher {
+      val zipline = Zipline.create(dispatcher)
+      zipline.loadTestingJs()
+      zipline.take<EchoService>("echoService")
+      zipline.close()
+      return@LeakWatcher zipline
+    }
 
-  private fun createUseAndCloseZipline(
-    referenceQueue: ReferenceQueue<Any>,
-  ): PhantomReference<Any> {
-    val zipline = Zipline.create(dispatcher)
-    zipline.loadTestingJs()
-    zipline.take<EchoService>("echoService")
-    zipline.close()
-    return PhantomReference(zipline, referenceQueue)
+    leakWatcher.assertNotLeaked()
   }
 }
