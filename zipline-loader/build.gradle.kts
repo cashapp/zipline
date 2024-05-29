@@ -9,7 +9,6 @@ plugins {
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
   id("app.cash.sqldelight")
-  id("de.undercouch.download")
   id("binary-compatibility-validator")
 }
 

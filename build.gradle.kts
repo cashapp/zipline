@@ -34,13 +34,12 @@ buildscript {
     classpath(libs.shadowJar.gradle.plugin)
     classpath(libs.cklib.gradle.plugin)
     classpath(libs.sqldelight.gradle.plugin)
-    classpath(libs.downloadTask.gradle.plugin)
+    classpath(libs.google.ksp)
   }
 }
 
 plugins {
   id("com.github.gmazzo.buildconfig") version "3.1.0" apply false
-  id("com.google.devtools.ksp") version libs.versions.ksp apply false
   alias(libs.plugins.spotless)
 }
 
