@@ -34,7 +34,6 @@ buildscript {
     classpath(libs.shadowJar.gradle.plugin)
     classpath(libs.cklib.gradle.plugin)
     classpath(libs.sqldelight.gradle.plugin)
-    classpath(libs.downloadTask.gradle.plugin)
     classpath(libs.google.ksp)
   }
 }

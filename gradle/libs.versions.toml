@@ -62,7 +62,6 @@ sqldelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", versi
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.45.2.0" }
 turbine = { module = "app.cash.turbine:turbine", version = "1.1.0" }
-downloadTask-gradle-plugin = { module = "de.undercouch:gradle-download-task", version = "5.6.0" }
 
 [plugins]
 spotless = { id = "com.diffplug.spotless", version = "6.25.0" }
