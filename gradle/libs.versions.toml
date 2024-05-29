@@ -1,6 +1,5 @@
 [versions]
 androidx-compose = "1.6.7"
-androidx-compose-compiler = "1.5.14"
 compileSdk = "34"
 http4k = "4.48.0.0"
 kotlin = "2.0.0"
@@ -18,8 +17,6 @@ android-material = { module = "com.google.android.material:material", version = 
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.9.0" }
 androidx-annotation = { module = "androidx.annotation:annotation", version = "1.8.0" }
 androidx-appCompat = { module = "androidx.appcompat:appcompat", version = "1.6.1" }
-# This isn't strictly used, but allows Renovate to see us using the Compose Compiler artifact
-androidx-compose-compiler = { module = "androidx.compose.compiler:compiler", version.ref = "androidx-compose-compiler" }
 androidx-compose-material = { module = "androidx.compose.material:material", version.ref = "androidx-compose" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui", version.ref = "androidx-compose" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", version.ref = "androidx-compose" }
@@ -33,7 +30,7 @@ auto-service-annotations = { module = "com.google.auto.service:auto-service-anno
 binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.14.0" }
 cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.3.1" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "1.9.20" }
-google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:1.9.24-1.0.20"
+google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.0.0-1.0.21"
 http4k-core = { module = "org.http4k:http4k-core", version.ref = "http4k" }
 http4k-server-jetty = { module = "org.http4k:http4k-server-jetty", version.ref = "http4k" }
 http4k-client-websocket = { module = "org.http4k:http4k-client-websocket", version.ref = "http4k" }

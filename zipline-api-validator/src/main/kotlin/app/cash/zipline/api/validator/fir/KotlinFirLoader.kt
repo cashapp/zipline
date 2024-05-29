@@ -136,14 +136,10 @@ internal class KotlinFirLoader(
 
     return compileModuleToAnalyzedFir(
       input = input,
-      environment = ModuleCompilerEnvironment(
-        projectEnvironment = projectEnvironment,
-        diagnosticsReporter = reporter,
-      ),
+      projectEnvironment = projectEnvironment,
       previousStepsSymbolProviders = emptyList(),
       incrementalExcludesScope = null,
       diagnosticsReporter = reporter,
-      performanceManager = null,
     )
   }
 

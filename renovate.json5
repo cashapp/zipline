@@ -10,10 +10,10 @@
       "allowedVersions": "!/1\\.5\\.31\\.2/",
     },
     {
-      // Compose compiler is tightly coupled to Kotlin version
-      "groupName": "Kotlin and Compose",
+      // KSP is tightly coupled to Kotlin version
+      "groupName": "Kotlin and KSP",
       "matchPackagePrefixes": [
-        "androidx.compose.compiler",
+        "com.google.devtools.ksp",
         "org.jetbrains.kotlin:kotlin",
       ],
     },
