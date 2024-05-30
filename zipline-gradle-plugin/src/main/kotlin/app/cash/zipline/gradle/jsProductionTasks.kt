@@ -16,6 +16,7 @@
 package app.cash.zipline.gradle
 
 import java.io.File
+import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
 import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
@@ -48,7 +49,10 @@ internal fun JsIrBinary.asJsProductionTask(): JsProductionTask {
     override val targetName get() = target.name
     override val toolName = null
     override val mode get() = this@asJsProductionTask.mode
-    override val outputFile get() = linkTask.map { it.destinationDirectory.get().asFile }
+    override val outputFile get() = linkTask.map {
+      @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+      it._outputFileProperty.get()
+    }
   }
 }
 
@@ -63,6 +67,6 @@ internal fun KotlinWebpack.asJsProductionTask(): JsProductionTask {
       name.endsWith("ProductionWebpack") -> KotlinJsBinaryMode.PRODUCTION
       else -> error("unexpected KotlinWebpack task name: $name")
     }
-    override val outputFile get() = mainOutputFile.map { it.asFile }
+    override val outputFile get() = DefaultProvider { this@asJsProductionTask.outputFile }
   }
 }
