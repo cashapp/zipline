@@ -27,7 +27,6 @@ package app.cash.zipline.testing
 
 import app.cash.zipline.ZiplineFunction
 import app.cash.zipline.ZiplineScope
-import app.cash.zipline.ZiplineService
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.OutboundCallHandler
 import app.cash.zipline.internal.bridge.OutboundService
