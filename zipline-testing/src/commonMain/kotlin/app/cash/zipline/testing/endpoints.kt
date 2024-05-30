@@ -27,6 +27,7 @@ package app.cash.zipline.testing
 import app.cash.zipline.internal.EndpointService
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
+import app.cash.zipline.internal.bridge.Endpoint.EventListener
 import app.cash.zipline.internal.bridge.SerializableZiplineServiceType
 import kotlin.jvm.JvmOverloads
 import kotlinx.coroutines.CoroutineScope
@@ -38,8 +39,8 @@ import kotlinx.serialization.modules.SerializersModule
 fun newEndpointPair(
   scope: CoroutineScope,
   serializersModule: SerializersModule = EmptySerializersModule(),
-  listenerA: Endpoint.EventListener = Endpoint.EventListener(),
-  listenerB: Endpoint.EventListener = Endpoint.EventListener(),
+  listenerA: EventListener = EventListener(),
+  listenerB: EventListener = EventListener(),
 ): Pair<Endpoint, Endpoint> {
   val pair = object : Any() {
     val aEndpointService = EndpointServiceProxy { a }
