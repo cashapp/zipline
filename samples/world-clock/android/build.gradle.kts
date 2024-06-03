@@ -3,6 +3,7 @@ import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 plugins {
   id("com.android.application")
   kotlin("android")
+  kotlin("plugin.compose")
 }
 
 android {
@@ -22,10 +23,6 @@ android {
 
   buildFeatures {
     compose = true
-  }
-
-  composeOptions {
-    kotlinCompilerExtensionVersion = libs.versions.androidx.compose.compiler.get()
   }
 
   packagingOptions {
