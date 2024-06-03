@@ -49,7 +49,10 @@ internal fun JsIrBinary.asJsProductionTask(): JsProductionTask {
     override val targetName get() = target.name
     override val toolName = null
     override val mode get() = this@asJsProductionTask.mode
-    override val outputFile get() = linkTask.map { it.outputFileProperty.get() }
+    override val outputFile get() = linkTask.map {
+      @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
+      it._outputFileProperty.get()
+    }
   }
 }
 

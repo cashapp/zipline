@@ -88,11 +88,15 @@ kotlin {
         api(libs.androidx.annotation)
       }
     }
+    val jniTest by creating {
+      dependsOn(hostTest)
+    }
+
     val androidMain by getting {
       dependsOn(jniMain)
     }
     val androidInstrumentedTest by getting {
-      dependsOn(hostTest)
+      dependsOn(jniTest)
       dependencies {
         implementation(libs.assertk)
         implementation(libs.junit)
@@ -106,8 +110,7 @@ kotlin {
       dependsOn(jniMain)
     }
     val jvmTest by getting {
-      dependsOn(hostTest)
-      kotlin.srcDir("src/jniTest/kotlin/")
+      dependsOn(jniTest)
       resources.srcDir(copyTestingJs)
       dependencies {
         implementation(libs.junit)
@@ -241,7 +244,6 @@ android {
 
   sourceSets {
     getByName("androidTest") {
-      java.srcDirs("src/hostTest/kotlin/", "src/jniTest/kotlin/")
       resources.srcDir("src/androidInstrumentationTest/resources/")
       resources.srcDir(copyTestingJs)
     }

@@ -6,6 +6,7 @@ buildscript {
   dependencies {
     classpath(libs.android.gradle.plugin)
     classpath(libs.kotlin.gradle.plugin)
+    classpath(libs.kotlin.compose.plugin)
     classpath(libs.kotlin.serialization)
     classpath(libs.shadowJar.gradle.plugin)
     classpath(libs.cklib.gradle.plugin)
