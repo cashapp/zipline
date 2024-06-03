@@ -251,17 +251,6 @@ allprojects {
   }
 }
 
-// Kotlin 1.9.20 started putting the library version in the klib manifest, but that broke resolution
-// in downstream projects! Hack the klib library version to be 'unspecified', which is what the
-// CInteropProcess task did in prior releases. https://youtrack.jetbrains.com/issue/KT-62515/
-allprojects {
-  tasks.withType<CInteropProcess>().configureEach {
-    val libraryVersionField = CInteropProcess::class.java.getDeclaredField("libraryVersion")
-    libraryVersionField.isAccessible = true
-    libraryVersionField.set(this, "unspecified")
-  }
-}
-
 subprojects {
   plugins.withId("binary-compatibility-validator") {
     configure<ApiValidationExtension> {
