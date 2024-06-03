@@ -39,7 +39,7 @@ suspend fun launchZipline(
   val localDirectoryHttpClient = object : ZiplineHttpClient() {
     val base = when (optimizeMode) {
       "development" -> "build/compileSync/js/main/developmentExecutable/kotlinZipline".toPath()
-      else -> "build/dist/js/productionExecutableZipline".toPath()
+      else -> "build/kotlin-webpack/js/productionExecutableZipline".toPath()
     }
     override suspend fun download(
       url: String,
