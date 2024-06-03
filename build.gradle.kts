@@ -95,7 +95,7 @@ subprojects {
 
     testLogging {
       if (System.getenv("CI") == "true") {
-        events = setOf(TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.PASSED)
+        events = setOf(TestLogEvent.STARTED, TestLogEvent.FAILED, TestLogEvent.SKIPPED, TestLogEvent.PASSED)
       }
       exceptionFormat = TestExceptionFormat.FULL
     }
