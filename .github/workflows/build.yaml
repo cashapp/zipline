@@ -116,7 +116,7 @@ jobs:
           xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
 
   publish:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs:
       - build
       - android
