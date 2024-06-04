@@ -155,7 +155,7 @@ jobs:
           path: zipline-cli/build/distributions/zipline-cli-*.zip
           if-no-files-found: error
 
-      - run: ./gradlew publish
+      - run: ./gradlew publishToMavenCentral
         if: ${{ github.ref == 'refs/heads/trunk' && github.repository == 'cashapp/zipline' }}
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_NEXUS_USERNAME }}
