@@ -20,6 +20,7 @@ import assertk.Assert
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.containsMatch
+import assertk.assertions.doesNotContain
 import assertk.assertions.isEqualTo
 import assertk.assertions.isTrue
 import java.io.File
@@ -505,6 +506,17 @@ class ZiplineGradlePluginTest(
     } finally {
       ziplineApiToml.delete()
     }
+  }
+
+  @Test
+  fun apiTrackingDisabledDoesNotGenerateFileOrTasks() {
+    val projectDir = File("src/test/projects/no-api-tracking")
+
+    val checkResult = createRunner(projectDir, "clean", "check").build()
+    assertThat(checkResult.tasks.map { it.path }).doesNotContain(":lib:ziplineApiCheck")
+
+    val dumpResult = createRunner(projectDir, ":lib:ziplineApiDump").buildAndFail()
+    assertThat(dumpResult.output).contains("Cannot locate tasks that match ':lib:ziplineApiDump'")
   }
 
   private fun createRunner(
