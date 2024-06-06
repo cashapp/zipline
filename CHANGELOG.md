@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## [1.11.0] - 2024-06-05
+
+ * New: `apiTracking` property on the `zipline { }` Gradle extension allows disabling API generation.
+ * Fix: Calling `Zipline.close()` will now call `ZiplineService.close()` on all bound services. Strong
+   references to the services will also be cleared to prevent reference cycles on native.
+ * Upgrade: [Kotlin 2.0.0][kotlin_2_0_0]]
+
+
 ## [1.10.1] - 2024-05-13
 
  * Fix: Build the released artifact on macOS instead of Linux to work around an issue packaging
@@ -493,6 +501,7 @@ Initial release.
 [kotlin_1_8_21]: https://github.com/JetBrains/kotlin/releases/tag/v1.8.21
 [kotlin_1_9_20]: https://github.com/JetBrains/kotlin/releases/tag/v1.9.20
 [kotlin_1_9_23]: https://github.com/JetBrains/kotlin/releases/tag/v1.9.23
+[kotlin_2_0_0]: https://github.com/JetBrains/kotlin/releases/tag/v2.0.0
 [kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
 [kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
