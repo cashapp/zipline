@@ -56,6 +56,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       ?: return
 
     val ziplineExtension = target.extensions.create("zipline", ZiplineExtension::class.java)
+    ziplineExtension.apiTracking.convention(true)
 
     kotlinExtension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
       kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
@@ -98,17 +99,21 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       target.ziplineDependency("zipline-cli"),
     )
 
-    val ziplineApiCheck = target.tasks.register("ziplineApiCheck")
-    target.tasks.named("check").configure { checkTask ->
-      checkTask.dependsOn(ziplineApiCheck)
-    }
+    target.afterEvaluate {
+      if (ziplineExtension.apiTracking.get()) {
+        val ziplineApiCheck = target.tasks.register("ziplineApiCheck")
+        target.tasks.named("check").configure { checkTask ->
+          checkTask.dependsOn(ziplineApiCheck)
+        }
 
-    val ziplineApiDump = target.tasks.register("ziplineApiDump")
+        val ziplineApiDump = target.tasks.register("ziplineApiDump")
 
-    target.tasks.withType(KotlinCompile::class.java) { kotlinCompile ->
-      if ("Test" in kotlinCompile.name) return@withType
-      registerZiplineApiTask(target, kotlinCompile, cliConfiguration, Mode.Check, ziplineApiCheck)
-      registerZiplineApiTask(target, kotlinCompile, cliConfiguration, Mode.Dump, ziplineApiDump)
+        target.tasks.withType(KotlinCompile::class.java) { kotlinCompile ->
+          if ("Test" in kotlinCompile.name) return@withType
+          registerZiplineApiTask(target, kotlinCompile, cliConfiguration, Mode.Check, ziplineApiCheck)
+          registerZiplineApiTask(target, kotlinCompile, cliConfiguration, Mode.Dump, ziplineApiDump)
+        }
+      }
     }
   }
 

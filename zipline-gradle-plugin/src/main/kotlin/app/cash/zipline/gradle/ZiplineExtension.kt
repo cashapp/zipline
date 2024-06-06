@@ -27,6 +27,7 @@ abstract class ZiplineExtension {
   abstract val signingKeys: NamedDomainObjectContainer<SigningKey>
   abstract val httpServerPort: Property<Int>
   abstract val metadata: MapProperty<String, String>
+  abstract val apiTracking: Property<Boolean>
 
   /**
    * True to strip line number information from the encoded QuickJS bytecode in production builds.
