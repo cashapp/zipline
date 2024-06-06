@@ -1,0 +1,554 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>EventListener</title>
+<link href="../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../styles/style.css" rel="Stylesheet">
+<link href="../../../styles/main.css" rel="Stylesheet">
+<link href="../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+<a class="library-name--link" href="../../../index.html">
+                            Zipline
+                    </a>            </div>
+            <div class="library-version">1.11.0
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector common-like" data-active="" data-filter=":zipline:dokkaHtmlPartial/hostMain">host</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="zipline::app.cash.zipline/EventListener///PointingToDeclaration//-705021808">
+  <div class="breadcrumbs"><a href="../../index.html">zipline</a><span class="delimiter">/</span><a href="../index.html">app.cash.zipline</a><span class="delimiter">/</span><span class="current">EventListener</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span>Event</span><wbr><span><span>Listener</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">abstract </span><span class="token keyword">class </span><a href="index.html">EventListener</a><span class="clearfix"><span class="floating-right">(<a href="https://github.com/cashapp/zipline/tree/trunk//zipline/src/hostMain/kotlin/app/cash/zipline/EventListener.kt#L25">source</a>)</span></span></div><p class="paragraph">Listener for metrics and debugging.</p><p class="paragraph">All event methods must execute fast, without external locking, cannot throw exceptions, attempt to mutate the event parameters, or be re-entrant back into the client. Any IO - writing to files or network should be done asynchronously.</p></div>    </div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="-782010984%2FConstructors%2F-705021808" anchor-label="EventListener" id="-782010984%2FConstructors%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-event-listener.html"><span>Event</span><wbr><span><span>Listener</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-782010984%2FConstructors%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="TYPE">
+        <h2 class="">Types</h2>
+        <div class="table"><a data-name="1303609581%2FClasslikes%2F-705021808" anchor-label="Companion" id="1303609581%2FClasslikes%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-companion/index.html"><span><span>Companion</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1303609581%2FClasslikes%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">object </span><a href="-companion/index.html">Companion</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-717701457%2FClasslikes%2F-705021808" anchor-label="Factory" id="-717701457%2FClasslikes%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-factory/index.html"><span><span>Factory</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-717701457%2FClasslikes%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">fun </span><span class="token keyword">interface </span><a href="-factory/index.html">Factory</a></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="FUNCTION">
+        <h2 class="">Functions</h2>
+        <div class="table"><a data-name="-270266733%2FFunctions%2F-705021808" anchor-label="applicationLoadFailed" id="-270266733%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="application-load-failed.html"><span>application</span><wbr><span>Load</span><wbr><span><span>Failed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-270266733%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="application-load-failed.html"><span class="token function">applicationLoadFailed</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">manifestUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">exception<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html">Exception</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when an application load fails.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1050918034%2FFunctions%2F-705021808" anchor-label="applicationLoadSkipped" id="1050918034%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="application-load-skipped.html"><span>application</span><wbr><span>Load</span><wbr><span><span>Skipped</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1050918034%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="application-load-skipped.html"><span class="token function">applicationLoadSkipped</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">manifestUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when an application load was skipped because the code is unchanged.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1417580516%2FFunctions%2F-705021808" anchor-label="applicationLoadSkippedNotFresh" id="-1417580516%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="application-load-skipped-not-fresh.html"><span>application</span><wbr><span>Load</span><wbr><span>Skipped</span><wbr><span>Not</span><wbr><span><span>Fresh</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1417580516%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="application-load-skipped-not-fresh.html"><span class="token function">applicationLoadSkippedNotFresh</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">manifestUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when an application load was skipped because the code is stale.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="965635874%2FFunctions%2F-705021808" anchor-label="applicationLoadStart" id="965635874%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="application-load-start.html"><span>application</span><wbr><span>Load</span><wbr><span><span>Start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="965635874%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="application-load-start.html"><span class="token function">applicationLoadStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">manifestUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Invoked when an application load starts.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1928725197%2FFunctions%2F-705021808" anchor-label="applicationLoadSuccess" id="-1928725197%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="application-load-success.html"><span>application</span><wbr><span>Load</span><wbr><span><span>Success</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1928725197%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="application-load-success.html"><span class="token function">applicationLoadSuccess</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">manifestUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">manifest<span class="token operator">: </span><a href="../-zipline-manifest/index.html">ZiplineManifest</a><span class="token punctuation">, </span></span><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when an application load succeeds.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="536863745%2FFunctions%2F-705021808" anchor-label="bindService" id="536863745%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="bind-service.html"><span>bind</span><wbr><span><span>Service</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="536863745%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="bind-service.html"><span class="token function">bindService</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">service<span class="token operator">: </span><a href="../-zipline-service/index.html">ZiplineService</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when something calls <a href="../-zipline/bind.html">Zipline.bind</a>, or a service is sent via an API.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-225295523%2FFunctions%2F-705021808" anchor-label="callEnd" id="-225295523%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="call-end.html"><span>call</span><wbr><span><span>End</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-225295523%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="call-end.html"><span class="token function">callEnd</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">call<span class="token operator">: </span><a href="../-call/index.html">Call</a><span class="token punctuation">, </span></span><span class="parameter ">result<span class="token operator">: </span><a href="../-call-result/index.html">CallResult</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when a service function call completes.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1106830606%2FFunctions%2F-705021808" anchor-label="callStart" id="-1106830606%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="call-start.html"><span>call</span><wbr><span><span>Start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1106830606%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="call-start.html"><span class="token function">callStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">call<span class="token operator">: </span><a href="../-call/index.html">Call</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Invoked when a service function is called. This may be invoked for either suspending or non-suspending functions.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-198907751%2FFunctions%2F-705021808" anchor-label="downloadEnd" id="-198907751%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="download-end.html"><span>download</span><wbr><span><span>End</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-198907751%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="download-end.html"><span class="token function">downloadEnd</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when a network download succeeds.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1307975610%2FFunctions%2F-705021808" anchor-label="downloadFailed" id="-1307975610%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="download-failed.html"><span>download</span><wbr><span><span>Failed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1307975610%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="download-failed.html"><span class="token function">downloadFailed</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">exception<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html">Exception</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when a network download fails.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1228281789%2FFunctions%2F-705021808" anchor-label="downloadStart" id="1228281789%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="download-start.html"><span>download</span><wbr><span><span>Start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1228281789%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="download-start.html"><span class="token function">downloadStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Invoked when a network download starts</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1602820469%2FFunctions%2F-705021808" anchor-label="initializerEnd" id="1602820469%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initializer-end.html"><span>initializer</span><wbr><span><span>End</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1602820469%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="initializer-end.html"><span class="token function">initializerEnd</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when initializer is finished. Failure is not recorded separately as it is unrecoverable.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1289324117%2FFunctions%2F-705021808" anchor-label="initializerStart" id="-1289324117%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="initializer-start.html"><span>initializer</span><wbr><span><span>Start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1289324117%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="initializer-start.html"><span class="token function">initializerStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Initializer runs before the mainFunction and executes on the host platform.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1952975882%2FFunctions%2F-705021808" anchor-label="mainFunctionEnd" id="-1952975882%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="main-function-end.html"><span>main</span><wbr><span>Function</span><wbr><span><span>End</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1952975882%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="main-function-end.html"><span class="token function">mainFunctionEnd</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when mainFunction is finished. Failure is not recorded separately as it is unrecoverable.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-508866196%2FFunctions%2F-705021808" anchor-label="mainFunctionStart" id="-508866196%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="main-function-start.html"><span>main</span><wbr><span>Function</span><wbr><span><span>Start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-508866196%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="main-function-start.html"><span class="token function">mainFunctionStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Invoked when mainFunction is run within the JS platform to start an application.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-879559010%2FFunctions%2F-705021808" anchor-label="manifestParseFailed" id="-879559010%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="manifest-parse-failed.html"><span>manifest</span><wbr><span>Parse</span><wbr><span><span>Failed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-879559010%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="manifest-parse-failed.html"><span class="token function">manifestParseFailed</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">url<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">exception<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-exception/index.html">Exception</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when the manifest couldn't be decoded as JSON. For example, this might occur if there's a captive portal on the network.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1702318346%2FFunctions%2F-705021808" anchor-label="manifestReady" id="-1702318346%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="manifest-ready.html"><span>manifest</span><wbr><span><span>Ready</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1702318346%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="manifest-ready.html"><span class="token function">manifestReady</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">manifestUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">manifest<span class="token operator">: </span><a href="../-zipline-manifest/index.html">ZiplineManifest</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when the loader has successfully fetched a manifest, verified it (if necessary), and will proceed to download and load each of its modules.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1500161040%2FFunctions%2F-705021808" anchor-label="manifestVerified" id="-1500161040%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="manifest-verified.html"><span>manifest</span><wbr><span><span>Verified</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1500161040%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="manifest-verified.html"><span class="token function">manifestVerified</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">applicationName<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">manifestUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token punctuation">, </span></span><span class="parameter ">manifest<span class="token operator">: </span><a href="../-zipline-manifest/index.html">ZiplineManifest</a><span class="token punctuation">, </span></span><span class="parameter ">verifiedKey<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when a the manifest verifier successfully verifies a key. Manifest verification failures are signaled with <a href="application-load-failed.html">applicationLoadFailed</a>.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1825677001%2FFunctions%2F-705021808" anchor-label="moduleLoadEnd" id="-1825677001%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="module-load-end.html"><span>module</span><wbr><span>Load</span><wbr><span><span>End</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1825677001%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="module-load-end.html"><span class="token function">moduleLoadEnd</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">moduleId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">startValue<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when a module load completes.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-909366291%2FFunctions%2F-705021808" anchor-label="moduleLoadStart" id="-909366291%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="module-load-start.html"><span>module</span><wbr><span>Load</span><wbr><span><span>Start</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-909366291%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="module-load-start.html"><span class="token function">moduleLoadStart</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">moduleId<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span></div><div class="brief "><p class="paragraph">Invoked when a module load starts. This is the process of loading code into QuickJS.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="582480134%2FFunctions%2F-705021808" anchor-label="serviceLeaked" id="582480134%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="service-leaked.html"><span>service</span><wbr><span><span>Leaked</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="582480134%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="service-leaked.html"><span class="token function">serviceLeaked</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when a service is garbage collected without being closed.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2090343627%2FFunctions%2F-705021808" anchor-label="takeService" id="2090343627%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="take-service.html"><span>take</span><wbr><span><span>Service</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2090343627%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="take-service.html"><span class="token function">takeService</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a><span class="token punctuation">, </span></span><span class="parameter ">name<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span></span><span class="parameter ">service<span class="token operator">: </span><a href="../-zipline-service/index.html">ZiplineService</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when something calls <a href="../-zipline/take.html">Zipline.take</a>, or a service is received via an API.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1606989545%2FFunctions%2F-705021808" anchor-label="ziplineClosed" id="-1606989545%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="zipline-closed.html"><span>zipline</span><wbr><span><span>Closed</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1606989545%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="zipline-closed.html"><span class="token function">ziplineClosed</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when a Zipline is closed. Unless otherwise noted, other methods on this interface will not be invoked after this.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="-1053593229%2FFunctions%2F-705021808" anchor-label="ziplineCreated" id="-1053593229%2FFunctions%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="zipline-created.html"><span>zipline</span><wbr><span><span>Created</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-1053593229%2FFunctions%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">open </span><span class="token keyword">fun </span><a href="zipline-created.html"><span class="token function">ziplineCreated</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">zipline<span class="token operator">: </span><a href="../-zipline/index.html">Zipline</a></span></span><span class="token punctuation">)</span></div><div class="brief "><p class="paragraph">Invoked when a Zipline is created, before any application code is loaded.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+

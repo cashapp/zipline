@@ -1,0 +1,159 @@
+<!doctype html>
+<html class="no-js">
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
+    <title>Unsigned</title>
+<link href="../../../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../../../";</script>
+    <script>document.documentElement.classList.replace("no-js","js");</script>
+    <script>const storage = localStorage.getItem("dokka-dark-mode")
+    if (storage == null) {
+        const osDarkSchemePreferred = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+        if (osDarkSchemePreferred === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    } else {
+        const savedDarkMode = JSON.parse(storage)
+        if(savedDarkMode === true) {
+            document.getElementsByTagName("html")[0].classList.add("theme-dark")
+        }
+    }
+    </script>
+<script type="text/javascript" src="https://unpkg.com/kotlin-playground@1/dist/playground.min.js" async></script>
+<script type="text/javascript" src="../../../../scripts/sourceset_dependencies.js" async></script>
+<link href="../../../../styles/style.css" rel="Stylesheet">
+<link href="../../../../styles/main.css" rel="Stylesheet">
+<link href="../../../../styles/prism.css" rel="Stylesheet">
+<link href="../../../../styles/logo-styles.css" rel="Stylesheet">
+<link href="../../../../styles/font-jb-sans-auto.css" rel="Stylesheet">
+<script type="text/javascript" src="../../../../scripts/clipboard.js" async></script>
+<script type="text/javascript" src="../../../../scripts/navigation-loader.js" async></script>
+<script type="text/javascript" src="../../../../scripts/platform-content-handler.js" async></script>
+<script type="text/javascript" src="../../../../scripts/main.js" defer></script>
+<script type="text/javascript" src="../../../../scripts/prism.js" async></script>
+<script type="text/javascript" src="../../../../scripts/symbol-parameters-wrapper_deferred.js" defer></script></head>
+<body>
+    <div class="root">
+<nav class="navigation" id="navigation-wrapper">
+    <div class="navigation--inner">
+        <div class="navigation-title">
+            <button class="menu-toggle" id="menu-toggle" type="button">toggle menu</button>
+            <div class="library-name">
+<a class="library-name--link" href="../../../../index.html">
+                            Zipline
+                    </a>            </div>
+            <div class="library-version">1.11.0
+            </div>
+        </div>
+        <div class="filter-section" id="filter-section">
+                <button class="platform-tag platform-selector common-like" data-active="" data-filter=":zipline:dokkaHtmlPartial/hostMain">host</button>
+        </div>
+    </div>
+    <div class="navigation-controls">
+        <button class="navigation-controls--btn navigation-controls--theme" id="theme-toggle-button" type="button">switch theme</button>
+        <div class="navigation-controls--btn navigation-controls--search" id="searchBar" role="button">search in API</div>
+    </div>
+</nav>
+        <div id="container">
+            <div class="sidebar" id="leftColumn">
+                <div class="sidebar--inner" id="sideMenu"></div>
+            </div>
+            <div id="main">
+<div class="main-content" data-page-type="classlike" id="content" pageids="zipline::app.cash.zipline/ZiplineManifest.Unsigned///PointingToDeclaration//-705021808">
+  <div class="breadcrumbs"><a href="../../../index.html">zipline</a><span class="delimiter">/</span><a href="../../index.html">app.cash.zipline</a><span class="delimiter">/</span><a href="../index.html">ZiplineManifest</a><span class="delimiter">/</span><span class="current">Unsigned</span></div>
+  <div class="cover ">
+    <h1 class="cover"><span><span>Unsigned</span></span></h1>
+    <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+      <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/Serializable///PointingToDeclaration/"><span class="token annotation builtin">Serializable</span></span></div></div><span class="token keyword">data </span><span class="token keyword">class </span><a href="index.html">Unsigned</a><span class="token punctuation">(</span><span class="parameters "><span class="parameter "><span class="token keyword">val </span>signatures<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token operator"> = </span>mapOf()<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>freshAtEpochMs<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter "><span class="token keyword">val </span>baseUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span><span class="clearfix"><span class="floating-right">(<a href="https://github.com/cashapp/zipline/tree/trunk//zipline/src/hostMain/kotlin/app/cash/zipline/ZiplineManifest.kt#L71">source</a>)</span></span></div><p class="paragraph">Properties of this manifest not authenticated by a signature. We prefer to define properties in the top-level manifest wherever possible.</p></div>    </div>
+  </div>
+  <div class="tabbedcontent">
+    <div class="tabs-section" tabs-section="tabs-section"><button class="section-tab" data-active="" data-togglable="CONSTRUCTOR,TYPE,PROPERTY,FUNCTION">Members</button></div>
+    <div class="tabs-section-body">
+      <div data-togglable="CONSTRUCTOR">
+        <h2 class="">Constructors</h2>
+        <div class="table"><a data-name="1919542597%2FConstructors%2F-705021808" anchor-label="Unsigned" id="1919542597%2FConstructors%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-togglable="CONSTRUCTOR" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="-unsigned.html"><span><span>Unsigned</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1919542597%2FConstructors%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">constructor</span><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">signatures<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span><span class="token operator"> = </span>mapOf()<span class="token punctuation">, </span></span><span class="parameter ">freshAtEpochMs<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null<span class="token punctuation">, </span></span><span class="parameter ">baseUrl<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</span></span><span class="token punctuation">)</span></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div data-togglable="PROPERTY">
+        <h2 class="">Properties</h2>
+        <div class="table"><a data-name="-709261273%2FProperties%2F-705021808" anchor-label="baseUrl" id="-709261273%2FProperties%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="base-url.html"><span>base</span><wbr><span><span>Url</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="-709261273%2FProperties%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">val </span><a href="base-url.html">baseUrl</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">?</span><span class="token operator"> = </span>null</div><div class="brief "><p class="paragraph">Optional URL to resolve module URLs against when downloading. If null, module URLs are relative to the URL that this manifest was loaded from.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="1427843111%2FProperties%2F-705021808" anchor-label="freshAtEpochMs" id="1427843111%2FProperties%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="fresh-at-epoch-ms.html"><span>fresh</span><wbr><span>At</span><wbr><span>Epoch</span><wbr><span><span>Ms</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="1427843111%2FProperties%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">val </span><a href="fresh-at-epoch-ms.html">freshAtEpochMs</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a><span class="token operator">?</span><span class="token operator"> = </span>null</div><div class="brief "><p class="paragraph">The newest timestamp that this manifest is known to be fresh. Typically, a manifest is fresh at the moment it is downloaded. If this field is null the caller should determine freshness independently.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+<a data-name="2112272602%2FProperties%2F-705021808" anchor-label="signatures" id="2112272602%2FProperties%2F-705021808" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain"></a>
+          <div class="table-row" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain">
+            <div class="main-subrow keyValue ">
+              <div class=""><span class="inline-flex">
+                  <div><a href="signatures.html"><span><span>signatures</span></span></a></div>
+<span class="anchor-wrapper"><span class="anchor-icon" pointing-to="2112272602%2FProperties%2F-705021808"></span>
+                    <div class="copy-popup-wrapper "><span class="copy-popup-icon"></span><span>Link copied to clipboard</span></div>
+                  </span></span></div>
+              <div>
+                <div class="title">
+                  <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
+                    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/hostMain" data-filterable-set=":zipline:dokkaHtmlPartial/hostMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/hostMain">host</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/hostMain"><div class="symbol monospace"><span class="token keyword">val </span><a href="signatures.html">signatures</a><span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin.collections/-map/index.html">Map</a><span class="token operator">&lt;</span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token punctuation">, </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-string/index.html">String</a><span class="token operator">&gt;</span></div><div class="brief "><p class="paragraph">A manifest may include many signatures, in order of preference. The keys of the map are the signing key names. The values of the map are hex-encoded signatures.</p></div></div>                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      <div class="footer">
+        <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
+      </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
