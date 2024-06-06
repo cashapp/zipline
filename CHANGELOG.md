@@ -7,7 +7,7 @@
  * New: `apiTracking` property on the `zipline { }` Gradle extension allows disabling API generation.
  * Fix: Calling `Zipline.close()` will now call `ZiplineService.close()` on all bound services. Strong
    references to the services will also be cleared to prevent reference cycles on native.
- * Upgrade: [Kotlin 2.0.0][kotlin_2_0_0]]
+ * Upgrade: [Kotlin 2.0.0][kotlin_2_0_0]
 
 
 ## [1.10.1] - 2024-05-13
