@@ -55,6 +55,9 @@ fun readFirZiplineApi(
 private val ziplineServiceClassId =
   ClassId(FqName("app.cash.zipline"), Name.identifier("ZiplineService"))
 
+private val autoCloseableClassId =
+  ClassId(FqName("java.lang"), Name.identifier("AutoCloseable"))
+
 /**
  * Read the frontend intermediate representation of a program and emit its ZiplineService
  * interfaces. These are subject to strict API compatibility requirements.
@@ -100,6 +103,7 @@ internal class FirZiplineApiReader(
 
     for (supertype in type.getAllSupertypes(session)) {
       if (!supertype.isInterface) continue // Skip kotlin.Any.
+      if (supertype.symbol.classId == autoCloseableClassId) continue // Skip AutoCloseable.
 
       for (declaration in supertype.declarations) {
         when (declaration) {

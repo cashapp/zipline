@@ -49,7 +49,7 @@ actual class Zipline private constructor(
   dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
   val eventListener: EventListener,
-) {
+) : AutoCloseable {
   private val endpoint = Endpoint(
     scope = scope,
     userSerializersModule = userSerializersModule,
@@ -140,7 +140,7 @@ actual class Zipline private constructor(
    *  * Accessing [quickJs].
    *  * Accessing the objects returned from [take].
    */
-  fun close() {
+  override fun close() {
     if (closed) return
     closed = true
 
