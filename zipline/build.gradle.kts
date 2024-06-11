@@ -65,6 +65,8 @@ kotlin {
         implementation(libs.assertk)
         implementation(kotlin("test"))
         implementation(projects.ziplineCryptography)
+        implementation(libs.kotlinx.coroutines.test)
+        implementation(projects.ziplineTesting)
       }
     }
 
@@ -76,10 +78,6 @@ kotlin {
     }
     val hostTest by creating {
       dependsOn(commonTest)
-      dependencies {
-        implementation(libs.kotlinx.coroutines.test)
-        implementation(projects.ziplineTesting)
-      }
     }
 
     val jniMain by creating {

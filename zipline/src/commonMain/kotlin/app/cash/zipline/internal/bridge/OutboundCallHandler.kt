@@ -27,13 +27,14 @@ import kotlin.coroutines.Continuation
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.serialization.KSerializer
 
 /**
  * Generated code uses this to make outbound calls.
  */
 @PublishedApi
 internal class OutboundCallHandler(
-  private val type: ZiplineServiceType<*>,
+  val sourceType: ZiplineServiceType<*>,
   private val serviceName: String,
   private val endpoint: Endpoint,
   private val adapter: ZiplineServiceAdapter<*>,
@@ -46,7 +47,7 @@ internal class OutboundCallHandler(
    */
   fun withScope(scope: ZiplineScope): OutboundCallHandler {
     return OutboundCallHandler(
-      type,
+      sourceType,
       serviceName,
       endpoint,
       adapter,
@@ -70,7 +71,23 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
-    val function = type.functions[functionIndex] as ReturningZiplineFunction<*>
+    val function = sourceType.functions[functionIndex] as ReturningZiplineFunction<*>
+    return callInternal(
+      service,
+      function,
+      function.argsListSerializer,
+      function.resultSerializer,
+      *args,
+    )
+  }
+
+  internal fun callInternal(
+    service: ZiplineService,
+    function: ZiplineFunction<*>,
+    argsListSerializer: ArgsListSerializer,
+    resultSerializer: ResultOrCallbackSerializer<*>,
+    vararg args: Any?,
+  ): Any? {
     if (function.isClose) {
       if (serviceState.closed) return Unit // ZiplineService.close() is idempotent.
       serviceState.closed = true
@@ -87,6 +104,7 @@ internal class OutboundCallHandler(
     val argsList = args.toList()
     val internalCall = InternalCall(
       serviceName = serviceName,
+      argsListSerializer = argsListSerializer,
       function = function,
       args = argsList,
     )
@@ -97,7 +115,7 @@ internal class OutboundCallHandler(
     }
     val encodedResult = endpoint.outboundChannel.call(externalCall.encodedCall)
     return endpoint.withTakeScope(scope) {
-      val callResult = endpoint.callCodec.decodeResult(function, encodedResult)
+      val callResult = endpoint.callCodec.decodeResult(resultSerializer, encodedResult)
       when (service) {
         !is SuspendCallback<*> -> {
           endpoint.eventListener.callEnd(externalCall, callResult, callStart)
@@ -118,9 +136,27 @@ internal class OutboundCallHandler(
     functionIndex: Int,
     vararg args: Any?,
   ): Any? {
+    val function = sourceType.functions[functionIndex] as SuspendingZiplineFunction<*>
+    return callSuspendingInternal(
+      service,
+      function,
+      function.argsListSerializer,
+      function.resultOrCallbackSerializer,
+      function.suspendCallbackSerializer,
+      *args,
+    )
+  }
+
+  internal suspend fun callSuspendingInternal(
+    service: ZiplineService,
+    function: ZiplineFunction<*>,
+    argsListSerializer: ArgsListSerializer,
+    resultOrCallbackSerializer: ResultOrCallbackSerializer<*>,
+    suspendCallbackSerializer: KSerializer<*>,
+    vararg args: Any?,
+  ): Any? {
     endpoint.scope.ensureActive()
 
-    val function = type.functions[functionIndex] as SuspendingZiplineFunction<*>
     check(!serviceState.closed) {
       """
       |$adapter $serviceName is closed, failed to call:
@@ -132,6 +168,8 @@ internal class OutboundCallHandler(
     val suspendCallback = RealSuspendCallback<Any?>()
     val internalCall = InternalCall(
       serviceName = serviceName,
+      argsListSerializer = argsListSerializer,
+      suspendCallbackSerializer = suspendCallbackSerializer,
       function = function,
       suspendCallback = suspendCallback,
       args = argsList,
@@ -143,7 +181,7 @@ internal class OutboundCallHandler(
 
     val resultOrCallbackJson = endpoint.outboundChannel.call(externalCall.encodedCall)
     val encodedResultOrCallback = endpoint.withTakeScope(scope) {
-      endpoint.callCodec.decodeResultOrCallback(function, resultOrCallbackJson)
+      endpoint.callCodec.decodeResultOrCallback(resultOrCallbackSerializer, resultOrCallbackJson)
     }
 
     // If the call returned a cancel callback, then it suspended and hasn't returned yet. Suspend
