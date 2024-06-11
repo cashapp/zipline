@@ -50,7 +50,7 @@ jobs:
           cp -v ../zipline-dockerbuild/build/jni/amd64/libquickjs.* zipline/src/jvmMain/resources/jni/amd64/
 
       - name: Build native library (macOS)
-        if: matrix.os == 'macos-latest'
+        if: matrix.os == 'macos-latest' || matrix.os == 'macos-latest-large'
         run: ./.github/workflows/build-mac.sh -a ${{ matrix.arch }} -c ${{ matrix.cmake-arch }}
 
       - name: Install libtinfo5
