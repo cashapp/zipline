@@ -30,3 +30,12 @@ val <T : ZiplineService> T.targetType: ZiplineServiceType<T>? get() {
   if (this !is OutboundService) return null
   return callHandler.targetType as ZiplineServiceType<T>?
 }
+
+/**
+ * Returns the type of this service according to its local declaration. Returns null if this service
+ * isn't an outbound service.
+ */
+val <T : ZiplineService> T.sourceType: ZiplineServiceType<T>? get() {
+  if (this !is OutboundService) return null
+  return callHandler.sourceType as ZiplineServiceType<T>?
+}
