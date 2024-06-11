@@ -82,8 +82,9 @@ internal class DynamicFunctionTest {
     assertThat(exception.message).isNotNull().contains("boom!")
   }
 
+  /** This test exercises the `SuspendCallback` path for suspending calls. */
   @Test
-  fun suspendedFunction() = runTest {
+  fun suspendedFunctionSuspends() = runTest {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val requests = Channel<EchoRequest>(1)
@@ -111,6 +112,31 @@ internal class DynamicFunctionTest {
     responses.send(EchoResponse("yo, suspended caller"))
     assertThat(JSON.stringify(deferred.await()))
       .isEqualTo("""{"message":"yo, suspended caller"}""")
+  }
+
+  /** This test exercises the synchronous return case for suspending calls. */
+  @Test
+  fun suspendedFunctionNotSuspended() = runTest {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val service = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        assertThat(request).isEqualTo(EchoRequest("don't suspend this call!"))
+        return EchoResponse("yo, unsuspended caller")
+      }
+    }
+
+    endpointA.bind<SuspendingEchoService>("service", service)
+    val client = endpointB.take<SuspendingEchoService>("service")
+
+    val echo = client.sourceType!!.functions.first { "suspendingEcho" in it.signature }
+    val dynamicEcho = echo.asDynamicSuspendingFunction()
+
+    val request = js("""{message:"don't suspend this call!"}""")
+    val response = dynamicEcho(client, listOf(request))
+
+    assertThat(JSON.stringify(response))
+      .isEqualTo("""{"message":"yo, unsuspended caller"}""")
   }
 
   @Test

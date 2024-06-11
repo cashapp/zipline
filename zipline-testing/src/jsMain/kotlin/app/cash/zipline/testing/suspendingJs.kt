@@ -18,6 +18,8 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.asDynamicSuspendingFunction
+import app.cash.zipline.sourceType
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.GlobalScope
@@ -59,6 +61,22 @@ fun callSuspendingEchoService(message: String) {
   GlobalScope.launch(start = CoroutineStart.UNDISPATCHED) {
     suspendingEchoResult = try {
       service.suspendingEcho(EchoRequest(message)).message
+    } catch (e: Exception) {
+      e.toString()
+    }
+  }
+}
+
+@OptIn(DelicateCoroutinesApi::class)
+@JsExport
+fun callSuspendingEchoServiceDynamically(message: String) {
+  val service = zipline.take<SuspendingEchoService>("jvmSuspendingEchoService")
+  val suspendingEcho = service.sourceType!!.functions.single { "suspendingEcho" in it.signature }
+    .asDynamicSuspendingFunction()
+  val request = js("""{"message":message}""")
+  GlobalScope.launch(start = CoroutineStart.UNDISPATCHED) {
+    suspendingEchoResult = try {
+      suspendingEcho(service, listOf(request)).asDynamic().message
     } catch (e: Exception) {
       e.toString()
     }
