@@ -8,16 +8,6 @@ plugins {
 kotlin {
   jvm()
 
-  if (project.property("enableK2").toString().toBooleanStrict()) {
-    targets.configureEach {
-      compilations.configureEach {
-        compilerOptions.options.languageVersion.set(
-          org.jetbrains.kotlin.gradle.dsl.KotlinVersion.KOTLIN_2_0,
-        )
-      }
-    }
-  }
-
   sourceSets {
     val jvmMain by getting {
       dependencies {
