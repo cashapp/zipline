@@ -519,6 +519,7 @@ class ZiplineGradlePluginTest {
   ): GradleRunner {
     val gradleRoot = projectDir.resolve("gradle").also { it.mkdir() }
     File("../gradle/wrapper").copyRecursively(gradleRoot.resolve("wrapper"), true)
+    File(projectDir, "kotlin-js-store/yarn.lock").delete()
     val arguments = arrayOf("--info", "--stacktrace", "--continue")
     return GradleRunner.create()
       .withProjectDir(projectDir)
