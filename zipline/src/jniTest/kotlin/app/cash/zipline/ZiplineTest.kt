@@ -117,8 +117,10 @@ class ZiplineTest {
   @Test fun jsCallJvmServiceUsingDynamicFunction() = runTest(dispatcher) {
     zipline.bind<EchoService>("supService", JvmEchoService("sup"))
 
-    assertThat(zipline.quickJs.evaluate(
-      "testing.app.cash.zipline.testing.callSupServiceDynamically('homie')")
+    assertThat(
+      zipline.quickJs.evaluate(
+      "testing.app.cash.zipline.testing.callSupServiceDynamically('homie')",
+      ),
     ).isEqualTo("JavaScript received 'sup from the JVM, homie' dynamically")
   }
 
@@ -168,7 +170,7 @@ class ZiplineTest {
     )
 
     zipline.quickJs.evaluate(
-      "testing.app.cash.zipline.testing.callSuspendingEchoServiceDynamically('Dylan')"
+      "testing.app.cash.zipline.testing.callSuspendingEchoServiceDynamically('Dylan')",
     )
     assertThat(zipline.quickJs.evaluate("testing.app.cash.zipline.testing.suspendingEchoResult"))
       .isEqualTo("hello dynamic and suspending, Dylan")
