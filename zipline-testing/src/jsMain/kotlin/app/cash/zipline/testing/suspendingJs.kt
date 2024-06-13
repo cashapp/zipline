@@ -76,7 +76,7 @@ fun callSuspendingEchoServiceDynamically(message: String) {
   val request = js("""{"message":message}""")
   GlobalScope.launch(start = CoroutineStart.UNDISPATCHED) {
     suspendingEchoResult = try {
-      suspendingEcho(service, listOf(request)).asDynamic().message
+      suspendingEcho(service, arrayOf(request)).asDynamic().message
     } catch (e: Exception) {
       e.toString()
     }

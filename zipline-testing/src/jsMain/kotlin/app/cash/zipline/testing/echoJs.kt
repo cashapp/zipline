@@ -56,6 +56,6 @@ fun callSupServiceDynamically(message: String): String {
   val supService = zipline.take<EchoService>("supService")
   val echoFunction = supService.sourceType!!.functions.single { "echo" in it.signature }
     .asDynamicFunction()
-  val echoResponse = echoFunction(supService, listOf(js("""{"message":message}""")))
+  val echoResponse = echoFunction(supService, arrayOf(js("""{"message":message}""")))
   return "JavaScript received '${echoResponse.asDynamic().message}' dynamically"
 }

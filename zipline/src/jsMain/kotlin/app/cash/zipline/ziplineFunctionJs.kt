@@ -43,7 +43,7 @@ import kotlinx.serialization.json.encodeToDynamic
  * bridged functions on Zipline services.
  */
 @ExperimentalSerializationApi
-fun <T : ZiplineService> ZiplineFunction<T>.asDynamicFunction(): (service: T, args: List<*>) -> Any? {
+fun <T : ZiplineService> ZiplineFunction<T>.asDynamicFunction(): (service: T, args: Array<*>) -> Any? {
   require(this is ReturningZiplineFunction<T>) {
     "asDynamicFunction() cannot be called on $this"
   }
@@ -60,7 +60,7 @@ fun <T : ZiplineService> ZiplineFunction<T>.asDynamicFunction(): (service: T, ar
       function = this@asDynamicFunction,
       argsListSerializer = argsListSerializer,
       resultSerializer = resultSerializer,
-      args = args.toTypedArray(),
+      args = args,
     )
   }
 }
@@ -74,7 +74,7 @@ fun <T : ZiplineService> ZiplineFunction<T>.asDynamicFunction(): (service: T, ar
  * bridged functions on Zipline services.
  */
 @ExperimentalSerializationApi
-fun <T : ZiplineService> ZiplineFunction<T>.asDynamicSuspendingFunction(): suspend (service: T, args: List<*>) -> Any? {
+fun <T : ZiplineService> ZiplineFunction<T>.asDynamicSuspendingFunction(): suspend (service: T, args: Array<*>) -> Any? {
   require(this is SuspendingZiplineFunction<T>) {
     "asDynamicSuspendingFunction() cannot be called on $this"
   }
@@ -96,7 +96,7 @@ fun <T : ZiplineService> ZiplineFunction<T>.asDynamicSuspendingFunction(): suspe
       argsListSerializer = argsListSerializer,
       resultOrCallbackSerializer = resultOrCallbackSerializer,
       suspendCallbackSerializer = dynamicSuspendCallbackSerializer,
-      args = args.toTypedArray(),
+      args = args,
     )
   }
 }

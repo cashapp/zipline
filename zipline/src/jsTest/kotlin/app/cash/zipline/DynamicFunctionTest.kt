@@ -56,7 +56,7 @@ internal class DynamicFunctionTest {
     val dynamicEcho = echo.asDynamicFunction()
 
     val request = js("""{message:"dynamic caller!"}""")
-    val response = dynamicEcho(client, listOf(request))
+    val response = dynamicEcho(client, arrayOf(request))
     assertThat(JSON.stringify(response))
       .isEqualTo("""{"message":"yo, dynamic caller!"}""")
   }
@@ -77,7 +77,7 @@ internal class DynamicFunctionTest {
 
     val request = js("""{message:"will it throw?"}""")
     val exception = assertFailsWith<ZiplineException> {
-      dynamicEcho(client, listOf(request))
+      dynamicEcho(client, arrayOf(request))
     }
     assertThat(exception.message).isNotNull().contains("boom!")
   }
@@ -105,7 +105,7 @@ internal class DynamicFunctionTest {
 
     val deferred: Deferred<Any?> = async {
       val request = js("""{message:"suspend this call!"}""")
-      return@async dynamicEcho(client, listOf(request))
+      return@async dynamicEcho(client, arrayOf(request))
     }
 
     assertThat(requests.receive()).isEqualTo(EchoRequest("suspend this call!"))
@@ -133,7 +133,7 @@ internal class DynamicFunctionTest {
     val dynamicEcho = echo.asDynamicSuspendingFunction()
 
     val request = js("""{message:"don't suspend this call!"}""")
-    val response = dynamicEcho(client, listOf(request))
+    val response = dynamicEcho(client, arrayOf(request))
 
     assertThat(JSON.stringify(response))
       .isEqualTo("""{"message":"yo, unsuspended caller"}""")
@@ -246,22 +246,22 @@ internal class DynamicFunctionTest {
 
     val blockingAcceptFunction = functions.first { "blockingAccept" in it.signature }
       .asDynamicFunction()
-    val blockingAcceptResult = blockingAcceptFunction(client, listOf(jsValue))
+    val blockingAcceptResult = blockingAcceptFunction(client, arrayOf(jsValue))
     assertThat(JSON.stringify(blockingAcceptResult)).isEqualTo("{}")
 
     val suspendingAcceptFunction = functions.first { "suspendingAccept" in it.signature }
       .asDynamicSuspendingFunction()
-    val suspendingAcceptResult = suspendingAcceptFunction(client, listOf(jsValue))
+    val suspendingAcceptResult = suspendingAcceptFunction(client, arrayOf(jsValue))
     assertThat(JSON.stringify(suspendingAcceptResult)).isEqualTo("{}")
 
     val blockingProduceFunction = functions.first { "blockingProduce" in it.signature }
       .asDynamicFunction()
-    val blockingProduceResult = blockingProduceFunction(client, listOf<Any?>())
+    val blockingProduceResult = blockingProduceFunction(client, arrayOf<Any?>())
     assertThat(JSON.stringify(blockingProduceResult)).isEqualTo(JSON.stringify(jsValue))
 
     val suspendingProduceFunction = functions.first { "suspendingProduce" in it.signature }
       .asDynamicSuspendingFunction()
-    val suspendingProduceResult = suspendingProduceFunction(client, listOf<Any?>())
+    val suspendingProduceResult = suspendingProduceFunction(client, arrayOf<Any?>())
     assertThat(JSON.stringify(suspendingProduceResult)).isEqualTo(JSON.stringify(jsValue))
   }
 
@@ -270,5 +270,34 @@ internal class DynamicFunctionTest {
     suspend fun suspendingAccept(argument: T)
     fun blockingProduce(): T
     suspend fun suspendingProduce(): T
+  }
+
+  @Test
+  fun multipleArguments() = runTest {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val service = object : ConcatService {
+      override fun blockingConcat(a: String, b: Int, c: String) = "$a$b$c"
+      override suspend fun suspendingConcat(a: String, b: Int, c: String) = "$a$b$c"
+    }
+
+    endpointA.bind<ConcatService>("service", service)
+    val client = endpointB.take<ConcatService>("service")
+    val functions = client.sourceType!!.functions
+
+    val blockingConcat = functions.first { "blockingConcat" in it.signature }
+    val dynamicBlockingConcat = blockingConcat.asDynamicFunction()
+    assertThat(JSON.stringify(dynamicBlockingConcat(client, arrayOf("one ", 2, " three"))))
+      .isEqualTo(""""one 2 three"""")
+
+    val suspendingConcat = functions.first { "suspendingConcat" in it.signature }
+    val dynamicSuspendingConcat = suspendingConcat.asDynamicSuspendingFunction()
+    assertThat(JSON.stringify(dynamicSuspendingConcat(client, arrayOf("four ", 5, " six"))))
+      .isEqualTo(""""four 5 six"""")
+  }
+
+  interface ConcatService : ZiplineService {
+    fun blockingConcat(a: String, b: Int, c: String): String
+    suspend fun suspendingConcat(a: String, b: Int, c: String): String
   }
 }
