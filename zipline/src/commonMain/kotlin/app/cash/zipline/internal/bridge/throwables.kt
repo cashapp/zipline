@@ -32,7 +32,10 @@ internal expect fun toInboundThrowable(
 
 /**
  * Cancellation exceptions are special in Zipline because they occur normally and do not indicate
- * that the system has failed.
+ * that the system has failed. We avoid allocating a new instance on each occurrence as an
+ * optimization. This is particularly useful on Kotlin/Native, where creating stack traces is slow.
+ *
+ * https://github.com/cashapp/zipline/issues/1340
  */
 internal val theOnlyCancellationException = CancellationException("canceled")
 
