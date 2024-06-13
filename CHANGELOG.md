@@ -2,6 +2,22 @@
 
 ## Unreleased
 
+## [1.12.0] - 2024-06-13
+
+ * Fix: Don't allocate a stack trace when canceling a coroutine or a job. We've observed that
+   applications create many instances of `CancellationException`, such as when canceling a flow
+   in routine business logic. Unfortunately, we've also seen that creating the stack traces for
+   these exceptions is slow on Kotlin/Native. With this update Zipline reuses a single instance of
+   CancellationException everywhere. We believe that losing the diagnostic information is worth
+   the performance benefit.
+ * Fix: Don't break the configuration cache. Zipline's compile task violated a Gradle requirement
+   by reading another task's property before that task had completed.
+ * New: `ZiplineFunction.asDynamicFunction()` short-circuits Kotlin Serialization in Kotlin/JS. This
+   new mechanism allows performance-sensitive code to reduce the amount of work required to call
+   bridged functions.
+ * Upgrade: [Kotlin Serialization 1.7.0][kotlin_serialization_1_7_0].
+
+
 ## [1.11.0] - 2024-06-05
 
  * New: `apiTracking` property on the `zipline { }` Gradle extension allows disabling API generation.
@@ -506,6 +522,7 @@ Initial release.
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
 [kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
 [kotlin_serialization_1_6_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.6.0
+[kotlin_serialization_1_7_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.7.0
 [kotlinx_coroutines_1_7_1]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.1
 [kotlinx_coroutines_1_7_2]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.2
 [kotlinx_coroutines_1_7_3]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.3
