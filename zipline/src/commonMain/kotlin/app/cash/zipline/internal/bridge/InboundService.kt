@@ -86,7 +86,7 @@ internal class InboundService<T : ZiplineService>(
         override var passByReferenceName: String? = null
 
         override fun cancel() {
-          deferred.cancel()
+          deferred.cancel(theOnlyCancellationException)
         }
 
         override fun toString() = "CancelCallback/$internalCall"

@@ -17,7 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineApiMismatchException
 import app.cash.zipline.ZiplineException
-import kotlin.coroutines.cancellation.CancellationException
+import kotlinx.coroutines.CancellationException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encoding.Decoder
