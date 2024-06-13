@@ -16,6 +16,9 @@
 package app.cash.zipline
 
 import app.cash.zipline.internal.bridge.ThrowableSerializer
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
@@ -102,5 +105,27 @@ class ThrowableSerializerTest {
     val decoded = json.decodeFromString(ThrowableSerializer, exceptionJson)
     assertEquals(ZiplineApiMismatchException::class, decoded::class)
     assertEquals("SomeFutureException: boom", decoded.message)
+  }
+
+  @Test fun cancellationExceptionReturnsConstantInstance() {
+    val exception = CancellationException("boom")
+    exception.stackTrace = arrayOf(
+      StackTraceElement("ThrowableSerializerTest", "goBoom", "test.kt", 5),
+    )
+
+    val exceptionJson = """
+      |{
+      |    "types": [
+      |        "CancellationException"
+      |    ],
+      |    "stacktraceString": ""
+      |}
+      """.trimMargin()
+
+    assertThat(json.encodeToString(ThrowableSerializer, exception)).isEqualTo(exceptionJson)
+
+    val decoded = json.decodeFromString(ThrowableSerializer, exceptionJson)
+    assertEquals(CancellationException::class, decoded::class)
+    assertThat(decoded.message).isEqualTo("canceled")
   }
 }

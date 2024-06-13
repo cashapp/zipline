@@ -17,6 +17,7 @@ package app.cash.zipline.internal.bridge
 
 import app.cash.zipline.ZiplineApiMismatchException
 import app.cash.zipline.ZiplineException
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.serialization.KSerializer
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encoding.Decoder
@@ -28,6 +29,12 @@ internal expect fun toInboundThrowable(
   stacktraceString: String,
   constructor: (String) -> Throwable,
 ): Throwable
+
+/**
+ * Cancellation exceptions are special in Zipline because they occur normally and do not indicate
+ * that the system has failed.
+ */
+internal val theOnlyCancellationException = CancellationException("canceled")
 
 /**
  * Serialize a [Throwable] in two parts:
@@ -58,6 +65,17 @@ internal object ThrowableSerializer : KSerializer<Throwable> {
   override val descriptor = surrogateSerializer.descriptor
 
   override fun serialize(encoder: Encoder, value: Throwable) {
+    if (value is CancellationException) {
+      encoder.encodeSerializableValue(
+        surrogateSerializer,
+        ThrowableSurrogate(
+          types = listOf("CancellationException"),
+          stacktraceString = "",
+        ),
+      )
+      return
+    }
+
     val stacktraceString = stacktraceString(value)
     val typeNames = knownTypeNames(value)
 
@@ -72,6 +90,10 @@ internal object ThrowableSerializer : KSerializer<Throwable> {
 
   override fun deserialize(decoder: Decoder): Throwable {
     val surrogate = decoder.decodeSerializableValue(surrogateSerializer)
+
+    if ("CancellationException" in surrogate.types) {
+      return theOnlyCancellationException
+    }
 
     // Find a throwable type to decode as.
     val typeNameToConstructor: Pair<String, (String) -> Throwable> =
