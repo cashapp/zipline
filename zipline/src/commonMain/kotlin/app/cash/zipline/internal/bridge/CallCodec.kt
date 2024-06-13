@@ -117,26 +117,20 @@ internal class CallCodec(
   }
 
   internal fun decodeResult(
-    function: ReturningZiplineFunction<*>,
+    serializer: ResultOrCallbackSerializer<*>,
     resultJson: String,
   ): CallResult {
     decodedServiceNames.clear()
-    val result = endpoint.json.decodeFromStringFast(
-      function.resultSerializer,
-      resultJson,
-    )
+    val result = endpoint.json.decodeFromStringFast(serializer, resultJson)
     return CallResult(result.result!!, resultJson, decodedServiceNames)
   }
 
   internal fun decodeResultOrCallback(
-    function: SuspendingZiplineFunction<*>,
+    serializer: ResultOrCallbackSerializer<*>,
     resultOrCallbackJson: String,
   ): EncodedResultOrCallback {
     decodedServiceNames.clear()
-    val result = endpoint.json.decodeFromStringFast(
-      function.resultOrCallbackSerializer,
-      resultOrCallbackJson,
-    )
+    val result = endpoint.json.decodeFromStringFast(serializer, resultOrCallbackJson)
     return EncodedResultOrCallback(result, resultOrCallbackJson, decodedServiceNames)
   }
 }

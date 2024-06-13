@@ -37,6 +37,12 @@ internal class InternalCall(
   /** This is not-null, but may refer to a service that is not known by this endpoint. */
   val serviceName: String,
 
+  /** This is non-null for outbound calls. */
+  val argsListSerializer: ArgsListSerializer? = null,
+
+  /** This is non-null for suspending outbound calls. */
+  val suspendCallbackSerializer: KSerializer<*>? = null,
+
   /** This is absent for outbound calls. */
   val inboundService: InboundService<*>? = null,
 
@@ -92,19 +98,15 @@ internal class RealCallSerializer(
       encodeStringElement(descriptor, 0, value.serviceName)
       encodeStringElement(descriptor, 1, value.function.id)
       if (value.suspendCallback != null) {
-        val function = value.function as SuspendingZiplineFunction<*>
         @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
         encodeSerializableElement(
           descriptor,
           2,
-          function.suspendCallbackSerializer as KSerializer<Any?>,
+          value.suspendCallbackSerializer as KSerializer<Any?>,
           value.suspendCallback,
         )
-        encodeSerializableElement(descriptor, 3, function.argsListSerializer, value.args)
-      } else {
-        val function = value.function as ReturningZiplineFunction<*>
-        encodeSerializableElement(descriptor, 3, function.argsListSerializer, value.args)
       }
+      encodeSerializableElement(descriptor, 3, value.argsListSerializer!!, value.args)
     }
   }
 
