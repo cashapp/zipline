@@ -78,7 +78,7 @@ abstract class ZiplineCompileTask : DefaultTask() {
   ) {
     description = "Compile .js to .zipline"
 
-    val linkOutputFolderProvider = jsProductionTask.outputFile.map { it.parentFile }
+    val linkOutputFolderProvider = jsProductionTask.outputFile.map { it.asFile.parentFile }
     inputDir.fileProvider(linkOutputFolderProvider)
     outputDir.fileProvider(
       linkOutputFolderProvider.map {

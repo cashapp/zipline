@@ -15,8 +15,7 @@
  */
 package app.cash.zipline.gradle
 
-import java.io.File
-import org.gradle.api.internal.provider.DefaultProvider
+import org.gradle.api.file.RegularFile
 import org.gradle.api.provider.Provider
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
 import org.jetbrains.kotlin.gradle.targets.js.ir.JsIrBinary
@@ -39,7 +38,7 @@ internal interface JsProductionTask {
 
   val mode: KotlinJsBinaryMode
 
-  val outputFile: Provider<File>
+  val outputFile: Provider<RegularFile>
 }
 
 /** Output of the Kotlin compiler. */
@@ -49,9 +48,9 @@ internal fun JsIrBinary.asJsProductionTask(): JsProductionTask {
     override val targetName get() = target.name
     override val toolName = null
     override val mode get() = this@asJsProductionTask.mode
-    override val outputFile get() = linkTask.map {
-      @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER")
-      it._outputFileProperty.get()
+    override val outputFile get() = linkTask.flatMap { kotlinJsIrLink ->
+      kotlinJsIrLink.destinationDirectory
+        .file(kotlinJsIrLink.compilerOptions.moduleName.map { "$it.js" })
     }
   }
 }
@@ -67,6 +66,6 @@ internal fun KotlinWebpack.asJsProductionTask(): JsProductionTask {
       name.endsWith("ProductionWebpack") -> KotlinJsBinaryMode.PRODUCTION
       else -> error("unexpected KotlinWebpack task name: $name")
     }
-    override val outputFile get() = DefaultProvider { this@asJsProductionTask.outputFile }
+    override val outputFile get() = this@asJsProductionTask.mainOutputFile
   }
 }

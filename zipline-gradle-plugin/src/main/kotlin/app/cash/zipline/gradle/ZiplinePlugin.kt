@@ -60,11 +60,14 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
     kotlinExtension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
       kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
-        registerCompileZiplineTask(
+        val ziplineCompileTask = registerCompileZiplineTask(
           project = target,
           jsProductionTask = kotlinBinary.asJsProductionTask(),
           extension = ziplineExtension,
         )
+        ziplineCompileTask.configure {
+          it.dependsOn(kotlinBinary.linkTask)
+        }
       }
     }
 
@@ -141,6 +144,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       createdTask.description = "Serves Zipline files"
       createdTask.inputDir.set(ziplineCompileTask.flatMap { it.outputDir })
       createdTask.port.set(extension.httpServerPort)
+      createdTask.dependsOn(ziplineCompileTask)
     }
 
     return ziplineCompileTask
