@@ -27,6 +27,7 @@ import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
 import app.cash.zipline.internal.bridge.stopTrackingLeaks
+import app.cash.zipline.internal.bridge.theOnlyCancellationException
 import app.cash.zipline.internal.initModuleLoader
 import app.cash.zipline.internal.loadJsModule
 import kotlin.coroutines.resumeWithException
@@ -145,7 +146,7 @@ actual class Zipline private constructor(
 
     var thrown: Throwable? = null
 
-    scope.cancel()
+    scope.cancel(theOnlyCancellationException)
 
     // Close all caller-provided services that are still open. We clear the map to prevent possible
     // retain cycles on Kotlin/Native where some objects may be reference-counted.

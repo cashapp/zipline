@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.internal
 
+import app.cash.zipline.internal.bridge.theOnlyCancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart.UNDISPATCHED
@@ -65,7 +66,7 @@ internal class CoroutineEventLoop(
 
     fun cancel() {
       canceled = true
-      job?.cancel()
+      job?.cancel(theOnlyCancellationException)
     }
   }
 }
