@@ -2,7 +2,7 @@
 <html class="no-js">
 <head>
     <meta name="viewport" content="width=device-width, initial-scale=1" charset="UTF-8">
-    <title>[jvm]ZiplineCache</title>
+    <title>asDynamicFunction</title>
 <link href="../../images/logo-icon.svg" rel="icon" type="image/svg">    <script>var pathToRoot = "../../";</script>
     <script>document.documentElement.classList.replace("no-js","js");</script>
     <script>const storage = localStorage.getItem("dokka-dark-mode")
@@ -45,7 +45,7 @@
             </div>
         </div>
         <div class="filter-section" id="filter-section">
-                <button class="platform-tag platform-selector jvm-like" data-active="" data-filter=":zipline-loader:dokkaHtmlPartial/jvmMain">jvm</button>
+                <button class="platform-tag platform-selector js-like" data-active="" data-filter=":zipline:dokkaHtmlPartial/jsMain">js</button>
         </div>
     </div>
     <div class="navigation-controls">
@@ -58,14 +58,14 @@
                 <div class="sidebar--inner" id="sideMenu"></div>
             </div>
             <div id="main">
-<div class="main-content" data-page-type="member" id="content" pageids="zipline-loader::app.cash.zipline.loader//ZiplineCache/#okio.FileSystem#okio.Path#kotlin.Long/PointingToDeclaration//-1896906930">
-  <div class="breadcrumbs"><a href="../index.html">zipline-loader</a><span class="delimiter">/</span><a href="index.html">app.cash.zipline.loader</a><span class="delimiter">/</span><span class="current">[jvm]ZiplineCache</span></div>
+<div class="main-content" data-page-type="member" id="content" pageids="zipline::app.cash.zipline//asDynamicFunction/app.cash.zipline.ZiplineFunction[TypeParam(bounds=[app.cash.zipline.ZiplineService])]#/PointingToDeclaration//-1254650990">
+  <div class="breadcrumbs"><a href="../index.html">zipline</a><span class="delimiter">/</span><a href="index.html">app.cash.zipline</a><span class="delimiter">/</span><span class="current">asDynamicFunction</span></div>
   <div class="cover ">
-    <h1 class="cover"><span>Zipline</span><wbr><span><span>Cache</span></span></h1>
+    <h1 class="cover"><span>as</span><wbr><span>Dynamic</span><wbr><span><span>Function</span></span></h1>
   </div>
   <div class="platform-hinted  with-platform-tabs" data-platform-hinted="data-platform-hinted">
-    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline-loader:dokkaHtmlPartial/jvmMain" data-filterable-set=":zipline-loader:dokkaHtmlPartial/jvmMain" data-active="" data-toggle=":zipline-loader:dokkaHtmlPartial/jvmMain">jvm</button></div>
-<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline-loader:dokkaHtmlPartial/jvmMain"><div class="symbol monospace"><span class="token keyword">fun </span><a href="[jvm]-zipline-cache.html"><span class="token function">ZiplineCache</span></a><span class="token punctuation">(</span><span class="parameters "><span class="parameter ">fileSystem<span class="token operator">: </span><span data-unresolved-link="okio/FileSystem///PointingToDeclaration/">FileSystem</span><span class="token punctuation">, </span></span><span class="parameter ">directory<span class="token operator">: </span><span data-unresolved-link="okio/Path///PointingToDeclaration/">Path</span><span class="token punctuation">, </span></span><span class="parameter ">maxSizeInBytes<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-long/index.html">Long</a></span></span><span class="token punctuation">)</span><span class="token operator">: </span><a href="-zipline-cache/index.html">ZiplineCache</a><span class="clearfix"><span class="floating-right">(<a href="https://github.com/cashapp/zipline/tree/trunk//zipline-loader/src/jvmMain/kotlin/app/cash/zipline/loader/loaderJvm.kt#L22">source</a>)</span></span></div></div>  </div>
+    <div class="platform-bookmarks-row" data-toggle-list="data-toggle-list"><button class="platform-bookmark" data-filterable-current=":zipline:dokkaHtmlPartial/jsMain" data-filterable-set=":zipline:dokkaHtmlPartial/jsMain" data-active="" data-toggle=":zipline:dokkaHtmlPartial/jsMain">js</button></div>
+<div class="content sourceset-dependent-content" data-active="" data-togglable=":zipline:dokkaHtmlPartial/jsMain"><div class="symbol monospace"><div class="block"><div class="block"><span class="token annotation builtin">@</span><span data-unresolved-link="kotlinx.serialization/ExperimentalSerializationApi///PointingToDeclaration/"><span class="token annotation builtin">ExperimentalSerializationApi</span></span></div></div><span class="token keyword">fun </span><span class="token operator">&lt;</span><a href="as-dynamic-function.html">T</a><span class="token operator"> : </span><a href="-zipline-service/index.html">ZiplineService</a><span class="token operator">&gt; </span><a href="-zipline-function/index.html">ZiplineFunction</a><span class="token operator">&lt;</span><a href="as-dynamic-function.html">T</a><span class="token operator">&gt;</span><span class="token punctuation">.</span><a href="as-dynamic-function.html"><span class="token function">asDynamicFunction</span></a><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">: </span><span class="token punctuation">(</span>service<span class="token operator">: </span><a href="as-dynamic-function.html">T</a><span class="token punctuation">, </span>args<span class="token operator">: </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-array/index.html">Array</a><span class="token operator">&lt;</span><span class="token operator">*</span><span class="token operator">&gt;</span><span class="token punctuation">)</span><span class="token operator"> -&gt; </span><a href="https://kotlinlang.org/api/latest/jvm/stdlib/kotlin/-any/index.html">Any</a><span class="token operator">?</span><span class="clearfix"><span class="floating-right">(<a href="https://github.com/cashapp/zipline/tree/trunk//zipline/src/jsMain/kotlin/app/cash/zipline/ziplineFunctionJs.kt#L46">source</a>)</span></span></div><p class="paragraph">Returns a function that accepts and returns plain JavaScript objects, instead of regular Kotlin values. (The function's receiver will still receive regular Kotlin values as parameters, and return a regular Kotlin value as a result.)</p><p class="paragraph">Use this in highly performance-sensitive code to reduce the amount of work required to call bridged functions on Zipline services.</p></div>  </div>
 </div>
       <div class="footer">
         <span class="go-to-top-icon"><a href="#content" id="go-to-top-link"></a></span><span>© 2024 Copyright</span><span class="pull-right"><span>Generated by </span><a href="https://github.com/Kotlin/dokka"><span>dokka</span><span class="padded-icon"></span></a></span>
