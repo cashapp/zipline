@@ -60,14 +60,11 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
     kotlinExtension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
       kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
-        val ziplineCompileTask = registerCompileZiplineTask(
+        registerCompileZiplineTask(
           project = target,
           jsProductionTask = kotlinBinary.asJsProductionTask(),
           extension = ziplineExtension,
         )
-        ziplineCompileTask.configure {
-          it.dependsOn(kotlinBinary.linkTask)
-        }
       }
     }
 
@@ -125,26 +122,27 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     jsProductionTask: JsProductionTask,
     extension: ZiplineExtension,
   ): TaskProvider<ZiplineCompileTask> {
+    val target = (if (jsProductionTask.targetName == "js") "" else jsProductionTask.targetName)
+    val mode = jsProductionTask.mode.name
+    val toolName = jsProductionTask.toolName ?: ""
+
     // For every JS executable, create a task that compiles its .js to .zipline.
-    //   input: build/compileSync/js/main/productionExecutable/kotlin
-    //   output: build/compileSync/js/main/productionExecutable/kotlinZipline
+    //   input:  build/compileSync/js/main/productionExecutable/kotlin
+    //   output: build/zipline/Production
+    val outputDirectoryName = "${target.capitalize()}${mode.capitalize()}$toolName"
     val ziplineCompileTask = project.tasks.register(
       "${jsProductionTask.name}Zipline",
       ZiplineCompileTask::class.java,
     )
     ziplineCompileTask.configure {
-      it.configure(jsProductionTask, extension)
+      it.configure(outputDirectoryName, jsProductionTask, extension)
     }
 
-    val target = (if (jsProductionTask.targetName == "js") "" else jsProductionTask.targetName)
-    val mode = jsProductionTask.mode.name
-    val toolName = jsProductionTask.toolName ?: ""
     val serveTaskName = "serve${target.capitalize()}${mode.capitalize()}${toolName}Zipline"
     project.tasks.register(serveTaskName, ZiplineServeTask::class.java) { createdTask ->
       createdTask.description = "Serves Zipline files"
       createdTask.inputDir.set(ziplineCompileTask.flatMap { it.outputDir })
       createdTask.port.set(extension.httpServerPort)
-      createdTask.dependsOn(ziplineCompileTask)
     }
 
     return ziplineCompileTask

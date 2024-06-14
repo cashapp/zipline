@@ -38,9 +38,7 @@ class ZiplineGradlePluginTest {
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
-    val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/productionExecutable/kotlinZipline",
-    )
+    val ziplineOut = projectDir.resolve("lib/build/zipline/Production")
     assertThat(ziplineOut.resolve(manifestFileName).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
   }
@@ -58,9 +56,7 @@ class ZiplineGradlePluginTest {
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
-    val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline",
-    )
+    val ziplineOut = projectDir.resolve("lib/build/zipline/Development")
     assertThat(ziplineOut.resolve(manifestFileName).exists()).isTrue()
     assertThat(ziplineOut.resolve("basic-lib.zipline").exists()).isTrue()
   }
@@ -188,9 +184,7 @@ class ZiplineGradlePluginTest {
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
-    val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/blue/main/developmentExecutable/kotlinZipline",
-    )
+    val ziplineOut = projectDir.resolve("lib/build/zipline/BlueDevelopment")
     val manifest = ziplineOut.resolve(manifestFileName)
     assertThat(manifest.exists()).isTrue()
     assertThat(manifest.readText())
@@ -207,9 +201,7 @@ class ZiplineGradlePluginTest {
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
-    val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline",
-    )
+    val ziplineOut = projectDir.resolve("lib/build/zipline/Development")
     val manifest = ziplineOut.resolve(manifestFileName)
     val manifestText = manifest.readText()
     assertThat(manifestText)
@@ -227,9 +219,7 @@ class ZiplineGradlePluginTest {
     assertThat(SUCCESS_OUTCOMES)
       .contains(result.task(taskName)!!.outcome)
 
-    val ziplineOut = projectDir.resolve(
-      "lib/build/compileSync/js/main/developmentExecutable/kotlinZipline",
-    )
+    val ziplineOut = projectDir.resolve("lib/build/zipline/Development")
     val manifest = ziplineOut.resolve(manifestFileName)
     assertThat(manifest.readText())
       .containsMatch(Regex(""""signatures":\{"key1":"\w{128}","key2":"\w{128}"}"""))
