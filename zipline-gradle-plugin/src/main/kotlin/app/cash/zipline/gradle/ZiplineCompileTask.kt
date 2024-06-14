@@ -73,19 +73,15 @@ abstract class ZiplineCompileTask : DefaultTask() {
   abstract val stripLineNumbers: Property<Boolean>
 
   internal fun configure(
+    outputDirectoryName: String,
     jsProductionTask: JsProductionTask,
     extension: ZiplineExtension,
   ) {
     description = "Compile .js to .zipline"
 
-    val linkOutputFolderProvider = jsProductionTask.outputFile.map { it.asFile.parentFile }
-    inputDir.fileProvider(linkOutputFolderProvider)
-    outputDir.fileProvider(
-      linkOutputFolderProvider.map {
-        it.parentFile.resolve("${it.name}Zipline")
-      },
-    )
+    inputDir.fileProvider(jsProductionTask.outputFile.map { it.asFile.parentFile })
 
+    outputDir.set(project.layout.buildDirectory.dir("zipline/$outputDirectoryName"))
     mainModuleId.set(extension.mainModuleId)
     mainFunction.set(extension.mainFunction)
     version.set(extension.version)

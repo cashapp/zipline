@@ -38,8 +38,8 @@ suspend fun launchZipline(
   // A fake HTTP client that returns files as the Webpack dev server would return them.
   val localDirectoryHttpClient = object : ZiplineHttpClient() {
     val base = when (optimizeMode) {
-      "development" -> "build/compileSync/js/main/developmentExecutable/kotlinZipline".toPath()
-      else -> "build/kotlin-webpack/js/productionExecutableZipline".toPath()
+      "development" -> "build/zipline/Development".toPath()
+      else -> "build/zipline/ProductionWebpack".toPath()
     }
     override suspend fun download(
       url: String,
