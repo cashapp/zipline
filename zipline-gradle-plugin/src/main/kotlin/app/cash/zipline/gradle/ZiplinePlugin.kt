@@ -129,7 +129,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     // For every JS executable, create a task that compiles its .js to .zipline.
     //   input:  build/compileSync/js/main/productionExecutable/kotlin
     //   output: build/zipline/Production
-    val outputDirectoryName = "${target.capitalize()}${mode.capitalize()}${toolName}"
+    val outputDirectoryName = "${target.capitalize()}${mode.capitalize()}$toolName"
     val ziplineCompileTask = project.tasks.register(
       "${jsProductionTask.name}Zipline",
       ZiplineCompileTask::class.java,
