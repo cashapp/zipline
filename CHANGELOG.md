@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## [1.13.0] - 2024-06-14
+
+ * Fix: Don't derive the Zipline compiler's output directory from the Kotlin/JS output directory.
+   Zipline's outputs are now emitted to directories named like `build/zipline/Development`, and
+   `build/zipline/ProductionWebpack`. This avoids a `PropertyQueryException` crash in Gradle.
+
+
 ## [1.12.0] - 2024-06-13
 
  * Fix: Don't allocate a stack trace when canceling a coroutine or a job. We've observed that
