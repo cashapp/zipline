@@ -21,7 +21,6 @@ import app.cash.zipline.loader.internal.cache.FileState
 import app.cash.zipline.loader.internal.cache.Files
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import app.cash.zipline.loader.internal.cache.createDatabase
-import app.cash.zipline.loader.internal.cache.isSqlException
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
@@ -52,6 +51,7 @@ class ZiplineCache internal constructor(
   private val directory: Path,
   private val maxSizeInBytes: Long,
 ) : Closeable {
+  private var hasWriteFailures = false
 
   /*
    * Files are named by their SHA-256 hashes. We use a SQLite database for file metadata: which
@@ -80,27 +80,23 @@ class ZiplineCache internal constructor(
     driver.close()
   }
 
-  internal fun write(
+  private fun write(
     applicationName: String,
     sha256: ByteString,
     content: ByteString,
     nowEpochMs: Long,
     isManifest: Boolean = false,
     manifestFreshAtMs: Long? = null,
-  ): Files? {
-    try {
-      val metadata = openForWrite(
-        applicationName = applicationName,
-        sha256 = sha256,
-        nowEpochMs = nowEpochMs,
-        isManifest = isManifest,
-        manifestFreshAtMs = manifestFreshAtMs,
-      ) ?: return null
-      write(metadata, content, nowEpochMs)
-      return metadata
-    } catch (ignored: IOException) {
-      return null // Silently ignore write failures; the disk might be full?
-    }
+  ): Files {
+    val metadata = openForWrite(
+      applicationName = applicationName,
+      sha256 = sha256,
+      nowEpochMs = nowEpochMs,
+      isManifest = isManifest,
+      manifestFreshAtMs = manifestFreshAtMs,
+    )
+    write(metadata, content, nowEpochMs)
+    return metadata
   }
 
   private fun write(metadata: Files, content: ByteString, nowEpochMs: Long) {
@@ -121,28 +117,40 @@ class ZiplineCache internal constructor(
     applicationName: String,
     sha256: ByteString,
     nowEpochMs: Long,
-    download: suspend () -> ByteString?,
-  ): ByteString? {
-    val read = read(sha256, nowEpochMs)
-    if (read != null) return read
+    download: suspend () -> ByteString,
+  ): ByteString {
+    if (hasWriteFailures) return download()
 
-    val content = download() ?: return null
-    write(
-      applicationName = applicationName,
-      sha256 = sha256,
-      content = content,
-      isManifest = false,
-      nowEpochMs = nowEpochMs,
-    )
+    try {
+      val read = read(sha256, nowEpochMs)
+      if (read != null) return read
+    } catch (e: Exception) {
+      hasWriteFailures = true // Mark this cache as broken.
+      return download()
+    }
+
+    val content = download()
+    try {
+      write(
+        applicationName = applicationName,
+        sha256 = sha256,
+        content = content,
+        isManifest = false,
+        nowEpochMs = nowEpochMs,
+      )
+    } catch (e: Exception) {
+      hasWriteFailures = true // Mark this cache as broken.
+    }
+
     return content
   }
 
-  internal fun getOrPutManifest(
+  private fun getOrPutManifest(
     applicationName: String,
     content: ByteString,
     putFreshAtMs: Long,
     nowEpochMs: Long,
-  ): Files? {
+  ): Files {
     val sha256 = content.sha256()
     val metadata = getOrNull(sha256)
     return metadata ?: write(
@@ -210,14 +218,18 @@ class ZiplineCache internal constructor(
 
   /** Returns null if there is no pinned manifest. */
   internal fun getPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? {
-    val manifestFile = database.filesQueries
-      .selectPinnedManifest(applicationName)
-      .executeAsOneOrNull() ?: return null
-    val manifestBytes = read(manifestFile, nowEpochMs)
-      ?: throw FileNotFoundException(
-        "No manifest file on disk with [fileName=${manifestFile.sha256_hex}]",
-      )
-    return LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms!!)
+    if (hasWriteFailures) return null // This cache is broken.
+
+    try {
+      val manifestFile = database.filesQueries
+        .selectPinnedManifest(applicationName)
+        .executeAsOneOrNull() ?: return null
+      val manifestBytes = read(manifestFile, nowEpochMs) ?: return null
+      return LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms!!)
+    } catch (e: Exception) {
+      hasWriteFailures = true // Mark this cache as broken.
+      return null
+    }
   }
 
   /** Pins manifest and unpins all other files and manifests */
@@ -226,26 +238,32 @@ class ZiplineCache internal constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    val manifestBytes = loadedManifest.manifestBytes
-    val manifestMetadata = getOrPutManifest(
-      applicationName = applicationName,
-      content = manifestBytes,
-      putFreshAtMs = loadedManifest.freshAtEpochMs,
-      nowEpochMs = nowEpochMs,
-    ) ?: return
+    if (hasWriteFailures) return // This cache is broken.
 
-    database.transaction {
-      database.pinsQueries.delete_application_pins(applicationName)
+    try {
+      val manifestBytes = loadedManifest.manifestBytes
+      val manifestMetadata = getOrPutManifest(
+        applicationName = applicationName,
+        content = manifestBytes,
+        putFreshAtMs = loadedManifest.freshAtEpochMs,
+        nowEpochMs = nowEpochMs,
+      )
 
-      // Pin all modules in this manifest.
-      loadedManifest.manifest.modules.forEach { (_, module) ->
-        database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.let { metadata ->
-          createPinIfNotExists(applicationName, metadata.id)
+      database.transaction {
+        database.pinsQueries.delete_application_pins(applicationName)
+
+        // Pin all modules in this manifest.
+        loadedManifest.manifest.modules.forEach { (_, module) ->
+          database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.let { metadata ->
+            createPinIfNotExists(applicationName, metadata.id)
+          }
         }
-      }
 
-      // Pin the manifest.
-      createPinIfNotExists(applicationName, manifestMetadata.id)
+        // Pin the manifest.
+        createPinIfNotExists(applicationName, manifestMetadata.id)
+      }
+    } catch (e: Exception) {
+      hasWriteFailures = true // Mark this cache as broken.
     }
   }
 
@@ -258,36 +276,42 @@ class ZiplineCache internal constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    val unpinManifestBytes = loadedManifest.manifestBytes
-    val unpinManifestFile = database.filesQueries
-      .get(unpinManifestBytes.sha256().hex())
-      .executeAsOneOrNull()
+    if (hasWriteFailures) return // This cache is broken.
 
-    // Get fallback manifest metadata.
-    val fallbackManifestFile: Files? = unpinManifestFile?.let {
-      database.filesQueries
-        .selectPinnedManifestNotFileId(applicationName, it.id)
+    try {
+      val unpinManifestBytes = loadedManifest.manifestBytes
+      val unpinManifestFile = database.filesQueries
+        .get(unpinManifestBytes.sha256().hex())
         .executeAsOneOrNull()
-    } ?: database.filesQueries
-      .selectPinnedManifest(applicationName)
-      .executeAsOneOrNull()
 
-    // There is no fallback manifest, delete all pins and return.
-    if (fallbackManifestFile == null) {
-      database.pinsQueries.delete_application_pins(applicationName)
-      return
-    }
+      // Get fallback manifest metadata.
+      val fallbackManifestFile: Files? = unpinManifestFile?.let {
+        database.filesQueries
+          .selectPinnedManifestNotFileId(applicationName, it.id)
+          .executeAsOneOrNull()
+      } ?: database.filesQueries
+        .selectPinnedManifest(applicationName)
+        .executeAsOneOrNull()
 
-    // Pin the fallback manifest, which removes all pins prior to pinning.
-    val fallbackManifestBytes = read(fallbackManifestFile, nowEpochMs)
-      ?: throw FileNotFoundException(
-        "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]",
+      // There is no fallback manifest, delete all pins and return.
+      if (fallbackManifestFile == null) {
+        database.pinsQueries.delete_application_pins(applicationName)
+        return
+      }
+
+      // Pin the fallback manifest, which removes all pins prior to pinning.
+      val fallbackManifestBytes = read(fallbackManifestFile, nowEpochMs)
+        ?: throw FileNotFoundException(
+          "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]",
+        )
+      val fallbackManifest = LoadedManifest(
+        fallbackManifestBytes,
+        fallbackManifestFile.fresh_at_epoch_ms!!,
       )
-    val fallbackManifest = LoadedManifest(
-      fallbackManifestBytes,
-      fallbackManifestFile.fresh_at_epoch_ms!!,
-    )
-    pinManifest(applicationName, fallbackManifest, nowEpochMs)
+      pinManifest(applicationName, fallbackManifest, nowEpochMs)
+    } catch (e: Exception) {
+      hasWriteFailures = true // Mark this cache as broken.
+    }
   }
 
   /**
@@ -300,7 +324,7 @@ class ZiplineCache internal constructor(
     nowEpochMs: Long,
     isManifest: Boolean,
     manifestFreshAtMs: Long? = null,
-  ): Files? = try {
+  ): Files {
     val manifestForApplicationName = if (isManifest) {
       applicationName
     } else {
@@ -327,10 +351,7 @@ class ZiplineCache internal constructor(
     // Optimistically pin file, if the load fails it will be unpinned.
     createPinIfNotExists(applicationName, metadata.id)
 
-    metadata
-  } catch (e: Exception) {
-    if (!isSqlException(e)) throw e
-    null // Presumably the file is already dirty.
+    return metadata
   }
 
   private fun createPinIfNotExists(
@@ -388,18 +409,18 @@ class ZiplineCache internal constructor(
    * It will also delete dirty files that were open when the previous run completed.
    */
   internal fun initialize() {
-    deleteDirtyFiles()
-    prune()
+    try {
+      deleteDirtyFiles()
+      prune()
+    } catch (e: IOException) {
+      hasWriteFailures = true // Mark this cache as broken.
+    }
   }
 
   private fun deleteDirtyFiles() {
     while (true) {
       val dirtyFile = database.filesQueries.selectAnyDirtyFile().executeAsOneOrNull() ?: return
-      try {
-        fileSystem.delete(path(dirtyFile))
-      } catch (e: IOException) {
-        return // If we can't delete files, give up quietly.
-      }
+      fileSystem.delete(path(dirtyFile))
       database.filesQueries.delete(dirtyFile.id)
     }
   }
@@ -443,17 +464,23 @@ class ZiplineCache internal constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    val freshAtMs = loadedManifest.freshAtEpochMs
-    val manifestMetadata = getOrPutManifest(
-      applicationName = applicationName,
-      content = loadedManifest.manifestBytes,
-      putFreshAtMs = freshAtMs,
-      nowEpochMs = nowEpochMs,
-    ) ?: return // Pruned.
-    database.filesQueries.updateFresh(
-      id = manifestMetadata.id,
-      fresh_at_epoch_ms = freshAtMs,
-    )
+    if (hasWriteFailures) return // This cache is broken.
+
+    try {
+      val freshAtMs = loadedManifest.freshAtEpochMs
+      val manifestMetadata = getOrPutManifest(
+        applicationName = applicationName,
+        content = loadedManifest.manifestBytes,
+        putFreshAtMs = freshAtMs,
+        nowEpochMs = nowEpochMs,
+      )
+      database.filesQueries.updateFresh(
+        id = manifestMetadata.id,
+        fresh_at_epoch_ms = freshAtMs,
+      )
+    } catch (e: Exception) {
+      hasWriteFailures = true // Mark this cache as broken.
+    }
   }
 }
 
