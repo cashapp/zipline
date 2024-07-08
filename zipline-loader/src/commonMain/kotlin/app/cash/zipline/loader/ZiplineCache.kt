@@ -50,6 +50,7 @@ class ZiplineCache internal constructor(
   private val fileSystem: FileSystem,
   private val directory: Path,
   private val maxSizeInBytes: Long,
+  private val loaderEventListener: LoaderEventListener,
 ) : Closeable {
   private var hasWriteFailures = false
 
@@ -126,6 +127,7 @@ class ZiplineCache internal constructor(
       if (read != null) return read
     } catch (e: Exception) {
       hasWriteFailures = true // Mark this cache as broken.
+      loaderEventListener.cacheStorageFailed(applicationName, e)
       return download()
     }
 
@@ -140,6 +142,7 @@ class ZiplineCache internal constructor(
       )
     } catch (e: Exception) {
       hasWriteFailures = true // Mark this cache as broken.
+      loaderEventListener.cacheStorageFailed(applicationName, e)
     }
 
     return content
@@ -228,6 +231,7 @@ class ZiplineCache internal constructor(
       return LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms!!)
     } catch (e: Exception) {
       hasWriteFailures = true // Mark this cache as broken.
+      loaderEventListener.cacheStorageFailed(applicationName, e)
       return null
     }
   }
@@ -264,6 +268,7 @@ class ZiplineCache internal constructor(
       }
     } catch (e: Exception) {
       hasWriteFailures = true // Mark this cache as broken.
+      loaderEventListener.cacheStorageFailed(applicationName, e)
     }
   }
 
@@ -311,6 +316,7 @@ class ZiplineCache internal constructor(
       pinManifest(applicationName, fallbackManifest, nowEpochMs)
     } catch (e: Exception) {
       hasWriteFailures = true // Mark this cache as broken.
+      loaderEventListener.cacheStorageFailed(applicationName, e)
     }
   }
 
@@ -414,6 +420,7 @@ class ZiplineCache internal constructor(
       prune()
     } catch (e: IOException) {
       hasWriteFailures = true // Mark this cache as broken.
+      loaderEventListener.cacheStorageFailed(null, e)
     }
   }
 
@@ -480,8 +487,10 @@ class ZiplineCache internal constructor(
       )
     } catch (e: Exception) {
       hasWriteFailures = true // Mark this cache as broken.
+      loaderEventListener.cacheStorageFailed(applicationName, e)
     }
   }
+
 }
 
 internal fun ZiplineCache(
@@ -489,6 +498,7 @@ internal fun ZiplineCache(
   fileSystem: FileSystem,
   directory: Path,
   maxSizeInBytes: Long,
+  loaderEventListener: LoaderEventListener,
 ): ZiplineCache {
   fileSystem.createDirectories(directory, mustCreate = false)
   val driver: SqlDriver = sqlDriverFactory.create(directory / "zipline.db", Database.Schema)
@@ -499,6 +509,7 @@ internal fun ZiplineCache(
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,
+    loaderEventListener = loaderEventListener,
   )
   cache.initialize()
   return cache
