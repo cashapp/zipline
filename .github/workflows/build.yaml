@@ -42,10 +42,14 @@ jobs:
         if: matrix.os == 'ubuntu-latest'
         run: |
           cp -a . ../zipline-dockerbuild
+          docker build \
+            --tag zipline-linux-amd64 \
+            .github/workflows
           docker run \
             --volume `pwd`/../zipline-dockerbuild:/zipline \
-            amd64/oraclelinux:8 \
-            /zipline/.github/workflows/build-linux-amd64.sh
+            --workdir /zipline \
+            --entrypoint ./.github/workflows/build-linux-amd64.sh \
+            zipline-linux-amd64
           mkdir -p zipline/src/jvmMain/resources/jni/amd64
           cp -v ../zipline-dockerbuild/build/jni/amd64/libquickjs.* zipline/src/jvmMain/resources/jni/amd64/
 
