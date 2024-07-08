@@ -156,7 +156,7 @@ class ZiplineCacheFaultsTest {
       assertThat(tester.downloadCount).isEqualTo(4)
 
       // We expect some combination of these files.
-      assertThat(tester.files.map { it.name }).each {
+      assertThat(tester.fileNames).each {
         it.isIn(
           "entry-1.bin",
           "entry-2.bin",
@@ -172,7 +172,7 @@ class ZiplineCacheFaultsTest {
 
       // Assert more strictly if we didn't need to inject any write failures.
       if (i >= noFailuresWriteCount) {
-        assertThat(tester.files.map { it.name }).each {
+        assertThat(tester.fileNames).each {
           it.isIn(
             "entry-3.bin",
             "entry-4.bin",

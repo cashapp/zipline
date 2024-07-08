@@ -88,8 +88,14 @@ class CacheFaultsTester {
    */
   var fileSystemWriteLimit = Int.MAX_VALUE
 
-  val files: List<Path>
+  /**
+   * Returns the names of the files managed by this cache, excluding SQLite temporary files.
+   * https://www.sqlite.org/tempfiles.html
+   */
+  val fileNames: List<String>
     get() = fileSystem.list(directory)
+      .map { it.name }
+      .filterNot { it.startsWith("zipline.db-") }
 
   init {
     fileSystem.createDirectories(directory)
