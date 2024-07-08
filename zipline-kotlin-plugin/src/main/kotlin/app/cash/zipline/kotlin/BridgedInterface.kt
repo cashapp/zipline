@@ -146,7 +146,7 @@ internal class BridgedInterface(
   }
 
   private val IrType.isContextual
-    get() = annotations.any { it.type.getClass()?.classId == ziplineApis.contextualClassId }
+    get() = annotations.any { it.type.getClass()?.classId == ZiplineApis.contextualClassId }
 
   class SerializerExpression(
     val expression: IrExpression,
@@ -260,10 +260,10 @@ internal class BridgedInterface(
   }
 
   private val IrType.isFlow
-    get() = getClass()?.classId == ziplineApis.flowClassId
+    get() = getClass()?.classId == ZiplineApis.flowClassId
 
   private val IrType.isStateFlow
-    get() = getClass()?.classId == ziplineApis.stateFlowClassId
+    get() = getClass()?.classId == ZiplineApis.stateFlowClassId
 
   /** Call this on any declaration returned by [classSymbol] to fill in the generic parameters. */
   fun resolveTypeParameters(type: IrType): IrType {
