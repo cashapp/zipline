@@ -1,6 +1,9 @@
 #!/bin/bash
 
 # Run this in Docker with the Zipline project mounted at /zipline.
+#
+# We use Docker because GitHub actions doesn't offer virtual environments for old distros, and we
+# need to build on old distros to run on old distros.
 
 set -e
 set -x
