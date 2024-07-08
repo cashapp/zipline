@@ -2,6 +2,7 @@ import co.touchlab.cklib.gradle.CompileToBitcode.Language.C
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.jetbrains.kotlin.gradle.plugin.NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
@@ -28,6 +29,11 @@ val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
 }
 tasks.withType<KotlinNativeTest>().configureEach {
   dependsOn(":zipline-testing:compileDevelopmentLibraryKotlinJs")
+}
+
+dependencies {
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, projects.ziplineKotlinPlugin)
+  add(NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME, projects.ziplineKotlinPlugin)
 }
 
 kotlin {
@@ -149,16 +155,6 @@ kotlin {
         create("release") {
           setExecutionSourceFrom(binaries.getByName("releaseTest") as TestExecutable)
         }
-      }
-    }
-
-    targets.all {
-      compilations.all {
-        // Naming logic from https://github.com/JetBrains/kotlin/blob/a0e6fb03f0288f0bff12be80c402d8a62b5b045a/libraries/tools/kotlin-gradle-plugin/src/main/kotlin/org/jetbrains/kotlin/gradle/plugin/KotlinTargetConfigurator.kt#L519-L520
-        val pluginConfigurationName = PLUGIN_CLASSPATH_CONFIGURATION_NAME +
-          target.disambiguationClassifier.orEmpty().capitalize() +
-          compilationName.capitalize()
-        project.dependencies.add(pluginConfigurationName, projects.ziplineKotlinPlugin)
       }
     }
   }
