@@ -41,6 +41,7 @@ jobs:
       - name: Build native library (Linux)
         if: matrix.os == 'ubuntu-latest'
         run: |
+          sudo apt-get install -y libtinfo5
           cp -a . ../zipline-dockerbuild
           docker build \
             --tag zipline-linux-amd64 \
@@ -57,14 +58,15 @@ jobs:
         if: matrix.os == 'macos-latest' || matrix.os == 'macos-latest-large'
         run: ./.github/workflows/build-mac.sh -a ${{ matrix.arch }} -c ${{ matrix.cmake-arch }}
 
-      - name: Install libtinfo5
-        if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install -y libtinfo5
+      - name: Zipline tests
+        run: ./gradlew :zipline:check --stacktrace
 
-      - name: Build Zipline
+      - name: Build all Zipline
+        if: matrix.os == 'macos-latest'
         run: ./gradlew build --stacktrace
 
       - name: Build samples
+        if: matrix.os == 'macos-latest'
         run: ./gradlew -p samples check --stacktrace
 
       - uses: actions/upload-artifact@v4
