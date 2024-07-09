@@ -503,6 +503,12 @@ class ZiplineGradlePluginTest {
     assertThat(dumpResult.output).contains("Cannot locate tasks that match ':lib:ziplineApiDump'")
   }
 
+  @Test
+  fun pluginWithNoRuntimeDoesNotCrash() {
+    val projectDir = File("src/test/projects/no-runtime")
+    createRunner(projectDir, "clean", "run").build()
+  }
+
   private fun createRunner(
     projectDir: File,
     vararg taskNames: String,

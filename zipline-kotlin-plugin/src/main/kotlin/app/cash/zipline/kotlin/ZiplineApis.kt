@@ -30,29 +30,39 @@ import org.jetbrains.kotlin.name.CallableId
 import org.jetbrains.kotlin.name.StandardClassIds
 
 /** Looks up APIs used by the code rewriters. */
-internal class ZiplineApis(
+internal class ZiplineApis private constructor(
   private val pluginContext: IrPluginContext,
 ) {
-  private val ziplineFqPackage = FqPackageName("app.cash.zipline")
-  private val bridgeFqPackage = FqPackageName("app.cash.zipline.internal.bridge")
-  private val serializationFqPackage = FqPackageName("kotlinx.serialization")
-  private val serializationBuiltInsFqPackage = FqPackageName("kotlinx.serialization.builtins")
-  private val collectionsFqPackage = FqPackageName(StandardClassIds.BASE_COLLECTIONS_PACKAGE)
-  val contextualClassId = serializationFqPackage.classId("Contextual")
-  private val serializationModulesFqPackage = FqPackageName("kotlinx.serialization.modules")
-  private val serializersModuleClassId = serializationModulesFqPackage.classId("SerializersModule")
-  private val ziplineClassId = ziplineFqPackage.classId("Zipline")
-  private val outboundServiceClassId = bridgeFqPackage.classId("OutboundService")
-  val ziplineScopedClassId = ziplineFqPackage.classId("ZiplineScoped")
-  val ziplineServiceClassId = ziplineFqPackage.classId("ZiplineService")
-  private val ziplineServiceSerializerFunctionCallableId = ziplineFqPackage.callableId("ziplineServiceSerializer")
-  private val ziplineServiceAdapterFunctionCallableId = bridgeFqPackage.callableId("ziplineServiceAdapter")
-  private val ziplineServiceAdapterClassId = bridgeFqPackage.classId("ZiplineServiceAdapter")
-  private val endpointClassId = bridgeFqPackage.classId("Endpoint")
-  private val suspendCallbackClassId = bridgeFqPackage.classId("SuspendCallback")
-  private val flowFqPackage = FqPackageName("kotlinx.coroutines.flow")
-  val flowClassId = flowFqPackage.classId("Flow")
-  val stateFlowClassId = flowFqPackage.classId("StateFlow")
+  companion object {
+    fun maybeCreate(pluginContext: IrPluginContext): ZiplineApis? {
+      if (pluginContext.referenceClass(ziplineServiceClassId) == null) {
+        // If we don't have ZiplineService, we don't have the runtime. Abort!
+        return null
+      }
+      return ZiplineApis(pluginContext)
+    }
+
+    private val ziplineFqPackage = FqPackageName("app.cash.zipline")
+    private val bridgeFqPackage = FqPackageName("app.cash.zipline.internal.bridge")
+    private val serializationFqPackage = FqPackageName("kotlinx.serialization")
+    private val serializationBuiltInsFqPackage = FqPackageName("kotlinx.serialization.builtins")
+    private val collectionsFqPackage = FqPackageName(StandardClassIds.BASE_COLLECTIONS_PACKAGE)
+    val contextualClassId = serializationFqPackage.classId("Contextual")
+    private val serializationModulesFqPackage = FqPackageName("kotlinx.serialization.modules")
+    private val serializersModuleClassId = serializationModulesFqPackage.classId("SerializersModule")
+    private val ziplineClassId = ziplineFqPackage.classId("Zipline")
+    private val outboundServiceClassId = bridgeFqPackage.classId("OutboundService")
+    val ziplineScopedClassId = ziplineFqPackage.classId("ZiplineScoped")
+    val ziplineServiceClassId = ziplineFqPackage.classId("ZiplineService")
+    private val ziplineServiceSerializerFunctionCallableId = ziplineFqPackage.callableId("ziplineServiceSerializer")
+    private val ziplineServiceAdapterFunctionCallableId = bridgeFqPackage.callableId("ziplineServiceAdapter")
+    private val ziplineServiceAdapterClassId = bridgeFqPackage.classId("ZiplineServiceAdapter")
+    private val endpointClassId = bridgeFqPackage.classId("Endpoint")
+    private val suspendCallbackClassId = bridgeFqPackage.classId("SuspendCallback")
+    private val flowFqPackage = FqPackageName("kotlinx.coroutines.flow")
+    val flowClassId = flowFqPackage.classId("Flow")
+    val stateFlowClassId = flowFqPackage.classId("StateFlow")
+  }
 
   val any: IrClassSymbol
     get() = pluginContext.referenceClass(StandardClassIds.Any)!!
@@ -192,14 +202,14 @@ internal class ZiplineApis(
     get() = pluginContext.referenceClass(suspendCallbackClassId)!!
 
   /** Keys are renderings of functions like `Zipline.take()` and values are their rewrite targets. */
-  val ziplineServiceAdapterFunctions: Map<String, IrSimpleFunctionSymbol> = listOf(
+  val ziplineServiceAdapterFunctions: Map<String, IrSimpleFunctionSymbol> = mapOf(
     rewritePair(ziplineClassId.callableId("take")),
     rewritePair(endpointClassId.callableId("take")),
     rewritePair(ziplineClassId.callableId("bind")),
     rewritePair(endpointClassId.callableId("bind")),
     rewritePair(ziplineServiceAdapterFunctionCallableId),
     rewritePair(ziplineServiceSerializerFunctionCallableId),
-  ).toMap()
+  )
 
   /** Maps overloads from the user-friendly function to its internal rewrite target. */
   private fun rewritePair(funName: CallableId): Pair<String, IrSimpleFunctionSymbol> {

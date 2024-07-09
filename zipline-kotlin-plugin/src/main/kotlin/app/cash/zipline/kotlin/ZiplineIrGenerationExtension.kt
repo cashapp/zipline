@@ -33,7 +33,10 @@ class ZiplineIrGenerationExtension(
   private val messageCollector: MessageCollector,
 ) : IrGenerationExtension {
   override fun generate(moduleFragment: IrModuleFragment, pluginContext: IrPluginContext) {
-    val ziplineApis = ZiplineApis(pluginContext)
+    // Compiler plugin targeting is coarse grained. If we are operating in a context without our
+    // runtime APIs, simply no-op rather than crash. This is required to allow new targets we don't
+    // support, or to allow processing only test source sets and not main, for example.
+    val ziplineApis = ZiplineApis.maybeCreate(pluginContext) ?: return
 
     val transformer = object : IrElementTransformerVoidWithContext() {
       override fun visitClassNew(declaration: IrClass): IrStatement {
@@ -41,7 +44,7 @@ class ZiplineIrGenerationExtension(
 
         try {
           if (declaration.isInterface &&
-            declaration.superTypes.any { it.getClass()?.classId == ziplineApis.ziplineScopedClassId }
+            declaration.superTypes.any { it.getClass()?.classId == ZiplineApis.ziplineScopedClassId }
           ) {
             throw ZiplineCompilationException(
               element = declaration,
@@ -51,7 +54,7 @@ class ZiplineIrGenerationExtension(
           }
 
           if (declaration.isInterface &&
-            declaration.superTypes.any { it.getClass()?.classId == ziplineApis.ziplineServiceClassId }
+            declaration.superTypes.any { it.getClass()?.classId == ZiplineApis.ziplineServiceClassId }
           ) {
             AdapterGenerator(
               pluginContext,
