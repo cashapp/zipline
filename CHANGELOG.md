@@ -2,6 +2,17 @@
 
 ## Unreleased
 
+## [1.14.0] - 2024-07-09
+
+ * New: `ZiplineLoader.load()` and `loadOnce()` now accept a suspending function.
+ * New: Don't crash in `ZiplineLoader` when writing to the disk cache fails. Use the new
+   `LoaderEventListener` type to observe such failures.
+ * Fix: Don't crash in Gradle if the Zipline runtime library is absent.
+ * New: Extend Kotlin's `AutoCloseable` in `Zipline`, `ZiplineService` and `ZiplineScope`.
+ * Upgrade: [Oracle Linux 8][oracle_linux_8] for x86_64 Linux (`amd64/oraclelinux:8` on Docker).
+ * Upgrade: [Kotlin Serialization 1.7.1][kotlin_serialization_1_7_1].
+
+
 ## [1.13.0] - 2024-06-14
 
  * Fix: Don't derive the Zipline compiler's output directory from the Kotlin/JS output directory.
@@ -530,11 +541,13 @@ Initial release.
 [kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
 [kotlin_serialization_1_6_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.6.0
 [kotlin_serialization_1_7_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.7.0
+[kotlin_serialization_1_7_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.7.1
 [kotlinx_coroutines_1_7_1]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.1
 [kotlinx_coroutines_1_7_2]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.2
 [kotlinx_coroutines_1_7_3]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.3
 [kotlinx_coroutines_1_8_0]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.8.0
 [okio_3_7_0]: https://square.github.io/okio/changelog/#version-370
 [okio_3_9_0]: https://square.github.io/okio/changelog/#version-390
+[oracle_linux_8]: https://docs.oracle.com/en/operating-systems/oracle-linux/8/
 [sqldelight_2_0_0]: https://cashapp.github.io/sqldelight/2.0.0/changelog/#200-2023-07-26
 [sqldelight_2_0_2]: https://cashapp.github.io/sqldelight/2.0.2/changelog/#202-2024-04-05
