@@ -117,7 +117,7 @@ actual class QuickJs private constructor(
   private val runtime: CPointer<JSRuntime>,
   internal val context: CPointer<JSContext>,
   internal val contextForCompiling: CPointer<JSContext>,
-) {
+) : AutoCloseable {
   actual companion object {
     actual fun create(): QuickJs {
       val runtime = JS_NewRuntime() ?: throw OutOfMemoryError()
@@ -391,7 +391,7 @@ actual class QuickJs private constructor(
     JS_RunGC(runtime)
   }
 
-  actual fun close() {
+  actual override fun close() {
     if (!closed) {
       JS_FreeContext(contextForCompiling)
       JS_FreeContext(context)

@@ -23,7 +23,7 @@ package app.cash.zipline
  * [close] when it is done. This releases the handle on the inbound side, and prevents a resource
  * leak. It is an error to call any method on a service after it is closed.
  */
-interface ZiplineService {
-  fun close() {
+interface ZiplineService : AutoCloseable {
+  override fun close() {
   }
 }

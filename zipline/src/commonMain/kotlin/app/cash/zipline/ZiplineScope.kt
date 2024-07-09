@@ -63,7 +63,7 @@ import app.cash.zipline.internal.bridge.OutboundCallHandler
  * When a service does not implement [ZiplineScoped], the services passed in to it must be closed
  * individually.
  */
-class ZiplineScope {
+class ZiplineScope : AutoCloseable {
   internal var closed = false
     private set
 
@@ -83,7 +83,7 @@ class ZiplineScope {
     callHandlers -= callHandler
   }
 
-  fun close() {
+  override fun close() {
     if (closed) return
     closed = true
 

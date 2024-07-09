@@ -24,7 +24,7 @@ import app.cash.zipline.internal.bridge.CallChannel
  * synchronized externally.
  */
 @EngineApi
-expect class QuickJs {
+expect class QuickJs : AutoCloseable {
   companion object {
     /**
      * Create a new interpreter instance. Calls to this method **must** matched with
@@ -88,5 +88,5 @@ expect class QuickJs {
    */
   fun gc()
 
-  fun close()
+  override fun close()
 }

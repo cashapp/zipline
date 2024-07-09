@@ -121,7 +121,7 @@ public final class app/cash/zipline/MemoryUsage {
 	public fun toString ()Ljava/lang/String;
 }
 
-public final class app/cash/zipline/QuickJs : java/io/Closeable {
+public final class app/cash/zipline/QuickJs : java/io/Closeable, java/lang/AutoCloseable {
 	public static final field Companion Lapp/cash/zipline/QuickJs$Companion;
 	public synthetic fun <init> (JLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun close ()V
@@ -163,12 +163,12 @@ public final class app/cash/zipline/SerializersKt {
 	public static synthetic fun ziplineServiceSerializer$default (Lkotlin/reflect/KClass;Ljava/util/List;ILjava/lang/Object;)Lkotlinx/serialization/KSerializer;
 }
 
-public final class app/cash/zipline/Zipline {
+public final class app/cash/zipline/Zipline : java/lang/AutoCloseable {
 	public static final field Companion Lapp/cash/zipline/Zipline$Companion;
 	public synthetic fun <init> (Lapp/cash/zipline/QuickJs;Lkotlinx/serialization/modules/SerializersModule;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlinx/coroutines/CoroutineScope;Lapp/cash/zipline/EventListener;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun bind (Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
 	public final fun bind (Ljava/lang/String;Lapp/cash/zipline/ZiplineService;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;)V
-	public final fun close ()V
+	public fun close ()V
 	public final fun getEventListener ()Lapp/cash/zipline/EventListener;
 	public final fun getJson ()Lkotlinx/serialization/json/Json;
 	public final fun getOrPutAttachment (Lkotlin/reflect/KClass;Lkotlin/jvm/functions/Function0;)Ljava/lang/Object;
@@ -322,9 +322,9 @@ public final class app/cash/zipline/ZiplineManifest$Unsigned$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
-public final class app/cash/zipline/ZiplineScope {
+public final class app/cash/zipline/ZiplineScope : java/lang/AutoCloseable {
 	public fun <init> ()V
-	public final fun close ()V
+	public fun close ()V
 }
 
 public abstract interface class app/cash/zipline/ZiplineScoped {
@@ -335,7 +335,7 @@ public final class app/cash/zipline/ZiplineScopedKt {
 	public static final fun withScope (Lapp/cash/zipline/ZiplineService;Lapp/cash/zipline/ZiplineScope;)Lapp/cash/zipline/ZiplineService;
 }
 
-public abstract interface class app/cash/zipline/ZiplineService {
+public abstract interface class app/cash/zipline/ZiplineService : java/lang/AutoCloseable {
 	public abstract fun close ()V
 }
 
