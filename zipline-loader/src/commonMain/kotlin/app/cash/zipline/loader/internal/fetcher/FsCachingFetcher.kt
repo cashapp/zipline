@@ -34,9 +34,9 @@ internal class FsCachingFetcher(
     nowEpochMs: Long,
     baseUrl: String?,
     url: String,
-  ): ByteString? {
+  ): ByteString {
     return cache.getOrPut(applicationName, sha256, nowEpochMs) {
-      delegate.fetch(applicationName, eventListener, id, sha256, nowEpochMs, baseUrl, url)
+      delegate.fetch(applicationName, eventListener, id, sha256, nowEpochMs, baseUrl, url)!!
     }
   }
 

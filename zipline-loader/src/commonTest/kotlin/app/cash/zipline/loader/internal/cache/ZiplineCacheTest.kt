@@ -262,7 +262,7 @@ class ZiplineCacheTest {
       assertEquals(manifestApple, it.getPinnedManifest("red"))
       assertEquals(3, it.countPins())
 
-      it.getOrPutManifest("red", manifestFiretruck.manifestBytes, 1, nowMillis)
+      it.updateManifestFreshAt("red", manifestFiretruck, 1)
       assertEquals(4, it.countPins())
 
       assertEquals(manifestFiretruck, it.getPinnedManifest("red"))
@@ -406,18 +406,16 @@ class ZiplineCacheTest {
 
   private fun ZiplineCache.read(sha256: ByteString) = read(sha256, nowMillis)
 
-  private fun ZiplineCache.write(
+  private suspend fun ZiplineCache.write(
     applicationName: String,
     sha256: ByteString,
     content: ByteString,
-    isManifest: Boolean = false,
-    manifestFreshAtMs: Long? = null,
-  ) = write(applicationName, sha256, content, nowMillis, isManifest, manifestFreshAtMs)
+  ) = getOrPut(applicationName, sha256, nowMillis) { content }
 
   private suspend fun ZiplineCache.getOrPut(
     applicationName: String,
     sha256: ByteString,
-    download: suspend () -> ByteString?,
+    download: suspend () -> ByteString,
   ) = getOrPut(applicationName, sha256, nowMillis, download)
 
   private fun ZiplineCache.getPinnedManifest(applicationName: String) =
