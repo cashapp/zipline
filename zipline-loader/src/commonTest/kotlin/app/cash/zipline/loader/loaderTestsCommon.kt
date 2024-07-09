@@ -48,7 +48,13 @@ fun testZiplineCache(
   fileSystem: FileSystem,
   directory: Path,
   maxSizeInBytes: Long,
-): ZiplineCache = ZiplineCache(testSqlDriverFactory(), fileSystem, directory, maxSizeInBytes)
+): ZiplineCache = ZiplineCache(
+  sqlDriverFactory = testSqlDriverFactory(),
+  fileSystem = fileSystem,
+  directory = directory,
+  maxSizeInBytes = maxSizeInBytes,
+  loaderEventListener = LoaderEventListener.None,
+)
 
 internal expect fun testSqlDriverFactory(): SqlDriverFactory
 

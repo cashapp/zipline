@@ -35,9 +35,9 @@ class ZiplineCacheFaultsTest {
   @Test
   fun openMissHitClose(): Unit = runBlocking {
     // How many writes are attempted in this test in the happy path. Determined experimentally!
-    val noFailuresWriteCount = 20
+    val noFailuresWriteCount = 21
 
-    for (i in 0 until noFailuresWriteCount + 1) {
+    for (i in 0..noFailuresWriteCount) {
       val tester = CacheFaultsTester()
       tester.fileSystemWriteLimit = i
 
@@ -53,7 +53,8 @@ class ZiplineCacheFaultsTest {
       }
 
       // Assert more strictly if we didn't need to inject any write failures.
-      if (i >= noFailuresWriteCount) {
+      if (i == noFailuresWriteCount) {
+        assertThat(tester.storageFailureCount).isEqualTo(0)
         assertThat(tester.downloadCount).isEqualTo(2)
       }
 
@@ -64,9 +65,9 @@ class ZiplineCacheFaultsTest {
   @Test
   fun openMissClose_OpenHitClose(): Unit = runBlocking {
     // How many writes are attempted in this test in the happy path. Determined experimentally!
-    val noFailuresWriteCount = 20
+    val noFailuresWriteCount = 21
 
-    for (i in 0 until noFailuresWriteCount + 1) {
+    for (i in 0..noFailuresWriteCount) {
       val tester = CacheFaultsTester()
       tester.fileSystemWriteLimit = i
 
@@ -84,7 +85,8 @@ class ZiplineCacheFaultsTest {
       assertThat(tester.downloadCount).isLessThanOrEqualTo(4)
 
       // Assert more strictly if we didn't need to inject any write failures.
-      if (i >= noFailuresWriteCount) {
+      if (i == noFailuresWriteCount) {
+        assertThat(tester.storageFailureCount).isEqualTo(0)
         assertThat(tester.downloadCount).isEqualTo(2)
       }
 
@@ -97,7 +99,7 @@ class ZiplineCacheFaultsTest {
     // How many writes are attempted in this test in the happy path. Determined experimentally!
     val noFailuresWriteCount = 27
 
-    for (i in 0 until noFailuresWriteCount + 1) {
+    for (i in 0..noFailuresWriteCount) {
       val tester = CacheFaultsTester()
       tester.fileSystemWriteLimit = i
 
@@ -122,7 +124,8 @@ class ZiplineCacheFaultsTest {
       assertThat(tester.downloadCount).isLessThanOrEqualTo(6)
 
       // Assert more strictly if we didn't need to inject any write failures.
-      if (i >= noFailuresWriteCount) {
+      if (i == noFailuresWriteCount) {
+        assertThat(tester.storageFailureCount).isEqualTo(0)
         assertThat(tester.downloadCount).isEqualTo(4)
       }
 
@@ -134,9 +137,9 @@ class ZiplineCacheFaultsTest {
   @Test
   fun openMissClose_openStaleClose(): Unit = runBlocking {
     // How many writes are attempted in this test in the happy path. Determined experimentally!
-    val noFailuresWriteCount = 31
+    val noFailuresWriteCount = 32
 
-    for (i in 0 until noFailuresWriteCount + 1) {
+    for (i in 0..noFailuresWriteCount) {
       val tester = CacheFaultsTester()
       tester.fileSystemWriteLimit = i
 
@@ -171,7 +174,8 @@ class ZiplineCacheFaultsTest {
       }
 
       // Assert more strictly if we didn't need to inject any write failures.
-      if (i >= noFailuresWriteCount) {
+      if (i == noFailuresWriteCount) {
+        assertThat(tester.storageFailureCount).isEqualTo(0)
         assertThat(tester.fileNames).each {
           it.isIn(
             "entry-3.bin",

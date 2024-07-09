@@ -32,9 +32,9 @@ class FetcherTest {
 
   private var alphaFetcherIds = mutableListOf<String>()
   private var bravoFetcherIds = mutableListOf<String>()
-  private lateinit var bravoByteString: ByteString
+  private val bravoByteString = "test".encodeUtf8()
 
-  private val fetcherAlpha = object : Fetcher {
+  private val fetcherAlpha = object : Fetcher<ByteString?> {
     override suspend fun fetch(
       applicationName: String,
       eventListener: EventListener,
@@ -49,7 +49,7 @@ class FetcherTest {
     }
   }
 
-  private val fetcherBravo = object : Fetcher {
+  private val fetcherBravo = object : Fetcher<ByteString> {
     override suspend fun fetch(
       applicationName: String,
       eventListener: EventListener,
@@ -58,7 +58,7 @@ class FetcherTest {
       nowEpochMs: Long,
       baseUrl: String?,
       url: String,
-    ): ByteString? {
+    ): ByteString {
       bravoFetcherIds.add(id)
       return bravoByteString
     }
@@ -67,7 +67,6 @@ class FetcherTest {
   @BeforeTest
   fun setUp() {
     testFixtures = LoaderTestFixtures()
-    bravoByteString = "test".encodeUtf8()
   }
 
   @Test

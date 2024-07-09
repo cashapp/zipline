@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.zipline.loader.LoaderEventListener
 import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.randomToken
@@ -373,6 +374,7 @@ class ZiplineCacheTest {
       fileSystem = fileSystem,
       directory = directory,
       maxSizeInBytes = cacheSize.toLong(),
+      loaderEventListener = LoaderEventListener.None,
     )
     cache.initialize()
     try {

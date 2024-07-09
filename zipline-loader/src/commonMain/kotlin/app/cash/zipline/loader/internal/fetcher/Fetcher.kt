@@ -23,7 +23,7 @@ import okio.ByteString
 /**
  * Fetchers get a desired [ByteString] if possible.
  */
-internal interface Fetcher {
+internal interface Fetcher<out T : ByteString?> {
   /**
    * Returns the desired [ByteString], or null if this fetcher doesn't know how to fetch this
    * resource.
@@ -38,13 +38,13 @@ internal interface Fetcher {
     nowEpochMs: Long,
     baseUrl: String?,
     url: String,
-  ): ByteString?
+  ): T
 }
 
 /**
  * Use a [concurrentDownloadsSemaphore] to control parallelism of fetching operations.
  */
-internal suspend fun List<Fetcher>.fetch(
+internal suspend fun List<Fetcher<ByteString?>>.fetch(
   concurrentDownloadsSemaphore: Semaphore,
   applicationName: String,
   eventListener: EventListener,

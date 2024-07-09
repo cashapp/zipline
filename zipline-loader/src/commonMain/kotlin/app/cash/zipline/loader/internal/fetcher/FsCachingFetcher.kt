@@ -24,8 +24,8 @@ import okio.ByteString
  */
 internal class FsCachingFetcher(
   private val cache: ZiplineCache,
-  private val delegate: Fetcher,
-) : Fetcher {
+  private val delegate: Fetcher<ByteString>,
+) : Fetcher<ByteString> {
   override suspend fun fetch(
     applicationName: String,
     eventListener: EventListener,
@@ -36,7 +36,7 @@ internal class FsCachingFetcher(
     url: String,
   ): ByteString {
     return cache.getOrPut(applicationName, sha256, nowEpochMs) {
-      delegate.fetch(applicationName, eventListener, id, sha256, nowEpochMs, baseUrl, url)!!
+      delegate.fetch(applicationName, eventListener, id, sha256, nowEpochMs, baseUrl, url)
     }
   }
 

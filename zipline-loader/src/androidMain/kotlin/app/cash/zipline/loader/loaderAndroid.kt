@@ -25,11 +25,28 @@ fun ZiplineCache(
   fileSystem: FileSystem,
   directory: Path,
   maxSizeInBytes: Long,
+  loaderEventListener: LoaderEventListener,
 ): ZiplineCache {
   return ZiplineCache(
     sqlDriverFactory = SqlDriverFactory(context),
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,
+    loaderEventListener = loaderEventListener,
+  )
+}
+
+fun ZiplineCache(
+  context: Context,
+  fileSystem: FileSystem,
+  directory: Path,
+  maxSizeInBytes: Long,
+): ZiplineCache {
+  return ZiplineCache(
+    context = context,
+    fileSystem = fileSystem,
+    directory = directory,
+    maxSizeInBytes = maxSizeInBytes,
+    loaderEventListener = LoaderEventListener.None,
   )
 }

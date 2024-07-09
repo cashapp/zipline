@@ -19,6 +19,7 @@ import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlPreparedStatement
 import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.loader.LoaderEventListener
 import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import app.cash.zipline.loader.randomToken
@@ -97,6 +98,12 @@ class CacheFaultsTester {
       .map { it.name }
       .filterNot { it.startsWith("zipline.db-") }
 
+  /**
+   * Incremented on each failure. Note that once a cache marks itself as degraded, this won't be
+   * incremented until the cache is rebuilt.
+   */
+  var storageFailureCount = 0
+
   init {
     fileSystem.createDirectories(directory)
   }
@@ -115,7 +122,12 @@ class CacheFaultsTester {
       database = database,
       fileSystem = LimitWritesFileSystem(fileSystem),
       directory = directory,
-      maxSizeInBytes = cacheSize.toLong(),
+      maxSizeInBytes = cacheSize,
+      loaderEventListener = object : LoaderEventListener() {
+        override fun cacheStorageFailed(applicationName: String?, e: Exception) {
+          storageFailureCount++
+        }
+      },
     )
 
     try {
