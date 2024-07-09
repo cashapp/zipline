@@ -490,7 +490,6 @@ class ZiplineCache internal constructor(
       loaderEventListener.cacheStorageFailed(applicationName, e)
     }
   }
-
 }
 
 internal fun ZiplineCache(

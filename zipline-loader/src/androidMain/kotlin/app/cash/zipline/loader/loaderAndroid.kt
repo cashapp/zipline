@@ -32,7 +32,7 @@ fun ZiplineCache(
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,
-    eventListener = loaderEventListener,
+    loaderEventListener = loaderEventListener,
   )
 }
 

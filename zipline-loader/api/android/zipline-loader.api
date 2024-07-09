@@ -44,6 +44,17 @@ public final class app/cash/zipline/loader/LoadResult$Success : app/cash/zipline
 
 public final class app/cash/zipline/loader/LoaderAndroidKt {
 	public static final fun ZiplineCache (Landroid/content/Context;Lokio/FileSystem;Lokio/Path;J)Lapp/cash/zipline/loader/ZiplineCache;
+	public static final fun ZiplineCache (Landroid/content/Context;Lokio/FileSystem;Lokio/Path;JLapp/cash/zipline/loader/LoaderEventListener;)Lapp/cash/zipline/loader/ZiplineCache;
+}
+
+public abstract class app/cash/zipline/loader/LoaderEventListener {
+	public static final field Companion Lapp/cash/zipline/loader/LoaderEventListener$Companion;
+	public fun <init> ()V
+	public fun cacheStorageFailed (Ljava/lang/String;Ljava/lang/Exception;)V
+}
+
+public final class app/cash/zipline/loader/LoaderEventListener$Companion {
+	public final fun getNONE ()Lapp/cash/zipline/loader/LoaderEventListener;
 }
 
 public final class app/cash/zipline/loader/LoaderJniKt {
