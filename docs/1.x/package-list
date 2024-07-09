@@ -1,5 +1,6 @@
 $dokka.format:html-v1
 $dokka.linkExtension:html
+$dokka.location:app.cash.zipline.loader//ZiplineCache/#okio.FileSystem#okio.Path#kotlin.Long#app.cash.zipline.loader.LoaderEventListener/PointingToDeclaration/zipline-loader/app.cash.zipline.loader/[native]-zipline-cache.html
 $dokka.location:app.cash.zipline.loader//ZiplineCache/#okio.FileSystem#okio.Path#kotlin.Long/PointingToDeclaration/zipline-loader/app.cash.zipline.loader/[native]-zipline-cache.html
 $dokka.location:app.cash.zipline/Zipline.Companion///PointingToDeclaration/zipline/app.cash.zipline/-zipline/[js]-companion/index.html
 $dokka.location:app.cash.zipline/Zipline.Companion/create/#kotlinx.coroutines.CoroutineDispatcher#kotlinx.serialization.modules.SerializersModule#app.cash.zipline.EventListener/PointingToDeclaration/zipline/app.cash.zipline/-zipline/[host]-companion/create.html
