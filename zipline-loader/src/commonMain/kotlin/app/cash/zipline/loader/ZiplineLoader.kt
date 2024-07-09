@@ -29,6 +29,7 @@ import app.cash.zipline.loader.internal.receiver.Receiver
 import app.cash.zipline.loader.internal.receiver.ZiplineLoadReceiver
 import app.cash.zipline.loader.internal.systemEpochMsClock
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.jvm.JvmName
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.ProducerScope
@@ -209,7 +210,7 @@ class ZiplineLoader internal constructor(
     freshnessChecker: FreshnessChecker = DefaultFreshnessCheckerNotFresh,
     manifestUrlFlow: Flow<String>,
     serializersModule: SerializersModule = EmptySerializersModule(),
-    initializer: (Zipline) -> Unit = {},
+    initializer: suspend (Zipline) -> Unit = {},
   ): Flow<LoadResult> {
     return channelFlow {
       var previousManifest: ZiplineManifest? = null
@@ -241,6 +242,28 @@ class ZiplineLoader internal constructor(
         }
       }
     }
+  }
+
+  @Deprecated(
+    message = "Deprecated, will be removed in 1.15",
+    level = DeprecationLevel.HIDDEN,
+    replaceWith = ReplaceWith("load with suspending initializer"),
+  )
+  @JvmName("load")
+  fun deprecatedLoad(
+    applicationName: String,
+    freshnessChecker: FreshnessChecker = DefaultFreshnessCheckerNotFresh,
+    manifestUrlFlow: Flow<String>,
+    serializersModule: SerializersModule = EmptySerializersModule(),
+    initializer: (Zipline) -> Unit = {},
+  ): Flow<LoadResult> {
+    return load(
+      applicationName = applicationName,
+      freshnessChecker = freshnessChecker,
+      manifestUrlFlow = manifestUrlFlow,
+      serializersModule = serializersModule,
+      initializer = { zipline -> initializer(zipline) },
+    )
   }
 
   /**
@@ -284,7 +307,7 @@ class ZiplineLoader internal constructor(
     applicationName: String,
     manifestUrl: String,
     serializersModule: SerializersModule,
-    initializer: (Zipline) -> Unit,
+    initializer: suspend (Zipline) -> Unit,
   ): ZiplineManifest? {
     val eventListener = eventListenerFactory.create(applicationName, manifestUrl)
 
@@ -344,7 +367,7 @@ class ZiplineLoader internal constructor(
     applicationName: String,
     freshnessChecker: FreshnessChecker,
     serializersModule: SerializersModule,
-    initializer: (Zipline) -> Unit,
+    initializer: suspend (Zipline) -> Unit,
   ): ZiplineManifest? {
     val eventListener = eventListenerFactory.create(applicationName, null)
 
@@ -393,7 +416,7 @@ class ZiplineLoader internal constructor(
     freshnessChecker: FreshnessChecker,
     manifestUrl: String,
     serializersModule: SerializersModule = EmptySerializersModule(),
-    initializer: (Zipline) -> Unit = {},
+    initializer: suspend (Zipline) -> Unit = {},
   ): LoadResult = load(
     applicationName = applicationName,
     freshnessChecker = freshnessChecker,
@@ -401,6 +424,26 @@ class ZiplineLoader internal constructor(
     serializersModule = serializersModule,
     initializer = initializer,
   ).first()
+
+  @Deprecated(
+    message = "Deprecated, will be removed in 1.15",
+    level = DeprecationLevel.HIDDEN,
+    replaceWith = ReplaceWith("loadOnce with suspending initializer"),
+  )
+  @JvmName("loadOnce")
+  suspend fun deprecatedLoadOnce(
+    applicationName: String,
+    freshnessChecker: FreshnessChecker,
+    manifestUrl: String,
+    serializersModule: SerializersModule = EmptySerializersModule(),
+    initializer: (Zipline) -> Unit = {},
+  ): LoadResult = loadOnce(
+    applicationName = applicationName,
+    freshnessChecker = freshnessChecker,
+    manifestUrl = manifestUrl,
+    serializersModule = serializersModule,
+    initializer = { zipline -> initializer(zipline) },
+  )
 
   /** Always loads from the network, never from local. */
   @Deprecated(
@@ -432,7 +475,7 @@ class ZiplineLoader internal constructor(
     loadedManifest: LoadedManifest,
     serializersModule: SerializersModule,
     nowEpochMs: Long,
-    initializer: (Zipline) -> Unit,
+    initializer: suspend (Zipline) -> Unit,
   ): Zipline {
     val zipline = Zipline.create(dispatcher, serializersModule, eventListener)
     try {
