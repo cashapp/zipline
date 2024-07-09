@@ -53,7 +53,7 @@ fun testZiplineCache(
   fileSystem = fileSystem,
   directory = directory,
   maxSizeInBytes = maxSizeInBytes,
-  loaderEventListener = LoaderEventListener.NONE,
+  loaderEventListener = LoaderEventListener.None,
 )
 
 internal expect fun testSqlDriverFactory(): SqlDriverFactory

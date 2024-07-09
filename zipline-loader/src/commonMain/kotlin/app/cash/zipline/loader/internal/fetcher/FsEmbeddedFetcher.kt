@@ -27,7 +27,7 @@ import okio.Path
 internal class FsEmbeddedFetcher(
   private val embeddedFileSystem: FileSystem,
   private val embeddedDir: Path,
-) : Fetcher {
+) : Fetcher<ByteString?> {
   override suspend fun fetch(
     applicationName: String,
     eventListener: EventListener,

@@ -374,7 +374,7 @@ class ZiplineCacheTest {
       fileSystem = fileSystem,
       directory = directory,
       maxSizeInBytes = cacheSize.toLong(),
-      loaderEventListener = LoaderEventListener.NONE,
+      loaderEventListener = LoaderEventListener.None,
     )
     cache.initialize()
     try {

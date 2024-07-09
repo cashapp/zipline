@@ -35,8 +35,5 @@ abstract class LoaderEventListener {
   ) {
   }
 
-  companion object {
-    val NONE: LoaderEventListener = object : LoaderEventListener() {
-    }
-  }
+  object None : LoaderEventListener()
 }
