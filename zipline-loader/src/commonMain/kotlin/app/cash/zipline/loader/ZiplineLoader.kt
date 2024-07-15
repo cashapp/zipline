@@ -54,6 +54,19 @@ import okio.Path
  *
  * Loader attempts to load code as quickly as possible with concurrent network downloads and code
  * loading.
+ *
+ * # Concurrency
+ *
+ * This class uses two different coroutine dispatchers:
+ *
+ *  - The [dispatcher] is the only dispatcher permitted to call functions on the returned [Zipline]
+ *    instance. Each instance is thread-confined and this dispatcher must implement that
+ *    enforcement.
+ *  - The [cacheDispatcher] is the only dispatcher permitted to call functions on [ZiplineCache].
+ *    The cache is also thread-confined, and the two threads may be different.
+ *
+ * In applications where multiple [Zipline] instances are used, but the instances all share a cache,
+ * there should be N + 1 dispatchers: one for the cache plus another for each application.
  */
 class ZiplineLoader internal constructor(
   private val dispatcher: CoroutineDispatcher,
@@ -64,6 +77,7 @@ class ZiplineLoader internal constructor(
   private val embeddedDir: Path?,
   private val embeddedFileSystem: FileSystem?,
   private val cache: ZiplineCache?,
+  private val cacheDispatcher: CoroutineDispatcher?,
 ) {
   constructor(
     dispatcher: CoroutineDispatcher,
@@ -80,6 +94,7 @@ class ZiplineLoader internal constructor(
     embeddedDir = null,
     embeddedFileSystem = null,
     cache = null,
+    cacheDispatcher = null,
   )
 
   @Deprecated(
@@ -101,9 +116,20 @@ class ZiplineLoader internal constructor(
 
   fun withCache(
     cache: ZiplineCache,
+    cacheDispatcher: CoroutineDispatcher? = null,
   ): ZiplineLoader = copy(
     cache = cache,
+    cacheDispatcher = cacheDispatcher,
   )
+
+  @Deprecated(
+    message = "Deprecated, will be removed in 1.16",
+    level = DeprecationLevel.HIDDEN,
+    replaceWith = ReplaceWith("withCache() that accepts a CacheDispatcher parameter"),
+  )
+  fun withCache(
+    cache: ZiplineCache,
+  ): ZiplineLoader = withCache(cache, null)
 
   fun withEventListenerFactory(
     eventListenerFactory: EventListener.Factory,
@@ -115,6 +141,7 @@ class ZiplineLoader internal constructor(
     embeddedDir: Path? = this.embeddedDir,
     embeddedFileSystem: FileSystem? = this.embeddedFileSystem,
     cache: ZiplineCache? = this.cache,
+    cacheDispatcher: CoroutineDispatcher? = this.cacheDispatcher,
     eventListenerFactory: EventListener.Factory = this.eventListenerFactory,
   ): ZiplineLoader {
     return ZiplineLoader(
@@ -126,6 +153,7 @@ class ZiplineLoader internal constructor(
       embeddedDir = embeddedDir,
       embeddedFileSystem = embeddedFileSystem,
       cache = cache,
+      cacheDispatcher = cacheDispatcher,
     )
   }
 
@@ -149,6 +177,7 @@ class ZiplineLoader internal constructor(
   private val cachingFetcher: FsCachingFetcher? = run {
     FsCachingFetcher(
       cache = cache ?: return@run null,
+      cacheDispatcher = cacheDispatcher ?: dispatcher,
       delegate = httpFetcher,
     )
   }
@@ -630,7 +659,7 @@ class ZiplineLoader internal constructor(
     }
   }
 
-  private fun loadCachedOrEmbeddedManifest(
+  private suspend fun loadCachedOrEmbeddedManifest(
     applicationName: String,
     eventListener: EventListener,
     nowEpochMs: Long,

@@ -155,7 +155,9 @@ public final class app/cash/zipline/loader/ZiplineLoader {
 	public static synthetic fun loadOnce$default (Lapp/cash/zipline/loader/ZiplineLoader;Ljava/lang/String;Lapp/cash/zipline/loader/FreshnessChecker;Ljava/lang/String;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function2;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public static synthetic fun loadOnce$default (Lapp/cash/zipline/loader/ZiplineLoader;Ljava/lang/String;Ljava/lang/String;Lkotlinx/serialization/modules/SerializersModule;Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun setConcurrentDownloads (I)V
-	public final fun withCache (Lapp/cash/zipline/loader/ZiplineCache;)Lapp/cash/zipline/loader/ZiplineLoader;
+	public final synthetic fun withCache (Lapp/cash/zipline/loader/ZiplineCache;)Lapp/cash/zipline/loader/ZiplineLoader;
+	public final fun withCache (Lapp/cash/zipline/loader/ZiplineCache;Lkotlinx/coroutines/CoroutineDispatcher;)Lapp/cash/zipline/loader/ZiplineLoader;
+	public static synthetic fun withCache$default (Lapp/cash/zipline/loader/ZiplineLoader;Lapp/cash/zipline/loader/ZiplineCache;Lkotlinx/coroutines/CoroutineDispatcher;ILjava/lang/Object;)Lapp/cash/zipline/loader/ZiplineLoader;
 	public final fun withEmbedded (Lokio/FileSystem;Lokio/Path;)Lapp/cash/zipline/loader/ZiplineLoader;
 	public final synthetic fun withEmbedded (Lokio/Path;Lokio/FileSystem;)Lapp/cash/zipline/loader/ZiplineLoader;
 	public final fun withEventListenerFactory (Lapp/cash/zipline/EventListener$Factory;)Lapp/cash/zipline/loader/ZiplineLoader;
