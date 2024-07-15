@@ -134,6 +134,7 @@ class LoaderEventsTest {
         "downloadEnd red https://example.com/files/red/red.manifest.zipline.json",
         "manifestReady red",
         "ziplineCreated",
+        "cacheHit red apple.zipline ${tester.file("red/apple.zipline")!!.size}",
         "moduleLoadStart apple",
         "moduleLoadEnd apple",
         "initializerStart red",

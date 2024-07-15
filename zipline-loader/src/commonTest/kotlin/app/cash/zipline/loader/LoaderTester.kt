@@ -32,6 +32,7 @@ import kotlinx.coroutines.flow.last
 import kotlinx.coroutines.flow.single
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import okio.Buffer
+import okio.ByteString
 import okio.FileSystem
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -202,6 +203,11 @@ class LoaderTester(
     block()
     val after = cache.countFiles()
     return after - before
+  }
+
+  /** Returns the file if it exists. */
+  fun file(path: String): ByteString? {
+    return httpClient.filePathToByteString["${baseUrl}/$path"]
   }
 
   suspend fun failureManifestFetchFails(applicationName: String): String {
