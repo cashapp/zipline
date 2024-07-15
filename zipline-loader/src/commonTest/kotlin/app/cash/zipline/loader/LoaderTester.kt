@@ -22,6 +22,7 @@ import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import app.cash.zipline.testing.systemFileSystem
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
@@ -37,11 +38,12 @@ import okio.FileSystem
 class LoaderTester(
   private val eventListenerFactory: EventListener.Factory = EventListenerNoneFactory,
   private val manifestVerifier: ManifestVerifier = NO_SIGNATURE_CHECKS,
+  private val dispatcher: CoroutineDispatcher = UnconfinedTestDispatcher(),
+  private val cacheDispatcher: CoroutineDispatcher = dispatcher,
 ) {
   val tempDir = FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "okio-${randomToken().hex()}"
 
   val httpClient = FakeZiplineHttpClient()
-  private val dispatcher = UnconfinedTestDispatcher()
   private val cacheMaxSizeInBytes = 100 * 1024 * 1024
   var nowMillis = 1_000L
 
@@ -68,9 +70,9 @@ class LoaderTester(
     systemFileSystem.createDirectories(tempDir, mustCreate = true)
     systemFileSystem.createDirectories(embeddedDir, mustCreate = true)
     cache = testZiplineCache(
-      systemFileSystem,
-      cacheDir,
-      cacheMaxSizeInBytes.toLong(),
+      fileSystem = systemFileSystem,
+      directory = cacheDir,
+      maxSizeInBytes = cacheMaxSizeInBytes.toLong(),
     )
     loader = testZiplineLoader(
       dispatcher = dispatcher,
@@ -82,7 +84,8 @@ class LoaderTester(
       embeddedFileSystem = embeddedFileSystem,
       embeddedDir = embeddedDir,
     ).withCache(
-      cache,
+      cache = cache,
+      cacheDispatcher = cacheDispatcher,
     )
   }
 

@@ -17,6 +17,8 @@ package app.cash.zipline.loader.internal.fetcher
 
 import app.cash.zipline.EventListener
 import app.cash.zipline.loader.ZiplineCache
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
 import okio.ByteString
 
 /**
@@ -24,6 +26,7 @@ import okio.ByteString
  */
 internal class FsCachingFetcher(
   private val cache: ZiplineCache,
+  private val cacheDispatcher: CoroutineDispatcher,
   private val delegate: Fetcher<ByteString>,
 ) : Fetcher<ByteString> {
   override suspend fun fetch(
@@ -35,13 +38,17 @@ internal class FsCachingFetcher(
     baseUrl: String?,
     url: String,
   ): ByteString {
-    return cache.getOrPut(applicationName, sha256, nowEpochMs) {
-      delegate.fetch(applicationName, eventListener, id, sha256, nowEpochMs, baseUrl, url)
+    return withContext(cacheDispatcher) {
+      cache.getOrPut(applicationName, sha256, nowEpochMs) {
+        delegate.fetch(applicationName, eventListener, id, sha256, nowEpochMs, baseUrl, url)
+      }
     }
   }
 
-  fun loadPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? {
-    return cache.getPinnedManifest(applicationName, nowEpochMs)
+  suspend fun loadPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? {
+    return withContext(cacheDispatcher) {
+      cache.getPinnedManifest(applicationName, nowEpochMs)
+    }
   }
 
   /**
@@ -50,18 +57,31 @@ internal class FsCachingFetcher(
    * This assumes that all artifacts in [loadedManifest] are currently pinned. Fetchers do not
    * necessarily enforce this assumption.
    */
-  fun pin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) =
-    cache.pinManifest(applicationName, loadedManifest, nowEpochMs)
+  suspend fun pin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) {
+    return withContext(cacheDispatcher) {
+      cache.pinManifest(applicationName, loadedManifest, nowEpochMs)
+    }
+  }
 
   /**
    * Removes the pins for [applicationName] in [loadedManifest] so they may be pruned.
    */
-  fun unpin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) =
-    cache.unpinManifest(applicationName, loadedManifest, nowEpochMs)
+  suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) {
+    return withContext(cacheDispatcher) {
+      cache.unpinManifest(applicationName, loadedManifest, nowEpochMs)
+    }
+  }
 
   /**
    * Updates freshAt timestamp for manifests that in later network fetch is still the freshest.
    */
-  fun updateFreshAt(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) =
-    cache.updateManifestFreshAt(applicationName, loadedManifest, nowEpochMs)
+  suspend fun updateFreshAt(
+    applicationName: String,
+    loadedManifest: LoadedManifest,
+    nowEpochMs: Long,
+  ) {
+    return withContext(cacheDispatcher) {
+      cache.updateManifestFreshAt(applicationName, loadedManifest, nowEpochMs)
+    }
+  }
 }
