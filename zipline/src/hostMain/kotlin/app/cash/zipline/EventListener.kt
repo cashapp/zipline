@@ -162,6 +162,14 @@ abstract class EventListener {
   ) {
   }
 
+  /** Invoked when a download is skipped because a file was cached. */
+  open fun cacheHit(
+    applicationName: String,
+    url: String,
+    fileSize: Long,
+  ) {
+  }
+
   /**
    * Invoked when the manifest couldn't be decoded as JSON. For example, this might occur if there's
    * a captive portal on the network.

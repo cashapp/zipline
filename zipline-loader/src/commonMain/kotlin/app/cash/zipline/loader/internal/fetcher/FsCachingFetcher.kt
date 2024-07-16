@@ -39,9 +39,15 @@ internal class FsCachingFetcher(
     url: String,
   ): ByteString {
     return withContext(cacheDispatcher) {
-      cache.getOrPut(applicationName, sha256, nowEpochMs) {
+      var downloadCalled = false
+      val result = cache.getOrPut(applicationName, sha256, nowEpochMs) {
+        downloadCalled = true
         delegate.fetch(applicationName, eventListener, id, sha256, nowEpochMs, baseUrl, url)
       }
+      if (!downloadCalled) {
+        eventListener.cacheHit(applicationName, url, result.size.toLong())
+      }
+      return@withContext result
     }
   }
 

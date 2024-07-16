@@ -154,6 +154,13 @@ class LoggingEventListener : EventListener(), EventListener.Factory {
     )
   }
 
+  override fun cacheHit(applicationName: String, url: String, fileSize: Long) {
+    log(
+      applicationName = applicationName,
+      log = "cacheHit $applicationName $url $fileSize",
+    )
+  }
+
   override fun manifestParseFailed(applicationName: String, url: String?, exception: Exception) {
     log(
       applicationName = applicationName,

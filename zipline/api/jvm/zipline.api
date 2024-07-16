@@ -28,6 +28,7 @@ public abstract class app/cash/zipline/EventListener {
 	public fun applicationLoadStart (Ljava/lang/String;Ljava/lang/String;)Ljava/lang/Object;
 	public fun applicationLoadSuccess (Ljava/lang/String;Ljava/lang/String;Lapp/cash/zipline/ZiplineManifest;Lapp/cash/zipline/Zipline;Ljava/lang/Object;)V
 	public fun bindService (Lapp/cash/zipline/Zipline;Ljava/lang/String;Lapp/cash/zipline/ZiplineService;)V
+	public fun cacheHit (Ljava/lang/String;Ljava/lang/String;J)V
 	public fun callEnd (Lapp/cash/zipline/Zipline;Lapp/cash/zipline/Call;Lapp/cash/zipline/CallResult;Ljava/lang/Object;)V
 	public fun callStart (Lapp/cash/zipline/Zipline;Lapp/cash/zipline/Call;)Ljava/lang/Object;
 	public fun downloadEnd (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Object;)V
