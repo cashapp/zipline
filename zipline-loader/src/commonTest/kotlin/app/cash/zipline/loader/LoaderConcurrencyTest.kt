@@ -76,7 +76,9 @@ class LoaderConcurrencyTest {
     private val delegate: CoroutineDispatcher,
   ) : CoroutineDispatcher() {
     override fun dispatch(context: CoroutineContext, block: Runnable) {
-      delegate.dispatch(context, object : Runnable {
+      delegate.dispatch(
+        context,
+        object : Runnable {
         override fun run() {
           currentDispatcher = this@CurrentTrackingDispatcher
           try {
@@ -85,7 +87,8 @@ class LoaderConcurrencyTest {
             currentDispatcher = null
           }
         }
-      })
+      },
+      )
     }
   }
 
