@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+## [1.15.0] - 2024-07-16
+
+ * New: Use different dispatchers for cache vs code execution. Both the cache and QuickJS need to be
+   thread-confined, but they don't need to be confined to the same thread. With this release we've
+   added a new `CoroutineDispatcher` parameter to `ZiplineLoader.withCache()`. It is used when
+   reading and writing the cache. The existing `CoroutineDispatcher` used to create the
+   `ZiplineLoader` is used to access QuickJS.
+ * New: `EventListener.cacheHit()` is called on each cache hit.
+
+
 ## [1.14.0] - 2024-07-09
 
  * New: `ZiplineLoader.load()` and `loadOnce()` now accept a suspending function.
