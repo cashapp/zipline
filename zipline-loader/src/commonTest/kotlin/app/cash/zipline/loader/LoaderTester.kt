@@ -207,7 +207,7 @@ class LoaderTester(
 
   /** Returns the file if it exists. */
   fun file(path: String): ByteString? {
-    return httpClient.filePathToByteString["${baseUrl}/$path"]
+    return httpClient.filePathToByteString["$baseUrl/$path"]
   }
 
   suspend fun failureManifestFetchFails(applicationName: String): String {
