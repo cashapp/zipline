@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+## [1.16.0] - 2024-07-17
+
+ * Fix: Support 16KB page sizes in our Android native library. This is necessary to prevent an
+   `UnsatisfiedLinkError` crash on Android 15 / API level 35.
+
+
 ## [1.15.0] - 2024-07-16
 
  * New: Use different dispatchers for cache vs code execution. Both the cache and QuickJS need to be
