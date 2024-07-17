@@ -8,3 +8,5 @@ file(GLOB_RECURSE sources "../../native/*.c" "../../native/*.cpp")
 add_library(quickjs SHARED ${sources})
 
 target_link_libraries(quickjs)
+
+target_link_options(quickjs PRIVATE "-Wl,-z,max-page-size=16384")
