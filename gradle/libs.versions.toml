@@ -2,7 +2,7 @@
 androidx-compose = "1.6.8"
 compileSdk = "34"
 http4k = "4.48.0.0"
-kotlin = "2.0.0"
+kotlin = "2.0.10"
 kotlinx-coroutines = "1.8.1"
 kotlinx-serialization = "1.7.1"
 okHttp = "4.12.0"
