@@ -93,7 +93,15 @@ internal fun serialName(typeName: String, serializers: List<KSerializer<*>>): St
   }
 }
 
-private fun descriptorName(typeName: SerialDescriptor): String {
+private fun descriptorName(typeName: SerialDescriptor, visited: MutableSet<SerialDescriptor> = mutableSetOf()): String {
+  // Check if we've already visited this descriptor to avoid infinite recursion
+  if (visited.contains(typeName)) {
+    return typeName.serialName
+  }
+
+  // Mark this descriptor as visited
+  visited.add(typeName)
+
   return buildString {
     append(typeName.serialName)
 
@@ -102,7 +110,7 @@ private fun descriptorName(typeName: SerialDescriptor): String {
 
       val elementIndices = 0 until typeName.elementsCount
       for (i in elementIndices) {
-        append(descriptorName(typeName.getElementDescriptor(i)))
+        append(descriptorName(typeName.getElementDescriptor(i), visited))
         if (i < elementIndices.last) {
           append(',')
         }
