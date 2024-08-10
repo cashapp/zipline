@@ -94,12 +94,12 @@ class SerialNameTest {
         "app.cash.zipline.internal.bridge.SomeRecursiveType<" +
         "app.cash.zipline.internal.bridge.SomeRecursiveType?<app.cash.zipline.internal.bridge.SomeRecursiveType?>" +
         ">>",
-      actual = serialName
+      actual = serialName,
     )
   }
 }
 
 @Serializable
 private data class SomeRecursiveType(
-  val someData: SomeRecursiveType?
+  val someData: SomeRecursiveType?,
 )
