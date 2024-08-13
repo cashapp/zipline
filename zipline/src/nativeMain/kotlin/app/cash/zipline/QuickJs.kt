@@ -26,6 +26,7 @@ import app.cash.zipline.quickjs.JSContext
 import app.cash.zipline.quickjs.JSMemoryUsage
 import app.cash.zipline.quickjs.JSRuntime
 import app.cash.zipline.quickjs.JSValue
+import app.cash.zipline.quickjs.JS_AddGlobalThisGc
 import app.cash.zipline.quickjs.JS_ComputeMemoryUsage
 import app.cash.zipline.quickjs.JS_EVAL_FLAG_COMPILE_ONLY
 import app.cash.zipline.quickjs.JS_EVAL_FLAG_STRICT
@@ -152,6 +153,8 @@ actual class QuickJs private constructor(
   init {
     JS_SetRuntimeOpaque(runtime, thisPtr.asCPointer())
     JS_SetInterruptHandler(runtime, jsInterruptHandlerCFunction, thisPtr.asCPointer())
+
+    JS_AddGlobalThisGc(context)
   }
 
   private var closed = false

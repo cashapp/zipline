@@ -65,4 +65,8 @@ class QuickJsTest {
       quickJs.evaluate("""["test", true, false, 1, 1.123, undefined, null];""") as Array<Any?>,
     )
   }
+
+  @Test fun gc() {
+    assertNull(quickJs.evaluate("""globalThis.gc();"""))
+  }
 }
