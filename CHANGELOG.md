@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+
+## [1.17.0] - 2024-08-28
+[1.17.0]: https://github.com/cashapp/zipline/releases/tag/1.17.0
+
+ * New: Expose `globalThis.gc()` function into the guest code.
+ * Upgrade: [Kotlin 2.0.20](https://github.com/JetBrains/kotlin/releases/tag/v2.0.20)
+
+
 ## [1.16.0] - 2024-07-17
 
  * Fix: Support 16KB page sizes in our Android native library. This is necessary to prevent an
