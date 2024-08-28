@@ -150,11 +150,11 @@ internal class FirZiplineApiReader(
     return FirZiplineFunction(signature)
   }
 
-  // TODO This available natively in Kotlin 2.1.0 or newer and can be deleted after upgrading.
+  // TODO This is available natively in Kotlin 2.1.0 or newer and can be deleted after upgrading.
   val ConeKotlinType.lookupTagIfAny: ConeClassifierLookupTag?
     get() = (this as? ConeLookupTagBasedType)?.lookupTag
 
-  // TODO This available natively in Kotlin 2.1.0 or newer and can be deleted after upgrading.
+  // TODO This is available natively in Kotlin 2.1.0 or newer and can be deleted after upgrading.
   fun ConeClassifierLookupTag.toClassLikeSymbol(useSiteSession: FirSession): FirClassLikeSymbol<*>? {
     return toSymbol(useSiteSession) as? FirClassLikeSymbol<*>
   }
