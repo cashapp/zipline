@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.gradle
+package app.cash.zipline.cli
 
 import app.cash.zipline.QuickJs
 import app.cash.zipline.ZiplineManifest
