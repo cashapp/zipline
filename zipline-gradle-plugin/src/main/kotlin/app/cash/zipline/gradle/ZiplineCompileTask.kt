@@ -16,23 +16,28 @@
 
 package app.cash.zipline.gradle
 
-import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.SignatureAlgorithmId
-import java.io.File
 import java.io.Serializable
+import javax.inject.Inject
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import org.gradle.api.DefaultTask
+import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
-import org.gradle.work.ChangeType
+import org.gradle.process.ExecOperations
+import org.gradle.work.ChangeType.ADDED
+import org.gradle.work.ChangeType.MODIFIED
+import org.gradle.work.ChangeType.REMOVED
 import org.gradle.work.Incremental
 import org.gradle.work.InputChanges
 import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
@@ -40,7 +45,9 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
 /**
  * Compiles `.js` files to `.zipline` files.
  */
-abstract class ZiplineCompileTask : DefaultTask() {
+abstract class ZiplineCompileTask @Inject constructor(
+  private val execOperations: ExecOperations,
+) : DefaultTask() {
 
   @get:Incremental
   @get:InputDirectory
@@ -72,12 +79,18 @@ abstract class ZiplineCompileTask : DefaultTask() {
   @get:Input
   abstract val stripLineNumbers: Property<Boolean>
 
+  @get:Classpath
+  abstract val classpath: ConfigurableFileCollection
+
   internal fun configure(
     outputDirectoryName: String,
     jsProductionTask: JsProductionTask,
     extension: ZiplineExtension,
+    cliConfiguration: Configuration,
   ) {
     description = "Compile .js to .zipline"
+
+    classpath.setFrom(cliConfiguration)
 
     inputDir.fileProvider(jsProductionTask.outputFile.map { it.asFile.parentFile })
 
@@ -109,51 +122,63 @@ abstract class ZiplineCompileTask : DefaultTask() {
 
   @TaskAction
   fun task(inputChanges: InputChanges) {
-    val inputDirFile = inputDir.get().asFile
-    val outputDirFile = outputDir.get().asFile
-    val mainModuleId = mainModuleId.orNull
-    val mainFunction = mainFunction.orNull
-    val signingKeys = signingKeys.get()
-    val manifestSigner = when {
-      signingKeys.isNotEmpty() -> {
-        val builder = ManifestSigner.Builder()
-        for (signingKey in signingKeys) {
-          builder.add(signingKey.algorithm, signingKey.name, signingKey.privateKey)
+    val args = buildList {
+      add("compile")
+      add("--input")
+      add(inputDir.get().asFile.toString())
+      add("--output")
+      add(outputDir.get().asFile.toString())
+      mainModuleId.orNull?.let {
+        add("--main-module-id")
+        add(it)
+      }
+      mainFunction.orNull?.let {
+        add("--main-function")
+        add(it)
+      }
+      for (signingKey in signingKeys.get()) {
+        add("--sign")
+        add(
+          buildString {
+          append(signingKey.algorithm.name)
+          append(':')
+          append(signingKey.name)
+          append(':')
+          append(signingKey.privateKey.hex())
+        },
+        )
+      }
+      version.orNull?.let {
+        add("--version")
+        add(it)
+      }
+      metadata.orNull?.let {
+        for ((key, value) in it) {
+          add("--metadata")
+          add("$key=$value")
         }
-        builder.build()
       }
-      else -> null
+      if (stripLineNumbers.getOrElse(false)) {
+        add("--strip-line-numbers")
+      }
+      if (inputChanges.isIncremental) {
+        for (fileChange in inputChanges.getFileChanges(inputDir)) {
+          add(
+            when (fileChange.changeType) {
+            ADDED -> "--added"
+            MODIFIED -> "--modified"
+            REMOVED -> "--removed"
+          },
+          )
+          add(fileChange.file.toString())
+        }
+      }
     }
-    val version = version.orNull
-    val metadata = metadata.orNull ?: mapOf()
-    val stripLineNumbers = stripLineNumbers.orNull ?: false
 
-    val ziplineCompiler = ZiplineCompiler(
-      outputDir = outputDirFile,
-      mainFunction = mainFunction,
-      mainModuleId = mainModuleId,
-      manifestSigner = manifestSigner,
-      version = version,
-      metadata = metadata,
-      stripLineNumbers = stripLineNumbers,
-    )
-
-    if (inputChanges.isIncremental) {
-      fun filterByChangeType(filter: (ChangeType) -> Boolean): List<File> {
-        return inputChanges.getFileChanges(inputDir)
-          .filter { filter(it.changeType) }
-          .map { outputDir.file(it.normalizedPath).get().asFile }
-      }
-
-      ziplineCompiler.incrementalCompile(
-        modifiedFiles = filterByChangeType { changeType -> changeType == ChangeType.MODIFIED },
-        addedFiles = filterByChangeType { changeType -> changeType == ChangeType.ADDED },
-        removedFiles = filterByChangeType { changeType -> changeType == ChangeType.REMOVED },
-      )
-    } else {
-      ziplineCompiler.compile(
-        inputDir = inputDirFile,
-      )
+    execOperations.javaexec { exec ->
+      exec.classpath = classpath
+      exec.mainClass.set("app.cash.zipline.cli.Main")
+      exec.setArgs(args)
     }
   }
 

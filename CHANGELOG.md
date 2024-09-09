@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+ * New: "compile" subcommand in 'zipline-cli' compiles `.js` files to `.zipline` files.
+
 
 ## [1.17.0] - 2024-08-28
 [1.17.0]: https://github.com/cashapp/zipline/releases/tag/1.17.0

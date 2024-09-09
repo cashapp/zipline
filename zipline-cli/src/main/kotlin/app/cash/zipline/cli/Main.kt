@@ -30,6 +30,7 @@ fun main(vararg args: String) {
 
   NoOpCliktCommand()
     .subcommands(
+      Compile(),
       Download(),
       GenerateKeyPair(),
       ValidateZiplineApi(NAME_CHECK),
