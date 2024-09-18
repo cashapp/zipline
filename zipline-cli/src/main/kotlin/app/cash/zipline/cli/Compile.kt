@@ -18,6 +18,7 @@ package app.cash.zipline.cli
 import app.cash.zipline.loader.ManifestSigner
 import app.cash.zipline.loader.SignatureAlgorithmId
 import com.github.ajalt.clikt.core.CliktCommand
+import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.parameters.options.associate
 import com.github.ajalt.clikt.parameters.options.convert
 import com.github.ajalt.clikt.parameters.options.flag
@@ -28,10 +29,10 @@ import com.github.ajalt.clikt.parameters.options.required
 import com.github.ajalt.clikt.parameters.types.file
 import okio.ByteString.Companion.decodeHex
 
-internal class Compile : CliktCommand(
-  name = "compile",
-  help = "Compile .js files to .zipline files",
-) {
+internal class Compile : CliktCommand("compile") {
+  override fun help(context: Context) =
+    "Compile .js files to .zipline files"
+
   private val inputDir by option("--input").file().required()
     .help("Directory from which .js files will be loaded.")
 
