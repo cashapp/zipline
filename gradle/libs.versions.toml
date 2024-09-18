@@ -1,5 +1,5 @@
 [versions]
-androidx-compose = "1.7.1"
+androidx-compose = "1.7.2"
 compileSdk = "34"
 http4k = "4.48.0.0"
 kotlin = "2.0.20"
