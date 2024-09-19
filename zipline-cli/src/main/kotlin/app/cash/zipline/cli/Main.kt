@@ -20,6 +20,7 @@ package app.cash.zipline.cli
 import app.cash.zipline.cli.ValidateZiplineApi.Companion.NAME_CHECK
 import app.cash.zipline.cli.ValidateZiplineApi.Companion.NAME_DUMP
 import com.github.ajalt.clikt.core.NoOpCliktCommand
+import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.options.versionOption
 
