@@ -18,6 +18,7 @@ package app.cash.zipline.cli
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.testing.LoaderTestFixtures
 import com.github.ajalt.clikt.core.MissingOption
+import com.github.ajalt.clikt.core.parse
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertTrue

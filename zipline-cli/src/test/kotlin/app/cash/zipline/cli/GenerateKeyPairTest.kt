@@ -19,6 +19,7 @@ import assertk.assertThat
 import assertk.assertions.isNull
 import assertk.assertions.matches
 import com.github.ajalt.clikt.core.NoSuchOption
+import com.github.ajalt.clikt.core.parse
 import java.io.PrintStream
 import kotlin.test.assertFailsWith
 import okio.Buffer
