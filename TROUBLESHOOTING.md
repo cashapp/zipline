@@ -31,7 +31,7 @@ Caused by: java.lang.IllegalStateException: Unable to read /jni/aarch64/libquick
 
 For tests like `app.cash.zipline.ConsoleTest`, failures with the above stacktrace point to missing `.dylib` prebuilt C libraries necessary for using QuickJS from the JVM.
 
-Download [the latest `jni-binaries` artifact](https://nightly.link/cashapp/zipline/workflows/build/trunk/jni-binaries) from our GitHub CI, and extract its contents to the `zipline/src/jvmMain/resources/jni/` directory.
+Download [the latest `jni-binaries` artifact](https://nightly.link/cashapp/zipline/workflows/build.yaml/trunk/jni-binaries.zip) from our GitHub CI, and extract its contents to the `zipline/src/jvmMain/resources/jni/` directory.
 
 ## Build JNI Libraries Locally
 
