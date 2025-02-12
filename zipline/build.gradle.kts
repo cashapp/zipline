@@ -2,6 +2,7 @@ import co.touchlab.cklib.gradle.CompileToBitcode.Language.C
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.MAIN_COMPILATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
@@ -40,7 +41,29 @@ kotlin {
   androidTarget {
     publishLibraryVariants("release")
   }
-  jvm()
+  jvm {
+    compilations.named(MAIN_COMPILATION_NAME).configure {
+      tasks.named(processResourcesTaskName).configure {
+        doFirst {
+          val jniDir = file("src/${target.name}Main/resources/jni")
+          val files = fileTree(jniDir).files
+          val expected = 4
+          if (files.size != expected) {
+            throw RuntimeException(
+              """Native libraries missing or outdated!
+              |
+              |See https://github.com/cashapp/zipline/blob/trunk/TROUBLESHOOTING.md#missing-jni-libraries
+              |
+              |Expected $expected files, found:
+              | - """.trimMargin() +
+                files.map { it.toRelativeString(jniDir) }.sorted().joinToString("\n - ")
+                  .ifEmpty { "None!" }
+            )
+          }
+        }
+      }
+    }
+  }
 
   js {
     nodejs()
