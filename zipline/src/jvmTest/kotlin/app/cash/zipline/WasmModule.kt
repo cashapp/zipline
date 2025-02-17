@@ -27,12 +27,12 @@ class WasmModule private constructor(
   }
 
   companion object {
-    fun create(): WasmModule {
-      return WasmModule(load())
+    fun create(wasmData: ByteArray): WasmModule {
+      return WasmModule(load(wasmData))
     }
 
     @JvmStatic
-    private external fun load(): Long
+    private external fun load(wasmData: ByteArray): Long
 
     @JvmStatic
     private external fun close(wasmModule: Long)

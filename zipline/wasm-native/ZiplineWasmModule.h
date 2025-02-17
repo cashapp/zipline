@@ -25,7 +25,7 @@ public:
     ZiplineWasmModule();
     ~ZiplineWasmModule();
 
-    bool load(JNIEnv *env);
+    bool load(JNIEnv *env, jbyteArray wasmData);
 
     wasm_module_t wasm_module;
 };

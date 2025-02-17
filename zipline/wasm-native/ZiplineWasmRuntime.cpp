@@ -56,10 +56,10 @@ Java_app_cash_zipline_WasmRuntime_init(JNIEnv* env, jclass type)
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_app_cash_zipline_WasmModule_load(JNIEnv* env, jclass type)
+Java_app_cash_zipline_WasmModule_load(JNIEnv* env, jclass type, jbyteArray byteCode)
 {
     ZiplineWasmModule* result = new ZiplineWasmModule();
-    if (!result->load(env)) {
+    if (!result->load(env, byteCode)) {
         delete result;
         return 0;
     }
