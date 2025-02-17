@@ -13,22 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ZIPLINE_WASM_MODULE_H
-#define ZIPLINE_WASM_MODULE_H
+#ifndef ZIPLINE_WASM_MODULE_INSTANCE_H
+#define ZIPLINE_WASM_MODULE_INSTANCE_H
 
 #include <jni.h>
 #include <wasm_export.h>
 #include "ZiplineWasmInternal.h"
-#include "ZiplineWasmModuleInstance.h"
 
-class ZiplineWasmModule {
+class ZiplineWasmModuleInstance {
 public:
-    ZiplineWasmModule(wasm_module_t wasm_module);
-    ~ZiplineWasmModule();
+    ZiplineWasmModuleInstance(wasm_module_inst_t wasm_module_instance);
+    ~ZiplineWasmModuleInstance();
 
-    ZiplineWasmModuleInstance* createInstance(JNIEnv *env);
+    void main(JNIEnv *env);
 
-    wasm_module_t wasm_module;
+    wasm_module_inst_t wasm_module_instance;
 };
 
-#endif //ZIPLINE_WASM_MODULE_H
+#endif //ZIPLINE_WASM_MODULE_INSTANCE_H

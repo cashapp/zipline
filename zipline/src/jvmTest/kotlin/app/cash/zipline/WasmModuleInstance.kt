@@ -15,37 +15,26 @@
  */
 package app.cash.zipline
 
-class WasmModule private constructor(
-  private val wasmModule: Long,
+class WasmModuleInstance internal constructor(
+  private val wasmModuleInstance: Long,
 ) : AutoCloseable {
   private var closed = false
 
-  fun createInstance(): WasmModuleInstance {
-    val wasmModuleInstance = createInstance(wasmModule)
-    return WasmModuleInstance(wasmModuleInstance)
+  fun main() {
+    main(wasmModuleInstance)
   }
 
   override fun close() {
     if (closed) return
     closed = true
-    close(wasmModule)
+    close(wasmModuleInstance)
   }
 
   companion object {
-    fun create(wasmData: ByteArray): WasmModule {
-      return WasmModule(load(wasmData))
-    }
+    @JvmStatic
+    private external fun main(wasmModuleInstance: Long)
 
     @JvmStatic
-    private external fun load(wasmData: ByteArray): Long
-
-    @JvmStatic
-    private external fun createInstance(wasmModule: Long): Long
-
-    @JvmStatic
-    private external fun test(wasmModule: Long)
-
-    @JvmStatic
-    private external fun close(wasmModule: Long)
+    private external fun close(wasmModuleInstance: Long)
   }
 }

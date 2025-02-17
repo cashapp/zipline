@@ -45,14 +45,22 @@ Java_app_cash_zipline_WasmRuntime_init(JNIEnv* env, jclass type)
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_app_cash_zipline_WasmModule_load(JNIEnv* env, jclass type, jbyteArray byteCode)
+Java_app_cash_zipline_WasmModule_load(JNIEnv* env, jclass type, jbyteArray wasmData)
 {
-    ZiplineWasmModule* result = new ZiplineWasmModule();
-    if (!result->load(env, byteCode)) {
-        delete result;
-        return 0;
+    char error_buf[128] = { 0 };
+
+    const auto wasm_file_buf = env->GetByteArrayElements(wasmData, NULL);
+    const auto wasm_file_size = env->GetArrayLength(wasmData);
+    const auto wasm_module = wasm_runtime_load(reinterpret_cast<uint8_t*>(wasm_file_buf), wasm_file_size, error_buf, sizeof(error_buf));
+    env->ReleaseByteArrayElements(wasmData, wasm_file_buf, JNI_ABORT);
+
+    if (!wasm_module) {
+        std::cout << "in wasm_runtime_load %s\n" << error_buf << std::endl;
+        throwJavaException(env, "java/lang/IllegalStateException", "Module load failed");
+        return NULL;
     }
 
+    const auto result = new ZiplineWasmModule(wasm_module);
     return reinterpret_cast<jlong>(result);
 }
 
@@ -62,11 +70,25 @@ Java_app_cash_zipline_WasmModule_close(JNIEnv* env, jclass type, jlong _wasm_mod
     delete reinterpret_cast<ZiplineWasmModule*>(_wasm_module);
 }
 
-extern "C" JNIEXPORT void JNICALL
-Java_app_cash_zipline_WasmModule_test(JNIEnv* env, jclass type, jlong _wasm_module)
+extern "C" JNIEXPORT jlong JNICALL
+Java_app_cash_zipline_WasmModule_createInstance(JNIEnv* env, jclass type, jlong _wasm_module)
 {
-    const auto wasm_module = reinterpret_cast<ZiplineWasmModule*>(_wasm_module);
-    wasm_module->test(env);
+    const auto module = reinterpret_cast<ZiplineWasmModule*>(_wasm_module);
+    const auto moduleInstance = module->createInstance(env);
+    return reinterpret_cast<jlong>(moduleInstance);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_zipline_WasmModuleInstance_main(JNIEnv* env, jclass type, jlong _wasm_module_instance)
+{
+    const auto  moduleInstance = reinterpret_cast<ZiplineWasmModuleInstance*>(_wasm_module_instance);
+    moduleInstance->main(env);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_zipline_WasmModuleInstance_close(JNIEnv* env, jclass type, jlong _wasm_module_instance)
+{
+    delete reinterpret_cast<ZiplineWasmModuleInstance*>(_wasm_module_instance);
 }
 
 extern "C" JNIEXPORT void JNICALL
