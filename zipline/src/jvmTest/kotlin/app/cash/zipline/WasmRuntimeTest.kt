@@ -24,10 +24,17 @@ import org.junit.Test
  *
  *
  */
-class WasmTest {
+class WasmRuntimeTest {
   @Test
-  fun name() {
+  fun happyPath() {
     System.load("/Volumes/Development/zipline/zipline/src/jvmMain/build/libziplinewamr.dylib")
-    println(Wasm.createContext())
+    println(WasmRuntime.init())
+    val wasmModule = WasmModule.create()
+    println(wasmModule.wasmModule)
+
+    println(WasmRuntime.test(wasmModule.wasmModule))
+
+    wasmModule.close()
+    println(WasmRuntime.destroy())
   }
 }

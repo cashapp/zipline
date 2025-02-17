@@ -1,22 +1,28 @@
-#include <cstring>
-#include <stdlib.h>
+/*
+ * Copyright (C) 2025 Cash App
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+#include "ZiplineWasmModule.h"
+#include <iostream>
 #include <jni.h>
-#include <cinttypes>
-#include <string>
 #include <wasm_export.h>
 
-#include <cstdio>
-#include <iostream>
+ZiplineWasmModule::ZiplineWasmModule() {
+}
 
-static void *
-app_instance_main(wasm_module_inst_t module_inst)
-{
-    const char *exception;
-
-    wasm_application_execute_main(module_inst, 0, NULL);
-    if ((exception = wasm_runtime_get_exception(module_inst)))
-        std::cout << exception << std::endl;
-    return NULL;
+ZiplineWasmModule::~ZiplineWasmModule() {
+    wasm_runtime_unload(wasm_module);
 }
 
 // WARNING! CAN NOT BE READ ONLY!!!
@@ -57,33 +63,10 @@ static unsigned char wasm_test_file[] = {
     0x20, 0x62, 0x75, 0x66, 0x20, 0x66, 0x61, 0x69, 0x6C, 0x65, 0x64, 0x00
 };
 
-extern "C" JNIEXPORT jlong JNICALL
-Java_app_cash_zipline_Wasm_createContext(JNIEnv* env, jclass type)
-{
-    wasm_module_t wasm_module = NULL;
-    wasm_module_inst_t wasm_module_inst = NULL;
-    RuntimeInitArgs init_args;
+bool ZiplineWasmModule::load(JNIEnv *env) {
     uint wasm_file_size = 0;
     uint8_t *wasm_file_buf = NULL;
     char error_buf[128] = { 0 };
-
-    memset(&init_args, 0, sizeof(RuntimeInitArgs));
-
-#if WASM_ENABLE_GLOBAL_HEAP_POOL == 0
-    init_args.mem_alloc_type = Alloc_With_Allocator;
-    init_args.mem_alloc_option.allocator.malloc_func = (void *)malloc;
-    init_args.mem_alloc_option.allocator.realloc_func = (void *)realloc;
-    init_args.mem_alloc_option.allocator.free_func = (void *)free;
-#else
-#error The usage of a global heap pool is not implemented yet for Android.
-#endif
-
-    std::cout << "wasm_runtime_full_init" << std::endl;
-    /* initialize runtime environment */
-    if (!wasm_runtime_full_init(&init_args)) {
-        std::cout << "Init runtime failed." << std::endl;
-        return 998;
-    }
 
     /* load WASM byte buffer from a preinstall WASM bin file */
     std::cout << "use an internal test file, gona to output Hello World in logcat" << std::endl;
@@ -95,40 +78,9 @@ Java_app_cash_zipline_Wasm_createContext(JNIEnv* env, jclass type)
     if (!(wasm_module = wasm_runtime_load(wasm_file_buf, wasm_file_size,
                                           error_buf, sizeof(error_buf)))) {
         std::cout << "in wasm_runtime_load %s\n" << error_buf << std::endl;
-        std::cout << "goto fail1" << std::endl;
-        goto fail1;
+        throwJavaException(env, "java/lang/IllegalStateException", "Module load failed");
+        return false;
     }
 
-    /* instantiate the module */
-    std::cout << "wasm_runtime_instantiate" << std::endl;
-    if (!(wasm_module_inst =
-              wasm_runtime_instantiate(wasm_module, 64 * 1024, /* stack size */
-                                       64 * 1024,              /* heap size */
-                                       error_buf, sizeof(error_buf)))) {
-        std::cout << error_buf << std::endl;
-        std::cout << "goto fail2" << std::endl;
-        goto fail2;
-    }
-
-    std::cout << "run main() of the application" << std::endl;
-    app_instance_main(wasm_module_inst);
-
-    /* destroy the module instance */
-    std::cout << "wasm_runtime_deinstantiate" << std::endl;
-    wasm_runtime_deinstantiate(wasm_module_inst);
-
-fail2:
-    /* unload the module */
-    std::cout << "wasm_runtime_unload" << std::endl;
-    wasm_runtime_unload(wasm_module);
-
-fail1:
-    // in our case, we don't need a free, but it is not a typical one
-    /* free the file buffer */
-    // bh_free((void *) wasm_file_buf);
-
-    /* destroy runtime environment */
-    std::cout << "wasm_runtime_destroy" << std::endl;
-    wasm_runtime_destroy();
-    return 999;
+    return true;
 }

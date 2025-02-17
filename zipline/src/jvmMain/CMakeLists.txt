@@ -33,6 +33,7 @@ set (LIBC_WASI_SOURCE ${source_all})
 
 file(GLOB_RECURSE ZIPLINE_SOURCE
   "${ZIPLINE_ROOT_DIR}/zipline/wasm-native/*.cpp"
+  "${ZIPLINE_ROOT_DIR}/zipline/wasm-native/*.h"
 )
 
 set (WAMR_RUNTIME_AND_ZIPLINE_LIB_SOURCE
@@ -40,17 +41,14 @@ set (WAMR_RUNTIME_AND_ZIPLINE_LIB_SOURCE
   ${ZIPLINE_SOURCE}
 )
 
+add_library (ziplinewamr SHARED ${WAMR_RUNTIME_AND_ZIPLINE_LIB_SOURCE})
 
-add_library (libziplinewamr SHARED ${WAMR_RUNTIME_AND_ZIPLINE_LIB_SOURCE})
-
-target_include_directories(libziplinewamr PRIVATE
+target_include_directories(ziplinewamr PRIVATE
   "${ZIPLINE_ROOT_DIR}/zipline/wasm-native/include"
   "${ZIPLINE_ROOT_DIR}/zipline/wasm-native/include/share"
   "${ZIPLINE_ROOT_DIR}/zipline/wasm-native/include/unix"
 )
 
-install (TARGETS libziplinewamr DESTINATION lib)
+set_target_properties (ziplinewamr PROPERTIES OUTPUT_NAME ziplinewamr)
 
-set_target_properties (libziplinewamr PROPERTIES OUTPUT_NAME ziplinewamr)
-
-target_link_libraries (libziplinewamr ${LLVM_AVAILABLE_LIBS} ${UV_A_LIBS} -lm -ldl -lpthread)
+target_link_libraries (ziplinewamr ${LLVM_AVAILABLE_LIBS} ${UV_A_LIBS} -lm -ldl -lpthread)

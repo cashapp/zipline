@@ -13,11 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline
+#ifndef ZIPLINE_WASM_MODULE_H
+#define ZIPLINE_WASM_MODULE_H
 
-class Wasm {
-  companion object {
-    @JvmStatic
-    external fun createContext(): Long
-  }
-}
+#include <jni.h>
+#include <wasm_export.h>
+#include "ZiplineWasmInternal.h"
+
+class ZiplineWasmModule {
+public:
+    ZiplineWasmModule();
+    ~ZiplineWasmModule();
+
+    bool load(JNIEnv *env);
+
+    wasm_module_t wasm_module;
+};
+
+#endif //#endif //ZIPLINE_WASM_INTERNAL_H
