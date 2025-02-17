@@ -33,9 +33,8 @@ class WasmRuntimeTest {
     System.load("/Volumes/Development/zipline/zipline/src/jvmMain/build/libziplinewamr.dylib")
     println(WasmRuntime.init())
     val wasmModule = WasmModule.create(wasmData.toByteArray())
-    println(wasmModule.wasmModule)
 
-    println(WasmRuntime.test(wasmModule.wasmModule))
+    println(wasmModule.test())
 
     wasmModule.close()
     println(WasmRuntime.destroy())

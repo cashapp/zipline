@@ -26,17 +26,6 @@
 #include <cstdio>
 #include <iostream>
 
-static void *
-app_instance_main(wasm_module_inst_t module_inst)
-{
-    const char *exception;
-
-    wasm_application_execute_main(module_inst, 0, NULL);
-    if ((exception = wasm_runtime_get_exception(module_inst)))
-        std::cout << exception << std::endl;
-    return NULL;
-}
-
 extern "C" JNIEXPORT void JNICALL
 Java_app_cash_zipline_WasmRuntime_init(JNIEnv* env, jclass type)
 {
@@ -73,33 +62,11 @@ Java_app_cash_zipline_WasmModule_close(JNIEnv* env, jclass type, jlong _wasm_mod
     delete reinterpret_cast<ZiplineWasmModule*>(_wasm_module);
 }
 
-extern "C" JNIEXPORT jlong JNICALL
-Java_app_cash_zipline_WasmRuntime_test(JNIEnv* env, jclass type, jlong _wasm_module)
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_zipline_WasmModule_test(JNIEnv* env, jclass type, jlong _wasm_module)
 {
-    ZiplineWasmModule* wasm_module = reinterpret_cast<ZiplineWasmModule*>(_wasm_module);
-    wasm_module_inst_t wasm_module_inst = NULL;
-    char error_buf[128] = { 0 };
-
-    /* instantiate the module */
-    std::cout << "wasm_runtime_instantiate" << std::endl;
-    if (!(wasm_module_inst =
-              wasm_runtime_instantiate(wasm_module->wasm_module, 64 * 1024, /* stack size */
-                                       64 * 1024,              /* heap size */
-                                       error_buf, sizeof(error_buf)))) {
-        std::cout << error_buf << std::endl;
-        std::cout << "goto fail2" << std::endl;
-        goto fail2;
-    }
-
-    std::cout << "run main() of the application" << std::endl;
-    app_instance_main(wasm_module_inst);
-
-    /* destroy the module instance */
-    std::cout << "wasm_runtime_deinstantiate" << std::endl;
-    wasm_runtime_deinstantiate(wasm_module_inst);
-
-fail2:
-    return 0;
+    const auto wasm_module = reinterpret_cast<ZiplineWasmModule*>(_wasm_module);
+    wasm_module->test(env);
 }
 
 extern "C" JNIEXPORT void JNICALL

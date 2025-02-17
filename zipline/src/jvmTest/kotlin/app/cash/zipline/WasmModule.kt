@@ -16,9 +16,13 @@
 package app.cash.zipline
 
 class WasmModule private constructor(
-  val wasmModule: Long,
+  private val wasmModule: Long,
 ) : AutoCloseable {
   private var closed = false
+
+  fun test() {
+    test(wasmModule)
+  }
 
   override fun close() {
     if (closed) return
@@ -33,6 +37,9 @@ class WasmModule private constructor(
 
     @JvmStatic
     private external fun load(wasmData: ByteArray): Long
+
+    @JvmStatic
+    private external fun test(wasmModule: Long)
 
     @JvmStatic
     private external fun close(wasmModule: Long)

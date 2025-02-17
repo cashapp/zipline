@@ -21,9 +21,6 @@ class WasmRuntime {
     external fun init()
 
     @JvmStatic
-    external fun test(wasmModule: Long): Long
-
-    @JvmStatic
     external fun destroy()
   }
 }
