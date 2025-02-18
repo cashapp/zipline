@@ -30,14 +30,12 @@ class WasmRuntimeTest {
 
   @Test
   fun happyPath() {
-    System.load("/Volumes/Development/zipline/zipline/src/jvmMain/build/libziplinewamr.dylib")
-    println(WasmRuntime.init())
-    val wasmModule = WasmModule.create(wasmData.toByteArray())
+    val runtime = WasmRuntime.create()
+    val wasmModule = runtime.createModule(wasmData.toByteArray())
     val wasmModuleInstance = wasmModule.createInstance()
     wasmModuleInstance.main()
     println(wasmModuleInstance.close())
-
     wasmModule.close()
-    println(WasmRuntime.destroy())
+    println(runtime.close())
   }
 }

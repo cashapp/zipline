@@ -27,16 +27,13 @@ ZiplineWasmModule::~ZiplineWasmModule() {
     wasm_runtime_unload(wasm_module);
 }
 
-ZiplineWasmModuleInstance* ZiplineWasmModule::createInstance(JNIEnv *env) {
+ZiplineWasmModuleInstance* ZiplineWasmModule::createInstance(JNIEnv *env, jlong stackSize, jlong heapSize) {
     char error_buf[128] = { 0 };
 
     /* instantiate the module */
     std::cout << "wasm_runtime_instantiate" << std::endl;
 
-    const auto result = wasm_runtime_instantiate(wasm_module,
-                                                 64 * 1024, /* stack size */
-                                                 64 * 1024, /* heap size */
-                                                 error_buf, sizeof(error_buf));
+    const auto result = wasm_runtime_instantiate(wasm_module, stackSize, heapSize, error_buf, sizeof(error_buf));
     if (!result) {
         std::cout << error_buf << std::endl;
         std::cout << "goto fail2" << std::endl;

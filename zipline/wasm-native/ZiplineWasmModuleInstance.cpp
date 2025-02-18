@@ -24,6 +24,7 @@ ZiplineWasmModuleInstance::ZiplineWasmModuleInstance(wasm_module_inst_t wasm_mod
 }
 
 ZiplineWasmModuleInstance::~ZiplineWasmModuleInstance() {
+    std::cout << "wasm_runtime_deinstantiate" << std::endl;
     wasm_runtime_deinstantiate(wasm_module_instance);
 }
 

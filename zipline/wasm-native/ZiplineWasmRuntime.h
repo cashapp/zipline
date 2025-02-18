@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline
+#ifndef ZIPLINE_WASM_RUNTIME_H
+#define ZIPLINE_WASM_RUNTIME_H
 
-class WasmModuleInstance private constructor(
-  private val pointer: Long,
-) : AutoCloseable {
-  external fun main()
+class ZiplineWasmRuntime {
+public:
+    ZiplineWasmRuntime();
+    ~ZiplineWasmRuntime();
+};
 
-  external override fun close()
-}
+#endif //ZIPLINE_WASM_RUNTIME_H

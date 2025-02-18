@@ -15,12 +15,20 @@
  */
 package app.cash.zipline
 
-class WasmRuntime {
+class WasmRuntime private constructor(
+  private val pointer: Long,
+) : AutoCloseable {
+  external fun createModule(wasmData: ByteArray): WasmModule
+
+  external override fun close()
+
   companion object {
-    @JvmStatic
-    external fun init()
+    fun create(): WasmRuntime {
+      System.load("/Volumes/Development/zipline/zipline/src/jvmMain/build/libziplinewamr.dylib")
+      return createJni()
+    }
 
     @JvmStatic
-    external fun destroy()
+    private external fun createJni(): WasmRuntime
   }
 }
