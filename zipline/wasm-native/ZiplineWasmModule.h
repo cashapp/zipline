@@ -23,12 +23,11 @@
 
 class ZiplineWasmModule {
 public:
-    ZiplineWasmModule(wasm_module_t wasm_module);
-    ~ZiplineWasmModule();
+    ZiplineWasmModule(wasm_module_t wasmModule);
 
-    ZiplineWasmModuleInstance* createInstance(JNIEnv *env, jlong stackSize, jlong heapSize);
+    jobject createInstance(JNIEnv *env, jlong stackSize, jlong heapSize);
 
-    wasm_module_t wasm_module;
+    wasm_module_t wasmModule;
 };
 
 #endif //ZIPLINE_WASM_MODULE_H

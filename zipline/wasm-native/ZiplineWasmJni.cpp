@@ -13,33 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include <iostream>
 #include <jni.h>
 #include <wasm_export.h>
 #include "ZiplineWasmInternal.h"
 #include "ZiplineWasmModule.h"
 #include "ZiplineWasmRuntime.h"
-#include <iostream>
-
-jlong getPointerField(JNIEnv* env, jobject receiver) {
-    // TODO: queue an IllegalStateException('closed') if the result is 0.
-    const auto receiverClass = env->GetObjectClass(receiver);
-    const auto pointerField = env->GetFieldID(receiverClass, "pointer", "J");
-    return env->GetLongField(receiver, pointerField);
-}
-
-jlong setPointerField(JNIEnv* env, jobject receiver, jlong newValue) {
-    const auto receiverClass = env->GetObjectClass(receiver);
-    const auto pointerField = env->GetFieldID(receiverClass, "pointer", "J");
-    const auto oldValue = env->GetLongField(receiver, pointerField);
-    env->SetLongField(receiver, pointerField, newValue);
-    return oldValue;
-}
-
-jobject createJavaWrapper(JNIEnv* env, const char* className, jlong pointer) {
-    const auto resultClass = env->FindClass(className);
-    const auto resultConstructor = env->GetMethodID(resultClass, "<init>", "(J)V");
-    return env->NewObject(resultClass, resultConstructor, pointer);
-}
 
 extern "C" JNIEXPORT jobject JNICALL
 Java_app_cash_zipline_WasmRuntime_createJni(JNIEnv* env, jclass type)
@@ -62,26 +41,21 @@ Java_app_cash_zipline_WasmRuntime_createJni(JNIEnv* env, jclass type)
     return createJavaWrapper(env, "app/cash/zipline/WasmRuntime", resultPointer);
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_app_cash_zipline_WasmRuntime_close(JNIEnv* env, jobject receiver)
+{
+    const auto receiverPointer = setPointerField(env, receiver, 0);
+    if (receiverPointer != 0) {
+      delete reinterpret_cast<ZiplineWasmRuntime*>(receiverPointer);
+    }
+}
+
 extern "C" JNIEXPORT jobject JNICALL
 Java_app_cash_zipline_WasmRuntime_createModule(JNIEnv* env, jobject receiver, jbyteArray wasmData)
 {
-    char errorBuf[128] = { 0 };
-
-    const auto wasmDataBuf = env->GetByteArrayElements(wasmData, NULL);
-    const auto wasmDataSize = env->GetArrayLength(wasmData);
-    const auto wasmModule = wasm_runtime_load(reinterpret_cast<uint8_t*>(wasmDataBuf), wasmDataSize, errorBuf, sizeof(errorBuf));
-    env->ReleaseByteArrayElements(wasmData, wasmDataBuf, JNI_ABORT);
-
-    if (!wasmModule) {
-        std::cout << "in wasm_runtime_load %s\n" << errorBuf << std::endl;
-        throwJavaException(env, "java/lang/IllegalStateException", "Module load failed");
-        return NULL;
-    }
-
-    const auto result = new ZiplineWasmModule(wasmModule);
-
-    const auto resultPointer = reinterpret_cast<jlong>(result);
-    return createJavaWrapper(env, "app/cash/zipline/WasmModule", resultPointer);
+    const auto receiverPointer = getPointerField(env, receiver);
+    const auto runtime = reinterpret_cast<ZiplineWasmRuntime*>(receiverPointer);
+    return runtime->createModule(env, wasmData);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -89,26 +63,24 @@ Java_app_cash_zipline_WasmModule_close(JNIEnv* env, jobject receiver)
 {
     const auto receiverPointer = setPointerField(env, receiver, 0);
     if (receiverPointer != 0) {
-      delete reinterpret_cast<ZiplineWasmModule*>(receiverPointer);
+      wasm_runtime_unload(reinterpret_cast<wasm_module_t>(receiverPointer));
     }
 }
 
 extern "C" JNIEXPORT jobject JNICALL
-Java_app_cash_zipline_WasmModule_createInstanceJni(JNIEnv* env, jobject receiver, jlong stackSize, jlong heapSize)
+Java_app_cash_zipline_WasmModule_createInstance(JNIEnv* env, jobject receiver, jlong stackSize, jlong heapSize)
 {
     const auto receiverPointer = getPointerField(env, receiver);
-    const auto module = reinterpret_cast<ZiplineWasmModule*>(receiverPointer);
-    const auto result = module->createInstance(env, stackSize, heapSize);
-    const auto resultPointer = reinterpret_cast<jlong>(result);
-    return createJavaWrapper(env, "app/cash/zipline/WasmModuleInstance", resultPointer);
+    const auto module = reinterpret_cast<wasm_module_t>(receiverPointer);
+    return ZiplineWasmModule(module).createInstance(env, stackSize, heapSize);
 }
 
-extern "C" JNIEXPORT void JNICALL
-Java_app_cash_zipline_WasmModuleInstance_main(JNIEnv* env, jobject receiver)
+extern "C" JNIEXPORT jobject JNICALL
+Java_app_cash_zipline_WasmModuleInstance_function(JNIEnv* env, jobject receiver, jstring name)
 {
     const auto receiverPointer = getPointerField(env, receiver);
-    const auto moduleInstance = reinterpret_cast<ZiplineWasmModuleInstance*>(receiverPointer);
-    moduleInstance->main(env);
+    const auto moduleInstance = reinterpret_cast<wasm_module_inst_t>(receiverPointer);
+    return ZiplineWasmModuleInstance(moduleInstance).function(env, name);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -116,15 +88,6 @@ Java_app_cash_zipline_WasmModuleInstance_close(JNIEnv* env, jobject receiver)
 {
     const auto receiverPointer = setPointerField(env, receiver, 0);
     if (receiverPointer != 0) {
-      delete reinterpret_cast<ZiplineWasmModuleInstance*>(receiverPointer);
-    }
-}
-
-extern "C" JNIEXPORT void JNICALL
-Java_app_cash_zipline_WasmRuntime_close(JNIEnv* env, jobject receiver)
-{
-    const auto receiverPointer = setPointerField(env, receiver, 0);
-    if (receiverPointer != 0) {
-      delete reinterpret_cast<ZiplineWasmRuntime*>(receiverPointer);
+      wasm_runtime_deinstantiate(reinterpret_cast<wasm_module_inst_t>(receiverPointer));
     }
 }

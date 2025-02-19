@@ -15,12 +15,23 @@
  */
 package app.cash.zipline
 
-class WasmModuleInstance private constructor(
+class WasmFunction private constructor(
   private val pointer: Long,
-) : AutoCloseable {
-//  external fun main()
+  private val paramTypes: Array<WasmValueType>,
+  private val resultTypes: Array<WasmValueType>,
+) {
+  fun call(args: List<WasmValue>): List<WasmValue> {
+    val result = call(args.toTypedArray())
+    return result.toList()
+  }
 
-  external fun function(name: String): WasmFunction?
+  /*
+  TODO.
+  wasm_runtime_call_wasm_a(wasm_exec_env_t exec_env,
+                           wasm_function_inst_t function, uint32_t num_results,
+                           wasm_val_t results[], uint32_t num_args,
+                           wasm_val_t *args);
 
-  external override fun close()
+     */
+  external fun call(args: Array<WasmValue>): Array<WasmValue>
 }

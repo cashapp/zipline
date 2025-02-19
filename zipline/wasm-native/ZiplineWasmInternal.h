@@ -20,4 +20,10 @@
 
 void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt, ...);
 
+jobject createJavaWrapper(JNIEnv* env, const char* className, jlong pointer);
+
+jlong getPointerField(JNIEnv* env, jobject receiver);
+
+jlong setPointerField(JNIEnv* env, jobject receiver, jlong newValue);
+
 #endif //ZIPLINE_WASM_INTERNAL_H

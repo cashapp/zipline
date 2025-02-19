@@ -23,3 +23,24 @@ void throwJavaException(JNIEnv *env, const char *exceptionClass, const char *fmt
   va_end (args);
   env->ThrowNew(env->FindClass(exceptionClass), msg);
 }
+
+jobject createJavaWrapper(JNIEnv* env, const char* className, jlong pointer) {
+    const auto resultClass = env->FindClass(className);
+    const auto resultConstructor = env->GetMethodID(resultClass, "<init>", "(J)V");
+    return env->NewObject(resultClass, resultConstructor, pointer);
+}
+
+jlong getPointerField(JNIEnv* env, jobject receiver) {
+    // TODO: queue an IllegalStateException('closed') if the result is 0.
+    const auto receiverClass = env->GetObjectClass(receiver);
+    const auto pointerField = env->GetFieldID(receiverClass, "pointer", "J");
+    return env->GetLongField(receiver, pointerField);
+}
+
+jlong setPointerField(JNIEnv* env, jobject receiver, jlong newValue) {
+    const auto receiverClass = env->GetObjectClass(receiver);
+    const auto pointerField = env->GetFieldID(receiverClass, "pointer", "J");
+    const auto oldValue = env->GetLongField(receiver, pointerField);
+    env->SetLongField(receiver, pointerField, newValue);
+    return oldValue;
+}

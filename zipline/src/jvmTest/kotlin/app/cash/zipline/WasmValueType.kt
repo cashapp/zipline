@@ -13,20 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ZIPLINE_WASM_RUNTIME_H
-#define ZIPLINE_WASM_RUNTIME_H
+package app.cash.zipline
 
-#include <jni.h>
-#include <wasm_export.h>
-#include "ZiplineWasmInternal.h"
-#include "ZiplineWasmModule.h"
-
-class ZiplineWasmRuntime {
-public:
-    ZiplineWasmRuntime();
-    ~ZiplineWasmRuntime();
-
-    jobject createModule(JNIEnv* env, jbyteArray wasmData);
-};
-
-#endif //ZIPLINE_WASM_RUNTIME_H
+enum class WasmValueType {
+  I32,
+  I64,
+  F32,
+  F64,
+  V128,
+  EXTERNREF,
+  FUNCREF,
+}

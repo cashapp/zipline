@@ -13,32 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "ZiplineWasmModule.h"
-#include "ZiplineWasmModuleInstance.h"
 #include <iostream>
 #include <jni.h>
 #include <wasm_export.h>
+#include "ZiplineWasmInternal.h"
+#include "ZiplineWasmModule.h"
+#include "ZiplineWasmModuleInstance.h"
 
-ZiplineWasmModule::ZiplineWasmModule(wasm_module_t wasm_module)
-    : wasm_module(wasm_module) {
+ZiplineWasmModule::ZiplineWasmModule(wasm_module_t wasmModule)
+    : wasmModule(wasmModule) {
 }
 
-ZiplineWasmModule::~ZiplineWasmModule() {
-    wasm_runtime_unload(wasm_module);
-}
-
-ZiplineWasmModuleInstance* ZiplineWasmModule::createInstance(JNIEnv *env, jlong stackSize, jlong heapSize) {
+jobject ZiplineWasmModule::createInstance(JNIEnv *env, jlong stackSize, jlong heapSize) {
     char error_buf[128] = { 0 };
 
-    /* instantiate the module */
-    std::cout << "wasm_runtime_instantiate" << std::endl;
-
-    const auto result = wasm_runtime_instantiate(wasm_module, stackSize, heapSize, error_buf, sizeof(error_buf));
+    const auto result = wasm_runtime_instantiate(wasmModule, stackSize, heapSize, error_buf, sizeof(error_buf));
     if (!result) {
         std::cout << error_buf << std::endl;
         std::cout << "goto fail2" << std::endl;
         return NULL;
     }
 
-    return new ZiplineWasmModuleInstance(result);
+    const auto resultPointer = reinterpret_cast<jlong>(result);
+    return createJavaWrapper(env, "app/cash/zipline/WasmModuleInstance", resultPointer);
 }

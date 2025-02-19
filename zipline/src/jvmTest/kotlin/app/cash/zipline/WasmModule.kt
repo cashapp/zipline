@@ -18,14 +18,11 @@ package app.cash.zipline
 class WasmModule private constructor(
   private val pointer: Long,
 ) : AutoCloseable {
-  fun createInstance(
+  external fun exports(): Array<WasmExport>
+
+  external fun createInstance(
     stackSize: Long = 64 * 1024,
     heapSize: Long = 64 * 1024,
-  ): WasmModuleInstance = createInstanceJni(stackSize, heapSize)
-
-  external fun createInstanceJni(
-    stackSize: Long,
-    heapSize: Long,
   ): WasmModuleInstance
 
   external override fun close()

@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ZIPLINE_WASM_RUNTIME_H
-#define ZIPLINE_WASM_RUNTIME_H
+package app.cash.zipline
 
-#include <jni.h>
-#include <wasm_export.h>
-#include "ZiplineWasmInternal.h"
-#include "ZiplineWasmModule.h"
+sealed interface WasmExport {
+  val name: String
 
-class ZiplineWasmRuntime {
-public:
-    ZiplineWasmRuntime();
-    ~ZiplineWasmRuntime();
-
-    jobject createModule(JNIEnv* env, jbyteArray wasmData);
-};
-
-#endif //ZIPLINE_WASM_RUNTIME_H
+  data class Function(override val name: String) : WasmExport
+  data class Table(override val name: String) : WasmExport
+  data class Global(override val name: String) : WasmExport
+  data class Memory(override val name: String) : WasmExport
+}

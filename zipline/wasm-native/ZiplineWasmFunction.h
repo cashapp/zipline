@@ -13,20 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ZIPLINE_WASM_RUNTIME_H
-#define ZIPLINE_WASM_RUNTIME_H
+#ifndef ZIPLINE_WASM_FUNCTION_H
+#define ZIPLINE_WASM_FUNCTION_H
 
 #include <jni.h>
 #include <wasm_export.h>
 #include "ZiplineWasmInternal.h"
-#include "ZiplineWasmModule.h"
 
-class ZiplineWasmRuntime {
+class ZiplineWasmFunction {
 public:
-    ZiplineWasmRuntime();
-    ~ZiplineWasmRuntime();
+    ZiplineWasmFunction(wasm_function_inst_t wasmFunctionInstance);
 
-    jobject createModule(JNIEnv* env, jbyteArray wasmData);
+    wasm_function_inst_t wasmFunctionInstance;
 };
 
-#endif //ZIPLINE_WASM_RUNTIME_H
+#endif //ZIPLINE_WASM_FUNCTION_H

@@ -18,16 +18,17 @@
 
 #include <jni.h>
 #include <wasm_export.h>
+#include "ZiplineWasmFunction.h"
 #include "ZiplineWasmInternal.h"
 
 class ZiplineWasmModuleInstance {
 public:
-    ZiplineWasmModuleInstance(wasm_module_inst_t wasm_module_instance);
-    ~ZiplineWasmModuleInstance();
+    ZiplineWasmModuleInstance(wasm_module_inst_t wasmModuleInstance);
 
     void main(JNIEnv *env);
+    jobject function(JNIEnv* env, jstring name);
 
-    wasm_module_inst_t wasm_module_instance;
+    wasm_module_inst_t wasmModuleInstance;
 };
 
 #endif //ZIPLINE_WASM_MODULE_INSTANCE_H
