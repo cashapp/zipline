@@ -26,6 +26,7 @@ public:
     ZiplineWasmModule(wasm_module_t wasmModule);
 
     jobject createInstance(JNIEnv *env, jlong stackSize, jlong heapSize);
+    void close(JNIEnv *env, jobject receiver);
 
     wasm_module_t wasmModule;
 };

@@ -16,10 +16,10 @@
 package app.cash.zipline
 
 class WasmModuleInstance private constructor(
+  /** A pointer to a `wasm_module_inst_t`. */
   private val pointer: Long,
 ) : AutoCloseable {
-//  external fun main()
-
+  /** Returns the named function, or null if no such function exists. */
   external fun function(name: String): WasmFunction?
 
   external override fun close()

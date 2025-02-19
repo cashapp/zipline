@@ -63,7 +63,8 @@ Java_app_cash_zipline_WasmModule_close(JNIEnv* env, jobject receiver)
 {
     const auto receiverPointer = setPointerField(env, receiver, 0);
     if (receiverPointer != 0) {
-      wasm_runtime_unload(reinterpret_cast<wasm_module_t>(receiverPointer));
+        const auto module = reinterpret_cast<wasm_module_t>(receiverPointer);
+        ZiplineWasmModule(module).close(env, receiver);
     }
 }
 

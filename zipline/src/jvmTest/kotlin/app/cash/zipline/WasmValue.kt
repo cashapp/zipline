@@ -16,10 +16,10 @@
 package app.cash.zipline
 
 sealed class WasmValue {
-  class I32Value(val value: Int) : WasmValue()
-  class I64Value(val value: Long) : WasmValue()
-  class F32Value(val value: Float) : WasmValue()
-  class F64Value(val value: Double) : WasmValue()
+  class I32(val value: Int) : WasmValue()
+  class I64(val value: Long) : WasmValue()
+  class F32(val value: Float) : WasmValue()
+  class F64(val value: Double) : WasmValue()
   // WASM_V128
   // WASM_EXTERNREF
   // WASM_FUNCREF

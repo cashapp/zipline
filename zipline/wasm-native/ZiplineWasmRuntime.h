@@ -27,6 +27,7 @@ public:
     ~ZiplineWasmRuntime();
 
     jobject createModule(JNIEnv* env, jbyteArray wasmData);
+    jobject createExport(JNIEnv* env, wasm_module_t wasmModule, int32_t index);
 };
 
 #endif //ZIPLINE_WASM_RUNTIME_H

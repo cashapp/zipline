@@ -16,6 +16,7 @@
 package app.cash.zipline
 
 class WasmRuntime private constructor(
+  /** A pointer to a `ZiplineWasmRuntime`. */
   private val pointer: Long,
 ) : AutoCloseable {
   external fun createModule(wasmData: ByteArray): WasmModule

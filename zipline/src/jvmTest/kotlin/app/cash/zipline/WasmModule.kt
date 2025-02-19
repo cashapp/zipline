@@ -16,9 +16,13 @@
 package app.cash.zipline
 
 class WasmModule private constructor(
+  /** A pointer to a `wasm_module_t`, or 0 after [close]. */
   private val pointer: Long,
+  /** A pointer to a `jbyte*`, or 0 after [close]. */
+  private val wasmDataBuf: Long,
+  /** TODO: implement support for [WasmExport.Table], [WasmExport.Global], [WasmExport.Memory]. */
+  private val exports: Array<WasmExport?>,
 ) : AutoCloseable {
-  external fun exports(): Array<WasmExport>
 
   external fun createInstance(
     stackSize: Long = 64 * 1024,

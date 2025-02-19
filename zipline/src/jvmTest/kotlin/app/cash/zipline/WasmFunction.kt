@@ -16,8 +16,11 @@
 package app.cash.zipline
 
 class WasmFunction private constructor(
+  /** A pointer to a `wasm_function_inst_t`. */
   private val pointer: Long,
+  /** TODO: implement support for populating these values. */
   private val paramTypes: Array<WasmValueType>,
+  /** TODO: implement support for populating these values. */
   private val resultTypes: Array<WasmValueType>,
 ) {
   fun call(args: List<WasmValue>): List<WasmValue> {

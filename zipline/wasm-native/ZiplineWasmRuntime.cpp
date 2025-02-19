@@ -30,10 +30,11 @@ ZiplineWasmRuntime::~ZiplineWasmRuntime() {
 jobject ZiplineWasmRuntime::createModule(JNIEnv* env, jbyteArray wasmData) {
     char errorBuf[128] = { 0 };
 
-    const auto wasmDataBuf = env->GetByteArrayElements(wasmData, NULL);
     const auto wasmDataSize = env->GetArrayLength(wasmData);
+    const auto wasmDataBuf = new jbyte[wasmDataSize];
+    env->GetByteArrayRegion(wasmData, 0, wasmDataSize, wasmDataBuf);
+
     const auto wasmModule = wasm_runtime_load(reinterpret_cast<uint8_t*>(wasmDataBuf), wasmDataSize, errorBuf, sizeof(errorBuf));
-    env->ReleaseByteArrayElements(wasmData, wasmDataBuf, JNI_ABORT);
 
     if (!wasmModule) {
         std::cout << "in wasm_runtime_load %s\n" << errorBuf << std::endl;
@@ -41,6 +42,33 @@ jobject ZiplineWasmRuntime::createModule(JNIEnv* env, jbyteArray wasmData) {
         return NULL;
     }
 
+    const auto wasmExportClass = env->FindClass("app/cash/zipline/WasmExport");
+    const auto wasmModuleClass = env->FindClass("app/cash/zipline/WasmModule");
+
+    const auto exportCount = wasm_runtime_get_export_count(wasmModule);
+    const auto exportsArray = env->NewObjectArray(exportCount, wasmExportClass, NULL);
+    for (int i = 0; i < exportCount; i++) {
+        env->SetObjectArrayElement(exportsArray, i, createExport(env, wasmModule, i));
+    }
+
     const auto resultPointer = reinterpret_cast<jlong>(wasmModule);
-    return createJavaWrapper(env, "app/cash/zipline/WasmModule", resultPointer);
+    const auto wasmDataBufPointer = reinterpret_cast<jlong>(wasmDataBuf);
+    const auto resultConstructor = env->GetMethodID(wasmModuleClass, "<init>", "(JJ[Lapp/cash/zipline/WasmExport;)V");
+
+    return env->NewObject(wasmModuleClass, resultConstructor, resultPointer, wasmDataBufPointer, exportsArray);
+}
+
+jobject ZiplineWasmRuntime::createExport(JNIEnv* env, wasm_module_t wasmModule, int32_t index) {
+    wasm_export_t exportType;
+    wasm_runtime_get_export_type(wasmModule, index, &exportType);
+
+    if (exportType.kind == WASM_IMPORT_EXPORT_KIND_FUNC) {
+        const auto resultClass = env->FindClass("app/cash/zipline/WasmExport$Function");
+        const auto resultConstructor = env->GetMethodID(resultClass, "<init>", "(Ljava/lang/String;)V");
+
+        const auto name = env->NewStringUTF(exportType.name);
+        return env->NewObject(resultClass, resultConstructor, name);
+    }
+
+    return NULL;
 }

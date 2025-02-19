@@ -37,3 +37,14 @@ jobject ZiplineWasmModule::createInstance(JNIEnv *env, jlong stackSize, jlong he
     const auto resultPointer = reinterpret_cast<jlong>(result);
     return createJavaWrapper(env, "app/cash/zipline/WasmModuleInstance", resultPointer);
 }
+
+void ZiplineWasmModule::close(JNIEnv *env, jobject receiver) {
+    wasm_runtime_unload(wasmModule);
+
+    const auto moduleClass = env->FindClass("app/cash/zipline/WasmModule");
+    const auto wasmDataBufField = env->GetFieldID(moduleClass, "wasmDataBuf", "J");
+    const auto wasmDataBufPointer = env->GetLongField(receiver, wasmDataBufField);
+    env->SetLongField(receiver, wasmDataBufField, 0);
+    const auto wasmDataBuf = reinterpret_cast<jbyte*>(wasmDataBufPointer);
+    delete wasmDataBuf;
+}
