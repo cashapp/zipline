@@ -19,7 +19,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 23
+          java-version-file: .github/workflows/.java-version
 
       - uses: goto-bus-stop/setup-zig@v2
         with:

@@ -52,7 +52,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 23
+          java-version-file: .github/workflows/.java-version
 
       - uses: actions/download-artifact@v4
         with:
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 23
+          java-version-file: .github/workflows/.java-version
 
       - uses: actions/download-artifact@v4
         with:
@@ -95,7 +95,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 23
+          java-version-file: .github/workflows/.java-version
 
       - name: Enable KVM
         run: |
@@ -119,7 +119,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 23
+          java-version-file: .github/workflows/.java-version
 
       - name: Build Xcode samples
         run: |
@@ -140,7 +140,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: 23
+          java-version-file: .github/workflows/.java-version
 
       - uses: actions/download-artifact@v4
         with:
