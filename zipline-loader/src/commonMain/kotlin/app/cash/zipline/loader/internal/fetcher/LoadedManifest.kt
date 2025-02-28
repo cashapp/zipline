@@ -45,5 +45,7 @@ internal fun LoadedManifest(manifestBytes: ByteString, freshAtEpochMs: Long): Lo
 
 internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
   val manifest = ZiplineManifest.decodeJson(manifestBytes.utf8())
-  return LoadedManifest(manifestBytes, manifest, manifest.freshAtEpochMs!!)
+  val freshAtEpochMs = manifest.freshAtEpochMs
+    ?: error("freshAtEpochMs is required for loaded manifests, but was null")
+  return LoadedManifest(manifestBytes, manifest, freshAtEpochMs)
 }
