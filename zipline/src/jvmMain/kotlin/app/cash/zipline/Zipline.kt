@@ -16,8 +16,13 @@
 
 package app.cash.zipline
 
+import app.cash.plywood.WasmEngine
+import app.cash.plywood.WasmFunction
+import app.cash.plywood.WasmModule
+import app.cash.plywood.bridge.HostBridge
 import app.cash.zipline.internal.CoroutineEventLoop
 import app.cash.zipline.internal.EventListenerAdapter
+import app.cash.zipline.internal.FakeKotlinStdlib
 import app.cash.zipline.internal.GuestService
 import app.cash.zipline.internal.HostService
 import app.cash.zipline.internal.RealHostService
@@ -26,10 +31,9 @@ import app.cash.zipline.internal.ZIPLINE_HOST_NAME
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.Endpoint
 import app.cash.zipline.internal.bridge.ZiplineServiceAdapter
+import app.cash.zipline.internal.bridge.ZiplineWasmBridge
 import app.cash.zipline.internal.bridge.stopTrackingLeaks
 import app.cash.zipline.internal.bridge.theOnlyCancellationException
-import app.cash.zipline.internal.initModuleLoader
-import app.cash.zipline.internal.loadJsModule
 import kotlin.coroutines.resumeWithException
 import kotlin.reflect.KClass
 import kotlin.reflect.cast
@@ -43,30 +47,34 @@ import kotlinx.serialization.modules.EmptySerializersModule
 import kotlinx.serialization.modules.SerializersModule
 
 actual class Zipline private constructor(
-  @property:EngineApi
-  val quickJs: QuickJs,
+  private val wasmEngine: WasmEngine,
   userSerializersModule: SerializersModule,
   dispatcher: CoroutineDispatcher,
   private val scope: CoroutineScope,
   val eventListener: EventListener,
 ) : AutoCloseable {
+  private val plywoodBridge = HostBridge()
+  private val ziplineWasmBridge = ZiplineWasmBridge(plywoodBridge)
+  private var wasmModuleSpec: WasmModule.Spec? = null
+  private var wasmModule: WasmModule? = null
+
   private val endpoint = Endpoint(
     scope = scope,
     userSerializersModule = userSerializersModule,
     eventListener = EventListenerAdapter(eventListener, this),
     outboundChannel = object : CallChannel {
-      /** Lazily fetch the channel to call into JS. */
-      private val jsInboundBridge: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
-        quickJs.getInboundChannel()
+      /** Lazily fetch the channel to call into Wasm. */
+      private val callChannel: CallChannel by lazy(mode = LazyThreadSafetyMode.NONE) {
+        ziplineWasmBridge.outboundCallChannel(wasmModule!!)
       }
 
       override fun call(callJson: String): String {
         check(scope.isActive) { "Zipline closed" }
-        return jsInboundBridge.call(callJson)
+        return callChannel.call(callJson)
       }
 
       override fun disconnect(instanceName: String): Boolean {
-        return jsInboundBridge.disconnect(instanceName)
+        return callChannel.disconnect(instanceName)
       }
     },
     oppositeProvider = {
@@ -90,9 +98,6 @@ actual class Zipline private constructor(
   private val attachments = mutableMapOf<KClass<*>, Any>()
 
   init {
-    // Eagerly publish the channel so the guest can call us.
-    quickJs.initOutboundChannel(endpoint.inboundChannel)
-
     val eventLoop = CoroutineEventLoop(dispatcher, scope, guest)
 
     endpoint.bind<HostService>(
@@ -160,7 +165,9 @@ actual class Zipline private constructor(
       }
     }
 
-    quickJs.close()
+    wasmModule?.close()
+    wasmModuleSpec?.close()
+    wasmEngine.close()
 
     // Don't wait for a JS continuation to resume, it never will. Canceling `scope` doesn't do this
     // because each continuation is in its caller's scope.
@@ -176,12 +183,18 @@ actual class Zipline private constructor(
     }
   }
 
-  fun loadJsModule(script: String, id: String) {
-    loadJsModule(quickJs, script, id)
+  fun loadWasmModule(bytecode: ByteArray) {
+    check(wasmModuleSpec == null && wasmModule == null)
+    val kotlinStdlib = FakeKotlinStdlib()
+    val spec = wasmEngine.spec(bytecode)
+    wasmModuleSpec = spec
+    wasmModule = spec.create { module ->
+      kotlinStdlib.imports(module) + plywoodBridge.imports(module) + ziplineWasmBridge.imports(module, endpoint.inboundChannel)
+    }
   }
 
-  fun loadJsModule(bytecode: ByteArray, id: String) {
-    loadJsModule(quickJs, id, bytecode)
+  fun wasmFunction(name: String): WasmFunction? {
+    return wasmModule?.function(name)
   }
 
   actual fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T): T {
@@ -195,15 +208,9 @@ actual class Zipline private constructor(
       serializersModule: SerializersModule = EmptySerializersModule(),
       eventListener: EventListener = EventListener.NONE,
     ): Zipline {
-      val quickJs = QuickJs.create()
-      // The default stack size is 256 KiB. QuickJS is not graceful when the stack size is exceeded
-      // so we set a high limit so it only fails on definitely buggy code, not just recursive code.
-      // Expect callers to use 8 MiB stack sizes for their calling threads.
-      quickJs.maxStackSize = 6 * 1024 * 1024L
-      initModuleLoader(quickJs)
-
+      val engine = WasmEngine()
       val scope = CoroutineScope(dispatcher)
-      val result = Zipline(quickJs, serializersModule, dispatcher, scope, eventListener)
+      val result = Zipline(engine, serializersModule, dispatcher, scope, eventListener)
       eventListener.ziplineCreated(result)
       return result
     }

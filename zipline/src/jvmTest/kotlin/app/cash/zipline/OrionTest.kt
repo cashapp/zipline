@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2025 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,16 +19,20 @@ import app.cash.zipline.testing.Clock
 import app.cash.zipline.testing.HttpActionService
 import app.cash.zipline.testing.HttpRequest
 import app.cash.zipline.testing.HttpResponse
-import app.cash.zipline.testing.loadTestingJs
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.runTest
+import okio.FileSystem
+import okio.Path.Companion.toPath
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 class OrionTest {
+  private val wasmFile = "../zipline-testing/build/compileSync/wasmWasi/main/developmentExecutable/kotlin/zipline-root-zipline-testing-wasm-wasi.wasm".toPath()
+
+  private val fileSystem = FileSystem.SYSTEM
   private val dispatcher = StandardTestDispatcher()
   private val zipline = Zipline.create(
     dispatcher,
@@ -46,7 +50,8 @@ class OrionTest {
 
   @Before
   fun setUp() = runTest(dispatcher) {
-    zipline.loadTestingJs()
+    val wasm = fileSystem.read(wasmFile) { readByteArray() }
+    zipline.loadWasmModule(wasm)
   }
 
   @After
@@ -56,7 +61,10 @@ class OrionTest {
 
   @Test
   fun jvmCallJsService() = runTest(dispatcher) {
-    zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareOrionBridges()")
+    zipline.wasmFunction("_initialize")!!.invoke(listOf())
+    val a = zipline.wasmFunction("prepareOrionBridges")!!.invoke(listOf())
+
+    println(a)
 
     val httpActionService = zipline.take<HttpActionService>("httpActionService")
     zipline.bind<Clock>("clock", object : Clock {

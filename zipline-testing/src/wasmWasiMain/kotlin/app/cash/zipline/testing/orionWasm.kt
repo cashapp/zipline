@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2021 Square, Inc.
+ * Copyright (C) 2025 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,9 @@
 package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
+import app.cash.zipline.internal.bridge.guestCall
+import app.cash.zipline.internal.bridge.guestDisconnect
+import app.cash.zipline.theOnlyZipline
 
 class OrionEchoService(
   private val greeting: String,
@@ -28,8 +31,25 @@ class OrionEchoService(
 
 private val zipline by lazy { Zipline.get() }
 
-@JsExport
-fun prepareOrionBridges() {
+@WasmExport
+fun prepareOrionBridges() : Int {
   val clock = zipline.take<Clock>("clock")
   zipline.bind<HttpActionService>("httpActionService", OrionEchoService("hello", clock))
+
+  retainExportedFunctions()
+
+  if (theOnlyZipline != null) {
+    return 0
+  } else {
+    return 1
+  }
+}
+
+/**
+ * Prevent exported functions from being stripped.
+ */
+private fun retainExportedFunctions() {
+  if ("hello".length == 5) return
+  guestCall(0)
+  guestDisconnect(0)
 }

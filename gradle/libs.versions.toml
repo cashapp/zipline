@@ -7,6 +7,7 @@ kotlinx-coroutines = "1.10.1"
 kotlinx-serialization = "1.8.0"
 okHttp = "4.12.0"
 okio = "3.10.2"
+plywood = "0.1-alpha.20250317.223637.2d65ec8"
 minSdk = "21"
 sqldelight = "2.0.2"
 
@@ -60,6 +61,9 @@ sqldelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", versi
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.49.1.0" }
 turbine = { module = "app.cash.turbine:turbine", version = "1.2.0" }
+plywood = { module = "app.cash.plywood:plywood", version.ref = "plywood" }
+plywood-bridge-guest = { module = "app.cash.plywood:plywood-bridge-guest", version.ref = "plywood" }
+plywood-bridge-host = { module = "app.cash.plywood:plywood-bridge-host", version.ref = "plywood" }
 
 [plugins]
 spotless = { id = "com.diffplug.spotless", version = "7.0.2" }

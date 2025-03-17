@@ -20,9 +20,7 @@ import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
 
 buildscript {
   repositories {
-    mavenCentral()
-    google()
-    gradlePluginPortal()
+    maven(url = "https://maven.global.square/artifactory/android-public")
   }
   dependencies {
     classpath(libs.android.gradle.plugin)
@@ -66,8 +64,7 @@ allprojects {
   version = project.property("VERSION_NAME") as String
 
   repositories {
-    mavenCentral()
-    google()
+    maven(url = "https://maven.global.square/artifactory/android-public")
   }
 }
 
