@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Cash App
+ * Copyright (C) 2022 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,23 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.testing
+package app.cash.zipline.internal.bridge
 
-import okio.FileSystem
-import okio.Path
-import okio.Path.Companion.toPath
+import app.cash.zipline.ZiplineService
 
-expect val systemFileSystem: FileSystem
+internal actual fun trackLeaks(
+  endpoint: Endpoint,
+  serviceName: String,
+  callHandler: OutboundCallHandler,
+  service: ZiplineService,
+) {
+}
 
-expect val resourcesFileSystem: FileSystem?
-
-val ziplineRoot: Path
-  get() = ziplineRootOrNull!!
-
-val ziplineRootOrNull: Path?
-  get() = getEnv("ZIPLINE_ROOT")?.toPath()
-
-internal expect fun getEnv(name: String): String?
-
-/** True on Android and JVM platforms. */
-expect val isJni: Boolean
+internal actual fun detectLeaks() {
+}

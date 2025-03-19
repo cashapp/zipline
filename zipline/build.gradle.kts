@@ -1,7 +1,10 @@
+@file:OptIn(ExperimentalWasmDsl::class)
+
 import co.touchlab.cklib.gradle.CompileToBitcode.Language.C
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
 import org.jetbrains.kotlin.gradle.plugin.NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
@@ -42,6 +45,8 @@ kotlin {
   }
   jvm()
 
+  wasmWasi()
+
   js {
     nodejs()
   }
@@ -74,6 +79,9 @@ kotlin {
         implementation(libs.kotlinx.coroutines.test)
         implementation(projects.ziplineTesting)
       }
+    }
+
+    val wasmWasiMain by getting {
     }
 
     val hostMain by creating {
@@ -112,6 +120,9 @@ kotlin {
     }
     val jvmMain by getting {
       dependsOn(jniMain)
+      dependencies {
+        implementation(libs.chasm)
+      }
     }
     val jvmTest by getting {
       dependsOn(jniTest)
