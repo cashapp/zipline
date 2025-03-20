@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-Nothing yet!
+* Fix: Update source map parser to ECMA 426 which will not fail on the `ignoreList` key and ignore any extensions.
 
 
 ## [1.20.0] - 2025-03-20
