@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
   // The Windows builds create a .lib file in the lib/ directory which we don't need.
-  const deleteLib = b.addRemoveDirTree(b.getInstallPath(.prefix, "lib"));
+  const deleteLib = b.addRemoveDirTree(b.path(b.getInstallPath(.prefix, "lib")));
   b.getInstallStep().dependOn(&deleteLib.step);
 
   try setupTarget(b, &deleteLib.step, .linux, .aarch64, "aarch64");
@@ -28,7 +28,7 @@ fn setupTarget(b: *std.Build, step: *std.Build.Step, tag: std.Target.Os.Tag, arc
   const version = try readVersionFile(&version_buf);
   var quoted_version_buf: [12]u8 = undefined;
   const quoted_version = try std.fmt.bufPrint(&quoted_version_buf, "\"{s}\"", .{ version });
-  lib.defineCMacro("CONFIG_VERSION", quoted_version);
+  lib.root_module.addCMacro("CONFIG_VERSION", quoted_version);
 
   lib.addIncludePath(b.path("native/include/share"));
   lib.addIncludePath(

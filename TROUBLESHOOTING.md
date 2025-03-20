@@ -38,7 +38,7 @@ Download [the latest `jni-binaries` artifact](https://nightly.link/cashapp/zipli
 Zipline uses Zig to cross-compile its JVM native libraries to all platforms and architectures.
 This is only tested on macOS, but may work on Linux, too. Windows is not supported.
 
-First, download or install Zig 0.13.0 to your system.
+First, download or install Zig 0.14.0 to your system.
 Then, execute these commands:
 
 ```
