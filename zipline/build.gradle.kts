@@ -36,6 +36,11 @@ dependencies {
   add(NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME, projects.ziplineKotlinPlugin)
 }
 
+val wasmBinaries by configurations.creating {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+}
+
 kotlin {
   androidTarget {
     publishLibraryVariants("release")
@@ -112,10 +117,14 @@ kotlin {
     }
     val jvmMain by getting {
       dependsOn(jniMain)
+      dependencies {
+        implementation(libs.chasm)
+      }
     }
     val jvmTest by getting {
       dependsOn(jniTest)
       resources.srcDir(copyTestingJs)
+      resources.srcDir(wasmBinaries)
       dependencies {
         implementation(libs.junit)
         implementation(projects.ziplineTesting)
@@ -289,4 +298,8 @@ configure<MavenPublishBaseExtension> {
   configure(
     KotlinMultiplatform(javadocJar = JavadocJar.Empty())
   )
+}
+
+dependencies {
+  wasmBinaries(project(":zipline-testing-wasm", "wasmBinaries"))
 }

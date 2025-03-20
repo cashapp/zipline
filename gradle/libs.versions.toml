@@ -9,10 +9,11 @@ okHttp = "4.12.0"
 okio = "3.10.2"
 minSdk = "21"
 sqldelight = "2.0.2"
+chasm = "0.9.63"
 
 [libraries]
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
-android-gradle-plugin = { module = "com.android.tools.build:gradle", version = "8.9.0" }
+android-gradle-plugin = { module = "com.android.tools.build:gradle", version = "8.8.0" }
 android-material = { module = "com.google.android.material:material", version = "1.12.0" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version = "1.10.1" }
 androidx-annotation = { module = "androidx.annotation:annotation", version = "1.9.1" }
@@ -60,6 +61,7 @@ sqldelight-driver-sqlite = { module = "app.cash.sqldelight:sqlite-driver", versi
 sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sqldelight" }
 sqlite-jdbc = { module = "org.xerial:sqlite-jdbc", version = "3.49.1.0" }
 turbine = { module = "app.cash.turbine:turbine", version = "1.2.0" }
+chasm = { module = "io.github.charlietap.chasm:chasm", version.ref = "chasm" }
 
 [plugins]
 spotless = { id = "com.diffplug.spotless", version = "7.0.2" }
