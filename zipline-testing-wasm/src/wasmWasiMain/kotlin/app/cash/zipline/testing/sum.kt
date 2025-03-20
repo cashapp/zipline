@@ -17,5 +17,6 @@ package app.cash.zipline.testing
 
 @WasmExport
 fun sum(a: Int, b: Int)  : Int {
+  println("I am summing $a and $b")
   return a + b
 }
