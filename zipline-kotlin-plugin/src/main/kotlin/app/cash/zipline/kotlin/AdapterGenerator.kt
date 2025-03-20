@@ -650,7 +650,6 @@ internal class AdapterGenerator(
       type = bridgedInterface.resolveTypeParameters(bridgedFunction.owner.returnType)
         .remapTypeParameters(original, ziplineFunctionClass),
       callee = bridgedFunction,
-      valueArgumentsCount = bridgedFunction.owner.valueParameters.size,
     ).apply {
       dispatchReceiver = irGet(callFunction.valueParameters[0])
 

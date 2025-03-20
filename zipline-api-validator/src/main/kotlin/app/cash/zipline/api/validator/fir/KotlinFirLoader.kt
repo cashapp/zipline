@@ -18,6 +18,7 @@ package app.cash.zipline.api.validator.fir
 import java.io.File
 import org.jetbrains.kotlin.KtVirtualFileSourceFile
 import org.jetbrains.kotlin.cli.common.GroupedKtSources
+import org.jetbrains.kotlin.cli.common.LegacyK2CliPipeline
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR
@@ -28,9 +29,9 @@ import org.jetbrains.kotlin.cli.common.messages.MessageCollector
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
 import org.jetbrains.kotlin.cli.jvm.compiler.VfsBasedProjectEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.IncrementalCompilationApi
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.ModuleCompilerInput
-import org.jetbrains.kotlin.cli.jvm.compiler.pipeline.compileModuleToAnalyzedFirViaLightTreeIncrementally
+import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.IncrementalCompilationApi
+import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.ModuleCompilerInput
+import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.compileModuleToAnalyzedFirViaLightTreeIncrementally
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
 import org.jetbrains.kotlin.com.intellij.openapi.util.Disposer
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.StandardFileSystems
@@ -109,6 +110,7 @@ internal class KotlinFirLoader(
     }
 
     val sourceFiles = files.mapTo(mutableSetOf(), ::KtVirtualFileSourceFile)
+    @OptIn(LegacyK2CliPipeline::class)
     val input = ModuleCompilerInput(
       targetId = TargetId(JvmProtoBufUtil.DEFAULT_MODULE_NAME, targetName),
       groupedSources = GroupedKtSources(
@@ -129,7 +131,21 @@ internal class KotlinFirLoader(
       getPackagePartProviderFn = { packagePartProvider },
     )
 
-    @OptIn(IncrementalCompilationApi::class) // We are not within the Kotlin compiler.
+    /**
+     * fun compileModuleToAnalyzedFirViaLightTreeIncrementally(
+     *     projectEnvironment: VfsBasedProjectEnvironment,
+     *     messageCollector: MessageCollector,
+     *     compilerConfiguration: CompilerConfiguration,
+     *     input: ModuleCompilerInput,
+     *     diagnosticsReporter: BaseDiagnosticsCollector,
+     *     incrementalExcludesScope: AbstractProjectFileSearchScope?,
+     * ): FirResult
+     */
+    @OptIn(
+      // We are not within the Kotlin compiler.
+      IncrementalCompilationApi::class,
+      LegacyK2CliPipeline::class,
+    )
     return compileModuleToAnalyzedFirViaLightTreeIncrementally(
       projectEnvironment,
       messageCollector,
