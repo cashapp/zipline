@@ -18,6 +18,9 @@ kotlin {
     nodejs()
   }
 
+  wasmWasi {
+  }
+
   linuxX64()
   macosX64()
   macosArm64()

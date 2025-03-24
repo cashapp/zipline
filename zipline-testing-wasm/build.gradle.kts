@@ -13,6 +13,14 @@ kotlin {
   }
 
   applyDefaultHierarchyTemplate()
+
+  sourceSets {
+    val commonMain by getting {
+      dependencies {
+        implementation(projects.zipline)
+      }
+    }
+  }
 }
 
 val wasmBinaries by configurations.creating {

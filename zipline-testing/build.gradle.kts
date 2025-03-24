@@ -16,6 +16,9 @@ kotlin {
     binaries.executable()
   }
 
+  wasmWasi {
+  }
+
   linuxX64()
   macosX64()
   macosArm64()

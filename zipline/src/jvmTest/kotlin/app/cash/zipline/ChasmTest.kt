@@ -38,7 +38,6 @@ class ChasmTest {
     val module = module(FileSystem.RESOURCES.read(path) { readByteArray() })
       .expect("module load failed")
 
-
     val moduleInstance = instance(
       store = store,
       module = module,
