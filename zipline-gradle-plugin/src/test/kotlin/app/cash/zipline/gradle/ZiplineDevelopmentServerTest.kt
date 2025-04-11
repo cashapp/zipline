@@ -17,17 +17,24 @@
 package app.cash.zipline.gradle
 
 import app.cash.zipline.ZiplineManifest
+import app.cash.zipline.gradle.ZiplineDevelopmentServer.Companion.HEARTBEAT_MESSAGE
+import app.cash.zipline.gradle.ZiplineDevelopmentServer.Companion.RELOAD_MESSAGE
 import assertk.assertThat
 import assertk.assertions.contains
 import assertk.assertions.isEqualTo
 import assertk.assertions.isNull
 import java.io.File
+import java.util.concurrent.LinkedBlockingDeque
+import java.util.concurrent.TimeUnit
 import okhttp3.Cache
 import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import okio.ByteString
 import okio.ByteString.Companion.encodeUtf8
 import org.gradle.deployment.internal.Deployment
 import org.junit.After
@@ -114,11 +121,55 @@ class ZiplineDevelopmentServerTest {
     val downloadedManifest2 = httpClient.call(manifestUrl).use { response ->
       // OkHttp should add a cache validation header, but the server should return a 200 because
       // the resource has changed. (And because it doesn't implement conditional caching.)
-      assertThat(response.networkResponse!!.request.headers.names()).contains("If-Modified-Since")
+      assertThat(response.networkResponse!!.request.headers.names()).contains("If-None-Match")
       assertThat(response.networkResponse!!.code).isEqualTo(200)
       ZiplineManifest.decodeJson(response.body!!.string())
     }
     assertThat(downloadedManifest2.version).isEqualTo("2")
+  }
+
+  /** Confirm Jetty serves a cached response if nothing has changed. */
+  @Test
+  fun manifestIsConditionallyCached() {
+    val httpClient = OkHttpClient.Builder()
+      .cache(Cache(File(temporaryFolder.root, "cache"), 1024 * 1024))
+      .build()
+
+    val downloadedManifest1 = httpClient.call(manifestUrl).use { response ->
+      assertThat(response.networkResponse!!.headers["Cache-Control"]).isEqualTo("no-cache")
+      ZiplineManifest.decodeJson(response.body!!.string())
+    }
+
+    val downloadedManifest2 = httpClient.call(manifestUrl).use { response ->
+      assertThat(response.networkResponse!!.code).isEqualTo(304)
+      ZiplineManifest.decodeJson(response.body!!.string())
+    }
+
+    assertThat(downloadedManifest2).isEqualTo(downloadedManifest1)
+  }
+
+  @Test
+  fun webSocketReload() {
+    val httpClient = OkHttpClient()
+    val request = Request.Builder()
+      .url(manifestUrl.resolve("/ws")!!)
+      .build()
+    val listener = RecordingWebSocketListener()
+    val webSocket = httpClient.newWebSocket(request, listener)
+
+    listener.take(
+      event = "onOpen",
+      skipEvents = arrayOf("onMessage(text=$HEARTBEAT_MESSAGE)"),
+    )
+
+    assertThat(server.sendReloadToAllWebSockets()).isEqualTo(1)
+
+    listener.take(
+      event = "onMessage(text=$RELOAD_MESSAGE)",
+      skipEvents = arrayOf("onMessage(text=$HEARTBEAT_MESSAGE)"),
+    )
+
+    webSocket.close(1000, null)
   }
 
   private fun OkHttpClient.call(url: HttpUrl): Response {
@@ -133,6 +184,45 @@ class ZiplineDevelopmentServerTest {
   object FakeDeployment : Deployment {
     override fun status(): Deployment.Status {
       error("unexpected call")
+    }
+  }
+
+  class RecordingWebSocketListener : WebSocketListener() {
+    private val events = LinkedBlockingDeque<String>()
+
+    fun take(event: String, vararg skipEvents: String) {
+      while (true) {
+        when (val e = events.poll(10, TimeUnit.SECONDS)) {
+          in skipEvents -> {}
+          event -> return
+          null -> error("timeout waiting for: $event")
+          else -> error("unexpected event: $e")
+        }
+      }
+    }
+
+    override fun onOpen(webSocket: WebSocket, response: Response) {
+      events.put("onOpen")
+    }
+
+    override fun onMessage(webSocket: WebSocket, text: String) {
+      events.put("onMessage(text=$text)")
+    }
+
+    override fun onMessage(webSocket: WebSocket, bytes: ByteString) {
+      events.put("onMessage(bytes=$bytes)")
+    }
+
+    override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+      events.put("onFailure($t)")
+    }
+
+    override fun onClosing(webSocket: WebSocket, code: Int, reason: String) {
+      events.put("onClosing($code, $reason)")
+    }
+
+    override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+      events.put("onClosed($code, $reason)")
     }
   }
 }

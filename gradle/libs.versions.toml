@@ -1,7 +1,7 @@
 [versions]
 androidx-compose = "1.7.8"
 compileSdk = "35"
-http4k = "4.48.0.0"
+jetty = "12.0.19"
 kotlin = "2.1.20"
 kotlinx-coroutines = "1.10.2"
 kotlinx-serialization = "1.8.1"
@@ -31,9 +31,9 @@ binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx
 cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.3.3" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.0.0" }
 google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.1.20-2.0.0"
-http4k-core = { module = "org.http4k:http4k-core", version.ref = "http4k" }
-http4k-server-jetty = { module = "org.http4k:http4k-server-jetty", version.ref = "http4k" }
-http4k-client-websocket = { module = "org.http4k:http4k-client-websocket", version.ref = "http4k" }
+jetty-ee10Servlet = { module = "org.eclipse.jetty.ee10:jetty-ee10-servlet", version.ref = "jetty" }
+jetty-ee10WebsocketJettyServer = { module = "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jetty-server", version.ref = "jetty" }
+jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty" }
 junit = { module = "junit:junit", version = "4.13.2" }
 kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.7.0" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }

@@ -20,23 +20,21 @@ import java.util.Timer
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.inject.Inject
 import kotlin.concurrent.schedule
+import org.eclipse.jetty.ee10.servlet.ResourceServlet
+import org.eclipse.jetty.ee10.servlet.ServletContextHandler
+import org.eclipse.jetty.ee10.servlet.ServletHolder
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServlet
+import org.eclipse.jetty.ee10.websocket.server.JettyWebSocketServletFactory
+import org.eclipse.jetty.ee10.websocket.server.config.JettyWebSocketServletContainerInitializer
+import org.eclipse.jetty.server.Server
+import org.eclipse.jetty.websocket.api.Callback
+import org.eclipse.jetty.websocket.api.Session
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose
+import org.eclipse.jetty.websocket.api.annotations.OnWebSocketOpen
+import org.eclipse.jetty.websocket.api.annotations.WebSocket
 import org.gradle.api.file.Directory
 import org.gradle.deployment.internal.Deployment
 import org.gradle.deployment.internal.DeploymentHandle
-import org.http4k.core.ContentType
-import org.http4k.core.Filter
-import org.http4k.core.then
-import org.http4k.routing.ResourceLoader
-import org.http4k.routing.bind
-import org.http4k.routing.routes
-import org.http4k.routing.static
-import org.http4k.routing.websockets
-import org.http4k.server.Http4kServer
-import org.http4k.server.Jetty
-import org.http4k.server.PolyHandler
-import org.http4k.server.asServer
-import org.http4k.websocket.Websocket
-import org.http4k.websocket.WsMessage
 
 /**
  * Serves .zipline and manifest files from a directory to a nearby ZiplineLoader. That loader may
@@ -52,37 +50,41 @@ internal open class ZiplineDevelopmentServer internal constructor(
     port: Int,
   ) : this(inputDirectory.asFile, port)
 
-  private val websockets = CopyOnWriteArrayList<Websocket>()
+  private val webSockets = CopyOnWriteArrayList<ZiplineWebSocket>()
   private var timer: Timer? = null
-  private var server: Http4kServer? = null
+  private var server: Server? = null
 
   override fun isRunning() = server != null
 
   override fun start(deployment: Deployment) {
-    val ws = websockets(
-      "/ws" bind { ws: Websocket ->
-        websockets.add(ws)
-        ws.onClose {
-          websockets.remove(ws)
-        }
-      },
-    )
+    val context = ServletContextHandler(ServletContextHandler.SESSIONS)
+      .apply {
+        JettyWebSocketServletContainerInitializer.configure(this, null)
 
-    // Note that 'no-cache' is different from 'no-store', and it permits conditional requests.
-    val noCacheFilter = Filter { next ->
-      { request ->
-        next(request).header("Cache-Control", "no-cache")
+        // Offer a web socket for reload events.
+        addServlet(
+          ServletHolder("ws", object : JettyWebSocketServlet() {
+            public override fun configure(factory: JettyWebSocketServletFactory) {
+              factory.addMapping("/ws") { _, _ ->
+                ZiplineWebSocket().also { webSockets.add(it) }
+              }
+            }
+          }),
+          "/ws"
+        )
+
+        // Serve .zipline bytecode and manifest JSON files at the file system root.
+        addServlet(
+          ServletHolder("default", ResourceServlet()).apply {
+            setInitParameter("resourceBase", inputDirectory.absolutePath)
+            setInitParameter("dirAllowed", "true")
+            // Note that 'no-cache' is different from 'no-store'. It permits conditional requests.
+            setInitParameter("cacheControl", "no-cache")
+            setInitParameter("etags", "true")
+          },
+          "/*"
+        )
       }
-    }
-
-    val http = noCacheFilter.then(
-      routes(
-        "/" bind static(
-          ResourceLoader.Directory(inputDirectory.absolutePath),
-          Pair("zipline", ContentType.TEXT_PLAIN),
-        ),
-      ),
-    )
 
     // Keep the connection open by sending a message periodically.
     timer = Timer("WebsocketHeartbeat", true).apply {
@@ -91,20 +93,26 @@ internal open class ZiplineDevelopmentServer internal constructor(
       }
     }
 
-    server = PolyHandler(http, ws).asServer(Jetty(port)).apply {
+    server = Server(port).apply {
+      handler = context
       start()
     }
   }
 
   @Suppress("unused") // Invoked reflectively by ZiplineServeTask.
-  fun sendReloadToAllWebSockets() {
-    sendMessageToAllWebSockets(RELOAD_MESSAGE)
+  fun sendReloadToAllWebSockets(): Int {
+    return sendMessageToAllWebSockets(RELOAD_MESSAGE)
   }
 
-  private fun sendMessageToAllWebSockets(message: String) {
-    websockets.forEach {
-      it.send(WsMessage(message))
+  /** Returns the number of web sockets notified. */
+  private fun sendMessageToAllWebSockets(message: String): Int {
+    var result = 0
+    for (webSocket in webSockets) {
+      val session = webSocket.session ?: continue
+      session.sendText(message, Callback.NOOP)
+      result++
     }
+    return result
   }
 
   override fun stop() {
@@ -114,6 +122,22 @@ internal open class ZiplineDevelopmentServer internal constructor(
     } finally {
       timer = null
       server = null
+    }
+  }
+
+  @WebSocket
+  internal inner class ZiplineWebSocket {
+    var session: Session? = null
+
+    @OnWebSocketClose
+    fun onWebSocketClose(statusCode: Int, reason: String?) {
+      session = null
+      webSockets.remove(this)
+    }
+
+    @OnWebSocketOpen
+    fun onWebSocketOpen(session: Session?) {
+      this.session = session
     }
   }
 
