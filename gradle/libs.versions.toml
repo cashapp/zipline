@@ -8,7 +8,7 @@ kotlinx-serialization = "1.8.1"
 okHttp = "4.12.0"
 okio = "3.11.0"
 minSdk = "21"
-sqldelight = "2.0.2"
+sqldelight = "2.1.0"
 
 [libraries]
 android-desugarJdkLibs = { module = "com.android.tools:desugar_jdk_libs", version = "2.1.5" }
