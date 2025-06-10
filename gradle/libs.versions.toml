@@ -30,7 +30,7 @@ auto-service-annotations = { module = "com.google.auto.service:auto-service-anno
 binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.17.0" }
 cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.3.4" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.0.0" }
-google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.1.21-2.0.1"
+google-ksp = "com.google.devtools.ksp:symbol-processing-gradle-plugin:2.1.21-2.0.2"
 jetty-ee10Servlet = { module = "org.eclipse.jetty.ee10:jetty-ee10-servlet", version.ref = "jetty" }
 jetty-ee10WebsocketJettyServer = { module = "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jetty-server", version.ref = "jetty" }
 jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty" }
