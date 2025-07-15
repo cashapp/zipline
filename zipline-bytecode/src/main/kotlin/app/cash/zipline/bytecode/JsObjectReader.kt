@@ -16,14 +16,24 @@
 package app.cash.zipline.bytecode
 
 import okio.Buffer
-import okio.BufferedSource
 import okio.Closeable
 import okio.IOException
 
 class JsObjectReader(
-  private val source: BufferedSource,
+  private val source: Buffer,
 ) : Closeable by source {
+  private val sourceLength: Int = source.size.toInt()
+
   constructor(byteArray: ByteArray) : this(Buffer().write(byteArray))
+
+  /**
+   * Returns the current offset into the file in bytes.
+   *
+   * Define `DUMP_READ_OBJECT` in quickjs.c to get a full dump of a binary object. It includes a hex
+   * offset that cross-references this offset.
+   */
+  private val offset: Int
+    get() = sourceLength - source.size.toInt()
 
   lateinit var atoms: AtomSet
     private set
@@ -64,6 +74,7 @@ class JsObjectReader(
   }
 
   private fun readObjectRecursive(): JsObject {
+    val objectOffset = this.offset
     return when (val tag = source.readByte().toInt()) {
       BC_TAG_NULL -> JsNull
       BC_TAG_UNDEFINED -> JsUndefined
@@ -73,12 +84,12 @@ class JsObjectReader(
       BC_TAG_FLOAT64 -> JsDouble(Double.fromBits(source.readLong()))
       BC_TAG_STRING -> readJsString()
       BC_TAG_FUNCTION_BYTECODE -> readFunction()
-      else -> throw IOException("unsupported tag: $tag")
+      else -> throw IOException("unsupported tag: $tag at 0x${objectOffset.toString(16)}")
     }
   }
 
   private fun readFunction(): JsFunctionBytecode {
-    val flags = source.readShort().toInt()
+    val flags = source.readShortLe().toInt()
     val jsMode = source.readByte()
     val functionName = readAtomString()
     val argCount = source.readLeb128()

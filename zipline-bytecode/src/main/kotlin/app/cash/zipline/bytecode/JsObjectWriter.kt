@@ -89,7 +89,7 @@ class JsObjectWriter(
   }
 
   private fun writeFunction(value: JsFunctionBytecode) {
-    sink.writeShort(value.flags)
+    sink.writeShortLe(value.flags)
     sink.writeByte(value.jsMode.toInt())
     writeAtom(value.name.toJsString())
     sink.writeLeb128(value.argCount)

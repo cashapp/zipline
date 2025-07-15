@@ -148,7 +148,7 @@ class JsObjectEncodingTest {
    * This regression test reproduces that exact situation. The code sample is simplified from
    * `kotlin-kotlin-stdlib-js-ir.js` as emitted by the Kotlin 1.8.20 compiler.
    */
-  @Test fun debugSymbolsCrash() {
+  @Test fun debugSymbolsDoesntCrash() {
     val evalFunction = assertRoundTrip(
       """
       |function createExternalThis(ctor, superExternalCtor, parameters, box) {
@@ -167,6 +167,25 @@ class JsObjectEncodingTest {
 
     val newThrowable = evalFunction.constantPool[1] as JsFunctionBytecode
     assertThat(newThrowable.name).isEqualTo("newThrowable")
+  }
+
+  /**
+   * We had a bug where we were using the wrong value to detect if debug symbols were present.
+   * The bug only triggered on functions that called `super()`.
+   */
+  @Test fun debugSymbolsDoesntCrashOnSuperCall() {
+    val evalFunction = assertRoundTrip(
+      """
+      |class Greeter {
+      |  greet() {
+      |    super.hello();
+      |  }
+      |}
+      """.trimMargin(),
+        "hello.js",
+    )
+
+    assertThat(evalFunction.name).isEqualTo("<eval>")
   }
 
   /** Returns the model object for the bytecode of [script]. */
