@@ -238,7 +238,7 @@ public final class app/cash/zipline/ZiplineManifest {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class app/cash/zipline/ZiplineManifest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class app/cash/zipline/ZiplineManifest$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lapp/cash/zipline/ZiplineManifest$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/ZiplineManifest;
@@ -246,6 +246,7 @@ public synthetic class app/cash/zipline/ZiplineManifest$$serializer : kotlinx/se
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/ZiplineManifest;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class app/cash/zipline/ZiplineManifest$Companion {
@@ -274,7 +275,7 @@ public final class app/cash/zipline/ZiplineManifest$Module {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class app/cash/zipline/ZiplineManifest$Module$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class app/cash/zipline/ZiplineManifest$Module$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lapp/cash/zipline/ZiplineManifest$Module$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/ZiplineManifest$Module;
@@ -282,6 +283,7 @@ public synthetic class app/cash/zipline/ZiplineManifest$Module$$serializer : kot
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/ZiplineManifest$Module;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class app/cash/zipline/ZiplineManifest$Module$Companion {
@@ -306,7 +308,7 @@ public final class app/cash/zipline/ZiplineManifest$Unsigned {
 	public fun toString ()Ljava/lang/String;
 }
 
-public synthetic class app/cash/zipline/ZiplineManifest$Unsigned$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+public final synthetic class app/cash/zipline/ZiplineManifest$Unsigned$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
 	public static final field INSTANCE Lapp/cash/zipline/ZiplineManifest$Unsigned$$serializer;
 	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
 	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lapp/cash/zipline/ZiplineManifest$Unsigned;
@@ -314,6 +316,7 @@ public synthetic class app/cash/zipline/ZiplineManifest$Unsigned$$serializer : k
 	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
 	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lapp/cash/zipline/ZiplineManifest$Unsigned;)V
 	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
 }
 
 public final class app/cash/zipline/ZiplineManifest$Unsigned$Companion {
@@ -334,7 +337,7 @@ public final class app/cash/zipline/ZiplineScopedKt {
 }
 
 public abstract interface class app/cash/zipline/ZiplineService : java/lang/AutoCloseable {
-	public abstract fun close ()V
+	public fun close ()V
 }
 
 public final class app/cash/zipline/ZiplineService$DefaultImpls {
