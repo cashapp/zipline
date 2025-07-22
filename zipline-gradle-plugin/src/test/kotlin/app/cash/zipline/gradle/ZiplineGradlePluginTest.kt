@@ -93,13 +93,13 @@ class ZiplineGradlePluginTest {
       .contains(result.task(taskName)!!.outcome)
     assertThat(result.output.lines()).containsMatchForEachInOrder(
       Regex("""app.cash.zipline.ZiplineException: \w+: boom!"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/CrashService.kt\)"""),
-      Regex("""at <anonymous> \(lib.js\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/internal/bridge/InboundService.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/internal/bridge/Endpoint.kt\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/tests/CrashService.kt\)"""),
+      Regex("""at [^ ]+ \(lib.js\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/internal/bridge/InboundService.kt\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/internal/bridge/Endpoint.kt\)"""),
       Regex("""at app.cash.zipline.tests.CrashService[${'$'}]Companion[${'$'}]Adapter[${'$'}]GeneratedOutboundService.crash\(CrashService.kt:\d+\)"""),
     )
   }
@@ -120,13 +120,13 @@ class ZiplineGradlePluginTest {
       .contains(result.task(taskName)!!.outcome)
     assertThat(result.output.lines()).containsMatchForEachInOrder(
       Regex("""app.cash.zipline.ZiplineException: Exception: boom!"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt:\d+\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/CrashService.kt\)"""),
-      Regex("""at <anonymous> \(lib.js\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/internal/bridge/InboundService.kt:\d+\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/internal/bridge/Endpoint.kt:\d+\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt:\d+\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/tests/CrashService.kt\)"""),
+      Regex("""at [^ ]+ \(lib.js\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/internal/bridge/InboundService.kt:\d+\)"""),
+      Regex("""at [^ ]+ \(app/cash/zipline/internal/bridge/Endpoint.kt:\d+\)"""),
       Regex("""at app.cash.zipline.tests.CrashService[${'$'}]Companion[${'$'}]Adapter[${'$'}]GeneratedOutboundService.crash\(CrashService.kt:\d+\)"""),
     )
   }
@@ -146,12 +146,12 @@ class ZiplineGradlePluginTest {
       .contains(result.task(taskName)!!.outcome)
     assertThat(result.output.lines()).containsMatchForEachInOrder(
       Regex("""app.cash.zipline.ZiplineException: Exception: boom!"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt:\d+\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/tests/CrashService.kt\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/internal/bridge/InboundService.kt:\d+\)"""),
-      Regex("""at <anonymous> \(app/cash/zipline/internal/bridge/Endpoint.kt:\d+\)"""),
+      Regex("""at goBoom_[^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
+      Regex("""at crash_[^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt:\d+\)"""),
+      Regex("""at crash_[^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
+      Regex("""at call_[^ ]+ \(app/cash/zipline/tests/CrashService.kt\)"""),
+      Regex("""at call_[^ ]+ \(app/cash/zipline/internal/bridge/InboundService.kt:\d+\)"""),
+      Regex("""at call_[^ ]+ \(app/cash/zipline/internal/bridge/Endpoint.kt:\d+\)"""),
       Regex("""at app.cash.zipline.tests.CrashService[${'$'}]Companion[${'$'}]Adapter[${'$'}]GeneratedOutboundService.crash\(CrashService.kt:\d+\)"""),
     )
   }

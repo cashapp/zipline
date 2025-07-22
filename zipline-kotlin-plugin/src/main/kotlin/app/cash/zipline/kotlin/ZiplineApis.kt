@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(DeprecatedForRemovalCompilerApi::class)
+
 package app.cash.zipline.kotlin
 
+import org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
@@ -56,7 +59,7 @@ internal class ZiplineApis private constructor(
     val ziplineServiceClassId = ziplineFqPackage.classId("ZiplineService")
     private val ziplineServiceSerializerFunctionCallableId = ziplineFqPackage.callableId("ziplineServiceSerializer")
     private val ziplineServiceAdapterFunctionCallableId = bridgeFqPackage.callableId("ziplineServiceAdapter")
-    private val ziplineServiceAdapterClassId = bridgeFqPackage.classId("ZiplineServiceAdapter")
+    val ziplineServiceAdapterClassId = bridgeFqPackage.classId("ZiplineServiceAdapter")
     private val endpointClassId = bridgeFqPackage.classId("Endpoint")
     private val suspendCallbackClassId = bridgeFqPackage.classId("SuspendCallback")
     private val flowFqPackage = FqPackageName("kotlinx.coroutines.flow")
