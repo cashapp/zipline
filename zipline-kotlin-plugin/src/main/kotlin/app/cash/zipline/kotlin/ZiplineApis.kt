@@ -59,7 +59,7 @@ internal class ZiplineApis private constructor(
     val ziplineServiceClassId = ziplineFqPackage.classId("ZiplineService")
     private val ziplineServiceSerializerFunctionCallableId = ziplineFqPackage.callableId("ziplineServiceSerializer")
     private val ziplineServiceAdapterFunctionCallableId = bridgeFqPackage.callableId("ziplineServiceAdapter")
-    val ziplineServiceAdapterClassId = bridgeFqPackage.classId("ZiplineServiceAdapter")
+    private val ziplineServiceAdapterClassId = bridgeFqPackage.classId("ZiplineServiceAdapter")
     private val endpointClassId = bridgeFqPackage.classId("Endpoint")
     private val suspendCallbackClassId = bridgeFqPackage.classId("SuspendCallback")
     private val flowFqPackage = FqPackageName("kotlinx.coroutines.flow")
