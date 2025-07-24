@@ -19,7 +19,7 @@ dependencies {
 
 kotlin {
   sourceSets {
-    all {
+    configureEach {
       languageSettings.optIn("org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI")
     }
   }
