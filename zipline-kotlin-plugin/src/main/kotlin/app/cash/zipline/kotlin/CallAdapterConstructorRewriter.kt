@@ -13,11 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:OptIn(DeprecatedForRemovalCompilerApi::class)
 
 package app.cash.zipline.kotlin
 
-import org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
@@ -57,8 +55,8 @@ internal class CallAdapterConstructorRewriter(
   private val original: IrCall,
 ) {
   fun rewrite(): IrExpression {
-    val kClassArgument = original.getValueArgument(0) ?: return original
-    val serializersListExpression = original.getValueArgument(1) ?: return original
+    val kClassArgument = original.arguments[0] ?: return original
+    val serializersListExpression = original.arguments[1] ?: return original
 
     val bridgedInterfaceType = when (kClassArgument) {
       is IrClassReference -> kClassArgument.classType
@@ -83,7 +81,7 @@ internal class CallAdapterConstructorRewriter(
       bridgedInterface.typeIrClass,
     ).adapterExpression(
       serializersListExpression = serializersListExpression,
-      adapterType = original.getTypeArgument(0)!!,
+      adapterType = original.typeArguments[0]!!,
     )
     result.patchDeclarationParents(declarationParent)
     return result

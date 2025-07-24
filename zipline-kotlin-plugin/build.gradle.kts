@@ -17,6 +17,14 @@ dependencies {
   compileOnly(libs.auto.service.annotations)
 }
 
+kotlin {
+  sourceSets {
+    all {
+      languageSettings.optIn("org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI")
+    }
+  }
+}
+
 buildConfig {
   useKotlinOutput {
     internalVisibility = true

@@ -13,11 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:OptIn(DeprecatedForRemovalCompilerApi::class)
-
 package app.cash.zipline.kotlin
 
-import org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationParent
@@ -62,7 +59,7 @@ internal class AddAdapterArgumentRewriter(
   private val rewrittenFunction: IrSimpleFunctionSymbol,
 ) {
   /** The user-defined interface type, like `SampleService` above. */
-  private val bridgedInterfaceType: IrType = original.getTypeArgument(0)!!
+  private val bridgedInterfaceType: IrType = original.typeArguments[0]!!
 
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,

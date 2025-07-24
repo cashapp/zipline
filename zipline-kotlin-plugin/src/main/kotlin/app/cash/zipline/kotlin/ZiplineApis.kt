@@ -13,12 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:OptIn(DeprecatedForRemovalCompilerApi::class)
-
 package app.cash.zipline.kotlin
 
-import org.jetbrains.kotlin.DeprecatedForRemovalCompilerApi
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
 import org.jetbrains.kotlin.ir.symbols.IrPropertySymbol
 import org.jetbrains.kotlin.ir.symbols.IrSimpleFunctionSymbol
@@ -85,19 +83,21 @@ internal class ZiplineApis private constructor(
   val listOfKSerializerStar: IrSimpleType
     get() = list.typeWith(kSerializer.starProjectedType)
 
+  /** This symbol for `SerializersModule.serializer<T>()`. */
   val serializerFunctionTypeParam: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(serializationFqPackage.callableId("serializer"))
       .single {
-        it.owner.extensionReceiverParameter?.type?.getClass()?.classId == serializersModuleClassId &&
-          it.owner.valueParameters.isEmpty() &&
-          it.owner.typeParameters.size == 1
+        it.owner.typeParameters.size == 1 &&
+          it.owner.parameters.size == 1 &&
+          it.owner.parameters[0].kind == IrParameterKind.ExtensionReceiver &&
+          it.owner.parameters[0].type.getClass()?.classId == serializersModuleClassId
       }
 
+  /** This symbol for `serializer<T>()`. */
   val serializerFunctionNoReceiver: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(serializationFqPackage.callableId("serializer"))
       .single {
-        it.owner.extensionReceiverParameter == null &&
-          it.owner.valueParameters.isEmpty() &&
+        it.owner.parameters.isEmpty() &&
           it.owner.typeParameters.size == 1
       }
 
@@ -114,14 +114,17 @@ internal class ZiplineApis private constructor(
     get() = pluginContext.referenceProperties(serializationBuiltInsFqPackage.callableId("nullable"))
       .single()
 
-  /** This symbol for `ziplineServiceSerializer(KClass<*>, List<KSerializer<*>>)`. */
+  /** The symbol for `ziplineServiceSerializer(KClass<*>, List<KSerializer<*>>)`. */
   val ziplineServiceSerializerTwoArg: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(ziplineServiceSerializerFunctionCallableId)
-      .single { it.owner.valueParameters.size == 2 }
+      .single {
+        it.owner.parameters.size == 2
+      }
 
+  /** The symbol for `listOf(vararg T)`. */
   val listOfFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(collectionsFqPackage.callableId("listOf"))
-      .single { it.owner.valueParameters.firstOrNull()?.isVararg == true }
+      .single { it.owner.parameters.firstOrNull()?.isVararg == true }
 
   val listGetFunction: IrSimpleFunctionSymbol
     get() = pluginContext.referenceFunctions(
@@ -218,10 +221,10 @@ internal class ZiplineApis private constructor(
   private fun rewritePair(funName: CallableId): Pair<String, IrSimpleFunctionSymbol> {
     val overloads = pluginContext.referenceFunctions(funName)
     val rewriteTarget = overloads.single {
-      it.owner.valueParameters.lastOrNull()?.type?.getClass()?.classId == ziplineServiceAdapterClassId
+      it.owner.parameters.lastOrNull()?.type?.getClass()?.classId == ziplineServiceAdapterClassId
     }
     val original = overloads.single {
-      it.owner.valueParameters.size + 1 == rewriteTarget.owner.valueParameters.size
+      it.owner.parameters.size + 1 == rewriteTarget.owner.parameters.size
     }
     return original.toString() to rewriteTarget
   }
