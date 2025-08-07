@@ -24,7 +24,7 @@ androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling", versi
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview", version.ref = "androidx-compose" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version = "1.16.0" }
 androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version = "2.9.2" }
-androidx-test-runner = { module = "androidx.test:runner", version = "1.6.2" }
+androidx-test-runner = { module = "androidx.test:runner", version = "1.7.0" }
 assertk = "com.willowtreeapps.assertk:assertk:0.28.1"
 auto-service-compiler = { module = "dev.zacsweers.autoservice:auto-service-ksp", version = "1.2.0" }
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version = "1.1.1" }
