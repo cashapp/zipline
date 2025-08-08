@@ -21,7 +21,7 @@ import org.gradle.api.Project
 import org.gradle.api.internal.provider.DefaultProvider
 import org.gradle.api.provider.Provider
 
-internal fun <T> Iterable<Provider<T>>.flatten(): Provider<List<T>> {
+internal fun <T : Any> Iterable<Provider<T>>.flatten(): Provider<List<T>> {
   val empty: Provider<List<T>> = DefaultProvider { emptyList() }
   return fold(empty) { listProvider, elementProvider ->
     listProvider.zip(elementProvider, Collection<T>::plus)
