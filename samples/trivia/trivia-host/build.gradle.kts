@@ -4,7 +4,7 @@ import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 plugins {
   kotlin("jvm")
   kotlin("plugin.serialization")
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 dependencies {
