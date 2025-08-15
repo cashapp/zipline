@@ -53,7 +53,7 @@ okHttp-mockWebServer = { module = "com.squareup.okhttp3:mockwebserver", version.
 okio-core = { module = "com.squareup.okio:okio", version.ref = "okio" }
 okio-fakeFileSystem = { module = "com.squareup.okio:okio-fakefilesystem", version.ref = "okio" }
 clikt = { module = "com.github.ajalt.clikt:clikt", version = "5.0.3" }
-shadowJar-gradle-plugin = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.0.1" }
+shadowJar-gradle-plugin = { module = "com.gradleup.shadow:shadow-gradle-plugin", version = "9.0.2" }
 sqldelight-gradle-plugin = { module = "app.cash.sqldelight:gradle-plugin", version.ref = "sqldelight" }
 sqldelight-driver-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
