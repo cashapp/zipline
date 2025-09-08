@@ -27,7 +27,6 @@ import okio.ByteString.Companion.decodeHex
 import okio.Closeable
 import okio.FileNotFoundException
 import okio.FileSystem
-import okio.IOException
 import okio.Path
 
 /**
@@ -44,15 +43,15 @@ import okio.Path
  * If multiple threads in a single process operate on a cache instance simultaneously, downloads may
  * be repeated but no thread will be blocked.
  */
-class ZiplineCache internal constructor(
+class ZiplineCache private constructor(
   private val driver: SqlDriver,
   private val database: Database,
   private val fileSystem: FileSystem,
   private val directory: Path,
   private val maxSizeInBytes: Long,
   private val loaderEventListener: LoaderEventListener,
+  private var hasWriteFailures: Boolean,
 ) : Closeable {
-  private var hasWriteFailures = false
 
   /*
    * Files are named by their SHA-256 hashes. We use a SQLite database for file metadata: which
@@ -192,7 +191,7 @@ class ZiplineCache internal constructor(
       fileSystem.read(path) {
         readByteString()
       }
-    } catch (e: FileNotFoundException) {
+    } catch (_: FileNotFoundException) {
       null // Might have been pruned while we were trying to read?
     }
 
@@ -201,17 +200,12 @@ class ZiplineCache internal constructor(
       try {
         fileSystem.delete(path)
         database.filesQueries.delete(metadata.id)
-      } catch (ignored: Exception) {
+      } catch (_: Exception) {
       }
       return null
     }
 
     return result
-  }
-
-  internal fun pin(applicationName: String, sha256: ByteString) {
-    val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
-    createPinIfNotExists(applicationName, fileId)
   }
 
   internal fun unpin(applicationName: String, sha256: ByteString) {
@@ -361,11 +355,11 @@ class ZiplineCache internal constructor(
   }
 
   private fun createPinIfNotExists(
-    application_name: String,
-    file_id: Long,
+    applicationName: String,
+    fileId: Long,
   ) {
-    database.pinsQueries.get_pin(file_id, application_name).executeAsOneOrNull()
-      ?: database.pinsQueries.create_pin(file_id, application_name)
+    database.pinsQueries.get_pin(fileId, applicationName).executeAsOneOrNull()
+      ?: database.pinsQueries.create_pin(fileId, applicationName)
   }
 
   /**
@@ -414,7 +408,7 @@ class ZiplineCache internal constructor(
    *
    * It will also delete dirty files that were open when the previous run completed.
    */
-  internal fun initialize() {
+  private fun initialize() {
     try {
       deleteDirtyFiles()
       prune()
@@ -459,9 +453,7 @@ class ZiplineCache internal constructor(
   /** Returns the number of pins in the cache DB. */
   internal fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
 
-  private fun path(metadata: Files): Path {
-    return directory / "entry-${metadata.id}.bin"
-  }
+  private fun path(metadata: Files): Path = directory / "entry-${metadata.id}.bin"
 
   /**
    * Update file record freshAt timestamp to reflect that the manifest is still seen as fresh.
@@ -490,26 +482,35 @@ class ZiplineCache internal constructor(
       loaderEventListener.cacheStorageFailed(applicationName, e)
     }
   }
-}
 
-internal fun ZiplineCache(
-  sqlDriverFactory: SqlDriverFactory,
-  fileSystem: FileSystem,
-  directory: Path,
-  maxSizeInBytes: Long,
-  loaderEventListener: LoaderEventListener,
-): ZiplineCache {
-  fileSystem.createDirectories(directory, mustCreate = false)
-  val driver: SqlDriver = sqlDriverFactory.create(directory / "zipline.db", Database.Schema)
-  val database = createDatabase(driver = driver)
-  val cache = ZiplineCache(
-    driver = driver,
-    database = database,
-    fileSystem = fileSystem,
-    directory = directory,
-    maxSizeInBytes = maxSizeInBytes,
-    loaderEventListener = loaderEventListener,
-  )
-  cache.initialize()
-  return cache
+  internal companion object {
+    internal operator fun invoke(
+      sqlDriverFactory: SqlDriverFactory,
+      fileSystem: FileSystem,
+      directory: Path,
+      maxSizeInBytes: Long,
+      loaderEventListener: LoaderEventListener,
+    ): ZiplineCache {
+      val (driver, hasWriteFailures) = try {
+        fileSystem.createDirectories(directory, mustCreate = false)
+        sqlDriverFactory.create(directory / "zipline.db", Database.Schema) to false
+      } catch (e: Exception) {
+        loaderEventListener.cacheStorageFailed(null, e)
+        NullSqlDriver() to true
+      }
+
+      val database = createDatabase(driver = driver)
+      val cache = ZiplineCache(
+        driver = driver,
+        database = database,
+        fileSystem = fileSystem,
+        directory = directory,
+        maxSizeInBytes = maxSizeInBytes,
+        loaderEventListener = loaderEventListener,
+        hasWriteFailures = hasWriteFailures,
+      )
+      cache.initialize()
+      return cache
+    }
+  }
 }

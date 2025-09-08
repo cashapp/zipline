@@ -102,6 +102,7 @@ public final class app/cash/zipline/loader/SignatureAlgorithmId : java/lang/Enum
 }
 
 public final class app/cash/zipline/loader/ZiplineCache : java/io/Closeable {
+	public synthetic fun <init> (Lapp/cash/sqldelight/db/SqlDriver;Lapp/cash/zipline/loader/internal/cache/Database;Lokio/FileSystem;Lokio/Path;JLapp/cash/zipline/loader/LoaderEventListener;ZLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun close ()V
 }
 

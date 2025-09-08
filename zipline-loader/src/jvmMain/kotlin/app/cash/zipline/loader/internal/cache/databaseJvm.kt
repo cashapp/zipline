@@ -22,8 +22,8 @@ import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
 import java.sql.SQLException
 import okio.Path
 
-internal actual class SqlDriverFactory {
-  actual fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>): SqlDriver {
+internal class JdbcSqliteDriverFactory : SqlDriverFactory {
+  override fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>): SqlDriver {
     validateDbPath(path)
     val driver: SqlDriver = JdbcSqliteDriver("jdbc:sqlite:$path")
     try {

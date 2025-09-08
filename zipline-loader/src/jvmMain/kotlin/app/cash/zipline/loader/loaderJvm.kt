@@ -15,7 +15,7 @@
  */
 package app.cash.zipline.loader
 
-import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.cache.JdbcSqliteDriverFactory
 import okio.FileSystem
 import okio.Path
 
@@ -26,7 +26,7 @@ fun ZiplineCache(
   loaderEventListener: LoaderEventListener,
 ): ZiplineCache {
   return ZiplineCache(
-    sqlDriverFactory = SqlDriverFactory(),
+    sqlDriverFactory = JdbcSqliteDriverFactory(),
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,

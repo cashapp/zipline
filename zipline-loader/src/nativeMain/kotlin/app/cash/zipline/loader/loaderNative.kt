@@ -16,7 +16,7 @@
 package app.cash.zipline.loader
 
 import app.cash.zipline.EventListener
-import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.cache.NativeSqliteDriverFactory
 import app.cash.zipline.loader.internal.systemEpochMsClock
 import kotlinx.coroutines.CoroutineDispatcher
 import okio.FileSystem
@@ -30,7 +30,7 @@ fun ZiplineCache(
   loaderEventListener: LoaderEventListener,
 ): ZiplineCache {
   return ZiplineCache(
-    sqlDriverFactory = SqlDriverFactory(),
+    sqlDriverFactory = NativeSqliteDriverFactory(),
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,

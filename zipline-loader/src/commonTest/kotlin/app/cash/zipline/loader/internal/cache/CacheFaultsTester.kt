@@ -18,6 +18,7 @@ package app.cash.zipline.loader.internal.cache
 import app.cash.sqldelight.db.QueryResult
 import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlPreparedStatement
+import app.cash.sqldelight.db.SqlSchema
 import app.cash.zipline.ZiplineManifest
 import app.cash.zipline.loader.LoaderEventListener
 import app.cash.zipline.loader.ZiplineCache
@@ -94,7 +95,7 @@ class CacheFaultsTester {
    * https://www.sqlite.org/tempfiles.html
    */
   val fileNames: List<String>
-    get() = fileSystem.list(directory)
+    get() = (fileSystem.listOrNull(directory) ?: listOf())
       .map { it.name }
       .filterNot { it.startsWith("zipline.db-") }
 
@@ -104,22 +105,9 @@ class CacheFaultsTester {
    */
   var storageFailureCount = 0
 
-  init {
-    fileSystem.createDirectories(directory)
-  }
-
   suspend fun withCache(block: suspend Session.() -> Unit) {
-    val driver = LimitWritesSqlDriver(
-      testSqlDriverFactory().create(
-        path = directory / "zipline.db",
-        schema = Database.Schema,
-      ),
-    )
-    val database = createDatabase(driver)
-
     val cache = ZiplineCache(
-      driver = driver,
-      database = database,
+      sqlDriverFactory = LimitWritesSqlDriverFactory(),
       fileSystem = LimitWritesFileSystem(fileSystem),
       directory = directory,
       maxSizeInBytes = cacheSize,
@@ -131,7 +119,6 @@ class CacheFaultsTester {
     )
 
     try {
-      cache.initialize()
       Session(cache).block()
     } finally {
       cache.close()
@@ -197,6 +184,13 @@ class CacheFaultsTester {
   private inner class LimitWritesFileSystem(
     delegate: FileSystem,
   ) : ForwardingFileSystem(delegate) {
+    override fun createDirectory(dir: Path, mustCreate: Boolean) {
+      fileSystemWriteCount++
+      if (fileSystemWriteCount >= fileSystemWriteLimit) throw IOException("write limit exceeded")
+
+      super.createDirectory(dir, mustCreate)
+    }
+
     override fun sink(file: Path, mustCreate: Boolean): Sink {
       fileSystemWriteCount++
       if (fileSystemWriteCount >= fileSystemWriteLimit) throw IOException("write limit exceeded")
@@ -226,6 +220,25 @@ class CacheFaultsTester {
       fileSystem.openReadWrite(path).use {
         it.resize(0L)
       }
+    }
+  }
+
+  private inner class LimitWritesSqlDriverFactory : SqlDriverFactory {
+    override fun create(
+      path: Path,
+      schema: SqlSchema<QueryResult.Value<Unit>>,
+    ): SqlDriver {
+      fileSystemWriteCount++
+      if (fileSystemWriteCount >= fileSystemWriteLimit) {
+        throw SqlFaultException("write limit exceeded")
+      }
+
+      return LimitWritesSqlDriver(
+        testSqlDriverFactory().create(
+          path = directory / "zipline.db",
+          schema = Database.Schema,
+        ),
+      )
     }
   }
 

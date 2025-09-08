@@ -29,7 +29,7 @@ class DatabaseJvmTest {
   @JvmField @Rule
   val temporaryFolder = TemporaryFolder()
 
-  private val sqlDriverFactory = SqlDriverFactory()
+  private val sqlDriverFactory = JdbcSqliteDriverFactory()
   private lateinit var driver: SqlDriver
   private lateinit var database: Produce
 

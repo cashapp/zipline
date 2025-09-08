@@ -21,7 +21,7 @@ import app.cash.sqldelight.db.SqlDriver
 import app.cash.sqldelight.db.SqlSchema
 import okio.Path
 
-internal expect class SqlDriverFactory {
+internal interface SqlDriverFactory {
   /**
    * Create a SqlDriver to be used in creating and managing a SqlLite instance on disk.
    *
@@ -39,11 +39,9 @@ internal fun validateDbPath(path: Path) {
   }
 }
 
-internal fun createDatabase(driver: SqlDriver): Database {
-  return Database(
+internal fun createDatabase(driver: SqlDriver): Database = Database(
     driver,
     filesAdapter = Files.Adapter(
       file_stateAdapter = EnumColumnAdapter(),
     ),
   )
-}

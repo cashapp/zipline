@@ -35,7 +35,7 @@ class ZiplineCacheFaultsTest {
   @Test
   fun openMissHitClose(): Unit = runBlocking {
     // How many writes are attempted in this test in the happy path. Determined experimentally!
-    val noFailuresWriteCount = 21
+    val noFailuresWriteCount = 23
 
     for (i in 0..noFailuresWriteCount) {
       val tester = CacheFaultsTester()
@@ -65,7 +65,7 @@ class ZiplineCacheFaultsTest {
   @Test
   fun openMissClose_OpenHitClose(): Unit = runBlocking {
     // How many writes are attempted in this test in the happy path. Determined experimentally!
-    val noFailuresWriteCount = 21
+    val noFailuresWriteCount = 24
 
     for (i in 0..noFailuresWriteCount) {
       val tester = CacheFaultsTester()
@@ -97,7 +97,7 @@ class ZiplineCacheFaultsTest {
   @Test
   fun openFailClose_OpenMissClose_OpenHitClose(): Unit = runBlocking {
     // How many writes are attempted in this test in the happy path. Determined experimentally!
-    val noFailuresWriteCount = 27
+    val noFailuresWriteCount = 31
 
     for (i in 0..noFailuresWriteCount) {
       val tester = CacheFaultsTester()
@@ -137,7 +137,7 @@ class ZiplineCacheFaultsTest {
   @Test
   fun openMissClose_openStaleClose(): Unit = runBlocking {
     // How many writes are attempted in this test in the happy path. Determined experimentally!
-    val noFailuresWriteCount = 32
+    val noFailuresWriteCount = 36
 
     for (i in 0..noFailuresWriteCount) {
       val tester = CacheFaultsTester()
