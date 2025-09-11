@@ -36,7 +36,7 @@ jetty-ee10Servlet = { module = "org.eclipse.jetty.ee10:jetty-ee10-servlet", vers
 jetty-ee10WebsocketJettyServer = { module = "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jetty-server", version.ref = "jetty" }
 jetty-server = { module = "org.eclipse.jetty:jetty-server", version.ref = "jetty" }
 junit = { module = "junit:junit", version = "4.13.2" }
-kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.8.0" }
+kotlin-compile-testing = { module = "dev.zacsweers.kctfork:core", version = "0.9.0" }
 kotlin-gradle-plugin = { module = "org.jetbrains.kotlin:kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlin-compose-plugin = { module = "org.jetbrains.kotlin:compose-compiler-gradle-plugin", version.ref = "kotlin" }
 kotlin-reflect = { module = "org.jetbrains.kotlin:kotlin-reflect" }
