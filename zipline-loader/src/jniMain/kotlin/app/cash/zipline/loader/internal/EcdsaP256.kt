@@ -58,9 +58,7 @@ internal class EcdsaP256(
     return signer.sign().toByteString()
   }
 
-  override fun sign(message: ByteString, privateKey: ByteString): ByteString {
-    return sign(decodePkcs8EcPrivateKey(privateKey), message)
-  }
+  override fun sign(message: ByteString, privateKey: ByteString): ByteString = sign(decodePkcs8EcPrivateKey(privateKey), message)
 
   fun verify(publicKey: PublicKey, signature: ByteString, data: ByteString): Boolean {
     val verifier = Signature.getInstance("SHA256withECDSA")
@@ -85,13 +83,11 @@ internal fun decodePkcs8EcPrivateKey(privateKey: ByteString): PrivateKey {
   return keyFactory.generatePrivate(keySpec)
 }
 
-internal fun ECPublicKey.encodeAnsiX963(): ByteString {
-  return Buffer()
+internal fun ECPublicKey.encodeAnsiX963(): ByteString = Buffer()
     .writeByte(4)
     .write(w.affineX.toUnsignedFixedWidth(32))
     .write(w.affineY.toUnsignedFixedWidth(32))
     .readByteString()
-}
 
 internal fun ByteString.decodeAnsiX963(): ECPublicKey {
   val buffer = Buffer().write(this)

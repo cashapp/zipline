@@ -191,11 +191,9 @@ class LoaderTester(
   }
 
   /** Returns the delta in the number of files, like -3 if 3 files were deleted. */
-  suspend fun prune(): Int {
-    return countFiles {
+  suspend fun prune(): Int = countFiles {
       cache.prune(0L)
     }
-  }
 
   /** Returns the delta in the number of files, like 3 if 3 files were added. */
   suspend fun countFiles(block: suspend () -> Unit): Int {
@@ -206,9 +204,7 @@ class LoaderTester(
   }
 
   /** Returns the file if it exists. */
-  fun file(path: String): ByteString? {
-    return httpClient.filePathToByteString["$baseUrl/$path"]
-  }
+  fun file(path: String): ByteString? = httpClient.filePathToByteString["$baseUrl/$path"]
 
   suspend fun failureManifestFetchFails(applicationName: String): String {
     val seed = "fail"
@@ -404,7 +400,5 @@ class LoaderTester(
 }
 
 object FakeFreshnessCheckerFresh : FreshnessChecker {
-  override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
-    return true
-  }
+  override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean = true
 }

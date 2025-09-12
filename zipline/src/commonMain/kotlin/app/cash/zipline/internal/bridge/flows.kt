@@ -57,8 +57,7 @@ internal class FlowSerializer<T>(
     return encoder.encodeSerializableValue(delegateSerializer, service)
   }
 
-  private fun Flow<T>.toZiplineService(): FlowZiplineService<T> {
-    return object : FlowZiplineService<T> {
+  private fun Flow<T>.toZiplineService(): FlowZiplineService<T> = object : FlowZiplineService<T> {
       override suspend fun collect(collector: FlowZiplineCollector<T>) {
         try {
           this@toZiplineService.collect(collector::emit)
@@ -69,25 +68,21 @@ internal class FlowSerializer<T>(
 
       override fun toString() = this@toZiplineService.toString()
     }
-  }
 
   override fun deserialize(decoder: Decoder): Flow<T> {
     val service = decoder.decodeSerializableValue(delegateSerializer)
     return service.toFlow()
   }
 
-  private fun FlowZiplineService<T>.toFlow(): Flow<T> {
-    return channelFlow {
+  private fun FlowZiplineService<T>.toFlow(): Flow<T> = channelFlow {
       this@toFlow.collect(object : FlowZiplineCollector<T> {
         override suspend fun emit(value: T) {
           this@channelFlow.send(value)
         }
       })
     }
-  }
 
-  override fun equals(other: Any?) =
-    other is FlowSerializer<*> && other.delegateSerializer == delegateSerializer
+  override fun equals(other: Any?) = other is FlowSerializer<*> && other.delegateSerializer == delegateSerializer
 
   override fun hashCode() = delegateSerializer.hashCode()
 }
@@ -108,8 +103,7 @@ internal class StateFlowSerializer<T>(
     return encoder.encodeSerializableValue(delegateSerializer, service)
   }
 
-  private fun StateFlow<T>.toZiplineService(): StateFlowZiplineService<T> {
-    return object : StateFlowZiplineService<T> {
+  private fun StateFlow<T>.toZiplineService(): StateFlowZiplineService<T> = object : StateFlowZiplineService<T> {
       override suspend fun collect(collector: FlowZiplineCollector<T>) {
         try {
           this@toZiplineService.collect(collector::emit)
@@ -122,15 +116,13 @@ internal class StateFlowSerializer<T>(
 
       override fun toString() = this@toZiplineService.toString()
     }
-  }
 
   override fun deserialize(decoder: Decoder): StateFlow<T> {
     val service = decoder.decodeSerializableValue(delegateSerializer)
     return service.toStateFlow()
   }
 
-  private fun StateFlowZiplineService<T>.toStateFlow(): StateFlow<T> {
-    return object : StateFlow<T> {
+  private fun StateFlowZiplineService<T>.toStateFlow(): StateFlow<T> = object : StateFlow<T> {
       override suspend fun collect(collector: FlowCollector<T>): Nothing {
         channelFlow {
           this@toStateFlow.collect(object : FlowZiplineCollector<T> {
@@ -146,10 +138,8 @@ internal class StateFlowSerializer<T>(
 
       override val replayCache: List<T> get() = listOf(value)
     }
-  }
 
-  override fun equals(other: Any?) =
-    other is StateFlowSerializer<*> && other.delegateSerializer == delegateSerializer
+  override fun equals(other: Any?) = other is StateFlowSerializer<*> && other.delegateSerializer == delegateSerializer
 
   override fun hashCode() = delegateSerializer.hashCode()
 }

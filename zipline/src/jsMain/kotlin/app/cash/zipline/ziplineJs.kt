@@ -47,13 +47,9 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
       private val jsOutboundChannel: CallChannel
         get() = js("globalThis.app_cash_zipline_outboundChannel")
 
-      override fun call(callJson: String): String {
-        return jsOutboundChannel.call(callJson)
-      }
+      override fun call(callJson: String): String = jsOutboundChannel.call(callJson)
 
-      override fun disconnect(instanceName: String): Boolean {
-        return jsOutboundChannel.disconnect(instanceName)
-      }
+      override fun disconnect(instanceName: String): Boolean = jsOutboundChannel.disconnect(instanceName)
     },
     oppositeProvider = {
       host
@@ -97,9 +93,7 @@ actual class Zipline internal constructor(userSerializersModule: SerializersModu
     name: String,
     scope: ZiplineScope = ZiplineScope(),
     adapter: ZiplineServiceAdapter<T>,
-  ): T {
-    return endpoint.take(name, scope, adapter)
-  }
+  ): T = endpoint.take(name, scope, adapter)
 
   actual fun <T : Any> getOrPutAttachment(key: KClass<T>, compute: () -> T): T {
     val value = attachments.getOrPut(key, compute)

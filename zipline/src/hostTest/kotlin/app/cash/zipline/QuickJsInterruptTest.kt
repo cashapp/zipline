@@ -68,9 +68,7 @@ class QuickJsInterruptTest {
 
   @Test fun interruptionReturnsTrueToTerminateWork() {
     quickJs.interruptHandler = object : InterruptHandler {
-      override fun poll(): Boolean {
-        return true
-      }
+      override fun poll(): Boolean = true
     }
 
     val e = assertFailsWith<QuickJsException> {

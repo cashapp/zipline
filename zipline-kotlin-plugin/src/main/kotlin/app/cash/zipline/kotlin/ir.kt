@@ -143,15 +143,13 @@ internal fun IrBuilderWithScope.irReturn(
   value: IrExpression,
   returnTargetSymbol: IrReturnTargetSymbol,
   type: IrType = value.type,
-): IrReturn {
-  return IrReturnImpl(
+): IrReturn = IrReturnImpl(
     startOffset = startOffset,
     endOffset = endOffset,
     type = type,
     returnTargetSymbol = returnTargetSymbol,
     value = value,
   )
-}
 
 /** Set up reasonable defaults for a generated function or constructor. */
 fun IrFunctionBuilder.initDefaults(original: IrElement) {
@@ -182,12 +180,10 @@ fun IrValueParameterBuilder.initDefaults(original: IrElement) {
  * use `UNDEFINED_OFFSET`. Make sure we don't propagate this further into generated code; that
  * causes LLVM code generation to fail.
  */
-private fun Int.toSyntheticIfUnknown(): Int {
-  return when (this) {
+private fun Int.toSyntheticIfUnknown(): Int = when (this) {
     UNDEFINED_OFFSET -> SYNTHETIC_OFFSET
     else -> this
   }
-}
 
 fun IrConstructor.irConstructorBody(
   context: IrGeneratorContext,
@@ -233,14 +229,12 @@ fun DeclarationIrBuilder.irDelegatingConstructorCall(
 fun DeclarationIrBuilder.irInstanceInitializerCall(
   context: IrGeneratorContext,
   classSymbol: IrClassSymbol,
-): IrInstanceInitializerCall {
-  return IrInstanceInitializerCallImpl(
+): IrInstanceInitializerCall = IrInstanceInitializerCallImpl(
     startOffset = startOffset,
     endOffset = endOffset,
     classSymbol = classSymbol,
     type = context.irBuiltIns.unitType,
   )
-}
 
 fun IrSimpleFunction.irFunctionBody(
   context: IrGeneratorContext,
@@ -355,41 +349,35 @@ fun irVal(
 
 internal fun IrBuilderWithScope.irKClass(
   containerClass: IrClass,
-): IrClassReferenceImpl {
-  return IrClassReferenceImpl(
+): IrClassReferenceImpl = IrClassReferenceImpl(
     startOffset = startOffset,
     endOffset = endOffset,
     type = context.irBuiltIns.kClassClass.typeWith(containerClass.defaultType),
     symbol = containerClass.symbol,
     classType = containerClass.defaultType,
   )
-}
 
 fun irBlockBodyBuilder(
   irPluginContext: IrGeneratorContext,
   scopeWithIr: ScopeWithIr,
   original: IrElement,
-): IrBlockBodyBuilder {
-  return IrBlockBodyBuilder(
+): IrBlockBodyBuilder = IrBlockBodyBuilder(
     context = irPluginContext,
     scope = scopeWithIr.scope,
     startOffset = original.startOffset.toSyntheticIfUnknown(),
     endOffset = original.endOffset.toSyntheticIfUnknown(),
   )
-}
 
 fun irBlockBuilder(
   irPluginContext: IrGeneratorContext,
   scopeWithIr: ScopeWithIr,
   original: IrElement,
-): IrBlockBuilder {
-  return IrBlockBuilder(
+): IrBlockBuilder = IrBlockBuilder(
     context = irPluginContext,
     scope = scopeWithIr.scope,
     startOffset = original.startOffset.toSyntheticIfUnknown(),
     endOffset = original.endOffset.toSyntheticIfUnknown(),
   )
-}
 
 /** This creates `companion object` if it doesn't exist already. */
 fun getOrCreateCompanion(
@@ -457,8 +445,7 @@ fun IrBuilderWithScope.irInvoke(
   typeArguments: List<IrType?>,
   valueArguments: List<IrExpression>,
   returnTypeHint: IrType? = null,
-): IrMemberAccessExpression<*> =
-  irInvoke(
+): IrMemberAccessExpression<*> = irInvoke(
     dispatchReceiver,
     callee,
     *valueArguments.toTypedArray(),

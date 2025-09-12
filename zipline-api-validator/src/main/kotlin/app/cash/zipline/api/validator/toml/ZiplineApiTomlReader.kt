@@ -20,9 +20,7 @@ import okio.ByteString.Companion.encodeUtf8
 import okio.IOException
 import okio.Options
 
-fun BufferedSource.readTomlZiplineApi(): TomlZiplineApi {
-  return TomlZiplineApiReader(this).readServices()
-}
+fun BufferedSource.readTomlZiplineApi(): TomlZiplineApi = TomlZiplineApiReader(this).readServices()
 
 /**
  * Super-limited reader for the tiny subset of TOML we use for Zipline API files.

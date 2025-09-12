@@ -45,8 +45,7 @@ internal class OutboundCallHandler(
    * Returns a copy of this call handler that targets the same service, but that applies [scope] to
    * outbound services produced by this service.
    */
-  fun withScope(scope: ZiplineScope): OutboundCallHandler {
-    return OutboundCallHandler(
+  fun withScope(scope: ZiplineScope): OutboundCallHandler = OutboundCallHandler(
       sourceType,
       serviceName,
       endpoint,
@@ -54,16 +53,13 @@ internal class OutboundCallHandler(
       scope,
       serviceState,
     )
-  }
 
   /** Returns the type of this service as reported by the opposite endpoint. */
   val targetType: SerializableZiplineServiceType?
     get() = endpoint.opposite.serviceType(serviceName)
 
   /** Returns a new service that uses this to send calls. */
-  fun <T : ZiplineService> outboundService(): T {
-    return adapter.outboundService(this) as T
-  }
+  fun <T : ZiplineService> outboundService(): T = adapter.outboundService(this) as T
 
   /** Used by generated code to call a function. */
   fun call(
@@ -226,7 +222,9 @@ internal class OutboundCallHandler(
   }
 
   private inner class RealSuspendCallback<R> :
-    SuspendCallback<R>, HasPassByReferenceName, ZiplineScoped {
+    SuspendCallback<R>,
+    HasPassByReferenceName,
+    ZiplineScoped {
     lateinit var internalCall: InternalCall
     lateinit var externalCall: Call
     lateinit var continuation: Continuation<R>

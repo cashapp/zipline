@@ -33,5 +33,4 @@ import okio.ByteString.Companion.encodeUtf8
  * Don't change how this works! Doing so will break upgrades for programs compiled with different
  * identifiers.
  */
-fun String.signatureHash(): String =
-  encodeUtf8().sha256().substring(0, 6).base64() // In base64, 6 bytes takes 8 chars.
+fun String.signatureHash(): String = encodeUtf8().sha256().substring(0, 6).base64() // In base64, 6 bytes takes 8 chars.

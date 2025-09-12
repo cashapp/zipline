@@ -39,9 +39,7 @@ internal class Ed25519Sign private constructor(
   private val hashedPrivateKey: ByteString,
   private val publicKey: ByteString,
 ) {
-  fun sign(data: ByteString): ByteString {
-    return sign(data, publicKey, hashedPrivateKey)
-  }
+  fun sign(data: ByteString): ByteString = sign(data, publicKey, hashedPrivateKey)
 
   companion object {
     private const val SECRET_KEY_LEN = Field25519.FIELD_LEN

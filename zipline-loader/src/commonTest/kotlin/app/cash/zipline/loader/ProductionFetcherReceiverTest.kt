@@ -143,8 +143,7 @@ class ProductionFetcherReceiverTest {
     applicationName: String,
     manifest: ZiplineManifest,
     initializer: (Zipline) -> Unit = {},
-  ): Zipline {
-    return loadFromManifest(
+  ): Zipline = loadFromManifest(
       applicationName = applicationName,
       eventListener = EventListener.NONE,
       loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
@@ -152,5 +151,4 @@ class ProductionFetcherReceiverTest {
       initializer = initializer,
       nowEpochMs = nowMillis,
     )
-  }
 }

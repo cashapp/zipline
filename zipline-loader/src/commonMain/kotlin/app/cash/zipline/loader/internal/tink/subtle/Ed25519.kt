@@ -650,9 +650,7 @@ internal object Ed25519 : SignatureAlgorithm {
    * Preconditions:
    * `a[31] <= 127`
    */
-  fun scalarMultWithBaseToBytes(a: ByteString): ByteString {
-    return scalarMultWithBase(a.toByteArray()).toBytes().toByteString()
-  }
+  fun scalarMultWithBaseToBytes(a: ByteString): ByteString = scalarMultWithBase(a.toByteArray()).toBytes().toByteString()
 
   private fun slide(a: ByteArray): ByteArray {
     val r = ByteArray(256)
@@ -763,9 +761,7 @@ internal object Ed25519 : SignatureAlgorithm {
   /**
    * Returns the least significant bit of [`in`].
    */
-  private fun getLsb(inLongArray: LongArray): Int {
-    return Field25519.contract(inLongArray)[0].toInt() and 1
-  }
+  private fun getLsb(inLongArray: LongArray): Int = Field25519.contract(inLongArray)[0].toInt() and 1
 
   /**
    * Negates all values in [in1] and store it in [out].

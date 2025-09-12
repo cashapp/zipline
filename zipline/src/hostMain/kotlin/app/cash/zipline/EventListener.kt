@@ -38,9 +38,7 @@ abstract class EventListener {
    * @return any object. This value will be passed back to [callEnd] when the call is completed. The
    *   base function always returns null.
    */
-  open fun callStart(zipline: Zipline, call: Call): Any? {
-    return null
-  }
+  open fun callStart(zipline: Zipline, call: Call): Any? = null
 
   /**
    * Invoked when a service function call completes.
@@ -68,9 +66,7 @@ abstract class EventListener {
   open fun applicationLoadStart(
     applicationName: String,
     manifestUrl: String?,
-  ): Any? {
-    return null
-  }
+  ): Any? = null
 
   /**
    * Invoked when an application load was skipped because the code is unchanged.
@@ -131,9 +127,7 @@ abstract class EventListener {
   open fun downloadStart(
     applicationName: String,
     url: String,
-  ): Any? {
-    return null
-  }
+  ): Any? = null
 
   /**
    * Invoked when a network download succeeds.
@@ -210,9 +204,7 @@ abstract class EventListener {
    * @return any object. This value will be passed back to [moduleLoadEnd] when the call is
    *   completed. The base function always returns null.
    */
-  open fun moduleLoadStart(zipline: Zipline, moduleId: String): Any? {
-    return null
-  }
+  open fun moduleLoadStart(zipline: Zipline, moduleId: String): Any? = null
 
   /**
    * Invoked when a module load completes.
@@ -226,9 +218,7 @@ abstract class EventListener {
   /**
    * Initializer runs before the mainFunction and executes on the host platform.
    */
-  open fun initializerStart(zipline: Zipline, applicationName: String): Any? {
-    return null
-  }
+  open fun initializerStart(zipline: Zipline, applicationName: String): Any? = null
 
   /**
    * Invoked when initializer is finished. Failure is not recorded separately as it is unrecoverable.
@@ -239,9 +229,7 @@ abstract class EventListener {
   /**
    * Invoked when mainFunction is run within the JS platform to start an application.
    */
-  open fun mainFunctionStart(zipline: Zipline, applicationName: String): Any? {
-    return null
-  }
+  open fun mainFunctionStart(zipline: Zipline, applicationName: String): Any? = null
 
   /**
    * Invoked when mainFunction is finished. Failure is not recorded separately as it is unrecoverable.

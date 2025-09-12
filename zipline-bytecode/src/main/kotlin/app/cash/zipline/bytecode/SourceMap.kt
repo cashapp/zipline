@@ -153,8 +153,7 @@ internal fun BufferedSource.readVarint(): Long {
   throw IOException("malformed varint")
 }
 
-internal fun BufferedSource.readBase64Character(): Int {
-  return when (val c = readByte().toInt().toChar()) {
+internal fun BufferedSource.readBase64Character(): Int = when (val c = readByte().toInt().toChar()) {
     in 'A'..'Z' -> {
       // char ASCII value
       //  A    65    0
@@ -177,4 +176,3 @@ internal fun BufferedSource.readBase64Character(): Int {
     '/', '_' -> 63
     else -> throw IOException("Unexpected character")
   }
-}

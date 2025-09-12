@@ -117,17 +117,13 @@ internal object ThrowableSerializer : KSerializer<Throwable> {
     return toInboundThrowable(stacktraceString, constructor)
   }
 
-  private fun knownTypeNames(throwable: Throwable): List<String> {
-    return when (throwable) {
+  private fun knownTypeNames(throwable: Throwable): List<String> = when (throwable) {
       is ZiplineApiMismatchException -> listOf("ZiplineApiMismatchException")
       else -> listOf()
     }
-  }
 
-  private fun knownTypeConstructor(typeName: String): ((String) -> Throwable)? {
-    return when (typeName) {
+  private fun knownTypeConstructor(typeName: String): ((String) -> Throwable)? = when (typeName) {
       "ZiplineApiMismatchException" -> ::ZiplineApiMismatchException
       else -> null
     }
-  }
 }

@@ -92,9 +92,7 @@ class Utf8Test {
     zipline.bind<Formatter>(
       "formatter",
       object : Formatter {
-        override fun format(message: String): String {
-          return "($message, $message)"
-        }
+        override fun format(message: String): String = "($message, $message)"
       },
     )
     assertEquals(
@@ -118,9 +116,7 @@ class Utf8Test {
     zipline.bind<Formatter>(
       "formatter",
       object : Formatter {
-        override fun format(message: String): String {
-          throw RuntimeException("a\uD83D\uDC1Dcdefg")
-        }
+        override fun format(message: String): String = throw RuntimeException("a\uD83D\uDC1Dcdefg")
       },
     )
     val t = assertFailsWith<RuntimeException> {

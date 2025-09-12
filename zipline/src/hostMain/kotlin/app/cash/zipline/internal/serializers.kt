@@ -35,9 +35,7 @@ internal object ByteStringAsHexSerializer : KSerializer<ByteString> {
     encoder.encodeString(value.hex())
   }
 
-  override fun deserialize(decoder: Decoder): ByteString {
-    return decoder.decodeString().decodeHex()
-  }
+  override fun deserialize(decoder: Decoder): ByteString = decoder.decodeString().decodeHex()
 }
 
 internal val jsonForManifest = Json {

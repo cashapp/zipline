@@ -57,9 +57,7 @@ object ZiplineTestInternals {
   }
 
   /** Simulate generated code for outbound calls.  */
-  fun takeEchoClient(endpoint: Endpoint, name: String): EchoService {
-    return endpoint.take(name, ZiplineScope(), EchoServiceAdapter())
-  }
+  fun takeEchoClient(endpoint: Endpoint, name: String): EchoService = endpoint.take(name, ZiplineScope(), EchoServiceAdapter())
 
   /** Simulate generated code for inbound calls.  */
   fun bindEchoService(endpoint: Endpoint, name: String, echoService: EchoService) {
@@ -67,9 +65,7 @@ object ZiplineTestInternals {
   }
 
   /** Simulate generated code for outbound calls.  */
-  fun takeGenericEchoService(endpoint: Endpoint, name: String): GenericEchoService<String> {
-    return endpoint.take(name, ZiplineScope(), GenericEchoServiceAdapter())
-  }
+  fun takeGenericEchoService(endpoint: Endpoint, name: String): GenericEchoService<String> = endpoint.take(name, ZiplineScope(), GenericEchoServiceAdapter())
 
   /** Simulate generated code for inbound calls.  */
   fun bindGenericEchoService(
@@ -90,9 +86,7 @@ object ZiplineTestInternals {
   }
 
   /** Simulate generated code for outbound calls.  */
-  fun takeEchoZiplineService(endpoint: Endpoint, name: String): EchoZiplineService {
-    return endpoint.take(name, ZiplineScope(), EchoZiplineServiceAdapter())
-  }
+  fun takeEchoZiplineService(endpoint: Endpoint, name: String): EchoZiplineService = endpoint.take(name, ZiplineScope(), EchoZiplineServiceAdapter())
 
   /** Simulate a generated subclass of ZiplineServiceAdapter.  */
   class EchoServiceAdapter : ZiplineServiceAdapter<EchoService>() {
@@ -117,24 +111,19 @@ object ZiplineTestInternals {
           listOf(requestSerializer),
           responseSerializer,
         ) {
-          override fun call(service: EchoService, args: List<*>): Any {
-            return service.echo(args[0] as EchoRequest)
-          }
+          override fun call(service: EchoService, args: List<*>): Any = service.echo(args[0] as EchoRequest)
         },
       )
     }
 
-    override fun outboundService(callHandler: OutboundCallHandler): EchoService {
-      return GeneratedOutboundService(callHandler)
-    }
+    override fun outboundService(callHandler: OutboundCallHandler): EchoService = GeneratedOutboundService(callHandler)
 
     private class GeneratedOutboundService(
       override val callHandler: OutboundCallHandler,
-    ) : EchoService, OutboundService {
+    ) : EchoService,
+      OutboundService {
 
-      override fun echo(request: EchoRequest): EchoResponse {
-        return callHandler.call(this, 0, request) as EchoResponse
-      }
+      override fun echo(request: EchoRequest): EchoResponse = callHandler.call(this, 0, request) as EchoResponse
     }
   }
 
@@ -160,23 +149,18 @@ object ZiplineTestInternals {
           listOf(requestSerializer),
           responseSerializer,
         ) {
-          override fun call(service: GenericEchoService<String>, args: List<*>): Any {
-            return service.genericEcho(args[0] as String)
-          }
+          override fun call(service: GenericEchoService<String>, args: List<*>): Any = service.genericEcho(args[0] as String)
         },
       )
     }
 
-    override fun outboundService(callHandler: OutboundCallHandler): GenericEchoService<String> {
-      return GeneratedOutboundService(callHandler)
-    }
+    override fun outboundService(callHandler: OutboundCallHandler): GenericEchoService<String> = GeneratedOutboundService(callHandler)
 
     private class GeneratedOutboundService(override val callHandler: OutboundCallHandler) :
-      GenericEchoService<String>, OutboundService {
+      GenericEchoService<String>,
+      OutboundService {
 
-      override fun genericEcho(request: String): List<String> {
-        return callHandler.call(this, 0, request) as List<String>
-      }
+      override fun genericEcho(request: String): List<String> = callHandler.call(this, 0, request) as List<String>
     }
   }
 
@@ -203,23 +187,18 @@ object ZiplineTestInternals {
           listOf(requestSerializer),
           responseSerializer,
         ) {
-          override fun call(service: EchoZiplineService, args: List<*>): Any {
-            return service.echo(args[0] as EchoRequest)
-          }
+          override fun call(service: EchoZiplineService, args: List<*>): Any = service.echo(args[0] as EchoRequest)
         },
       )
     }
 
-    override fun outboundService(callHandler: OutboundCallHandler): EchoZiplineService {
-      return GeneratedOutboundService(callHandler)
-    }
+    override fun outboundService(callHandler: OutboundCallHandler): EchoZiplineService = GeneratedOutboundService(callHandler)
 
     private class GeneratedOutboundService(override val callHandler: OutboundCallHandler) :
-      EchoZiplineService, OutboundService {
+      EchoZiplineService,
+      OutboundService {
 
-      override fun echo(request: EchoRequest): EchoResponse {
-        return callHandler.call(this, 0, request) as EchoResponse
-      }
+      override fun echo(request: EchoRequest): EchoResponse = callHandler.call(this, 0, request) as EchoResponse
     }
   }
 }

@@ -14,9 +14,7 @@ internal fun getModuleDependencies(quickJs: QuickJs): List<String> {
   return Json.decodeFromString(dependenciesString)
 }
 
-internal fun QuickJs.getGlobalThis(key: String): String? {
-  return evaluate("globalThis.$key", "getGlobalThis.js") as String?
-}
+internal fun QuickJs.getGlobalThis(key: String): String? = evaluate("globalThis.$key", "getGlobalThis.js") as String?
 
 internal fun getLog(quickJs: QuickJs): String? = quickJs.getGlobalThis("log")
 

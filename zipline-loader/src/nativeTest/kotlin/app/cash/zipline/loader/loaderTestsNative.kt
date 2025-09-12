@@ -23,8 +23,6 @@ import okio.ByteString.Companion.toByteString
 
 internal actual fun testSqlDriverFactory(): SqlDriverFactory = NativeSqliteDriverFactory()
 
-actual fun randomByteString(size: Int): ByteString {
-  return Random.nextBytes(size).toByteString()
-}
+actual fun randomByteString(size: Int): ByteString = Random.nextBytes(size).toByteString()
 
 internal actual fun canSignEcdsaP256() = false

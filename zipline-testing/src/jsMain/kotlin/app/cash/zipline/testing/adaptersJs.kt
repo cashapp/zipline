@@ -18,9 +18,7 @@ package app.cash.zipline.testing
 import app.cash.zipline.Zipline
 
 class JsAdaptersService : AdaptersService {
-  override fun echo(request: AdaptersRequest): AdaptersResponse {
-    return AdaptersResponse("thank you for using your serializers, ${request.message}")
-  }
+  override fun echo(request: AdaptersRequest): AdaptersResponse = AdaptersResponse("thank you for using your serializers, ${request.message}")
 }
 
 private val zipline by lazy { Zipline.get(AdaptersSerializersModule) }

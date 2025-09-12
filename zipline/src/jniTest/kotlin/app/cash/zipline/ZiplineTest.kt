@@ -143,9 +143,7 @@ class ZiplineTest {
 
   @Test fun suspendingJsCallJvmService() = runTest(dispatcher) {
     val jvmSuspendingEchoService = object : SuspendingEchoService {
-      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        return EchoResponse("hello from the suspending JVM, ${request.message}")
-      }
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse = EchoResponse("hello from the suspending JVM, ${request.message}")
     }
 
     zipline.bind<SuspendingEchoService>(
@@ -160,9 +158,7 @@ class ZiplineTest {
 
   @Test fun suspendingJsCallJvmServiceUsingDynamicFunction() = runTest(dispatcher) {
     val jvmSuspendingEchoService = object : SuspendingEchoService {
-      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        return EchoResponse("hello dynamic and suspending, ${request.message}")
-      }
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse = EchoResponse("hello dynamic and suspending, ${request.message}")
     }
 
     zipline.bind<SuspendingEchoService>(
@@ -497,14 +493,10 @@ class ZiplineTest {
   }
 
   private class JvmEchoService(private val greeting: String) : EchoService {
-    override fun echo(request: EchoRequest): EchoResponse {
-      return EchoResponse("$greeting from the JVM, ${request.message}")
-    }
+    override fun echo(request: EchoRequest): EchoResponse = EchoResponse("$greeting from the JVM, ${request.message}")
   }
 
   private class JvmPotatoService(private val greeting: String) : PotatoService {
-    override fun echo(): EchoResponse {
-      return EchoResponse("$greeting from the JVM, anonymous")
-    }
+    override fun echo(): EchoResponse = EchoResponse("$greeting from the JVM, anonymous")
   }
 }

@@ -54,8 +54,7 @@ private class SourceMapBytecodeRewriter(
   val sourceMap: SourceMap,
   val atoms: MutableAtomSet,
 ) {
-  fun JsObject.jsToKt(): JsObject {
-    return when (this) {
+  fun JsObject.jsToKt(): JsObject = when (this) {
       is JsFunctionBytecode -> {
         copy(
           debug = debug?.jsToKt(),
@@ -64,7 +63,6 @@ private class SourceMapBytecodeRewriter(
       }
       else -> this
     }
-  }
 
   fun Debug.jsToKt(): Debug {
     val ktPc2LineBuffer = Buffer()

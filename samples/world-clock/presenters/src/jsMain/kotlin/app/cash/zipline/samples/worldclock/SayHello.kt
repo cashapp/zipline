@@ -16,7 +16,5 @@
 package app.cash.zipline.samples.worldclock
 
 class SayHello {
-  fun getMessage(): String {
-    return "Hello from Kotlin/JS"
-  }
+  fun getMessage(): String = "Hello from Kotlin/JS"
 }

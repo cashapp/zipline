@@ -43,12 +43,10 @@ data class JsString(
     }
 }
 
-fun String.toJsString(): JsString {
-  return when (length) {
+fun String.toJsString(): JsString = when (length) {
     utf8Size().toInt() -> JsString(isWideChar = false, bytes = encodeUtf8())
     else -> JsString(isWideChar = true, bytes = encode(Charsets.UTF_16LE))
   }
-}
 
 data class JsFunctionBytecode(
   val flags: Int,

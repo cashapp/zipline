@@ -22,9 +22,7 @@ import app.cash.zipline.sourceType
 class JsEchoService(
   private val greeting: String,
 ) : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    return EchoResponse("$greeting from JavaScript, ${request.message}")
-  }
+  override fun echo(request: EchoRequest): EchoResponse = EchoResponse("$greeting from JavaScript, ${request.message}")
 }
 
 private val zipline by lazy { Zipline.get() }

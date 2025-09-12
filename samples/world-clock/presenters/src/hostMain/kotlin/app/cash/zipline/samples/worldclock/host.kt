@@ -75,11 +75,9 @@ fun startWorldClockZipline(
 }
 
 /** Poll for code updates by emitting the manifest on an interval. */
-private fun <T> repeatFlow(content: T, delayMillis: Long): Flow<T> {
-  return flow {
+private fun <T> repeatFlow(content: T, delayMillis: Long): Flow<T> = flow {
     while (true) {
       emit(content)
       delay(delayMillis)
     }
   }
-}

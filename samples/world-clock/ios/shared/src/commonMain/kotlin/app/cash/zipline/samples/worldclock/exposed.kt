@@ -26,9 +26,7 @@ fun exposedTypes(
   worldClockIos: WorldClockIos,
   worldClockModel: WorldClockModel,
   worldClockPresenter: WorldClockPresenter,
-) {
-  throw AssertionError()
-}
+): Unit = throw AssertionError()
 
 fun byteStringOf(data: NSData): ByteString = data.toByteString()
 

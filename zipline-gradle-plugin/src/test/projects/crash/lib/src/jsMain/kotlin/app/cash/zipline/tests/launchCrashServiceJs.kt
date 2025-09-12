@@ -28,9 +28,7 @@ fun launchCrashService() {
       goBoom() // More calls to get a more interesting stack traces.
     }
 
-    fun goBoom() {
-      throw Exception("boom!")
-    }
+    fun goBoom(): Unit = throw Exception("boom!")
   }
 
   zipline.bind<CrashService>("crashService", crashService)

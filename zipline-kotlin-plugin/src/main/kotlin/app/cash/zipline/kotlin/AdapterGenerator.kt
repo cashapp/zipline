@@ -595,7 +595,7 @@ internal class AdapterGenerator(
             +functionCall
             irUnit()
           }
-        }
+        },
       )
     }
 
@@ -647,8 +647,7 @@ internal class AdapterGenerator(
     ziplineFunctionClass: IrClass,
     callFunction: IrSimpleFunction,
     bridgedFunction: IrSimpleFunctionSymbol,
-  ): IrExpression {
-    return irCall(
+  ): IrExpression = irCall(
       type = bridgedInterface.resolveTypeParameters(bridgedFunction.owner.returnType)
         .remapTypeParameters(original, ziplineFunctionClass),
       callee = bridgedFunction,
@@ -669,7 +668,6 @@ internal class AdapterGenerator(
         )
       }
     }
-  }
 
   /** Override `ZiplineServiceAdapter.outboundService(...)`. */
   private fun irOutboundServiceFunction(
@@ -893,7 +891,7 @@ internal class AdapterGenerator(
           elementType = pluginContext.symbols.any.defaultType.makeNullable(),
           values = result.parameters
             .filter { it.kind == IrParameterKind.Regular }
-            .map { irGet(type = it.type, variable = it.symbol) }
+            .map { irGet(type = it.type, variable = it.symbol) },
         )
       }
 

@@ -24,9 +24,7 @@ fun prepareNonAsciiInputAndOutput() {
   zipline.bind<Formatter>(
     "formatter",
     object : Formatter {
-    override fun format(message: String): String {
-      return "($message, $message)"
-    }
+    override fun format(message: String): String = "($message, $message)"
   },
   )
 }
@@ -36,9 +34,7 @@ fun prepareNonAsciiThrower() {
   zipline.bind<Formatter>(
     "formatter",
     object : Formatter {
-    override fun format(message: String): String {
-      throw Exception("a🐝cdefg")
-    }
+    override fun format(message: String): String = throw Exception("a🐝cdefg")
   },
   )
 }

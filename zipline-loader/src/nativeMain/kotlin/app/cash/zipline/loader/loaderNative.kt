@@ -28,28 +28,24 @@ fun ZiplineCache(
   directory: Path,
   maxSizeInBytes: Long,
   loaderEventListener: LoaderEventListener,
-): ZiplineCache {
-  return ZiplineCache(
+): ZiplineCache = ZiplineCache(
     sqlDriverFactory = NativeSqliteDriverFactory(),
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,
     loaderEventListener = loaderEventListener,
   )
-}
 
 fun ZiplineCache(
   fileSystem: FileSystem,
   directory: Path,
   maxSizeInBytes: Long,
-): ZiplineCache {
-  return ZiplineCache(
+): ZiplineCache = ZiplineCache(
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,
     loaderEventListener = LoaderEventListener.None,
   )
-}
 
 fun ZiplineLoader(
   dispatcher: CoroutineDispatcher,
@@ -57,14 +53,12 @@ fun ZiplineLoader(
   urlSession: NSURLSession,
   eventListener: EventListener = EventListener.NONE,
   nowEpochMs: () -> Long = systemEpochMsClock,
-): ZiplineLoader {
-  return ZiplineLoader(
+): ZiplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     manifestVerifier = manifestVerifier,
     httpClient = urlSession.asZiplineHttpClient(),
     eventListener = eventListener,
     nowEpochMs = nowEpochMs,
   )
-}
 
 fun NSURLSession.asZiplineHttpClient(): ZiplineHttpClient = URLSessionZiplineHttpClient(this)

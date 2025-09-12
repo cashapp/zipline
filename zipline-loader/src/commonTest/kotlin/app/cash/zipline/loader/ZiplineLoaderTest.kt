@@ -417,8 +417,7 @@ class ZiplineLoaderTest {
     applicationName: String,
     manifest: ZiplineManifest,
     initializer: (Zipline) -> Unit = {},
-  ): Zipline {
-    return loadFromManifest(
+  ): Zipline = loadFromManifest(
       applicationName = applicationName,
       eventListener = EventListener.NONE,
       loadedManifest = LoadedManifest(ByteString.EMPTY, manifest, 1L),
@@ -426,5 +425,4 @@ class ZiplineLoaderTest {
       initializer = initializer,
       nowEpochMs = systemEpochMsClock(),
     )
-  }
 }

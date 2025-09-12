@@ -46,9 +46,7 @@ class FakeZiplineHttpClient : ZiplineHttpClient() {
   override suspend fun download(
     url: String,
     requestHeaders: List<Pair<String, String>>,
-  ): ByteString {
-    return filePathToByteString[url] ?: throw IOException("404: $url not found")
-  }
+  ): ByteString = filePathToByteString[url] ?: throw IOException("404: $url not found")
 
   override suspend fun openDevelopmentServerWebSocket(
     url: String,

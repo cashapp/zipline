@@ -150,7 +150,7 @@ allprojects {
 
   plugins.withId("org.jetbrains.kotlin.multiplatform") {
     configure<KotlinMultiplatformExtension> {
-      jvmToolchain(11)
+      jvmToolchain(17)
       @Suppress("OPT_IN_USAGE")
       compilerOptions {
         freeCompilerArgs.addAll("-opt-in=app.cash.zipline.EngineApi")
@@ -168,7 +168,7 @@ allprojects {
 
   plugins.withId("org.jetbrains.kotlin.jvm") {
     configure<KotlinJvmProjectExtension> {
-      jvmToolchain(11)
+      jvmToolchain(17)
     }
   }
 

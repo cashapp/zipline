@@ -48,9 +48,7 @@ internal object AdaptersRequestSerializer : KSerializer<AdaptersRequest> {
     encoder.encodeString(value.message)
   }
 
-  override fun deserialize(decoder: Decoder): AdaptersRequest {
-    return AdaptersRequest(decoder.decodeString())
-  }
+  override fun deserialize(decoder: Decoder): AdaptersRequest = AdaptersRequest(decoder.decodeString())
 }
 
 internal object AdaptersResponseSerializer : KSerializer<AdaptersResponse> {
@@ -63,9 +61,7 @@ internal object AdaptersResponseSerializer : KSerializer<AdaptersResponse> {
     encoder.encodeString(value.message)
   }
 
-  override fun deserialize(decoder: Decoder): AdaptersResponse {
-    return AdaptersResponse(decoder.decodeString())
-  }
+  override fun deserialize(decoder: Decoder): AdaptersResponse = AdaptersResponse(decoder.decodeString())
 }
 
 val AdaptersRequestSerializersModule: SerializersModule = SerializersModule {

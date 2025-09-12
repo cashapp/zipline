@@ -56,9 +56,7 @@ internal class EventListenerEndpointTest {
     )
 
     val service = object : EchoService {
-      override fun echo(request: EchoRequest): EchoResponse {
-        return EchoResponse("pong")
-      }
+      override fun echo(request: EchoRequest): EchoResponse = EchoResponse("pong")
     }
 
     serviceEndpoint.bind<EchoService>("echoService", service)
@@ -357,25 +355,19 @@ internal class EventListenerEndpointTest {
     )
 
     val service = object : EchoTransformer {
-      override fun transform(prefix: String, service: EchoService): EchoService {
-        return object : EchoService {
-          override fun echo(request: EchoRequest): EchoResponse {
-            return EchoResponse("$prefix ${request.message}")
-          }
+      override fun transform(prefix: String, service: EchoService): EchoService = object : EchoService {
+          override fun echo(request: EchoRequest): EchoResponse = EchoResponse("$prefix ${request.message}")
 
           override fun close() {
             service.close()
           }
         }
-      }
     }
 
     serviceEndpoint.bind<EchoTransformer>("echoTransformer", service)
     val client = clientEndpoint.take<EchoTransformer>("echoTransformer")
     val serviceArgument = object : EchoService {
-      override fun echo(request: EchoRequest): EchoResponse {
-        return EchoResponse("pong")
-      }
+      override fun echo(request: EchoRequest): EchoResponse = EchoResponse("pong")
     }
     val transformedService = client.transform("hello", serviceArgument)
 

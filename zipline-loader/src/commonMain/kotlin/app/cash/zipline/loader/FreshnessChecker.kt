@@ -38,7 +38,5 @@ interface FreshnessChecker {
 
 /** A FreshnessChecker that never loads locally-cached applications. */
 object DefaultFreshnessCheckerNotFresh : FreshnessChecker {
-  override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean {
-    return false
-  }
+  override fun isFresh(manifest: ZiplineManifest, freshAtEpochMs: Long): Boolean = false
 }

@@ -28,10 +28,8 @@ internal fun <T : Any> Iterable<Provider<T>>.flatten(): Provider<List<T>> {
   }
 }
 
-internal fun String.capitalize(): String {
-  return lowercase(locale = Locale.US)
+internal fun String.capitalize(): String = lowercase(locale = Locale.US)
     .replaceFirstChar { it.titlecase(locale = Locale.US) }
-}
 
 internal fun Project.ziplineDependency(artifactId: String): Any {
   // Indicates when the plugin is applied inside the Zipline repo to Zipline's own modules. This

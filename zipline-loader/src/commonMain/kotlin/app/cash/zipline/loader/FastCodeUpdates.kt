@@ -36,8 +36,7 @@ import kotlinx.coroutines.flow.transformLatest
 fun Flow<String>.withDevelopmentServerPush(
   httpClient: ZiplineHttpClient,
   pollingInterval: Duration = 500.milliseconds,
-): Flow<String> {
-  return transformLatest { manifestUrl ->
+): Flow<String> = transformLatest { manifestUrl ->
     // Attempt once before any websocket setup or polling.
     emit(manifestUrl)
 
@@ -62,7 +61,6 @@ fun Flow<String>.withDevelopmentServerPush(
       emit(manifestUrl)
     }
   }
-}
 
 /**
  * Returns a string like "http://host:8080" given a full URL like "http://host:8080/path?query".

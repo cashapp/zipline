@@ -22,12 +22,10 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
 class JsSealedClassMessageService : SealedClassMessageService {
-  override fun colorSwap(request: SealedMessage): SealedMessage {
-    return when (request) {
+  override fun colorSwap(request: SealedMessage): SealedMessage = when (request) {
       is BlueMessage -> RedMessage(request.message)
       is RedMessage -> BlueMessage(request.message)
     }
-  }
 
   override fun colorSwapFlow(flow: Flow<SealedMessage>) = flow.map(::colorSwap)
 }

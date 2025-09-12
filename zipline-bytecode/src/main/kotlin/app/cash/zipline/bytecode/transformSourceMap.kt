@@ -24,29 +24,23 @@ fun SourceMap.clean(): SourceMap {
 
 private fun SourceMap.transformFilePaths(
   filePathTransformer: (String) -> String,
-): SourceMap {
-  return SourceMap(
+): SourceMap = SourceMap(
     version = version,
     file = file?.let(filePathTransformer),
     sourcesContent = sourcesContent,
     groups = groups.map { it.transformFilePaths(filePathTransformer) },
   )
-}
 
 private fun Group.transformFilePaths(
   filePathTransformer: (String) -> String,
-): Group {
-  return Group(segments.map { it.transformFilePaths(filePathTransformer) })
-}
+): Group = Group(segments.map { it.transformFilePaths(filePathTransformer) })
 
 private fun Segment.transformFilePaths(
   filePathTransformer: (String) -> String,
-): Segment {
-  return Segment(
+): Segment = Segment(
     startingColumn = startingColumn,
     source = source?.let(filePathTransformer),
     sourceLine = sourceLine,
     sourceColumn = sourceColumn,
     name = name,
   )
-}

@@ -123,9 +123,7 @@ class ZiplineKotlinPluginTest {
     val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
 
     val testingEchoService = object : EchoZiplineService {
-      override fun echo(request: EchoRequest): EchoResponse {
-        return EchoResponse("greetings from the compiler plugin, ${request.message}")
-      }
+      override fun echo(request: EchoRequest): EchoResponse = EchoResponse("greetings from the compiler plugin, ${request.message}")
     }
     ZiplineTestInternals.bindEchoZiplineService(bridgeB, "helloService", testingEchoService)
 
@@ -252,9 +250,7 @@ class ZiplineKotlinPluginTest {
     val (bridgeA, bridgeB) = ZiplineTestInternals.newEndpointPair()
 
     val testingService = object : GenericEchoService<String> {
-      override fun genericEcho(request: String): List<String> {
-        return listOf("received a generic $request!")
-      }
+      override fun genericEcho(request: String): List<String> = listOf("received a generic $request!")
     }
     ZiplineTestInternals.bindGenericEchoService(bridgeB, "genericService", testingService)
 
@@ -422,18 +418,14 @@ class ZiplineKotlinPluginTest {
 fun compile(
   sourceFiles: List<SourceFile>,
   plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
-): JvmCompilationResult {
-  return KotlinCompilation().apply {
+): JvmCompilationResult = KotlinCompilation().apply {
     sources = sourceFiles
     compilerPluginRegistrars = listOf(plugin)
     inheritClassPath = true
   }.compile()
-}
 
 @ExperimentalCompilerApi
 fun compile(
   sourceFile: SourceFile,
   plugin: CompilerPluginRegistrar = ZiplineCompilerPluginRegistrar(),
-): JvmCompilationResult {
-  return compile(listOf(sourceFile), plugin)
-}
+): JvmCompilationResult = compile(listOf(sourceFile), plugin)

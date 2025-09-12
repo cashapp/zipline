@@ -163,15 +163,11 @@ internal class ZiplineServiceTest {
   }
 
   class GreetingService(val greeting: String) : EchoService {
-    override fun echo(request: EchoRequest): EchoResponse {
-      return EchoResponse("$greeting ${request.message}")
-    }
+    override fun echo(request: EchoRequest): EchoResponse = EchoResponse("$greeting ${request.message}")
   }
 
   class FactoryService : EchoServiceFactory {
-    override fun create(greeting: String): EchoService {
-      return GreetingService(greeting)
-    }
+    override fun create(greeting: String): EchoService = GreetingService(greeting)
   }
 
   @Serializable
@@ -185,8 +181,6 @@ internal class ZiplineServiceTest {
   }
 
   class RealGreetingAndEchoServiceFactory : GreetingAndEchoServiceFactory {
-    override fun create(greeting: String): GreetingAndEchoService {
-      return GreetingAndEchoService(greeting, GreetingService(greeting))
-    }
+    override fun create(greeting: String): GreetingAndEchoService = GreetingAndEchoService(greeting, GreetingService(greeting))
   }
 }

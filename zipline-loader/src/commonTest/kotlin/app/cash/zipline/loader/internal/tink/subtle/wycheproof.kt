@@ -74,13 +74,9 @@ class Key(
 
 private val wycheproofDir = ziplineRoot / "zipline-loader/src/commonTest/resources/wycheproof/"
 
-fun loadEddsaTestJson(): WycheproofTestJson {
-  return loadWycheproofTestJson(wycheproofDir / "eddsa_test.json")
-}
+fun loadEddsaTestJson(): WycheproofTestJson = loadWycheproofTestJson(wycheproofDir / "eddsa_test.json")
 
-fun loadEcdsaP256TestJson(): WycheproofTestJson {
-  return loadWycheproofTestJson(wycheproofDir / "ecdsa_secp256r1_sha256_test.json")
-}
+fun loadEcdsaP256TestJson(): WycheproofTestJson = loadWycheproofTestJson(wycheproofDir / "ecdsa_secp256r1_sha256_test.json")
 
 fun loadWycheproofTestJson(path: Path): WycheproofTestJson {
   val wycheproofTestJson = systemFileSystem.read(path) {

@@ -51,11 +51,9 @@ internal class FsCachingFetcher(
     }
   }
 
-  suspend fun loadPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? {
-    return withContext(cacheDispatcher) {
+  suspend fun loadPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? = withContext(cacheDispatcher) {
       cache.getPinnedManifest(applicationName, nowEpochMs)
     }
-  }
 
   /**
    * Permits all downloads for [applicationName] not in [loadedManifest] to be pruned.
@@ -63,20 +61,16 @@ internal class FsCachingFetcher(
    * This assumes that all artifacts in [loadedManifest] are currently pinned. Fetchers do not
    * necessarily enforce this assumption.
    */
-  suspend fun pin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) {
-    return withContext(cacheDispatcher) {
+  suspend fun pin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) = withContext(cacheDispatcher) {
       cache.pinManifest(applicationName, loadedManifest, nowEpochMs)
     }
-  }
 
   /**
    * Removes the pins for [applicationName] in [loadedManifest] so they may be pruned.
    */
-  suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) {
-    return withContext(cacheDispatcher) {
+  suspend fun unpin(applicationName: String, loadedManifest: LoadedManifest, nowEpochMs: Long) = withContext(cacheDispatcher) {
       cache.unpinManifest(applicationName, loadedManifest, nowEpochMs)
     }
-  }
 
   /**
    * Updates freshAt timestamp for manifests that in later network fetch is still the freshest.
@@ -85,9 +79,7 @@ internal class FsCachingFetcher(
     applicationName: String,
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
-  ) {
-    return withContext(cacheDispatcher) {
+  ) = withContext(cacheDispatcher) {
       cache.updateManifestFreshAt(applicationName, loadedManifest, nowEpochMs)
     }
-  }
 }

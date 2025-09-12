@@ -143,8 +143,7 @@ class ZiplineLoader internal constructor(
     cache: ZiplineCache? = this.cache,
     cacheDispatcher: CoroutineDispatcher? = this.cacheDispatcher,
     eventListenerFactory: EventListener.Factory = this.eventListenerFactory,
-  ): ZiplineLoader {
-    return ZiplineLoader(
+  ): ZiplineLoader = ZiplineLoader(
       dispatcher = dispatcher,
       manifestVerifier = manifestVerifier,
       httpFetcher = httpFetcher,
@@ -155,7 +154,6 @@ class ZiplineLoader internal constructor(
       cache = cache,
       cacheDispatcher = cacheDispatcher,
     )
-  }
 
   private var concurrentDownloadsSemaphore = Semaphore(3)
 
@@ -285,15 +283,13 @@ class ZiplineLoader internal constructor(
     manifestUrlFlow: Flow<String>,
     serializersModule: SerializersModule = EmptySerializersModule(),
     initializer: (Zipline) -> Unit = {},
-  ): Flow<LoadResult> {
-    return load(
+  ): Flow<LoadResult> = load(
       applicationName = applicationName,
       freshnessChecker = freshnessChecker,
       manifestUrlFlow = manifestUrlFlow,
       serializersModule = serializersModule,
       initializer = { zipline -> initializer(zipline) },
     )
-  }
 
   /**
    * Downloads ZiplineManifest each time [manifestUrlFlow] emits and loads Zipline with the newly
@@ -316,15 +312,13 @@ class ZiplineLoader internal constructor(
     manifestUrlFlow: Flow<String>,
     serializersModule: SerializersModule = EmptySerializersModule(),
     initializer: (Zipline) -> Unit = {},
-  ): Flow<LoadResult> {
-    return load(
+  ): Flow<LoadResult> = load(
       applicationName = applicationName,
       freshnessChecker = DefaultFreshnessCheckerNotFresh,
       manifestUrlFlow = manifestUrlFlow,
       serializersModule = serializersModule,
       initializer = initializer,
     )
-  }
 
   /**
    * Fetches ZiplineManifest from network, and after a successful fetch, loads Zipline with newly

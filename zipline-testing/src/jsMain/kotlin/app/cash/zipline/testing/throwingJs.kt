@@ -27,26 +27,16 @@ class JsThrowingEchoService : EchoService {
   private fun goBoom2(): Nothing {
     goBoom1()
   }
-  private fun goBoom1(): Nothing {
-    throw IllegalStateException("boom!")
-  }
+  private fun goBoom1(): Nothing = throw IllegalStateException("boom!")
 }
 
 class JsDelegatingEchoService(
   private val delegate: EchoService,
 ) : EchoService {
-  override fun echo(request: EchoRequest): EchoResponse {
-    return delegate3(request)
-  }
-  private fun delegate3(request: EchoRequest): EchoResponse {
-    return delegate2(request)
-  }
-  private fun delegate2(request: EchoRequest): EchoResponse {
-    return delegate1(request)
-  }
-  private fun delegate1(request: EchoRequest): EchoResponse {
-    return delegate.echo(request)
-  }
+  override fun echo(request: EchoRequest): EchoResponse = delegate3(request)
+  private fun delegate3(request: EchoRequest): EchoResponse = delegate2(request)
+  private fun delegate2(request: EchoRequest): EchoResponse = delegate1(request)
+  private fun delegate1(request: EchoRequest): EchoResponse = delegate.echo(request)
 }
 
 private val zipline by lazy { Zipline.get() }

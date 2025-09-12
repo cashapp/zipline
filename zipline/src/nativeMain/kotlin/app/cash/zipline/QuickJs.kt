@@ -427,8 +427,7 @@ actual class QuickJs private constructor(
     throw QuickJsException(message, stack)
   }
 
-  internal fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? {
-    return when (JsValueGetNormTag(this)) {
+  internal fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? = when (JsValueGetNormTag(this)) {
       JS_TAG_EXCEPTION -> throwJsException()
       JS_TAG_STRING -> JS_ToCString(context, this)!!.toKStringFromUtf8()
       JS_TAG_BOOL -> JsValueGetBool(this) != 0
@@ -453,11 +452,8 @@ actual class QuickJs private constructor(
       }
       else -> null
     }
-  }
 
-  private fun Boolean.toJsValue(): CValue<JSValue> {
-    return if (this) JsTrue() else JsFalse()
-  }
+  private fun Boolean.toJsValue(): CValue<JSValue> = if (this) JsTrue() else JsFalse()
 }
 
 internal fun jsInterruptHandlerGlobal(runtime: CPointer<JSRuntime>?, opaque: COpaquePointer?): Int {

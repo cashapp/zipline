@@ -216,11 +216,9 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
   override fun applyToCompilation(
     kotlinCompilation: KotlinCompilation<*>,
-  ): Provider<List<SubpluginOption>> {
-    return kotlinCompilation.target.project.provider {
+  ): Provider<List<SubpluginOption>> = kotlinCompilation.target.project.provider {
       listOf() // No options.
     }
-  }
 
   private fun createGenerateKeyPairTasks(project: Project) {
     project.tasks.register("generateZiplineManifestKeyPairEd25519") { task ->

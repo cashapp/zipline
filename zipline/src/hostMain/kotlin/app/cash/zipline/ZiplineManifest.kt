@@ -215,8 +215,7 @@ data class ZiplineManifest private constructor(
       version: String? = null,
       builtAtEpochMs: Long? = null,
       baseUrl: String? = null,
-    ): ZiplineManifest {
-      return create(
+    ): ZiplineManifest = create(
         modules = modules,
         mainFunction = mainFunction,
         mainModuleId = mainModuleId,
@@ -225,7 +224,6 @@ data class ZiplineManifest private constructor(
         baseUrl = baseUrl,
         metadata = mapOf(),
       )
-    }
 
     fun create(
       modules: Map<String, Module>,

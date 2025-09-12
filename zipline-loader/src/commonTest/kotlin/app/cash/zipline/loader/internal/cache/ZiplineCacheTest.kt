@@ -423,8 +423,7 @@ class ZiplineCacheTest {
     download: suspend () -> ByteString,
   ) = getOrPut(applicationName, sha256, nowMillis, download)
 
-  private fun ZiplineCache.getPinnedManifest(applicationName: String) =
-    getPinnedManifest(applicationName, nowMillis)
+  private fun ZiplineCache.getPinnedManifest(applicationName: String) = getPinnedManifest(applicationName, nowMillis)
 
   private fun ZiplineCache.pinManifest(
     applicationName: String,

@@ -82,8 +82,7 @@ fun makeApiCompatibilityDecision(
   }
 }
 
-private fun FirZiplineApi.toToml(): TomlZiplineApi {
-  return TomlZiplineApi(
+private fun FirZiplineApi.toToml(): TomlZiplineApi = TomlZiplineApi(
     services.map { service ->
       TomlZiplineService(
         name = service.name,
@@ -96,4 +95,3 @@ private fun FirZiplineApi.toToml(): TomlZiplineApi {
       )
     },
   )
-}

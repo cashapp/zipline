@@ -27,23 +27,17 @@ internal inline infix fun Byte.and(other: Int): Int = toInt() and other
 
 /** Like QuickJS' `bc_get_flags` where n is 1. */
 @Suppress("NOTHING_TO_INLINE") // Syntactic sugar.
-internal inline fun Int.bit(bit: Int): Boolean {
-  return (this shr bit) and 0x1 != 0x1
-}
+internal inline fun Int.bit(bit: Int): Boolean = (this shr bit) and 0x1 != 0x1
 
 @Suppress("NOTHING_TO_INLINE") // Syntactic sugar.
-internal inline fun Boolean.toBit(bit: Int): Int {
-  return when {
+internal inline fun Boolean.toBit(bit: Int): Int = when {
     this -> 0
     else -> 1 shl bit
   }
-}
 
 /** Like QuickJS' `bc_get_flags` where n is > 1. */
 @Suppress("NOTHING_TO_INLINE") // Syntactic sugar.
-internal inline fun Int.bits(bit: Int, bitCount: Int): Int {
-  return (this ushr bit) and ((1 shl bitCount) - 1)
-}
+internal inline fun Int.bits(bit: Int, bitCount: Int): Int = (this ushr bit) and ((1 shl bitCount) - 1)
 
 internal fun BufferedSource.readLeb128(): Int {
   var result = 0

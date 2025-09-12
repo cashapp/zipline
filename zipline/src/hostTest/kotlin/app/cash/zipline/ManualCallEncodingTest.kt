@@ -117,9 +117,7 @@ internal class ManualCallEncodingTest {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : ReceiveService {
-      override fun receive(): MessageWithDefaults {
-        return MessageWithDefaults()
-      }
+      override fun receive(): MessageWithDefaults = MessageWithDefaults()
     }
     endpointA.bind<ReceiveService>("service", service)
 

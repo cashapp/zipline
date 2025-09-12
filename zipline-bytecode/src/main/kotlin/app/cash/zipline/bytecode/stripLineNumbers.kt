@@ -34,8 +34,7 @@ fun stripLineNumbers(jsBytecode: ByteArray): ByteArray {
   return result.readByteArray()
 }
 
-fun JsObject.stripLineNumbers(): JsObject {
-  return when (this) {
+fun JsObject.stripLineNumbers(): JsObject = when (this) {
     is JsFunctionBytecode -> {
       copy(
         debug = debug?.copy(pc2Line = ByteString.EMPTY),
@@ -44,4 +43,3 @@ fun JsObject.stripLineNumbers(): JsObject {
     }
     else -> this
   }
-}

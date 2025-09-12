@@ -54,9 +54,7 @@ class ZiplineCryptographyTest {
   fun secureRandomWorks() = runBlocking(dispatcher) {
     if (isLinux) return@runBlocking
     val fakeZiplineCryptographyService = object : ZiplineCryptographyService {
-      override fun nextSecureRandomBytes(size: Int): ByteArray {
-        return ByteArray(size) { index -> (index + 1).toByte() }
-      }
+      override fun nextSecureRandomBytes(size: Int): ByteArray = ByteArray(size) { index -> (index + 1).toByte() }
     }
 
     zipline.installCryptographyServiceInternal(fakeZiplineCryptographyService)

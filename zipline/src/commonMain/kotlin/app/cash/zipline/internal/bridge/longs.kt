@@ -35,12 +35,10 @@ internal object LongSerializer : KSerializer<Long> {
     PrimitiveKind.LONG,
   )
 
-  override fun deserialize(decoder: Decoder): Long {
-    return when (val jsonElement = (decoder as JsonDecoder).decodeJsonElement()) {
+  override fun deserialize(decoder: Decoder): Long = when (val jsonElement = (decoder as JsonDecoder).decodeJsonElement()) {
       is JsonArray, is JsonObject, JsonNull -> throw SerializationException("expected a Long")
       is JsonPrimitive -> jsonElement.long
     }
-  }
 
   override fun serialize(encoder: Encoder, value: Long) {
     if (value in MIN_SAFE_INTEGER..MAX_SAFE_INTEGER) {

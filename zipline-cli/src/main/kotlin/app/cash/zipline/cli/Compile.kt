@@ -30,8 +30,7 @@ import com.github.ajalt.clikt.parameters.types.file
 import okio.ByteString.Companion.decodeHex
 
 internal class Compile : CliktCommand("compile") {
-  override fun help(context: Context) =
-    "Compile .js files to .zipline files"
+  override fun help(context: Context) = "Compile .js files to .zipline files"
 
   private val inputDir by option("--input").file().required()
     .help("Directory from which .js files will be loaded.")

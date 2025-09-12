@@ -18,9 +18,7 @@ package app.cash.zipline.testing
 import app.cash.zipline.Zipline
 
 class JsEncodingService : EncodingService {
-  override fun echoLong(request: Long): Long {
-    return request
-  }
+  override fun echoLong(request: Long): Long = request
 }
 
 private val zipline by lazy { Zipline.get() }

@@ -51,12 +51,10 @@ fun readFirZiplineApi(
   jdkRelease: Int,
   sources: Collection<File>,
   classpath: Collection<File>,
-): FirZiplineApi {
-  return KotlinFirLoader(javaHome, jdkRelease, sources, classpath).use { loader ->
+): FirZiplineApi = KotlinFirLoader(javaHome, jdkRelease, sources, classpath).use { loader ->
     val output = loader.load("zipline-api-dump")
     FirZiplineApiReader(output).read()
   }
-}
 
 private val ziplineServiceClassId =
   ClassId(FqName("app.cash.zipline"), Name.identifier("ZiplineService"))
@@ -95,12 +93,10 @@ internal class FirZiplineApiReader(
       return ziplineServiceClssSymbol.isSupertypeOf(symbol, session)
     }
 
-  private fun FirRegularClass.asDeclaredZiplineService(): FirZiplineService {
-    return FirZiplineService(
+  private fun FirRegularClass.asDeclaredZiplineService(): FirZiplineService = FirZiplineService(
       symbol.classId.asSingleFqName().asString(),
       bridgedFunctions(this),
     )
-  }
 
   private fun bridgedFunctions(type: FirRegularClass): List<FirZiplineFunction> {
     val result = sortedSetOf<FirZiplineFunction>(
@@ -175,8 +171,7 @@ internal class FirZiplineApiReader(
     }
   }
 
-  private fun FirTypeProjection.asString(): String {
-    return when (this) {
+  private fun FirTypeProjection.asString(): String = when (this) {
       is FirStarProjection -> {
         "*"
       }
@@ -187,7 +182,6 @@ internal class FirZiplineApiReader(
         error("Unexpected kind of FirTypeProjection: " + javaClass.simpleName)
       }
     }
-  }
 
   /** Collect all regular class declarations in this. */
   private fun FirFile.regularClasses(): List<FirRegularClass> {
@@ -196,7 +190,7 @@ internal class FirZiplineApiReader(
       visitor = object : FirDefaultVisitor<Unit, MutableList<FirRegularClass>>() {
         override fun visitRegularClass(
           regularClass: FirRegularClass,
-          data: MutableList<FirRegularClass>
+          data: MutableList<FirRegularClass>,
         ) {
           super.visitRegularClass(regularClass, data)
           data.add(regularClass)
@@ -204,7 +198,7 @@ internal class FirZiplineApiReader(
 
         override fun visitElement(
           element: FirElement,
-          data: MutableList<FirRegularClass>
+          data: MutableList<FirRegularClass>,
         ) {
           element.acceptChildren(this, data)
         }

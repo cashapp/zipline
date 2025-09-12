@@ -39,9 +39,7 @@ internal class EventListenerAdapter(
     delegate.serviceLeaked(zipline, name)
   }
 
-  override fun callStart(call: Call): Any? {
-    return delegate.callStart(zipline, call)
-  }
+  override fun callStart(call: Call): Any? = delegate.callStart(zipline, call)
 
   override fun callEnd(call: Call, result: CallResult, startValue: Any?) {
     delegate.callEnd(zipline, call, result, startValue)

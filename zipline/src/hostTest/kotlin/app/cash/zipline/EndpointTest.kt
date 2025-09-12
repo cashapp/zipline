@@ -139,9 +139,7 @@ internal class EndpointTest {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : EchoService {
-      override fun echo(request: EchoRequest): EchoResponse {
-        throw IllegalStateException("boom!")
-      }
+      override fun echo(request: EchoRequest): EchoResponse = throw IllegalStateException("boom!")
     }
 
     endpointA.bind<EchoService>("helloService", service)
@@ -158,9 +156,7 @@ internal class EndpointTest {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : SuspendingEchoService {
-      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        throw IllegalStateException("boom!")
-      }
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse = throw IllegalStateException("boom!")
     }
 
     endpointA.bind<SuspendingEchoService>("helloService", service)
@@ -206,15 +202,13 @@ internal class EndpointTest {
     val requests = Channel<String>(1)
     val cancels = Channel<Throwable?>(1)
     val service = object : SuspendingEchoService {
-      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        return suspendCancellableCoroutine { continuation ->
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse = suspendCancellableCoroutine { continuation ->
           continuation.invokeOnCancellation { throwable ->
             cancels.trySend(throwable)
           }
           requests.trySend(request.message)
           // This continuation never resumes normally!
         }
-      }
     }
 
     endpointA.bind<SuspendingEchoService>("helloService", service)
@@ -236,15 +230,13 @@ internal class EndpointTest {
     val requests = Channel<String>(1)
     val cancels = Channel<Throwable?>(1)
     val service = object : SuspendingEchoService {
-      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        return suspendCancellableCoroutine { continuation ->
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse = suspendCancellableCoroutine { continuation ->
           continuation.invokeOnCancellation { throwable ->
             cancels.trySend(throwable)
           }
           requests.trySend(request.message)
           // This continuation never resumes normally!
         }
-      }
     }
 
     endpointA.bind<SuspendingEchoService>("helloService", service)
@@ -293,17 +285,13 @@ internal class EndpointTest {
     val (endpointA, endpointB) = newEndpointPair(this, kotlinBuiltInSerializersModule)
 
     val stringService = object : GenericEchoService<String> {
-      override fun genericEcho(request: String): List<String> {
-        return listOf("x", request)
-      }
+      override fun genericEcho(request: String): List<String> = listOf("x", request)
     }
     endpointA.bind<GenericEchoService<String>>("strings", stringService)
     val stringClient = endpointB.take<GenericEchoService<String>>("strings")
 
     val mapsService = object : GenericEchoService<Map<String, Int>> {
-      override fun genericEcho(request: Map<String, Int>): List<Map<String, Int>> {
-        return listOf(mapOf(), request)
-      }
+      override fun genericEcho(request: Map<String, Int>): List<Map<String, Int>> = listOf(mapOf(), request)
     }
     endpointA.bind<GenericEchoService<Map<String, Int>>>("maps", mapsService)
     val mapsClient = endpointB.take<GenericEchoService<Map<String, Int>>>("maps")
@@ -325,14 +313,12 @@ internal class EndpointTest {
     val channel = Channel<String>(1)
 
     val service = object : SuspendingEchoService {
-      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        return suspendCancellableCoroutine {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse = suspendCancellableCoroutine {
           it.invokeOnCancellation {
             channel.trySend("Canceled on $dispatcher")
           }
           channel.trySend("Invoked on $dispatcher")
         }
-      }
     }
 
     endpointA.bind<SuspendingEchoService>("helloService", service)
@@ -528,9 +514,7 @@ internal class EndpointTest {
     val (endpointA, endpointB) = newEndpointPair(this)
 
     val service = object : EchoService {
-      override fun echo(request: EchoRequest): EchoResponse {
-        throw ZiplineApiMismatchException("boom!")
-      }
+      override fun echo(request: EchoRequest): EchoResponse = throw ZiplineApiMismatchException("boom!")
     }
     endpointA.bind<EchoService>("service", service)
     val client = endpointB.take<EchoService>("service")
@@ -541,7 +525,9 @@ internal class EndpointTest {
     assertTrue("boom!" in e.message)
   }
 
-  interface ExtendsEchoService : ZiplineService, ExtendableInterface
+  interface ExtendsEchoService :
+    ZiplineService,
+    ExtendableInterface
 
   interface ExtendableInterface {
     fun echo(request: EchoRequest): EchoResponse

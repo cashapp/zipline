@@ -225,7 +225,5 @@ class ZiplineCompilerTest {
   }
 
   @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline internals.
-  private fun loadJsModule(quickJs: QuickJs, id: String, bytecode: ByteArray) {
-    return app.cash.zipline.internal.loadJsModule(quickJs, id, bytecode)
-  }
+  private fun loadJsModule(quickJs: QuickJs, id: String, bytecode: ByteArray) = app.cash.zipline.internal.loadJsModule(quickJs, id, bytecode)
 }

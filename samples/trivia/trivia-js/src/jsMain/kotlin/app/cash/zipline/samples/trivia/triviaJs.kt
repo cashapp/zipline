@@ -55,8 +55,7 @@ class RealTriviaService : TriviaService {
 
   override fun games() = gameWithAnswersList.map { it.game }
 
-  override fun answer(gameId: Int, questionId: Int, answer: String) =
-    gameWithAnswersList[gameId].questionList[questionId].result(answer)
+  override fun answer(gameId: Int, questionId: Int, answer: String) = gameWithAnswersList[gameId].questionList[questionId].result(answer)
 }
 
 interface QuestionAndAnswer {

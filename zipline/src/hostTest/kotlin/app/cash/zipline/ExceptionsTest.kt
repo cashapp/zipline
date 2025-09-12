@@ -114,8 +114,6 @@ class ExceptionsTest {
     private fun goBoom2(): Nothing {
       goBoom1()
     }
-    private fun goBoom1(): Nothing {
-      throw IllegalStateException("boom!")
-    }
+    private fun goBoom1(): Nothing = throw IllegalStateException("boom!")
   }
 }

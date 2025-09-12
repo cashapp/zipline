@@ -57,8 +57,7 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
     return reference.take(this)
   }
 
-  override fun equals(other: Any?) =
-    other is ZiplineServiceAdapter<*> &&
+  override fun equals(other: Any?) = other is ZiplineServiceAdapter<*> &&
     this::class == other::class &&
     serializers == other.serializers
 
@@ -75,26 +74,21 @@ internal fun <T : ZiplineService> ziplineServiceAdapter(): ZiplineServiceAdapter
 @PublishedApi
 internal fun <T : ZiplineService> ziplineServiceAdapter(
   ziplineServiceAdapter: ZiplineServiceAdapter<T>,
-): ZiplineServiceAdapter<T> {
-  return ziplineServiceAdapter
-}
+): ZiplineServiceAdapter<T> = ziplineServiceAdapter
 
 /**
  * Returns a string like `kotlinx.coroutines.Flow<kotlin.String>`. This can be used as a unique
  * key to identify a serializer for [typeName] that has [serializers] for its type arguments.
  */
 @PublishedApi
-internal fun serialName(typeName: String, serializers: List<KSerializer<*>>): String {
-  return buildString {
+internal fun serialName(typeName: String, serializers: List<KSerializer<*>>): String = buildString {
     append(typeName)
     serializers.joinTo(this, separator = ",", prefix = "<", postfix = ">") {
       descriptorName(it.descriptor)
     }
   }
-}
 
-private fun descriptorName(typeName: SerialDescriptor): String {
-  return buildString {
+private fun descriptorName(typeName: SerialDescriptor): String = buildString {
     append(typeName.serialName)
 
     if (typeName.elementsCount > 0) {
@@ -111,4 +105,3 @@ private fun descriptorName(typeName: SerialDescriptor): String {
       append('>')
     }
   }
-}

@@ -80,6 +80,4 @@ fun prettyPrint(jsonString: String): String {
  * Returns a new `<publicKey / privateKey>` KeyPair. The PRNG for this function is not secure on all
  * platforms and should not be used for production code.
  */
-internal fun generateKeyPairForTest(): KeyPair {
-  return newKeyPairFromSeed(randomByteString(Field25519.FIELD_LEN))
-}
+internal fun generateKeyPairForTest(): KeyPair = newKeyPairFromSeed(randomByteString(Field25519.FIELD_LEN))

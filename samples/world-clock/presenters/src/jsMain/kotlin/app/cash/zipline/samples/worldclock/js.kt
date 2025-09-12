@@ -39,8 +39,7 @@ class RealWorldClockPresenter(
 ) : WorldClockPresenter {
   override fun models(
     events: Flow<WorldClockEvent>,
-  ): Flow<WorldClockModel> {
-    return flow {
+  ): Flow<WorldClockModel> = flow {
       while (true) {
         emit(
           WorldClockModel(
@@ -50,5 +49,4 @@ class RealWorldClockPresenter(
         delay(16)
       }
     }
-  }
 }

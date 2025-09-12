@@ -22,9 +22,7 @@ import app.cash.zipline.loader.ManifestVerifier.Companion.NO_SIGNATURE_CHECKS
 import app.cash.zipline.loader.ZiplineLoader
 import kotlinx.coroutines.CoroutineDispatcher
 import okhttp3.OkHttpClient
-fun getTriviaService(zipline: Zipline): TriviaService {
-  return zipline.take("triviaService")
-}
+fun getTriviaService(zipline: Zipline): TriviaService = zipline.take("triviaService")
 
 suspend fun launchZipline(dispatcher: CoroutineDispatcher): Zipline {
   val manifestUrl = "http://localhost:8080/manifest.zipline.json"

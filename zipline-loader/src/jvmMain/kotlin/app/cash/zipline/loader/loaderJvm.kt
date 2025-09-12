@@ -24,25 +24,21 @@ fun ZiplineCache(
   directory: Path,
   maxSizeInBytes: Long,
   loaderEventListener: LoaderEventListener,
-): ZiplineCache {
-  return ZiplineCache(
+): ZiplineCache = ZiplineCache(
     sqlDriverFactory = JdbcSqliteDriverFactory(),
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,
     loaderEventListener = loaderEventListener,
   )
-}
 
 fun ZiplineCache(
   fileSystem: FileSystem,
   directory: Path,
   maxSizeInBytes: Long,
-): ZiplineCache {
-  return ZiplineCache(
+): ZiplineCache = ZiplineCache(
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,
     loaderEventListener = LoaderEventListener.None,
   )
-}

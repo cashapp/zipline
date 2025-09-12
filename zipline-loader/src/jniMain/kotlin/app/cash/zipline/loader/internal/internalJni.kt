@@ -19,8 +19,7 @@ import app.cash.zipline.Zipline
 import java.security.SecureRandom
 import okhttp3.HttpUrl.Companion.toHttpUrl
 
-internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
+internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) = loadJsModule(bytecode, id)
 
 internal actual val ecdsaP256: SignatureAlgorithm = EcdsaP256(secureRandom())
 
@@ -30,6 +29,4 @@ internal fun secureRandom(): SecureRandom {
 
 internal actual val systemEpochMsClock: () -> Long = System::currentTimeMillis
 
-internal actual fun resolveUrl(baseUrl: String, link: String): String {
-  return baseUrl.toHttpUrl().resolve(link)!!.toString()
-}
+internal actual fun resolveUrl(baseUrl: String, link: String): String = baseUrl.toHttpUrl().resolve(link)!!.toString()

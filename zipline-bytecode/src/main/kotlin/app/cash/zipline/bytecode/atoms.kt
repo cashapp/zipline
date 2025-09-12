@@ -45,12 +45,10 @@ class MutableAtomSet(
 
   override val strings: List<JsString> = _strings
 
-  override fun get(id: Int): JsString {
-    return when {
+  override fun get(id: Int): JsString = when {
       id < BUILT_IN_ATOMS.size -> BUILT_IN_ATOMS[id]
       else -> _strings[id - BUILT_IN_ATOMS.size]
     }
-  }
 
   override fun idOf(value: JsString): Int {
     val result = stringToId[value]

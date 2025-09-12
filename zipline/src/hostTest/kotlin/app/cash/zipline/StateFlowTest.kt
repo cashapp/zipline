@@ -40,29 +40,25 @@ internal class StateFlowTest {
     suspend fun take(flow: StateFlow<String>, count: Int): List<String>
   }
 
-  class RealStateFlowEchoService(initialValue: String = "") : StateFlowEchoService, ZiplineScoped {
+  class RealStateFlowEchoService(initialValue: String = "") :
+    StateFlowEchoService,
+    ZiplineScoped {
     override val scope = ZiplineScope()
     val mutableFlow = MutableStateFlow(initialValue)
     override val flow: StateFlow<String> get() = mutableFlow
 
-    override suspend fun createFlow(initialValue: String): StateFlow<String> {
-      return MutableStateFlow(initialValue)
-    }
+    override suspend fun createFlow(initialValue: String): StateFlow<String> = MutableStateFlow(initialValue)
 
     lateinit var coroutineScope: CoroutineScope
 
-    override suspend fun createFlow(initialValue: String, values: List<String>): StateFlow<String> {
-      return flow {
+    override suspend fun createFlow(initialValue: String, values: List<String>): StateFlow<String> = flow {
         for (value in values) {
           forceSuspend()
           emit(value)
         }
       }.stateIn(coroutineScope, SharingStarted.Lazily, initialValue)
-    }
 
-    override suspend fun take(flow: StateFlow<String>, count: Int): List<String> {
-      return flow.take(count).toList()
-    }
+    override suspend fun take(flow: StateFlow<String>, count: Int): List<String> = flow.take(count).toList()
 
     override fun close() {
       scope.close()

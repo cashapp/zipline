@@ -30,7 +30,8 @@ import java.io.Closeable
 @EngineApi
 actual class QuickJs private constructor(
   internal var context: Long,
-) : AutoCloseable, Closeable {
+) : AutoCloseable,
+  Closeable {
   actual companion object {
     init {
       loadNativeLibrary()
@@ -135,18 +136,14 @@ actual class QuickJs private constructor(
    *
    * @throws QuickJsException if the sourceCode could not be compiled.
    */
-  actual fun compile(sourceCode: String, fileName: String): ByteArray {
-    return compile(context, sourceCode, fileName)
-  }
+  actual fun compile(sourceCode: String, fileName: String): ByteArray = compile(context, sourceCode, fileName)
 
   /**
    * Load and execute [bytecode] and return the result.
    *
    * @throws QuickJsException if there is an error loading or executing the code.
    */
-  actual fun execute(bytecode: ByteArray): Any? {
-    return execute(context, bytecode)
-  }
+  actual fun execute(bytecode: ByteArray): Any? = execute(context, bytecode)
 
   actual override fun close() {
     val contextToClose = context

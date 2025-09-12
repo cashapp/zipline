@@ -137,9 +137,7 @@ class TopologicalSortTest {
   }
 
   /** Each string is two characters, source and destination of an edge. */
-  private fun edges(vararg edges: String): (String) -> List<String> {
-    return { node: String ->
+  private fun edges(vararg edges: String): (String) -> List<String> = { node: String ->
       edges.filter { it.startsWith(node) }.map { it.substring(1) }
     }
-  }
 }

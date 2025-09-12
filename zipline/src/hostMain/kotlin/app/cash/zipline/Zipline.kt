@@ -65,9 +65,7 @@ actual class Zipline private constructor(
         return jsInboundBridge.call(callJson)
       }
 
-      override fun disconnect(instanceName: String): Boolean {
-        return jsInboundBridge.disconnect(instanceName)
-      }
+      override fun disconnect(instanceName: String): Boolean = jsInboundBridge.disconnect(instanceName)
     },
     oppositeProvider = {
       guest

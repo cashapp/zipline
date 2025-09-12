@@ -110,9 +110,7 @@ internal class Endpoint internal constructor(
       }
     }
 
-    override fun disconnect(instanceName: String): Boolean {
-      return remove(instanceName) != null
-    }
+    override fun disconnect(instanceName: String): Boolean = remove(instanceName) != null
   }
 
   private val serviceTypeCache = mutableMapOf<String, RealZiplineServiceType<*>>()
@@ -187,13 +185,9 @@ internal class Endpoint internal constructor(
   }
 
   @PublishedApi
-  internal fun remove(name: String): InboundService<*>? {
-    return inboundServices.remove(name)
-  }
+  internal fun remove(name: String): InboundService<*>? = inboundServices.remove(name)
 
-  internal fun generatePassByReferenceName(): String {
-    return "$passByReferencePrefix${nextId++}"
-  }
+  internal fun generatePassByReferenceName(): String = "$passByReferencePrefix${nextId++}"
 
   override fun serviceType(name: String): SerializableZiplineServiceType? {
     val type = inboundServices[name]?.type ?: return null
@@ -226,9 +220,7 @@ internal class Endpoint internal constructor(
     open fun serviceLeaked(name: String) {
     }
 
-    open fun callStart(call: Call): Any? {
-      return null
-    }
+    open fun callStart(call: Call): Any? = null
 
     open fun callEnd(call: Call, result: CallResult, startValue: Any?) {
     }

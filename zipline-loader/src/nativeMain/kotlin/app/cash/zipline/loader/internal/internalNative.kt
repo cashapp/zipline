@@ -20,14 +20,11 @@ import platform.Foundation.NSDate
 import platform.Foundation.NSURL
 import platform.Foundation.timeIntervalSince1970
 
-internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
+internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) = loadJsModule(bytecode, id)
 
 internal actual val ecdsaP256: SignatureAlgorithm = EcdsaP256()
 
 internal actual val systemEpochMsClock: () -> Long =
   { (NSDate().timeIntervalSince1970() * 1000).toLong() }
 
-internal actual fun resolveUrl(baseUrl: String, link: String): String {
-  return NSURL(string = link, relativeToURL = NSURL(string = baseUrl)).absoluteString!!
-}
+internal actual fun resolveUrl(baseUrl: String, link: String): String = NSURL(string = link, relativeToURL = NSURL(string = baseUrl)).absoluteString!!

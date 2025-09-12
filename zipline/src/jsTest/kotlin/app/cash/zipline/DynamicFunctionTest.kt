@@ -231,13 +231,9 @@ internal class DynamicFunctionTest {
         assertThat(argument).isEqualTo(kotlinValue)
       }
 
-      override fun blockingProduce(): T {
-        return kotlinValue
-      }
+      override fun blockingProduce(): T = kotlinValue
 
-      override suspend fun suspendingProduce(): T {
-        return kotlinValue
-      }
+      override suspend fun suspendingProduce(): T = kotlinValue
     }
 
     endpointA.bind<AcceptProduceService<T>>("service", service)

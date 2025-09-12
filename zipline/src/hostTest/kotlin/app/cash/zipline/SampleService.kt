@@ -49,12 +49,10 @@ interface SampleService<T> : ZiplineService {
 
   companion object {
     /** This function's body is what callers use to create a properly-typed adapter. */
-    internal inline fun <reified T> manualAdapter(): ManualAdapter<T> {
-      return ManualAdapter<T>(
+    internal inline fun <reified T> manualAdapter(): ManualAdapter<T> = ManualAdapter<T>(
         listOf(serializer<T>()),
         typeOf<ManualAdapter<T>>().toString(),
       )
-    }
 
     /**
      * We expect this manually-written adapter to be consistent with the generated one. This exists
@@ -76,8 +74,7 @@ interface SampleService<T> : ZiplineService {
         argSerializers = argSerializers,
         resultSerializer = resultSerializer,
       ) {
-        override fun call(service: SampleService<TF>, args: List<*>): Any? =
-          service.ping(args[0] as SampleRequest)
+        override fun call(service: SampleService<TF>, args: List<*>): Any? = service.ping(args[0] as SampleRequest)
       }
 
       class ZiplineFunction1<TF>(
@@ -91,8 +88,7 @@ interface SampleService<T> : ZiplineService {
         resultSerializer = resultSerializer,
         suspendCallbackSerializer = suspendCallbackSerializer,
       ) {
-        override suspend fun callSuspending(service: SampleService<TF>, args: List<*>) =
-          service.reduce(args[0] as List<TF>)
+        override suspend fun callSuspending(service: SampleService<TF>, args: List<*>) = service.reduce(args[0] as List<TF>)
       }
 
       class ZiplineFunction2<TF>(
@@ -135,7 +131,8 @@ interface SampleService<T> : ZiplineService {
 
       private class GeneratedOutboundService<TS>(
         override val callHandler: OutboundCallHandler,
-      ) : SampleService<TS>, OutboundService {
+      ) : SampleService<TS>,
+        OutboundService {
         override fun ping(request: SampleRequest): SampleResponse {
           val callHandler = callHandler
           return callHandler.call(this, 0, request) as SampleResponse

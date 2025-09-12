@@ -68,9 +68,7 @@ class EventListenerTest {
 
   @Test fun jsCallJvmService() = runTest(dispatcher) {
     val jvmEchoService = object : EchoService {
-      override fun echo(request: EchoRequest): EchoResponse {
-        return EchoResponse("sup from the JVM, ${request.message}")
-      }
+      override fun echo(request: EchoRequest): EchoResponse = EchoResponse("sup from the JVM, ${request.message}")
     }
     zipline.bind<EchoService>("supService", jvmEchoService)
 
@@ -103,9 +101,7 @@ class EventListenerTest {
 
   @Test fun suspendingJsCallJvmService() = runTest(dispatcher) {
     val jvmSuspendingEchoService = object : SuspendingEchoService {
-      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
-        return EchoResponse("hello from the suspending JVM, ${request.message}")
-      }
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse = EchoResponse("hello from the suspending JVM, ${request.message}")
     }
 
     zipline.bind<SuspendingEchoService>(

@@ -105,8 +105,6 @@ class SerializersTest {
   }
 
   private class HostAdaptersService : AdaptersService {
-    override fun echo(request: AdaptersRequest): AdaptersResponse {
-      return AdaptersResponse("nice adapters, ${request.message}")
-    }
+    override fun echo(request: AdaptersRequest): AdaptersResponse = AdaptersResponse("nice adapters, ${request.message}")
   }
 }

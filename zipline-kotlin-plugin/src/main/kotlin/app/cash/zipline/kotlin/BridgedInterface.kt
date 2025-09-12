@@ -107,12 +107,10 @@ internal class BridgedInterface(
     statementsBuilder: IrStatementsBuilder<*>,
     serializersModuleParameter: IrValueParameter,
     serializersExpression: IrVariable,
-  ): Map<IrType, IrVariable> {
-    return statementsBuilder.irDeclareSerializerTemporaries(
+  ): Map<IrType, IrVariable> = statementsBuilder.irDeclareSerializerTemporaries(
       serializersModuleParameter = serializersModuleParameter,
       serializersExpression = serializersExpression,
     )
-  }
 
   private fun IrStatementsBuilder<*>.irDeclareSerializerTemporaries(
     serializersModuleParameter: IrValueParameter,
@@ -237,7 +235,7 @@ internal class BridgedInterface(
         wrapWithNullableSerializerIfNeeded(
           type,
           contextualSerializerExpression,
-          ziplineApis.nullableSerializer
+          ziplineApis.nullableSerializer,
         )
       }
 

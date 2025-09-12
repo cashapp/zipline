@@ -43,21 +43,19 @@ internal class FlowTest {
     suspend fun flowParameter(flow: Flow<String>): Int
   }
 
-  class RealFlowEchoService : FlowEchoService, ZiplineScoped {
+  class RealFlowEchoService :
+    FlowEchoService,
+    ZiplineScoped {
     override val scope = ZiplineScope()
 
-    override fun createFlow(message: String, count: Int): Flow<String> {
-      return flow {
+    override fun createFlow(message: String, count: Int): Flow<String> = flow {
         for (i in 0 until count) {
           forceSuspend() // Ensure we can send async through the reference.
           emit("$i $message")
         }
       }
-    }
 
-    override suspend fun flowParameter(flow: Flow<String>): Int {
-      return flow.count()
-    }
+    override suspend fun flowParameter(flow: Flow<String>): Int = flow.count()
 
     override fun close() {
       scope.close()
@@ -123,9 +121,7 @@ internal class FlowTest {
 
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = object : FlowEchoService {
-      override fun createFlow(message: String, count: Int): Flow<String> {
-        return channel.consumeAsFlow()
-      }
+      override fun createFlow(message: String, count: Int): Flow<String> = channel.consumeAsFlow()
 
       override suspend fun flowParameter(flow: Flow<String>): Int = error("unexpected call")
     }
@@ -167,9 +163,7 @@ internal class FlowTest {
 
     val (endpointA, endpointB) = newEndpointPair(this)
     val service = object : FlowEchoService {
-      override fun createFlow(message: String, count: Int): Flow<String> {
-        return channel.consumeAsFlow()
-      }
+      override fun createFlow(message: String, count: Int): Flow<String> = channel.consumeAsFlow()
 
       override suspend fun flowParameter(flow: Flow<String>): Int = error("unexpected call")
     }

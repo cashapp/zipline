@@ -26,14 +26,12 @@ fun ZiplineLoader(
   httpClient: OkHttpClient,
   eventListener: EventListener = EventListener.NONE,
   nowEpochMs: () -> Long = systemEpochMsClock,
-): ZiplineLoader {
-  return ZiplineLoader(
+): ZiplineLoader = ZiplineLoader(
     dispatcher = dispatcher,
     manifestVerifier = manifestVerifier,
     httpClient = httpClient.asZiplineHttpClient(),
     eventListener = eventListener,
     nowEpochMs = nowEpochMs,
   )
-}
 
 fun OkHttpClient.asZiplineHttpClient(): ZiplineHttpClient = OkHttpZiplineHttpClient(this)

@@ -411,18 +411,14 @@ class NewSerializersTest {
 
   private fun <T> suspendCallbackSerializer(
     resultSerializer: KSerializer<T>,
-  ): KSerializer<SuspendCallback<T>> {
-    return ziplineServiceSerializer(
+  ): KSerializer<SuspendCallback<T>> = ziplineServiceSerializer(
       SuspendCallback::class,
       listOf(resultSerializer),
     )
-  }
 
-  private fun <T> flowSerializer(elementSerializer: KSerializer<T>): KSerializer<Flow<T>> {
-    return FlowSerializer(
+  private fun <T> flowSerializer(elementSerializer: KSerializer<T>): KSerializer<Flow<T>> = FlowSerializer(
       ziplineServiceSerializer(FlowZiplineService::class, listOf(elementSerializer)),
     )
-  }
 
   private fun <T : ZiplineService> onlyZiplineFunction(
     serviceSerializer: KSerializer<T>,
@@ -445,9 +441,7 @@ class NewSerializersTest {
   object RequiresContextualSerializer : KSerializer<RequiresContextual> {
     override val descriptor = String.serializer().descriptor
 
-    override fun deserialize(decoder: Decoder): RequiresContextual {
-      return RequiresContextual(decoder.decodeString())
-    }
+    override fun deserialize(decoder: Decoder): RequiresContextual = RequiresContextual(decoder.decodeString())
 
     override fun serialize(encoder: Encoder, value: RequiresContextual) {
       encoder.encodeString(value.string)

@@ -42,8 +42,7 @@ internal interface JsProductionTask {
 }
 
 /** Output of the Kotlin compiler. */
-internal fun JsIrBinary.asJsProductionTask(): JsProductionTask {
-  return object : JsProductionTask {
+internal fun JsIrBinary.asJsProductionTask(): JsProductionTask = object : JsProductionTask {
     override val name get() = linkTaskName
     override val targetName get() = target.name
     override val toolName = null
@@ -53,11 +52,9 @@ internal fun JsIrBinary.asJsProductionTask(): JsProductionTask {
         .file(kotlinJsIrLink.compilerOptions.moduleName.map { "$it.js" })
     }
   }
-}
 
 /** Output of the Kotlin compiler, post-processed by a Webpack toolchain. */
-internal fun KotlinWebpack.asJsProductionTask(): JsProductionTask {
-  return object : JsProductionTask {
+internal fun KotlinWebpack.asJsProductionTask(): JsProductionTask = object : JsProductionTask {
     override val name = this@asJsProductionTask.name
     override val targetName = compilation.target.name
     override val toolName = "Webpack"
@@ -68,4 +65,3 @@ internal fun KotlinWebpack.asJsProductionTask(): JsProductionTask {
     }
     override val outputFile get() = this@asJsProductionTask.mainOutputFile
   }
-}

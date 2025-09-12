@@ -72,6 +72,4 @@ fun <T : ZiplineService> ziplineServiceSerializer(
 @PublishedApi
 internal fun <T : ZiplineService> ziplineServiceSerializer(
   ziplineServiceAdapter: ZiplineServiceAdapter<T>,
-): KSerializer<T> {
-  return ziplineServiceAdapter
-}
+): KSerializer<T> = ziplineServiceAdapter

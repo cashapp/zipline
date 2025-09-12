@@ -60,8 +60,7 @@ internal class InternalCall(
 
   val args: List<*>,
 ) {
-  override fun toString() =
-    "Call(receiver=$serviceName, function=${function.signature}, args=$args)"
+  override fun toString() = "Call(receiver=$serviceName, function=${function.signature}, args=$args)"
 }
 
 /** This uses [Int] as a placeholder; in practice the element type depends on the argument type. */
@@ -183,8 +182,7 @@ internal class RealCallSerializer(
   }
 
   /** Returns a fake service that implements no functions. */
-  private fun unknownService(): InboundService<*> {
-    return InboundService(
+  private fun unknownService(): InboundService<*> = InboundService(
       type = RealZiplineServiceType<ZiplineService>(
         name = "Unknown",
         functions = listOf(),
@@ -192,7 +190,6 @@ internal class RealCallSerializer(
       service = object : ZiplineService {},
       endpoint = endpoint,
     )
-  }
 
   /** Returns a function that always throws [ZiplineApiMismatchException] when called. */
   private fun <T : ZiplineService> unknownFunction(
@@ -209,8 +206,7 @@ internal class RealCallSerializer(
         resultSerializer = Int.serializer(),
         suspendCallbackSerializer = failureSuspendCallbackSerializer,
       ) {
-        override suspend fun callSuspending(service: T, args: List<*>) =
-          throw ZiplineApiMismatchException(message)
+        override suspend fun callSuspending(service: T, args: List<*>) = throw ZiplineApiMismatchException(message)
       }
     } else {
       return object : ReturningZiplineFunction<T>(
@@ -220,8 +216,7 @@ internal class RealCallSerializer(
         // Placeholder; we're only encoding failures.
         resultSerializer = Int.serializer(),
       ) {
-        override fun call(service: T, args: List<*>) =
-          throw ZiplineApiMismatchException(message)
+        override fun call(service: T, args: List<*>) = throw ZiplineApiMismatchException(message)
       }
     }
   }

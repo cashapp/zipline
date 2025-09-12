@@ -110,6 +110,7 @@ internal class KotlinFirLoader(
     }
 
     val sourceFiles = files.mapTo(mutableSetOf(), ::KtVirtualFileSourceFile)
+
     @OptIn(LegacyK2CliPipeline::class)
     val input = ModuleCompilerInput(
       targetId = TargetId(JvmProtoBufUtil.DEFAULT_MODULE_NAME, targetName),
