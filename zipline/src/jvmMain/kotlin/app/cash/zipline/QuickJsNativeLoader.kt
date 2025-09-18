@@ -17,6 +17,9 @@ package app.cash.zipline
 
 import java.io.File
 import java.io.IOException
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.StandardCopyOption
 import java.util.Locale.US
 
 @Suppress("UnsafeDynamicallyLoadedCode") // Only loading from our own JAR contents.
@@ -34,20 +37,18 @@ internal actual fun loadNativeLibrary() {
   }
 
   val nativeLibraryUrl = QuickJs::class.java.getResource(nativeLibraryJarPath)
-      ?: throw IllegalStateException("Unable to read $nativeLibraryJarPath from JAR")
-  val nativeLibraryFile: File
+    ?: throw IllegalStateException("Unable to read $nativeLibraryJarPath from JAR")
+  val nativeLibraryFile: Path
   try {
-    nativeLibraryFile = File.createTempFile("quickjs", null)
+    nativeLibraryFile = Files.createTempFile("quickjs", null)
 
     // File-based deleteOnExit() uses a special internal shutdown hook that always runs last.
-    nativeLibraryFile.deleteOnExit()
+    nativeLibraryFile.toFile().deleteOnExit()
     nativeLibraryUrl.openStream().use { nativeLibrary ->
-      nativeLibraryFile.outputStream().use { output ->
-        nativeLibrary.copyTo(output)
-      }
+      Files.copy(nativeLibrary, nativeLibraryFile, StandardCopyOption.REPLACE_EXISTING)
     }
   } catch (e: IOException) {
     throw RuntimeException("Unable to extract native library from JAR", e)
   }
-  System.load(nativeLibraryFile.absolutePath)
+  System.load(nativeLibraryFile.toAbsolutePath().toString())
 }
