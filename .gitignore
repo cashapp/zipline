@@ -35,3 +35,4 @@ generated-zipline-webpack-config.js
 # Zig
 .zig-cache
 zig-out
+zipline/src/jvmMain/resources/jni

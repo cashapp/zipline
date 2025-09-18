@@ -5,28 +5,32 @@ pub fn build(b: *std.Build) !void {
   const deleteLib = b.addRemoveDirTree(.{ .cwd_relative = b.getInstallPath(.prefix, "lib") });
   b.getInstallStep().dependOn(&deleteLib.step);
 
-  try setupTarget(b, &deleteLib.step, .linux, .aarch64, "aarch64");
-  try setupTarget(b, &deleteLib.step, .linux, .x86_64, "amd64");
-  try setupTarget(b, &deleteLib.step, .macos, .aarch64, "aarch64");
-  try setupTarget(b, &deleteLib.step, .macos, .x86_64, "x86_64");
+  try setupTarget(b, &deleteLib.step, .linux, .aarch64, "linux_aarch64");
+  try setupTarget(b, &deleteLib.step, .linux, .x86_64, "linux_amd64");
+  try setupTarget(b, &deleteLib.step, .macos, .aarch64, "macos_aarch64");
+  try setupTarget(b, &deleteLib.step, .macos, .x86_64, "macos_x86_64");
+  try setupTarget(b, &deleteLib.step, .windows, .x86_64, "windows_amd64");
 }
 
 fn setupTarget(b: *std.Build, step: *std.Build.Step, tag: std.Target.Os.Tag, arch: std.Target.Cpu.Arch, dir: []const u8) !void {
-  const lib = b.addSharedLibrary(.{
+  const lib = b.addLibrary(.{
     .name = "quickjs",
-    .target = b.resolveTargetQuery(.{
-      .cpu_arch = arch,
-      .os_tag = tag,
-      // We need to explicitly specify gnu for linux, as otherwise it defaults to musl.
-      // See https://github.com/ziglang/zig/issues/16624#issuecomment-1801175600.
-      .abi = if (tag == .linux) .gnu else null,
+    .linkage = .dynamic,
+    .root_module = b.createModule(.{
+      .target = b.resolveTargetQuery(.{
+        .cpu_arch = arch,
+        .os_tag = tag,
+        // We need to explicitly specify gnu for linux, as otherwise it defaults to musl.
+        // See https://github.com/ziglang/zig/issues/16624#issuecomment-1801175600.
+        .abi = if (tag == .linux) .gnu else null,
+      }),
+      .optimize = .ReleaseSmall,
     }),
-    .optimize = .ReleaseSmall,
   });
 
   var version_buf: [11]u8 = undefined;
   const version = try readVersionFile(&version_buf);
-  var quoted_version_buf: [12]u8 = undefined;
+  var quoted_version_buf: [14]u8 = undefined;
   const quoted_version = try std.fmt.bufPrint(&quoted_version_buf, "\"{s}\"", .{ version });
   lib.root_module.addCMacro("CONFIG_VERSION", quoted_version);
 
@@ -73,12 +77,20 @@ fn setupTarget(b: *std.Build, step: *std.Build.Step, tag: std.Target.Os.Tag, arc
   const install = b.addInstallArtifact(lib, .{
     .dest_dir = .{
       .override = .{
+        .custom = b.fmt("../src/jvmMain/resources/jni/{s}", .{dir}),
+      },
+    },
+  });
+  const installDefault = b.addInstallArtifact(lib, .{
+    .dest_dir = .{
+      .override = .{
         .custom = dir,
       },
     },
   });
 
   step.dependOn(&install.step);
+  step.dependOn(&installDefault.step);
 }
 
 fn readVersionFile(version_buf: []u8) ![]u8 {
@@ -88,8 +100,15 @@ fn readVersionFile(version_buf: []u8) ![]u8 {
   );
   defer version_file.close();
 
-  var version_file_reader = std.io.bufferedReader(version_file.reader());
-  var version_file_stream = version_file_reader.reader();
-  const version = try version_file_stream.readUntilDelimiterOrEof(version_buf, '\n');
-  return version.?;
+  var buffer: [256]u8 = undefined;
+  var file_reader = version_file.reader(&buffer);
+  const bytes_read = try file_reader.read(version_buf);
+
+  // remove all '\r' and '\n'
+  var end_pos = bytes_read;
+  while (end_pos > 0 and (version_buf[end_pos - 1] == '\n' or version_buf[end_pos - 1] == '\r')) {
+    end_pos -= 1;
+  }
+
+  return version_buf[0..end_pos];
 }

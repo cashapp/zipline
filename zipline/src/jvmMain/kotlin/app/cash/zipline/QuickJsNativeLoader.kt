@@ -15,10 +15,8 @@
  */
 package app.cash.zipline
 
+import java.io.File
 import java.io.IOException
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.StandardCopyOption.REPLACE_EXISTING
 import java.util.Locale.US
 
 @Suppress("UnsafeDynamicallyLoadedCode") // Only loading from our own JAR contents.
@@ -26,25 +24,30 @@ internal actual fun loadNativeLibrary() {
   val osName = System.getProperty("os.name").lowercase(US)
   val osArch = System.getProperty("os.arch").lowercase(US)
   val nativeLibraryJarPath = if (osName.contains("linux")) {
-    "/jni/$osArch/libquickjs.so"
+    "/jni/linux_$osArch/libquickjs.so"
   } else if (osName.contains("mac")) {
-    "/jni/$osArch/libquickjs.dylib"
+    "/jni/macos_$osArch/libquickjs.dylib"
+  } else if(osName.contains("windows")) {
+    "/jni/windows_$osArch/quickjs.dll"
   } else {
     throw IllegalStateException("Unsupported OS: $osName")
   }
+
   val nativeLibraryUrl = QuickJs::class.java.getResource(nativeLibraryJarPath)
       ?: throw IllegalStateException("Unable to read $nativeLibraryJarPath from JAR")
-  val nativeLibraryFile: Path
+  val nativeLibraryFile: File
   try {
-    nativeLibraryFile = Files.createTempFile("quickjs", null)
+    nativeLibraryFile = File.createTempFile("quickjs", null)
 
     // File-based deleteOnExit() uses a special internal shutdown hook that always runs last.
-    nativeLibraryFile.toFile().deleteOnExit()
+    nativeLibraryFile.deleteOnExit()
     nativeLibraryUrl.openStream().use { nativeLibrary ->
-      Files.copy(nativeLibrary, nativeLibraryFile, REPLACE_EXISTING)
+      nativeLibraryFile.outputStream().use { output ->
+        nativeLibrary.copyTo(output)
+      }
     }
   } catch (e: IOException) {
     throw RuntimeException("Unable to extract native library from JAR", e)
   }
-  System.load(nativeLibraryFile.toAbsolutePath().toString())
+  System.load(nativeLibraryFile.absolutePath)
 }
