@@ -182,7 +182,7 @@ cklib {
       listOf(
         //"-DDUMP_LEAKS=1", // For local testing ONLY!
         "-DKONAN_MI_MALLOC=1",
-        "-DCONFIG_VERSION=\"${quickJsVersion()}\"",
+        "-DCONFIG_VERSION=\"\\\"${quickJsVersion()}\\\"\"",
         "-Wno-unknown-pragmas",
         "-ftls-model=initial-exec",
         "-Wno-unused-function",
@@ -212,9 +212,13 @@ android {
 
     externalNativeBuild {
       cmake {
-        arguments("-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static")
-        cFlags("-fstrict-aliasing", "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\"")
-        cppFlags("-fstrict-aliasing", "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\"")
+        arguments(
+          "-DANDROID_TOOLCHAIN=clang",
+          "-DANDROID_STL=c++_static",
+          "-DQUICKJS_VERSION=${quickJsVersion()}"
+        )
+        cFlags("-fstrict-aliasing")
+        cppFlags("-fstrict-aliasing")
       }
     }
 
