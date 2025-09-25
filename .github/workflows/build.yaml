@@ -112,7 +112,7 @@ jobs:
           script: ./gradlew connectedCheck
 
   ios-app:
-    runs-on: macos-14
+    runs-on: macos-15
 
     steps:
       - uses: actions/checkout@v5
@@ -125,7 +125,7 @@ jobs:
         run: |
           cd samples/world-clock/ios/app
           pod install
-          xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=iPhone 13,OS=latest'
+          xcodebuild -workspace WorldClock.xcworkspace -scheme WorldClock -destination 'platform=iOS Simulator,name=iPhone 16,OS=latest'
 
   build:
     runs-on: macos-latest
