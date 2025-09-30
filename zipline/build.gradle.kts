@@ -4,6 +4,7 @@ import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.jetbrains.kotlin.gradle.plugin.NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
+import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.TEST_COMPILATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTarget
 import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
@@ -20,6 +21,7 @@ plugins {
   id("co.touchlab.cklib")
   id("com.github.gmazzo.buildconfig")
   id("binary-compatibility-validator")
+  id("com.jakewharton.test-distribution")
 }
 
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
@@ -146,17 +148,12 @@ kotlin {
         linkerOpts += "-lsqlite3"
       }
     }
+  }
 
-    targets.withType<KotlinNativeTargetWithTests<*>> {
-      binaries {
-        // Configure a separate test where code is compiled in release mode.
-        test(setOf(NativeBuildType.RELEASE))
-      }
-      testRuns {
-        create("release") {
-          setExecutionSourceFrom(binaries.getByName("releaseTest") as TestExecutable)
-        }
-      }
+  val linkNativeDebugTests = tasks.register("linkNativeDebugTests")
+  targets.withType<KotlinNativeTarget> {
+    linkNativeDebugTests.configure {
+      dependsOn(compilations.getByName(TEST_COMPILATION_NAME).binariesTaskName)
     }
   }
 }

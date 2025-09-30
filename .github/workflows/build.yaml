@@ -31,22 +31,10 @@ jobs:
           path: zipline/src/jvmMain/resources/jni
           if-no-files-found: error
 
-  platform-tests:
+  jvm-test-binaries:
     needs:
       - zig
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - os: macos-13
-            task: macosX64Test
-          - os: macos-latest
-            task: macosArm64Test
-          - os: ubuntu-latest
-            task: linuxX64Test
-
-    runs-on: ${{ matrix.platform.os }}
-
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-java@v5
@@ -59,14 +47,75 @@ jobs:
           name: jni-binaries
           path: zipline/src/jvmMain/resources/jni
 
-      - run: ./gradlew jvmTest ${{ matrix.platform.task }} apiCheck --stacktrace
+      - run: ./gradlew :zipline:installJvmTestDistribution
 
       - uses: actions/upload-artifact@v4
-        if: ${{ always() }}
         with:
-          name: test-report-${{ matrix.platform.os }}
-          path: '**/build/reports/tests/**'
-          retention-days: 1
+          name: zipline-jvm-tests
+          path: zipline/build/install/jvmTest
+          if-no-files-found: error
+
+  native-test-binaries:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: true
+
+      - run: ./gradlew :zipline:linkNativeDebugTests
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: zipline-native-tests
+          path: zipline/build/bin
+          if-no-files-found: error
+
+  platform-tests:
+    needs:
+      - jvm-test-binaries
+      - native-test-binaries
+    strategy:
+      fail-fast: false
+      matrix:
+        platform:
+          - os: macos-15-intel
+            native-target: macosX64
+          - os: macos-15
+            native-target: macosArm64
+          - os: ubuntu-latest
+            native-target: linuxX64
+          - os: ubuntu-24.04-arm
+            native-target: linuxArm
+    runs-on: ${{ matrix.platform.os }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          sparse-checkout: .github/workflows/.java-version
+          sparse-checkout-cone-mode: false
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu'
+          java-version-file: .github/workflows/.java-version
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: zipline-jvm-tests
+
+      - uses: actions/download-artifact@v5
+        with:
+          name: zipline-native-tests
+
+      - name: Run JVM tests
+        run: |
+          chmod +x bin/zipline-test
+          bin/zipline-test
+
+      - name: Run native tests
+        shell: bash
+        run: |
+          chmod +x ${{ matrix.platform.native-target }}/debugTest/test.*
+          ${{ matrix.platform.native-target }}/debugTest/test.*
 
   samples:
     runs-on: macos-latest
