@@ -595,7 +595,7 @@ internal class AdapterGenerator(
             +functionCall
             irUnit()
           }
-        }
+        },
       )
     }
 
@@ -893,7 +893,7 @@ internal class AdapterGenerator(
           elementType = pluginContext.symbols.any.defaultType.makeNullable(),
           values = result.parameters
             .filter { it.kind == IrParameterKind.Regular }
-            .map { irGet(type = it.type, variable = it.symbol) }
+            .map { irGet(type = it.type, variable = it.symbol) },
         )
       }
 

@@ -237,7 +237,7 @@ internal class BridgedInterface(
         wrapWithNullableSerializerIfNeeded(
           type,
           contextualSerializerExpression,
-          ziplineApis.nullableSerializer
+          ziplineApis.nullableSerializer,
         )
       }
 

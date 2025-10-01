@@ -541,7 +541,9 @@ internal class EndpointTest {
     assertTrue("boom!" in e.message)
   }
 
-  interface ExtendsEchoService : ZiplineService, ExtendableInterface
+  interface ExtendsEchoService :
+    ZiplineService,
+    ExtendableInterface
 
   interface ExtendableInterface {
     fun echo(request: EchoRequest): EchoResponse

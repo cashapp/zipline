@@ -63,14 +63,17 @@ internal open class ZiplineDevelopmentServer internal constructor(
 
         // Offer a web socket for reload events.
         addServlet(
-          ServletHolder("ws", object : JettyWebSocketServlet() {
+          ServletHolder(
+            "ws",
+            object : JettyWebSocketServlet() {
             public override fun configure(factory: JettyWebSocketServletFactory) {
               factory.addMapping("/ws") { _, _ ->
                 ZiplineWebSocket().also { webSockets.add(it) }
               }
             }
-          }),
-          "/ws"
+          },
+          ),
+          "/ws",
         )
 
         // Serve .zipline bytecode and manifest JSON files at the file system root.
@@ -82,7 +85,7 @@ internal open class ZiplineDevelopmentServer internal constructor(
             setInitParameter("cacheControl", "no-cache")
             setInitParameter("etags", "true")
           },
-          "/*"
+          "/*",
         )
       }
 

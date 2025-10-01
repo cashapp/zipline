@@ -196,7 +196,7 @@ internal class FirZiplineApiReader(
       visitor = object : FirDefaultVisitor<Unit, MutableList<FirRegularClass>>() {
         override fun visitRegularClass(
           regularClass: FirRegularClass,
-          data: MutableList<FirRegularClass>
+          data: MutableList<FirRegularClass>,
         ) {
           super.visitRegularClass(regularClass, data)
           data.add(regularClass)
@@ -204,7 +204,7 @@ internal class FirZiplineApiReader(
 
         override fun visitElement(
           element: FirElement,
-          data: MutableList<FirRegularClass>
+          data: MutableList<FirRegularClass>,
         ) {
           element.acceptChildren(this, data)
         }

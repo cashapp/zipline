@@ -125,11 +125,11 @@ class InterfaceSerializersTest {
     )
   }
 
-  private class JvmMessageInterfaceService : RequestInterfaceService, ResponseInterfaceService {
-    override fun echo(request: MessageInterface) =
-      "JVM received an interface, ${request.message}"
+  private class JvmMessageInterfaceService :
+    RequestInterfaceService,
+    ResponseInterfaceService {
+    override fun echo(request: MessageInterface) = "JVM received an interface, ${request.message}"
 
-    override fun echo(request: String) =
-      RealMessageInterface("JVM returned an interface, $request")
+    override fun echo(request: String) = RealMessageInterface("JVM returned an interface, $request")
   }
 }

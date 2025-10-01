@@ -20,8 +20,7 @@ import platform.Foundation.NSDate
 import platform.Foundation.NSURL
 import platform.Foundation.timeIntervalSince1970
 
-internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) =
-  loadJsModule(bytecode, id)
+internal actual fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: String) = loadJsModule(bytecode, id)
 
 internal actual val ecdsaP256: SignatureAlgorithm = EcdsaP256()
 

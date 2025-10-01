@@ -457,8 +457,7 @@ fun IrBuilderWithScope.irInvoke(
   typeArguments: List<IrType?>,
   valueArguments: List<IrExpression>,
   returnTypeHint: IrType? = null,
-): IrMemberAccessExpression<*> =
-  irInvoke(
+): IrMemberAccessExpression<*> = irInvoke(
     dispatchReceiver,
     callee,
     *valueArguments.toTypedArray(),

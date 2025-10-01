@@ -76,8 +76,7 @@ interface SampleService<T> : ZiplineService {
         argSerializers = argSerializers,
         resultSerializer = resultSerializer,
       ) {
-        override fun call(service: SampleService<TF>, args: List<*>): Any? =
-          service.ping(args[0] as SampleRequest)
+        override fun call(service: SampleService<TF>, args: List<*>): Any? = service.ping(args[0] as SampleRequest)
       }
 
       class ZiplineFunction1<TF>(
@@ -91,8 +90,7 @@ interface SampleService<T> : ZiplineService {
         resultSerializer = resultSerializer,
         suspendCallbackSerializer = suspendCallbackSerializer,
       ) {
-        override suspend fun callSuspending(service: SampleService<TF>, args: List<*>) =
-          service.reduce(args[0] as List<TF>)
+        override suspend fun callSuspending(service: SampleService<TF>, args: List<*>) = service.reduce(args[0] as List<TF>)
       }
 
       class ZiplineFunction2<TF>(
@@ -135,7 +133,8 @@ interface SampleService<T> : ZiplineService {
 
       private class GeneratedOutboundService<TS>(
         override val callHandler: OutboundCallHandler,
-      ) : SampleService<TS>, OutboundService {
+      ) : SampleService<TS>,
+        OutboundService {
         override fun ping(request: SampleRequest): SampleResponse {
           val callHandler = callHandler
           return callHandler.call(this, 0, request) as SampleResponse

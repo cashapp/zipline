@@ -17,12 +17,12 @@ package app.cash.zipline.testing
 
 import app.cash.zipline.Zipline
 
-class JsMessageInterfaceService : RequestInterfaceService, ResponseInterfaceService {
-  override fun echo(request: MessageInterface) =
-    "JS received an interface, ${request.message}"
+class JsMessageInterfaceService :
+  RequestInterfaceService,
+  ResponseInterfaceService {
+  override fun echo(request: MessageInterface) = "JS received an interface, ${request.message}"
 
-  override fun echo(request: String) =
-    RealMessageInterface("JS returned an interface, $request")
+  override fun echo(request: String) = RealMessageInterface("JS returned an interface, $request")
 }
 
 private val zipline by lazy { Zipline.get(MessageInterfaceSerializersModule) }

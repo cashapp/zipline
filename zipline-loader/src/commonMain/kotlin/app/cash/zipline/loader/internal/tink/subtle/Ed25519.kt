@@ -265,7 +265,7 @@ internal object Ed25519 : SignatureAlgorithm {
   }
 
   /**
-   * Partial projective point representation ((X:Z),(Y:T)) satisfying x=X/Z, y=Y/T
+   * Partial projective point representation ((X:Z), (Y:T)) satisfying x=X/Z, y=Y/T
    *
    * Note that this is referred as complete form in the original ref10 impl (ge_p1p1).
    * Also note that t = T below following Java coding style.

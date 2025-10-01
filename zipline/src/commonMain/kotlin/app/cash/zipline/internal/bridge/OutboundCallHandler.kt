@@ -226,7 +226,9 @@ internal class OutboundCallHandler(
   }
 
   private inner class RealSuspendCallback<R> :
-    SuspendCallback<R>, HasPassByReferenceName, ZiplineScoped {
+    SuspendCallback<R>,
+    HasPassByReferenceName,
+    ZiplineScoped {
     lateinit var internalCall: InternalCall
     lateinit var externalCall: Call
     lateinit var continuation: Continuation<R>

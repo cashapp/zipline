@@ -40,7 +40,9 @@ internal class StateFlowTest {
     suspend fun take(flow: StateFlow<String>, count: Int): List<String>
   }
 
-  class RealStateFlowEchoService(initialValue: String = "") : StateFlowEchoService, ZiplineScoped {
+  class RealStateFlowEchoService(initialValue: String = "") :
+    StateFlowEchoService,
+    ZiplineScoped {
     override val scope = ZiplineScope()
     val mutableFlow = MutableStateFlow(initialValue)
     override val flow: StateFlow<String> get() = mutableFlow

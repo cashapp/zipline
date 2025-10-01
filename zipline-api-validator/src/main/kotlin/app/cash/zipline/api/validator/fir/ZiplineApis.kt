@@ -17,8 +17,7 @@ package app.cash.zipline.api.validator.fir
 
 import okio.ByteString.Companion.encodeUtf8
 
-internal fun String.signatureHash(): String =
-  encodeUtf8().sha256().substring(0, 6).base64() // In base64, 6 bytes takes 8 chars.
+internal fun String.signatureHash(): String = encodeUtf8().sha256().substring(0, 6).base64() // In base64, 6 bytes takes 8 chars.
 
 /** Don't bridge these. */
 internal val NON_INTERFACE_FUNCTION_NAMES = setOf(
