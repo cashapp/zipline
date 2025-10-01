@@ -11,13 +11,10 @@ import org.jetbrains.dokka.gradle.AbstractDokkaTask
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
-import org.jetbrains.kotlin.gradle.targets.jvm.KotlinJvmTarget
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
-import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 buildscript {
@@ -42,25 +39,14 @@ buildscript {
 
 plugins {
   id("com.github.gmazzo.buildconfig") version "5.6.8" apply false
-  alias(libs.plugins.spotless)
+  alias(libs.plugins.spotless) apply false
 }
 
 apply(plugin = "org.jetbrains.dokka")
-
 apply(plugin = "com.vanniktech.maven.publish.base")
 
-configure<SpotlessExtension> {
-  kotlin {
-    target("**/*.kt")
-    ktlint()
-      .editorConfigOverride(
-        mapOf(
-          "ktlint_standard_comment-spacing" to "disabled", // TODO Re-enable
-          "ktlint_standard_filename" to "disabled",
-          "ktlint_standard_indent" to "disabled", // TODO Re-enable
-        )
-      )
-  }
+tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
+  moduleName.set("Zipline")
 }
 
 allprojects {
@@ -71,9 +57,27 @@ allprojects {
     mavenCentral()
     google()
   }
-}
 
-subprojects {
+  apply(plugin = "com.diffplug.spotless")
+  extensions.configure<SpotlessExtension> {
+    kotlin {
+      target("src/**/*.kt")
+      // Avoid 'build' folders within test fixture projects which may contain generated sources.
+      targetExclude("src/test/fixture/**/build/**")
+
+      ktlint()
+        .editorConfigOverride(
+          mapOf(
+            "ktlint_standard_comment-spacing" to "disabled", // TODO Re-enable
+            "ktlint_standard_filename" to "disabled",
+            "ktlint_standard_indent" to "disabled", // TODO Re-enable
+            // Making something an expression body should be a choice around readability.
+            "ktlint_standard_function-expression-body" to "disabled",
+          )
+        )
+    }
+  }
+
   plugins.withId("com.android.library") {
     extensions.configure<BaseExtension> {
       lintOptions {
@@ -102,13 +106,7 @@ subprojects {
       exceptionFormat = TestExceptionFormat.FULL
     }
   }
-}
 
-tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
-  moduleName.set("Zipline")
-}
-
-allprojects {
   tasks.withType<DokkaTaskPartial>().configureEach {
     dokkaSourceSets.configureEach {
       documentedVisibilities.set(setOf(
@@ -241,9 +239,7 @@ allprojects {
       }
     }
   }
-}
 
-allprojects {
   tasks.withType<KotlinJvmTest>().configureEach {
     environment("ZIPLINE_ROOT", rootDir)
   }
@@ -256,9 +252,7 @@ allprojects {
   tasks.withType<KotlinJsTest>().configureEach {
     environment("ZIPLINE_ROOT", rootDir.toString())
   }
-}
 
-subprojects {
   plugins.withId("binary-compatibility-validator") {
     configure<ApiValidationExtension> {
       // Making this properly internal requires some SQLDelight work.
