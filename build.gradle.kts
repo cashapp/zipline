@@ -34,6 +34,7 @@ buildscript {
     classpath(libs.cklib.gradle.plugin)
     classpath(libs.sqldelight.gradle.plugin)
     classpath(libs.google.ksp)
+    classpath(libs.testDistributionGradlePlugin)
   }
 }
 
