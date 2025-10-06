@@ -18,6 +18,7 @@ package app.cash.zipline
 import app.cash.zipline.internal.bridge.ThrowableSerializer
 import assertk.assertThat
 import assertk.assertions.isEqualTo
+import java.util.Locale.US
 import kotlin.coroutines.cancellation.CancellationException
 import kotlin.test.assertEquals
 import kotlinx.serialization.json.Json
@@ -31,6 +32,17 @@ class ThrowableSerializerTest {
       contextual(Throwable::class, ThrowableSerializer)
     }
   }
+  private val newline: String
+  private val newlineEscape: String
+  init {
+    if ("windows" in System.getProperty("os.name").lowercase(US)) {
+      newline = "\r\n"
+      newlineEscape = "\\r\\n"
+    } else {
+      newline = "\n"
+      newlineEscape = "\\n"
+    }
+  }
 
   @Test fun happyPath() {
     val exception = Exception("boom")
@@ -41,7 +53,7 @@ class ThrowableSerializerTest {
     val exceptionJson = """
       |{
       |    "types": [],
-      |    "stacktraceString": "java.lang.Exception: boom\n\tat ThrowableSerializerTest.goBoom(test.kt:5)"
+      |    "stacktraceString": "java.lang.Exception: boom$newlineEscape\tat ThrowableSerializerTest.goBoom(test.kt:5)"
       |}
       """.trimMargin()
 
@@ -53,10 +65,7 @@ class ThrowableSerializerTest {
     val decoded = json.decodeFromString(ThrowableSerializer, exceptionJson)
     assertEquals(ZiplineException::class, decoded::class)
     assertEquals(
-      """
-      |java.lang.Exception: boom
-      |${'\t'}at ThrowableSerializerTest.goBoom(test.kt:5)
-      """.trimMargin(),
+      "java.lang.Exception: boom$newline\tat ThrowableSerializerTest.goBoom(test.kt:5)",
       decoded.message,
     )
   }
