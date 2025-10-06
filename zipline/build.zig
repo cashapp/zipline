@@ -5,11 +5,11 @@ pub fn build(b: *std.Build) !void {
   const deleteLib = b.addRemoveDirTree(.{ .cwd_relative = b.getInstallPath(.prefix, "lib") });
   b.getInstallStep().dependOn(&deleteLib.step);
 
-  try setupTarget(b, &deleteLib.step, .linux, .aarch64, "linux_aarch64");
-  try setupTarget(b, &deleteLib.step, .linux, .x86_64, "linux_amd64");
-  try setupTarget(b, &deleteLib.step, .macos, .aarch64, "macos_aarch64");
-  try setupTarget(b, &deleteLib.step, .macos, .x86_64, "macos_x86_64");
-  try setupTarget(b, &deleteLib.step, .windows, .x86_64, "windows_amd64");
+  try setupTarget(b, &deleteLib.step, .linux, .aarch64, "aarch64");
+  try setupTarget(b, &deleteLib.step, .linux, .x86_64, "amd64");
+  try setupTarget(b, &deleteLib.step, .macos, .aarch64, "aarch64");
+  try setupTarget(b, &deleteLib.step, .macos, .x86_64, "x86_64");
+  try setupTarget(b, &deleteLib.step, .windows, .x86_64, "amd64");
 }
 
 fn setupTarget(b: *std.Build, step: *std.Build.Step, tag: std.Target.Os.Tag, arch: std.Target.Cpu.Arch, dir: []const u8) !void {
