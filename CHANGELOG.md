@@ -3,6 +3,7 @@
 ## Unreleased
 
 * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
+* Upgrade: [Kotlin 2.2.21](https://github.com/JetBrains/kotlin/releases/tag/v2.2.21).
 
 
 ## [1.23.0] - 2025-09-09
