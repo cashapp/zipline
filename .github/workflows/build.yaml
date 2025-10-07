@@ -67,6 +67,7 @@ jobs:
           - ubuntu-24.04
           - ubuntu-24.04-arm
           - windows-2025
+          - windows-11-arm
     runs-on: ${{ matrix.platform }}
     steps:
       - uses: actions/checkout@v5
