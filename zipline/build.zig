@@ -84,15 +84,10 @@ fn setupTarget(b: *std.Build, step: *std.Build.Step, tag: std.Target.Os.Tag, arc
 }
 
 fn readVersionFile(version_buf: []u8) ![]const u8 {
-  const version_file = try std.fs.cwd().openFile(
+  const version = try std.fs.cwd().readFile(
     "native/quickjs/VERSION",
-    .{ },
+    version_buf,
   );
-  defer version_file.close();
 
-  var version_file_reader = std.io.bufferedReader(version_file.reader());
-  var version_file_stream = version_file_reader.reader();
-
-  const version = try version_file_stream.readUntilDelimiterOrEof(version_buf, '\n');
-  return std.mem.trim(u8, version.?, " \t\r\n");
+  return std.mem.trim(u8, version, "\r\n");
 }
