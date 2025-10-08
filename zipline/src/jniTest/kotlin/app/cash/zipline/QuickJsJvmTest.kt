@@ -55,7 +55,9 @@ class QuickJsJvmTest {
 
   @Test fun dateNow() {
     val beforeMillis = System.currentTimeMillis().toDouble()
+    Thread.sleep(100)
     val nowMillis = quickjs.evaluate("Date.now()") as Double
+    Thread.sleep(100)
     val afterMillis = System.currentTimeMillis().toDouble()
     assertTrue(
       "$beforeMillis <= $nowMillis <= $afterMillis",
