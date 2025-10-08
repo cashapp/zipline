@@ -103,19 +103,15 @@ internal open class ZiplineDevelopmentServer internal constructor(
   }
 
   @Suppress("unused") // Invoked reflectively by ZiplineServeTask.
-  fun sendReloadToAllWebSockets(): Int {
-    return sendMessageToAllWebSockets(RELOAD_MESSAGE)
+  fun sendReloadToAllWebSockets() {
+    sendMessageToAllWebSockets(RELOAD_MESSAGE)
   }
 
-  /** Returns the number of web sockets notified. */
-  private fun sendMessageToAllWebSockets(message: String): Int {
-    var result = 0
+  private fun sendMessageToAllWebSockets(message: String) {
     for (webSocket in webSockets) {
       val session = webSocket.session ?: continue
       session.sendText(message, Callback.NOOP)
-      result++
     }
-    return result
   }
 
   override fun stop() {

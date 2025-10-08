@@ -88,12 +88,12 @@ class ZiplineDevelopmentServerTest {
   fun happyPath() {
     val httpClient = OkHttpClient()
     val downloadedManifest = httpClient.call(manifestUrl).use { response ->
-      ZiplineManifest.decodeJson(response.body!!.string())
+      ZiplineManifest.decodeJson(response.body.string())
     }
 
     val module = downloadedManifest.modules.values.single()
     httpClient.call(manifestUrl.resolve(module.url)!!).use { response ->
-      val moduleData = response.body!!.byteString()
+      val moduleData = response.body.byteString()
       assertThat(moduleData).isEqualTo(helloZipline)
     }
   }
@@ -112,7 +112,7 @@ class ZiplineDevelopmentServerTest {
 
     val downloadedManifest1 = httpClient.call(manifestUrl).use { response ->
       assertThat(response.networkResponse!!.headers["Cache-Control"]).isEqualTo("no-cache")
-      ZiplineManifest.decodeJson(response.body!!.string())
+      ZiplineManifest.decodeJson(response.body.string())
     }
     assertThat(downloadedManifest1.version).isNull()
 
@@ -123,7 +123,7 @@ class ZiplineDevelopmentServerTest {
       // the resource has changed. (And because it doesn't implement conditional caching.)
       assertThat(response.networkResponse!!.request.headers.names()).contains("If-None-Match")
       assertThat(response.networkResponse!!.code).isEqualTo(200)
-      ZiplineManifest.decodeJson(response.body!!.string())
+      ZiplineManifest.decodeJson(response.body.string())
     }
     assertThat(downloadedManifest2.version).isEqualTo("2")
   }
@@ -137,12 +137,12 @@ class ZiplineDevelopmentServerTest {
 
     val downloadedManifest1 = httpClient.call(manifestUrl).use { response ->
       assertThat(response.networkResponse!!.headers["Cache-Control"]).isEqualTo("no-cache")
-      ZiplineManifest.decodeJson(response.body!!.string())
+      ZiplineManifest.decodeJson(response.body.string())
     }
 
     val downloadedManifest2 = httpClient.call(manifestUrl).use { response ->
       assertThat(response.networkResponse!!.code).isEqualTo(304)
-      ZiplineManifest.decodeJson(response.body!!.string())
+      ZiplineManifest.decodeJson(response.body.string())
     }
 
     assertThat(downloadedManifest2).isEqualTo(downloadedManifest1)
@@ -162,7 +162,7 @@ class ZiplineDevelopmentServerTest {
       skipEvents = arrayOf("onMessage(text=$HEARTBEAT_MESSAGE)"),
     )
 
-    assertThat(server.sendReloadToAllWebSockets()).isEqualTo(1)
+    server.sendReloadToAllWebSockets()
 
     listener.take(
       event = "onMessage(text=$RELOAD_MESSAGE)",
