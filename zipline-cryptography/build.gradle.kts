@@ -6,7 +6,7 @@ import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
-  id("org.jetbrains.dokka")
+  alias(libs.plugins.dokka)
   id("com.vanniktech.maven.publish.base")
   id("binary-compatibility-validator")
 }

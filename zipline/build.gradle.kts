@@ -15,7 +15,7 @@ plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
   id("com.android.library")
-  id("org.jetbrains.dokka")
+  alias(libs.plugins.dokka)
   id("com.vanniktech.maven.publish.base")
   id("co.touchlab.cklib")
   id("com.github.gmazzo.buildconfig")

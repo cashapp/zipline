@@ -26,7 +26,7 @@ jobs:
       - run: zig build -p src/jvmMain/resources/jni
         working-directory: zipline
 
-      - run: ./gradlew publishToMavenCentral :dokkaHtmlMultiModule
+      - run: ./gradlew publishToMavenCentral
         if: ${{ github.repository == 'cashapp/zipline' }}
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.SONATYPE_CENTRAL_USERNAME }}
@@ -45,12 +45,14 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      - run: ./gradlew :dokkaGenerate
+
       - name: Deploy docs to website
         if: ${{ github.repository == 'cashapp/zipline' }}
         uses: JamesIves/github-pages-deploy-action@releases/v3
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
-          FOLDER: build/dokka/htmlMultiModule/
+          FOLDER: build/dokka/html/
           TARGET_FOLDER: docs/1.x/
           CLEAN: true

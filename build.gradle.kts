@@ -1,21 +1,18 @@
+
 import com.android.build.gradle.BaseExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import java.net.URI
-import java.net.URL
 import kotlinx.validation.ApiValidationExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
-import org.jetbrains.dokka.DokkaConfiguration.Visibility
-import org.jetbrains.dokka.gradle.AbstractDokkaTask
-import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
-import org.jetbrains.dokka.gradle.DokkaTaskPartial
+import org.jetbrains.dokka.gradle.engine.parameters.VisibilityModifier
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
+import java.net.URI
 
 buildscript {
   repositories {
@@ -29,7 +26,6 @@ buildscript {
     classpath(libs.mavenPublish.gradle.plugin)
     classpath(libs.kotlin.gradle.plugin)
     classpath(libs.kotlin.serialization)
-    classpath(libs.dokka.gradle.plugin)
     classpath(libs.shadowJar.gradle.plugin)
     classpath(libs.cklib.gradle.plugin)
     classpath(libs.sqldelight.gradle.plugin)
@@ -41,13 +37,20 @@ buildscript {
 plugins {
   id("com.github.gmazzo.buildconfig") version "5.7.0" apply false
   alias(libs.plugins.spotless) apply false
+  alias(libs.plugins.dokka)
 }
 
-apply(plugin = "org.jetbrains.dokka")
 apply(plugin = "com.vanniktech.maven.publish.base")
 
-tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
-  moduleName.set("Zipline")
+dependencies {
+  dokka(projects.zipline)
+  dokka(projects.ziplineCryptography)
+  dokka(projects.ziplineLoader)
+  dokka(projects.ziplineProfiler)
+}
+
+dokka {
+  moduleName = "Zipline"
 }
 
 allprojects {
@@ -108,39 +111,27 @@ allprojects {
     }
   }
 
-  tasks.withType<DokkaTaskPartial>().configureEach {
-    dokkaSourceSets.configureEach {
-      documentedVisibilities.set(setOf(
-        Visibility.PUBLIC,
-        Visibility.PROTECTED
-      ))
-      reportUndocumented.set(false)
-      jdkVersion.set(11)
-
-      perPackageOption {
-        matchingRegex.set("app\\.cash\\.zipline\\.internal\\..*")
-        suppress.set(true)
+  pluginManager.withPlugin("org.jetbrains.dokka") {
+    dokka {
+      dokkaSourceSets.configureEach {
+        documentedVisibilities = setOf(
+          VisibilityModifier.Public,
+          VisibilityModifier.Protected,
+        )
+        perPackageOption {
+          matchingRegex.set("app\\.cash\\.zipline\\.internal\\..*")
+          suppress.set(true)
+        }
+        perPackageOption {
+          matchingRegex.set("app\\.cash\\.zipline\\.loader\\.internal\\..*")
+          suppress.set(true)
+        }
+        sourceLink {
+          localDirectory = rootProject.projectDir
+          remoteUrl = URI("https://github.com/cashapp/zipline/tree/main/")
+          remoteLineSuffix.set("#L")
+        }
       }
-      perPackageOption {
-        matchingRegex.set("app\\.cash\\.zipline\\.loader\\.internal\\..*")
-        suppress.set(true)
-      }
-
-      sourceLink {
-        localDirectory.set(rootProject.projectDir)
-        remoteUrl.set(URL("https://github.com/cashapp/zipline/tree/trunk/"))
-        remoteLineSuffix.set("#L")
-      }
-    }
-  }
-
-  // Workaround for https://github.com/Kotlin/dokka/issues/2977.
-  // We disable the C Interop IDE metadata task when generating documentation using Dokka.
-  tasks.withType<AbstractDokkaTask> {
-    @Suppress("UNCHECKED_CAST")
-    val taskClass = Class.forName("org.jetbrains.kotlin.gradle.targets.native.internal.CInteropMetadataDependencyTransformationTask") as Class<Task>
-    parent?.subprojects?.forEach {
-      dependsOn(it.tasks.withType(taskClass))
     }
   }
 
