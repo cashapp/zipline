@@ -7,7 +7,7 @@ plugins {
   kotlin("multiplatform")
   id("com.android.library")
   kotlin("plugin.serialization")
-  id("org.jetbrains.dokka")
+  alias(libs.plugins.dokka)
   id("com.vanniktech.maven.publish.base")
   id("app.cash.sqldelight")
   id("binary-compatibility-validator")

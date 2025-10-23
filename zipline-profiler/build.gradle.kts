@@ -4,7 +4,7 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 
 plugins {
   kotlin("multiplatform")
-  id("org.jetbrains.dokka")
+  alias(libs.plugins.dokka)
   id("com.vanniktech.maven.publish.base")
   id("binary-compatibility-validator")
 }

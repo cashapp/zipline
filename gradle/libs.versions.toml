@@ -30,7 +30,6 @@ auto-service-compiler = { module = "dev.zacsweers.autoservice:auto-service-ksp",
 auto-service-annotations = { module = "com.google.auto.service:auto-service-annotations", version = "1.1.1" }
 binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.18.1" }
 cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.3.4" }
-dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.0.0" }
 google-ksp = { module = "com.google.devtools.ksp:symbol-processing-gradle-plugin", version.ref = "ksp" }
 jetty-ee10Servlet = { module = "org.eclipse.jetty.ee10:jetty-ee10-servlet", version.ref = "jetty" }
 jetty-ee10WebsocketJettyServer = { module = "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jetty-server", version.ref = "jetty" }
@@ -66,3 +65,4 @@ turbine = { module = "app.cash.turbine:turbine", version = "1.2.1" }
 [plugins]
 spotless = { id = "com.diffplug.spotless", version = "8.0.0" }
 zipline-kotlin = { id = "app.cash.zipline.kotlin" }
+dokka = { id = "org.jetbrains.dokka", version = "2.1.0" }

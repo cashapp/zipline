@@ -251,12 +251,12 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SECRET_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SECRET_PASSPHRASE }}
 
-      - run: ./gradlew :dokkaHtmlMultiModule
+      - run: ./gradlew :dokkaGenerate
 
       - uses: actions/upload-artifact@v4
         with:
           name: html-docs
-          path: build/dokka/htmlMultiModule/
+          path: build/dokka/html/
           if-no-files-found: error
 
       - name: Deploy docs to website
@@ -264,6 +264,6 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: site
-          FOLDER: build/dokka/htmlMultiModule/
+          FOLDER: build/dokka/html/
           TARGET_FOLDER: docs/latest/
           CLEAN: true

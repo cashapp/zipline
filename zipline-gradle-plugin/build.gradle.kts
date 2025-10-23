@@ -6,7 +6,7 @@ plugins {
   id("java-gradle-plugin")
   kotlin("jvm")
   id("com.github.gmazzo.buildconfig")
-  id("org.jetbrains.dokka")
+  alias(libs.plugins.dokka)
   id("com.vanniktech.maven.publish.base")
 }
 
