@@ -25,7 +25,7 @@ jobs:
       - run: zig build -p src/jvmMain/resources/jni
         working-directory: zipline
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: jni-binaries
           path: zipline/src/jvmMain/resources/jni
@@ -42,14 +42,14 @@ jobs:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: jni-binaries
           path: zipline/src/jvmMain/resources/jni
 
       - run: ./gradlew :zipline:installJvmTestDistribution
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: jvm-tests
           path: zipline/build/install/jvmTest
@@ -79,7 +79,7 @@ jobs:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: jvm-tests
 
@@ -113,7 +113,7 @@ jobs:
 
       - run: ./gradlew ${{ matrix.platform.task }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         if: ${{ always() }}
         with:
           name: test-report-native-${{ matrix.platform.task }}
@@ -131,7 +131,7 @@ jobs:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: jni-binaries
           path: zipline/src/jvmMain/resources/jni
@@ -161,7 +161,7 @@ jobs:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: jni-binaries
           path: zipline/src/jvmMain/resources/jni
@@ -239,7 +239,7 @@ jobs:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
 
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v6
         with:
           name: jni-binaries
           path: zipline/src/jvmMain/resources/jni
@@ -253,7 +253,7 @@ jobs:
 
       - run: ./gradlew :dokkaHtmlMultiModule
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v5
         with:
           name: html-docs
           path: build/dokka/htmlMultiModule/
