@@ -26,7 +26,7 @@ androidx-lifecycle = { module = "androidx.lifecycle:lifecycle-runtime-ktx", vers
 androidx-test-runner = { module = "androidx.test:runner", version = "1.7.0" }
 assertk = "com.willowtreeapps.assertk:assertk:0.28.1"
 binary-compatibility-validator-gradle-plugin = { module = "org.jetbrains.kotlinx.binary-compatibility-validator:org.jetbrains.kotlinx.binary-compatibility-validator.gradle.plugin", version = "0.18.1" }
-cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.3.4" }
+cklib-gradle-plugin = { module = "co.touchlab:cklib-gradle-plugin", version = "0.3.5" }
 dokka-gradle-plugin = { module = "org.jetbrains.dokka:dokka-gradle-plugin", version = "2.0.0" }
 jetty-ee10Servlet = { module = "org.eclipse.jetty.ee10:jetty-ee10-servlet", version.ref = "jetty" }
 jetty-ee10WebsocketJettyServer = { module = "org.eclipse.jetty.ee10.websocket:jetty-ee10-websocket-jetty-server", version.ref = "jetty" }
