@@ -2,7 +2,9 @@
 
 ## Unreleased
 
-Nothing yet!
+ * Fix: Work-around the Kotlin compiler returning a non-`Unit` value for a function that declares
+   `Unit` as its return value. We'd previously observed this problem with Kotlin/JS and recently
+   started seeing it in Kotlin/JVM also.
 
 
 ## [1.24.0] - 2025-10-23

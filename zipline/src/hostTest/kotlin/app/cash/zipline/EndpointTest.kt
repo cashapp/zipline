@@ -19,10 +19,17 @@ import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
 import app.cash.zipline.testing.GenericEchoService
+import app.cash.zipline.testing.GenericUnitService
 import app.cash.zipline.testing.PotatoService
+import app.cash.zipline.testing.RealGenericUnitService
+import app.cash.zipline.testing.RealUnitService
 import app.cash.zipline.testing.SuspendingEchoService
+import app.cash.zipline.testing.UnitService
 import app.cash.zipline.testing.kotlinBuiltInSerializersModule
 import app.cash.zipline.testing.newEndpointPair
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isNull
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -539,6 +546,48 @@ internal class EndpointTest {
       client.echo(EchoRequest(""))
     }
     assertTrue("boom!" in e.message)
+  }
+
+  @Test
+  fun callUnitService() = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val service = RealUnitService()
+    endpointA.bind<UnitService>("unitService", service)
+    val client = endpointB.take<UnitService>("unitService")
+
+    client.call()
+    client.call()
+    client.call()
+    assertThat(client.count()).isEqualTo(3)
+    client.callSuspending()
+    client.callSuspending()
+    assertThat(client.count()).isEqualTo(5)
+    assertThat(client.nullableUnitReturnsUnit()).isEqualTo(Unit)
+    assertThat(client.nullableUnitReturnsNull()).isNull()
+    assertThat(client.nullableUnitReturnsUnitSuspending()).isEqualTo(Unit)
+    assertThat(client.nullableUnitReturnsNullSuspending()).isNull()
+  }
+
+  @Test
+  fun callGenericUnitService() = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    val service = RealGenericUnitService()
+    endpointA.bind<GenericUnitService<Unit>>("genericUnitService", service)
+    val client = endpointB.take<GenericUnitService<Unit>>("genericUnitService")
+
+    client.call()
+    client.call()
+    client.call()
+    assertThat(client.count()).isEqualTo(3)
+    client.callSuspending()
+    client.callSuspending()
+    assertThat(client.count()).isEqualTo(5)
+    assertThat(client.nullableUnitReturnsUnit()).isEqualTo(Unit)
+    assertThat(client.nullableUnitReturnsNull()).isNull()
+    assertThat(client.nullableUnitReturnsUnitSuspending()).isEqualTo(Unit)
+    assertThat(client.nullableUnitReturnsNullSuspending()).isNull()
   }
 
   interface ExtendsEchoService :

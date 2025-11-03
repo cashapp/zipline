@@ -440,6 +440,13 @@ public final class app/cash/zipline/internal/bridge/InternalSerializersKt {
 	public static final fun requireContextual (Lkotlinx/serialization/modules/SerializersModule;Lkotlin/reflect/KClass;Ljava/util/List;)Lkotlinx/serialization/KSerializer;
 }
 
+public final class app/cash/zipline/internal/bridge/LenientUnitSerializer : kotlinx/serialization/KSerializer {
+	public static final field INSTANCE Lapp/cash/zipline/internal/bridge/LenientUnitSerializer;
+	public fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+}
+
 public final class app/cash/zipline/internal/bridge/OutboundCallHandler {
 	public fun <init> (Lapp/cash/zipline/ZiplineServiceType;Ljava/lang/String;Lapp/cash/zipline/internal/bridge/Endpoint;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;Lapp/cash/zipline/ZiplineScope;Lapp/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState;)V
 	public synthetic fun <init> (Lapp/cash/zipline/ZiplineServiceType;Ljava/lang/String;Lapp/cash/zipline/internal/bridge/Endpoint;Lapp/cash/zipline/internal/bridge/ZiplineServiceAdapter;Lapp/cash/zipline/ZiplineScope;Lapp/cash/zipline/internal/bridge/OutboundCallHandler$ServiceState;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
