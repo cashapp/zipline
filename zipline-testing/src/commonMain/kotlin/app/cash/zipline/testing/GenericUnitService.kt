@@ -17,17 +17,17 @@ package app.cash.zipline.testing
 
 import app.cash.zipline.ZiplineService
 
-interface UnitService : ZiplineService {
-  fun call()
-  suspend fun callSuspending()
+interface GenericUnitService<T> : ZiplineService {
+  fun call(): T
+  suspend fun callSuspending(): T
   fun count(): Int
-  fun nullableUnitReturnsNull(): Unit?
-  fun nullableUnitReturnsUnit(): Unit?
-  suspend fun nullableUnitReturnsNullSuspending(): Unit?
-  suspend fun nullableUnitReturnsUnitSuspending(): Unit?
+  fun nullableUnitReturnsNull(): T?
+  fun nullableUnitReturnsUnit(): T?
+  suspend fun nullableUnitReturnsNullSuspending(): T?
+  suspend fun nullableUnitReturnsUnitSuspending(): T?
 }
 
-class RealUnitService : UnitService {
+class RealGenericUnitService : GenericUnitService<Unit> {
   private var count = 0
 
   override fun call() {

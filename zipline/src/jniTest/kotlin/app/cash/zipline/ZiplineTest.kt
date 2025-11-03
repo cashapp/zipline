@@ -20,6 +20,7 @@ import app.cash.zipline.internal.ZIPLINE_HOST_NAME
 import app.cash.zipline.testing.EchoRequest
 import app.cash.zipline.testing.EchoResponse
 import app.cash.zipline.testing.EchoService
+import app.cash.zipline.testing.GenericUnitService
 import app.cash.zipline.testing.PotatoService
 import app.cash.zipline.testing.SuspendingEchoService
 import app.cash.zipline.testing.SuspendingPotatoService
@@ -482,18 +483,38 @@ class ZiplineTest {
   @Test fun callUnitService() = runTest(dispatcher) {
     zipline.quickJs.evaluate("testing.app.cash.zipline.testing.prepareUnitServiceJsBridges()")
 
-    val unitService = zipline.take<UnitService>("unitService")
-    unitService.call()
-    unitService.call()
-    unitService.call()
-    assertThat(unitService.count()).isEqualTo(3)
-    unitService.callSuspending()
-    unitService.callSuspending()
-    assertThat(unitService.count()).isEqualTo(5)
-    assertThat(unitService.nullableUnitReturnsUnit()).isEqualTo(Unit)
-    assertThat(unitService.nullableUnitReturnsNull()).isNull()
-    assertThat(unitService.nullableUnitReturnsUnitSuspending()).isEqualTo(Unit)
-    assertThat(unitService.nullableUnitReturnsNullSuspending()).isNull()
+    val service = zipline.take<UnitService>("unitService")
+    service.call()
+    service.call()
+    service.call()
+    assertThat(service.count()).isEqualTo(3)
+    service.callSuspending()
+    service.callSuspending()
+    assertThat(service.count()).isEqualTo(5)
+    assertThat(service.nullableUnitReturnsUnit()).isEqualTo(Unit)
+    assertThat(service.nullableUnitReturnsNull()).isNull()
+    assertThat(service.nullableUnitReturnsUnitSuspending()).isEqualTo(Unit)
+    assertThat(service.nullableUnitReturnsNullSuspending()).isNull()
+  }
+
+  /** https://github.com/cashapp/zipline/issues/1719 */
+  @Test fun callGenericUnitService() = runTest(dispatcher) {
+    zipline.quickJs.evaluate(
+      script = "testing.app.cash.zipline.testing.prepareGenericUnitServiceJsBridges()",
+    )
+
+    val service = zipline.take<GenericUnitService<Unit>>("genericUnitService")
+    service.call()
+    service.call()
+    service.call()
+    assertThat(service.count()).isEqualTo(3)
+    service.callSuspending()
+    service.callSuspending()
+    assertThat(service.count()).isEqualTo(5)
+    assertThat(service.nullableUnitReturnsUnit()).isEqualTo(Unit)
+    assertThat(service.nullableUnitReturnsNull()).isNull()
+    assertThat(service.nullableUnitReturnsUnitSuspending()).isEqualTo(Unit)
+    assertThat(service.nullableUnitReturnsNullSuspending()).isNull()
   }
 
   private class JvmEchoService(private val greeting: String) : EchoService {

@@ -20,6 +20,6 @@ import app.cash.zipline.Zipline
 private val zipline by lazy { Zipline.get() }
 
 @JsExport
-fun prepareUnitServiceJsBridges() {
-  zipline.bind<UnitService>("unitService", RealUnitService())
+fun prepareGenericUnitServiceJsBridges() {
+  zipline.bind<GenericUnitService<Unit>>("genericUnitService", RealGenericUnitService())
 }
