@@ -33,6 +33,7 @@ import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irCallConstructor
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irGetObjectValue
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
@@ -112,11 +113,19 @@ internal class AdapterGenerator(
     //   serializer<Long>(),
     // )
     val serializersExpressions = adapterType.arguments.map { argumentType ->
-      irCall(
-        callee = ziplineApis.serializerFunctionNoReceiver,
-        type = ziplineApis.kSerializer.typeWith(argumentType as IrType),
-      ).apply {
-        typeArguments[0] = argumentType
+      val argument = argumentType as IrType
+      when {
+        argument.isUnit() -> irGetObjectValue(
+          classSymbol = ziplineApis.lenientUnitSerializer,
+          type = ziplineApis.kSerializer.typeWith(argument),
+        )
+
+        else -> irCall(
+          callee = ziplineApis.serializerFunctionNoReceiver,
+          type = ziplineApis.kSerializer.typeWith(argument),
+        ).apply {
+          typeArguments[0] = argumentType
+        }
       }
     }
     val serializersList = irCall(ziplineApis.listOfFunction).apply {

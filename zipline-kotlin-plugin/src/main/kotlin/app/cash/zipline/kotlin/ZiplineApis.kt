@@ -53,6 +53,7 @@ internal class ZiplineApis private constructor(
     private val serializersModuleClassId = serializationModulesFqPackage.classId("SerializersModule")
     private val ziplineClassId = ziplineFqPackage.classId("Zipline")
     private val outboundServiceClassId = bridgeFqPackage.classId("OutboundService")
+    private val lenientUnitSerializerClassId = bridgeFqPackage.classId("LenientUnitSerializer")
     val ziplineScopedClassId = ziplineFqPackage.classId("ZiplineScoped")
     val ziplineServiceClassId = ziplineFqPackage.classId("ZiplineService")
     private val ziplineServiceSerializerFunctionCallableId = ziplineFqPackage.callableId("ziplineServiceSerializer")
@@ -79,6 +80,9 @@ internal class ZiplineApis private constructor(
 
   val list: IrClassSymbol
     get() = pluginContext.referenceClass(StandardClassIds.List)!!
+
+  val lenientUnitSerializer: IrClassSymbol
+    get() = pluginContext.referenceClass(lenientUnitSerializerClassId)!!
 
   val listOfKSerializerStar: IrSimpleType
     get() = list.typeWith(kSerializer.starProjectedType)
