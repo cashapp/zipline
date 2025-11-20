@@ -12,7 +12,7 @@ android {
 
   defaultConfig {
     applicationId = "com.example.zipline.worldclock"
-    minSdk = 21
+    minSdk = 24
   }
 
   compileOptions {
