@@ -2,6 +2,7 @@ import co.touchlab.cklib.gradle.CompileToBitcode.Language.C
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.gradle.kotlin.dsl.withType
 import org.jetbrains.kotlin.gradle.plugin.NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
@@ -10,6 +11,7 @@ import org.jetbrains.kotlin.gradle.plugin.mpp.KotlinNativeTargetWithTests
 import org.jetbrains.kotlin.gradle.plugin.mpp.NativeBuildType
 import org.jetbrains.kotlin.gradle.plugin.mpp.TestExecutable
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
+import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
 
 plugins {
   kotlin("multiplatform")
@@ -291,4 +293,9 @@ configure<MavenPublishBaseExtension> {
   configure(
     KotlinMultiplatform(javadocJar = JavadocJar.Empty())
   )
+}
+
+tasks.withType<CInteropProcess>().configureEach {
+  // Tell Gradle: "If quickjs.c changes, this task is DIRTY"
+  inputs.file(layout.projectDirectory.file("native/quickjs/quickjs.c"))
 }
