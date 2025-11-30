@@ -34,7 +34,7 @@ jobs:
           ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.GPG_SECRET_KEY }}
           ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.GPG_SECRET_PASSPHRASE }}
 
-      - uses: ffurrer2/extract-release-notes@v2
+      - uses: ffurrer2/extract-release-notes@v3
         id: release_notes
 
       - uses: softprops/action-gh-release@v2
