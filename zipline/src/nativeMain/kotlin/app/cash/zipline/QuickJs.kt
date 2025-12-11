@@ -33,6 +33,7 @@ import app.cash.zipline.quickjs.JS_EVAL_FLAG_STRICT
 import app.cash.zipline.quickjs.JS_Eval
 import app.cash.zipline.quickjs.JS_EvalFunction
 import app.cash.zipline.quickjs.JS_FreeAtom
+import app.cash.zipline.quickjs.JS_FreeCString
 import app.cash.zipline.quickjs.JS_FreeContext
 import app.cash.zipline.quickjs.JS_FreeRuntime
 import app.cash.zipline.quickjs.JS_FreeValue
@@ -430,7 +431,13 @@ actual class QuickJs private constructor(
   internal fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? {
     return when (JsValueGetNormTag(this)) {
       JS_TAG_EXCEPTION -> throwJsException()
-      JS_TAG_STRING -> JS_ToCString(context, this)!!.toKStringFromUtf8()
+      JS_TAG_STRING -> {
+        val cString = JS_ToCString(context, this)!!
+        val string = cString.toKStringFromUtf8()
+        JS_FreeCString(context, cString)
+        string
+      }
+
       JS_TAG_BOOL -> JsValueGetBool(this) != 0
       JS_TAG_INT -> JsValueGetInt(this)
       JS_TAG_FLOAT64 -> JsValueGetFloat64(this)
