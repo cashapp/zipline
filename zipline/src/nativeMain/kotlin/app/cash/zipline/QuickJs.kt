@@ -20,6 +20,7 @@ package app.cash.zipline
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.INBOUND_CHANNEL_NAME
 import app.cash.zipline.internal.bridge.OUTBOUND_CHANNEL_NAME
+import app.cash.zipline.quickjs.JSCFunctionListEntry
 import app.cash.zipline.quickjs.JSClassDef
 import app.cash.zipline.quickjs.JSClassIDVar
 import app.cash.zipline.quickjs.JSContext
@@ -33,6 +34,7 @@ import app.cash.zipline.quickjs.JS_EVAL_FLAG_STRICT
 import app.cash.zipline.quickjs.JS_Eval
 import app.cash.zipline.quickjs.JS_EvalFunction
 import app.cash.zipline.quickjs.JS_FreeAtom
+import app.cash.zipline.quickjs.JS_FreeCString
 import app.cash.zipline.quickjs.JS_FreeContext
 import app.cash.zipline.quickjs.JS_FreeRuntime
 import app.cash.zipline.quickjs.JS_FreeValue
@@ -102,6 +104,7 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.cstr
+import kotlinx.cinterop.free
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.nativeHeap
 import kotlinx.cinterop.ptr
@@ -159,6 +162,7 @@ actual class QuickJs private constructor(
 
   private var closed = false
   private var outboundChannel: CallChannel? = null
+  private var functionList: CArrayPointer<JSCFunctionListEntry>? = null
 
   internal fun jsInterruptHandler(runtime: CPointer<JSRuntime>?): Int {
     val interruptHandler = interruptHandler ?: return 0
@@ -350,7 +354,7 @@ actual class QuickJs private constructor(
         throwJsException()
       }
 
-      val functionList = nativeHeap.allocArrayOf(
+      functionList = nativeHeap.allocArrayOf(
         JsCallFunction(staticCFunction(::outboundCall)),
         JsDisconnectFunction(staticCFunction(::outboundDisconnect)),
       )
@@ -396,6 +400,10 @@ actual class QuickJs private constructor(
 
   actual override fun close() {
     if (!closed) {
+      functionList?.let { ptr ->
+        nativeHeap.free(ptr)
+      }
+      functionList = null
       JS_FreeContext(contextForCompiling)
       JS_FreeContext(context)
       JS_FreeRuntime(runtime)
@@ -430,7 +438,13 @@ actual class QuickJs private constructor(
   internal fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? {
     return when (JsValueGetNormTag(this)) {
       JS_TAG_EXCEPTION -> throwJsException()
-      JS_TAG_STRING -> JS_ToCString(context, this)!!.toKStringFromUtf8()
+      JS_TAG_STRING -> {
+        val cString = JS_ToCString(context, this)!!
+        val string = cString.toKStringFromUtf8()
+        JS_FreeCString(context, cString)
+        string
+      }
+
       JS_TAG_BOOL -> JsValueGetBool(this) != 0
       JS_TAG_INT -> JsValueGetInt(this)
       JS_TAG_FLOAT64 -> JsValueGetFloat64(this)
