@@ -403,6 +403,7 @@ actual class QuickJs private constructor(
       functionList?.let { ptr ->
         nativeHeap.free(ptr)
       }
+      functionList = null
       JS_FreeContext(contextForCompiling)
       JS_FreeContext(context)
       JS_FreeRuntime(runtime)
