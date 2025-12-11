@@ -20,6 +20,7 @@ package app.cash.zipline
 import app.cash.zipline.internal.bridge.CallChannel
 import app.cash.zipline.internal.bridge.INBOUND_CHANNEL_NAME
 import app.cash.zipline.internal.bridge.OUTBOUND_CHANNEL_NAME
+import app.cash.zipline.quickjs.JSCFunctionListEntry
 import app.cash.zipline.quickjs.JSClassDef
 import app.cash.zipline.quickjs.JSClassIDVar
 import app.cash.zipline.quickjs.JSContext
@@ -103,6 +104,7 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.asStableRef
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.cstr
+import kotlinx.cinterop.free
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.nativeHeap
 import kotlinx.cinterop.ptr
@@ -160,6 +162,7 @@ actual class QuickJs private constructor(
 
   private var closed = false
   private var outboundChannel: CallChannel? = null
+  private var functionList: CArrayPointer<JSCFunctionListEntry>? = null
 
   internal fun jsInterruptHandler(runtime: CPointer<JSRuntime>?): Int {
     val interruptHandler = interruptHandler ?: return 0
@@ -351,7 +354,7 @@ actual class QuickJs private constructor(
         throwJsException()
       }
 
-      val functionList = nativeHeap.allocArrayOf(
+      functionList = nativeHeap.allocArrayOf(
         JsCallFunction(staticCFunction(::outboundCall)),
         JsDisconnectFunction(staticCFunction(::outboundDisconnect)),
       )
@@ -397,6 +400,9 @@ actual class QuickJs private constructor(
 
   actual override fun close() {
     if (!closed) {
+      functionList?.let { ptr ->
+        nativeHeap.free(ptr)
+      }
       JS_FreeContext(contextForCompiling)
       JS_FreeContext(context)
       JS_FreeRuntime(runtime)
