@@ -269,7 +269,7 @@ internal class AdapterGenerator(
       addValueParameter {
         initDefaults(original)
         name = Name.identifier("serialName")
-        type = pluginContext.symbols.string.defaultType
+        type = pluginContext.irBuiltIns.stringType
       }
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
@@ -325,10 +325,12 @@ internal class AdapterGenerator(
 
     adapterClass.addFakeOverrides(
       irTypeSystemContext,
-      listOf(
+      mapOf(
+        adapterClass to listOf(
         serialNameProperty,
         ziplineFunctionsFunction,
         outboundServiceFunction,
+      ),
       ),
     )
 
@@ -345,7 +347,7 @@ internal class AdapterGenerator(
     // override val serialName: String = serialName
     return irVal(
       pluginContext = pluginContext,
-      propertyType = pluginContext.symbols.string.defaultType,
+      propertyType = pluginContext.irBuiltIns.stringType,
       declaringClass = adapterClass,
       propertyName = ziplineApis.ziplineServiceAdapterSerialName.owner.name,
       overriddenProperty = ziplineApis.ziplineServiceAdapterSerialName,
@@ -362,7 +364,7 @@ internal class AdapterGenerator(
     // override val simpleName: String = "MyClass"
     return irVal(
       pluginContext = pluginContext,
-      propertyType = pluginContext.symbols.string.defaultType,
+      propertyType = pluginContext.irBuiltIns.stringType,
       declaringClass = adapterClass,
       propertyName = ziplineApis.ziplineServiceAdapterSimpleName.owner.name,
       overriddenProperty = ziplineApis.ziplineServiceAdapterSimpleName,
@@ -582,7 +584,7 @@ internal class AdapterGenerator(
     // We add overrides here, so we can call them below.
     functionClass.addFakeOverrides(
       irTypeSystemContext,
-      listOf(callFunction),
+      mapOf(functionClass to listOf(callFunction)),
     )
 
     callFunction.irFunctionBody(
@@ -629,7 +631,7 @@ internal class AdapterGenerator(
     return ziplineFunctionClass.addFunction {
       initDefaults(original)
       name = ziplineFunctionCall.owner.name
-      returnType = pluginContext.symbols.any.defaultType.makeNullable()
+      returnType = pluginContext.irBuiltIns.anyType.makeNullable()
       isSuspend = callSuspending
     }.apply {
       parameters += buildReceiverParameter {
@@ -899,7 +901,7 @@ internal class AdapterGenerator(
         arguments[1] = irGet(result.dispatchReceiverParameter!!)
         arguments[2] = irInt(functionIndex)
         arguments[3] = irVararg(
-          elementType = pluginContext.symbols.any.defaultType.makeNullable(),
+          elementType = pluginContext.irBuiltIns.anyType.makeNullable(),
           values = result.parameters
             .filter { it.kind == IrParameterKind.Regular }
             .map { irGet(type = it.type, variable = it.symbol) },
