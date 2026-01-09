@@ -21,7 +21,6 @@
 #include "InboundCallChannel.h"
 #include "ExceptionThrowers.h"
 #include "common/context-no-eval.h"
-#include "common/finalization-registry.h"
 #include "common/global-gc.h"
 #include "quickjs/quickjs.h"
 
@@ -97,11 +96,7 @@ Context::Context(JNIEnv* env)
   JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
 
   JS_AddGlobalThisGc(jsContext);
-
-  if (installFinalizationRegistry(jsContext, jsContextForCompiling) < 0) {
-    throwJavaException(env, "java/lang/IllegalStateException",
-                       "Failed to install FinalizationRegistry");
-  }
+  // FinalizationRegistry is now provided natively by QuickJS via JS_AddIntrinsicWeakRef
 }
 
 Context::~Context() {

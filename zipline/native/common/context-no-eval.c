@@ -38,5 +38,6 @@ JSContext *JS_NewContextNoEval(JSRuntime *jsRuntime) {
   JS_AddIntrinsicMapSet(jsContext);
   JS_AddIntrinsicTypedArrays(jsContext);
   JS_AddIntrinsicPromise(jsContext);
+  JS_AddIntrinsicWeakRef(jsContext);  // Adds WeakRef and FinalizationRegistry
   return jsContext;
 }
