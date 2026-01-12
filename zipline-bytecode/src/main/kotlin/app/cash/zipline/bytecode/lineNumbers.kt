@@ -21,11 +21,11 @@ import okio.Closeable
 
 /** Decode the pc2line table. */
 class LineNumberReader(
-  functionLineNumber: Int,
   private val source: BufferedSource,
 ) : Closeable by source {
   var pc: Int = 0
-  var line: Int = functionLineNumber
+  var line: Int = source.readLeb128() + 1
+  var column: Int = source.readLeb128() + 1
 
   fun next(): Boolean {
     if (source.exhausted()) return false
@@ -41,8 +41,12 @@ class LineNumberReader(
       diffPc = source.readLeb128()
       diffLine = source.readSleb128()
     }
+
+    val diffColumn: Int = source.readSleb128()
+
     pc += diffPc
     line += diffLine
+    column += diffColumn
 
     return true
   }
@@ -50,19 +54,25 @@ class LineNumberReader(
 
 /** Encode a pc2line table. */
 class LineNumberWriter(
-  functionLineNumber: Int,
   private val sink: BufferedSink,
+  private var lastLine: Int = 0,
+  private var lastColumn: Int = 0,
 ) : Closeable by sink {
   private var lastPc = 0
-  private var lastLine = functionLineNumber
 
-  fun next(pc: Int, line: Int) {
+  init {
+    sink.writeLeb128(lastLine - 1)
+    sink.writeLeb128(lastColumn - 1)
+  }
+
+  fun next(pc: Int, line: Int, column: Int) {
     if (line < 0) return // Drop negative line numbers.
 
     val diffPc = pc - lastPc
     val diffLine = line - lastLine
+    val diffColumn = column - lastColumn
 
-    if (diffLine == 0) return // Nothing to do.
+    if (diffLine == 0 && diffColumn == 0) return // Nothing to do.
     if (diffPc < 0) return // PC may only advance.
 
     val linePart = diffLine - PC2LINE_BASE
@@ -75,8 +85,11 @@ class LineNumberWriter(
       sink.writeSleb128(diffLine)
     }
 
+    sink.writeSleb128(diffColumn)
+
     lastPc = pc
     lastLine = line
+    lastColumn = column
   }
 }
 

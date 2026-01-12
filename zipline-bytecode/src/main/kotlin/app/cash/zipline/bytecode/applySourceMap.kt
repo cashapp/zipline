@@ -70,16 +70,17 @@ private class SourceMapBytecodeRewriter(
     val ktPc2LineBuffer = Buffer()
 
     val jsReader = LineNumberReader(
-      functionLineNumber = lineNumber,
       source = Buffer().write(pc2Line),
     )
 
     var ktFileName: String? = null
     var functionKtLineNumber: Int = -1
+    var functionKtColumnNumber: Int = -1
     lateinit var ktWriter: LineNumberWriter
     while (jsReader.next()) {
       val segment = sourceMap.find(jsReader.line)
       val instructionKtLineNumber = segment?.sourceLine?.toInt() ?: jsReader.line
+      val instructionKtColumnNumber = segment?.sourceColumn?.toInt() ?: jsReader.column
 
       // If we haven't initialized declaration-level data, do that now. We'd prefer to map from the
       // source declaration line number, but we can't because that information isn't in the source
@@ -89,16 +90,17 @@ private class SourceMapBytecodeRewriter(
           atoms.add(it)
         }
         functionKtLineNumber = instructionKtLineNumber
-        ktWriter = LineNumberWriter(functionKtLineNumber, ktPc2LineBuffer)
+        functionKtColumnNumber = instructionKtColumnNumber
+        ktWriter = LineNumberWriter(ktPc2LineBuffer, functionKtLineNumber, functionKtColumnNumber)
       }
 
-      ktWriter.next(jsReader.pc, instructionKtLineNumber)
+      ktWriter.next(jsReader.pc, instructionKtLineNumber, instructionKtColumnNumber)
     }
 
     return Debug(
       fileName = ktFileName ?: fileName,
-      lineNumber = functionKtLineNumber,
       pc2Line = ktPc2LineBuffer.readByteString(),
+      source = source,
     )
   }
 }

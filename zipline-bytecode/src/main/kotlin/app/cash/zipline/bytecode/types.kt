@@ -58,7 +58,8 @@ data class JsFunctionBytecode(
   val varCount: Int,
   val definedArgCount: Int,
   val stackSize: Int,
-  val locals: List<JsVarDef>,
+  val varRefCount: Int,
+  val locals: List<JsBytecodeVarDef>,
   val closureVars: List<JsClosureVar>,
   val bytecode: ByteString,
   val constantPool: List<JsObject>,
@@ -74,33 +75,34 @@ data class JsFunctionBytecode(
   val superAllowed get() = flags.bit(8)
   val argumentsAllowed get() = flags.bit(9)
   val hasDebug get() = flags.bit(10)
-  val backtraceBarrier get() = flags.bit(11)
+  val readOnlyBytecode get() = flags.bit(11)
+  val isDirectOrIndirectEval get() = flags.bit(12)
 }
 
-data class JsVarDef(
+data class JsBytecodeVarDef(
   val name: String,
-  val scopeLevel: Int,
   val scopeNext: Int,
   // JsVarKindEnum
   val kind: Int,
   val isConst: Boolean,
   val isLexical: Boolean,
   val isCaptured: Boolean,
+  val hasScope: Boolean,
+  val varRefIdx: Int,
 )
 
 data class JsClosureVar(
   val name: String,
   val varIndex: Int,
-  val isLocal: Boolean,
-  val isArg: Boolean,
-  val isConst: Boolean,
+  val closureType: Int,
   val isLexical: Boolean,
+  val isConst: Boolean,
   // JsVarKindEnum
   val kind: Int,
 )
 
 data class Debug(
   val fileName: String,
-  val lineNumber: Int,
   val pc2Line: ByteString,
+  val source: ByteString,
 )

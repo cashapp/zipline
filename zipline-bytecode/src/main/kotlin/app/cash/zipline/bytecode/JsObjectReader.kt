@@ -96,12 +96,13 @@ class JsObjectReader(
     val varCount = source.readLeb128()
     val definedArgCount = source.readLeb128()
     val stackSize = source.readLeb128()
+    val varRefCount = source.readLeb128()
     val closureVarCount = source.readLeb128()
     val constantPoolCount = source.readLeb128()
     val bytecodeLength = source.readLeb128()
     val localCount = source.readLeb128()
 
-    val locals = mutableListOf<JsVarDef>()
+    val locals = mutableListOf<JsBytecodeVarDef>()
     for (i in 0 until localCount) {
       locals += readVarDef()
     }
@@ -130,6 +131,7 @@ class JsObjectReader(
       varCount = varCount,
       definedArgCount = definedArgCount,
       stackSize = stackSize,
+      varRefCount = varRefCount,
       locals = locals,
       closureVars = closureVars,
       bytecode = bytecode,
@@ -152,46 +154,47 @@ class JsObjectReader(
     return value
   }
 
-  private fun readVarDef(): JsVarDef {
+  private fun readVarDef(): JsBytecodeVarDef {
     val name = readAtomString()
-    val scopeLevel = source.readLeb128()
     val scopeNext = source.readLeb128() - 1
+    val varRefIdx = source.readLeb128()
     val flags = source.readByte().toInt()
-    return JsVarDef(
+    return JsBytecodeVarDef(
       name = name.string,
-      scopeLevel = scopeLevel,
       scopeNext = scopeNext,
       kind = flags.bits(bit = 0, bitCount = 4),
       isConst = flags.bit(4),
       isLexical = flags.bit(5),
       isCaptured = flags.bit(6),
+      hasScope = flags.bit(7),
+      varRefIdx = varRefIdx,
     )
   }
 
   private fun readClosureVar(): JsClosureVar {
     val name = readAtomString()
     val varIndex = source.readLeb128()
-    val flags = source.readByte().toInt()
+    val flags = source.readShortLe().toInt()
     return JsClosureVar(
       name = name.string,
       varIndex = varIndex,
-      isLocal = flags.bit(0),
-      isArg = flags.bit(1),
-      isConst = flags.bit(2),
+      closureType = flags.bits(bit = 0, bitCount = 3),
       isLexical = flags.bit(3),
-      kind = flags.bits(bit = 4, bitCount = 4),
+      isConst = flags.bit(4),
+      kind = flags.bits(bit = 5, bitCount = 4),
     )
   }
 
   private fun readDebug(): Debug {
     val fileName = readAtomString()
-    val lineNumber = source.readLeb128()
     val pc2lineLength = source.readLeb128()
     val pc2line = source.readByteString(pc2lineLength.toLong())
+    val sourceLength = source.readLeb128()
+    val source = source.readByteString(sourceLength.toLong())
     return Debug(
       fileName = fileName.string,
-      lineNumber = lineNumber,
       pc2Line = pc2line,
+      source = source,
     )
   }
 }
