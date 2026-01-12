@@ -2,17 +2,25 @@
 
 ## Unreleased
 
+Nothing yet!
+
+
+## [1.25.0] - 2026-01-12
+[1.25.0]: https://github.com/cashapp/zipline/releases/tag/1.25.0
+
  * Fix: Work-around the Kotlin compiler returning a non-`Unit` value for a function that declares
    `Unit` as its return value. We'd previously observed this problem with Kotlin/JS and recently
    started seeing it in Kotlin/JVM also.
+ * Fix: Prevent some memory leaks on native.
+ * Upgrade: [Kotlin 2.3.0](https://github.com/JetBrains/kotlin/releases/tag/v2.3.0).
 
 
 ## [1.24.0] - 2025-10-23
 [1.24.0]: https://github.com/cashapp/zipline/releases/tag/1.24.0
 
-* New: Add JVM support for Windows (x64 and ARM).
-* In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
-* Upgrade: [Kotlin 2.2.21](https://github.com/JetBrains/kotlin/releases/tag/v2.2.21).
+ * New: Add JVM support for Windows (x64 and ARM).
+ * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
+ * Upgrade: [Kotlin 2.2.21](https://github.com/JetBrains/kotlin/releases/tag/v2.2.21).
 
 
 ## [1.23.0] - 2025-09-09
