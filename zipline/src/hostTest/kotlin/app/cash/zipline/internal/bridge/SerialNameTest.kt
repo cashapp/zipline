@@ -90,10 +90,7 @@ class SerialNameTest {
       ),
     )
     assertEquals(
-      expected = "SomeType<" +
-        "app.cash.zipline.internal.bridge.SomeRecursiveType<" +
-        "app.cash.zipline.internal.bridge.SomeRecursiveType?<app.cash.zipline.internal.bridge.SomeRecursiveType?>" +
-        ">>",
+      expected = "SomeType<app.cash.zipline.internal.bridge.SomeRecursiveType<app.cash.zipline.internal.bridge.SomeRecursiveType?<[CIRCULAR]>>>",
       actual = serialName,
     )
   }

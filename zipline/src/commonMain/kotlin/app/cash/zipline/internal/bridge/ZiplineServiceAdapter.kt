@@ -95,7 +95,7 @@ internal fun serialName(typeName: String, serializers: List<KSerializer<*>>): St
 private fun descriptorName(typeName: SerialDescriptor, visited: MutableSet<SerialDescriptor> = mutableSetOf()): String {
   // Check if we've already visited this descriptor to avoid infinite recursion
   if (!visited.add(typeName)) {
-    return typeName.serialName
+    return "[CIRCULAR]"
   }
 
   return buildString {
