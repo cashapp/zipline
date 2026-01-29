@@ -57,8 +57,7 @@ internal abstract class ZiplineServiceAdapter<T : ZiplineService> : KSerializer<
     return reference.take(this)
   }
 
-  override fun equals(other: Any?) =
-    other is ZiplineServiceAdapter<*> &&
+  override fun equals(other: Any?) = other is ZiplineServiceAdapter<*> &&
     this::class == other::class &&
     serializers == other.serializers
 

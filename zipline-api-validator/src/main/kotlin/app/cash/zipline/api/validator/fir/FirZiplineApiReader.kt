@@ -16,25 +16,31 @@
 package app.cash.zipline.api.validator.fir
 
 import java.io.File
+import org.jetbrains.kotlin.fir.FirElement
 import org.jetbrains.kotlin.fir.FirSession
 import org.jetbrains.kotlin.fir.analysis.checkers.isSupertypeOf
-import org.jetbrains.kotlin.fir.analysis.checkers.toClassLikeSymbol
-import org.jetbrains.kotlin.fir.declarations.FirDeclaration
-import org.jetbrains.kotlin.fir.declarations.FirFunction
-import org.jetbrains.kotlin.fir.declarations.FirProperty
+import org.jetbrains.kotlin.fir.declarations.FirFile
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.utils.isInterface
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.pipeline.FirResult
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
+import org.jetbrains.kotlin.fir.resolve.toClassLikeSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirFunctionSymbol
+import org.jetbrains.kotlin.fir.symbols.impl.FirPropertySymbol
 import org.jetbrains.kotlin.fir.types.FirResolvedTypeRef
 import org.jetbrains.kotlin.fir.types.FirStarProjection
 import org.jetbrains.kotlin.fir.types.FirTypeProjection
 import org.jetbrains.kotlin.fir.types.FirTypeProjectionWithVariance
 import org.jetbrains.kotlin.fir.types.FirTypeRef
 import org.jetbrains.kotlin.fir.types.FirUserTypeRef
+import org.jetbrains.kotlin.fir.types.abbreviatedTypeOrSelf
+import org.jetbrains.kotlin.fir.types.coneType
+import org.jetbrains.kotlin.fir.types.lookupTagIfAny
+import org.jetbrains.kotlin.fir.visitors.FirDefaultVisitor
 import org.jetbrains.kotlin.name.ClassId
 import org.jetbrains.kotlin.name.FqName
 import org.jetbrains.kotlin.name.Name
@@ -73,7 +79,7 @@ internal class FirZiplineApiReader(
 
   fun read(): FirZiplineApi {
     val types = platformOutput.fir
-      .flatMap { it.declarations.findRegularClassesRecursive() }
+      .flatMap { it.regularClasses() }
       .filter { it.isInterface && it.isZiplineService }
 
     val services = types
@@ -105,15 +111,15 @@ internal class FirZiplineApiReader(
       if (!supertype.isInterface) continue // Skip kotlin.Any.
       if (supertype.symbol.classId == autoCloseableClassId) continue // Skip AutoCloseable.
 
-      for (declaration in supertype.declarations) {
-        when (declaration) {
-          is FirFunction -> {
-            if (declaration.isNonInterfaceFunction) continue
-            result += declaration.asDeclaredZiplineFunction()
+      supertype.processAllDeclarations(session) { symbol ->
+        when (symbol) {
+          is FirFunctionSymbol -> {
+            if (symbol.isNonInterfaceFunction) return@processAllDeclarations
+            result += symbol.asDeclaredZiplineFunction()
           }
 
-          is FirProperty -> {
-            result += declaration.asDeclaredZiplineFunction()
+          is FirPropertySymbol -> {
+            result += symbol.asDeclaredZiplineFunction()
           }
 
           else -> Unit
@@ -124,31 +130,31 @@ internal class FirZiplineApiReader(
     return result.toList()
   }
 
-  private val FirFunction.isNonInterfaceFunction: Boolean
-    get() = symbol.name.identifier in NON_INTERFACE_FUNCTION_NAMES
+  private val FirFunctionSymbol<*>.isNonInterfaceFunction: Boolean
+    get() = name.identifier in NON_INTERFACE_FUNCTION_NAMES
 
-  private fun FirFunction.asDeclaredZiplineFunction(): FirZiplineFunction {
+  private fun FirFunctionSymbol<*>.asDeclaredZiplineFunction(): FirZiplineFunction {
     val signature = buildString {
       if (isSuspend) append("suspend ")
-      append("fun ${symbol.name.identifier}(")
-      append(valueParameters.joinToString { it.returnTypeRef.asString() })
-      append("): ${returnTypeRef.asString()}")
+      append("fun ${name.identifier}(")
+      valueParameterSymbols.joinTo(this) { it.resolvedReturnTypeRef.asString() }
+      append("): ${resolvedReturnTypeRef.asString()}")
     }
 
     return FirZiplineFunction(signature)
   }
 
-  private fun FirProperty.asDeclaredZiplineFunction(): FirZiplineFunction {
-    val signature = when {
-      isVar -> "var ${symbol.name.identifier}: ${returnTypeRef.asString()}"
-      else -> "val ${symbol.name.identifier}: ${returnTypeRef.asString()}"
-    }
+  private fun FirPropertySymbol.asDeclaredZiplineFunction(): FirZiplineFunction {
+    val valOrVar = if (isVar) "var" else "val"
+    val signature = "$valOrVar ${name.identifier}: ${resolvedReturnTypeRef.asString()}"
     return FirZiplineFunction(signature)
   }
 
   /** See [app.cash.zipline.kotlin.asString]. */
   private fun FirTypeRef.asString(): String {
-    val classLikeSymbol = toClassLikeSymbol(session) ?: error("unexpected class: $this")
+    // Abbreviated type gets us the name of typealiases rather than what they expand to.
+    val classLikeSymbol = coneType.abbreviatedTypeOrSelf.lookupTagIfAny
+      ?.toClassLikeSymbol(session) ?: error("unexpected class: $this")
 
     val typeRef = when (this) {
       is FirResolvedTypeRef -> delegatedTypeRef ?: this
@@ -183,8 +189,28 @@ internal class FirZiplineApiReader(
     }
   }
 
-  private fun List<FirDeclaration>.findRegularClassesRecursive(): List<FirRegularClass> {
-    val classes = filterIsInstance<FirRegularClass>()
-    return classes + classes.flatMap { it.declarations.findRegularClassesRecursive() }
+  /** Collect all regular class declarations in this. */
+  private fun FirFile.regularClasses(): List<FirRegularClass> {
+    val result = mutableListOf<FirRegularClass>()
+    accept(
+      visitor = object : FirDefaultVisitor<Unit, MutableList<FirRegularClass>>() {
+        override fun visitRegularClass(
+          regularClass: FirRegularClass,
+          data: MutableList<FirRegularClass>,
+        ) {
+          super.visitRegularClass(regularClass, data)
+          data.add(regularClass)
+        }
+
+        override fun visitElement(
+          element: FirElement,
+          data: MutableList<FirRegularClass>,
+        ) {
+          element.acceptChildren(this, data)
+        }
+      },
+      data = result,
+    )
+    return result
   }
 }

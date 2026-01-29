@@ -130,7 +130,8 @@ object ZiplineTestInternals {
 
     private class GeneratedOutboundService(
       override val callHandler: OutboundCallHandler,
-    ) : EchoService, OutboundService {
+    ) : EchoService,
+      OutboundService {
 
       override fun echo(request: EchoRequest): EchoResponse {
         return callHandler.call(this, 0, request) as EchoResponse
@@ -172,7 +173,8 @@ object ZiplineTestInternals {
     }
 
     private class GeneratedOutboundService(override val callHandler: OutboundCallHandler) :
-      GenericEchoService<String>, OutboundService {
+      GenericEchoService<String>,
+      OutboundService {
 
       override fun genericEcho(request: String): List<String> {
         return callHandler.call(this, 0, request) as List<String>
@@ -215,7 +217,8 @@ object ZiplineTestInternals {
     }
 
     private class GeneratedOutboundService(override val callHandler: OutboundCallHandler) :
-      EchoZiplineService, OutboundService {
+      EchoZiplineService,
+      OutboundService {
 
       override fun echo(request: EchoRequest): EchoResponse {
         return callHandler.call(this, 0, request) as EchoResponse

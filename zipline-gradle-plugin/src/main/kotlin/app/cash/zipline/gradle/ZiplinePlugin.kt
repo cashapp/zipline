@@ -24,6 +24,7 @@ import org.gradle.api.artifacts.Configuration
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.internal.jvm.Jvm
+import org.jetbrains.kotlin.gradle.dsl.JsModuleKind.MODULE_UMD
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation
 import org.jetbrains.kotlin.gradle.plugin.KotlinCompilerPluginSupportPlugin
@@ -58,12 +59,29 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     val ziplineExtension = target.extensions.create("zipline", ZiplineExtension::class.java)
     ziplineExtension.apiTracking.convention(true)
 
+    val cliConfiguration: Configuration = target.configurations.create("ziplineCli")
+      .apply {
+        isCanBeConsumed = false
+        isVisible = false
+      }
+    target.dependencies.add(
+      cliConfiguration.name,
+      target.ziplineDependency("zipline-cli"),
+    )
+
     kotlinExtension.targets.withType(KotlinJsIrTarget::class.java).all { kotlinTarget ->
+      kotlinTarget.compilerOptions {
+        // Target latest JS to get classes, arrow functions, etc.
+        this.target.set("es2015")
+        // But our loader requires we still use the old module format.
+        this.moduleKind.set(MODULE_UMD)
+      }
       kotlinTarget.binaries.withType(JsIrBinary::class.java).all { kotlinBinary ->
         registerCompileZiplineTask(
           project = target,
           jsProductionTask = kotlinBinary.asJsProductionTask(),
           extension = ziplineExtension,
+          cliConfiguration = cliConfiguration,
         )
       }
     }
@@ -77,6 +95,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
         project = target,
         jsProductionTask = jsProductionTask,
         extension = ziplineExtension,
+        cliConfiguration = cliConfiguration,
       )
       ziplineCompileTask.configure {
         it.dependsOn(kotlinWebpack)
@@ -88,16 +107,6 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       )
       kotlinWebpack.dependsOn(writeWebpackConfigTask)
     }
-
-    val cliConfiguration: Configuration = target.configurations.create("ziplineCli")
-      .apply {
-        isCanBeConsumed = false
-        isVisible = false
-      }
-    target.dependencies.add(
-      cliConfiguration.name,
-      target.ziplineDependency("zipline-cli"),
-    )
 
     target.afterEvaluate {
       if (ziplineExtension.apiTracking.get()) {
@@ -121,6 +130,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     project: Project,
     jsProductionTask: JsProductionTask,
     extension: ZiplineExtension,
+    cliConfiguration: Configuration,
   ): TaskProvider<ZiplineCompileTask> {
     val target = (if (jsProductionTask.targetName == "js") "" else jsProductionTask.targetName)
     val mode = jsProductionTask.mode.name
@@ -133,9 +143,8 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     val ziplineCompileTask = project.tasks.register(
       "${jsProductionTask.name}Zipline",
       ZiplineCompileTask::class.java,
-    )
-    ziplineCompileTask.configure {
-      it.configure(outputDirectoryName, jsProductionTask, extension)
+    ) {
+      it.configure(outputDirectoryName, jsProductionTask, extension, cliConfiguration)
     }
 
     val serveTaskName = "serve${target.capitalize()}${mode.capitalize()}${toolName}Zipline"

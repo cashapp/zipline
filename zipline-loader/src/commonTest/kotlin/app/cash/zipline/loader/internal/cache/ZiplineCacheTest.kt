@@ -15,6 +15,8 @@
  */
 package app.cash.zipline.loader.internal.cache
 
+import app.cash.sqldelight.db.QueryResult
+import app.cash.sqldelight.db.SqlSchema
 import app.cash.zipline.loader.LoaderEventListener
 import app.cash.zipline.loader.ZiplineCache
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
@@ -366,17 +368,18 @@ class ZiplineCacheTest {
       path = directory / "zipline.db",
       schema = Database.Schema,
     )
-    val database = createDatabase(driver)
+
+    val testSqlDriverFactory = object : SqlDriverFactory {
+      override fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>) = driver
+    }
 
     val cache = ZiplineCache(
-      driver = driver,
-      database = database,
+      sqlDriverFactory = testSqlDriverFactory,
       fileSystem = fileSystem,
       directory = directory,
       maxSizeInBytes = cacheSize.toLong(),
       loaderEventListener = LoaderEventListener.None,
     )
-    cache.initialize()
     try {
       return block(cache)
     } finally {
@@ -420,8 +423,7 @@ class ZiplineCacheTest {
     download: suspend () -> ByteString,
   ) = getOrPut(applicationName, sha256, nowMillis, download)
 
-  private fun ZiplineCache.getPinnedManifest(applicationName: String) =
-    getPinnedManifest(applicationName, nowMillis)
+  private fun ZiplineCache.getPinnedManifest(applicationName: String) = getPinnedManifest(applicationName, nowMillis)
 
   private fun ZiplineCache.pinManifest(
     applicationName: String,

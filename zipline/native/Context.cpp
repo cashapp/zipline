@@ -22,6 +22,7 @@
 #include "ExceptionThrowers.h"
 #include "common/context-no-eval.h"
 #include "common/finalization-registry.h"
+#include "common/global-gc.h"
 #include "quickjs/quickjs.h"
 
 /**
@@ -94,6 +95,8 @@ Context::Context(JNIEnv* env)
   env->GetJavaVM(&javaVm);
   JS_SetRuntimeOpaque(jsRuntime, this);
   JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
+
+  JS_AddGlobalThisGc(jsContext);
 
   if (installFinalizationRegistry(jsContext, jsContextForCompiling) < 0) {
     throwJavaException(env, "java/lang/IllegalStateException",

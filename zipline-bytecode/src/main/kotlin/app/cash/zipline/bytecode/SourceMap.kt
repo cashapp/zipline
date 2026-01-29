@@ -56,15 +56,19 @@ data class SourceMap(
   }
 
   companion object {
+    private val json = Json {
+      ignoreUnknownKeys = true
+    }
+
     /**
      * Parses the contents of a source map file to enable mapping from the elements in the
      * transformed (e.g. minified) source to the elements in the original source. This is an
-     * implementation of the [Source Map Revision 3 Proposal](https://sourcemaps.info/spec.html).
+     * implementation of the [Source Map specification](https://tc39.es/ecma426).
      *
      * @param sourceMapJson contents of the source map file in JSON format.
      */
     fun parse(sourceMapJson: String): SourceMap {
-      val sourceMap = Json.decodeFromString(SourceMapJson.serializer(), sourceMapJson)
+      val sourceMap = json.decodeFromString(SourceMapJson.serializer(), sourceMapJson)
 
       val buffer = Buffer()
 

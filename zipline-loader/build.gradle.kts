@@ -1,3 +1,4 @@
+import com.android.build.api.variant.HostTestBuilder.Companion.UNIT_TEST_TYPE
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
@@ -15,7 +16,7 @@ plugins {
 kotlin {
   jvm()
   androidTarget {
-    publishAllLibraryVariants()
+    publishLibraryVariants("release")
   }
   if (false) {
     linuxX64()
@@ -127,20 +128,17 @@ android {
   }
 }
 
+androidComponents {
+  beforeVariants { variant ->
+    variant.hostTests[UNIT_TEST_TYPE]?.enable = false
+  }
+}
+
 sqldelight {
   databases {
     create("Database") {
       packageName.set("app.cash.zipline.loader.internal.cache")
     }
-  }
-}
-
-afterEvaluate {
-  tasks.named("compileDebugUnitTestKotlinAndroid") {
-    enabled = false
-  }
-  tasks.named("compileReleaseUnitTestKotlinAndroid") {
-    enabled = false
   }
 }
 

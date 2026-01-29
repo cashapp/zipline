@@ -32,6 +32,7 @@ import okio.ByteString.Companion.encodeUtf8
  * Use [ZiplineManifest.create] to create instances.
  */
 @Serializable
+@ExposedCopyVisibility // For binary compatibility.
 data class ZiplineManifest private constructor(
   /** Metadata on this manifest that isn't authenticated by a signature. */
   val unsigned: Unsigned = Unsigned(),

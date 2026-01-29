@@ -23,10 +23,10 @@ import app.cash.sqldelight.db.SqlSchema
 import app.cash.sqldelight.driver.android.AndroidSqliteDriver
 import okio.Path
 
-internal actual class SqlDriverFactory(
+internal class AndroidSqliteDriverFactory(
   private val context: Context,
-) {
-  actual fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>): SqlDriver {
+) : SqlDriverFactory {
+  override fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>): SqlDriver {
     validateDbPath(path)
     return AndroidSqliteDriver(
       schema = schema,

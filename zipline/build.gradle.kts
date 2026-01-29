@@ -20,6 +20,7 @@ plugins {
   id("co.touchlab.cklib")
   id("com.github.gmazzo.buildconfig")
   id("binary-compatibility-validator")
+  id("com.jakewharton.test-distribution")
 }
 
 val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
@@ -137,6 +138,7 @@ kotlin {
           header(file("native/quickjs/quickjs.h"))
           header(file("native/common/context-no-eval.h"))
           header(file("native/common/finalization-registry.h"))
+          header(file("native/common/global-gc.h"))
           packageName("app.cash.zipline.quickjs")
         }
       }
@@ -187,7 +189,8 @@ cklib {
         "-Wno-unused-function",
         "-Wno-error=atomic-alignment",
         "-Wno-sign-compare",
-        "-Wno-unused-parameter" /* for windows 32 */
+        "-Wno-unused-parameter", /* for windows 32 */
+        "-D_Float16=short", // KT-69094
       )
     )
   }

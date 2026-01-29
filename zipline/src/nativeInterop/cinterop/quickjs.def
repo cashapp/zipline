@@ -1,6 +1,7 @@
 noStringConversion = \
 	JS_Eval \
-	JS_NewString
+	JS_NewString \
+	JS_FreeCString
 
 ---
 

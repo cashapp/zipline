@@ -59,7 +59,7 @@ internal class AddAdapterArgumentRewriter(
   private val rewrittenFunction: IrSimpleFunctionSymbol,
 ) {
   /** The user-defined interface type, like `SampleService` above. */
-  private val bridgedInterfaceType: IrType = original.getTypeArgument(0)!!
+  private val bridgedInterfaceType: IrType = original.typeArguments[0]!!
 
   private val bridgedInterface = BridgedInterface.create(
     pluginContext,
@@ -79,7 +79,7 @@ internal class AddAdapterArgumentRewriter(
     ).adapterExpression(bridgedInterfaceType as IrSimpleType)
 
     return irCall(original, rewrittenFunction).apply {
-      putValueArgument(valueArgumentsCount - 1, adapterExpression)
+      arguments += adapterExpression
       patchDeclarationParents(declarationParent)
     }
   }

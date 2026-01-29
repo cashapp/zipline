@@ -1,5 +1,6 @@
 public abstract interface class app/cash/zipline/cryptography/SecureRandom {
 	public abstract fun nextBytes ([BII)V
+	public static synthetic fun nextBytes$default (Lapp/cash/zipline/cryptography/SecureRandom;[BIIILjava/lang/Object;)V
 	public abstract fun nextLong ()J
 }
 

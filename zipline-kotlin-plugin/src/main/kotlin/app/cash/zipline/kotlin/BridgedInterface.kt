@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
@@ -25,6 +26,7 @@ import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irTemporary
 import org.jetbrains.kotlin.ir.builders.irVararg
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParameter
 import org.jetbrains.kotlin.ir.declarations.IrValueParameter
@@ -118,7 +120,8 @@ internal class BridgedInterface(
   ): Map<IrType, IrVariable> {
     val requiredTypes = mutableSetOf<IrType>()
     for (bridgedFunction in bridgedFunctions) {
-      for (valueParameter in bridgedFunction.owner.valueParameters) {
+      for (valueParameter in bridgedFunction.owner.parameters) {
+        if (valueParameter.kind != IrParameterKind.Regular) continue
         requiredTypes += resolveTypeParameters(valueParameter.type)
       }
       val resolvedReturnType = resolveTypeParameters(bridgedFunction.owner.returnType)
@@ -180,13 +183,10 @@ internal class BridgedInterface(
     }
     val parameterList = irCall(ziplineApis.listOfFunction).apply {
       this.type = ziplineApis.listOfKSerializerStar
-      putTypeArgument(0, ziplineApis.kSerializer.starProjectedType)
-      putValueArgument(
-        0,
-        irVararg(
-          ziplineApis.kSerializer.starProjectedType,
-          parameterExpressions.map { it.expression },
-        ),
+      typeArguments[0] = ziplineApis.kSerializer.starProjectedType
+      arguments[0] = irVararg(
+        ziplineApis.kSerializer.starProjectedType,
+        parameterExpressions.map { it.expression },
       )
     }
 
@@ -202,7 +202,7 @@ internal class BridgedInterface(
           type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
           dispatchReceiver = irGet(serializersExpression)
-          putValueArgument(0, irInt(classifierOwner.index))
+          arguments[1] = irInt(classifierOwner.index)
         }
       }
 
@@ -228,16 +228,17 @@ internal class BridgedInterface(
           callee = ziplineApis.requireContextual,
           type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
-          extensionReceiver = irGet(serializersModuleParameter)
           // TODO: call remapTypeParameters passing typeIrClass and the AdapterClass we're making
-          putTypeArgument(0, type)
-          putValueArgument(
-            0,
-            irKClass(pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner),
-          )
-          putValueArgument(1, parameterList)
+          typeArguments[0] = type
+          arguments[0] = irGet(serializersModuleParameter)
+          arguments[1] = irKClass(pluginContext.referenceClass(type.getClass()!!.classId!!)!!.owner)
+          arguments[2] = parameterList
         }
-        wrapWithNullableSerializerIfNeeded(type, contextualSerializerExpression, ziplineApis.nullableSerializer)
+        wrapWithNullableSerializerIfNeeded(
+          type,
+          contextualSerializerExpression,
+          ziplineApis.nullableSerializer,
+        )
       }
 
       else -> {
@@ -247,8 +248,8 @@ internal class BridgedInterface(
           type = ziplineApis.kSerializer.starProjectedType,
         ).apply {
           // TODO: call remapTypeParameters passing typeIrClass and the AdapterClass we're making
-          putTypeArgument(0, type)
-          extensionReceiver = irGet(serializersModuleParameter)
+          typeArguments[0] = type
+          arguments[0] = irGet(serializersModuleParameter)
         }
       }
     }
@@ -326,7 +327,9 @@ private fun IrBuilderWithScope.wrapWithNullableSerializerIfNeeded(
     typeArguments = typeArguments,
     valueArguments = emptyList(),
     returnTypeHint = returnType,
-  ).apply { extensionReceiver = expression }
+  ).apply {
+    arguments[0] = expression
+  }
 } else {
   expression
 }

@@ -6,16 +6,12 @@ import org.jetbrains.kotlin.gradle.plugin.KotlinCompilation.Companion.TEST_COMPI
 
 plugins {
   kotlin("jvm")
-  id("com.google.devtools.ksp")
   id("com.vanniktech.maven.publish.base")
 }
 
 dependencies {
   api(kotlin("compiler-embeddable"))
   api(libs.okio.core)
-
-  ksp(libs.auto.service.compiler)
-  compileOnly(libs.auto.service.annotations)
 
   testImplementation(projects.zipline)
   testImplementation(libs.assertk)

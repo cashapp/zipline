@@ -58,7 +58,6 @@ class ProductionFetcherReceiverTest {
   @AfterTest
   fun tearDown() {
     tester.afterTest()
-    cache.close()
   }
 
   @Test

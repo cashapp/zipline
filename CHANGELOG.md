@@ -2,6 +2,104 @@
 
 ## Unreleased
 
+Nothing yet!
+
+
+## [1.25.0] - 2026-01-12
+[1.25.0]: https://github.com/cashapp/zipline/releases/tag/1.25.0
+
+ * Fix: Work-around the Kotlin compiler returning a non-`Unit` value for a function that declares
+   `Unit` as its return value. We'd previously observed this problem with Kotlin/JS and recently
+   started seeing it in Kotlin/JVM also.
+ * Fix: Prevent some memory leaks on native.
+ * Upgrade: [Kotlin 2.3.0](https://github.com/JetBrains/kotlin/releases/tag/v2.3.0).
+
+
+## [1.24.0] - 2025-10-23
+[1.24.0]: https://github.com/cashapp/zipline/releases/tag/1.24.0
+
+ * New: Add JVM support for Windows (x64 and ARM).
+ * In-development snapshots are now published to the Central Portal Snapshots repository at https://central.sonatype.com/repository/maven-snapshots/.
+ * Upgrade: [Kotlin 2.2.21](https://github.com/JetBrains/kotlin/releases/tag/v2.2.21).
+
+
+## [1.23.0] - 2025-09-09
+[1.23.0]: https://github.com/cashapp/zipline/releases/tag/1.23.0
+
+ * Fix: Recover from more full disk exceptions. We had a bug on Kotlin/Native where Zipline would
+   crash if it was unable to create the cache directory.
+ * Upgrade: [Kotlin 2.2.10][kotlin_2_2_10].
+ * Upgrade: [Okio 3.16.0][okio_3_16_0].
+
+
+## [1.22.0] - 2025-07-25
+[1.22.0]: https://github.com/cashapp/zipline/releases/tag/1.22.0
+
+ * Upgrade: [Kotlin 2.2.0][kotlin_2_2_0].
+ * Upgrade: [OkHttp 5.1.0][okhttp_5_1_0].
+
+
+## [1.21.1] - 2025-07-17
+[1.21.1]: https://github.com/cashapp/zipline/releases/tag/1.21.1
+
+ * Fix: Recover from more SQL exceptions. We had a bug on Kotlin/Native where a full disk on the
+   host device would cause the disk cache to crash. With this update it gracefully degrades to not
+   caching.
+ * Fix: Work-around Kotlin/JS treating null as Unit. When we updated our intermediate JavaScript to
+   es2015, that caused `suspend` functions that return `Unit` to crash. We now explicitly handle
+   cases where functions that should return `Unit` don’t!
+
+
+## [1.21.0] - 2025-07-15
+[1.21.0]: https://github.com/cashapp/zipline/releases/tag/1.21.0
+
+ * New: Switch to ES2015 as our intermediate target when compiling from Kotlin to JavaScript to
+   QuickJS bytecode. This results in artifacts that better preserve function names in stack traces.
+   Note that this benefit isn't free; gzipped artifacts are about 3% larger with this update!
+ * Upgrade: [Okio 3.15.0][okio_3_15_0].
+ * Upgrade: [SQLDelight 2.1.0][sqldelight_2_1_0].
+ * Upgrade: [Kotlin 2.1.21][kotlin_2_1_21].
+
+
+## [1.20.1] - 2025-04-02
+[1.20.1]: https://github.com/cashapp/zipline/releases/tag/1.20.1
+
+* Fix: Update source map parser to ECMA 426 which will not fail on the `ignoreList` key and ignore any extensions.
+* Upgrade: [Kotlin Serialization 1.8.1](https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.8.1).
+
+
+## [1.20.0] - 2025-03-20
+[1.20.0]: https://github.com/cashapp/zipline/releases/tag/1.20.0
+
+* New: Add Linux ARM to supported platforms for JVM artifact.
+* JVM native libraries are now cross-compiled with Zig build system. Please report any issues!
+* Upgrade: [Kotlin 2.1.20](https://github.com/JetBrains/kotlin/releases/tag/v2.1.20)
+* Upgrade: [Kotlin Serialization 1.8.0](https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.8.0).
+
+
+## [1.19.0] - 2024-12-03
+[1.19.0]: https://github.com/cashapp/zipline/releases/tag/1.19.0
+
+ * Upgrade: [Kotlin 2.1.0](https://github.com/JetBrains/kotlin/releases/tag/v2.1.0)
+
+
+## [1.18.0] - 2024-11-14
+[1.18.0]: https://github.com/cashapp/zipline/releases/tag/1.18.0
+
+ * Fix: Prevent clients from caching the dev server's responses.
+ * New: "compile" subcommand in 'zipline-cli' compiles `.js` files to `.zipline` files.
+ * Upgrade: [Kotlin Serialization 1.7.3][kotlin_serialization_1_7_3].
+ * Upgrade: [kotlinx.coroutines 1.9.0][kotlinx_coroutines_1_9_0].
+ * Upgrade: [Okio 3.9.1][okio_3_9_1].
+
+
+## [1.17.0] - 2024-08-28
+[1.17.0]: https://github.com/cashapp/zipline/releases/tag/1.17.0
+
+ * New: Expose `globalThis.gc()` function into the guest code.
+ * Upgrade: [Kotlin 2.0.20](https://github.com/JetBrains/kotlin/releases/tag/v2.0.20)
+
+
 ## [1.16.0] - 2024-07-17
 
  * Fix: Support 16KB page sizes in our Android native library. This is necessary to prevent an
@@ -552,18 +650,28 @@ Initial release.
 [kotlin_1_9_20]: https://github.com/JetBrains/kotlin/releases/tag/v1.9.20
 [kotlin_1_9_23]: https://github.com/JetBrains/kotlin/releases/tag/v1.9.23
 [kotlin_2_0_0]: https://github.com/JetBrains/kotlin/releases/tag/v2.0.0
+[kotlin_2_1_21]: https://github.com/JetBrains/kotlin/releases/tag/v2.1.21
+[kotlin_2_2_0]: https://github.com/JetBrains/kotlin/releases/tag/v2.2.0
+[kotlin_2_2_10]: https://github.com/JetBrains/kotlin/releases/tag/v2.2.10
 [kotlin_serialization_1_4_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.4.0
 [kotlin_serialization_1_5_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.0
 [kotlin_serialization_1_5_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.5.1
 [kotlin_serialization_1_6_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.6.0
 [kotlin_serialization_1_7_0]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.7.0
 [kotlin_serialization_1_7_1]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.7.1
+[kotlin_serialization_1_7_3]: https://github.com/Kotlin/kotlinx.serialization/releases/tag/v1.7.3
 [kotlinx_coroutines_1_7_1]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.1
 [kotlinx_coroutines_1_7_2]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.2
 [kotlinx_coroutines_1_7_3]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.7.3
 [kotlinx_coroutines_1_8_0]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.8.0
+[kotlinx_coroutines_1_9_0]: https://github.com/Kotlin/kotlinx.coroutines/releases/tag/1.9.0
+[okio_3_15_0]: https://square.github.io/okio/changelog/#version-3150
+[okio_3_16_0]: https://square.github.io/okio/changelog/#version-3160
 [okio_3_7_0]: https://square.github.io/okio/changelog/#version-370
 [okio_3_9_0]: https://square.github.io/okio/changelog/#version-390
+[okio_3_9_1]: https://square.github.io/okio/changelog/#version-391
+[okhttp_5_1_0]: https://square.github.io/okhttp/changelogs/changelog/#version-510
 [oracle_linux_8]: https://docs.oracle.com/en/operating-systems/oracle-linux/8/
 [sqldelight_2_0_0]: https://cashapp.github.io/sqldelight/2.0.0/changelog/#200-2023-07-26
 [sqldelight_2_0_2]: https://cashapp.github.io/sqldelight/2.0.2/changelog/#202-2024-04-05
+[sqldelight_2_1_0]: https://sqldelight.github.io/sqldelight/2.1.0/changelog/

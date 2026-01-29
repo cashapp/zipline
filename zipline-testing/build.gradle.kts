@@ -1,3 +1,4 @@
+import org.jetbrains.kotlin.gradle.dsl.JsModuleKind
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.tasks.KotlinNativeCompile
 
@@ -14,6 +15,10 @@ kotlin {
     // TODO upstream this to ZiplinePlugin
     binaries.library()
     binaries.executable()
+    compilerOptions {
+      target.set("es2015")
+      moduleKind.set(JsModuleKind.MODULE_UMD)
+    }
   }
 
   linuxX64()

@@ -30,7 +30,8 @@ import java.io.Closeable
 @EngineApi
 actual class QuickJs private constructor(
   internal var context: Long,
-) : AutoCloseable, Closeable {
+) : AutoCloseable,
+  Closeable {
   actual companion object {
     init {
       loadNativeLibrary()

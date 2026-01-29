@@ -25,8 +25,7 @@ import okio.ByteString.Companion.toByteString
 // Note that we don't run Android tests because we don't have the right QuickJS or SQLite to run
 // them on the JVM.
 
-internal actual fun testSqlDriverFactory(): SqlDriverFactory =
-  error("testSqlDriverFactory not available for Android")
+internal actual fun testSqlDriverFactory(): SqlDriverFactory = error("testSqlDriverFactory not available for Android")
 
 actual fun randomByteString(size: Int): ByteString {
   val byteArray = ByteArray(size)

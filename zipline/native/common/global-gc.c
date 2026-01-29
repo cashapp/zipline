@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Cash App
+ * Copyright (C) 2024 Block, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.profiler
+#include "../quickjs/quickjs.h"
+#include "global-gc.h"
 
-import okio.FileSystem
+static JSValue js_global_gc(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  JS_RunGC(JS_GetRuntime(ctx));
+  return JS_UNDEFINED;
+}
 
-actual val SYSTEM_FILESYSTEM = FileSystem.SYSTEM
+void JS_AddGlobalThisGc(JSContext *jsContext) {
+  JSValue gc = JS_NewCFunction(jsContext, js_global_gc, "gc", 0);
+  JSValue globalThis = JS_GetGlobalObject(jsContext);
+  JS_SetPropertyStr(jsContext, globalThis, "gc", gc);
+  JS_FreeValue(jsContext, globalThis);
+}

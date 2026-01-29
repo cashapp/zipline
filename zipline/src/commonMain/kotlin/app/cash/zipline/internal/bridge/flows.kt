@@ -86,8 +86,7 @@ internal class FlowSerializer<T>(
     }
   }
 
-  override fun equals(other: Any?) =
-    other is FlowSerializer<*> && other.delegateSerializer == delegateSerializer
+  override fun equals(other: Any?) = other is FlowSerializer<*> && other.delegateSerializer == delegateSerializer
 
   override fun hashCode() = delegateSerializer.hashCode()
 }
@@ -148,8 +147,7 @@ internal class StateFlowSerializer<T>(
     }
   }
 
-  override fun equals(other: Any?) =
-    other is StateFlowSerializer<*> && other.delegateSerializer == delegateSerializer
+  override fun equals(other: Any?) = other is StateFlowSerializer<*> && other.delegateSerializer == delegateSerializer
 
   override fun hashCode() = delegateSerializer.hashCode()
 }

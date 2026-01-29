@@ -57,7 +57,8 @@ fun QuickJs.startCpuSampling(hprofSink: BufferedSink): Closeable {
 internal class SamplingProfiler internal constructor(
   private val quickJs: QuickJs,
   private val hprofWriter: HprofWriter,
-) : Closeable, InterruptHandler {
+) : Closeable,
+  InterruptHandler {
   private var nextId = 1
 
   /** Placeholder value for the JavaScript thread. */

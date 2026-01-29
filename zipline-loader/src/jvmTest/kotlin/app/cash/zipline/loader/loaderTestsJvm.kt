@@ -15,12 +15,13 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.cache.JdbcSqliteDriverFactory
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import java.security.SecureRandom
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 
-internal actual fun testSqlDriverFactory() = SqlDriverFactory()
+internal actual fun testSqlDriverFactory(): SqlDriverFactory = JdbcSqliteDriverFactory()
 
 actual fun randomByteString(size: Int): ByteString {
   val byteArray = ByteArray(size)

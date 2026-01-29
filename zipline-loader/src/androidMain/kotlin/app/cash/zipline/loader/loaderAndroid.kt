@@ -16,7 +16,7 @@
 package app.cash.zipline.loader
 
 import android.content.Context
-import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import app.cash.zipline.loader.internal.cache.AndroidSqliteDriverFactory
 import okio.FileSystem
 import okio.Path
 
@@ -28,7 +28,7 @@ fun ZiplineCache(
   loaderEventListener: LoaderEventListener,
 ): ZiplineCache {
   return ZiplineCache(
-    sqlDriverFactory = SqlDriverFactory(context),
+    sqlDriverFactory = AndroidSqliteDriverFactory(context),
     fileSystem = fileSystem,
     directory = directory,
     maxSizeInBytes = maxSizeInBytes,

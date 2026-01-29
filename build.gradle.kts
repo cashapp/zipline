@@ -1,7 +1,6 @@
 import com.android.build.gradle.BaseExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
-import com.vanniktech.maven.publish.SonatypeHost
 import java.net.URI
 import java.net.URL
 import kotlinx.validation.ApiValidationExtension
@@ -11,12 +10,12 @@ import org.jetbrains.dokka.DokkaConfiguration.Visibility
 import org.jetbrains.dokka.gradle.AbstractDokkaTask
 import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
-import org.jetbrains.kotlin.gradle.dsl.KotlinJvmProjectExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
-import org.jetbrains.kotlin.gradle.tasks.CInteropProcess
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 buildscript {
   repositories {
@@ -34,31 +33,20 @@ buildscript {
     classpath(libs.shadowJar.gradle.plugin)
     classpath(libs.cklib.gradle.plugin)
     classpath(libs.sqldelight.gradle.plugin)
-    classpath(libs.google.ksp)
+    classpath(libs.testDistributionGradlePlugin)
   }
 }
 
 plugins {
-  id("com.github.gmazzo.buildconfig") version "3.1.0" apply false
-  alias(libs.plugins.spotless)
+  id("com.github.gmazzo.buildconfig") version "6.0.7" apply false
+  alias(libs.plugins.spotless) apply false
 }
 
 apply(plugin = "org.jetbrains.dokka")
-
 apply(plugin = "com.vanniktech.maven.publish.base")
 
-configure<SpotlessExtension> {
-  kotlin {
-    target("**/*.kt")
-    ktlint()
-      .editorConfigOverride(
-        mapOf(
-          "ktlint_standard_comment-spacing" to "disabled", // TODO Re-enable
-          "ktlint_standard_filename" to "disabled",
-          "ktlint_standard_indent" to "disabled", // TODO Re-enable
-        )
-      )
-  }
+tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
+  moduleName.set("Zipline")
 }
 
 allprojects {
@@ -69,9 +57,27 @@ allprojects {
     mavenCentral()
     google()
   }
-}
 
-subprojects {
+  apply(plugin = "com.diffplug.spotless")
+  extensions.configure<SpotlessExtension> {
+    kotlin {
+      target("src/**/*.kt")
+      // Avoid 'build' folders within test fixture projects which may contain generated sources.
+      targetExclude("src/test/fixture/**/build/**")
+
+      ktlint()
+        .editorConfigOverride(
+          mapOf(
+            "ktlint_standard_comment-spacing" to "disabled", // TODO Re-enable
+            "ktlint_standard_filename" to "disabled",
+            "ktlint_standard_indent" to "disabled", // TODO Re-enable
+            // Making something an expression body should be a choice around readability.
+            "ktlint_standard_function-expression-body" to "disabled",
+          )
+        )
+    }
+  }
+
   plugins.withId("com.android.library") {
     extensions.configure<BaseExtension> {
       lintOptions {
@@ -100,13 +106,7 @@ subprojects {
       exceptionFormat = TestExceptionFormat.FULL
     }
   }
-}
 
-tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure {
-  moduleName.set("Zipline")
-}
-
-allprojects {
   tasks.withType<DokkaTaskPartial>().configureEach {
     dokkaSourceSets.configureEach {
       documentedVisibilities.set(setOf(
@@ -151,7 +151,6 @@ allprojects {
 
   plugins.withId("org.jetbrains.kotlin.multiplatform") {
     configure<KotlinMultiplatformExtension> {
-      jvmToolchain(11)
       @Suppress("OPT_IN_USAGE")
       compilerOptions {
         freeCompilerArgs.addAll("-opt-in=app.cash.zipline.EngineApi")
@@ -167,10 +166,16 @@ allprojects {
     }
   }
 
-  plugins.withId("org.jetbrains.kotlin.jvm") {
-    configure<KotlinJvmProjectExtension> {
-      jvmToolchain(11)
+  val javaVersion = JavaVersion.VERSION_11
+  tasks.withType(KotlinJvmCompile::class.java).configureEach {
+    compilerOptions {
+      freeCompilerArgs.add("-Xjdk-release=$javaVersion")
+      jvmTarget.set(JvmTarget.fromTarget(javaVersion.toString()))
     }
+  }
+  tasks.withType(JavaCompile::class.java).configureEach {
+    sourceCompatibility = javaVersion.toString()
+    targetCompatibility = javaVersion.toString()
   }
 
   plugins.withId("com.vanniktech.maven.publish.base") {
@@ -207,7 +212,7 @@ allprojects {
       }
     }
     configure<MavenPublishBaseExtension> {
-      publishToMavenCentral(SonatypeHost.DEFAULT, automaticRelease = true)
+      publishToMavenCentral(automaticRelease = true)
       signAllPublications()
       pom {
         description.set("Runs Kotlin/JS libraries in Kotlin/JVM and Kotlin/Native programs")
@@ -234,9 +239,7 @@ allprojects {
       }
     }
   }
-}
 
-allprojects {
   tasks.withType<KotlinJvmTest>().configureEach {
     environment("ZIPLINE_ROOT", rootDir)
   }
@@ -249,9 +252,7 @@ allprojects {
   tasks.withType<KotlinJsTest>().configureEach {
     environment("ZIPLINE_ROOT", rootDir.toString())
   }
-}
 
-subprojects {
   plugins.withId("binary-compatibility-validator") {
     configure<ApiValidationExtension> {
       // Making this properly internal requires some SQLDelight work.

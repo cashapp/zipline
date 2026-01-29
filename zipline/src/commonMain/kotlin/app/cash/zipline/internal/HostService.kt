@@ -23,7 +23,9 @@ import app.cash.zipline.ZiplineService
  * Unlike typical interfaces that collect functions that share a purpose, this interface collects
  * functions that share a common implementation mechanism: the host platform.
  */
-internal interface HostService : EndpointService, ZiplineService {
+internal interface HostService :
+  EndpointService,
+  ZiplineService {
   fun setTimeout(timeoutId: Int, delayMillis: Int)
 
   fun clearTimeout(timeoutId: Int)

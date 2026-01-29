@@ -92,7 +92,9 @@ class LoaderConcurrencyTest {
     }
   }
 
-  inner class TestEventListener : EventListener(), EventListener.Factory {
+  inner class TestEventListener :
+    EventListener(),
+    EventListener.Factory {
     override fun create(applicationName: String, manifestUrl: String?) = this
 
     override fun cacheHit(applicationName: String, url: String, fileSize: Long) {

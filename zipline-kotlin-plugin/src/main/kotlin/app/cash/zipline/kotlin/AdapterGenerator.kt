@@ -17,7 +17,6 @@ package app.cash.zipline.kotlin
 
 import org.jetbrains.kotlin.backend.common.ScopeWithIr
 import org.jetbrains.kotlin.backend.common.extensions.IrPluginContext
-import org.jetbrains.kotlin.backend.common.ir.addDispatchReceiver
 import org.jetbrains.kotlin.descriptors.DescriptorVisibilities
 import org.jetbrains.kotlin.descriptors.Modality
 import org.jetbrains.kotlin.ir.builders.IrBuilderWithScope
@@ -28,19 +27,23 @@ import org.jetbrains.kotlin.ir.builders.declarations.addValueParameter
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
 import org.jetbrains.kotlin.ir.builders.declarations.buildFun
 import org.jetbrains.kotlin.ir.builders.declarations.buildProperty
+import org.jetbrains.kotlin.ir.builders.declarations.buildReceiverParameter
 import org.jetbrains.kotlin.ir.builders.irAs
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irCallConstructor
 import org.jetbrains.kotlin.ir.builders.irExprBody
 import org.jetbrains.kotlin.ir.builders.irGet
+import org.jetbrains.kotlin.ir.builders.irGetObjectValue
 import org.jetbrains.kotlin.ir.builders.irInt
 import org.jetbrains.kotlin.ir.builders.irReturn
 import org.jetbrains.kotlin.ir.builders.irString
 import org.jetbrains.kotlin.ir.builders.irTemporary
+import org.jetbrains.kotlin.ir.builders.irUnit
 import org.jetbrains.kotlin.ir.builders.irVararg
 import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.IrTypeParametersContainer
@@ -53,12 +56,13 @@ import org.jetbrains.kotlin.ir.types.IrType
 import org.jetbrains.kotlin.ir.types.IrTypeSystemContextImpl
 import org.jetbrains.kotlin.ir.types.classFqName
 import org.jetbrains.kotlin.ir.types.defaultType
+import org.jetbrains.kotlin.ir.types.isUnit
 import org.jetbrains.kotlin.ir.types.makeNullable
 import org.jetbrains.kotlin.ir.types.starProjectedType
 import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.addFakeOverrides
 import org.jetbrains.kotlin.ir.util.constructors
-import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
+import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.ir.util.isGetter
 import org.jetbrains.kotlin.ir.util.isSuspend
@@ -109,22 +113,27 @@ internal class AdapterGenerator(
     //   serializer<Long>(),
     // )
     val serializersExpressions = adapterType.arguments.map { argumentType ->
-      irCall(
-        callee = ziplineApis.serializerFunctionNoReceiver,
-        type = ziplineApis.kSerializer.typeWith(argumentType as IrType),
-      ).apply {
-        putTypeArgument(0, argumentType as IrType)
+      val argument = argumentType as IrType
+      when {
+        argument.isUnit() -> irGetObjectValue(
+          classSymbol = ziplineApis.lenientUnitSerializer,
+          type = ziplineApis.kSerializer.typeWith(argument),
+        )
+
+        else -> irCall(
+          callee = ziplineApis.serializerFunctionNoReceiver,
+          type = ziplineApis.kSerializer.typeWith(argument),
+        ).apply {
+          typeArguments[0] = argumentType
+        }
       }
     }
     val serializersList = irCall(ziplineApis.listOfFunction).apply {
       type = ziplineApis.listOfKSerializerStar
-      putTypeArgument(0, ziplineApis.kSerializer.starProjectedType)
-      putValueArgument(
-        0,
-        irVararg(
-          ziplineApis.kSerializer.starProjectedType,
-          serializersExpressions,
-        ),
+      typeArguments[0] = ziplineApis.kSerializer.starProjectedType
+      arguments[0] = irVararg(
+        ziplineApis.kSerializer.starProjectedType,
+        serializersExpressions,
       )
     }
 
@@ -135,8 +144,8 @@ internal class AdapterGenerator(
       callee = adapterClass.constructors.single().symbol,
       typeArguments = adapterType.arguments.map { it as IrType },
     ).apply {
-      putValueArgument(0, serializersList)
-      putValueArgument(1, serialName)
+      arguments[0] = serializersList
+      arguments[1] = serialName
     }
   }
 
@@ -178,20 +187,20 @@ internal class AdapterGenerator(
           irCall(
             callee = ziplineApis.serialNameFunction,
           ).apply {
-            putValueArgument(0, irString(adapterType.classFqName!!.asString()))
-            putValueArgument(1, irGet(serializersListLocal))
+            arguments[0] = irString(adapterType.classFqName!!.asString())
+            arguments[1] = irGet(serializersListLocal)
           }
         }
         else -> {
-          irString((adapterType as IrSimpleType).asString())
+          irString(adapterType.asString())
         }
       }
 
       +irCall(
         callee = adapterClass.constructors.single(),
       ).apply {
-        putValueArgument(0, irGet(serializersListLocal))
-        putValueArgument(1, serialNameExpression)
+        arguments[0] = irGet(serializersListLocal)
+        arguments[1] = serialNameExpression
       }
     }
   }
@@ -245,7 +254,7 @@ internal class AdapterGenerator(
         ziplineApis.ziplineServiceAdapter.typeWith(serviceT),
         ziplineApis.kSerializer.typeWith(serviceT),
       )
-      createImplicitParameterDeclarationWithWrappedDescriptor()
+      createThisReceiverParameter()
     }
 
     val constructor = adapterClass.addConstructor {
@@ -260,7 +269,7 @@ internal class AdapterGenerator(
       addValueParameter {
         initDefaults(original)
         name = Name.identifier("serialName")
-        type = pluginContext.symbols.string.defaultType
+        type = pluginContext.irBuiltIns.stringType
       }
       irConstructorBody(pluginContext) { statements ->
         statements += irDelegatingConstructorCall(
@@ -268,7 +277,7 @@ internal class AdapterGenerator(
           symbol = ziplineApis.ziplineServiceAdapter.constructors.single(),
           typeArgumentsCount = 1,
         ) {
-          putTypeArgument(0, original.defaultType.remapTypeParameters(original, adapterClass))
+          typeArguments[0] = original.defaultType.remapTypeParameters(original, adapterClass)
         }
         statements += irInstanceInitializerCall(
           context = pluginContext,
@@ -316,10 +325,12 @@ internal class AdapterGenerator(
 
     adapterClass.addFakeOverrides(
       irTypeSystemContext,
-      listOf(
+      mapOf(
+        adapterClass to listOf(
         serialNameProperty,
         ziplineFunctionsFunction,
         outboundServiceFunction,
+      ),
       ),
     )
 
@@ -336,12 +347,12 @@ internal class AdapterGenerator(
     // override val serialName: String = serialName
     return irVal(
       pluginContext = pluginContext,
-      propertyType = pluginContext.symbols.string.defaultType,
+      propertyType = pluginContext.irBuiltIns.stringType,
       declaringClass = adapterClass,
       propertyName = ziplineApis.ziplineServiceAdapterSerialName.owner.name,
       overriddenProperty = ziplineApis.ziplineServiceAdapterSerialName,
     ) {
-      irExprBody(irGet(value.valueParameters[1]))
+      irExprBody(irGet(value.parameters[1]))
     }
   }
 
@@ -353,7 +364,7 @@ internal class AdapterGenerator(
     // override val simpleName: String = "MyClass"
     return irVal(
       pluginContext = pluginContext,
-      propertyType = pluginContext.symbols.string.defaultType,
+      propertyType = pluginContext.irBuiltIns.stringType,
       declaringClass = adapterClass,
       propertyName = ziplineApis.ziplineServiceAdapterSimpleName.owner.name,
       overriddenProperty = ziplineApis.ziplineServiceAdapterSimpleName,
@@ -371,7 +382,7 @@ internal class AdapterGenerator(
       propertyName = ziplineApis.ziplineServiceAdapterSerializers.owner.name,
       overriddenProperty = ziplineApis.ziplineServiceAdapterSerializers,
     ) {
-      irExprBody(irGet(value.valueParameters[0]))
+      irExprBody(irGet(value.parameters[0]))
     }
   }
 
@@ -395,7 +406,7 @@ internal class AdapterGenerator(
       name = ziplineApis.ziplineServiceAdapterZiplineFunctions.owner.name
       returnType = listOfZiplineFunctionT
     }.apply {
-      addDispatchReceiver {
+      parameters += buildReceiverParameter {
         initDefaults(original)
         type = adapterClass.typeWith(adapterClass.typeParameters.map { it.defaultType })
       }
@@ -415,7 +426,7 @@ internal class AdapterGenerator(
         value = irCall(
           callee = serializersProperty.getter!!,
         ).apply {
-          dispatchReceiver = irGet(ziplineFunctionsFunction.dispatchReceiverParameter!!)
+          dispatchReceiver = irGet(ziplineFunctionsFunction.parameters[0])
         },
         nameHint = "serializers",
         isMutable = false,
@@ -425,7 +436,7 @@ internal class AdapterGenerator(
 
       val serializers = bridgedInterface.declareSerializerTemporaries(
         statementsBuilder = this@irFunctionBody,
-        serializersModuleParameter = ziplineFunctionsFunction.valueParameters[0],
+        serializersModuleParameter = ziplineFunctionsFunction.parameters[1],
         serializersExpression = serializersLocal,
       )
 
@@ -444,24 +455,20 @@ internal class AdapterGenerator(
           typeArguments = adapterClass.typeParameters.map { it.defaultType },
         ).apply {
           type = ziplineFunctionT
-          putValueArgument(
-            0,
-            irCall(ziplineApis.listOfFunction).apply {
-            putTypeArgument(0, ziplineApis.kSerializer.starProjectedType)
-            putValueArgument(
-              0,
-              irVararg(
-                ziplineApis.kSerializer.starProjectedType,
-                bridgedFunction.owner.valueParameters.map { irGet(serializers[it.type]!!) },
-              ),
+          arguments[0] = irCall(ziplineApis.listOfFunction).apply {
+            typeArguments[0] = ziplineApis.kSerializer.starProjectedType
+            arguments[0] = irVararg(
+              ziplineApis.kSerializer.starProjectedType,
+              bridgedFunction.owner.parameters
+                .filter { it.kind == IrParameterKind.Regular }
+                .map { irGet(serializers[it.type]!!) },
             )
-          },
-          )
+          }
           val returnType = bridgedFunction.owner.returnType
-          putValueArgument(1, irGet(serializers[returnType]!!))
+          arguments[1] = irGet(serializers[returnType]!!)
           if (bridgedFunction.isSuspend) {
             val suspendCallbackType = ziplineApis.suspendCallback.typeWith(returnType)
-            putValueArgument(2, irGet(serializers[suspendCallbackType]!!))
+            arguments[2] = irGet(serializers[suspendCallbackType]!!)
           }
         }
       }
@@ -472,15 +479,12 @@ internal class AdapterGenerator(
       // )
       +irReturn(
         irCall(ziplineApis.listOfFunction).apply {
-        putTypeArgument(0, ziplineFunctionT)
-        putValueArgument(
-          0,
-          irVararg(
+          typeArguments[0] = ziplineFunctionT
+          arguments[0] = irVararg(
             ziplineFunctionT,
             expressions,
-          ),
-        )
-      },
+          )
+        },
       )
     }
 
@@ -510,7 +514,7 @@ internal class AdapterGenerator(
       visibility = DescriptorVisibilities.PRIVATE
     }.apply {
       parent = adapterClass
-      createImplicitParameterDeclarationWithWrappedDescriptor()
+      createThisReceiverParameter()
       copyTypeParametersFromOriginal("F")
       thisReceiver?.type = defaultDispatchReceiver
     }
@@ -555,13 +559,13 @@ internal class AdapterGenerator(
           valueArgumentsCount = valueArgumentsCount,
           typeArgumentsCount = 1,
         ) {
-          putTypeArgument(0, bridgedInterfaceT)
-          putValueArgument(0, irString(bridgedFunction.owner.id))
-          putValueArgument(1, irString(bridgedFunction.owner.signature))
-          putValueArgument(2, irGet(valueParameters[0]))
-          putValueArgument(3, irGet(valueParameters[1]))
+          typeArguments[0] = bridgedInterfaceT
+          arguments[0] = irString(bridgedFunction.owner.id)
+          arguments[1] = irString(bridgedFunction.owner.signature)
+          arguments[2] = irGet(parameters[0])
+          arguments[3] = irGet(parameters[1])
           if (bridgedFunction.isSuspend) {
-            putValueArgument(4, irGet(valueParameters[2]))
+            arguments[4] = irGet(parameters[2])
           }
         }
         statements += irInstanceInitializerCall(
@@ -580,20 +584,29 @@ internal class AdapterGenerator(
     // We add overrides here, so we can call them below.
     functionClass.addFakeOverrides(
       irTypeSystemContext,
-      listOf(callFunction),
+      mapOf(functionClass to listOf(callFunction)),
     )
 
     callFunction.irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = callFunction.symbol,
     ) {
+      val functionCall = irCallServiceFunction(
+        bridgedInterface = bridgedInterface,
+        ziplineFunctionClass = functionClass,
+        callFunction = callFunction,
+        bridgedFunction = bridgedFunction,
+      )
+      // Work around https://github.com/cashapp/zipline/issues/1618: explicitly return Unit because
+      // functions that return 'Unit' might not.
       +irReturn(
-        irCallServiceFunction(
-          bridgedInterface = bridgedInterface,
-          ziplineFunctionClass = functionClass,
-          callFunction = callFunction,
-          bridgedFunction = bridgedFunction,
-        ),
+        when {
+          !functionCall.type.isUnit() -> functionCall
+          else -> {
+            +functionCall
+            irUnit()
+          }
+        },
       )
     }
 
@@ -618,10 +631,10 @@ internal class AdapterGenerator(
     return ziplineFunctionClass.addFunction {
       initDefaults(original)
       name = ziplineFunctionCall.owner.name
-      returnType = pluginContext.symbols.any.defaultType.makeNullable()
+      returnType = pluginContext.irBuiltIns.anyType.makeNullable()
       isSuspend = callSuspending
     }.apply {
-      addDispatchReceiver {
+      parameters += buildReceiverParameter {
         initDefaults(original)
         type = ziplineFunctionClass.defaultDispatchReceiver
       }
@@ -650,21 +663,20 @@ internal class AdapterGenerator(
       type = bridgedInterface.resolveTypeParameters(bridgedFunction.owner.returnType)
         .remapTypeParameters(original, ziplineFunctionClass),
       callee = bridgedFunction,
-      valueArgumentsCount = bridgedFunction.owner.valueParameters.size,
     ).apply {
-      dispatchReceiver = irGet(callFunction.valueParameters[0])
+      dispatchReceiver = irGet(callFunction.parameters[1])
 
-      for (p in bridgedFunction.owner.valueParameters.indices) {
-        putValueArgument(
-          p,
-          irAs(
-            irCall(ziplineApis.listGetFunction).apply {
-              dispatchReceiver = irGet(callFunction.valueParameters[1])
-              putValueArgument(0, irInt(p))
-            },
-            bridgedInterface.resolveTypeParameters(bridgedFunction.owner.valueParameters[p].type)
-              .remapTypeParameters(original, ziplineFunctionClass),
-          ),
+      val regularParameters = bridgedFunction.owner.parameters
+        .filter { it.kind == IrParameterKind.Regular }
+
+      for (p in regularParameters.indices) {
+        arguments[p + 1] = irAs(
+          irCall(ziplineApis.listGetFunction).apply {
+            dispatchReceiver = irGet(callFunction.parameters[2])
+            arguments[1] = irInt(p)
+          },
+          bridgedInterface.resolveTypeParameters(regularParameters[p].type)
+            .remapTypeParameters(original, ziplineFunctionClass),
         )
       }
     }
@@ -686,7 +698,7 @@ internal class AdapterGenerator(
       name = ziplineApis.ziplineServiceAdapterOutboundService.owner.name
       returnType = bridgedInterfaceT
     }.apply {
-      addDispatchReceiver {
+      parameters += buildReceiverParameter {
         initDefaults(original)
         type = adapterClass.defaultDispatchReceiver
       }
@@ -706,7 +718,7 @@ internal class AdapterGenerator(
           callee = outboundServiceClass.constructors.single().symbol,
           typeArguments = adapterClass.typeParameters.map { it.defaultType },
         ).apply {
-          putValueArgument(0, irGet(outboundServiceFunction.valueParameters[0]))
+          arguments[0] = irGet(outboundServiceFunction.parameters[1])
           type = bridgedInterfaceT
         },
       )
@@ -729,7 +741,7 @@ internal class AdapterGenerator(
       visibility = DescriptorVisibilities.PRIVATE
     }.apply {
       parent = adapterClass
-      createImplicitParameterDeclarationWithWrappedDescriptor()
+      createThisReceiverParameter()
       copyTypeParametersFromOriginal("S")
       thisReceiver?.type = defaultDispatchReceiver
     }
@@ -762,7 +774,7 @@ internal class AdapterGenerator(
 
     val callHandlerProperty = irCallHandlerProperty(
       outboundServiceClass,
-      constructor.valueParameters[0],
+      constructor.parameters[0],
     )
     outboundServiceClass.declarations += callHandlerProperty
 
@@ -815,7 +827,7 @@ internal class AdapterGenerator(
       returnType = functionReturnType
     }.apply {
       overriddenSymbols = overridesList
-      addDispatchReceiver {
+      parameters += buildReceiverParameter {
         initDefaults(original)
         type = defaultDispatchReceiver
       }
@@ -849,11 +861,13 @@ internal class AdapterGenerator(
       result.parent = this@irBridgedFunction
     }
 
-    for (valueParameter in bridgedFunction.valueParameters) {
+    val regularParameters = bridgedFunction.parameters.filter { it.kind == IrParameterKind.Regular }
+
+    for (parameter in regularParameters) {
       result.addValueParameter {
         initDefaults(original)
-        name = valueParameter.name
-        type = bridgedInterface.resolveTypeParameters(valueParameter.type)
+        name = parameter.name
+        type = bridgedInterface.resolveTypeParameters(parameter.type)
           .remapTypeParameters(original, this@irBridgedFunction)
       }
     }
@@ -884,25 +898,13 @@ internal class AdapterGenerator(
       }
       val call = irCall(callFunction).apply {
         dispatchReceiver = irGet(callHandlerLocal)
-        putValueArgument(
-          0,
-          irGet(result.dispatchReceiverParameter!!),
-        )
-        putValueArgument(
-          1,
-          irInt(functionIndex),
-        )
-        putValueArgument(
-          2,
-          irVararg(
-            elementType = pluginContext.symbols.any.defaultType.makeNullable(),
-            values = result.valueParameters.map {
-              irGet(
-                type = it.type,
-                variable = it.symbol,
-              )
-            },
-          ),
+        arguments[1] = irGet(result.dispatchReceiverParameter!!)
+        arguments[2] = irInt(functionIndex)
+        arguments[3] = irVararg(
+          elementType = pluginContext.irBuiltIns.anyType.makeNullable(),
+          values = result.parameters
+            .filter { it.kind == IrParameterKind.Regular }
+            .map { irGet(type = it.type, variable = it.symbol) },
         )
       }
 

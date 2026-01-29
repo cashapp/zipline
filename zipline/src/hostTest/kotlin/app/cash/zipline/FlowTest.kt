@@ -43,7 +43,9 @@ internal class FlowTest {
     suspend fun flowParameter(flow: Flow<String>): Int
   }
 
-  class RealFlowEchoService : FlowEchoService, ZiplineScoped {
+  class RealFlowEchoService :
+    FlowEchoService,
+    ZiplineScoped {
     override val scope = ZiplineScope()
 
     override fun createFlow(message: String, count: Int): Flow<String> {

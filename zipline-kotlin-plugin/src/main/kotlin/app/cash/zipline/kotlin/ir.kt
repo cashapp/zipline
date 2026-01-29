@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.ir.builders.declarations.IrFunctionBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.IrValueParameterBuilder
 import org.jetbrains.kotlin.ir.builders.declarations.addConstructor
 import org.jetbrains.kotlin.ir.builders.declarations.buildClass
+import org.jetbrains.kotlin.ir.builders.declarations.buildReceiverParameter
 import org.jetbrains.kotlin.ir.builders.irCall
 import org.jetbrains.kotlin.ir.builders.irGet
 import org.jetbrains.kotlin.ir.builders.irGetField
@@ -45,6 +46,7 @@ import org.jetbrains.kotlin.ir.declarations.IrClass
 import org.jetbrains.kotlin.ir.declarations.IrConstructor
 import org.jetbrains.kotlin.ir.declarations.IrDeclarationOrigin
 import org.jetbrains.kotlin.ir.declarations.IrFile
+import org.jetbrains.kotlin.ir.declarations.IrParameterKind
 import org.jetbrains.kotlin.ir.declarations.IrProperty
 import org.jetbrains.kotlin.ir.declarations.IrSimpleFunction
 import org.jetbrains.kotlin.ir.declarations.createBlockBody
@@ -55,7 +57,7 @@ import org.jetbrains.kotlin.ir.expressions.IrInstanceInitializerCall
 import org.jetbrains.kotlin.ir.expressions.IrMemberAccessExpression
 import org.jetbrains.kotlin.ir.expressions.IrReturn
 import org.jetbrains.kotlin.ir.expressions.impl.IrClassReferenceImpl
-import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImpl
+import org.jetbrains.kotlin.ir.expressions.impl.IrDelegatingConstructorCallImplWithShape
 import org.jetbrains.kotlin.ir.expressions.impl.IrInstanceInitializerCallImpl
 import org.jetbrains.kotlin.ir.expressions.impl.IrReturnImpl
 import org.jetbrains.kotlin.ir.symbols.IrClassSymbol
@@ -73,8 +75,7 @@ import org.jetbrains.kotlin.ir.types.typeWith
 import org.jetbrains.kotlin.ir.util.SYNTHETIC_OFFSET
 import org.jetbrains.kotlin.ir.util.companionObject
 import org.jetbrains.kotlin.ir.util.constructors
-import org.jetbrains.kotlin.ir.util.createDispatchReceiverParameter
-import org.jetbrains.kotlin.ir.util.createImplicitParameterDeclarationWithWrappedDescriptor
+import org.jetbrains.kotlin.ir.util.createThisReceiverParameter
 import org.jetbrains.kotlin.ir.util.defaultType
 import org.jetbrains.kotlin.name.Name
 import org.jetbrains.kotlin.name.StandardClassIds
@@ -85,10 +86,10 @@ internal val IrSimpleFunction.signature: String
     val property = correspondingPropertySymbol
     if (property != null) {
       val name = property.owner.name.asString()
-      if (valueParameters.size == 1) {
+      if (parameters.size == 2) {
         // setter
         append(
-          "var $name: ${(valueParameters[0].type as IrSimpleType).asString()}",
+          "var $name: ${(parameters[1].type as IrSimpleType).asString()}",
         )
       } else {
         // getter
@@ -100,9 +101,13 @@ internal val IrSimpleFunction.signature: String
       if (isSuspend) {
         append("suspend ")
       }
-      append(
-        "fun ${name.identifier}(${valueParameters.joinToString { (it.type as IrSimpleType).asString() }}): ${(returnType as IrSimpleType).asString()}",
-      )
+      append("fun ")
+      append(name.identifier)
+      append("(")
+      parameters.filter { it.kind == IrParameterKind.Regular }
+        .joinTo(this) { (it.type as IrSimpleType).asString() }
+      append("): ")
+      append((returnType as IrSimpleType).asString())
     }
   }
 
@@ -209,13 +214,17 @@ fun DeclarationIrBuilder.irDelegatingConstructorCall(
   valueArgumentsCount: Int = 0,
   block: IrDelegatingConstructorCall.() -> Unit = {},
 ): IrDelegatingConstructorCall {
-  val result = IrDelegatingConstructorCallImpl(
+  val result = IrDelegatingConstructorCallImplWithShape(
     startOffset = startOffset,
     endOffset = endOffset,
     type = context.irBuiltIns.unitType,
     symbol = symbol,
     typeArgumentsCount = typeArgumentsCount,
     valueArgumentsCount = valueArgumentsCount,
+    // Note: These three parameters are unused in the Kotlin 2.1.0 implementation of this factory.
+    contextParameterCount = 0,
+    hasDispatchReceiver = false,
+    hasExtensionReceiver = false,
   )
   result.block()
   return result
@@ -325,7 +334,9 @@ fun irVal(
     parent = declaringClass
     correspondingPropertySymbol = result.symbol
     overriddenSymbols = listOfNotNull(overriddenProperty?.owner?.getter?.symbol)
-    createDispatchReceiverParameter()
+    parameters += buildReceiverParameter {
+      type = declaringClass.defaultType
+    }
     irFunctionBody(
       context = pluginContext,
       scopeOwnerSymbol = symbol,
@@ -399,7 +410,7 @@ fun getOrCreateCompanion(
   }.apply {
     parent = enclosing
     superTypes = listOf(irPluginContext.irBuiltIns.anyType)
-    createImplicitParameterDeclarationWithWrappedDescriptor()
+    createThisReceiverParameter()
   }
 
   companionClass.addConstructor {
@@ -433,7 +444,9 @@ fun IrBuilderWithScope.irInvoke(
   val returnType = typeHint ?: callee.owner.returnType
   val call = irCall(callee, type = returnType)
   call.dispatchReceiver = dispatchReceiver
-  args.forEachIndexed(call::putValueArgument)
+  for ((index, arg) in args.withIndex()) {
+    call.arguments[callee.owner.parameters[index].indexInParameters] = arg
+  }
   return call
 }
 
@@ -444,10 +457,13 @@ fun IrBuilderWithScope.irInvoke(
   typeArguments: List<IrType?>,
   valueArguments: List<IrExpression>,
   returnTypeHint: IrType? = null,
-): IrMemberAccessExpression<*> =
-  irInvoke(
+): IrMemberAccessExpression<*> = irInvoke(
     dispatchReceiver,
     callee,
     *valueArguments.toTypedArray(),
     typeHint = returnTypeHint,
-  ).also { call -> typeArguments.forEachIndexed(call::putTypeArgument) }
+  ).also { call ->
+    for ((index, typeArgument) in typeArguments.withIndex()) {
+      call.typeArguments[index] = typeArgument
+    }
+  }

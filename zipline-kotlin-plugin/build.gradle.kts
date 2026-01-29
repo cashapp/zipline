@@ -4,7 +4,6 @@ import com.vanniktech.maven.publish.MavenPublishBaseExtension
 
 plugins {
   kotlin("jvm")
-  id("com.google.devtools.ksp")
   id("com.github.gmazzo.buildconfig")
   id("com.vanniktech.maven.publish.base")
 }
@@ -12,9 +11,14 @@ plugins {
 dependencies {
   compileOnly(kotlin("compiler-embeddable"))
   compileOnly(kotlin("stdlib"))
+}
 
-  ksp(libs.auto.service.compiler)
-  compileOnly(libs.auto.service.annotations)
+kotlin {
+  sourceSets {
+    configureEach {
+      languageSettings.optIn("org.jetbrains.kotlin.ir.symbols.UnsafeDuringIrConstructionAPI")
+    }
+  }
 }
 
 buildConfig {

@@ -65,6 +65,8 @@ class SourceMapParsingTest {
         "sourcesContent": [
           null
         ],
+        "ignoreList": [],
+        "x_google_ignoreList": [],
         "names": [],
         "mappings": ";;;;;;;;;;;;EAAA,gB;IACE,YAAY,c;IACZ,OAAQ,KAAI,KAAJ,C;EACV,C;;;;;;"
       }
@@ -87,6 +89,27 @@ class SourceMapParsingTest {
     )
     // Doesn't match any lines in the source file.
     assertNull(sourceMap.find(lineNumber = 17))
+  }
+
+  @Test fun doNotFailOnUnknownExtensions() {
+    val json = """
+      {
+        "version": 3,
+        "file": "kotlin-js-demo.js",
+        "sources": [
+          "../../../../../src/main/kotlin/main.kt"
+        ],
+        "sourcesContent": [
+          null
+        ],
+        "names": [],
+        "x_google_linecount": "12-34",
+        "x_hello": "world!",
+        "mappings": ";;;;;;;;;;;;EAAA,gB;IACE,YAAY,c;IACZ,OAAQ,KAAI,KAAJ,C;EACV,C;;;;;;"
+      }
+      """.trimIndent()
+
+    SourceMap.parse(json)
   }
 
   @Test fun readVarints() {

@@ -38,16 +38,19 @@ artifacts {
 kotlin {
   sourceSets {
     all {
+      languageSettings.optIn("app.cash.zipline.EngineApi")
       languageSettings.optIn("kotlinx.serialization.ExperimentalSerializationApi")
     }
   }
 }
 
 dependencies {
-  api(projects.ziplineApiValidator)
-  api(projects.ziplineLoader)
+  implementation(projects.ziplineApiValidator)
+  implementation(projects.ziplineBytecode)
+  implementation(projects.ziplineLoader)
   implementation(libs.clikt)
   implementation(libs.okHttp.core)
+  implementation(libs.kotlinx.serialization.json)
 
   testImplementation(projects.ziplineLoaderTesting)
   testImplementation(libs.assertk)

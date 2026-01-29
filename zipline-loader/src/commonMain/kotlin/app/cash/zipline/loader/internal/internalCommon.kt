@@ -24,8 +24,7 @@ internal expect fun Zipline.multiplatformLoadJsModule(bytecode: ByteArray, id: S
 
 internal const val MANIFEST_FILE_NAME = "manifest.zipline.json"
 
-internal fun getApplicationManifestFileName(applicationName: String) =
-  "$applicationName.$MANIFEST_FILE_NAME"
+internal fun getApplicationManifestFileName(applicationName: String) = "$applicationName.$MANIFEST_FILE_NAME"
 
 /** ECDSA P-256. https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm */
 internal expect val ecdsaP256: SignatureAlgorithm

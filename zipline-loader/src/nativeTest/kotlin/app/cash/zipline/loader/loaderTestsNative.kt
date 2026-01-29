@@ -15,12 +15,13 @@
  */
 package app.cash.zipline.loader
 
+import app.cash.zipline.loader.internal.cache.NativeSqliteDriverFactory
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import kotlin.random.Random
 import okio.ByteString
 import okio.ByteString.Companion.toByteString
 
-internal actual fun testSqlDriverFactory() = SqlDriverFactory()
+internal actual fun testSqlDriverFactory(): SqlDriverFactory = NativeSqliteDriverFactory()
 
 actual fun randomByteString(size: Int): ByteString {
   return Random.nextBytes(size).toByteString()

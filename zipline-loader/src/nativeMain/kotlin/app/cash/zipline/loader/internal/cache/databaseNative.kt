@@ -24,8 +24,8 @@ import co.touchlab.sqliter.DatabaseConfiguration
 import co.touchlab.sqliter.interop.SQLiteException
 import okio.Path
 
-internal actual class SqlDriverFactory {
-  actual fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>): SqlDriver {
+internal class NativeSqliteDriverFactory : SqlDriverFactory {
+  override fun create(path: Path, schema: SqlSchema<QueryResult.Value<Unit>>): SqlDriver {
     validateDbPath(path)
     return NativeSqliteDriver(
       configuration = DatabaseConfiguration(

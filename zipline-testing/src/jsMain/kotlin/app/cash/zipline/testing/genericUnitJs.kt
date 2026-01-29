@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Cash App
+ * Copyright (C) 2025 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,8 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.profiler
+package app.cash.zipline.testing
 
-import okio.FileSystem
+import app.cash.zipline.Zipline
 
-actual val SYSTEM_FILESYSTEM = FileSystem.SYSTEM
+private val zipline by lazy { Zipline.get() }
+
+@JsExport
+fun prepareGenericUnitServiceJsBridges() {
+  zipline.bind<GenericUnitService<Unit>>("genericUnitService", RealGenericUnitService())
+}
