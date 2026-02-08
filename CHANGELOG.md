@@ -2,7 +2,8 @@
 
 ## Unreleased
 
-Nothing yet!
+ * Fix: Prevent StackOverflow when serializing recursive class definitions. The serial name
+   description now ends when encountering a recursive descriptor.
 
 
 ## [1.25.0] - 2026-01-12
