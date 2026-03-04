@@ -4,7 +4,7 @@
 
  * Fix: Prevent StackOverflow when serializing recursive class definitions. The serial name
    description now ends when encountering a recursive descriptor.
-
+ * Fix: Embedded code will now be used first if it is fresher than cached network code.
 
 ## [1.25.0] - 2026-01-12
 [1.25.0]: https://github.com/cashapp/zipline/releases/tag/1.25.0

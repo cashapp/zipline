@@ -22,6 +22,7 @@ import app.cash.zipline.loader.internal.fetcher.FsCachingFetcher
 import app.cash.zipline.loader.internal.fetcher.FsEmbeddedFetcher
 import app.cash.zipline.loader.internal.fetcher.HttpFetcher
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
+import app.cash.zipline.loader.internal.fetcher.LoadedManifestComparator
 import app.cash.zipline.loader.internal.fetcher.fetch
 import app.cash.zipline.loader.internal.getApplicationManifestFileName
 import app.cash.zipline.loader.internal.receiver.FsSaveReceiver
@@ -664,9 +665,15 @@ class ZiplineLoader internal constructor(
     eventListener: EventListener,
     nowEpochMs: Long,
   ): LoadedManifest? {
-    val result = cachingFetcher?.loadPinnedManifest(applicationName, nowEpochMs)
-      ?: embeddedFetcher?.loadEmbeddedManifest(applicationName)
-      ?: return null
+    val pinnedManifest = cachingFetcher?.loadPinnedManifest(applicationName, nowEpochMs)
+    val embeddedManifest = embeddedFetcher?.loadEmbeddedManifest(applicationName)
+
+    // If both are available, pick the freshest of the two
+    val result = if (pinnedManifest != null && embeddedManifest != null) {
+      maxOf(pinnedManifest, embeddedManifest, LoadedManifestComparator)
+    } else {
+      pinnedManifest ?: embeddedManifest ?: return null
+    }
 
     // Defend against changes to the locally-cached copy.
     val verifiedKey = manifestVerifier.verify(result.manifestBytes, result.manifest)
