@@ -94,7 +94,7 @@ class LoaderTester(
     cache.close()
   }
 
-  fun seedEmbedded(applicationName: String, seed: String) {
+  fun seedEmbedded(applicationName: String, seed: String, freshAtEpochMs: Long = 5L) {
     embeddedFileSystem.createDirectories(embeddedDir)
     val ziplineFileByteString =
       testFixtures.createZiplineFile(LoaderTestFixtures.createJs(seed), "$seed.js")
@@ -102,7 +102,7 @@ class LoaderTester(
     val embeddedManifest = LoaderTestFixtures.createRelativeEmbeddedManifest(
       seed = seed,
       seedFileSha256 = sha256,
-      seedFreshAtEpochMs = 5L,
+      seedFreshAtEpochMs = freshAtEpochMs,
       includeUnknownFieldInJson = includeUnknownFieldInJson,
     )
     embeddedFileSystem.write(embeddedDir / sha256.hex()) {

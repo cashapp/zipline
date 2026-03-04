@@ -53,6 +53,7 @@ class ZiplineLoaderTest {
   private lateinit var httpClient: FakeZiplineHttpClient
   private lateinit var embeddedFileSystem: FileSystem
   private lateinit var embeddedDir: Path
+  private lateinit var cache: ZiplineCache
 
   private val testFixtures = LoaderTestFixtures()
 
@@ -63,6 +64,7 @@ class ZiplineLoaderTest {
     httpClient = tester.httpClient
     embeddedFileSystem = tester.embeddedFileSystem
     embeddedDir = tester.embeddedDir
+    cache = tester.cache
   }
 
   @AfterTest
@@ -408,6 +410,32 @@ class ZiplineLoaderTest {
       )
       awaitComplete()
     }
+  }
+
+  @Test
+  fun freshestCachedOrEmbeddedManifestTakesPrecedence() = runBlocking {
+    cache.pinManifest("test", LoadedManifest(testFixtures.manifestByteString, freshAtEpochMs = 25L), tester.nowMillis)
+
+    // Embedded code is fresher than cached code
+    tester.seedEmbedded("test", "test", freshAtEpochMs = 100L)
+
+    val zipline = (
+      loader.loadOnce(
+        applicationName = "test",
+        freshnessChecker = FakeFreshnessCheckerFresh,
+        manifestUrl = MANIFEST_URL,
+      ) as LoadResult.Success
+      ).zipline
+
+    // Loaded the embedded "test" code, not the cached "alpha/bravo" code
+    assertEquals(
+      """
+      |test loaded
+      |
+      """.trimMargin(),
+      zipline.getLog(),
+    )
+    zipline.close()
   }
 
   @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline-loader internals.

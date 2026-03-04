@@ -49,3 +49,12 @@ internal fun LoadedManifest(manifestBytes: ByteString): LoadedManifest {
     ?: error("freshAtEpochMs is required for loaded manifests, but was null")
   return LoadedManifest(manifestBytes, manifest, freshAtEpochMs)
 }
+
+internal object LoadedManifestComparator : Comparator<LoadedManifest> {
+  override fun compare(
+    a: LoadedManifest,
+    b: LoadedManifest,
+  ): Int {
+    return a.freshAtEpochMs.compareTo(b.freshAtEpochMs)
+  }
+}
