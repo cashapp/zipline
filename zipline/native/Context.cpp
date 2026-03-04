@@ -504,8 +504,8 @@ JSValue Context::toJsString(JNIEnv* env, jstring javaString) const {
  * contain non-ASCII characters because that function expects modified UTF-8.
  */
 jstring Context::toJavaString(JNIEnv* env, const JSValueConst& value) const {
-  const char* string = JS_ToCString(jsContext, value);
-  size_t utf8Length = strlen(string);
+  size_t utf8Length;
+  const char* string = JS_ToCStringLen(jsContext, &utf8Length, value);
   jbyteArray utf8BytesObject = env->NewByteArray(utf8Length);
   jbyte* utf8Bytes = env->GetByteArrayElements(utf8BytesObject, NULL);
   std::copy(string, string + utf8Length, utf8Bytes);
