@@ -38,7 +38,7 @@ buildscript {
 }
 
 plugins {
-  id("com.github.gmazzo.buildconfig") version "6.0.7" apply false
+  id("com.github.gmazzo.buildconfig") version "6.0.9" apply false
   alias(libs.plugins.spotless) apply false
 }
 
