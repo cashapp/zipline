@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+ * The minimum-supported API level for Android is now 23.
+
+
 ## [1.26.0] - 2026-03-04
 [1.26.0]: https://github.com/cashapp/zipline/releases/tag/1.26.0
 
