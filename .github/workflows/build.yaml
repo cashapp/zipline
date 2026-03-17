@@ -111,7 +111,7 @@ jobs:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
 
-      - run: ./gradlew ${{ matrix.platform.task }}
+      - run: ./gradlew ${{ matrix.platform.task }} --no-parallel --max-workers=1
 
       - uses: actions/upload-artifact@v7
         if: ${{ always() }}
