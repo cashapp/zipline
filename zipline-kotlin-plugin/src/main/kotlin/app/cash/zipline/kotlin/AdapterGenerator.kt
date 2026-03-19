@@ -191,6 +191,7 @@ internal class AdapterGenerator(
             arguments[1] = irGet(serializersListLocal)
           }
         }
+
         else -> {
           irString(adapterType.asString())
         }
@@ -602,6 +603,7 @@ internal class AdapterGenerator(
       +irReturn(
         when {
           !functionCall.type.isUnit() -> functionCall
+
           else -> {
             +functionCall
             irUnit()

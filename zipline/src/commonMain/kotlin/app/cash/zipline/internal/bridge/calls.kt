@@ -126,14 +126,17 @@ internal class RealCallSerializer(
               inboundService = endpoint.inboundServices[serviceName]
               endpoint.takeScope = (inboundService?.service as? ZiplineScoped)?.scope
             }
+
             1 -> {
               functionId = decodeStringElement(descriptor, index)
               function = inboundService?.type?.functionsById?.get(functionId)
             }
+
             2 -> {
               @Suppress("UNCHECKED_CAST") // We don't declare a type T for the result of this call.
               val serializer = when (function) {
                 is SuspendingZiplineFunction<*> -> function.suspendCallbackSerializer
+
                 // We can use any suspend callback if we're only returning failures.
                 else -> failureSuspendCallbackSerializer
               } as KSerializer<SuspendCallback<Any?>>
@@ -144,6 +147,7 @@ internal class RealCallSerializer(
                 serializer,
               )
             }
+
             3 -> {
               val argsListSerializer = when (function) {
                 is SuspendingZiplineFunction<*> -> function.argsListSerializer
@@ -157,7 +161,9 @@ internal class RealCallSerializer(
                 (decoder as JsonDecoder).decodeJsonElement()
               }
             }
+
             DECODE_DONE -> break
+
             else -> error("Unexpected index: $index")
           }
         }
@@ -325,13 +331,17 @@ internal class ResultOrCallbackSerializer<T>(
       while (true) {
         when (val index = decodeElementIndex(descriptor)) {
           0 -> callback = decodeSerializableElement(descriptor, 0, cancelCallbackSerializer)
+
           1 -> result = Result.failure(
             decodeSerializableElement(descriptor, 1, ThrowableSerializer),
           )
+
           2 -> result = Result.success(
             decodeSerializableElement(descriptor, 2, successSerializer),
           )
+
           DECODE_DONE -> break
+
           else -> error("Unexpected index: $index")
         }
       }

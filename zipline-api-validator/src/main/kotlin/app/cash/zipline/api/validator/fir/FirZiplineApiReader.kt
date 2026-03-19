@@ -180,9 +180,11 @@ internal class FirZiplineApiReader(
       is FirStarProjection -> {
         "*"
       }
+
       is FirTypeProjectionWithVariance -> {
         variance.label + (if (variance != Variance.INVARIANT) " " else "") + typeRef.asString()
       }
+
       else -> {
         error("Unexpected kind of FirTypeProjection: " + javaClass.simpleName)
       }

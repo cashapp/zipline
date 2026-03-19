@@ -66,6 +66,7 @@ class JsObjectReader(
         val byteCount = stringLength.toLong() * 2
         JsString(isWideChar = true, bytes = source.readByteString(byteCount))
       }
+
       else -> {
         val byteCount = stringLength.toLong()
         JsString(isWideChar = false, bytes = source.readByteString(byteCount))

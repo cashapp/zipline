@@ -65,7 +65,7 @@ allprojects {
       // Avoid 'build' folders within test fixture projects which may contain generated sources.
       targetExclude("src/test/fixture/**/build/**")
 
-      ktlint()
+      ktlint(libs.ktlint.get().version)
         .editorConfigOverride(
           mapOf(
             "ktlint_standard_comment-spacing" to "disabled", // TODO Re-enable

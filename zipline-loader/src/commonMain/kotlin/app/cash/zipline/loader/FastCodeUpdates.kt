@@ -51,7 +51,9 @@ fun Flow<String>.withDevelopmentServerPush(
             emit(manifestUrl)
             true
           }
+
           "heartbeat" -> true
+
           else -> false // Not the web socket we were expecting. Fall back to polling.
         }
       }.collect()

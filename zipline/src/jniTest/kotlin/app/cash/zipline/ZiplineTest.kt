@@ -247,6 +247,7 @@ class ZiplineTest {
             lock1.lock()
             lock2.unlock()
           }
+
           "B" -> {
             lock1.unlock()
           }

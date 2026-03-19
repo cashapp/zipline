@@ -79,6 +79,7 @@ data class ZiplineFile(
         }
         readByteString(sectionLength.toLong())
       }
+
       else -> {
         // Ignore unexpected section.
         skip(sectionLength.toLong())

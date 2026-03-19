@@ -42,6 +42,7 @@ fun JsObject.stripLineNumbers(): JsObject {
         constantPool = constantPool.map { it.stripLineNumbers() },
       )
     }
+
     else -> this
   }
 }

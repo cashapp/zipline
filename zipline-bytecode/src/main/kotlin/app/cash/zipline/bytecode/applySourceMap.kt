@@ -62,6 +62,7 @@ private class SourceMapBytecodeRewriter(
           constantPool = constantPool.map { it.jsToKt() },
         )
       }
+
       else -> this
     }
   }

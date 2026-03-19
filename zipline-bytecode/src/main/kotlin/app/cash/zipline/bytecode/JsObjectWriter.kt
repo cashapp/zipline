@@ -61,7 +61,9 @@ class JsObjectWriter(
   private fun writeObjectRecursive(value: JsObject) {
     when (value) {
       is JsNull -> sink.writeByte(BC_TAG_NULL)
+
       is JsUndefined -> sink.writeByte(BC_TAG_UNDEFINED)
+
       is JsBoolean -> {
         val tag = when {
           value.value -> BC_TAG_BOOL_TRUE
@@ -69,18 +71,22 @@ class JsObjectWriter(
         }
         sink.writeByte(tag)
       }
+
       is JsInt -> {
         sink.writeByte(BC_TAG_INT32)
         sink.writeSleb128(value.value)
       }
+
       is JsDouble -> {
         sink.writeByte(BC_TAG_FLOAT64)
         sink.writeLong(value.value.toRawBits())
       }
+
       is JsString -> {
         sink.writeByte(BC_TAG_STRING)
         writeJsString(value)
       }
+
       is JsFunctionBytecode -> {
         sink.writeByte(BC_TAG_FUNCTION_BYTECODE)
         writeFunction(value)

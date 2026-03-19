@@ -161,20 +161,25 @@ internal fun BufferedSource.readBase64Character(): Int {
       //  Z    90    25 (ASCII - 65)
       c.code - 65
     }
+
     in 'a'..'z' -> {
       // char ASCII value
       //  a    97    26
       //  z    122   51 (ASCII - 71)
       c.code - 71
     }
+
     in '0'..'9' -> {
       // char ASCII value
       //  0    48    52
       //  9    57    61 (ASCII + 4)
       c.code + 4
     }
+
     '+', '-' -> 62
+
     '/', '_' -> 63
+
     else -> throw IOException("Unexpected character")
   }
 }
