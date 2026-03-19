@@ -438,6 +438,7 @@ actual class QuickJs private constructor(
   internal fun CValue<JSValue>.toKotlinInstanceOrNull(): Any? {
     return when (JsValueGetNormTag(this)) {
       JS_TAG_EXCEPTION -> throwJsException()
+
       JS_TAG_STRING -> {
         val cString = JS_ToCString(context, this)!!
         val string = cString.toKStringFromUtf8()
@@ -446,9 +447,13 @@ actual class QuickJs private constructor(
       }
 
       JS_TAG_BOOL -> JsValueGetBool(this) != 0
+
       JS_TAG_INT -> JsValueGetInt(this)
+
       JS_TAG_FLOAT64 -> JsValueGetFloat64(this)
+
       JS_TAG_NULL, JS_TAG_UNDEFINED -> null
+
       JS_TAG_OBJECT -> {
         if (JS_IsArray(context, this) != 0) {
           val lengthProperty = JS_GetPropertyStr(context, this, "length")
@@ -465,6 +470,7 @@ actual class QuickJs private constructor(
           null
         }
       }
+
       else -> null
     }
   }

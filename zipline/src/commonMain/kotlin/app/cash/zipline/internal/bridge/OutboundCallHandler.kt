@@ -120,6 +120,7 @@ internal class OutboundCallHandler(
         !is SuspendCallback<*> -> {
           endpoint.eventListener.callEnd(externalCall, callResult, callStart)
         }
+
         else -> {
           Unit // Don't call callEnd() for suspend callbacks.
         }

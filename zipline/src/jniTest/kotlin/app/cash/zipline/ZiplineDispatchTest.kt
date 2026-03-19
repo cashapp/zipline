@@ -174,6 +174,7 @@ class ZiplineDispatchTest {
             val result = schedulerService.schedule(delayMillis = 0L, callback = this)
             ".$result"
           }
+
           else -> "!"
         }
       }
@@ -201,6 +202,7 @@ class ZiplineDispatchTest {
             val result = schedulerService.schedule(delayMillis = 1L, callback = this)
             ".$result"
           }
+
           else -> "!"
         }
       }

@@ -68,6 +68,7 @@ abstract class ValidateZiplineApiTask @Inject constructor(
         group = "verification"
         description = "Confirm that the current Zipline API matches the expectations file"
       }
+
       Mode.Dump -> {
         description = "Write the current Zipline APIs to the expectations file"
       }

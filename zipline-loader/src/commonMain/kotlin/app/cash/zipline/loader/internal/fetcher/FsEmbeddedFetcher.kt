@@ -49,6 +49,7 @@ internal class FsEmbeddedFetcher(
     embeddedFileSystem.exists(filePath) -> embeddedFileSystem.read(filePath) {
       readByteString()
     }
+
     else -> null
   }
 }

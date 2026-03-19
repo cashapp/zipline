@@ -52,7 +52,9 @@ internal class TomlZiplineApiReader(
           val serviceName = readTableHeader()
           services += readService(serviceName)
         }
+
         source.exhausted() -> break
+
         else -> throw IOException("expected '['")
       }
     }
@@ -74,6 +76,7 @@ internal class TomlZiplineApiReader(
           skipWhitespace()
           functions += readFunctions()
         }
+
         else -> break
       }
     }
@@ -103,7 +106,9 @@ internal class TomlZiplineApiReader(
             else -> throw IOException("expected ',' or ']'")
           }
         }
+
         READ_FUNCTION_CLOSE_BRACE -> break
+
         else -> throw IOException("expected '\"' or ']'")
       }
     }
