@@ -53,7 +53,7 @@ buildConfig {
 gradlePlugin {
   plugins {
     create("zipline") {
-      id = "app.cash.zipline"
+      id = "io.github.tret9.zipline"
       displayName = "zipline"
       description = "Compiler plugin to generate bridges between platforms"
       implementationClass = "app.cash.zipline.gradle.ZiplinePlugin"

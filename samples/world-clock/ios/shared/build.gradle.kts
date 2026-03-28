@@ -15,7 +15,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation("app.cash.zipline:zipline")
+        implementation("io.github.tret9:zipline")
         implementation(libs.kotlinx.coroutines.core)
         implementation(projects.worldClock.presenters)
       }

@@ -5,7 +5,7 @@ plugins {
   kotlin("multiplatform")
   id("com.android.library")
   kotlin("plugin.serialization")
-  id("app.cash.zipline")
+  id("io.github.tret9.zipline")
 }
 
 kotlin {
@@ -25,13 +25,13 @@ kotlin {
   sourceSets {
     val commonMain by getting {
       dependencies {
-        api("app.cash.zipline:zipline")
+        api("io.github.tret9:zipline")
       }
     }
     val hostMain by creating {
       dependsOn(commonMain)
       dependencies {
-        implementation("app.cash.zipline:zipline-loader")
+        implementation("io.github.tret9:zipline-loader")
         api(libs.okio.core)
       }
     }

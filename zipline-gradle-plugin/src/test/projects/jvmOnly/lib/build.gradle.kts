@@ -2,7 +2,7 @@ import app.cash.zipline.gradle.ZiplineCompileTask
 
 plugins {
   kotlin("multiplatform")
-  id("app.cash.zipline")
+  id("io.github.tret9.zipline")
 }
 
 kotlin {
@@ -11,7 +11,7 @@ kotlin {
   sourceSets {
     val jvmMain by getting {
       dependencies {
-        implementation("app.cash.zipline:zipline:${project.property("ziplineVersion")}")
+        implementation("io.github.tret9:zipline:${project.property("ziplineVersion")}")
       }
     }
   }

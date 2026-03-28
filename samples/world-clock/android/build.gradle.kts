@@ -17,8 +17,8 @@ android {
 
   compileOptions {
     isCoreLibraryDesugaringEnabled = true
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
   }
 
   buildFeatures {
@@ -50,9 +50,9 @@ android {
 }
 
 dependencies {
-  implementation("app.cash.zipline:zipline")
-  implementation("app.cash.zipline:zipline-loader")
-  implementation("app.cash.zipline:zipline-profiler")
+  implementation("io.github.tret9:zipline")
+  implementation("io.github.tret9:zipline-loader")
+  implementation("io.github.tret9:zipline-profiler")
   implementation(projects.samples.worldClock.presenters)
   implementation(libs.android.material)
   implementation(libs.androidx.activity.compose)
@@ -63,6 +63,6 @@ dependencies {
   implementation(libs.androidx.compose.ui)
   implementation(libs.androidx.compose.ui.tooling.preview)
   debugImplementation(libs.androidx.compose.ui.tooling)
-  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, "app.cash.zipline:zipline-kotlin-plugin")
+  add(PLUGIN_CLASSPATH_CONFIGURATION_NAME, "io.github.tret9:zipline-kotlin-plugin")
   coreLibraryDesugaring(libs.android.desugarJdkLibs)
 }

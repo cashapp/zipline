@@ -1,7 +1,7 @@
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnPlugin
 import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
-apply(plugin = "app.cash.zipline")
+apply(plugin = "io.github.tret9.zipline")
 
 plugins {
   kotlin("multiplatform")
@@ -18,7 +18,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation("app.cash.zipline:zipline")
+        implementation("io.github.tret9:zipline")
       }
     }
   }

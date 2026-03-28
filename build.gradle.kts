@@ -50,7 +50,7 @@ tasks.named("dokkaHtmlMultiModule", DokkaMultiModuleTask::class.java).configure 
 }
 
 allprojects {
-  group = "app.cash.zipline"
+  group = "io.github.tret9"
   version = project.property("VERSION_NAME") as String
 
   repositories {
@@ -217,7 +217,7 @@ allprojects {
       pom {
         description.set("Runs Kotlin/JS libraries in Kotlin/JVM and Kotlin/Native programs")
         name.set(project.name)
-        url.set("https://github.com/cashapp/zipline/")
+        url.set("https://github.com/tret9/zipline/")
         licenses {
           license {
             name.set("The Apache Software License, Version 2.0")
@@ -227,14 +227,15 @@ allprojects {
         }
         developers {
           developer {
-            id.set("cashapp")
-            name.set("Cash App")
+            id.set("composelive")
+            name.set("ComposeLive")
+            url.set("https://github.com/ComposeLive-io/")
           }
         }
         scm {
-          url.set("https://github.com/cashapp/zipline/")
-          connection.set("scm:git:https://github.com/cashapp/zipline.git")
-          developerConnection.set("scm:git:ssh://git@github.com/cashapp/zipline.git")
+          url.set("https://github.com/tret9/zipline/")
+          connection.set("scm:git:https://github.com/tret9/zipline.git")
+          developerConnection.set("scm:git:ssh://git@github.com/tret9/zipline.git")
         }
       }
     }

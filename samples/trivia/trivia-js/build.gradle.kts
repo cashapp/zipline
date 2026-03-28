@@ -5,7 +5,7 @@ import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
-  id("app.cash.zipline")
+  id("io.github.tret9.zipline")
 }
 
 kotlin {
@@ -17,7 +17,7 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation("app.cash.zipline:zipline")
+        implementation("io.github.tret9:zipline")
         implementation(project(":trivia:trivia-shared"))
       }
     }

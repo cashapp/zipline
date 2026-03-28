@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
   kotlin("multiplatform")
-  id("app.cash.zipline")
+  id("io.github.tret9.zipline")
 }
 
 kotlin {
@@ -17,12 +17,12 @@ kotlin {
   sourceSets {
     commonMain {
       dependencies {
-        implementation("app.cash.zipline:zipline:${project.property("ziplineVersion")}")
+        implementation("io.github.tret9:zipline:${project.property("ziplineVersion")}")
       }
     }
     val jvmMain by getting {
       dependencies {
-        implementation("app.cash.zipline:zipline-loader:${project.property("ziplineVersion")}")
+        implementation("io.github.tret9:zipline-loader:${project.property("ziplineVersion")}")
         implementation(libs.okio.core)
         implementation(libs.kotlinx.serialization.core)
         implementation(libs.kotlinx.serialization.json)

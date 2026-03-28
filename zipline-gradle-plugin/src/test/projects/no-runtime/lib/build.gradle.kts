@@ -19,7 +19,7 @@ import org.jetbrains.kotlin.gradle.targets.js.yarn.YarnRootExtension
 
 plugins {
   kotlin("jvm")
-  id("app.cash.zipline")
+  id("io.github.tret9.zipline")
   application
 }
 
