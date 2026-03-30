@@ -339,6 +339,89 @@ class ZiplineCacheTest {
   }
 
   @Test
+  fun readReturnsNullAfterClose(): Unit = runBlocking {
+    withCache { cache ->
+      val fileContents = "abc123".encodeUtf8()
+      val fileSha = fileContents.sha256()
+
+      cache.getOrPut("app1", fileSha, nowMillis) { fileContents }
+      assertEquals(fileContents, cache.read(fileSha))
+
+      cache.close()
+      assertNull(cache.read(fileSha))
+    }
+  }
+
+  @Test
+  fun getOrPutFallsBackToDownloadAfterClose(): Unit = runBlocking {
+    withCache { cache ->
+      val fileContents = "abc123".encodeUtf8()
+      val fileSha = fileContents.sha256()
+
+      cache.getOrPut("app1", fileSha, nowMillis) { fileContents }
+
+      cache.close()
+      var downloadCalled = false
+      val result = cache.getOrPut("app1", fileSha, nowMillis) {
+        downloadCalled = true
+        fileContents
+      }
+      assertTrue(downloadCalled)
+      assertEquals(fileContents, result)
+    }
+  }
+
+  @Test
+  fun unpinIsNoOpAfterClose(): Unit = runBlocking {
+    withCache { cache ->
+      val fileContents = "abc123".encodeUtf8()
+      val fileSha = fileContents.sha256()
+
+      cache.getOrPut("app1", fileSha, nowMillis) { fileContents }
+
+      cache.close()
+      cache.unpin("app1", fileSha) // Should be a no-op, not a crash.
+    }
+  }
+
+  @Test
+  fun getPinnedManifestReturnsNullAfterClose(): Unit = runBlocking {
+    withCache { cache ->
+      val fileApple = testFixtures.createZiplineFile(createJs("apple"), "apple.js")
+      cache.getOrPut("red", fileApple.sha256(), nowMillis) { fileApple }
+      val manifestApple = createRelativeManifest("apple", fileApple.sha256())
+      cache.pinManifest("red", manifestApple, nowMillis)
+      assertNotNull(cache.getPinnedManifest("red", nowMillis))
+
+      cache.close()
+      assertNull(cache.getPinnedManifest("red", nowMillis))
+    }
+  }
+
+  @Test
+  fun pinManifestIsNoOpAfterClose(): Unit = runBlocking {
+    withCache { cache ->
+      val fileApple = testFixtures.createZiplineFile(createJs("apple"), "apple.js")
+      cache.getOrPut("red", fileApple.sha256(), nowMillis) { fileApple }
+      val manifestApple = createRelativeManifest("apple", fileApple.sha256())
+
+      cache.close()
+      cache.pinManifest("red", manifestApple, nowMillis) // Should be a no-op, not a crash.
+    }
+  }
+
+  @Test
+  fun updateManifestFreshAtIsNoOpAfterClose(): Unit = runBlocking {
+    withCache { cache ->
+      val fileContents = testFixtures.manifestByteString
+      cache.pinManifest("red", LoadedManifest(fileContents, 5), nowMillis)
+
+      cache.close()
+      cache.updateManifestFreshAt("red", LoadedManifest(fileContents, 10), nowMillis)
+    }
+  }
+
+  @Test
   fun manifestFreshAtMs(): Unit = runBlocking {
     val fileContents = testFixtures.manifestByteString
 
