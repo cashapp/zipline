@@ -20,6 +20,7 @@ import app.cash.zipline.loader.internal.cache.Database
 import app.cash.zipline.loader.internal.cache.FileState
 import app.cash.zipline.loader.internal.cache.Files
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
+import kotlin.concurrent.Volatile
 import app.cash.zipline.loader.internal.cache.createDatabase
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import okio.ByteString
@@ -51,6 +52,7 @@ class ZiplineCache private constructor(
   private val maxSizeInBytes: Long,
   private val loaderEventListener: LoaderEventListener,
   private var hasWriteFailures: Boolean,
+  @Volatile private var closed: Boolean = false,
 ) : Closeable {
 
   /*
@@ -77,6 +79,7 @@ class ZiplineCache private constructor(
    */
 
   override fun close() {
+    closed = true
     driver.close()
   }
 
@@ -119,7 +122,7 @@ class ZiplineCache private constructor(
     nowEpochMs: Long,
     download: suspend () -> ByteString,
   ): ByteString {
-    if (hasWriteFailures) return download()
+    if (hasWriteFailures || closed) return download()
 
     try {
       val read = read(sha256, nowEpochMs)
@@ -169,6 +172,7 @@ class ZiplineCache private constructor(
     sha256: ByteString,
     nowEpochMs: Long,
   ): ByteString? {
+    if (closed) return null
     val metadata = database.filesQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
     return read(metadata, nowEpochMs)
   }
@@ -209,13 +213,14 @@ class ZiplineCache private constructor(
   }
 
   internal fun unpin(applicationName: String, sha256: ByteString) {
+    if (closed) return
     val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
     database.pinsQueries.delete_pin(applicationName, fileId)
   }
 
   /** Returns null if there is no pinned manifest. */
   internal fun getPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? {
-    if (hasWriteFailures) return null // This cache is broken.
+    if (hasWriteFailures || closed) return null // This cache is broken.
 
     try {
       val manifestFile = database.filesQueries
@@ -236,7 +241,7 @@ class ZiplineCache private constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    if (hasWriteFailures) return // This cache is broken.
+    if (hasWriteFailures || closed) return // This cache is broken.
 
     try {
       val manifestBytes = loadedManifest.manifestBytes
@@ -275,7 +280,7 @@ class ZiplineCache private constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    if (hasWriteFailures) return // This cache is broken.
+    if (hasWriteFailures || closed) return // This cache is broken.
 
     try {
       val unpinManifestBytes = loadedManifest.manifestBytes
@@ -463,7 +468,7 @@ class ZiplineCache private constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    if (hasWriteFailures) return // This cache is broken.
+    if (hasWriteFailures || closed) return // This cache is broken.
 
     try {
       val freshAtMs = loadedManifest.freshAtEpochMs
