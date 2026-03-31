@@ -20,9 +20,9 @@ import app.cash.zipline.loader.internal.cache.Database
 import app.cash.zipline.loader.internal.cache.FileState
 import app.cash.zipline.loader.internal.cache.Files
 import app.cash.zipline.loader.internal.cache.SqlDriverFactory
-import kotlin.concurrent.Volatile
 import app.cash.zipline.loader.internal.cache.createDatabase
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
+import kotlin.concurrent.Volatile
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.Closeable
@@ -52,8 +52,9 @@ class ZiplineCache private constructor(
   private val maxSizeInBytes: Long,
   private val loaderEventListener: LoaderEventListener,
   private var hasWriteFailures: Boolean,
-  @Volatile private var closed: Boolean = false,
 ) : Closeable {
+
+  @Volatile private var closed: Boolean = false
 
   /*
    * Files are named by their SHA-256 hashes. We use a SQLite database for file metadata: which
@@ -441,6 +442,7 @@ class ZiplineCache private constructor(
    * have opened them.
    */
   internal fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
+    if (closed) return
     while (true) {
       val currentSize = database.filesQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
       if (currentSize <= maxSizeInBytes) return
@@ -453,10 +455,16 @@ class ZiplineCache private constructor(
   }
 
   /** Returns the number of files in the cache DB. */
-  internal fun countFiles() = database.filesQueries.count().executeAsOne().toInt()
+  internal fun countFiles(): Int {
+    if (closed) return 0
+    return database.filesQueries.count().executeAsOne().toInt()
+  }
 
   /** Returns the number of pins in the cache DB. */
-  internal fun countPins() = database.pinsQueries.count().executeAsOne().toInt()
+  internal fun countPins(): Int {
+    if (closed) return 0
+    return database.pinsQueries.count().executeAsOne().toInt()
+  }
 
   private fun path(metadata: Files): Path = directory / "entry-${metadata.id}.bin"
 
