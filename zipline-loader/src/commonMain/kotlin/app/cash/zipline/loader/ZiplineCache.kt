@@ -91,14 +91,14 @@ class ZiplineCache private constructor(
     nowEpochMs: Long,
     isManifest: Boolean = false,
     manifestFreshAtMs: Long? = null,
-  ): Files {
+  ): Files? {
     val metadata = openForWrite(
       applicationName = applicationName,
       sha256 = sha256,
       nowEpochMs = nowEpochMs,
       isManifest = isManifest,
       manifestFreshAtMs = manifestFreshAtMs,
-    )
+    ) ?: return null
     write(metadata, content, nowEpochMs)
     return metadata
   }
@@ -156,7 +156,7 @@ class ZiplineCache private constructor(
     content: ByteString,
     putFreshAtMs: Long,
     nowEpochMs: Long,
-  ): Files {
+  ): Files? {
     val sha256 = content.sha256()
     val metadata = getOrNull(sha256)
     return metadata ?: write(
@@ -251,7 +251,7 @@ class ZiplineCache private constructor(
         content = manifestBytes,
         putFreshAtMs = loadedManifest.freshAtEpochMs,
         nowEpochMs = nowEpochMs,
-      )
+      ) ?: return
 
       database.transaction {
         database.pinsQueries.delete_application_pins(applicationName)
@@ -330,7 +330,8 @@ class ZiplineCache private constructor(
     nowEpochMs: Long,
     isManifest: Boolean,
     manifestFreshAtMs: Long? = null,
-  ): Files {
+  ): Files? {
+    if (closed) return null
     val manifestForApplicationName = if (isManifest) {
       applicationName
     } else {
@@ -381,6 +382,7 @@ class ZiplineCache private constructor(
     fileSizeBytes: Long,
     nowEpochMs: Long,
   ) {
+    if (closed) return
     database.transaction {
       // Go from DIRTY to READY.
       require(getOrNull(metadata.id)?.file_state == FileState.DIRTY) {
@@ -485,7 +487,7 @@ class ZiplineCache private constructor(
         content = loadedManifest.manifestBytes,
         putFreshAtMs = freshAtMs,
         nowEpochMs = nowEpochMs,
-      )
+      ) ?: return
       database.filesQueries.updateFresh(
         id = manifestMetadata.id,
         fresh_at_epoch_ms = freshAtMs,
