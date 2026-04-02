@@ -24,7 +24,7 @@ import org.jetbrains.kotlin.fir.declarations.FirRegularClass
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
 import org.jetbrains.kotlin.fir.declarations.utils.isInterface
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
-import org.jetbrains.kotlin.fir.pipeline.FirResult
+import org.jetbrains.kotlin.fir.pipeline.AllModulesFrontendOutput
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.resolve.toClassLikeSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
@@ -69,7 +69,7 @@ private val autoCloseableClassId =
  * interfaces. These are subject to strict API compatibility requirements.
  */
 internal class FirZiplineApiReader(
-  output: FirResult,
+  output: AllModulesFrontendOutput,
 ) {
   private val platformOutput = output.outputs.first()
   private val session: FirSession = platformOutput.session

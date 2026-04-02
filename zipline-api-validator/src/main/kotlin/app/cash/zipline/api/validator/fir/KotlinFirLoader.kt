@@ -16,6 +16,7 @@
 package app.cash.zipline.api.validator.fir
 
 import java.io.File
+import org.jetbrains.kotlin.K1Deprecation
 import org.jetbrains.kotlin.KtVirtualFileSourceFile
 import org.jetbrains.kotlin.cli.common.GroupedKtSources
 import org.jetbrains.kotlin.cli.common.LegacyK2CliPipeline
@@ -41,7 +42,7 @@ import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
 import org.jetbrains.kotlin.diagnostics.DiagnosticReporterFactory
-import org.jetbrains.kotlin.fir.pipeline.FirResult
+import org.jetbrains.kotlin.fir.pipeline.AllModulesFrontendOutput
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.modules.TargetId
 
@@ -81,7 +82,8 @@ internal class KotlinFirLoader(
   /**
    * @param targetName an opaque identifier for this operation.
    */
-  fun load(targetName: String): FirResult {
+  @OptIn(K1Deprecation::class)
+  fun load(targetName: String): AllModulesFrontendOutput {
     val configuration = CompilerConfiguration()
     configuration.put(CommonConfigurationKeys.MODULE_NAME, targetName)
     configuration.put(CommonConfigurationKeys.MESSAGE_COLLECTOR_KEY, messageCollector)
@@ -122,13 +124,13 @@ internal class KotlinFirLoader(
       configuration = configuration,
     )
 
-    val reporter = DiagnosticReporterFactory.createReporter(messageCollector)
+    val reporter = DiagnosticReporterFactory.createReporter()
 
     val globalScope = GlobalSearchScope.allScope(project)
     val packagePartProvider = environment.createPackagePartProvider(globalScope)
     val projectEnvironment = VfsBasedProjectEnvironment(
       project = project,
-      localFileSystem = localFileSystem,
+      fileSystem = localFileSystem,
       getPackagePartProviderFn = { packagePartProvider },
     )
 
