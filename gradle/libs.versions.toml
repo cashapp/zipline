@@ -1,5 +1,5 @@
 [versions]
-androidx-compose = "1.10.6"
+androidx-compose = "1.11.0"
 compileSdk = "36"
 jetty = "12.1.8"
 kotlin = "2.3.20"
