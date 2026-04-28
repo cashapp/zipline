@@ -128,7 +128,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
             Mode.Check,
             ziplineApiCheck,
             forbidServiceExtension,
-            )
+          )
           registerZiplineApiTask(
             target,
             kotlinCompile,
@@ -136,7 +136,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
             Mode.Dump,
             ziplineApiDump,
             forbidServiceExtension,
-            )
+          )
         }
       }
     }
