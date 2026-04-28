@@ -45,6 +45,10 @@ abstract class ZiplineExtension {
    */
   abstract val terserOptionsJson: Property<String>
 
+
+  /** True to forbid the existing Zipline service to be extended with new functions. */
+  abstract val forbidServiceExtension: Property<Boolean>
+
   /**
    * Configure production builds to get a small artifact, by removing information used for stack
    * traces and the sampling profiler.
