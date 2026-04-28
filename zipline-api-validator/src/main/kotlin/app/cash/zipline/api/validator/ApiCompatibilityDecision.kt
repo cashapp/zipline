@@ -68,8 +68,9 @@ fun makeApiCompatibilityDecision(
       if (options.forbidServiceExtension) {
         problemMessages += addedFunctions.map { addedFunction ->
           """
-          |Unexpected function in $serviceName found:
-          |  ${addedFunction.signature.replace("\n", "\n  ")}
+            |New function is found in $serviceName:
+            |  ${addedFunction.signature.replace("\n", "\n  ")}
+            |Service extension is forbidden. Create a new Zipline service instead.
           """.trimMargin()
         }
       } else {
