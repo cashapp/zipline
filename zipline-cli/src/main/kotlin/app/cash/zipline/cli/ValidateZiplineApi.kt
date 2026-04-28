@@ -16,6 +16,7 @@
 package app.cash.zipline.cli
 
 import app.cash.zipline.api.validator.ActualApiHasProblems
+import app.cash.zipline.api.validator.ApiCompatibilityOptions
 import app.cash.zipline.api.validator.ExpectedApiIsUpToDate
 import app.cash.zipline.api.validator.ExpectedApiRequiresUpdates
 import app.cash.zipline.api.validator.fir.readFirZiplineApi
@@ -26,6 +27,7 @@ import app.cash.zipline.api.validator.toml.writeTomlZiplineApi
 import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.parameters.options.default
+import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.help
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.required
@@ -89,6 +91,10 @@ class ValidateZiplineApi(
   private val dumpCommandName by option("--dump-command-name", hidden = true)
     .default(NAME_DUMP)
 
+  private val forbidServiceExtension by option("--forbid-service-extension", hidden = true)
+    .flag("--allow-service-extension", default = false)
+    .help("Forbid an existing Zipline service to add a new function")
+
   override fun run() {
     val expectedZiplineApi = when {
       tomlFile.exists() -> tomlFile.source().buffer().use { it.readTomlZiplineApi() }
@@ -97,7 +103,15 @@ class ValidateZiplineApi(
 
     val actualZiplineApi = readFirZiplineApi(javaHome.toFile(), jdkRelease, sources, classpath)
 
-    when (val decision = makeApiCompatibilityDecision(expectedZiplineApi, actualZiplineApi)) {
+    when (
+      val decision = makeApiCompatibilityDecision(
+        expectedZiplineApi,
+        actualZiplineApi,
+        ApiCompatibilityOptions(
+          forbidServiceExtension = forbidServiceExtension,
+        ),
+      )
+    ) {
       is ActualApiHasProblems -> {
         throw CliktError(
           """

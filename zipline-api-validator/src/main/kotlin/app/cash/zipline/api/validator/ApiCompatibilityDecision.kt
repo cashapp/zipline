@@ -22,6 +22,10 @@ import app.cash.zipline.api.validator.toml.TomlZiplineService
 
 sealed interface ApiCompatibilityDecision
 
+data class ApiCompatibilityOptions(
+  val forbidServiceExtension: Boolean = false,
+)
+
 class ActualApiHasProblems(
   val messages: List<String>,
 ) : ApiCompatibilityDecision
@@ -36,6 +40,7 @@ object ExpectedApiIsUpToDate : ApiCompatibilityDecision
 fun makeApiCompatibilityDecision(
   expectedApi: TomlZiplineApi,
   actualApi: FirZiplineApi,
+  options: ApiCompatibilityOptions = ApiCompatibilityOptions(),
 ): ApiCompatibilityDecision {
   val problemMessages = mutableListOf<String>()
   var hasChanges = false
@@ -56,8 +61,22 @@ fun makeApiCompatibilityDecision(
       continue
     }
 
+    val expectedFunctions = expectedService.functions.associateBy { it.id }
     val actualFunctions = actualService.functions.associateBy { it.id }
-    if (actualFunctions.size != expectedService.functions.size) hasChanges = true
+    val addedFunctions = actualService.functions.filter { it.id !in expectedFunctions }
+    if (addedFunctions.isNotEmpty()) {
+      if (options.forbidServiceExtension) {
+        problemMessages += addedFunctions.map { addedFunction ->
+          """
+            |New function is found in $serviceName:
+            |  ${addedFunction.signature.replace("\n", "\n  ")}
+            |Service extension is forbidden. Create a new Zipline service instead.
+          """.trimMargin()
+        }
+      } else {
+        hasChanges = true
+      }
+    }
 
     for (expectedFunction in expectedService.functions) {
       val functionId = expectedFunction.id

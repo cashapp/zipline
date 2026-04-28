@@ -58,6 +58,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
     val ziplineExtension = target.extensions.create("zipline", ZiplineExtension::class.java)
     ziplineExtension.apiTracking.convention(true)
+    ziplineExtension.forbidServiceExtension.convention(false)
 
     val cliConfiguration: Configuration = target.configurations.create("ziplineCli")
       .apply {
@@ -119,8 +120,23 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
 
         target.tasks.withType(KotlinCompile::class.java) { kotlinCompile ->
           if ("Test" in kotlinCompile.name) return@withType
-          registerZiplineApiTask(target, kotlinCompile, cliConfiguration, Mode.Check, ziplineApiCheck)
-          registerZiplineApiTask(target, kotlinCompile, cliConfiguration, Mode.Dump, ziplineApiDump)
+          val forbidServiceExtension = ziplineExtension.forbidServiceExtension.get()
+          registerZiplineApiTask(
+            target,
+            kotlinCompile,
+            cliConfiguration,
+            Mode.Check,
+            ziplineApiCheck,
+            forbidServiceExtension,
+          )
+          registerZiplineApiTask(
+            target,
+            kotlinCompile,
+            cliConfiguration,
+            Mode.Dump,
+            ziplineApiDump,
+            forbidServiceExtension,
+          )
         }
       }
     }
@@ -181,6 +197,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     cliConfiguration: Configuration,
     mode: Mode,
     rollupTask: TaskProvider<Task>,
+    forbidServiceExtension: Boolean,
   ) {
     val task = project.tasks.register(
       // Like 'compileKotlinJvmZiplineApiCheck'
@@ -197,6 +214,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       task.cliClasspath.from(cliConfiguration)
       task.ziplineApiFile.set(project.file("api/zipline-api.toml"))
       task.projectDirectory.set(project.projectDir.path)
+      task.forbidServiceExtension.set(forbidServiceExtension)
 
       // TODO: the validation uses the wrong JDK. We should be getting the JDK from the
       //     KotlinCompile task (as defaultKotlinJavaToolchain.get().buildJvm), but it doesn't

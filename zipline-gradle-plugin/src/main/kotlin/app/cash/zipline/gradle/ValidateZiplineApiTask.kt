@@ -54,6 +54,9 @@ abstract class ValidateZiplineApiTask @Inject constructor(
   abstract val javaHome: Property<String>
 
   @get:Input
+  abstract val forbidServiceExtension: Property<Boolean>
+
+  @get:Input
   abstract val jdkRelease: Property<Int>
 
   @get:InputFiles
@@ -90,6 +93,7 @@ abstract class ValidateZiplineApiTask @Inject constructor(
       it.jdkRelease.set(jdkRelease.get())
       it.sources.setFrom(sourcepath)
       it.classpath.setFrom(classpath)
+      it.forbidServiceExtension.set(forbidServiceExtension.get())
     }
   }
 
@@ -108,6 +112,7 @@ private interface ZiplineApiValidatorParameters : WorkParameters {
   val jdkRelease: Property<Int>
   val sources: ConfigurableFileCollection
   val classpath: ConfigurableFileCollection
+  val forbidServiceExtension: Property<Boolean>
 }
 
 private abstract class ZiplineApiValidatorWorker @Inject constructor(
@@ -142,7 +147,13 @@ private abstract class ZiplineApiValidatorWorker @Inject constructor(
         parameters.classpath.files.joinToString(File.pathSeparator),
         "--dump-command-name",
         ":ziplineApiDump",
-      )
+      ).let { args ->
+        if (parameters.forbidServiceExtension.get()) {
+          args + "--forbid-service-extension"
+        } else {
+          args
+        }
+      }
     }
 
     check(execResult.exitValue == 0) {
