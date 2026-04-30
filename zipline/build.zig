@@ -1,49 +1,75 @@
 const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
-  // The Windows builds create a .lib file in the lib/ directory which we don't need.
-  const deleteLib = b.addRemoveDirTree(.{ .cwd_relative = b.getInstallPath(.prefix, "lib") });
-  b.getInstallStep().dependOn(&deleteLib.step);
-
-  try setupTarget(b, &deleteLib.step, .linux, .aarch64, "aarch64");
-  try setupTarget(b, &deleteLib.step, .linux, .x86_64, "amd64");
-  try setupTarget(b, &deleteLib.step, .macos, .aarch64, "aarch64");
-  try setupTarget(b, &deleteLib.step, .macos, .x86_64, "x86_64");
-  try setupTarget(b, &deleteLib.step, .windows, .aarch64, "aarch64");
-  try setupTarget(b, &deleteLib.step, .windows, .x86_64, "amd64");
+  try setupTarget(b, .linux, .aarch64, "aarch64");
+  try setupTarget(b, .linux, .x86_64, "amd64");
+  try setupTarget(b, .macos, .aarch64, "aarch64");
+  try setupTarget(b, .macos, .x86_64, "x86_64");
+  try setupTarget(b, .windows, .aarch64, "aarch64");
+  try setupTarget(b, .windows, .x86_64, "amd64");
 }
 
-fn setupTarget(b: *std.Build, step: *std.Build.Step, tag: std.Target.Os.Tag, arch: std.Target.Cpu.Arch, dir: []const u8) !void {
-  const lib = b.addSharedLibrary(.{
+fn setupTarget(b: *std.Build, tag: std.Target.Os.Tag, arch: std.Target.Cpu.Arch, dir: []const u8) !void {
+  const lib = b.addLibrary(.{
     .name = "quickjs",
-    .target = b.resolveTargetQuery(.{
-      .cpu_arch = arch,
-      .os_tag = tag,
-      // We need to explicitly specify gnu for linux, as otherwise it defaults to musl.
-      // See https://github.com/ziglang/zig/issues/16624#issuecomment-1801175600.
-      .abi = if (tag == .linux) .gnu else null,
+    .linkage = .dynamic,
+    .root_module = b.createModule(.{
+      .target = b.resolveTargetQuery(.{
+        .cpu_arch = arch,
+        .os_tag = tag,
+        // We need to explicitly specify gnu for linux, as otherwise it defaults to musl.
+        // See https://github.com/ziglang/zig/issues/16624#issuecomment-1801175600.
+        .abi = if (tag == .linux) .gnu else null,
+      }),
+      .optimize = .ReleaseSmall,
     }),
-    .optimize = .ReleaseSmall,
   });
 
-  var version_buf: [64]u8 = undefined;
-  const version = try readVersionFile(&version_buf);
+  const version = readVersionFile();
   var quoted_version_buf: [64]u8 = undefined;
   const quoted_version = try std.fmt.bufPrint(&quoted_version_buf, "\"{s}\"", .{ version });
   lib.root_module.addCMacro("CONFIG_VERSION", quoted_version);
 
-  lib.addIncludePath(b.path("native/include/share"));
-  lib.addIncludePath(
+  lib.root_module.addIncludePath(b.path("native/include/share"));
+  lib.root_module.addIncludePath(
     switch (tag) {
       .windows => b.path("native/include/windows"),
       else => b.path("native/include/unix"),
     }
   );
+  lib.root_module.addIncludePath(b.path("mimalloc/include"));
 
-  lib.linkLibC();
+  lib.root_module.link_libc = true;
+
   // TODO Tree-walk these two dirs for all C files.
-  lib.addCSourceFiles(.{
+  lib.root_module.addCSourceFiles(.{
     .files = &.{
+      "mimalloc/src/alloc.c",
+      "mimalloc/src/alloc-aligned.c",
+      "mimalloc/src/alloc-posix.c",
+      "mimalloc/src/arena.c",
+      "mimalloc/src/arena-meta.c",
+      "mimalloc/src/bitmap.c",
+      "mimalloc/src/heap.c",
+      "mimalloc/src/init.c",
+      "mimalloc/src/libc.c",
+      "mimalloc/src/options.c",
+      "mimalloc/src/os.c",
+      "mimalloc/src/page.c",
+      "mimalloc/src/page-map.c",
+      "mimalloc/src/random.c",
+      "mimalloc/src/stats.c",
+      "mimalloc/src/theap.c",
+      "mimalloc/src/threadlocal.c",
+      "mimalloc/src/prim/prim.c",
+    },
+    .flags = &.{
+      "-Wno-date-time",
+    },
+  });
+  lib.root_module.addCSourceFiles(.{
+    .files = &.{
+      "native/mimalloc/mimalloc-quickjs.c",
       "native/common/context-no-eval.c",
       "native/common/finalization-registry.c",
       "native/common/global-gc.c",
@@ -57,9 +83,9 @@ fn setupTarget(b: *std.Build, step: *std.Build.Step, tag: std.Target.Os.Tag, arc
     },
   });
 
-  lib.linkLibCpp();
+  lib.root_module.link_libcpp = true;
   // TODO Tree-walk this dirs for all C++ files.
-  lib.addCSourceFiles(.{
+  lib.root_module.addCSourceFiles(.{
     .files = &.{
       "native/Context.cpp",
       "native/ExceptionThrowers.cpp",
@@ -80,14 +106,10 @@ fn setupTarget(b: *std.Build, step: *std.Build.Step, tag: std.Target.Os.Tag, arc
     },
   });
 
-  step.dependOn(&install.step);
+  b.getInstallStep().dependOn(&install.step);
 }
 
-fn readVersionFile(version_buf: []u8) ![]const u8 {
-  const version = try std.fs.cwd().readFile(
-    "native/quickjs/VERSION",
-    version_buf,
-  );
-
+fn readVersionFile() []const u8 {
+  const version = @embedFile("native/quickjs/VERSION");
   return std.mem.trim(u8, version, "\r\n");
 }
