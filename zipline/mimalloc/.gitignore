@@ -1,0 +1,7 @@
+build
+out/
+*.zip
+*.tar
+*.gz
+.vscode
+.DS_STore

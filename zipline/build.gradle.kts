@@ -136,6 +136,7 @@ kotlin {
       main.cinterops {
         create("quickjs") {
           header(file("native/quickjs/quickjs.h"))
+          header(file("native/mimalloc/mimalloc-quickjs.h"))
           header(file("native/common/context-no-eval.h"))
           header(file("native/common/finalization-registry.h"))
           header(file("native/common/global-gc.h"))
@@ -176,12 +177,40 @@ buildConfig {
 
 cklib {
   config.kotlinVersion = libs.versions.kotlin.get()
+  create("mimalloc") {
+    language = C
+    srcDirs = project.files(
+      file("mimalloc/src"),
+    )
+    compilerArgs.addAll(listOf("-I${file("mimalloc/include").absolutePath}"))
+    includeFiles = listOf(
+      "alloc.c",
+      "alloc-aligned.c",
+      "alloc-posix.c",
+      "arena.c",
+      "arena-meta.c",
+      "bitmap.c",
+      "heap.c",
+      "init.c",
+      "libc.c",
+      "options.c",
+      "os.c",
+      "page.c",
+      "page-map.c",
+      "random.c",
+      "stats.c",
+      "theap.c",
+      "threadlocal.c",
+      "prim/prim.c",
+    )
+  }
   create("quickjs") {
     language = C
-    srcDirs = project.files(file("native/quickjs"), file("native/common"))
+    srcDirs = project.files(file("native/quickjs"), file("native/common"), file("native/mimalloc"))
     compilerArgs.addAll(
       listOf(
         //"-DDUMP_LEAKS=1", // For local testing ONLY!
+        "-I${file("mimalloc/include").absolutePath}",
         "-DKONAN_MI_MALLOC=1",
         "-DCONFIG_VERSION=\"${quickJsVersion()}\"",
         "-Wno-unknown-pragmas",
