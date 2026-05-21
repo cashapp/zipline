@@ -19,6 +19,7 @@ import app.cash.zipline.api.validator.ActualApiHasProblems
 import app.cash.zipline.api.validator.ApiCompatibilityOptions
 import app.cash.zipline.api.validator.ExpectedApiIsUpToDate
 import app.cash.zipline.api.validator.ExpectedApiRequiresUpdates
+import app.cash.zipline.api.validator.fir.FirZiplineApiReaderOptions
 import app.cash.zipline.api.validator.fir.readFirZiplineApi
 import app.cash.zipline.api.validator.makeApiCompatibilityDecision
 import app.cash.zipline.api.validator.toml.TomlZiplineApi
@@ -92,8 +93,12 @@ class ValidateZiplineApi(
     .default(NAME_DUMP)
 
   private val forbidServiceExtension by option("--forbid-service-extension", hidden = true)
-    .flag("--allow-service-extension", default = false)
+    .flag(default = false)
     .help("Forbid an existing Zipline service to add a new function")
+
+  private val includeSchemaInFunctionIds by option("--include-schema-in-function-ids", hidden = true)
+    .flag(default = false)
+    .help("Include source DTO schemas in Zipline API function IDs")
 
   override fun run() {
     val expectedZiplineApi = when {
@@ -101,7 +106,15 @@ class ValidateZiplineApi(
       else -> TomlZiplineApi(listOf())
     }
 
-    val actualZiplineApi = readFirZiplineApi(javaHome.toFile(), jdkRelease, sources, classpath)
+    val actualZiplineApi = readFirZiplineApi(
+      javaHome.toFile(),
+      jdkRelease,
+      sources,
+      classpath,
+      FirZiplineApiReaderOptions(
+        includeSchemaInFunctionIds = includeSchemaInFunctionIds,
+      ),
+    )
 
     when (
       val decision = makeApiCompatibilityDecision(
@@ -109,6 +122,7 @@ class ValidateZiplineApi(
         actualZiplineApi,
         ApiCompatibilityOptions(
           forbidServiceExtension = forbidServiceExtension,
+          includeSchemaInFunctionIds = includeSchemaInFunctionIds,
         ),
       )
     ) {

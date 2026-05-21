@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.api.validator.fir
 
+import app.cash.zipline.CallResult
 import app.cash.zipline.ZiplineService
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -40,6 +41,13 @@ internal class FirZiplineApiReaderTest {
       FirZiplineApi(
         listOf(
           FirZiplineService(
+            name = CollectionDtoService::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun save(${CollectionRequest::class.qualifiedName}): kotlin.Unit"),
+            ),
+          ),
+          FirZiplineService(
             name = EchoService::class.qualifiedName!!,
             functions = listOf(
               FirZiplineFunction("fun close(): kotlin.Unit"),
@@ -59,11 +67,39 @@ internal class FirZiplineApiReaderTest {
             ),
           ),
           FirZiplineService(
+            name = ExternalTypeService::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun record(${CallResult::class.qualifiedName}): kotlin.Unit"),
+            ),
+          ),
+          FirZiplineService(
             name = ImportsJdkTypes::class.qualifiedName!!,
             functions = listOf(
               FirZiplineFunction("fun close(): kotlin.Unit"),
               FirZiplineFunction("fun jvmIoException(java.io.IOException): kotlin.String"),
               FirZiplineFunction("fun okioIoException(okio.IOException): kotlin.String"),
+            ),
+          ),
+          FirZiplineService(
+            name = PersonService::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun print(${Person::class.qualifiedName}): kotlin.Unit"),
+            ),
+          ),
+          FirZiplineService(
+            name = ProfileService::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun show(${Profile::class.qualifiedName}): kotlin.Unit"),
+            ),
+          ),
+          FirZiplineService(
+            name = RecursiveDtoService::class.qualifiedName!!,
+            functions = listOf(
+              FirZiplineFunction("fun close(): kotlin.Unit"),
+              FirZiplineFunction("fun link(${RecursiveNode::class.qualifiedName}): kotlin.Unit"),
             ),
           ),
           FirZiplineService(
@@ -80,6 +116,111 @@ internal class FirZiplineApiReaderTest {
     )
   }
 
+  @Test
+  fun includesDirectAndInheritedSchemaInFunctionIdsWhenConfigured() {
+    val ziplineApi = readFirZiplineApi(
+      javaHome,
+      jdkRelease,
+      sources,
+      classpath,
+      FirZiplineApiReaderOptions(includeSchemaInFunctionIds = true),
+    )
+
+    assertThat(
+      ziplineApi.function(
+        serviceName = PersonService::class.qualifiedName!!,
+        signature = "fun print(${Person::class.qualifiedName}): kotlin.Unit",
+      ),
+    ).isEqualTo(
+      functionWithIdSignature(
+        signature = "fun print(${Person::class.qualifiedName}): kotlin.Unit",
+        idSignature = "fun print(${Person::class.qualifiedName}{kind=class;prop=address:${Address::class.qualifiedName}{kind=class;prop=street:kotlin.String};prop=name:kotlin.String}): kotlin.Unit",
+      ),
+    )
+    assertThat(
+      ziplineApi.function(
+        serviceName = ProfileService::class.qualifiedName!!,
+        signature = "fun show(${Profile::class.qualifiedName}): kotlin.Unit",
+      ),
+    ).isEqualTo(
+      functionWithIdSignature(
+        signature = "fun show(${Profile::class.qualifiedName}): kotlin.Unit",
+        idSignature = "fun show(${Profile::class.qualifiedName}{kind=class;super=${AuditedEntityDto::class.qualifiedName}{kind=class;super=${EntityDto::class.qualifiedName}{kind=class};prop=auditInfo:${AuditInfo::class.qualifiedName}{kind=class;prop=createdBy:kotlin.String}};prop=displayName:kotlin.String;prop=id:kotlin.String}): kotlin.Unit",
+      ),
+    )
+    assertThat(
+      ziplineApi.function(
+        serviceName = ExternalTypeService::class.qualifiedName!!,
+        signature = "fun record(${CallResult::class.qualifiedName}): kotlin.Unit",
+      ),
+    ).isEqualTo(
+      FirZiplineFunction("fun record(${CallResult::class.qualifiedName}): kotlin.Unit"),
+    )
+  }
+
+  @Test
+  fun includesNestedSchemaInFunctionIdsWhenConfigured() {
+    val ziplineApi = readFirZiplineApi(
+      javaHome,
+      jdkRelease,
+      sources,
+      classpath,
+      FirZiplineApiReaderOptions(includeSchemaInFunctionIds = true),
+    )
+
+    assertThat(
+      ziplineApi.function(
+        serviceName = CollectionDtoService::class.qualifiedName!!,
+        signature = "fun save(${CollectionRequest::class.qualifiedName}): kotlin.Unit",
+      ),
+    ).isEqualTo(
+      functionWithIdSignature(
+        signature = "fun save(${CollectionRequest::class.qualifiedName}): kotlin.Unit",
+        idSignature = "fun save(${CollectionRequest::class.qualifiedName}{kind=class;prop=external:${CallResult::class.qualifiedName};prop=nullableName:kotlin.String?;prop=people:kotlin.collections.List<${Person::class.qualifiedName}{kind=class;prop=address:${Address::class.qualifiedName}{kind=class;prop=street:kotlin.String};prop=name:kotlin.String}?>;prop=status:${Status::class.qualifiedName}{kind=enum_class;enum=Disabled;enum=Enabled}}): kotlin.Unit",
+      ),
+    )
+  }
+
+  @Test
+  fun includesRecursiveSchemaInFunctionIdsWhenConfigured() {
+    val ziplineApi = readFirZiplineApi(
+      javaHome,
+      jdkRelease,
+      sources,
+      classpath,
+      FirZiplineApiReaderOptions(includeSchemaInFunctionIds = true),
+    )
+
+    assertThat(
+      ziplineApi.function(
+        serviceName = RecursiveDtoService::class.qualifiedName!!,
+        signature = "fun link(${RecursiveNode::class.qualifiedName}): kotlin.Unit",
+      ),
+    ).isEqualTo(
+      functionWithIdSignature(
+        signature = "fun link(${RecursiveNode::class.qualifiedName}): kotlin.Unit",
+        idSignature = "fun link(${RecursiveNode::class.qualifiedName}{kind=class;prop=name:kotlin.String;prop=next:${RecursiveNode::class.qualifiedName}{...}?}): kotlin.Unit",
+      ),
+    )
+  }
+
+  /** This uses source-defined DTOs with nested source, enum, nullable, and external leaf types. */
+  interface CollectionDtoService : ZiplineService {
+    fun save(request: CollectionRequest)
+  }
+
+  data class CollectionRequest(
+    val external: CallResult,
+    val nullableName: String?,
+    val people: List<Person?>,
+    val status: Status,
+  )
+
+  enum class Status {
+    Disabled,
+    Enabled,
+  }
+
   /** This should be included in the output. */
   interface EchoService : ZiplineService {
     fun echo(request: String): String
@@ -90,6 +231,11 @@ internal class FirZiplineApiReaderTest {
   /** This should be included in the output. */
   interface ExtendedEchoService : EchoService {
     fun echoAll(requests: List<String>): List<String>
+  }
+
+  /** This uses an external classpath type. */
+  interface ExternalTypeService : ZiplineService {
+    fun record(result: CallResult)
   }
 
   /** This uses externally-defined types. */
@@ -107,6 +253,47 @@ internal class FirZiplineApiReaderTest {
     fun okioIoException(e: okio.IOException): String
   }
 
+  /** This uses source-defined DTOs. */
+  interface PersonService : ZiplineService {
+    fun print(person: Person)
+  }
+
+  data class Person(
+    val name: String,
+    val address: Address,
+  )
+
+  data class Address(val street: String)
+
+  /** This uses source-defined DTOs with inherited and overridden properties. */
+  interface ProfileService : ZiplineService {
+    fun show(profile: Profile)
+  }
+
+  data class Profile(
+    override val id: String,
+    val displayName: String,
+  ) : AuditedEntityDto(id, AuditInfo("created"))
+
+  open class AuditedEntityDto(
+    open override val id: String,
+    val auditInfo: AuditInfo,
+  ) : EntityDto(id)
+
+  open class EntityDto(open val id: String)
+
+  data class AuditInfo(val createdBy: String)
+
+  /** This uses source-defined recursive DTOs. */
+  interface RecursiveDtoService : ZiplineService {
+    fun link(node: RecursiveNode)
+  }
+
+  data class RecursiveNode(
+    val name: String,
+    val next: RecursiveNode?,
+  )
+
   /** This should be included in the output, but without additional methods. */
   interface UnnecessaryEchoService : EchoService {
     override fun echo(request: String): String
@@ -122,5 +309,23 @@ internal class FirZiplineApiReaderTest {
       set(value) = error("unexpected call")
 
     override fun echo(request: String) = error("unexpected call")
+  }
+
+  private fun functionWithIdSignature(
+    signature: String,
+    idSignature: String,
+  ): FirZiplineFunction {
+    return FirZiplineFunction(
+      id = idSignature.signatureHash(),
+      signature = signature,
+    )
+  }
+
+  private fun FirZiplineApi.function(
+    serviceName: String,
+    signature: String,
+  ): FirZiplineFunction {
+    return services.single { it.name == serviceName }
+      .functions.single { it.signature == signature }
   }
 }
