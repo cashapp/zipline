@@ -59,6 +59,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     val ziplineExtension = target.extensions.create("zipline", ZiplineExtension::class.java)
     ziplineExtension.apiTracking.convention(true)
     ziplineExtension.forbidServiceExtension.convention(false)
+    ziplineExtension.includeSchemaInFunctionIds.convention(false)
 
     val cliConfiguration: Configuration = target.configurations.create("ziplineCli")
       .apply {
@@ -121,6 +122,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
         target.tasks.withType(KotlinCompile::class.java) { kotlinCompile ->
           if ("Test" in kotlinCompile.name) return@withType
           val forbidServiceExtension = ziplineExtension.forbidServiceExtension.get()
+          val includeSchemaInFunctionIds = ziplineExtension.includeSchemaInFunctionIds.get()
           registerZiplineApiTask(
             target,
             kotlinCompile,
@@ -128,6 +130,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
             Mode.Check,
             ziplineApiCheck,
             forbidServiceExtension,
+            includeSchemaInFunctionIds,
           )
           registerZiplineApiTask(
             target,
@@ -136,6 +139,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
             Mode.Dump,
             ziplineApiDump,
             forbidServiceExtension,
+            includeSchemaInFunctionIds,
           )
         }
       }
@@ -198,6 +202,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     mode: Mode,
     rollupTask: TaskProvider<Task>,
     forbidServiceExtension: Boolean,
+    includeSchemaInFunctionIds: Boolean,
   ) {
     val task = project.tasks.register(
       // Like 'compileKotlinJvmZiplineApiCheck'
@@ -215,6 +220,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       task.ziplineApiFile.set(project.file("api/zipline-api.toml"))
       task.projectDirectory.set(project.projectDir.path)
       task.forbidServiceExtension.set(forbidServiceExtension)
+      task.includeSchemaInFunctionIds.set(includeSchemaInFunctionIds)
 
       // TODO: the validation uses the wrong JDK. We should be getting the JDK from the
       //     KotlinCompile task (as defaultKotlinJavaToolchain.get().buildJvm), but it doesn't

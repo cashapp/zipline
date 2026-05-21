@@ -45,9 +45,11 @@ abstract class ZiplineExtension {
    */
   abstract val terserOptionsJson: Property<String>
 
-
   /** True to forbid the existing Zipline service to be extended with new functions. */
   abstract val forbidServiceExtension: Property<Boolean>
+
+  /** True to include source DTO schemas in Zipline API function IDs. */
+  abstract val includeSchemaInFunctionIds: Property<Boolean>
 
   /**
    * Configure production builds to get a small artifact, by removing information used for stack

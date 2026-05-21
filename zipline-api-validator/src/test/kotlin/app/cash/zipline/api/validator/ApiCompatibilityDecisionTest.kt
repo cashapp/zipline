@@ -319,4 +319,162 @@ class ApiCompatibilityDecisionTest {
     val decision = makeApiCompatibilityDecision(expectedApi, actualApi)
     assertThat(decision).isEqualTo(ExpectedApiIsUpToDate)
   }
+
+  @Test
+  fun dtoSchemaChangeChangesFunctionId() {
+    val signature = "fun print(com.example.Person): kotlin.Unit"
+    val oldIdSignature =
+      "fun print(com.example.Person{kind=class;prop=name:kotlin.String}): kotlin.Unit"
+    val newIdSignature =
+      "fun print(com.example.Person{kind=class;prop=firstName:kotlin.String;prop=lastName:kotlin.String}): kotlin.Unit"
+    val expectedApi = TomlZiplineApi(
+      listOf(
+        TomlZiplineService(
+          name = "com.example.PersonService",
+          functions = listOf(
+            TomlZiplineFunction(
+              signature,
+              oldIdSignature.signatureHash(),
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val actualApi = FirZiplineApi(
+      listOf(
+        FirZiplineService(
+          name = "com.example.PersonService",
+          functions = listOf(
+            FirZiplineFunction(
+              id = newIdSignature.signatureHash(),
+              signature = signature,
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val decision = makeApiCompatibilityDecision(expectedApi, actualApi) as ActualApiHasProblems
+    assertThat(decision.messages).containsExactly(
+      """
+      |Expected function vqKB1WEQ of com.example.PersonService not found:
+      |  fun print(com.example.Person): kotlin.Unit
+      """.trimMargin(),
+    )
+  }
+
+  @Test
+  fun dtoSchemaChangeIncludesHintWhenSchemaIdsAreEnabled() {
+    val signature = "fun print(com.example.Person): kotlin.Unit"
+    val oldIdSignature =
+      "fun print(com.example.Person{kind=class;prop=name:kotlin.String}): kotlin.Unit"
+    val newIdSignature =
+      "fun print(com.example.Person{kind=class;prop=firstName:kotlin.String;prop=lastName:kotlin.String}): kotlin.Unit"
+    val expectedFunctionId = oldIdSignature.signatureHash()
+    val actualFunctionId = newIdSignature.signatureHash()
+    val expectedApi = TomlZiplineApi(
+      listOf(
+        TomlZiplineService(
+          name = "com.example.PersonService",
+          functions = listOf(
+            TomlZiplineFunction(
+              signature,
+              expectedFunctionId,
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val actualApi = FirZiplineApi(
+      listOf(
+        FirZiplineService(
+          name = "com.example.PersonService",
+          functions = listOf(
+            FirZiplineFunction(
+              id = actualFunctionId,
+              signature = signature,
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val decision = makeApiCompatibilityDecision(
+      expectedApi,
+      actualApi,
+      ApiCompatibilityOptions(includeSchemaInFunctionIds = true),
+    ) as ActualApiHasProblems
+    assertThat(decision.messages).containsExactly(
+      """
+      |Expected function $expectedFunctionId of com.example.PersonService not found:
+      |  fun print(com.example.Person): kotlin.Unit
+      |Hint: a function with the same signature exists with ID $actualFunctionId.
+      |Since includeSchemaInFunctionIds is enabled, this probably means a DTO used by this function, or one of its nested DTOs, changed.
+      """.trimMargin(),
+    )
+  }
+
+  @Test
+  fun dtoSchemaChangeIncludesHintForAddedFunctionWhenServiceExtensionIsForbidden() {
+    val signature = "fun print(com.example.Person): kotlin.Unit"
+    val oldIdSignature =
+      "fun print(com.example.Person{kind=class;prop=name:kotlin.String}): kotlin.Unit"
+    val newIdSignature =
+      "fun print(com.example.Person{kind=class;prop=firstName:kotlin.String;prop=lastName:kotlin.String}): kotlin.Unit"
+    val expectedFunctionId = oldIdSignature.signatureHash()
+    val actualFunctionId = newIdSignature.signatureHash()
+    val expectedApi = TomlZiplineApi(
+      listOf(
+        TomlZiplineService(
+          name = "com.example.PersonService",
+          functions = listOf(
+            TomlZiplineFunction(
+              signature,
+              expectedFunctionId,
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val actualApi = FirZiplineApi(
+      listOf(
+        FirZiplineService(
+          name = "com.example.PersonService",
+          functions = listOf(
+            FirZiplineFunction(
+              id = actualFunctionId,
+              signature = signature,
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val decision = makeApiCompatibilityDecision(
+      expectedApi,
+      actualApi,
+      ApiCompatibilityOptions(
+        forbidServiceExtension = true,
+        includeSchemaInFunctionIds = true,
+      ),
+    ) as ActualApiHasProblems
+    assertThat(decision.messages).containsExactly(
+      """
+      |New function is found in com.example.PersonService:
+      |  fun print(com.example.Person): kotlin.Unit
+      |Service extension is forbidden. Create a new Zipline service instead.
+      |Hint: a function with the same signature exists with ID $expectedFunctionId.
+      |Since includeSchemaInFunctionIds is enabled, this probably means a DTO used by this function, or one of its nested DTOs, changed.
+      """.trimMargin(),
+      """
+      |Expected function $expectedFunctionId of com.example.PersonService not found:
+      |  fun print(com.example.Person): kotlin.Unit
+      |Hint: a function with the same signature exists with ID $actualFunctionId.
+      |Since includeSchemaInFunctionIds is enabled, this probably means a DTO used by this function, or one of its nested DTOs, changed.
+      """.trimMargin(),
+    )
+  }
 }

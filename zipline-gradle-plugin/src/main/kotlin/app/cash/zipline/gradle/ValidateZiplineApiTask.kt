@@ -57,6 +57,9 @@ abstract class ValidateZiplineApiTask @Inject constructor(
   abstract val forbidServiceExtension: Property<Boolean>
 
   @get:Input
+  abstract val includeSchemaInFunctionIds: Property<Boolean>
+
+  @get:Input
   abstract val jdkRelease: Property<Int>
 
   @get:InputFiles
@@ -94,6 +97,7 @@ abstract class ValidateZiplineApiTask @Inject constructor(
       it.sources.setFrom(sourcepath)
       it.classpath.setFrom(classpath)
       it.forbidServiceExtension.set(forbidServiceExtension.get())
+      it.includeSchemaInFunctionIds.set(includeSchemaInFunctionIds.get())
     }
   }
 
@@ -113,6 +117,7 @@ private interface ZiplineApiValidatorParameters : WorkParameters {
   val sources: ConfigurableFileCollection
   val classpath: ConfigurableFileCollection
   val forbidServiceExtension: Property<Boolean>
+  val includeSchemaInFunctionIds: Property<Boolean>
 }
 
 private abstract class ZiplineApiValidatorWorker @Inject constructor(
@@ -148,10 +153,14 @@ private abstract class ZiplineApiValidatorWorker @Inject constructor(
         "--dump-command-name",
         ":ziplineApiDump",
       ).let { args ->
-        if (parameters.forbidServiceExtension.get()) {
-          args + "--forbid-service-extension"
-        } else {
-          args
+        buildList {
+          addAll(args)
+          if (parameters.forbidServiceExtension.get()) {
+            add("--forbid-service-extension")
+          }
+          if (parameters.includeSchemaInFunctionIds.get()) {
+            add("--include-schema-in-function-ids")
+          }
         }
       }
     }

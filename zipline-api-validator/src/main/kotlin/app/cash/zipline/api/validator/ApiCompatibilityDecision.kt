@@ -24,6 +24,7 @@ sealed interface ApiCompatibilityDecision
 
 data class ApiCompatibilityOptions(
   val forbidServiceExtension: Boolean = false,
+  val includeSchemaInFunctionIds: Boolean = false,
 )
 
 class ActualApiHasProblems(
@@ -63,15 +64,27 @@ fun makeApiCompatibilityDecision(
 
     val expectedFunctions = expectedService.functions.associateBy { it.id }
     val actualFunctions = actualService.functions.associateBy { it.id }
+    val expectedFunctionsBySignature = expectedService.functions
+      .filter { it.leadingComment.isNotEmpty() }
+      .associateBy { it.leadingComment }
     val addedFunctions = actualService.functions.filter { it.id !in expectedFunctions }
     if (addedFunctions.isNotEmpty()) {
       if (options.forbidServiceExtension) {
         problemMessages += addedFunctions.map { addedFunction ->
-          """
-            |New function is found in $serviceName:
-            |  ${addedFunction.signature.replace("\n", "\n  ")}
-            |Service extension is forbidden. Create a new Zipline service instead.
-          """.trimMargin()
+          buildString {
+            append(
+              """
+              |New function is found in $serviceName:
+              |  ${addedFunction.signature.replace("\n", "\n  ")}
+              |Service extension is forbidden. Create a new Zipline service instead.
+              """.trimMargin(),
+            )
+            val expectedFunctionWithSameSignature = expectedFunctionsBySignature[addedFunction.signature]
+            if (expectedFunctionWithSameSignature != null && options.includeSchemaInFunctionIds) {
+              append("\n")
+              append(schemaIdChangedHint(expectedFunctionWithSameSignature.id))
+            }
+          }
         }
       } else {
         hasChanges = true
@@ -83,11 +96,18 @@ fun makeApiCompatibilityDecision(
       val actualFunction = actualFunctions[functionId]
       if (actualFunction == null) {
         val comment = expectedFunction.leadingComment
+        val actualFunctionWithSameSignature = actualService.functions
+          .takeIf { options.includeSchemaInFunctionIds && comment.isNotEmpty() }
+          ?.firstOrNull { it.signature == comment }
         problemMessages += buildString {
           append("Expected function $functionId of $serviceName not found")
           if (comment.isNotEmpty()) {
             append(":\n  ")
             append(comment.replace("\n", "\n  "))
+          }
+          if (actualFunctionWithSameSignature != null) {
+            append("\n")
+            append(schemaIdChangedHint(actualFunctionWithSameSignature.id))
           }
         }
       }
@@ -99,6 +119,13 @@ fun makeApiCompatibilityDecision(
     hasChanges -> ExpectedApiRequiresUpdates(actualApi.toToml())
     else -> ExpectedApiIsUpToDate
   }
+}
+
+private fun schemaIdChangedHint(otherFunctionId: String): String {
+  return """
+    |Hint: a function with the same signature exists with ID $otherFunctionId.
+    |Since includeSchemaInFunctionIds is enabled, this probably means a DTO used by this function, or one of its nested DTOs, changed.
+  """.trimMargin()
 }
 
 private fun FirZiplineApi.toToml(): TomlZiplineApi {
