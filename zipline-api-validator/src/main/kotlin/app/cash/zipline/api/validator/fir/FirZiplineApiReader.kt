@@ -196,6 +196,10 @@ internal class FirZiplineApiReader(
           it.asString()
         }
       }
+
+      if (coneType.isMarkedNullable) {
+        append("?")
+      }
     }
   }
 
