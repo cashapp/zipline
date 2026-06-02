@@ -16,10 +16,12 @@
 package app.cash.zipline.api.validator
 
 import app.cash.zipline.api.validator.fir.FirZiplineApi
+import app.cash.zipline.api.validator.fir.FirZiplineConstant
 import app.cash.zipline.api.validator.fir.FirZiplineFunction
 import app.cash.zipline.api.validator.fir.FirZiplineService
 import app.cash.zipline.api.validator.fir.signatureHash
 import app.cash.zipline.api.validator.toml.TomlZiplineApi
+import app.cash.zipline.api.validator.toml.TomlZiplineConstant
 import app.cash.zipline.api.validator.toml.TomlZiplineFunction
 import app.cash.zipline.api.validator.toml.TomlZiplineService
 import assertk.assertThat
@@ -175,6 +177,112 @@ class ApiCompatibilityDecisionTest {
           ),
         ),
       ),
+    )
+  }
+
+  @Test
+  fun constantAdded() {
+    val expectedApi = TomlZiplineApi(
+      listOf(
+        TomlZiplineService(
+          name = "com.example.EchoService",
+          functions = listOf(
+            TomlZiplineFunction(
+              "fun echo(kotlin.String): kotlin.String",
+              "fun echo(kotlin.String): kotlin.String".signatureHash(),
+            ),
+          ),
+        ),
+      ),
+    )
+
+    val actualApi = FirZiplineApi(
+      listOf(
+        FirZiplineService(
+          name = "com.example.EchoService",
+          functions = listOf(
+            FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
+          ),
+          constants = listOf(
+            FirZiplineConstant("const val NAME: kotlin.String = \"EchoService\""),
+          ),
+        ),
+      ),
+    )
+
+    val decision = makeApiCompatibilityDecision(
+      expectedApi,
+      actualApi,
+      ApiCompatibilityOptions(includeApiConstants = true),
+    ) as ExpectedApiRequiresUpdates
+    assertThat(decision.updatedApi).isEqualTo(
+      TomlZiplineApi(
+        listOf(
+          TomlZiplineService(
+            name = "com.example.EchoService",
+            functions = listOf(
+              TomlZiplineFunction(
+                "fun echo(kotlin.String): kotlin.String",
+                "fun echo(kotlin.String): kotlin.String".signatureHash(),
+              ),
+            ),
+            constants = listOf(
+              TomlZiplineConstant(
+                "const val NAME: kotlin.String = \"EchoService\"",
+                "const val NAME: kotlin.String = \"EchoService\"".signatureHash(),
+              ),
+            ),
+          ),
+        ),
+      ),
+    )
+  }
+
+  @Test
+  fun constantChanged() {
+    val oldSignature = "const val NAME: kotlin.String = \"EchoService\""
+    val newSignature = "const val NAME: kotlin.String = \"EchoServiceV2\""
+    val expectedApi = TomlZiplineApi(
+      listOf(
+        TomlZiplineService(
+          name = "com.example.EchoService",
+          functions = listOf(
+            TomlZiplineFunction(
+              "fun echo(kotlin.String): kotlin.String",
+              "fun echo(kotlin.String): kotlin.String".signatureHash(),
+            ),
+          ),
+          constants = listOf(
+            TomlZiplineConstant(oldSignature, oldSignature.signatureHash()),
+          ),
+        ),
+      ),
+    )
+
+    val actualApi = FirZiplineApi(
+      listOf(
+        FirZiplineService(
+          name = "com.example.EchoService",
+          functions = listOf(
+            FirZiplineFunction("fun echo(kotlin.String): kotlin.String"),
+          ),
+          constants = listOf(
+            FirZiplineConstant(newSignature),
+          ),
+        ),
+      ),
+    )
+
+    val decision = makeApiCompatibilityDecision(
+      expectedApi,
+      actualApi,
+      ApiCompatibilityOptions(includeApiConstants = true),
+    ) as ActualApiHasProblems
+    assertThat(decision.messages).containsExactly(
+      """
+      |Expected constant ${oldSignature.signatureHash()} of com.example.EchoService not found:
+      |  const val NAME: kotlin.String = "EchoService"
+      """.trimMargin(),
     )
   }
 

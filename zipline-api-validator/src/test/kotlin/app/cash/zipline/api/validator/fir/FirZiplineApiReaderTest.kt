@@ -16,6 +16,7 @@
 package app.cash.zipline.api.validator.fir
 
 import app.cash.zipline.CallResult
+import app.cash.zipline.ZiplineApiConstant
 import app.cash.zipline.ZiplineService
 import assertk.assertThat
 import assertk.assertions.isEqualTo
@@ -112,6 +113,23 @@ internal class FirZiplineApiReaderTest {
             ),
           ),
         ),
+      ),
+    )
+  }
+
+  @Test
+  fun includesApiConstantsWhenConfigured() {
+    val ziplineApi = readFirZiplineApi(
+      javaHome,
+      jdkRelease,
+      sources,
+      classpath,
+      FirZiplineApiReaderOptions(includeApiConstants = true),
+    )
+
+    assertThat(ziplineApi.service(EchoService::class.qualifiedName!!).constants).isEqualTo(
+      listOf(
+        FirZiplineConstant("const val NAME: kotlin.String = \"EchoService\""),
       ),
     )
   }
@@ -226,6 +244,13 @@ internal class FirZiplineApiReaderTest {
     fun echo(request: String): String
     val greeting: String
     var terse: Boolean
+
+    companion object {
+      @ZiplineApiConstant
+      const val NAME: String = "Echo" + "Service"
+
+      const val UNTRACKED_NAME: String = "Ignored"
+    }
   }
 
   /** This should be included in the output. */
@@ -325,7 +350,11 @@ internal class FirZiplineApiReaderTest {
     serviceName: String,
     signature: String,
   ): FirZiplineFunction {
-    return services.single { it.name == serviceName }
+    return service(serviceName)
       .functions.single { it.signature == signature }
+  }
+
+  private fun FirZiplineApi.service(serviceName: String): FirZiplineService {
+    return services.single { it.name == serviceName }
   }
 }

@@ -34,6 +34,11 @@ internal class TomlZiplineApiReaderTest {
       |  # fun echo(kotlin.String): kotlin.String
       |  "1acbabc2",
       |]
+      |
+      |constants = [
+      |  # const val NAME: kotlin.String = "SampleService"
+      |  "name1234",
+      |]
       """.trimMargin(),
     )
 
@@ -51,6 +56,12 @@ internal class TomlZiplineApiReaderTest {
               TomlZiplineFunction(
                 leadingComment = "fun echo(kotlin.String): kotlin.String",
                 id = "1acbabc2",
+              ),
+            ),
+            constants = listOf(
+              TomlZiplineConstant(
+                leadingComment = "const val NAME: kotlin.String = \"SampleService\"",
+                id = "name1234",
               ),
             ),
           ),

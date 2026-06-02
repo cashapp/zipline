@@ -51,6 +51,9 @@ abstract class ZiplineExtension {
   /** True to include source DTO schemas in Zipline API function IDs. */
   abstract val includeSchemaInFunctionIds: Property<Boolean>
 
+  /** True to include @ZiplineApiConstant companion object const vals in Zipline API validation. */
+  abstract val includeApiConstants: Property<Boolean>
+
   /**
    * Configure production builds to get a small artifact, by removing information used for stack
    * traces and the sampling profiler.
