@@ -17,6 +17,7 @@ package app.cash.zipline.api.validator
 
 import app.cash.zipline.api.validator.fir.FirZiplineApi
 import app.cash.zipline.api.validator.toml.TomlZiplineApi
+import app.cash.zipline.api.validator.toml.TomlZiplineConstant
 import app.cash.zipline.api.validator.toml.TomlZiplineFunction
 import app.cash.zipline.api.validator.toml.TomlZiplineService
 
@@ -25,6 +26,7 @@ sealed interface ApiCompatibilityDecision
 data class ApiCompatibilityOptions(
   val forbidServiceExtension: Boolean = false,
   val includeSchemaInFunctionIds: Boolean = false,
+  val includeApiConstants: Boolean = false,
 )
 
 class ActualApiHasProblems(
@@ -112,11 +114,33 @@ fun makeApiCompatibilityDecision(
         }
       }
     }
+
+    val expectedConstants = expectedService.constants.associateBy { it.id }
+    val actualConstants = actualService.constants.associateBy { it.id }
+    val addedConstants = actualService.constants.filter { it.id !in expectedConstants }
+    if (addedConstants.isNotEmpty()) {
+      hasChanges = true
+    }
+
+    for (expectedConstant in expectedService.constants) {
+      val constantId = expectedConstant.id
+      val actualConstant = actualConstants[constantId]
+      if (actualConstant == null) {
+        val comment = expectedConstant.leadingComment
+        problemMessages += buildString {
+          append("Expected constant $constantId of $serviceName not found")
+          if (comment.isNotEmpty()) {
+            append(":\n  ")
+            append(comment.replace("\n", "\n  "))
+          }
+        }
+      }
+    }
   }
 
   return when {
     problemMessages.isNotEmpty() -> ActualApiHasProblems(problemMessages)
-    hasChanges -> ExpectedApiRequiresUpdates(actualApi.toToml())
+    hasChanges -> ExpectedApiRequiresUpdates(actualApi.toToml(options))
     else -> ExpectedApiIsUpToDate
   }
 }
@@ -128,7 +152,7 @@ private fun schemaIdChangedHint(otherFunctionId: String): String {
   """.trimMargin()
 }
 
-private fun FirZiplineApi.toToml(): TomlZiplineApi {
+private fun FirZiplineApi.toToml(options: ApiCompatibilityOptions): TomlZiplineApi {
   return TomlZiplineApi(
     services.map { service ->
       TomlZiplineService(
@@ -138,6 +162,16 @@ private fun FirZiplineApi.toToml(): TomlZiplineApi {
             leadingComment = function.signature,
             id = function.id,
           )
+        },
+        constants = if (options.includeApiConstants) {
+          service.constants.map { constant ->
+            TomlZiplineConstant(
+              leadingComment = constant.signature,
+              id = constant.id,
+            )
+          }
+        } else {
+          listOf()
         },
       )
     },

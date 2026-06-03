@@ -100,6 +100,10 @@ class ValidateZiplineApi(
     .flag(default = false)
     .help("Include source DTO schemas in Zipline API function IDs")
 
+  private val includeApiConstants by option("--include-api-constants", hidden = true)
+    .flag(default = false)
+    .help("Include @ZiplineApiConstant companion object const vals in Zipline API validation")
+
   override fun run() {
     val expectedZiplineApi = when {
       tomlFile.exists() -> tomlFile.source().buffer().use { it.readTomlZiplineApi() }
@@ -113,6 +117,7 @@ class ValidateZiplineApi(
       classpath,
       FirZiplineApiReaderOptions(
         includeSchemaInFunctionIds = includeSchemaInFunctionIds,
+        includeApiConstants = includeApiConstants,
       ),
     )
 
@@ -123,6 +128,7 @@ class ValidateZiplineApi(
         ApiCompatibilityOptions(
           forbidServiceExtension = forbidServiceExtension,
           includeSchemaInFunctionIds = includeSchemaInFunctionIds,
+          includeApiConstants = includeApiConstants,
         ),
       )
     ) {

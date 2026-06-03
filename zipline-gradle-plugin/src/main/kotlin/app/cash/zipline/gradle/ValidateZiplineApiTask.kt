@@ -60,6 +60,9 @@ abstract class ValidateZiplineApiTask @Inject constructor(
   abstract val includeSchemaInFunctionIds: Property<Boolean>
 
   @get:Input
+  abstract val includeApiConstants: Property<Boolean>
+
+  @get:Input
   abstract val jdkRelease: Property<Int>
 
   @get:InputFiles
@@ -98,6 +101,7 @@ abstract class ValidateZiplineApiTask @Inject constructor(
       it.classpath.setFrom(classpath)
       it.forbidServiceExtension.set(forbidServiceExtension.get())
       it.includeSchemaInFunctionIds.set(includeSchemaInFunctionIds.get())
+      it.includeApiConstants.set(includeApiConstants.get())
     }
   }
 
@@ -118,6 +122,7 @@ private interface ZiplineApiValidatorParameters : WorkParameters {
   val classpath: ConfigurableFileCollection
   val forbidServiceExtension: Property<Boolean>
   val includeSchemaInFunctionIds: Property<Boolean>
+  val includeApiConstants: Property<Boolean>
 }
 
 private abstract class ZiplineApiValidatorWorker @Inject constructor(
@@ -160,6 +165,9 @@ private abstract class ZiplineApiValidatorWorker @Inject constructor(
           }
           if (parameters.includeSchemaInFunctionIds.get()) {
             add("--include-schema-in-function-ids")
+          }
+          if (parameters.includeApiConstants.get()) {
+            add("--include-api-constants")
           }
         }
       }

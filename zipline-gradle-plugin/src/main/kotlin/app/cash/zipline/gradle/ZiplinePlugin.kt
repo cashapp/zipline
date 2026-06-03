@@ -60,6 +60,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     ziplineExtension.apiTracking.convention(true)
     ziplineExtension.forbidServiceExtension.convention(false)
     ziplineExtension.includeSchemaInFunctionIds.convention(false)
+    ziplineExtension.includeApiConstants.convention(false)
 
     val cliConfiguration: Configuration = target.configurations.create("ziplineCli")
       .apply {
@@ -123,6 +124,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
           if ("Test" in kotlinCompile.name) return@withType
           val forbidServiceExtension = ziplineExtension.forbidServiceExtension.get()
           val includeSchemaInFunctionIds = ziplineExtension.includeSchemaInFunctionIds.get()
+          val includeApiConstants = ziplineExtension.includeApiConstants.get()
           registerZiplineApiTask(
             target,
             kotlinCompile,
@@ -131,6 +133,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
             ziplineApiCheck,
             forbidServiceExtension,
             includeSchemaInFunctionIds,
+            includeApiConstants,
           )
           registerZiplineApiTask(
             target,
@@ -140,6 +143,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
             ziplineApiDump,
             forbidServiceExtension,
             includeSchemaInFunctionIds,
+            includeApiConstants,
           )
         }
       }
@@ -203,6 +207,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
     rollupTask: TaskProvider<Task>,
     forbidServiceExtension: Boolean,
     includeSchemaInFunctionIds: Boolean,
+    includeApiConstants: Boolean,
   ) {
     val task = project.tasks.register(
       // Like 'compileKotlinJvmZiplineApiCheck'
@@ -221,6 +226,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       task.projectDirectory.set(project.projectDir.path)
       task.forbidServiceExtension.set(forbidServiceExtension)
       task.includeSchemaInFunctionIds.set(includeSchemaInFunctionIds)
+      task.includeApiConstants.set(includeApiConstants)
 
       // TODO: the validation uses the wrong JDK. We should be getting the JDK from the
       //     KotlinCompile task (as defaultKotlinJavaToolchain.get().buildJvm), but it doesn't

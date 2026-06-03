@@ -187,6 +187,9 @@ public final class app/cash/zipline/Zipline$Companion {
 	public static synthetic fun create$default (Lapp/cash/zipline/Zipline$Companion;Lkotlinx/coroutines/CoroutineDispatcher;Lkotlinx/serialization/modules/SerializersModule;Lapp/cash/zipline/EventListener;ILjava/lang/Object;)Lapp/cash/zipline/Zipline;
 }
 
+public abstract interface annotation class app/cash/zipline/ZiplineApiConstant : java/lang/annotation/Annotation {
+}
+
 public final class app/cash/zipline/ZiplineApiMismatchException : java/lang/Exception {
 	public fun <init> (Ljava/lang/String;)V
 	public fun getMessage ()Ljava/lang/String;
