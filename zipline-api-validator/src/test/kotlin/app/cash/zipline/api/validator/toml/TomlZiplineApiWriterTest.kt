@@ -39,6 +39,12 @@ internal class TomlZiplineApiWriterTest {
                   id = "1acbabc2",
                 ),
               ),
+              constants = listOf(
+                TomlZiplineConstant(
+                  leadingComment = "const val NAME: kotlin.String = \"SampleService\"",
+                  id = "name1234",
+                ),
+              ),
             ),
           ),
         ),
@@ -55,6 +61,11 @@ internal class TomlZiplineApiWriterTest {
       |
       |  # fun echo(kotlin.String): kotlin.String
       |  "1acbabc2",
+      |]
+      |
+      |constants = [
+      |  # const val NAME: kotlin.String = "SampleService"
+      |  "name1234",
       |]
       |
       """.trimMargin(),

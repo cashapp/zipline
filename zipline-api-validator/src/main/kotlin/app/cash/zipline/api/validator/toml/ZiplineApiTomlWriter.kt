@@ -42,9 +42,17 @@ internal class TomlZiplineApiWriter(
   private fun writeService(service: TomlZiplineService) {
     sink.writeUtf8("[").writeUtf8(service.name).writeUtf8("]\n")
     sink.writeUtf8("\n")
+    writeFunctions(service.functions)
+    if (service.constants.isNotEmpty()) {
+      sink.writeUtf8("\n")
+      writeConstants(service.constants)
+    }
+  }
+
+  private fun writeFunctions(functions: List<TomlZiplineFunction>) {
     sink.writeUtf8("functions = [\n")
     var first = true
-    for (function in service.functions) {
+    for (function in functions) {
       if (!first) sink.writeUtf8("\n")
       first = false
 
@@ -53,12 +61,34 @@ internal class TomlZiplineApiWriter(
     sink.writeUtf8("]\n")
   }
 
+  private fun writeConstants(constants: List<TomlZiplineConstant>) {
+    sink.writeUtf8("constants = [\n")
+    var first = true
+    for (constant in constants) {
+      if (!first) sink.writeUtf8("\n")
+      first = false
+
+      writeConstant(constant)
+    }
+    sink.writeUtf8("]\n")
+  }
+
   private fun writeFunction(function: TomlZiplineFunction) {
-    val comment = function.leadingComment
+    writeItem(function.leadingComment, function.id)
+  }
+
+  private fun writeConstant(constant: TomlZiplineConstant) {
+    writeItem(constant.leadingComment, constant.id)
+  }
+
+  private fun writeItem(
+    comment: String,
+    id: String,
+  ) {
     if (comment.isNotEmpty()) {
       sink.writeUtf8("  # ").writeUtf8(comment.replace("\n", "\n  # ")).writeUtf8("\n")
     }
 
-    sink.writeUtf8("  \"").writeUtf8(function.id).writeUtf8("\",\n")
+    sink.writeUtf8("  \"").writeUtf8(id).writeUtf8("\",\n")
   }
 }

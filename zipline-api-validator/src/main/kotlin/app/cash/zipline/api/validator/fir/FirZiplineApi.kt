@@ -23,9 +23,17 @@ data class FirZiplineApi(
 data class FirZiplineService(
   val name: String,
   val functions: List<FirZiplineFunction>,
+  val constants: List<FirZiplineConstant> = listOf(),
 )
 
 data class FirZiplineFunction(
+  val id: String,
+  val signature: String,
+) {
+  internal constructor(signature: String) : this(signature.signatureHash(), signature)
+}
+
+data class FirZiplineConstant(
   val id: String,
   val signature: String,
 ) {

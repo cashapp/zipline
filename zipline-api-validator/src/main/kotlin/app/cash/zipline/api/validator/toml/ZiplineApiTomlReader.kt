@@ -64,6 +64,7 @@ internal class TomlZiplineApiReader(
 
   private fun readService(serviceName: String): TomlZiplineService {
     val functions = mutableListOf<TomlZiplineFunction>()
+    val constants = mutableListOf<TomlZiplineConstant>()
 
     while (true) {
       readComment()
@@ -77,6 +78,14 @@ internal class TomlZiplineApiReader(
           functions += readFunctions()
         }
 
+        // constants = [ ... ]
+        READ_SERVICES_TOKEN_CONSTANTS -> {
+          skipWhitespace()
+          if (source.select(equals) == -1) throw IOException("expected '='")
+          skipWhitespace()
+          constants += readConstants()
+        }
+
         else -> break
       }
     }
@@ -84,11 +93,20 @@ internal class TomlZiplineApiReader(
     return TomlZiplineService(
       name = serviceName,
       functions = functions,
+      constants = constants,
     )
   }
 
   private fun readFunctions(): List<TomlZiplineFunction> {
-    val result = mutableListOf<TomlZiplineFunction>()
+    return readItems { comment, id -> TomlZiplineFunction(comment, id) }
+  }
+
+  private fun readConstants(): List<TomlZiplineConstant> {
+    return readItems { comment, id -> TomlZiplineConstant(comment, id) }
+  }
+
+  private fun <T> readItems(factory: (String, String) -> T): List<T> {
+    val result = mutableListOf<T>()
 
     readComment()
     if (source.select(openBrace) == -1) throw IOException("expected '['")
@@ -99,7 +117,7 @@ internal class TomlZiplineApiReader(
         READ_FUNCTION_QUOTE -> {
           val functionId = readString()
           skipWhitespace()
-          result += TomlZiplineFunction(comment ?: "", functionId)
+          result += factory(comment ?: "", functionId)
           when (source.select(afterFunctionToken)) {
             AFTER_FUNCTION_COMMA -> Unit
             AFTER_FUNCTION_CLOSE_BRACE -> break
@@ -168,9 +186,11 @@ internal class TomlZiplineApiReader(
 
     val readServiceToken = Options.of(
       "functions".encodeUtf8(),
+      "constants".encodeUtf8(),
     )
 
     const val READ_SERVICES_TOKEN_FUNCTIONS = 0
+    const val READ_SERVICES_TOKEN_CONSTANTS = 1
 
     val readFunctionToken = Options.of(
       "\"".encodeUtf8(),

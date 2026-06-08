@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2023 Cash App
+ * Copyright (C) 2026 Cash App
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,24 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package app.cash.zipline.api.validator.toml
+package app.cash.zipline
 
-data class TomlZiplineApi(
-  val services: List<TomlZiplineService>,
-)
-
-data class TomlZiplineService(
-  val name: String,
-  val functions: List<TomlZiplineFunction>,
-  val constants: List<TomlZiplineConstant> = listOf(),
-)
-
-data class TomlZiplineFunction(
-  val leadingComment: String,
-  val id: String,
-)
-
-data class TomlZiplineConstant(
-  val leadingComment: String,
-  val id: String,
-)
+/**
+ * Marks a `const val` in a [ZiplineService] companion object as part of the tracked Zipline API.
+ */
+@Target(AnnotationTarget.PROPERTY)
+@Retention(AnnotationRetention.BINARY)
+annotation class ZiplineApiConstant

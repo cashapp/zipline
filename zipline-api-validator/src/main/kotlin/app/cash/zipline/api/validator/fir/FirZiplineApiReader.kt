@@ -25,10 +25,16 @@ import org.jetbrains.kotlin.fir.declarations.FirEnumEntry
 import org.jetbrains.kotlin.fir.declarations.FirFile
 import org.jetbrains.kotlin.fir.declarations.FirProperty
 import org.jetbrains.kotlin.fir.declarations.FirRegularClass
+import org.jetbrains.kotlin.fir.declarations.evaluateAs
+import org.jetbrains.kotlin.fir.declarations.hasAnnotation
 import org.jetbrains.kotlin.fir.declarations.processAllDeclarations
+import org.jetbrains.kotlin.fir.declarations.utils.isCompanion
+import org.jetbrains.kotlin.fir.declarations.utils.isConst
 import org.jetbrains.kotlin.fir.declarations.utils.isInterface
 import org.jetbrains.kotlin.fir.declarations.utils.isOverride
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
+import org.jetbrains.kotlin.fir.expressions.FirExpression
+import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
 import org.jetbrains.kotlin.fir.pipeline.FirResult
 import org.jetbrains.kotlin.fir.resolve.firClassLike
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
@@ -68,10 +74,14 @@ fun readFirZiplineApi(
 
 data class FirZiplineApiReaderOptions(
   val includeSchemaInFunctionIds: Boolean = false,
+  val includeApiConstants: Boolean = false,
 )
 
 private val ziplineServiceClassId =
   ClassId(FqName("app.cash.zipline"), Name.identifier("ZiplineService"))
+
+private val ziplineApiConstantClassId =
+  ClassId(FqName("app.cash.zipline"), Name.identifier("ZiplineApiConstant"))
 
 private val autoCloseableClassId =
   ClassId(FqName("java.lang"), Name.identifier("AutoCloseable"))
@@ -112,6 +122,7 @@ internal class FirZiplineApiReader(
     return FirZiplineService(
       symbol.classId.asSingleFqName().asString(),
       bridgedFunctions(this),
+      if (options.includeApiConstants) companionConstants() else listOf(),
     )
   }
 
@@ -141,6 +152,76 @@ internal class FirZiplineApiReader(
     }
 
     return result.toList()
+  }
+
+  @OptIn(DirectDeclarationsAccess::class)
+  private fun FirRegularClass.companionConstants(): List<FirZiplineConstant> {
+    val serviceName = symbol.classId.asSingleFqName().asString()
+    return declarations
+      .filterIsInstance<FirRegularClass>()
+      .filter { it.isCompanion }
+      .flatMap { companion ->
+        companion.declarations
+          .filterIsInstance<FirProperty>()
+          .filter { it.hasAnnotation(ziplineApiConstantClassId, session) }
+          .map { it.asDeclaredZiplineConstant(serviceName) }
+      }
+      .sortedBy { it.signature }
+  }
+
+  private fun FirProperty.asDeclaredZiplineConstant(serviceName: String): FirZiplineConstant {
+    if (!isConst || isVar) {
+      error("@ZiplineApiConstant may only annotate const val properties: $serviceName.${name.asString()}")
+    }
+
+    val value = initializer?.asConstantValueString(serviceName, name.asString())
+      ?: error("@ZiplineApiConstant property must have an initializer: $serviceName.${name.asString()}")
+    val signature = "const val ${name.asString()}: ${symbol.resolvedReturnTypeRef.asString()} = $value"
+    return FirZiplineConstant(signature)
+  }
+
+  private fun FirExpression.asConstantValueString(
+    serviceName: String,
+    propertyName: String,
+  ): String {
+    val literal = evaluateAs<FirLiteralExpression>(session)
+      ?: error("@ZiplineApiConstant property must have a compile-time constant value: $serviceName.$propertyName")
+    return literal.value.toKotlinLiteral()
+  }
+
+  private fun Any?.toKotlinLiteral(): String {
+    return when (this) {
+      null -> "null"
+      is String -> quoteAsKotlinString()
+      is Char -> quoteAsKotlinChar()
+      else -> toString()
+    }
+  }
+
+  private fun String.quoteAsKotlinString(): String {
+    return buildString {
+      append('"')
+      for (char in this@quoteAsKotlinString) {
+        append(char.escapeForKotlinLiteral())
+      }
+      append('"')
+    }
+  }
+
+  private fun Char.quoteAsKotlinChar(): String {
+    return "'" + escapeForKotlinLiteral() + "'"
+  }
+
+  private fun Char.escapeForKotlinLiteral(): String {
+    return when (this) {
+      '\\' -> "\\\\"
+      '"' -> "\\\""
+      '\'' -> "\\'"
+      '\n' -> "\\n"
+      '\r' -> "\\r"
+      '\t' -> "\\t"
+      else -> toString()
+    }
   }
 
   private val FirFunctionSymbol<*>.isNonInterfaceFunction: Boolean
@@ -195,6 +276,10 @@ internal class FirZiplineApiReader(
         typeArguments.joinTo(this, separator = ",", prefix = "<", postfix = ">") {
           it.asString()
         }
+      }
+
+      if (coneType.isMarkedNullable) {
+        append("?")
       }
     }
   }
