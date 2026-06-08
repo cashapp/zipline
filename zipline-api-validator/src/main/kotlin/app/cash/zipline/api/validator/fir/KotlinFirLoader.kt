@@ -41,7 +41,7 @@ import org.jetbrains.kotlin.com.intellij.psi.search.GlobalSearchScope
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
-import org.jetbrains.kotlin.diagnostics.DiagnosticReporterFactory
+import org.jetbrains.kotlin.diagnostics.impl.DiagnosticsCollectorImpl
 import org.jetbrains.kotlin.fir.pipeline.AllModulesFrontendOutput
 import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
 import org.jetbrains.kotlin.modules.TargetId
@@ -82,7 +82,7 @@ internal class KotlinFirLoader(
   /**
    * @param targetName an opaque identifier for this operation.
    */
-  @OptIn(K1Deprecation::class)
+  @OptIn(K1Deprecation::class, CompilerConfiguration.Internals::class)
   fun load(targetName: String): AllModulesFrontendOutput {
     val configuration = CompilerConfiguration()
     configuration.put(CommonConfigurationKeys.MODULE_NAME, targetName)
@@ -124,7 +124,7 @@ internal class KotlinFirLoader(
       configuration = configuration,
     )
 
-    val reporter = DiagnosticReporterFactory.createReporter()
+    val reporter = DiagnosticsCollectorImpl()
 
     val globalScope = GlobalSearchScope.allScope(project)
     val packagePartProvider = environment.createPackagePartProvider(globalScope)
