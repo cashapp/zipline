@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+Nothing yet!
+
+## [1.27.0] - 2026-04-02
+[1.27.0]: https://github.com/cashapp/zipline/releases/tag/1.27.0
+
+* Guard `ZiplineCache` against use-after-close crashes.
+* Upgrade [Kotlin 2.3.20](https://github.com/JetBrains/kotlin/releases/tag/v2.3.20)
+
 ## [1.26.0] - 2026-03-04
 [1.26.0]: https://github.com/cashapp/zipline/releases/tag/1.26.0
 

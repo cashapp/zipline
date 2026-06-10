@@ -37,6 +37,7 @@ import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
 import org.jetbrains.kotlin.fir.pipeline.FirResult
 import org.jetbrains.kotlin.fir.resolve.firClassLike
+import org.jetbrains.kotlin.fir.pipeline.AllModulesFrontendOutput
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.resolve.toClassLikeSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
@@ -91,7 +92,7 @@ private val autoCloseableClassId =
  * interfaces. These are subject to strict API compatibility requirements.
  */
 internal class FirZiplineApiReader(
-  output: FirResult,
+  output: AllModulesFrontendOutput,
   private val options: FirZiplineApiReaderOptions = FirZiplineApiReaderOptions(),
 ) {
   private val platformOutput = output.outputs.single()
