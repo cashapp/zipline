@@ -77,6 +77,7 @@ fn setupTarget(b: *std.Build, tag: std.Target.Os.Tag, arch: std.Target.Cpu.Arch,
       "native/quickjs/libregexp.c",
       "native/quickjs/libunicode.c",
       "native/quickjs/quickjs.c",
+      "native/quickjs/dtoa.c",
     },
     .flags = &.{
       "-std=gnu99",
