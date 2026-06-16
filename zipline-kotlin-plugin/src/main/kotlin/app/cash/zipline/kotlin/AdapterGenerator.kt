@@ -326,10 +326,12 @@ internal class AdapterGenerator(
 
     adapterClass.addFakeOverrides(
       irTypeSystemContext,
-      listOf(
-        serialNameProperty,
-        ziplineFunctionsFunction,
-        outboundServiceFunction,
+      mapOf(
+        adapterClass to listOf(
+          serialNameProperty,
+          ziplineFunctionsFunction,
+          outboundServiceFunction,
+        ),
       ),
     )
 
@@ -583,7 +585,7 @@ internal class AdapterGenerator(
     // We add overrides here, so we can call them below.
     functionClass.addFakeOverrides(
       irTypeSystemContext,
-      listOf(callFunction),
+      mapOf(functionClass to listOf(callFunction)),
     )
 
     callFunction.irFunctionBody(

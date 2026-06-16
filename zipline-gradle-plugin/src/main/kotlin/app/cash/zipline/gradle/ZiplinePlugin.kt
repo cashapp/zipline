@@ -21,6 +21,7 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.UnknownTaskException
 import org.gradle.api.artifacts.Configuration
+import org.gradle.api.file.FileCollection
 import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.internal.jvm.Jvm
@@ -111,6 +112,14 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       kotlinWebpack.dependsOn(writeWebpackConfigTask)
     }
 
+    val srcDirs = kotlinExtension.targets.flatMap { kotlinTarget ->
+      kotlinTarget.compilations.flatMap { compilation ->
+        compilation.allKotlinSourceSets.map { sourceSet ->
+          sourceSet.kotlin.sourceDirectories
+        }
+      }
+    }.reduce { acc, files -> acc + files }
+
     target.afterEvaluate {
       if (ziplineExtension.apiTracking.get()) {
         val ziplineApiCheck = target.tasks.register("ziplineApiCheck")
@@ -128,6 +137,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
           registerZiplineApiTask(
             target,
             kotlinCompile,
+            srcDirs,
             cliConfiguration,
             Mode.Check,
             ziplineApiCheck,
@@ -138,6 +148,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
           registerZiplineApiTask(
             target,
             kotlinCompile,
+            srcDirs,
             cliConfiguration,
             Mode.Dump,
             ziplineApiDump,
@@ -202,6 +213,7 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
   private fun registerZiplineApiTask(
     project: Project,
     compileTask: KotlinCompile,
+    sources: FileCollection,
     cliConfiguration: Configuration,
     mode: Mode,
     rollupTask: TaskProvider<Task>,
@@ -236,10 +248,10 @@ class ZiplinePlugin : KotlinCompilerPluginSupportPlugin {
       task.javaHome.set(buildJvm.javaHome.path)
       task.jdkRelease.set(
         buildJvm.javaVersion?.getMajorVersion()?.toInt()
-        ?: Runtime.version().feature(),
+          ?: Runtime.version().feature(),
       )
 
-      task.sourcepath.setFrom(compileTask.sources)
+      task.sourcepath.setFrom(sources)
       task.classpath.setFrom(compileTask.libraries)
     }
   }

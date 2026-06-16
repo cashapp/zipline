@@ -35,9 +35,8 @@ import org.jetbrains.kotlin.fir.declarations.utils.isOverride
 import org.jetbrains.kotlin.fir.declarations.utils.isSuspend
 import org.jetbrains.kotlin.fir.expressions.FirExpression
 import org.jetbrains.kotlin.fir.expressions.FirLiteralExpression
-import org.jetbrains.kotlin.fir.pipeline.FirResult
-import org.jetbrains.kotlin.fir.resolve.firClassLike
 import org.jetbrains.kotlin.fir.pipeline.AllModulesFrontendOutput
+import org.jetbrains.kotlin.fir.resolve.firClassLike
 import org.jetbrains.kotlin.fir.resolve.providers.symbolProvider
 import org.jetbrains.kotlin.fir.resolve.toClassLikeSymbol
 import org.jetbrains.kotlin.fir.symbols.impl.FirClassLikeSymbol
@@ -177,7 +176,8 @@ internal class FirZiplineApiReader(
 
     val value = initializer?.asConstantValueString(serviceName, name.asString())
       ?: error("@ZiplineApiConstant property must have an initializer: $serviceName.${name.asString()}")
-    val signature = "const val ${name.asString()}: ${symbol.resolvedReturnTypeRef.asString()} = $value"
+    val signature =
+      "const val ${name.asString()}: ${symbol.resolvedReturnTypeRef.asString()} = $value"
     return FirZiplineConstant(signature)
   }
 
@@ -255,7 +255,8 @@ internal class FirZiplineApiReader(
     val valOrVar = if (isVar) "var" else "val"
     val signature = "$valOrVar ${name.identifier}: ${resolvedReturnTypeRef.asString()}"
     val id = if (options.includeSchemaInFunctionIds) {
-      val signatureWithSchema = "$valOrVar ${name.identifier}: ${resolvedReturnTypeRef.asExpandedString()}"
+      val signatureWithSchema =
+        "$valOrVar ${name.identifier}: ${resolvedReturnTypeRef.asExpandedString()}"
       signatureWithSchema.signatureHash()
     } else {
       signature.signatureHash()
