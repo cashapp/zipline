@@ -38,7 +38,7 @@ fun JsObject.stripLineNumbers(): JsObject {
   return when (this) {
     is JsFunctionBytecode -> {
       copy(
-        debug = debug?.copy(pc2Line = ByteString.EMPTY),
+        debug = debug?.copy(pc2Line = ByteString.EMPTY, line = 0, column = 0),
         constantPool = constantPool.map { it.stripLineNumbers() },
       )
     }

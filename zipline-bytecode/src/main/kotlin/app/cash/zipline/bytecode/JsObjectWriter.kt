@@ -15,6 +15,7 @@
  */
 package app.cash.zipline.bytecode
 
+import okio.Buffer
 import okio.BufferedSink
 import okio.Closeable
 
@@ -95,13 +96,17 @@ class JsObjectWriter(
   }
 
   private fun writeFunction(value: JsFunctionBytecode) {
-    sink.writeShortLe(value.flags)
+    val debug = value.debug
+    val hasDebug = debug != null
+    val flags = if (hasDebug) value.flags else value.flags and (1 shl 10).inv()
+    sink.writeShortLe(flags)
     sink.writeByte(value.jsMode.toInt())
     writeAtom(value.name.toJsString())
     sink.writeLeb128(value.argCount)
     sink.writeLeb128(value.varCount)
     sink.writeLeb128(value.definedArgCount)
     sink.writeLeb128(value.stackSize)
+    sink.writeLeb128(value.varRefCount)
     sink.writeLeb128(value.closureVars.size)
     sink.writeLeb128(value.constantPool.size)
     sink.writeLeb128(value.bytecode.size)
@@ -118,8 +123,8 @@ class JsObjectWriter(
     // TODO: fixup atoms within bytecode?
     sink.write(value.bytecode)
 
-    if (value.debug != null) {
-      writeDebug(value.debug)
+    if (hasDebug) {
+      writeDebug(debug!!)
     }
 
     for (constant in value.constantPool) {
@@ -134,32 +139,42 @@ class JsObjectWriter(
 
   private fun writeVarDef(value: JsVarDef) {
     writeAtom(value.name.toJsString())
-    sink.writeLeb128(value.scopeLevel)
     sink.writeLeb128(value.scopeNext + 1)
+    sink.writeLeb128(value.varRefIdx)
     sink.writeByte(
       value.kind or
         value.isConst.toBit(4) or
         value.isLexical.toBit(5) or
-        value.isCaptured.toBit(6),
+        value.isCaptured.toBit(6) or
+        value.hasScope.toBit(7),
     )
   }
 
   private fun writeClosureVar(value: JsClosureVar) {
     writeAtom(value.name.toJsString())
     sink.writeLeb128(value.varIndex)
-    sink.writeByte(
-      value.isLocal.toBit(0) or
-        value.isArg.toBit(1) or
-        value.isConst.toBit(2) or
-        value.isLexical.toBit(3) or
-        (value.kind shl 4),
+    sink.writeShortLe(
+      value.closureType or
+        (value.isConst.toBit(3)) or
+        (value.isLexical.toBit(4)) or
+        (value.kind shl 5),
     )
   }
 
   private fun writeDebug(debug: Debug) {
     writeAtom(debug.fileName.toJsString())
-    sink.writeLeb128(debug.lineNumber)
-    sink.writeLeb128(debug.pc2Line.size)
-    sink.write(debug.pc2Line)
+    val pc2lineBuffer = Buffer()
+    pc2lineBuffer.writeLeb128(debug.line - 1)
+    pc2lineBuffer.writeLeb128(debug.column - 1)
+    pc2lineBuffer.write(debug.pc2Line)
+    val pc2lineBytes = pc2lineBuffer.readByteArray()
+    sink.writeLeb128(pc2lineBytes.size)
+    sink.write(pc2lineBytes)
+    if (debug.source != null) {
+      sink.writeLeb128(debug.source.size)
+      sink.write(debug.source)
+    } else {
+      sink.writeLeb128(0)
+    }
   }
 }

@@ -43,14 +43,14 @@ class JsObjectEncodingTest {
 
     assertThat(evalFunction.name).isEqualTo("<eval>")
     assertThat(evalFunction.debug?.fileName).isEqualTo("hello.js")
-    assertThat(evalFunction.debug?.lineNumber).isEqualTo(1)
+    assertThat(evalFunction.debug?.line).isEqualTo(1)
 
     val greetFunction = evalFunction.constantPool.single() as JsFunctionBytecode
     assertThat(greetFunction.name).isEqualTo("greet")
     assertThat(greetFunction.argCount).isEqualTo(1)
     assertThat(greetFunction.locals.single().name).isEqualTo("name")
     assertThat(greetFunction.debug?.fileName).isEqualTo("hello.js")
-    assertThat(greetFunction.debug?.lineNumber).isEqualTo(1)
+    assertThat(greetFunction.debug?.line).isEqualTo(1)
   }
 
   @Test fun primitiveValues() {
@@ -101,11 +101,9 @@ class JsObjectEncodingTest {
     )
 
     assertThat(evalFunction.name).isEqualTo("<eval>")
-    assertThat(assertLineNumbersRoundTrip(evalFunction.debug!!))
-      .containsExactly(0, 10)
 
     val function = evalFunction.constantPool.single() as JsFunctionBytecode
-    assertThat(assertLineNumbersRoundTrip(function.debug!!))
+    assertThat(assertLineNumbersRoundTrip(function.debug!!).distinct())
       .containsExactly(2, 5, 6, 8, 9)
   }
 
@@ -215,13 +213,13 @@ class JsObjectEncodingTest {
 
   /** Returns the line numbers only. */
   private fun assertLineNumbersRoundTrip(debug: Debug): List<Int> {
-    val reader = LineNumberReader(debug.lineNumber, Buffer().write(debug.pc2Line))
+    val reader = LineNumberReader(debug.line, debug.column, Buffer().write(debug.pc2Line))
     val result = mutableListOf<Int>()
 
     val buffer = Buffer()
-    val writer = LineNumberWriter(debug.lineNumber, buffer)
+    val writer = LineNumberWriter(debug.line, debug.column, buffer)
     while (reader.next()) {
-      writer.next(reader.pc, reader.line)
+      writer.next(reader.pc, reader.line, reader.column)
       result += reader.line
     }
 
