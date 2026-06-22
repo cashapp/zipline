@@ -96,6 +96,7 @@ Context::Context(JNIEnv* env)
   env->GetJavaVM(&javaVm);
   JS_SetRuntimeOpaque(jsRuntime, this);
   JS_SetInterruptHandler(jsRuntime, &jsInterruptHandlerPoll, this);
+  JS_SetStripInfo(jsRuntime, JS_STRIP_SOURCE);
 
   JS_AddGlobalThisGc(jsContext);
 
