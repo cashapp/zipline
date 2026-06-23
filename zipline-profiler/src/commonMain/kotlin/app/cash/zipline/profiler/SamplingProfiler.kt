@@ -137,6 +137,6 @@ internal class SamplingProfiler internal constructor(
   }
 
   private companion object {
-    val STACK_FRAME_REGEX = Regex("    at ([^ ]+) \\(([^ :]+)(?::(\\d+))?\\)\n")
+    val STACK_FRAME_REGEX = Regex(" *at ([^ ]+) *\\(([^:)]+)(?::(\\d+))+\\)\n?")
   }
 }
