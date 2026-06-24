@@ -86,8 +86,49 @@ class JsObjectReader(
       BC_TAG_FLOAT64 -> JsDouble(Double.fromBits(source.readLong()))
       BC_TAG_STRING -> readJsString()
       BC_TAG_FUNCTION_BYTECODE -> readFunction()
+      BC_TAG_BIG_INT -> readBigInt()
       else -> throw IOException("unsupported tag: $tag at 0x${objectOffset.toString(16)}")
     }
+  }
+
+  /**
+   * Reads a `BC_TAG_BIG_INT` payload as defined by `JS_ReadBigInt` in `native/quickjs/quickjs.c`:
+   *
+   *   ```
+   *   BC_TAG_BIG_INT   (1 byte, value 10)
+   *   leb128: len      // number of bytes in the two's complement representation; 0 means zero
+   *   if len > 0:
+   *     u32 * (len / 4)        // low limbs, little-endian
+   *     u8  * (len % 4)        // top byte(s), sign-extended on read
+   *   ```
+   *
+   * The top byte(s) are sign-extended so the final limb is treated as signed in QuickJS'
+   * representation. We strip the sign extension here and stash the sign in [JsBigInt.exponent]
+   * — the writer will re-add it.
+   */
+  private fun readBigInt(): JsBigInt {
+    val byteLen = source.readLeb128()
+    if (byteLen == 0) {
+      return JsBigInt(limbs = listOf(0L))
+    }
+    val fullLimbs = byteLen / 4
+    val tailBytes = byteLen % 4
+    val limbs = ArrayList<Long>(fullLimbs + (if (tailBytes > 0) 1 else 0))
+    for (i in 0 until fullLimbs) {
+      limbs += source.readIntLe().toLong() and 0xFFFFFFFFL
+    }
+    if (tailBytes > 0) {
+      var raw = 0L
+      for (i in 0 until tailBytes) {
+        raw = raw or (source.readByte().toLong() and 0xFFL shl (i * 8))
+      }
+      // Strip the sign extension the QuickJS writer applies to the top limb so the limbs
+      // list round-trips losslessly through the writer.
+      val topBits = tailBytes * 8
+      val mask = (1L shl topBits) - 1L
+      limbs += raw and mask
+    }
+    return JsBigInt(limbs = limbs)
   }
 
   private fun readFunction(): JsFunctionBytecode {

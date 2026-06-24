@@ -93,6 +93,7 @@ fn setupTarget(b: *std.Build, tag: std.Target.Os.Tag, arch: std.Target.Cpu.Arch,
       "native/InboundCallChannel.cpp",
       "native/OutboundCallChannel.cpp",
       "native/quickjs-jni.cpp",
+      "native/IntSetBuiltins.cpp",
     },
     .flags = &.{
       "-std=c++11",
