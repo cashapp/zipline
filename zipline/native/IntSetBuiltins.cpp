@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2024 Square, Inc.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -13,223 +13,440 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- * C builtins for the kotlinx.collections.IntSet / kotlin.Long arithmetic that dominates
- * the Compose recomposition hot path in JS. The generated Kotlin/JS stdlib defines `Long`
- * as a class with two numeric fields (v4_1 = low 32 bits, w4_1 = high 32 bits). Every
- * IntSet operation (multiply, add, subtract, bitwiseAnd, etc.) does Long arithmetic through
- * the stdlib's module-local top-level functions. We register C builtins for those
- * functions on the JS global, then a build-time post-processor rewrites the stdlib
- * function bodies to call these builtins. The arithmetic becomes a single C call per
- * operation (~20-50ns vs ~5-10us in pure JS).
+ * C builtins for androidx.collection.IntSet hot operations.
+ *
+ * Data layout: each IntSet carries a parallel Int32Array `metadataFlat` with
+ * length equal to the rounded-up metadata byte count. Byte i of the flat
+ * array is the metadata byte for slot i, stored in the low 8 bits of flat[i].
+ *
+ * Metadata byte values (matching ScatterMap.kt):
+ *   0x80 (128)  = Empty
+ *   0xFE (254)  = Deleted
+ *   0xFF (255)  = Sentinel
+ *   0x00..0x7F  = Full, holds hash2 of the element at that slot
+ *
+ * Function signatures (all return JS_NewInt32):
+ *   _intsetFind(metadataFlat, elements, capacity, element, hash, hash2)
+ *       -> index >= 0 if found, else -1
+ *   _intsetAdd(metadataFlat, elements, capacity, element, hash, hash2, outCreated, outSizeDelta)
+ *       -> index (existing or new), outCreated[0] = 0|1, outSizeDelta[0] = 0|1
+ *   _intsetRemove(metadataFlat, elements, capacity, element, hash, hash2)
+ *       -> removed index, or -1 if not present
+ *
+ * The Kotlin/JS side keeps `metadataFlat` in sync with `metadata` whenever
+ * the latter is mutated (via the new writeRawMetadataFlat primitive).
  */
 #include "quickjs/quickjs.h"
 #include <stdint.h>
 
-// Unpack either a Kotlin/JS Long instance (object with v4_1=low, w4_1=high) or a plain
-// JS number into a native int64_t. Kotlin/JS's Long arithmetic is sometimes called with
-// raw numbers instead of proper Long objects (e.g. `shiftLeft(normalMillis, 1)` where
-// `normalMillis` is a JS number, or `add(this, fromInt(1))` where `fromInt(1)` is a
-// number passed as the operand). For a number we treat it as a 32-bit signed int and
-// sign-extend; for an object we read v4_1/w4_1.
-//
-// Important: hi/lo are stored as JS Int32 with values that should be interpreted as
-// unsigned 32-bit halves of a signed 64-bit Long. Sign-extending hi to int64_t before
-// shifting is wrong (and would shift the sign bits into UB territory). Instead, zero-
-// extend hi to uint64_t first, shift by 32, OR in the unsigned low half.
-static inline int64_t long_unpack(JSContext *ctx, JSValueConst val) {
-  int tag = JS_VALUE_GET_TAG(val);
-  if (tag == JS_TAG_INT) {
-    int32_t i = JS_VALUE_GET_INT(val);
-    return (int64_t)i;
+#define META_EMPTY 0x80
+#define META_DELETED 0xFE
+#define META_SENTINEL 0xFF
+
+static inline int32_t read_meta_byte(const int32_t* flat, int32_t offset) {
+  return flat[offset] & 0xFF;
+}
+
+static inline void write_meta_byte(int32_t* flat, int32_t offset, int32_t byte) {
+  flat[offset] = byte & 0xFF;
+}
+
+// Build a uint64 with byte 0..7 = flat[offset]..flat[offset+7] (wrapping mod capacity).
+// capacity must be a power of 2 (>= 8).
+static inline uint64_t load_group(const int32_t* flat, int32_t offset, int32_t capacity) {
+  uint64_t g = 0;
+  int32_t mask = capacity - 1;
+  for (int i = 0; i < 8; i++) {
+    int32_t o = (offset + i) & mask;
+    g |= ((uint64_t)(uint8_t)read_meta_byte(flat, o)) << (i * 8);
   }
-  JSValue loVal = JS_GetPropertyStr(ctx, val, "v4_1");
-  JSValue hiVal = JS_GetPropertyStr(ctx, val, "w4_1");
-  int32_t lo = JS_VALUE_GET_INT(loVal);
-  int32_t hi = JS_VALUE_GET_INT(hiVal);
-  JS_FreeValue(ctx, loVal);
-  JS_FreeValue(ctx, hiVal);
-  uint64_t uhi = (uint32_t)hi;
-  uint64_t ulo = (uint32_t)lo;
-  return (int64_t)((uhi << 32) | ulo);
+  return g;
 }
 
-// valueOf: converts the (v4_1, w4_1) halves to a JS double, matching
-// kotlin.Long.toNumber(). Used so JS expressions like `id - someLong` produce a
-// number instead of NaN.
-static JSValue long_valueOf_impl(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)argv;
-  JSValue loV = JS_GetPropertyStr(ctx, this_val, "v4_1");
-  JSValue hiV = JS_GetPropertyStr(ctx, this_val, "w4_1");
-  int32_t lo = JS_VALUE_GET_INT(loV);
-  int32_t hi = JS_VALUE_GET_INT(hiV);
-  JS_FreeValue(ctx, loV);
-  JS_FreeValue(ctx, hiV);
-  double d = (double)(int64_t)(((uint64_t)(uint32_t)hi << 32) | (uint32_t)lo);
-  return JS_NewFloat64(ctx, d);
+// Match the 8-byte group against hash2 (0..127). Each set bit 8k+7 indicates
+// that byte k matches hash2. Implementation matches the Kotlin/JS version:
+//   m = (x - 0x01010101) & ~x & 0x80808080
+static inline uint64_t match_hash2(uint64_t g, int32_t hash2) {
+  uint64_t x = g ^ (uint64_t)(uint8_t)hash2 * 0x0101010101010101ULL;
+  return (x - 0x0101010101010101ULL) & ~x & 0x8080808080808080ULL;
 }
 
-// Cached kotlin.Long.prototype (set lazily on first use). The stdlib module exposes it
-// on globalThis as `kotlinLongPrototype` via a small hook injected by patch-stdlib.py.
-static JSValue g_long_proto = {0};
-static int g_long_proto_set = 0;
-
-static JSValue find_kotlin_long_proto(JSContext *ctx) {
-  if (g_long_proto_set) return g_long_proto;
-  JSValue global = JS_GetGlobalObject(ctx);
-  JSValue proto = JS_GetPropertyStr(ctx, global, "kotlinLongPrototype");
-  JS_FreeValue(ctx, global);
-  g_long_proto = proto;
-  g_long_proto_set = 1;
-  return g_long_proto;
-}
-
-// Pack a native int64_t into a JS object with the kotlin.Long prototype so `instanceof Long`
-// returns true (THROW_CCE() and friends keep working) and all of Long's instance methods
-// (valueOf, toString, equals, hashCode, compareTo) are inherited. The two numeric halves
-// are stored as own properties v4_1/w4_1 so the stdlib's arithmetic functions can still
-// read them directly when needed. valueOf is overridden so `id - someLong` produces a
-// number rather than NaN.
-static inline JSValue long_pack(JSContext *ctx, int64_t v) {
-  int32_t lo = (int32_t)(v & 0xFFFFFFFF);
-  int32_t hi = (int32_t)((v >> 32) & 0xFFFFFFFF);
-  JSValue proto = find_kotlin_long_proto(ctx);
-  JSValue obj;
-  if (JS_VALUE_GET_TAG(proto) == JS_TAG_OBJECT) {
-    obj = JS_NewObjectProto(ctx, proto);
-  } else {
-    obj = JS_NewObject(ctx);
+// True if any byte of the group is Empty or Deleted. Equivalent to the
+// Kotlin maskEmptyOrDeleted() but cheaper in C — just compare per byte.
+//   maskEmpty() in Kotlin = (g & ~g << 6) & 0x80808080 = bit7 set per byte iff byte == Empty
+//   maskEmptyOrDeleted() = maskEmpty() | maskDeleted()
+//   We want any_empty_or_deleted, which is true if byte==0x80 OR byte==0xFE.
+static inline int32_t any_empty_or_deleted(uint64_t g) {
+  for (int i = 0; i < 8; i++) {
+    uint8_t b = (g >> (i * 8)) & 0xFF;
+    if (b == META_EMPTY || b == META_DELETED) return 1;
   }
-  JS_DefinePropertyValueStr(ctx, obj, "v4_1", JS_NewInt32(ctx, lo), JS_PROP_C_W_E);
-  JS_DefinePropertyValueStr(ctx, obj, "w4_1", JS_NewInt32(ctx, hi), JS_PROP_C_W_E);
-  JSValue toNumSrc = JS_NewCFunction(ctx, long_valueOf_impl, "valueOf", 0);
-  JS_DefinePropertyValueStr(ctx, obj, "valueOf", toNumSrc, JS_PROP_C_W_E);
-  return obj;
+  return 0;
 }
 
-static JSValue c_long_add(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, long_unpack(ctx, argv[0]) + long_unpack(ctx, argv[1]));
+// Find the first Empty or Deleted slot in the group. Returns -1 if none.
+static inline int32_t first_empty_or_deleted(uint64_t g, int32_t probeOffset, int32_t capacity) {
+  int32_t mask = capacity - 1;
+  for (int i = 0; i < 8; i++) {
+    uint8_t b = (g >> (i * 8)) & 0xFF;
+    if (b == META_EMPTY || b == META_DELETED) {
+      return (probeOffset + i) & mask;
+    }
+  }
+  return -1;
 }
 
-static JSValue c_long_sub(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, long_unpack(ctx, argv[0]) - long_unpack(ctx, argv[1]));
+// True if any byte of the group is Empty (probe-terminating condition for find).
+static inline int32_t any_empty(uint64_t g) {
+  for (int i = 0; i < 8; i++) {
+    if (((g >> (i * 8)) & 0xFF) == META_EMPTY) return 1;
+  }
+  return 0;
 }
 
-static JSValue c_long_mul(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, long_unpack(ctx, argv[0]) * long_unpack(ctx, argv[1]));
-}
-
-static JSValue c_long_neg(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, -long_unpack(ctx, argv[0]));
-}
-
-static JSValue c_long_and(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, long_unpack(ctx, argv[0]) & long_unpack(ctx, argv[1]));
-}
-
-static JSValue c_long_or(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, long_unpack(ctx, argv[0]) | long_unpack(ctx, argv[1]));
-}
-
-static JSValue c_long_xor(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, long_unpack(ctx, argv[0]) ^ long_unpack(ctx, argv[1]));
-}
-
-static JSValue c_long_shl(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  int64_t a = long_unpack(ctx, argv[0]);
-  int32_t n = JS_VALUE_GET_INT(argv[1]) & 0x3F;
-  return long_pack(ctx, (int64_t)((uint64_t)a << n));
-}
-
-static JSValue c_long_shr(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  int64_t a = long_unpack(ctx, argv[0]);
-  int32_t n = JS_VALUE_GET_INT(argv[1]) & 0x3F;
-  return long_pack(ctx, a >> n);
-}
-
-static JSValue c_long_ushr(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  int64_t a = long_unpack(ctx, argv[0]);
-  int32_t n = JS_VALUE_GET_INT(argv[1]) & 0x3F;
-  return long_pack(ctx, (int64_t)((uint64_t)a >> n));
-}
-
-static JSValue c_long_fromInt(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+static JSValue c_intset_find(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
   (void)this_val; (void)argc;
-  return long_pack(ctx, JS_VALUE_GET_INT(argv[0]));
+  size_t s1, s2;
+  int32_t* meta = (int32_t*)JS_GetArrayBuffer(ctx, &s1, argv[0]);
+  if (!meta) return JS_EXCEPTION;
+  int32_t* elems = (int32_t*)JS_GetArrayBuffer(ctx, &s2, argv[1]);
+  if (!elems) return JS_EXCEPTION;
+  int32_t capacity = JS_VALUE_GET_INT(argv[2]);
+  int32_t element = JS_VALUE_GET_INT(argv[3]);
+  int32_t hash = JS_VALUE_GET_INT(argv[4]);
+  int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+
+  int32_t probeMask = capacity - 1;
+  int32_t probeOffset = ((uint32_t)hash >> 7) & probeMask;
+  int32_t probeIndex = 0;
+
+  while (1) {
+    uint64_t g = load_group(meta, probeOffset, capacity);
+    uint64_t m = match_hash2(g, hash2);
+    while (m != 0) {
+      int32_t bitIdx = __builtin_ctzll(m);
+      int32_t byteInGroup = bitIdx >> 3;
+      int32_t index = (probeOffset + byteInGroup) & probeMask;
+      if (elems[index] == element) {
+        return JS_NewInt32(ctx, index);
+      }
+      m &= m - 1;
+    }
+    if (any_empty_or_deleted(g)) break;
+    probeIndex += 8;
+    probeOffset = (probeOffset + probeIndex) & probeMask;
+  }
+  return JS_NewInt32(ctx, -1);
 }
 
-static JSValue c_long_invert(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, ~long_unpack(ctx, argv[0]));
+static JSValue c_intset_add(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  (void)this_val; (void)argc;
+  size_t s1, s2, s3, s4;
+  int32_t* meta = (int32_t*)JS_GetArrayBuffer(ctx, &s1, argv[0]);
+  if (!meta) return JS_EXCEPTION;
+  int32_t* elems = (int32_t*)JS_GetArrayBuffer(ctx, &s2, argv[1]);
+  if (!elems) return JS_EXCEPTION;
+  int32_t* created = (int32_t*)JS_GetArrayBuffer(ctx, &s3, argv[6]);
+  if (!created) return JS_EXCEPTION;
+  int32_t* sizeDelta = (int32_t*)JS_GetArrayBuffer(ctx, &s4, argv[7]);
+  if (!sizeDelta) return JS_EXCEPTION;
+  int32_t capacity = JS_VALUE_GET_INT(argv[2]);
+  int32_t element = JS_VALUE_GET_INT(argv[3]);
+  int32_t hash = JS_VALUE_GET_INT(argv[4]);
+  int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+
+  int32_t probeMask = capacity - 1;
+  int32_t probeOffset = ((uint32_t)hash >> 7) & probeMask;
+  int32_t probeIndex = 0;
+  int32_t insertSlot = -1;
+
+  while (1) {
+    uint64_t g = load_group(meta, probeOffset, capacity);
+    uint64_t m = match_hash2(g, hash2);
+    while (m != 0) {
+      int32_t bitIdx = __builtin_ctzll(m);
+      int32_t byteInGroup = bitIdx >> 3;
+      int32_t index = (probeOffset + byteInGroup) & probeMask;
+      if (elems[index] == element) {
+        created[0] = 0;
+        sizeDelta[0] = 0;
+        return JS_NewInt32(ctx, index);
+      }
+      m &= m - 1;
+    }
+    int32_t slot = first_empty_or_deleted(g, probeOffset, capacity);
+    if (slot >= 0) { insertSlot = slot; break; }
+    probeIndex += 8;
+    probeOffset = (probeOffset + probeIndex) & probeMask;
+  }
+
+  write_meta_byte(meta, insertSlot, hash2);
+  elems[insertSlot] = element;
+  created[0] = 1;
+  sizeDelta[0] = 1;
+  return JS_NewInt32(ctx, insertSlot);
 }
 
-static JSValue c_long_equals(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return JS_NewBool(ctx, long_unpack(ctx, argv[0]) == long_unpack(ctx, argv[1]));
+static JSValue c_intset_remove(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  (void)this_val; (void)argc;
+  size_t s1, s2;
+  int32_t* meta = (int32_t*)JS_GetArrayBuffer(ctx, &s1, argv[0]);
+  if (!meta) return JS_EXCEPTION;
+  int32_t* elems = (int32_t*)JS_GetArrayBuffer(ctx, &s2, argv[1]);
+  if (!elems) return JS_EXCEPTION;
+  int32_t capacity = JS_VALUE_GET_INT(argv[2]);
+  int32_t element = JS_VALUE_GET_INT(argv[3]);
+  int32_t hash = JS_VALUE_GET_INT(argv[4]);
+  int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+
+  int32_t probeMask = capacity - 1;
+  int32_t probeOffset = ((uint32_t)hash >> 7) & probeMask;
+  int32_t probeIndex = 0;
+
+  while (1) {
+    uint64_t g = load_group(meta, probeOffset, capacity);
+    uint64_t m = match_hash2(g, hash2);
+    while (m != 0) {
+      int32_t bitIdx = __builtin_ctzll(m);
+      int32_t byteInGroup = bitIdx >> 3;
+      int32_t index = (probeOffset + byteInGroup) & probeMask;
+      if (elems[index] == element) {
+        write_meta_byte(meta, index, META_DELETED);
+        return JS_NewInt32(ctx, index);
+      }
+      m &= m - 1;
+    }
+    if (any_empty(g)) break;
+    probeIndex += 8;
+    probeOffset = (probeOffset + probeIndex) & probeMask;
+  }
+  return JS_NewInt32(ctx, -1);
 }
 
-static JSValue c_long_less(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return JS_NewBool(ctx, long_unpack(ctx, argv[0]) < long_unpack(ctx, argv[1]));
+// ============================================================================
+// IntObjectMap intrinsics (same metadata layout as IntSet, but stores keys and values)
+//
+// Function signatures:
+//   _intObjectMapFind(metadataFlat, keys, capacity, key, hash, hash2) -> index or -1
+//   _intObjectMapPut(metadataFlat, keys, capacity, key, hash, hash2,
+//                    outCreated, outSizeDelta) -> index (existing or new)
+//   _intObjectMapRemove(metadataFlat, keys, capacity, key, hash, hash2) -> removed index or -1
+// ============================================================================
+
+static JSValue c_intobjectmap_find(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  (void)this_val; (void)argc;
+  size_t s1, s2;
+  int32_t* meta = (int32_t*)JS_GetArrayBuffer(ctx, &s1, argv[0]);
+  if (!meta) return JS_EXCEPTION;
+  int32_t* keys = (int32_t*)JS_GetArrayBuffer(ctx, &s2, argv[1]);
+  if (!keys) return JS_EXCEPTION;
+  int32_t capacity = JS_VALUE_GET_INT(argv[2]);
+  int32_t key = JS_VALUE_GET_INT(argv[3]);
+  int32_t hash = JS_VALUE_GET_INT(argv[4]);
+  int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+
+  int32_t probeMask = capacity - 1;
+  int32_t probeOffset = ((uint32_t)hash >> 7) & probeMask;
+  int32_t probeIndex = 0;
+
+  while (1) {
+    uint64_t g = load_group(meta, probeOffset, capacity);
+    uint64_t m = match_hash2(g, hash2);
+    while (m != 0) {
+      int32_t bitIdx = __builtin_ctzll(m);
+      int32_t byteInGroup = bitIdx >> 3;
+      int32_t index = (probeOffset + byteInGroup) & probeMask;
+      if (keys[index] == key) {
+        return JS_NewInt32(ctx, index);
+      }
+      m &= m - 1;
+    }
+    if (any_empty(g)) break;
+    probeIndex += 8;
+    probeOffset = (probeOffset + probeIndex) & probeMask;
+  }
+  return JS_NewInt32(ctx, -1);
 }
 
-static JSValue c_long_compare(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  int64_t a = long_unpack(ctx, argv[0]);
-  int64_t b = long_unpack(ctx, argv[1]);
-  return JS_NewInt32(ctx, (a < b) ? -1 : (a > b) ? 1 : 0);
+static JSValue c_intobjectmap_put(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  (void)this_val; (void)argc;
+  size_t s1, s2, s3, s4;
+  int32_t* meta = (int32_t*)JS_GetArrayBuffer(ctx, &s1, argv[0]);
+  if (!meta) return JS_EXCEPTION;
+  int32_t* keys = (int32_t*)JS_GetArrayBuffer(ctx, &s2, argv[1]);
+  if (!keys) return JS_EXCEPTION;
+  int32_t* created = (int32_t*)JS_GetArrayBuffer(ctx, &s3, argv[6]);
+  if (!created) return JS_EXCEPTION;
+  int32_t* sizeDelta = (int32_t*)JS_GetArrayBuffer(ctx, &s4, argv[7]);
+  if (!sizeDelta) return JS_EXCEPTION;
+  int32_t capacity = JS_VALUE_GET_INT(argv[2]);
+  int32_t key = JS_VALUE_GET_INT(argv[3]);
+  int32_t hash = JS_VALUE_GET_INT(argv[4]);
+  int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+
+  int32_t probeMask = capacity - 1;
+  int32_t probeOffset = ((uint32_t)hash >> 7) & probeMask;
+  int32_t probeIndex = 0;
+  int32_t insertSlot = -1;
+
+  while (1) {
+    uint64_t g = load_group(meta, probeOffset, capacity);
+    uint64_t m = match_hash2(g, hash2);
+    while (m != 0) {
+      int32_t bitIdx = __builtin_ctzll(m);
+      int32_t byteInGroup = bitIdx >> 3;
+      int32_t index = (probeOffset + byteInGroup) & probeMask;
+      if (keys[index] == key) {
+        created[0] = 0;
+        sizeDelta[0] = 0;
+        return JS_NewInt32(ctx, index);
+      }
+      m &= m - 1;
+    }
+    int32_t slot = first_empty_or_deleted(g, probeOffset, capacity);
+    if (slot >= 0) { insertSlot = slot; break; }
+    probeIndex += 8;
+    probeOffset = (probeOffset + probeIndex) & probeMask;
+  }
+
+  write_meta_byte(meta, insertSlot, hash2);
+  keys[insertSlot] = key;
+  created[0] = 1;
+  sizeDelta[0] = 1;
+  return JS_NewInt32(ctx, insertSlot);
 }
 
-static JSValue c_long_isNegative(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return JS_NewBool(ctx, long_unpack(ctx, argv[0]) < 0);
+static JSValue c_intobjectmap_remove(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  (void)this_val; (void)argc;
+  size_t s1, s2;
+  int32_t* meta = (int32_t*)JS_GetArrayBuffer(ctx, &s1, argv[0]);
+  if (!meta) return JS_EXCEPTION;
+  int32_t* keys = (int32_t*)JS_GetArrayBuffer(ctx, &s2, argv[1]);
+  if (!keys) return JS_EXCEPTION;
+  int32_t capacity = JS_VALUE_GET_INT(argv[2]);
+  int32_t key = JS_VALUE_GET_INT(argv[3]);
+  int32_t hash = JS_VALUE_GET_INT(argv[4]);
+  int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+
+  int32_t probeMask = capacity - 1;
+  int32_t probeOffset = ((uint32_t)hash >> 7) & probeMask;
+  int32_t probeIndex = 0;
+
+  while (1) {
+    uint64_t g = load_group(meta, probeOffset, capacity);
+    uint64_t m = match_hash2(g, hash2);
+    while (m != 0) {
+      int32_t bitIdx = __builtin_ctzll(m);
+      int32_t byteInGroup = bitIdx >> 3;
+      int32_t index = (probeOffset + byteInGroup) & probeMask;
+      if (keys[index] == key) {
+        write_meta_byte(meta, index, META_DELETED);
+        return JS_NewInt32(ctx, index);
+      }
+      m &= m - 1;
+    }
+    if (any_empty(g)) break;
+    probeIndex += 8;
+    probeOffset = (probeOffset + probeIndex) & probeMask;
+  }
+  return JS_NewInt32(ctx, -1);
 }
 
-static JSValue c_long_isZero(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return JS_NewBool(ctx, long_unpack(ctx, argv[0]) == 0);
+// Helper to allocate a flat metadata buffer from a LongArray-like representation.
+// JS signature: _intsetMakeFlat(metadataLongArray) -> Int32Array
+// Each Long in the input array becomes 8 consecutive bytes (little-endian).
+static JSValue c_intset_make_flat(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  (void)this_val; (void)argc;
+  // Get the source array's length and data
+  JSValue srcLenVal = JS_GetPropertyStr(ctx, argv[0], "length");
+  if (JS_IsException(srcLenVal)) return JS_EXCEPTION;
+  int32_t srcLen = JS_VALUE_GET_INT(srcLenVal);
+  JS_FreeValue(ctx, srcLenVal);
+  int32_t byteCount = srcLen * 8;
+
+  // Allocate a fresh Int32Array of that size
+  JSValue int32Ctor = JS_GetPropertyStr(ctx, JS_GetGlobalObject(ctx), "Int32Array");
+  JSValue arg = JS_NewInt32(ctx, byteCount);
+  JSValue result = JS_CallConstructor(ctx, int32Ctor, 1, &arg);
+  JS_FreeValue(ctx, int32Ctor);
+  JS_FreeValue(ctx, arg);
+  if (JS_IsException(result)) return JS_EXCEPTION;
+
+  size_t s;
+  int32_t* dst = (int32_t*)JS_GetArrayBuffer(ctx, &s, result);
+  if (!dst) { JS_FreeValue(ctx, result); return JS_EXCEPTION; }
+
+  // Iterate source Longs: for each Long, extract 8 bytes (little-endian) into dst[LongIdx*8..LongIdx*8+7].
+  for (int32_t i = 0; i < srcLen; i++) {
+    JSValue loVal = JS_GetPropertyStr(ctx, argv[0], "" /* not this */ );
+    // The Kotlin/JS Long is an object {v4_1, w4_1}. We need indexed access.
+    // Use JS_GetPropertyUint32 to read element i.
+    JS_FreeValue(ctx, loVal);
+    JSValue elem = JS_GetPropertyUint32(ctx, argv[0], i);
+    if (JS_IsException(elem)) { JS_FreeValue(ctx, result); return JS_EXCEPTION; }
+    JSValue lo = JS_GetPropertyStr(ctx, elem, "v4_1");
+    JSValue hi = JS_GetPropertyStr(ctx, elem, "w4_1");
+    int32_t loI = JS_VALUE_GET_INT(lo);
+    int32_t hiI = JS_VALUE_GET_INT(hi);
+    JS_FreeValue(ctx, elem);
+    JS_FreeValue(ctx, lo);
+    JS_FreeValue(ctx, hi);
+    // bytes 0..3 = low 8 bits of loI, loI>>8, loI>>16, loI>>24
+    dst[i*8 + 0] = loI & 0xFF;
+    dst[i*8 + 1] = (loI >> 8) & 0xFF;
+    dst[i*8 + 2] = (loI >> 16) & 0xFF;
+    dst[i*8 + 3] = (loI >> 24) & 0xFF;
+    // bytes 4..7 = hiI bytes
+    dst[i*8 + 4] = hiI & 0xFF;
+    dst[i*8 + 5] = (hiI >> 8) & 0xFF;
+    dst[i*8 + 6] = (hiI >> 16) & 0xFF;
+    dst[i*8 + 7] = (hiI >> 24) & 0xFF;
+  }
+  return result;
 }
 
-static JSValue c_long_div(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, long_unpack(ctx, argv[0]) / long_unpack(ctx, argv[1]));
-}
+// JS signature: _intObjectMapFindAvailableSlot(metadataFlat, capacity, hash1)
+// Returns the index of the first Empty or Deleted slot starting from hash1.
+static JSValue c_intobjectmap_find_available_slot(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  (void)this_val; (void)argc;
+  size_t s;
+  int32_t* meta = (int32_t*)JS_GetArrayBuffer(ctx, &s, argv[0]);
+  if (!meta) return JS_EXCEPTION;
+  int32_t capacity = JS_VALUE_GET_INT(argv[1]);
+  int32_t hash1 = JS_VALUE_GET_INT(argv[2]);
 
-static JSValue c_long_mod(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)argc; (void)this_val;
-  return long_pack(ctx, long_unpack(ctx, argv[0]) % long_unpack(ctx, argv[1]));
+  int32_t probeMask = capacity - 1;
+  int32_t probeOffset = hash1 & probeMask;
+  int32_t probeIndex = 0;
+
+  while (1) {
+    uint64_t g = load_group(meta, probeOffset, capacity);
+    int32_t slot = first_empty_or_deleted(g, probeOffset, capacity);
+    if (slot >= 0) return JS_NewInt32(ctx, slot);
+    probeIndex += 8;
+    probeOffset = (probeOffset + probeIndex) & probeMask;
+  }
+  return JS_NewInt32(ctx, -1);  // unreachable
 }
 
 extern "C" __attribute__((visibility("default"))) void js_intset_register_builtins(JSContext *ctx) {
   JSValue globalThis = JS_GetGlobalObject(ctx);
   JSValue fn;
-  fn = JS_NewCFunction(ctx, c_long_add, "_longAdd", 2);              JS_SetPropertyStr(ctx, globalThis, "_longAdd", fn);
-  fn = JS_NewCFunction(ctx, c_long_sub, "_longSub", 2);              JS_SetPropertyStr(ctx, globalThis, "_longSub", fn);
-  fn = JS_NewCFunction(ctx, c_long_mul, "_longMul", 2);              JS_SetPropertyStr(ctx, globalThis, "_longMul", fn);
-  fn = JS_NewCFunction(ctx, c_long_neg, "_longNeg", 1);              JS_SetPropertyStr(ctx, globalThis, "_longNeg", fn);
-  fn = JS_NewCFunction(ctx, c_long_and, "_longAnd", 2);              JS_SetPropertyStr(ctx, globalThis, "_longAnd", fn);
-  fn = JS_NewCFunction(ctx, c_long_or,  "_longOr",  2);              JS_SetPropertyStr(ctx, globalThis, "_longOr",  fn);
-  fn = JS_NewCFunction(ctx, c_long_xor, "_longXor", 2);              JS_SetPropertyStr(ctx, globalThis, "_longXor", fn);
-  fn = JS_NewCFunction(ctx, c_long_shl, "_longShl", 2);              JS_SetPropertyStr(ctx, globalThis, "_longShl", fn);
-  fn = JS_NewCFunction(ctx, c_long_shr, "_longShr", 2);              JS_SetPropertyStr(ctx, globalThis, "_longShr", fn);
-  fn = JS_NewCFunction(ctx, c_long_ushr, "_longUshr", 2);            JS_SetPropertyStr(ctx, globalThis, "_longUshr", fn);
-  fn = JS_NewCFunction(ctx, c_long_fromInt, "_longFromInt", 1);      JS_SetPropertyStr(ctx, globalThis, "_longFromInt", fn);
-  fn = JS_NewCFunction(ctx, c_long_invert, "_longInvert", 1);        JS_SetPropertyStr(ctx, globalThis, "_longInvert", fn);
-  fn = JS_NewCFunction(ctx, c_long_equals, "_longEquals", 2);        JS_SetPropertyStr(ctx, globalThis, "_longEquals", fn);
-  fn = JS_NewCFunction(ctx, c_long_less, "_longLess", 2);            JS_SetPropertyStr(ctx, globalThis, "_longLess", fn);
-  fn = JS_NewCFunction(ctx, c_long_compare, "_longCompare", 2);      JS_SetPropertyStr(ctx, globalThis, "_longCompare", fn);
-  fn = JS_NewCFunction(ctx, c_long_isNegative, "_longIsNegative", 1);JS_SetPropertyStr(ctx, globalThis, "_longIsNegative", fn);
-  fn = JS_NewCFunction(ctx, c_long_isZero, "_longIsZero", 1);        JS_SetPropertyStr(ctx, globalThis, "_longIsZero", fn);
-  fn = JS_NewCFunction(ctx, c_long_div, "_longDiv", 2);              JS_SetPropertyStr(ctx, globalThis, "_longDiv", fn);
-  fn = JS_NewCFunction(ctx, c_long_mod, "_longMod", 2);              JS_SetPropertyStr(ctx, globalThis, "_longMod", fn);
+  fn = JS_NewCFunction(ctx, c_intset_find,                       "_intsetFind",                       6);
+  JS_SetPropertyStr(ctx, globalThis, "_intsetFind", fn);
+  fn = JS_NewCFunction(ctx, c_intset_add,                        "_intsetAdd",                        8);
+  JS_SetPropertyStr(ctx, globalThis, "_intsetAdd", fn);
+  fn = JS_NewCFunction(ctx, c_intset_remove,                     "_intsetRemove",                     6);
+  JS_SetPropertyStr(ctx, globalThis, "_intsetRemove", fn);
+  fn = JS_NewCFunction(ctx, c_intset_make_flat,                  "_intsetMakeFlat",                   1);
+  JS_SetPropertyStr(ctx, globalThis, "_intsetMakeFlat", fn);
+  fn = JS_NewCFunction(ctx, c_intobjectmap_find,                 "_intObjectMapFind",                 6);
+  JS_SetPropertyStr(ctx, globalThis, "_intObjectMapFind", fn);
+  fn = JS_NewCFunction(ctx, c_intobjectmap_put,                  "_intObjectMapPut",                  8);
+  JS_SetPropertyStr(ctx, globalThis, "_intObjectMapPut", fn);
+  fn = JS_NewCFunction(ctx, c_intobjectmap_remove,               "_intObjectMapRemove",               6);
+  JS_SetPropertyStr(ctx, globalThis, "_intObjectMapRemove", fn);
+  fn = JS_NewCFunction(ctx, c_intobjectmap_find_available_slot,  "_intObjectMapFindAvailableSlot",    3);
+  JS_SetPropertyStr(ctx, globalThis, "_intObjectMapFindAvailableSlot", fn);
   JS_FreeValue(ctx, globalThis);
 }
