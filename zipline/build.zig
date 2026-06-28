@@ -85,6 +85,9 @@ fn setupTarget(b: *std.Build, tag: std.Target.Os.Tag, arch: std.Target.Cpu.Arch,
   });
 
   lib.root_module.link_libcpp = true;
+  // Note: Android's liblog (for __android_log_print) is linked by the Android NDK cmake build
+  // in src/androidMain/CMakeLists.txt. We deliberately don't link it here because zig's Linux
+  // target builds for plain Linux GNU which doesn't ship liblog — that would fail the link step.
   // TODO Tree-walk this dirs for all C++ files.
   lib.root_module.addCSourceFiles(.{
     .files = &.{
