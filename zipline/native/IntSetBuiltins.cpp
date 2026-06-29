@@ -42,8 +42,10 @@
 #ifdef __ANDROID__
 #include <android/log.h>
 #define DBG_TAG "IntSetBuiltin"
-#define DBG_LOGI(...) __android_log_print(ANDROID_LOG_INFO, DBG_TAG, __VA_ARGS__)
-#define DBG_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, DBG_TAG, __VA_ARGS__)
+// #define DBG_LOGI(...) __android_log_print(ANDROID_LOG_INFO, DBG_TAG, __VA_ARGS__)
+// #define DBG_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, DBG_TAG, __VA_ARGS__)
+#define DBG_LOGI(...) do {} while (0)
+#define DBG_LOGE(...) do {} while (0)
 #else
 #define DBG_LOGI(...) do {} while (0)
 #define DBG_LOGE(...) do {} while (0)
@@ -128,37 +130,42 @@ static inline uint64_t match_hash2(uint64_t g, int32_t hash2) {
   return (x - 0x0101010101010101ULL) & ~x & 0x8080808080808080ULL;
 }
 
-// True if any byte of the group is Empty or Deleted. Equivalent to the
-// Kotlin maskEmptyOrDeleted() but cheaper in C — just compare per byte.
-//   maskEmpty() in Kotlin = (g & ~g << 6) & 0x80808080 = bit7 set per byte iff byte == Empty
-//   maskEmptyOrDeleted() = maskEmpty() | maskDeleted()
-//   We want any_empty_or_deleted, which is true if byte==0x80 OR byte==0xFE.
-static inline int32_t any_empty_or_deleted(uint64_t g) {
-  for (int i = 0; i < 8; i++) {
-    uint8_t b = (g >> (i * 8)) & 0xFF;
-    if (b == META_EMPTY || b == META_DELETED) return 1;
-  }
-  return 0;
+// Detect bytes equal to META_EMPTY (0x80)
+static inline uint64_t mask_empty(uint64_t g) {
+    // XOR with 0x80 to turn empty bytes into zero, then zero-detect
+    uint64_t x = g ^ 0x8080808080808080ULL;
+    return (x - 0x0101010101010101ULL) & ~x & 0x8080808080808080ULL;
 }
 
-// Find the first Empty or Deleted slot in the group. Returns -1 if none.
-static inline int32_t first_empty_or_deleted(uint64_t g, int32_t probeOffset, int32_t capacity) {
-  int32_t mask = capacity - 1;
-  for (int i = 0; i < 8; i++) {
-    uint8_t b = (g >> (i * 8)) & 0xFF;
-    if (b == META_EMPTY || b == META_DELETED) {
-      return (probeOffset + i) & mask;
-    }
-  }
-  return -1;
+// Detect bytes equal to META_DELETED (0xFE)
+static inline uint64_t mask_deleted(uint64_t g) {
+    uint64_t x = g ^ 0xFEFEFEFEFEFEFEFEULL;
+    return (x - 0x0101010101010101ULL) & ~x & 0x8080808080808080ULL;
 }
 
-// True if any byte of the group is Empty (probe-terminating condition for find).
+// Combined empty or deleted mask
+static inline uint64_t mask_empty_or_deleted(uint64_t g) {
+    return mask_empty(g) | mask_deleted(g);
+}
+
+// Check if any empty byte exists
 static inline int32_t any_empty(uint64_t g) {
-  for (int i = 0; i < 8; i++) {
-    if (((g >> (i * 8)) & 0xFF) == META_EMPTY) return 1;
-  }
-  return 0;
+    return mask_empty(g) != 0;
+}
+
+// Check if any empty or deleted byte exists
+static inline int32_t any_empty_or_deleted(uint64_t g) {
+    return mask_empty_or_deleted(g) != 0;
+}
+
+// Find the first empty or deleted slot in the group
+static inline int32_t first_empty_or_deleted(uint64_t g, int32_t probeOffset, int32_t capacity) {
+    uint64_t mask = mask_empty_or_deleted(g);
+    if (mask == 0) return -1;
+    int32_t bitIndex = __builtin_ctzll(mask);          // index of first set bit
+    int32_t byteInGroup = bitIndex >> 3;               // bitIndex / 8
+    int32_t maskIdx = capacity - 1;
+    return (probeOffset + byteInGroup) & maskIdx;
 }
 
 static JSValue c_intset_find(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -541,6 +548,73 @@ static JSValue c_intobjectmap_find_available_slot(JSContext *ctx, JSValueConst t
   return JS_NewInt32(ctx, -1);
 }
 
+// ============================================================================
+// ScatterSet intrinsics. Same metadata layout as IntSet, but `elements` holds
+// JS values (Any?) instead of Int. We compare with JS_StrictEq (===) which matches
+// Kotlin's `==` on Any?.
+//
+// JS signature: _scatterSetFind(metadataFlat, elements, capacity, element, hash, hash2)
+// Returns index >= 0, or -1 if not found.
+// JS signature: _scatterSetFindAvailableSlot(metadataFlat, capacity, hash1)
+// Returns index of first Empty/Deleted slot, or -1 if none found.
+// ============================================================================
+
+static JSValue c_scatterset_find(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+  (void)this_val; (void)argc;
+  int32_t* meta = get_int32_data(ctx, argv[0], "meta");
+  if (!meta) return JS_EXCEPTION;
+  // elements is a plain Array<Any?> (Object[] in JS), not a TypedArray. We can't
+  // get_int32_data on it — we just access argv[1] directly via JS_GetPropertyUint32.
+  int32_t capacity = JS_VALUE_GET_INT(argv[2]);
+  JSValueConst element = argv[3];
+  int32_t hash = JS_VALUE_GET_INT(argv[4]);
+  int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+
+  DBG_LOGI("c_scatterset_find ENTER cap=%d hash=%d hash2=%d", capacity, hash, hash2);
+
+  int32_t probeMask = capacity;
+  int32_t probeOffset = ((uint32_t)hash >> 7) & probeMask;
+  int32_t probeIndex = 0;
+  int32_t iter = 0;
+
+  while (1) {
+    iter++;
+    if (iter > 100) {
+      DBG_LOGE("c_scatterset_find PROBE LOOP exceeded 100 iters (cap=%d hash2=%d probeOffset=%d)", capacity, hash2, probeOffset);
+      return JS_NewInt32(ctx, -1);
+    }
+    uint64_t g = load_group(meta, probeOffset, capacity);
+    uint64_t m = match_hash2(g, hash2);
+    DBG_LOGI("  iter=%d probeOffset=%d probeIndex=%d g=0x%016llx m=0x%016llx",
+             iter, probeOffset, probeIndex, (unsigned long long)g, (unsigned long long)m);
+    while (m != 0) {
+      int32_t bitIdx = __builtin_ctzll(m);
+      int32_t byteInGroup = bitIdx >> 3;
+      int32_t index = (probeOffset + byteInGroup) & probeMask;
+      // Read element[index] and compare to `element` using JS_StrictEq
+      JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
+      if (JS_IsException(slotVal)) {
+        DBG_LOGE("c_scatterset_find: JS_GetPropertyUint32(%d) failed", index);
+        return JS_EXCEPTION;
+      }
+      int eq = JS_StrictEq(ctx, slotVal, element);
+      JS_FreeValue(ctx, slotVal);
+      if (eq > 0) {
+        DBG_LOGI("c_scatterset_find FOUND at index=%d", index);
+        return JS_NewInt32(ctx, index);
+      }
+      m &= m - 1;
+    }
+    if (any_empty_or_deleted(g)) {
+      DBG_LOGI("c_scatterset_find group has empty/deleted, returning -1");
+      break;
+    }
+    probeIndex += 8;
+    probeOffset = (probeOffset + probeIndex) & probeMask;
+  }
+  return JS_NewInt32(ctx, -1);
+}
+
 // Generic JS-callable log function. Allows Kotlin/JS code to send debug messages that
 // appear in Android logcat (and stderr on other platforms).
 static JSValue c_dbg_log(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -573,6 +647,8 @@ extern "C" __attribute__((visibility("default"))) void js_intset_register_builti
   JS_SetPropertyStr(ctx, globalThis, "_intObjectMapRemove", fn);
   fn = JS_NewCFunction(ctx, c_intobjectmap_find_available_slot,  "_intObjectMapFindAvailableSlot",    3);
   JS_SetPropertyStr(ctx, globalThis, "_intObjectMapFindAvailableSlot", fn);
+  fn = JS_NewCFunction(ctx, c_scatterset_find,                    "_scatterSetFind",                  6);
+  JS_SetPropertyStr(ctx, globalThis, "_scatterSetFind", fn);
   // Generic debug log helper for Kotlin/JS code to log to logcat.
   fn = JS_NewCFunction(ctx, c_dbg_log,                           "_dbg",                              1);
   JS_SetPropertyStr(ctx, globalThis, "_dbg", fn);
