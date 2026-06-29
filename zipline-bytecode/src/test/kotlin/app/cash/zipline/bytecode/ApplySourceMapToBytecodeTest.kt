@@ -123,11 +123,11 @@ class ApplySourceMapToBytecodeTest {
     assertThat(exception.stackTraceToString()).startsWith(
       """
       |app.cash.zipline.QuickJsException: boom!
-      |	at JavaScript.goBoom1(throwException.kt)
-      |	at JavaScript.goBoom2(throwException.kt:9)
-      |	at JavaScript.goBoom3(throwException.kt:6)
-      |	at JavaScript.sayHello(throwException.kt:3)
-      |	at JavaScript.<eval>(?)
+      |	at JavaScript.goBoom1(throwException.kt:12:12)
+      |	at JavaScript.goBoom2(throwException.kt:9:12)
+      |	at JavaScript.goBoom3(throwException.kt:6:12)
+      |	at JavaScript.sayHello(throwException.kt:3:12)
+      |	at JavaScript.<eval>(?:1:25)
       |
       """.trimMargin(),
     )
@@ -176,11 +176,11 @@ class ApplySourceMapToBytecodeTest {
     assertThat(exception.stackTraceToString().replace("\t", "  ")).startsWith(
       """
       |app.cash.zipline.QuickJsException: boom
-      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:4)
-      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10)
-      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10)
-      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10)
-      |  at JavaScript.<eval>(?)
+      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:4:48)
+      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10:48)
+      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10:48)
+      |  at JavaScript.<anonymous>(app/cash/zipline/testing/goBoom.kt:10:48)
+      |  at JavaScript.<eval>(?:1:50)
       |
       """.trimMargin(),
     )

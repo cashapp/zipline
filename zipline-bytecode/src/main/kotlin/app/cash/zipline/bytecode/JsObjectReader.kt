@@ -16,6 +16,7 @@
 package app.cash.zipline.bytecode
 
 import okio.Buffer
+import okio.ByteString
 import okio.Closeable
 import okio.IOException
 
@@ -97,6 +98,7 @@ class JsObjectReader(
     val varCount = source.readLeb128()
     val definedArgCount = source.readLeb128()
     val stackSize = source.readLeb128()
+    val varRefCount = source.readLeb128()
     val closureVarCount = source.readLeb128()
     val constantPoolCount = source.readLeb128()
     val bytecodeLength = source.readLeb128()
@@ -115,7 +117,7 @@ class JsObjectReader(
     val bytecode = source.readByteString(bytecodeLength.toLong())
     // TODO: fixup atoms within bytecode?
 
-    val hasDebug = flags.bit(11)
+    val hasDebug = !flags.bit(10)
     val debug: Debug? = if (hasDebug) readDebug() else null
 
     val constantPool = mutableListOf<JsObject>()
@@ -131,6 +133,7 @@ class JsObjectReader(
       varCount = varCount,
       definedArgCount = definedArgCount,
       stackSize = stackSize,
+      varRefCount = varRefCount,
       locals = locals,
       closureVars = closureVars,
       bytecode = bytecode,
@@ -155,44 +158,60 @@ class JsObjectReader(
 
   private fun readVarDef(): JsVarDef {
     val name = readAtomString()
-    val scopeLevel = source.readLeb128()
     val scopeNext = source.readLeb128() - 1
+    val varRefIdx = source.readLeb128()
     val flags = source.readByte().toInt()
     return JsVarDef(
       name = name.string,
-      scopeLevel = scopeLevel,
       scopeNext = scopeNext,
+      varRefIdx = varRefIdx,
       kind = flags.bits(bit = 0, bitCount = 4),
       isConst = flags.bit(4),
       isLexical = flags.bit(5),
       isCaptured = flags.bit(6),
+      hasScope = flags.bit(7),
     )
   }
 
   private fun readClosureVar(): JsClosureVar {
     val name = readAtomString()
     val varIndex = source.readLeb128()
-    val flags = source.readByte().toInt()
+    val flags = source.readShortLe().toInt()
     return JsClosureVar(
       name = name.string,
       varIndex = varIndex,
-      isLocal = flags.bit(0),
-      isArg = flags.bit(1),
-      isConst = flags.bit(2),
-      isLexical = flags.bit(3),
-      kind = flags.bits(bit = 4, bitCount = 4),
+      closureType = flags.bits(bit = 0, bitCount = 3),
+      isConst = flags.bit(3),
+      isLexical = flags.bit(4),
+      kind = flags.bits(bit = 5, bitCount = 4),
     )
   }
 
   private fun readDebug(): Debug {
     val fileName = readAtomString()
-    val lineNumber = source.readLeb128()
     val pc2lineLength = source.readLeb128()
-    val pc2line = source.readByteString(pc2lineLength.toLong())
+    val pc2lineBytes = source.readByteString(pc2lineLength.toLong())
+    val functionLine: Int
+    val functionColumn: Int
+    val pc2Line: ByteString
+    if (pc2lineLength > 0) {
+      val pc2lineSource = Buffer().write(pc2lineBytes)
+      functionLine = pc2lineSource.readLeb128() + 1
+      functionColumn = pc2lineSource.readLeb128() + 1
+      pc2Line = pc2lineSource.readByteString()
+    } else {
+      functionLine = 0
+      functionColumn = 0
+      pc2Line = pc2lineBytes
+    }
+    val sourceLen = source.readLeb128()
+    val source = if (sourceLen > 0) source.readByteString(sourceLen.toLong()) else null
     return Debug(
       fileName = fileName.string,
-      lineNumber = lineNumber,
-      pc2Line = pc2line,
+      line = functionLine,
+      column = functionColumn,
+      pc2Line = pc2Line,
+      source = source,
     )
   }
 }

@@ -26,23 +26,27 @@ import org.junit.Test
 class LineNumbersTest {
   @Test
   fun readGoldenValue() {
-    val reader = LineNumberReader(1, Buffer().write("1f000812".decodeHex()))
+    // v5 pc2line per-PC entries: { op | (op=0, leb128(pc), slab128(line)) | slab128(column) }
+    // (function line/column header is written by the bytecode reader, not here)
+    val reader = LineNumberReader(1, 1, Buffer().write("1f0000081200".decodeHex()))
     assertThat(reader.next()).isTrue()
     assertThat(reader.pc).isEqualTo(6)
     assertThat(reader.line).isEqualTo(0)
+    assertThat(reader.column).isEqualTo(1)
     assertThat(reader.next()).isTrue()
     assertThat(reader.pc).isEqualTo(14)
     assertThat(reader.line).isEqualTo(9)
+    assertThat(reader.column).isEqualTo(1)
     assertThat(reader.next()).isFalse()
   }
 
   @Test
   fun writeGoldenValue() {
     val buffer = Buffer()
-    LineNumberWriter(1, buffer).use { writer ->
-      writer.next(pc = 6, line = 0)
-      writer.next(pc = 14, line = 9)
+    LineNumberWriter(1, 1, buffer).use { writer ->
+      writer.next(pc = 6, line = 0, column = 1)
+      writer.next(pc = 14, line = 9, column = 1)
     }
-    assertThat(buffer.readByteString()).isEqualTo("1f000812".decodeHex())
+    assertThat(buffer.readByteString()).isEqualTo("1f0000081200".decodeHex())
   }
 }

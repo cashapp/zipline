@@ -68,11 +68,11 @@ class Es2015SupportTest {
     assertThat(exception.stackTraceToString()).startsWith(
       """
       |app.cash.zipline.QuickJsException: boom!
-      |	at JavaScript.goBoom1(demo.js:19)
-      |	at JavaScript.goBoom2(demo.js:15)
-      |	at JavaScript.goBoom3(demo.js:11)
-      |	at JavaScript.sayHello(demo.js:7)
-      |	at JavaScript.<eval>(?)
+      |	at JavaScript.goBoom1(demo.js:19:16)
+      |	at JavaScript.goBoom2(demo.js:15:17)
+      |	at JavaScript.goBoom3(demo.js:11:17)
+      |	at JavaScript.sayHello(demo.js:7:17)
+      |	at JavaScript.<eval>(?:1:27)
       """.trimMargin(),
     )
   }

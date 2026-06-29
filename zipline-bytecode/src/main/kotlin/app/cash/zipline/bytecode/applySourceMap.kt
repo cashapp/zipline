@@ -71,7 +71,8 @@ private class SourceMapBytecodeRewriter(
     val ktPc2LineBuffer = Buffer()
 
     val jsReader = LineNumberReader(
-      functionLineNumber = lineNumber,
+      functionLine = line,
+      functionColumn = column,
       source = Buffer().write(pc2Line),
     )
 
@@ -90,16 +91,18 @@ private class SourceMapBytecodeRewriter(
           atoms.add(it)
         }
         functionKtLineNumber = instructionKtLineNumber
-        ktWriter = LineNumberWriter(functionKtLineNumber, ktPc2LineBuffer)
+        ktWriter = LineNumberWriter(functionKtLineNumber, column, ktPc2LineBuffer)
       }
 
-      ktWriter.next(jsReader.pc, instructionKtLineNumber)
+      ktWriter.next(jsReader.pc, instructionKtLineNumber, column)
     }
 
     return Debug(
       fileName = ktFileName ?: fileName,
-      lineNumber = functionKtLineNumber,
+      line = functionKtLineNumber,
+      column = column,
       pc2Line = ktPc2LineBuffer.readByteString(),
+      source = source,
     )
   }
 }

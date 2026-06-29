@@ -59,7 +59,7 @@ class StripLineNumbersTest {
       |	at JavaScript.goBoom2(demo.js)
       |	at JavaScript.goBoom3(demo.js)
       |	at JavaScript.sayHello(demo.js)
-      |	at JavaScript.<eval>(?)
+      |	at JavaScript.<eval>(?:1:9)
       |
       """.trimMargin(),
     )
