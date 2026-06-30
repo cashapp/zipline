@@ -173,6 +173,7 @@ static inline int32_t first_empty_or_deleted(uint64_t g, int32_t probeOffset, in
 
 static JSValue c_intset_find(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_intset_find ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[0]=meta, argv[1]=elements, argv[2]=capacity, argv[3]=element, argv[4]=hash, argv[5]=hash2
@@ -180,6 +181,7 @@ static JSValue c_intset_find(JSContext *ctx, JSValueConst this_val, int argc, JS
     int32_t element = JS_VALUE_GET_INT(argv[3]);
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_intset_find cap=%d elem=%d hash=%d hash2=%d", capacity, element, hash, hash2);
 
     int32_t mask = capacity;
     int32_t probeOffset = ((uint32_t)hash >> 7) & mask;
@@ -194,11 +196,13 @@ static JSValue c_intset_find(JSContext *ctx, JSValueConst this_val, int argc, JS
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_intset_find EXCEPTION");
                 return JS_EXCEPTION;
             }
             int32_t slotInt = JS_VALUE_GET_INT(slotVal);
             JS_FreeValue(ctx, slotVal);
             if (slotInt == element) {
+                DBG_LOGI("c_intset_find FOUND index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -209,11 +213,13 @@ static JSValue c_intset_find(JSContext *ctx, JSValueConst this_val, int argc, JS
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
     }
+    DBG_LOGI("c_intset_find NOT_FOUND");
     return JS_NewInt32(ctx, -1);
 }
 
 static JSValue c_intset_add(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_intset_add ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[0]=meta, argv[1]=elements, argv[2]=capacity, argv[3]=element, argv[4]=hash, argv[5]=hash2,
@@ -222,6 +228,7 @@ static JSValue c_intset_add(JSContext *ctx, JSValueConst this_val, int argc, JSV
     int32_t element = JS_VALUE_GET_INT(argv[3]);
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_intset_add cap=%d elem=%d hash=%d hash2=%d", capacity, element, hash, hash2);
     int32_t* outCreated = get_int32_data(ctx, argv[6], "outCreated");
     if (!outCreated) return JS_EXCEPTION;
     int32_t* outSizeDelta = get_int32_data(ctx, argv[7], "outSizeDelta");
@@ -240,6 +247,7 @@ static JSValue c_intset_add(JSContext *ctx, JSValueConst this_val, int argc, JSV
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_intset_add EXCEPTION");
                 return JS_EXCEPTION;
             }
             int32_t slotInt = JS_VALUE_GET_INT(slotVal);
@@ -247,6 +255,7 @@ static JSValue c_intset_add(JSContext *ctx, JSValueConst this_val, int argc, JSV
             if (slotInt == element) {
                 outCreated[0] = 0;
                 outSizeDelta[0] = 0;
+                DBG_LOGI("c_intset_add EXISTS index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -259,6 +268,7 @@ static JSValue c_intset_add(JSContext *ctx, JSValueConst this_val, int argc, JSV
             JS_SetPropertyUint32(ctx, argv[1], (uint32_t)index, JS_NewInt32(ctx, element));
             outCreated[0] = 1;
             outSizeDelta[0] = 1;
+            DBG_LOGI("c_intset_add INSERTED index=%d", index);
             return JS_NewInt32(ctx, index);
         }
         probeIndex += 8;
@@ -268,6 +278,7 @@ static JSValue c_intset_add(JSContext *ctx, JSValueConst this_val, int argc, JSV
 
 static JSValue c_intset_remove(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_intset_remove ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[0]=meta, argv[1]=elements, argv[2]=capacity, argv[3]=element, argv[4]=hash, argv[5]=hash2
@@ -275,6 +286,7 @@ static JSValue c_intset_remove(JSContext *ctx, JSValueConst this_val, int argc, 
     int32_t element = JS_VALUE_GET_INT(argv[3]);
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_intset_remove cap=%d elem=%d hash=%d hash2=%d", capacity, element, hash, hash2);
 
     int32_t mask = capacity;
     int32_t probeOffset = ((uint32_t)hash >> 7) & mask;
@@ -289,6 +301,7 @@ static JSValue c_intset_remove(JSContext *ctx, JSValueConst this_val, int argc, 
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_intset_remove EXCEPTION");
                 return JS_EXCEPTION;
             }
             int32_t slotInt = JS_VALUE_GET_INT(slotVal);
@@ -296,6 +309,7 @@ static JSValue c_intset_remove(JSContext *ctx, JSValueConst this_val, int argc, 
             if (slotInt == element) {
                 write_meta_byte(meta, index, META_DELETED);
                 JS_SetPropertyUint32(ctx, argv[1], (uint32_t)index, JS_NULL);
+                DBG_LOGI("c_intset_remove REMOVED index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -304,6 +318,7 @@ static JSValue c_intset_remove(JSContext *ctx, JSValueConst this_val, int argc, 
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
     }
+    DBG_LOGI("c_intset_remove NOT_FOUND");
     return JS_NewInt32(ctx, -1);
 }
 
@@ -360,12 +375,14 @@ static int kotlin_equals(JSContext *ctx, JSValueConst a, JSValueConst b) {
 
 static JSValue c_scatterset_find(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_scatterset_find ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     int32_t capacity = JS_VALUE_GET_INT(argv[2]);
     JSValueConst element = argv[3];
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_scatterset_find cap=%d hash=%d hash2=%d", capacity, hash, hash2);
 
     int32_t mask = capacity;                       // use capacity (not capacity-1)
     int32_t probeOffset = ((uint32_t)hash >> 7) & mask;
@@ -380,11 +397,13 @@ static JSValue c_scatterset_find(JSContext *ctx, JSValueConst this_val, int argc
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_scatterset_find EXCEPTION");
                 return JS_EXCEPTION;
             }
             int eq = kotlin_equals(ctx, slotVal, element);
             JS_FreeValue(ctx, slotVal);
             if (eq) {
+                DBG_LOGI("c_scatterset_find FOUND index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -395,6 +414,7 @@ static JSValue c_scatterset_find(JSContext *ctx, JSValueConst this_val, int argc
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
     }
+    DBG_LOGI("c_scatterset_find NOT_FOUND");
     return JS_NewInt32(ctx, -1);
 }
 
@@ -402,12 +422,14 @@ static int32_t find_first_available_slot(const int32_t* meta, int32_t capacity, 
 
 static JSValue c_scatterset_find_slot(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_scatterset_find_slot ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     int32_t capacity = JS_VALUE_GET_INT(argv[2]);
     JSValueConst element = argv[3];
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_scatterset_find_slot cap=%d hash=%d hash2=%d", capacity, hash, hash2);
     int32_t* emptySlot = get_int32_data(ctx, argv[6], "emptySlot");
     if (!emptySlot) return JS_EXCEPTION;
 
@@ -424,11 +446,13 @@ static JSValue c_scatterset_find_slot(JSContext *ctx, JSValueConst this_val, int
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_scatterset_find_slot EXCEPTION");
                 return JS_EXCEPTION;
             }
             int eq = kotlin_equals(ctx, slotVal, element);
             JS_FreeValue(ctx, slotVal);
             if (eq) {
+                DBG_LOGI("c_scatterset_find_slot FOUND index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -440,6 +464,7 @@ static JSValue c_scatterset_find_slot(JSContext *ctx, JSValueConst this_val, int
         probeOffset = (probeOffset + probeIndex) & mask;
     }
     emptySlot[0] = find_first_available_slot(meta, capacity, ((uint32_t)hash >> 7) & mask);
+    DBG_LOGI("c_scatterset_find_slot NOT_FOUND emptySlot=%d", emptySlot[0]);
     return JS_NewInt32(ctx, -1);
 }
 
@@ -462,12 +487,14 @@ static int32_t find_first_available_slot(const int32_t* meta, int32_t capacity, 
 
 static JSValue c_scatterset_remove(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_scatterset_remove ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     int32_t capacity = JS_VALUE_GET_INT(argv[2]);
     JSValueConst element = argv[3];
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_scatterset_remove cap=%d hash=%d hash2=%d", capacity, hash, hash2);
 
     int32_t mask = capacity;
     int32_t probeOffset = ((uint32_t)hash >> 7) & mask;
@@ -482,6 +509,7 @@ static JSValue c_scatterset_remove(JSContext *ctx, JSValueConst this_val, int ar
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_scatterset_remove EXCEPTION");
                 return JS_EXCEPTION;
             }
             int eq = kotlin_equals(ctx, slotVal, element);
@@ -490,6 +518,7 @@ static JSValue c_scatterset_remove(JSContext *ctx, JSValueConst this_val, int ar
                 // Mark as Deleted and clear the element to null (not undefined)
                 write_meta_byte(meta, index, META_DELETED);
                 JS_SetPropertyUint32(ctx, argv[1], (uint32_t)index, JS_NULL);
+                DBG_LOGI("c_scatterset_remove REMOVED index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -498,17 +527,20 @@ static JSValue c_scatterset_remove(JSContext *ctx, JSValueConst this_val, int ar
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
     }
+    DBG_LOGI("c_scatterset_remove NOT_FOUND");
     return JS_NewInt32(ctx, -1);
 }
 
 static JSValue c_scattermap_find_slot(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_scattermap_find_slot ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     int32_t capacity = JS_VALUE_GET_INT(argv[2]);
     JSValueConst key = argv[3];
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_scattermap_find_slot cap=%d hash=%d hash2=%d", capacity, hash, hash2);
     int32_t* emptySlot = get_int32_data(ctx, argv[6], "emptySlot");
     if (!emptySlot) return JS_EXCEPTION;
 
@@ -525,11 +557,13 @@ static JSValue c_scattermap_find_slot(JSContext *ctx, JSValueConst this_val, int
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_scattermap_find_slot EXCEPTION");
                 return JS_EXCEPTION;
             }
             int eq = kotlin_equals(ctx, slotVal, key);
             JS_FreeValue(ctx, slotVal);
             if (eq) {
+                DBG_LOGI("c_scattermap_find_slot FOUND index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -541,11 +575,13 @@ static JSValue c_scattermap_find_slot(JSContext *ctx, JSValueConst this_val, int
         probeOffset = (probeOffset + probeIndex) & mask;
     }
     emptySlot[0] = find_first_available_slot(meta, capacity, ((uint32_t)hash >> 7) & mask);
+    DBG_LOGI("c_scattermap_find_slot NOT_FOUND emptySlot=%d", emptySlot[0]);
     return JS_NewInt32(ctx, -1);
 }
 
 static JSValue c_scattermap_find(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_scattermap_find ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[0]=meta, argv[1]=keys, argv[2]=capacity, argv[3]=key, argv[4]=hash, argv[5]=hash2
@@ -553,6 +589,7 @@ static JSValue c_scattermap_find(JSContext *ctx, JSValueConst this_val, int argc
     JSValueConst key = argv[3];
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_scattermap_find cap=%d hash=%d hash2=%d", capacity, hash, hash2);
 
     int32_t mask = capacity;
     int32_t probeOffset = ((uint32_t)hash >> 7) & mask;
@@ -567,11 +604,13 @@ static JSValue c_scattermap_find(JSContext *ctx, JSValueConst this_val, int argc
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_scattermap_find EXCEPTION");
                 return JS_EXCEPTION;
             }
             int eq = kotlin_equals(ctx, slotVal, key);
             JS_FreeValue(ctx, slotVal);
             if (eq) {
+                DBG_LOGI("c_scattermap_find FOUND index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -582,11 +621,13 @@ static JSValue c_scattermap_find(JSContext *ctx, JSValueConst this_val, int argc
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
     }
+    DBG_LOGI("c_scattermap_find NOT_FOUND");
     return JS_NewInt32(ctx, -1);
 }
 
 static JSValue c_scattermap_remove(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_scattermap_remove ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[1]=keys, argv[2]=values, argv[3]=capacity, argv[4]=key, argv[5]=hash, argv[6]=hash2
@@ -594,6 +635,7 @@ static JSValue c_scattermap_remove(JSContext *ctx, JSValueConst this_val, int ar
     JSValueConst key = argv[4];
     int32_t hash = JS_VALUE_GET_INT(argv[5]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[6]);
+    DBG_LOGI("c_scattermap_remove cap=%d hash=%d hash2=%d", capacity, hash, hash2);
 
     int32_t mask = capacity;
     int32_t probeOffset = ((uint32_t)hash >> 7) & mask;
@@ -608,6 +650,7 @@ static JSValue c_scattermap_remove(JSContext *ctx, JSValueConst this_val, int ar
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_scattermap_remove EXCEPTION");
                 return JS_EXCEPTION;
             }
             int eq = kotlin_equals(ctx, slotVal, key);
@@ -616,6 +659,7 @@ static JSValue c_scattermap_remove(JSContext *ctx, JSValueConst this_val, int ar
                 write_meta_byte(meta, index, META_DELETED);
                 JS_SetPropertyUint32(ctx, argv[1], (uint32_t)index, JS_NULL);
                 JS_SetPropertyUint32(ctx, argv[2], (uint32_t)index, JS_NULL);
+                DBG_LOGI("c_scattermap_remove REMOVED index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -624,6 +668,7 @@ static JSValue c_scattermap_remove(JSContext *ctx, JSValueConst this_val, int ar
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
     }
+    DBG_LOGI("c_scattermap_remove NOT_FOUND");
     return JS_NewInt32(ctx, -1);
 }
 
@@ -633,6 +678,7 @@ static JSValue c_scattermap_remove(JSContext *ctx, JSValueConst this_val, int ar
 
 static JSValue c_int_object_map_find(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_int_object_map_find ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[0]=meta, argv[1]=keys, argv[2]=capacity, argv[3]=key, argv[4]=hash, argv[5]=hash2
@@ -640,6 +686,7 @@ static JSValue c_int_object_map_find(JSContext *ctx, JSValueConst this_val, int 
     int32_t key = JS_VALUE_GET_INT(argv[3]);
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_int_object_map_find cap=%d key=%d hash=%d hash2=%d", capacity, key, hash, hash2);
 
     int32_t mask = capacity;
     int32_t probeOffset = ((uint32_t)hash >> 7) & mask;
@@ -654,11 +701,13 @@ static JSValue c_int_object_map_find(JSContext *ctx, JSValueConst this_val, int 
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_int_object_map_find EXCEPTION");
                 return JS_EXCEPTION;
             }
             int32_t slotKey = JS_VALUE_GET_INT(slotVal);
             JS_FreeValue(ctx, slotVal);
             if (slotKey == key) {
+                DBG_LOGI("c_int_object_map_find FOUND index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -669,11 +718,13 @@ static JSValue c_int_object_map_find(JSContext *ctx, JSValueConst this_val, int 
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
     }
+    DBG_LOGI("c_int_object_map_find NOT_FOUND");
     return JS_NewInt32(ctx, -1);
 }
 
 static JSValue c_int_object_map_put(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_int_object_map_put ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[0]=meta, argv[1]=keys, argv[2]=capacity, argv[3]=key, argv[4]=hash, argv[5]=hash2,
@@ -682,6 +733,7 @@ static JSValue c_int_object_map_put(JSContext *ctx, JSValueConst this_val, int a
     int32_t key = JS_VALUE_GET_INT(argv[3]);
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_int_object_map_put cap=%d key=%d hash=%d hash2=%d", capacity, key, hash, hash2);
     int32_t* outCreated = get_int32_data(ctx, argv[6], "outCreated");
     if (!outCreated) return JS_EXCEPTION;
     int32_t* outSizeDelta = get_int32_data(ctx, argv[7], "outSizeDelta");
@@ -700,6 +752,7 @@ static JSValue c_int_object_map_put(JSContext *ctx, JSValueConst this_val, int a
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_int_object_map_put EXCEPTION");
                 return JS_EXCEPTION;
             }
             int32_t slotKey = JS_VALUE_GET_INT(slotVal);
@@ -707,6 +760,7 @@ static JSValue c_int_object_map_put(JSContext *ctx, JSValueConst this_val, int a
             if (slotKey == key) {
                 outCreated[0] = 0;
                 outSizeDelta[0] = 0;
+                DBG_LOGI("c_int_object_map_put EXISTS index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -719,6 +773,7 @@ static JSValue c_int_object_map_put(JSContext *ctx, JSValueConst this_val, int a
             JS_SetPropertyUint32(ctx, argv[1], (uint32_t)index, JS_NewInt32(ctx, key));
             outCreated[0] = 1;
             outSizeDelta[0] = 1;
+            DBG_LOGI("c_int_object_map_put INSERTED index=%d", index);
             return JS_NewInt32(ctx, index);
         }
         probeIndex += 8;
@@ -728,6 +783,7 @@ static JSValue c_int_object_map_put(JSContext *ctx, JSValueConst this_val, int a
 
 static JSValue c_int_object_map_remove(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_int_object_map_remove ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[0]=meta, argv[1]=keys, argv[2]=capacity, argv[3]=key, argv[4]=hash, argv[5]=hash2
@@ -735,6 +791,7 @@ static JSValue c_int_object_map_remove(JSContext *ctx, JSValueConst this_val, in
     int32_t key = JS_VALUE_GET_INT(argv[3]);
     int32_t hash = JS_VALUE_GET_INT(argv[4]);
     int32_t hash2 = JS_VALUE_GET_INT(argv[5]);
+    DBG_LOGI("c_int_object_map_remove cap=%d key=%d hash=%d hash2=%d", capacity, key, hash, hash2);
 
     int32_t mask = capacity;
     int32_t probeOffset = ((uint32_t)hash >> 7) & mask;
@@ -749,6 +806,7 @@ static JSValue c_int_object_map_remove(JSContext *ctx, JSValueConst this_val, in
             int32_t index = (probeOffset + byteInGroup) & mask;
             JSValue slotVal = JS_GetPropertyUint32(ctx, argv[1], (uint32_t)index);
             if (JS_IsException(slotVal)) {
+                DBG_LOGI("c_int_object_map_remove EXCEPTION");
                 return JS_EXCEPTION;
             }
             int32_t slotKey = JS_VALUE_GET_INT(slotVal);
@@ -756,6 +814,7 @@ static JSValue c_int_object_map_remove(JSContext *ctx, JSValueConst this_val, in
             if (slotKey == key) {
                 write_meta_byte(meta, index, META_DELETED);
                 JS_SetPropertyUint32(ctx, argv[1], (uint32_t)index, JS_NULL);
+                DBG_LOGI("c_int_object_map_remove REMOVED index=%d", index);
                 return JS_NewInt32(ctx, index);
             }
             m &= m - 1;
@@ -764,16 +823,19 @@ static JSValue c_int_object_map_remove(JSContext *ctx, JSValueConst this_val, in
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
     }
+    DBG_LOGI("c_int_object_map_remove NOT_FOUND");
     return JS_NewInt32(ctx, -1);
 }
 
 static JSValue c_int_object_map_find_available_slot(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
+    DBG_LOGI("c_int_object_map_find_available_slot ENTRY");
     int32_t* meta = get_int32_data(ctx, argv[0], "meta");
     if (!meta) return JS_EXCEPTION;
     // argv[0]=meta, argv[1]=capacity, argv[2]=hash1
     int32_t capacity = JS_VALUE_GET_INT(argv[1]);
     int32_t hash1 = JS_VALUE_GET_INT(argv[2]);
+    DBG_LOGI("c_int_object_map_find_available_slot cap=%d hash1=%d", capacity, hash1);
 
     int32_t mask = capacity;
     int32_t probeOffset = hash1 & mask;
@@ -784,7 +846,9 @@ static JSValue c_int_object_map_find_available_slot(JSContext *ctx, JSValueConst
         if (m != 0) {
             int32_t bitIdx = __builtin_ctzll(m);
             int32_t byteInGroup = bitIdx >> 3;
-            return JS_NewInt32(ctx, (probeOffset + byteInGroup) & mask);
+            int32_t result = (probeOffset + byteInGroup) & mask;
+            DBG_LOGI("c_int_object_map_find_available_slot FOUND index=%d", result);
+            return JS_NewInt32(ctx, result);
         }
         probeIndex += 8;
         probeOffset = (probeOffset + probeIndex) & mask;
