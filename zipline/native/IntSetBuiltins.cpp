@@ -19,15 +19,6 @@
 #include "quickjs/quickjs.h"
 #include <stdint.h>
 
-#ifdef __ANDROID__
-#include <android/log.h>
-#define DBG_TAG "IntSetBuiltin"
-#define DBG_LOGE(...) __android_log_print(ANDROID_LOG_ERROR, DBG_TAG, __VA_ARGS__)
-#else
-#include <stdio.h>
-#define DBG_LOGE(...) do { fprintf(stderr, "[IntSetBuiltin ERROR] "); fprintf(stderr, __VA_ARGS__); fprintf(stderr, "\n"); fflush(stderr); } while (0)
-#endif
-
 #define META_EMPTY 0x80
 #define META_DELETED 0xFE
 #define META_SENTINEL 0xFF
@@ -851,6 +842,129 @@ static JSValue c_dbg_log(JSContext *ctx, JSValueConst this_val, int argc, JSValu
   return JS_UNDEFINED;
 }
 
+// Array copy: copies elements from source to destination
+// argv[0]=source, argv[1]=destination, argv[2]=destinationOffset, argv[3]=startIndex, argv[4]=endIndex
+static JSValue c_array_copy(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    (void)this_val;
+    if (argc < 5) return JS_EXCEPTION;
+
+    JSValueConst source = argv[0];
+    JSValueConst destination = argv[1];
+    int32_t destOffset = JS_VALUE_GET_INT(argv[2]);
+    int32_t startIndex = JS_VALUE_GET_INT(argv[3]);
+    int32_t endIndex = JS_VALUE_GET_INT(argv[4]);
+    int32_t rangeSize = endIndex - startIndex;
+
+    int isSourceArray = JS_IsArray(ctx, source);
+    int isDestArray = JS_IsArray(ctx, destination);
+
+    JSValue srcBuffer = JS_GetPropertyStr(ctx, source, "buffer");
+    JSValue dstBuffer = JS_GetPropertyStr(ctx, destination, "buffer");
+    int srcBufferIsObject = !JS_IsException(srcBuffer) && !JS_IsNull(srcBuffer);
+    int dstBufferIsObject = !JS_IsException(dstBuffer) && !JS_IsNull(dstBuffer);
+    JS_FreeValue(ctx, srcBuffer);
+    JS_FreeValue(ctx, dstBuffer);
+
+    int isSourceTypedArray = !isSourceArray && srcBufferIsObject;
+    int isDestTypedArray = !isDestArray && dstBufferIsObject;
+
+    if (isSourceTypedArray && isDestTypedArray) {
+        JSValue subarrayFn = JS_GetPropertyStr(ctx, source, "subarray");
+        JSValue setFn = JS_GetPropertyStr(ctx, destination, "set");
+
+        if (!JS_IsException(subarrayFn) && !JS_IsException(setFn)) {
+            JSValue subarray = JS_Call(ctx, subarrayFn, source, 2, (JSValue[]){ JS_NewInt32(ctx, startIndex), JS_NewInt32(ctx, endIndex) });
+            JS_FreeValue(ctx, subarrayFn);
+            if (!JS_IsException(subarray)) {
+                JSValue result = JS_Call(ctx, setFn, destination, 2, (JSValue[]){ subarray, JS_NewInt32(ctx, destOffset) });
+                JS_FreeValue(ctx, subarray);
+                JS_FreeValue(ctx, setFn);
+                if (!JS_IsException(result)) return result;
+            }
+            JS_GetException(ctx);
+        }
+        if (!JS_IsException(subarrayFn)) JS_FreeValue(ctx, subarrayFn);
+        if (!JS_IsException(setFn)) JS_FreeValue(ctx, setFn);
+    }
+
+    int sameArray = JS_StrictEq(ctx, source, destination);
+    if (sameArray && destOffset > startIndex) {
+        for (int32_t i = rangeSize - 1; i >= 0; i--) {
+            JSValue val = JS_GetPropertyUint32(ctx, source, (uint32_t)(startIndex + i));
+            if (JS_IsException(val)) return val;
+            JS_SetPropertyUint32(ctx, destination, (uint32_t)(destOffset + i), val);
+        }
+    } else {
+        for (int32_t i = 0; i < rangeSize; i++) {
+            JSValue val = JS_GetPropertyUint32(ctx, source, (uint32_t)(startIndex + i));
+            if (JS_IsException(val)) return val;
+            JS_SetPropertyUint32(ctx, destination, (uint32_t)(destOffset + i), val);
+        }
+    }
+    return JS_UNDEFINED;
+}
+
+// Computes Kotlin's String.hashCode(): hash = s[0]*31^(n-1) + s[1]*31^(n-2) + ... + s[n-1]
+// which is implemented as iterative: hash = hash * 31 + charAt(i)
+// JS charCodeAt returns UTF-16 code units (16-bit values)
+static JSValue c_get_string_hash_code(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
+    (void)this_val; (void)argc;
+    if (argc < 1) return JS_EXCEPTION;
+
+    JSValueConst str = argv[0];
+
+    // Convert JS string to UTF-8 C string, then get length
+    const char* cstr = JS_ToCString(ctx, str);
+    if (!cstr) return JS_NewInt32(ctx, 0);
+
+    // Get byte length of UTF-8 string
+    size_t byteLen = 0;
+    while (cstr[byteLen] != 0) byteLen++;
+
+    if (byteLen == 0) {
+        JS_FreeCString(ctx, cstr);
+        return JS_NewInt32(ctx, 0);
+    }
+
+    // Decode UTF-8 to UTF-16 and compute hash
+    // This matches JS charCodeAt behavior: each char is a 16-bit UTF-16 code unit
+    int32_t hash = 0;
+    size_t i = 0;
+    while (i < byteLen) {
+        uint32_t code;
+        // Decode UTF-8 character
+        if ((cstr[i] & 0x80) == 0) {
+            // 1-byte sequence (ASCII)
+            code = (uint8_t)cstr[i];
+            i += 1;
+        } else if ((cstr[i] & 0xE0) == 0xC0) {
+            // 2-byte sequence
+            code = ((uint8_t)cstr[i] & 0x1F) << 6;
+            code |= ((uint8_t)cstr[i + 1] & 0x3F);
+            i += 2;
+        } else if ((cstr[i] & 0xF0) == 0xE0) {
+            // 3-byte sequence
+            code = ((uint8_t)cstr[i] & 0x0F) << 12;
+            code |= ((uint8_t)cstr[i + 1] & 0x3F) << 6;
+            code |= ((uint8_t)cstr[i + 2] & 0x3F);
+            i += 3;
+        } else {
+            // 4-byte sequence (surrogate pair in UTF-16)
+            // For simplicity, just use the raw bytes combined
+            code = ((uint8_t)cstr[i] & 0x07) << 18;
+            code |= ((uint8_t)cstr[i + 1] & 0x3F) << 12;
+            code |= ((uint8_t)cstr[i + 2] & 0x3F) << 6;
+            code |= ((uint8_t)cstr[i + 3] & 0x3F);
+            i += 4;
+        }
+        // hash * 31 + char, with 32-bit signed integer overflow (same as JS.imul)
+        hash = (int32_t)((int32_t)hash * 31 + (int32_t)code);
+    }
+
+    JS_FreeCString(ctx, cstr);
+    return JS_NewInt32(ctx, hash);
+}
+
 extern "C" __attribute__((visibility("default"))) void js_intset_register_builtins(JSContext *ctx) {
   JSValue globalThis = JS_GetGlobalObject(ctx);
   JSValue fn;
@@ -889,5 +1003,11 @@ extern "C" __attribute__((visibility("default"))) void js_intset_register_builti
   // Generic debug log helper for Kotlin/JS code to log to logcat.
   fn = JS_NewCFunction(ctx, c_dbg_log,                           "_dbg",                              1);
   JS_SetPropertyStr(ctx, globalThis, "_dbg", fn);
+  // String hashCode helper
+  fn = JS_NewCFunction(ctx, c_get_string_hash_code,              "_getStringHashCode",                1);
+  JS_SetPropertyStr(ctx, globalThis, "_getStringHashCode", fn);
+  // Array copy helper
+  fn = JS_NewCFunction(ctx, c_array_copy,                         "_arrayCopy",                        5);
+  JS_SetPropertyStr(ctx, globalThis, "_arrayCopy", fn);
   JS_FreeValue(ctx, globalThis);
 }

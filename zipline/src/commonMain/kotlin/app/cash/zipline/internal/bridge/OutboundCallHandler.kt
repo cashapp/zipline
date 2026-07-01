@@ -88,7 +88,6 @@ internal class OutboundCallHandler(
     resultSerializer: ResultOrCallbackSerializer<*>,
     vararg args: Any?,
   ): Any? {
-
     if (function.isClose) {
       if (serviceState.closed) return Unit // ZiplineService.close() is idempotent.
       serviceState.closed = true
