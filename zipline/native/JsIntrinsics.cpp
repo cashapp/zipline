@@ -1,21 +1,3 @@
-/*
- * Copyright (C) 2024 Square, Inc.
- *
- * Licensed under the Apache License, Version 2.0, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * C builtins for androidx.collection.IntSet hot operations.
- *
- */
 #include "quickjs/quickjs.h"
 #include <stdint.h>
 
@@ -38,10 +20,7 @@ static int32_t* get_int32_data(JSContext *ctx, JSValueConst val, const char* arg
   //  - TypedArray.buffer  == the underlying ArrayBuffer
   JSValue buf = JS_GetPropertyStr(ctx, val, "buffer");
   if (JS_IsException(buf)) {
-    JSValue exc = JS_GetException(ctx);
-    const char* str = JS_ToCString(ctx, exc);
-    JS_FreeCString(ctx, str);
-    JS_FreeValue(ctx, exc);
+    JS_FreeValue(ctx, buf);
     JS_ThrowTypeError(ctx, "%s: not an ArrayBuffer or TypedArray (no .buffer property)", arg_name);
     return NULL;
   }
@@ -51,27 +30,20 @@ static int32_t* get_int32_data(JSContext *ctx, JSValueConst val, const char* arg
   uint8_t* data = JS_GetArrayBuffer(ctx, &size, buf);
   JS_FreeValue(ctx, buf);
   if (!data) {
-    JSValue exc = JS_GetException(ctx);
-    const char* str = JS_ToCString(ctx, exc);
-    JS_FreeCString(ctx, str);
-    JS_FreeValue(ctx, exc);
     return NULL;
   }
   return (int32_t*)data;
 }
 
-static inline int32_t read_int_element(JSContext *ctx, JSValueConst arr, int32_t index) {
+static inline bool read_int_element(JSContext *ctx, JSValueConst arr, int32_t index, int32_t *result) {
   JSValue val = JS_GetPropertyUint32(ctx, arr, (uint32_t)index);
-  if (JS_IsException(val)) {
-    return -1;
+  if (JS_VALUE_GET_TAG(val) != JS_TAG_INT) {
+    JS_FreeValue(ctx, val);
+    return false;
   }
-  int32_t result = JS_VALUE_GET_INT(val);
+  *result = JS_VALUE_GET_INT(val);
   JS_FreeValue(ctx, val);
-  return result;
-}
-
-static inline int32_t read_meta_byte(const int32_t* flat, int32_t offset) {
-  return (int32_t)((uint8_t*)flat)[offset];
+  return true;
 }
 
 static inline void write_meta_byte(int32_t* flat, int32_t offset, int32_t byte) {
@@ -134,15 +106,6 @@ static inline int32_t any_empty(uint64_t g) {
 // Check if any empty or deleted byte exists
 static inline int32_t any_empty_or_deleted(uint64_t g) {
     return mask_empty_or_deleted(g) != 0;
-}
-
-// Find the first empty or deleted slot in the group
-static inline int32_t first_empty_or_deleted(uint64_t g, int32_t probeOffset, int32_t capacity) {
-    uint64_t mask = mask_empty_or_deleted(g);
-    if (mask == 0) return -1;
-    int32_t bitIndex = __builtin_ctzll(mask);
-    int32_t byteInGroup = bitIndex >> 3;
-    return (probeOffset + byteInGroup) & capacity;   // use capacity, not capacity-1
 }
 
 // ============================================================================
@@ -215,7 +178,10 @@ static JSValue c_intset_find_slot(JSContext *ctx, JSValueConst this_val, int arg
             int32_t bitIdx = __builtin_ctzll(m);
             int32_t byteInGroup = bitIdx >> 3;
             int32_t index = (probeOffset + byteInGroup) & mask;
-            int32_t slotInt = read_int_element(ctx, argv[1], index);
+            int32_t slotInt;
+            if (!read_int_element(ctx, argv[1], index, &slotInt)) {
+                return JS_EXCEPTION;
+            }
             if (slotInt == element) {
                 return JS_NewInt32(ctx, index);
             }
@@ -283,10 +249,6 @@ static JSValue c_intset_remove(JSContext *ctx, JSValueConst this_val, int argc, 
 // Returns index of first Empty/Deleted slot, or -1 if none found.
 // ============================================================================
 
-// ============================================================================
-// ScatterSet intrinsics (fixed)
-// ============================================================================
-
 // Helper: Kotlin-compatible equality for Any?
 // Matches JS equals function behavior:
 static int kotlin_equals(JSContext *ctx, JSValueConst a, JSValueConst b) {
@@ -310,12 +272,13 @@ static int kotlin_equals(JSContext *ctx, JSValueConst a, JSValueConst b) {
         if (!JS_IsException(result)) {
             // Check if result is JS false - need to check both tag and value
             // JS_FALSE = JS_MKVAL(JS_TAG_BOOL, 0)
-            // In QuickJS, JSValue is compared via JS_StrictEq or by checking components
             int ret = !(JS_VALUE_GET_TAG(result) == JS_TAG_BOOL && JS_VALUE_GET_BOOL(result) == 0);
             JS_FreeValue(ctx, result);
             return ret;
+        } else {
+            JS_FreeValue(ctx, result);
+            return -1;
         }
-        JS_FreeValue(ctx, result);
     } else {
         JS_FreeValue(ctx, equals);
     }
@@ -378,6 +341,9 @@ static JSValue c_scatterset_find(JSContext *ctx, JSValueConst this_val, int argc
             }
             int eq = kotlin_equals(ctx, slotVal, element);
             JS_FreeValue(ctx, slotVal);
+            if (eq == -1) {
+                return JS_EXCEPTION;
+            }
             if (eq) {
                 return JS_NewInt32(ctx, index);
             }
@@ -391,8 +357,6 @@ static JSValue c_scatterset_find(JSContext *ctx, JSValueConst this_val, int argc
     }
     return JS_NewInt32(ctx, -1);
 }
-
-static int32_t find_first_available_slot(const int32_t* meta, int32_t capacity, int32_t hash1);
 
 static JSValue c_scatterset_find_slot(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
     (void)this_val; (void)argc;
@@ -422,6 +386,9 @@ static JSValue c_scatterset_find_slot(JSContext *ctx, JSValueConst this_val, int
             }
             int eq = kotlin_equals(ctx, slotVal, element);
             JS_FreeValue(ctx, slotVal);
+            if (eq == -1) {
+                return JS_EXCEPTION;
+            }
             if (eq) {
                 return JS_NewInt32(ctx, index);
             }
@@ -480,6 +447,9 @@ static JSValue c_scatterset_remove(JSContext *ctx, JSValueConst this_val, int ar
             }
             int eq = kotlin_equals(ctx, slotVal, element);
             JS_FreeValue(ctx, slotVal);
+            if (eq == -1) {
+                return JS_EXCEPTION;
+            }
             if (eq) {
                 // Mark as Deleted and clear the element to null (not undefined)
                 write_meta_byte(meta, index, META_DELETED);
@@ -523,6 +493,9 @@ static JSValue c_scattermap_find_slot(JSContext *ctx, JSValueConst this_val, int
             }
             int eq = kotlin_equals(ctx, slotVal, key);
             JS_FreeValue(ctx, slotVal);
+            if (eq == -1) {
+                return JS_EXCEPTION;
+            }
             if (eq) {
                 return JS_NewInt32(ctx, index);
             }
@@ -565,6 +538,9 @@ static JSValue c_scattermap_find(JSContext *ctx, JSValueConst this_val, int argc
             }
             int eq = kotlin_equals(ctx, slotVal, key);
             JS_FreeValue(ctx, slotVal);
+            if (eq == -1) {
+                return JS_EXCEPTION;
+            }
             if (eq) {
                 return JS_NewInt32(ctx, index);
             }
@@ -606,6 +582,9 @@ static JSValue c_scattermap_remove(JSContext *ctx, JSValueConst this_val, int ar
             }
             int eq = kotlin_equals(ctx, slotVal, key);
             JS_FreeValue(ctx, slotVal);
+            if (eq == -1) {
+                return JS_EXCEPTION;
+            }
             if (eq) {
                 write_meta_byte(meta, index, META_DELETED);
                 JS_SetPropertyUint32(ctx, argv[1], (uint32_t)index, JS_NULL);
@@ -830,18 +809,6 @@ static JSValue c_int_object_map_find_available_slot(JSContext *ctx, JSValueConst
     }
 }
 
-// Generic JS-callable log function. Allows Kotlin/JS code to send debug messages that
-// appear in Android logcat (and stderr on other platforms).
-static JSValue c_dbg_log(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-  (void)this_val; (void)argc;
-  if (argc < 1) return JS_UNDEFINED;
-  const char* str = JS_ToCString(ctx, argv[0]);
-  if (str) {
-    JS_FreeCString(ctx, str);
-  }
-  return JS_UNDEFINED;
-}
-
 // Array copy: copies elements from source to destination
 // argv[0]=source, argv[1]=destination, argv[2]=destinationOffset, argv[3]=startIndex, argv[4]=endIndex
 static JSValue c_array_copy(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
@@ -879,7 +846,7 @@ static JSValue c_array_copy(JSContext *ctx, JSValueConst this_val, int argc, JSV
                 JSValue result = JS_Call(ctx, setFn, destination, 2, (JSValue[]){ subarray, JS_NewInt32(ctx, destOffset) });
                 JS_FreeValue(ctx, subarray);
                 JS_FreeValue(ctx, setFn);
-                if (!JS_IsException(result)) return result;
+                if (!JS_IsException(result)) return JS_UNDEFINED;
             }
             JS_GetException(ctx);
         }
@@ -938,24 +905,41 @@ static JSValue c_get_string_hash_code(JSContext *ctx, JSValueConst this_val, int
             code = (uint8_t)cstr[i];
             i += 1;
         } else if ((cstr[i] & 0xE0) == 0xC0) {
-            // 2-byte sequence
+            // 2-byte sequence - bounds check
+            if (i + 1 >= byteLen) break;
             code = ((uint8_t)cstr[i] & 0x1F) << 6;
             code |= ((uint8_t)cstr[i + 1] & 0x3F);
             i += 2;
         } else if ((cstr[i] & 0xF0) == 0xE0) {
-            // 3-byte sequence
+            // 3-byte sequence - bounds check
+            if (i + 2 >= byteLen) break;
             code = ((uint8_t)cstr[i] & 0x0F) << 12;
             code |= ((uint8_t)cstr[i + 1] & 0x3F) << 6;
             code |= ((uint8_t)cstr[i + 2] & 0x3F);
             i += 3;
         } else {
-            // 4-byte sequence (surrogate pair in UTF-16)
-            // For simplicity, just use the raw bytes combined
-            code = ((uint8_t)cstr[i] & 0x07) << 18;
-            code |= ((uint8_t)cstr[i + 1] & 0x3F) << 12;
-            code |= ((uint8_t)cstr[i + 2] & 0x3F) << 6;
-            code |= ((uint8_t)cstr[i + 3] & 0x3F);
+            // 4-byte sequence - bounds check
+            if (i + 3 >= byteLen) break;
+            // 4-byte sequence represents a Unicode code point outside BMP (U+10000 and above)
+            // Decode to get the full code point
+            uint32_t fullCodePoint = ((uint8_t)cstr[i] & 0x07) << 18;
+            fullCodePoint |= ((uint8_t)cstr[i + 1] & 0x3F) << 12;
+            fullCodePoint |= ((uint8_t)cstr[i + 2] & 0x3F) << 6;
+            fullCodePoint |= ((uint8_t)cstr[i + 3] & 0x3F);
             i += 4;
+
+            // Convert to UTF-16 surrogate pairs (what JS charCodeAt returns)
+            // High surrogate: 0xD800 + top 10 bits of (codePoint - 0x10000)
+            // Low surrogate:  0xDC00 + bottom 10 bits of (codePoint - 0x10000)
+            uint32_t adjusted = fullCodePoint - 0x10000;
+            uint32_t highSurrogate = 0xD800 + (adjusted >> 10);
+            uint32_t lowSurrogate = 0xDC00 + (adjusted & 0x3FF);
+
+            // First char
+            hash = (int32_t)((int32_t)hash * 31 + (int32_t)highSurrogate);
+            // Second char
+            hash = (int32_t)((int32_t)hash * 31 + (int32_t)lowSurrogate);
+            continue;
         }
         // hash * 31 + char, with 32-bit signed integer overflow (same as JS.imul)
         hash = (int32_t)((int32_t)hash * 31 + (int32_t)code);
@@ -1000,9 +984,6 @@ extern "C" __attribute__((visibility("default"))) void js_intset_register_builti
   JS_SetPropertyStr(ctx, globalThis, "_scatterMapFind", fn);
   fn = JS_NewCFunction(ctx, c_scattermap_remove, "_scatterMapRemove", 7);
   JS_SetPropertyStr(ctx, globalThis, "_scatterMapRemove", fn);
-  // Generic debug log helper for Kotlin/JS code to log to logcat.
-  fn = JS_NewCFunction(ctx, c_dbg_log,                           "_dbg",                              1);
-  JS_SetPropertyStr(ctx, globalThis, "_dbg", fn);
   // String hashCode helper
   fn = JS_NewCFunction(ctx, c_get_string_hash_code,              "_getStringHashCode",                1);
   JS_SetPropertyStr(ctx, globalThis, "_getStringHashCode", fn);
