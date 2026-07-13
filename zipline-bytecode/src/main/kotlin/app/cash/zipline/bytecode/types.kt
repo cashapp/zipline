@@ -32,6 +32,15 @@ data class JsInt(val value: Int) : JsObject()
 
 data class JsDouble(val value: Double) : JsObject()
 
+/**
+ * BigInt value in QuickJS bytecode format. [limbs] is an unsigned little-endian array of
+ * 32-bit limbs. The QuickJS `JS_WriteBigInt` / `JS_ReadBigInt` routines in
+ * `native/quickjs/quickjs.c` encode the value as the two's-complement byte length
+ * followed by `len/4` full 32-bit limbs plus `len%4` sign-extended top bytes — this
+ * representation round-trips losslessly.
+ */
+data class JsBigInt(val limbs: List<Long>) : JsObject()
+
 data class JsString(
   val isWideChar: Boolean,
   val bytes: ByteString,

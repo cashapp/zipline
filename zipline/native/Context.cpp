@@ -26,6 +26,8 @@
 #include "quickjs/quickjs.h"
 #include "mimalloc/mimalloc-quickjs.h"
 
+extern "C" void js_intset_register_builtins(JSContext* ctx);
+
 /**
  * This signature satisfies the JSInterruptHandler typedef. It is always installed but only does
  * work if a Kotlin InterruptHandler is configured.
@@ -99,6 +101,11 @@ Context::Context(JNIEnv* env)
   JS_SetStripInfo(jsRuntime, JS_STRIP_SOURCE);
 
   JS_AddGlobalThisGc(jsContext);
+
+  // Register C builtins for kotlin.Long arithmetic. These back the kotlinx.collections.IntSet
+  // hot path in the JS runtime. The stdlib JS bodies for `add`/`multiply`/etc. are patched at
+  // build time to call into these builtins.
+  js_intset_register_builtins(jsContext);
 
   if (installFinalizationRegistry(jsContext, jsContextForCompiling) < 0) {
     throwJavaException(env, "java/lang/IllegalStateException",

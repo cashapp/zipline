@@ -92,6 +92,42 @@ class JsObjectWriter(
         sink.writeByte(BC_TAG_FUNCTION_BYTECODE)
         writeFunction(value)
       }
+
+      is JsBigInt -> {
+        sink.writeByte(BC_TAG_BIG_INT)
+        writeBigInt(value)
+      }
+    }
+  }
+
+  private fun writeBigInt(value: JsBigInt) {
+    // The BigInt limbs are unsigned 32-bit values; QuickJS encodes the byte length of
+    // the two's-complement representation. For zero, write a single 0 byte of length 0.
+    val limbs = value.limbs
+    val isZero = limbs.isEmpty() || (limbs.size == 1 && limbs[0] == 0L)
+    if (isZero) {
+      sink.writeLeb128(0)
+      return
+    }
+    // Determine byte length (excluding trailing sign-only bytes).
+    var topLimb = limbs.last()
+    var topByteCount = 4
+    while (topByteCount > 1) {
+      val shift = (topByteCount - 1) * 8
+      val b = ((topLimb shr shift) and 0xFFL).toInt()
+      if (b != 0x00 && b != 0xFF) break
+      val b2 = ((topLimb shr (shift - 8)) and 0xFFL).toInt()
+      if ((b and 1) != (b2 and 1)) break
+      topByteCount--
+    }
+    val fullLimbs = limbs.size - 1
+    val byteLen = fullLimbs * 4 + topByteCount
+    sink.writeLeb128(byteLen)
+    for (i in 0 until fullLimbs) {
+      sink.writeIntLe(limbs[i].toInt())
+    }
+    for (i in 0 until topByteCount) {
+      sink.writeByte(((topLimb shr (i * 8)) and 0xFFL).toInt())
     }
   }
 

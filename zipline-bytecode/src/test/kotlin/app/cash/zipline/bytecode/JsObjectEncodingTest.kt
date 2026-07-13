@@ -134,6 +134,26 @@ class JsObjectEncodingTest {
     )
   }
 
+  @Test fun bigIntRoundTrip() {
+    assertRoundTrip(
+      """
+      |function bigInts() {
+      |  return [
+      |    2147483648n,
+      |    -2147483648n,
+      |    -31557014167219200n,
+      |    31556889864403199n,
+      |    0n,
+      |    1n,
+      |    -1n,
+      |    9223372036854775807n,
+      |    -9223372036854775808n
+      |  ];
+      |}
+      """.trimMargin(),
+    )
+  }
+
   /**
    * We had an off-by-one reading the `has_debug` bit from the flags in
    * `JsObjectReader.readFunction()`.
