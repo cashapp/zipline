@@ -92,12 +92,6 @@ import app.cash.zipline.quickjs.JsValueGetNormTag
 import app.cash.zipline.quickjs.installFinalizationRegistry
 import app.cash.zipline.quickjs.js_free
 import app.cash.zipline.quickjs.js_intset_register_builtins
-import app.cash.zipline.quickjs.JsGetOwnPropertyNames
-import app.cash.zipline.quickjs.JsGetPropertyAt
-import app.cash.zipline.quickjs.JsGetPropertyName
-import app.cash.zipline.quickjs.JsFreePropertyEnum
-import app.cash.zipline.quickjs.JsNewCFunction
-import app.cash.zipline.quickjs.JsNewTagInt
 import kotlin.experimental.ExperimentalNativeApi
 import kotlinx.cinterop.CArrayPointer
 import kotlinx.cinterop.COpaquePointer
@@ -161,6 +155,7 @@ actual class QuickJs private constructor(
 
   private val jsInterruptHandlerCFunction = staticCFunction(::jsInterruptHandlerGlobal)
   private val thisPtr = StableRef.create(this)
+
   init {
     JS_SetRuntimeOpaque(runtime, thisPtr.asCPointer())
     JS_SetInterruptHandler(runtime, jsInterruptHandlerCFunction, thisPtr.asCPointer())
@@ -357,7 +352,7 @@ actual class QuickJs private constructor(
 
       val jsOutboundCallChannel = JS_NewObjectClass(context, outboundCallChannelClassId)
       if (JS_IsException(jsOutboundCallChannel) != 0 ||
-          JS_SetProperty(context, globalThis, propertyName, jsOutboundCallChannel) <= 0
+        JS_SetProperty(context, globalThis, propertyName, jsOutboundCallChannel) <= 0
       ) {
         throwJsException()
       }
