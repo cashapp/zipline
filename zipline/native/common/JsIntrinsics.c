@@ -1,4 +1,5 @@
-#include "quickjs/quickjs.h"
+#include "../quickjs/quickjs.h"
+#include <stdbool.h>
 #include <stdint.h>
 
 #define META_EMPTY 0x80
@@ -24,7 +25,6 @@ static int32_t* get_int32_data(JSContext *ctx, JSValueConst val, const char* arg
     JS_ThrowTypeError(ctx, "%s: not an ArrayBuffer or TypedArray (no .buffer property)", arg_name);
     return NULL;
   }
-  int buf_tag = JS_VALUE_GET_TAG(buf);
 
   size_t size;
   uint8_t* data = JS_GetArrayBuffer(ctx, &size, buf);
@@ -949,7 +949,7 @@ static JSValue c_get_string_hash_code(JSContext *ctx, JSValueConst this_val, int
     return JS_NewInt32(ctx, hash);
 }
 
-extern "C" __attribute__((visibility("default"))) void js_intset_register_builtins(JSContext *ctx) {
+__attribute__((visibility("default"))) void js_intset_register_builtins(JSContext *ctx) {
   JSValue globalThis = JS_GetGlobalObject(ctx);
   JSValue fn;
   // IntSet intrinsics

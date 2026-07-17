@@ -140,6 +140,7 @@ kotlin {
           header(file("native/common/context-no-eval.h"))
           header(file("native/common/finalization-registry.h"))
           header(file("native/common/global-gc.h"))
+          header(file("native/common/intset-builtins.h"))
           packageName("app.cash.zipline.quickjs")
         }
       }

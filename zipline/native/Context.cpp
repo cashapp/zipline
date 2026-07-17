@@ -23,10 +23,9 @@
 #include "common/context-no-eval.h"
 #include "common/finalization-registry.h"
 #include "common/global-gc.h"
+#include "common/intset-builtins.h"
 #include "quickjs/quickjs.h"
 #include "mimalloc/mimalloc-quickjs.h"
-
-extern "C" void js_intset_register_builtins(JSContext* ctx);
 
 /**
  * This signature satisfies the JSInterruptHandler typedef. It is always installed but only does
