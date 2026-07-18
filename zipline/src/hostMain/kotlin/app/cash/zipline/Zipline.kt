@@ -141,6 +141,24 @@ actual class Zipline private constructor(
    *  * Accessing the objects returned from [take].
    */
   override fun close() {
+    close(closeServices = true)
+  }
+
+  /**
+   * Release resources held by this instance. It is an error to do any of the following after
+   * calling close:
+   *
+   *  * Call [take] or [bind].
+   *  * Accessing [quickJs].
+   *  * Accessing the objects returned from [take].
+   *
+   * @param closeServices whether to close the host services that were bound with [bind]. Pass false
+   *   when these services are owned by the host and may be shared with other [Zipline] instances or
+   *   outlive this one (as Treehouse does when it reuses host services across code sessions).
+   *   Closing a shared service here would also cancel in-flight calls that belong to other live
+   *   [Zipline] instances, surfacing spurious cancellations in unrelated code.
+   */
+  fun close(closeServices: Boolean) {
     if (closed) return
     closed = true
 
@@ -148,15 +166,18 @@ actual class Zipline private constructor(
 
     scope.cancel(theOnlyCancellationException)
 
-    // Close all caller-provided services that are still open. We clear the map to prevent possible
-    // retain cycles on Kotlin/Native where some objects may be reference-counted.
+    // Drop references to all bound services. We clear the map to prevent possible retain cycles on
+    // Kotlin/Native where some objects may be reference-counted. Only close the services when we own
+    // their lifecycle; host-owned services may still be bound to other live Zipline instances.
     val inboundServicesToClose = endpoint.inboundServices.values.toTypedArray()
     endpoint.inboundServices.clear()
-    for (inboundService in inboundServicesToClose) {
-      try {
-        inboundService.service.close()
-      } catch (e: Throwable) {
-        if (thrown != null) thrown = e
+    if (closeServices) {
+      for (inboundService in inboundServicesToClose) {
+        try {
+          inboundService.service.close()
+        } catch (e: Throwable) {
+          if (thrown != null) thrown = e
+        }
       }
     }
 
