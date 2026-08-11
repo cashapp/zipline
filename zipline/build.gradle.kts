@@ -183,7 +183,11 @@ cklib {
       listOf(
         //"-DDUMP_LEAKS=1", // For local testing ONLY!
         "-DKONAN_MI_MALLOC=1",
-        "-DCONFIG_VERSION=\"${quickJsVersion()}\"",
+        // Unquoted: quickjs.c stringifies this itself now (see the QJS_XSTR/QJS_STR
+        // macros near its top) so this doesn't depend on an already-quoted -D value
+        // surviving Gradle -> cmake/ninja/cklib -> clang.exe process-argument passing
+        // intact - it didn't on Windows, where the escaped quotes got lost.
+        "-DCONFIG_VERSION=${quickJsVersion()}",
         "-Wno-unknown-pragmas",
         "-ftls-model=initial-exec",
         "-Wno-unused-function",
@@ -214,8 +218,11 @@ android {
     externalNativeBuild {
       cmake {
         arguments("-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static")
-        cFlags("-fstrict-aliasing", "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\"")
-        cppFlags("-fstrict-aliasing", "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\"")
+        // Unquoted: quickjs.c stringifies CONFIG_VERSION itself now (see the
+        // QJS_XSTR/QJS_STR macros added near its top) - a Windows toolchain quoting
+        // bug was losing the escaped quotes crossing Gradle -> cmake/ninja -> clang.exe.
+        cFlags("-fstrict-aliasing", "-DCONFIG_VERSION=${quickJsVersion()}")
+        cppFlags("-fstrict-aliasing", "-DCONFIG_VERSION=${quickJsVersion()}")
       }
     }
 

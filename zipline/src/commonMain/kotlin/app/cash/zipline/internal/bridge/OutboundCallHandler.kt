@@ -180,18 +180,32 @@ internal class OutboundCallHandler(
     suspendCallback.externalCall = externalCall
     suspendCallback.callStart = endpoint.eventListener.callStart(externalCall)
 
-    val resultOrCallbackJson = endpoint.outboundChannel.call(externalCall.encodedCall)
-    val encodedResultOrCallback = endpoint.withTakeScope(scope) {
-      endpoint.callCodec.decodeResultOrCallback(resultOrCallbackSerializer, resultOrCallbackJson)
-    }
+    return suspendCancellableCoroutine { continuation ->
+      // Wire up the continuation before making the call below. The callee may call
+      // back into suspendCallback.success()/failure() reentrantly - synchronously,
+      // within that call - if it settles a native platform Promise as a side effect
+      // (rather than only through Zipline's own outbound-call-boundary RPC
+      // machinery). That reentrant path needs a live continuation to resume.
+      suspendCallback.continuation = continuation
+      endpoint.incompleteContinuations += continuation
 
-    // If the call returned a cancel callback, then it suspended and hasn't returned yet. Suspend
-    // the current coroutine until the called function completes.
-    val cancelCallback = encodedResultOrCallback.value.callback
-    if (cancelCallback != null) {
-      return suspendCancellableCoroutine { continuation ->
-        suspendCallback.continuation = continuation
-        endpoint.incompleteContinuations += continuation
+      val resultOrCallbackJson = endpoint.outboundChannel.call(externalCall.encodedCall)
+
+      // If the reentrant path above already resumed this continuation, there's
+      // nothing left to do - the call's own return value below is stale, describing
+      // a pending state that was already superseded before this function got to look
+      // at it.
+      if (suspendCallback.completed) return@suspendCancellableCoroutine
+
+      val encodedResultOrCallback = endpoint.withTakeScope(scope) {
+        endpoint.callCodec.decodeResultOrCallback(resultOrCallbackSerializer, resultOrCallbackJson)
+      }
+
+      // If the call returned a cancel callback, then it suspended and hasn't
+      // returned yet. Wait for suspendCallback.success()/failure() to eventually
+      // resume this continuation for real.
+      val cancelCallback = encodedResultOrCallback.value.callback
+      if (cancelCallback != null) {
         continuation.invokeOnCancellation {
           endpoint.scope.launch {
             if (!suspendCallback.completed) {
@@ -199,21 +213,21 @@ internal class OutboundCallHandler(
             }
           }
         }
+        return@suspendCancellableCoroutine
       }
+
+      // The call didn't suspend. Resume with its result immediately.
+      val callResult = encodedResultOrCallback.callResult!!
+
+      // Suspend callbacks are one-shot. When triggered, remove them immediately.
+      val name = suspendCallback.passByReferenceName
+      if (name != null) endpoint.remove(name)
+
+      endpoint.incompleteContinuations -= continuation
+      endpoint.eventListener.callEnd(externalCall, callResult, suspendCallback.callStart)
+
+      continuation.resumeWith(callResult.result.withApiMismatchMessage(function))
     }
-
-    // The call didn't suspend. Return its result without suspending.
-    val callResult = encodedResultOrCallback.callResult!!
-
-    // Suspend callbacks are one-shot. When triggered, remove them immediately.
-    val name = suspendCallback.passByReferenceName
-    if (name != null) endpoint.remove(name)
-
-    endpoint.eventListener.callEnd(externalCall, callResult, suspendCallback.callStart)
-
-    return callResult.result
-      .withApiMismatchMessage(function)
-      .getOrThrow()
   }
 
   override fun toString() = serviceName

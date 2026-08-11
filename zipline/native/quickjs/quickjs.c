@@ -43,6 +43,14 @@
 #include "cutils.h"
 #include "list.h"
 #include "quickjs.h"
+
+/* Passing CONFIG_VERSION as an already-quoted string via -D on the command line
+   (`-DCONFIG_VERSION=\"...\"`) depends on the escaped quotes surviving intact across
+   every layer between the build script and the compiler invocation. On Windows
+   (NDK/clang and cklib's bundled LLVM, both via cmake/ninja) they don't. Stringifying
+   an unquoted value at the point of use sidesteps the whole quoting problem. */
+#define QJS_XSTR(x) QJS_STR(x)
+#define QJS_STR(x) #x
 #include "libregexp.h"
 #ifdef CONFIG_BIGNUM
 #include "libbf.h"
@@ -6196,7 +6204,7 @@ void JS_DumpMemoryUsage(FILE *fp, const JSMemoryUsage *s, JSRuntime *rt)
 #ifdef CONFIG_BIGNUM
             "BigNum "
 #endif
-            CONFIG_VERSION " version, %d-bit, malloc limit: %"PRId64"\n\n",
+            QJS_XSTR(CONFIG_VERSION) " version, %d-bit, malloc limit: %"PRId64"\n\n",
             (int)sizeof(void *) * 8, (int64_t)(ssize_t)s->malloc_limit);
 #if 1
     if (rt) {

@@ -53,6 +53,11 @@ jstring InboundCallChannel::call(Context *context, JNIEnv* env,
   JS_FreeValue(jsContext, thisPointer);
   JS_FreeValue(jsContext, global);
 
+  // See Context::runJobs() - drains any native Promise reactions this call enqueued
+  // before returning control to the host, so async guest code chained off a real
+  // JS Promise (not just Zipline's own RPC machinery) actually gets to run.
+  context->runJobs();
+
   return javaResult;
 }
 
