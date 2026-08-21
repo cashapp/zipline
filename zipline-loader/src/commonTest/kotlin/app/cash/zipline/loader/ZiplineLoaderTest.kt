@@ -37,6 +37,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.modules.EmptySerializersModule
@@ -436,6 +437,50 @@ class ZiplineLoaderTest {
       zipline.getLog(),
     )
     zipline.close()
+  }
+
+  @Test
+  fun loadsManifestFromCacheAndThenFromUrlWhenUrlChanged() = runBlocking {
+    tester.seedEmbedded("test", "test", freshAtEpochMs = 100L)
+
+    val urlFlow = MutableSharedFlow<String>(replay = 1).apply { emit(MANIFEST_URL) }
+
+    loader.load(
+      applicationName = "test",
+      freshnessChecker = FakeFreshnessCheckerFresh,
+      manifestUrlFlow = urlFlow,
+    ).test {
+      val cachedZipline = (awaitItem() as LoadResult.Success).zipline
+      assertEquals(
+        cachedZipline.getLog(),
+        """
+        |test loaded
+        |
+        """.trimMargin(),
+      )
+      cachedZipline.close()
+
+      httpClient.filePathToByteString = mapOf(
+        MANIFEST_URL to testFixtures.manifestNoBaseUrlByteString,
+        ALPHA_URL to testFixtures.alphaByteString,
+        BRAVO_URL to testFixtures.bravoByteString,
+      )
+
+      // Re-emit URL to trigger a new load
+      urlFlow.emit(MANIFEST_URL)
+
+      val networkZipline = (awaitItem() as LoadResult.Success).zipline
+      assertEquals(
+        networkZipline.getLog(),
+        """
+        |alpha loaded
+        |bravo loaded
+        |
+        """.trimMargin(),
+      )
+
+      networkZipline.close()
+    }
   }
 
   @Suppress("INVISIBLE_REFERENCE", "INVISIBLE_MEMBER") // Access :zipline-loader internals.

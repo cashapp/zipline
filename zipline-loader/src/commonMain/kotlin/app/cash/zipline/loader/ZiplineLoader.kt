@@ -37,6 +37,7 @@ import kotlinx.coroutines.channels.ProducerScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.joinAll
@@ -252,13 +253,15 @@ class ZiplineLoader internal constructor(
         initializer,
       )
 
-      // If we successfully loaded local code, don't collect the remote code. We're done!
       if (localManifest != null) {
         previousManifest = localManifest
-        return@channelFlow
       }
 
-      manifestUrlFlow.collect { manifestUrl ->
+      manifestUrlFlow
+        // If we successfully loaded a local copy we can skip a network load, but we still want to react to changes in
+        // the target url.
+        .drop(if (localManifest != null) 1 else 0)
+        .collect { manifestUrl ->
         val loadedFromNetwork = loadFromNetwork(
           previousManifest,
           nowEpochMs(),

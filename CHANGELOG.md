@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-Nothing yet!
+* Fix: Listen for manifest url changes after local (cached/embedded) manifest loaded.
 
 ## [1.27.0] - 2026-04-02
 [1.27.0]: https://github.com/cashapp/zipline/releases/tag/1.27.0
