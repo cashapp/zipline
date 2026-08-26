@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.KotlinMultiplatformAndroidLibraryTarget
 import com.android.build.gradle.BaseExtension
 import com.diffplug.gradle.spotless.SpotlessExtension
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
@@ -12,6 +13,7 @@ import org.jetbrains.dokka.gradle.DokkaMultiModuleTask
 import org.jetbrains.dokka.gradle.DokkaTaskPartial
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinMultiplatformExtension
+import org.jetbrains.kotlin.gradle.dsl.kotlinExtension
 import org.jetbrains.kotlin.gradle.targets.js.testing.KotlinJsTest
 import org.jetbrains.kotlin.gradle.targets.jvm.tasks.KotlinJvmTest
 import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
@@ -78,20 +80,22 @@ allprojects {
     }
   }
 
-  plugins.withId("com.android.library") {
-    extensions.configure<BaseExtension> {
-      lintOptions {
-        textReport = true
-        textOutput("stdout")
-        lintConfig = rootProject.file("lint.xml")
+  plugins.withId("com.android.kotlin.multiplatform.library") {
+    extensions.configure<KotlinMultiplatformExtension> {
+      this.extensions.configure<KotlinMultiplatformAndroidLibraryTarget> {
+        lint {
+          printTextReport = true
+          lintConfig = rootProject.file("lint.xml")
 
-        isCheckDependencies = true
-        isCheckTestSources = false // TODO true https://issuetracker.google.com/issues/138247523
-        isExplainIssues = false
+          checkDependencies = true
+          checkTestSources = false // TODO true https://issuetracker.google.com/issues/138247523
+          explainIssues = false
 
-        // We run a full lint analysis as build part in CI, so skip vital checks for assemble task.
-        isCheckReleaseBuilds = false
+          // We run a full lint analysis as build part in CI, so skip vital checks for assemble task.
+          checkReleaseBuilds = false
+        }
       }
+      this.extensions.getByType<KotlinMultiplatformAndroidLibraryTarget>()
     }
   }
 

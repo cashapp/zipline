@@ -28,11 +28,14 @@ import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputDirectory
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 import org.gradle.work.ChangeType.ADDED
@@ -45,12 +48,14 @@ import org.jetbrains.kotlin.gradle.targets.js.dsl.KotlinJsBinaryMode
 /**
  * Compiles `.js` files to `.zipline` files.
  */
+@CacheableTask
 abstract class ZiplineCompileTask @Inject constructor(
   private val execOperations: ExecOperations,
 ) : DefaultTask() {
 
   @get:Incremental
   @get:InputDirectory
+  @get:PathSensitive(PathSensitivity.RELATIVE)
   abstract val inputDir: DirectoryProperty
 
   @get:OutputDirectory
