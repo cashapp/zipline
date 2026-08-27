@@ -55,6 +55,11 @@ internal class InboundCallChannel(
     JS_FreeValue(context, inboundChannel)
     JS_FreeValue(context, globalThis)
 
+    // See QuickJs.runJobs() - drains any native Promise reactions this call enqueued
+    // before returning control to the host, so async guest code chained off a real
+    // JS Promise (not just Zipline's own RPC machinery) actually gets to run.
+    quickJs.runJobs()
+
     return kotlinResult
   }
 

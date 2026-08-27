@@ -157,8 +157,37 @@ jobject Context::execute(JNIEnv* env, jbyteArray byteCode) {
     throwJsException(env, val);
   }
   JS_FreeValue(jsContext, val);
+  runJobs();
 
   return result;
+}
+
+/**
+ * QuickJS never runs a native Promise's `.then()`/`async function` reaction on its
+ * own - those are enqueued as "jobs" (JS_EnqueueJob) that only ever run when the
+ * embedder explicitly drains them (JS_ExecutePendingJob). Nothing in this bridge
+ * did that, so any guest-side code that awaits a *real* JS Promise (as opposed to
+ * a Zipline RPC call, which never goes through the native Promise machinery) would
+ * make progress on its first synchronous tick and then hang forever - the first
+ * chained `.then()`/await continuation would simply never fire. Drain after every
+ * JNI entry point that can run guest JS, so any reactions enqueued during that call
+ * get a chance to run before control returns to the host.
+ */
+void Context::runJobs() {
+  JSContext* pendingCtx;
+  for (;;) {
+    int result = JS_ExecutePendingJob(jsRuntime, &pendingCtx);
+    if (result == 0) {
+      break; // No more jobs pending.
+    }
+    if (result < 0) {
+      // An unhandled exception inside a promise reaction. There's no call stack left
+      // to propagate it to here, so drop it - matches "unhandled promise rejection"
+      // semantics elsewhere.
+      JSValue exception = JS_GetException(pendingCtx);
+      JS_FreeValue(pendingCtx, exception);
+    }
+  }
 }
 
 jbyteArray Context::compile(JNIEnv* env, jstring source, jstring file) {

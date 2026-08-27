@@ -33,6 +33,7 @@ import app.cash.zipline.quickjs.JS_EVAL_FLAG_COMPILE_ONLY
 import app.cash.zipline.quickjs.JS_EVAL_FLAG_STRICT
 import app.cash.zipline.quickjs.JS_Eval
 import app.cash.zipline.quickjs.JS_EvalFunction
+import app.cash.zipline.quickjs.JS_ExecutePendingJob
 import app.cash.zipline.quickjs.JS_FreeAtom
 import app.cash.zipline.quickjs.JS_FreeCString
 import app.cash.zipline.quickjs.JS_FreeContext
@@ -95,6 +96,7 @@ import kotlin.experimental.ExperimentalNativeApi
 import kotlinx.cinterop.CArrayPointer
 import kotlinx.cinterop.COpaquePointer
 import kotlinx.cinterop.CPointer
+import kotlinx.cinterop.CPointerVar
 import kotlinx.cinterop.CValue
 import kotlinx.cinterop.CValuesRef
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -323,7 +325,39 @@ actual class QuickJs private constructor(
     }
     val result = value.toKotlinInstanceOrNull()
     JS_FreeValue(context, value)
+    runJobs()
     return result
+  }
+
+  /**
+   * QuickJS never runs a native Promise's `.then()`/`async function` reaction on its
+   * own - those are enqueued as "jobs" that only ever run when the embedder
+   * explicitly drains them via `JS_ExecutePendingJob`. Guest code that awaits a real
+   * JS Promise (as opposed to a Zipline RPC call, which never touches the native
+   * Promise machinery) would make progress on its first synchronous tick and then
+   * hang forever, because nothing ever ran its continuation. Call this after every
+   * entry point that can run guest JS.
+   */
+  internal fun runJobs() {
+    memScoped {
+      val pendingContext = alloc<CPointerVar<JSContext>>()
+      while (true) {
+        val result = JS_ExecutePendingJob(runtime, pendingContext.ptr)
+        if (result == 0) {
+          break // No more jobs pending.
+        }
+        if (result < 0) {
+          // An unhandled exception inside a promise reaction. There's no call stack
+          // left to propagate it to here, so drop it - matches "unhandled promise
+          // rejection" semantics elsewhere.
+          val ctx = pendingContext.value
+          if (ctx != null) {
+            val exception = JS_GetException(ctx)
+            JS_FreeValue(ctx, exception)
+          }
+        }
+      }
+    }
   }
 
   internal actual fun initOutboundChannel(outboundChannel: CallChannel) {

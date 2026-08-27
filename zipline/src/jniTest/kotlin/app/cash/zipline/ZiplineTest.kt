@@ -159,6 +159,34 @@ class ZiplineTest {
       .isEqualTo("hello from the suspending JVM, Eric")
   }
 
+  @Test fun suspendingJsCallJvmServiceAfterRealPromise() = runTest(dispatcher) {
+    // Regression test: a JS suspend function that awaits a genuine native Promise
+    // (not a Zipline outbound call) before making an outbound call to the JVM used
+    // to never complete - QuickJS's Promise job queue was never drained by the host
+    // bridge, so the Promise's `.then()` reaction (and everything chained after it)
+    // never ran. See suspendingJs.kt's JsSuspendingEchoServiceAfterRealPromise doc
+    // comment.
+    val jvmSuspendingEchoService = object : SuspendingEchoService {
+      override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
+        return EchoResponse("hello from the suspending JVM, ${request.message}")
+      }
+    }
+
+    zipline.bind<SuspendingEchoService>(
+      "jvmSuspendingEchoService",
+      jvmSuspendingEchoService,
+    )
+
+    zipline.quickJs.evaluate(
+      "testing.app.cash.zipline.testing.prepareSuspendingJsAfterRealPromiseBridge()",
+    )
+    val jsSuspendingEchoService =
+      zipline.take<SuspendingEchoService>("jsSuspendingEchoServiceAfterRealPromise")
+
+    assertThat(jsSuspendingEchoService.suspendingEcho(EchoRequest("Priya")))
+      .isEqualTo(EchoResponse("hello from the suspending JVM, Priya"))
+  }
+
   @Test fun suspendingJsCallJvmServiceUsingDynamicFunction() = runTest(dispatcher) {
     val jvmSuspendingEchoService = object : SuspendingEchoService {
       override suspend fun suspendingEcho(request: EchoRequest): EchoResponse {
