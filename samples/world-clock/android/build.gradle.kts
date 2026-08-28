@@ -2,7 +2,6 @@ import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 
 plugins {
   id("com.android.application")
-  kotlin("android")
   kotlin("plugin.compose")
 }
 
@@ -31,11 +30,11 @@ android {
     }
   }
 
-  val samples by signingConfigs.creating {
-    storeFile(file("../../samples.keystore"))
-    storePassword("javascript")
-    keyAlias("javascript")
-    keyPassword("javascript")
+  val samples = signingConfigs.create("samples") {
+    storeFile = file("../../samples.keystore")
+    storePassword = "javascript"
+    keyAlias = "javascript"
+    keyPassword = "javascript"
   }
 
   buildTypes {

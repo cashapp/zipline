@@ -2,10 +2,11 @@ import com.android.build.api.variant.HostTestBuilder.Companion.UNIT_TEST_TYPE
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
   kotlin("multiplatform")
-  id("com.android.library")
+  id("com.android.kotlin.multiplatform.library")
   kotlin("plugin.serialization")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
@@ -15,8 +16,17 @@ plugins {
 
 kotlin {
   jvm()
-  androidTarget {
-    publishLibraryVariants("release")
+  android {
+    namespace = "app.cash.zipline.loader"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+    minSdk = libs.versions.minSdk.get().toInt()
+
+    withDeviceTest {}
+
+    // TODO: Remove when https://issuetracker.google.com/issues/260059413 is resolved.
+    compilerOptions {
+      jvmTarget = JvmTarget.JVM_11
+    }
   }
   if (false) {
     linuxX64()
@@ -77,7 +87,7 @@ kotlin {
         implementation(libs.turbine)
       }
     }
-    val androidInstrumentedTest by getting {
+    val androidDeviceTest by getting {
       dependsOn(commonTest)
     }
     val jniTest by creating {
@@ -101,29 +111,6 @@ kotlin {
       dependencies {
         implementation(projects.ziplineLoaderTesting)
       }
-    }
-  }
-}
-
-
-android {
-  namespace = "app.cash.zipline.loader"
-  compileSdk = libs.versions.compileSdk.get().toInt()
-
-  defaultConfig {
-    minSdk = libs.versions.minSdk.get().toInt()
-    multiDexEnabled = true
-  }
-
-  // TODO: Remove when https://issuetracker.google.com/issues/260059413 is resolved.
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-  }
-
-  sourceSets {
-    getByName("androidTest") {
-      java.srcDirs("src/androidInstrumentedTest/kotlin/")
     }
   }
 }

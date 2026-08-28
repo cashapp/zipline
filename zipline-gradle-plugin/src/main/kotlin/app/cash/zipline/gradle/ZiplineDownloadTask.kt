@@ -19,6 +19,7 @@ package app.cash.zipline.gradle
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
@@ -28,6 +29,7 @@ import org.gradle.api.tasks.TaskAction
  * an Android or iOS app to support offline, first-launch, and/or other usage.
  */
 @Suppress("unused") // Public API for Gradle plugin users.
+@CacheableTask
 abstract class ZiplineDownloadTask : DefaultTask() {
   @get:Input
   abstract val applicationName: Property<String>

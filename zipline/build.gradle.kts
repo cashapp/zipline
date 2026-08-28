@@ -2,6 +2,8 @@ import co.touchlab.cklib.gradle.CompileToBitcode.Language.C
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
+import org.gradle.api.internal.file.copy.CopyAction
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.mpp.Framework
@@ -14,7 +16,7 @@ import org.jetbrains.kotlin.gradle.targets.native.tasks.KotlinNativeTest
 plugins {
   kotlin("multiplatform")
   kotlin("plugin.serialization")
-  id("com.android.library")
+  id("com.android.kotlin.multiplatform.library")
   id("org.jetbrains.dokka")
   id("com.vanniktech.maven.publish.base")
   id("co.touchlab.cklib")
@@ -23,9 +25,20 @@ plugins {
   id("com.jakewharton.test-distribution")
 }
 
-val copyTestingJs = tasks.register<Copy>("copyTestingJs") {
+internal abstract class CopyTestingJsTask : Copy() {
+  // We need a DirectoryProperty to supply to the Android Gradle Plugin to wire the outputs into the android test resources
+  @get:OutputDirectory
+  abstract val destination: DirectoryProperty
+
+  fun configureDestination(destination: Provider<Directory>) {
+    this.destination = destination
+    destinationDir = destination.get().asFile
+  }
+}
+
+internal val copyTestingJs = tasks.register<CopyTestingJsTask>("copyTestingJs") {
   dependsOn(":zipline-testing:compileDevelopmentLibraryKotlinJs")
-  destinationDir = rootProject.layout.buildDirectory.dir("generated/testingJs").get().asFile
+  configureDestination(rootProject.layout.buildDirectory.dir("generated/testingJs"))
   from(rootDir.resolve("zipline-testing/build/compileSync/js/main/developmentLibrary/kotlin"))
 }
 tasks.withType<KotlinNativeTest>().configureEach {
@@ -38,9 +51,34 @@ dependencies {
 }
 
 kotlin {
-  androidTarget {
-    publishLibraryVariants("release")
+  android {
+    namespace = "app.cash.zipline"
+    compileSdk = libs.versions.compileSdk.get().toInt()
+    minSdk = libs.versions.minSdk.get().toInt()
+
+    withDeviceTest {
+      instrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    optimization {
+      consumerKeepRules.publish = true
+      consumerKeepRules.file("proguard-rules.pro")
+    }
+
+    packaging {
+      // We get multiple copies of some license files via JNA, which is a transitive dependency of
+      // kotlinx-coroutines-test. Don't fail the build on these duplicates.
+      resources {
+        excludes += listOf("META-INF/AL2.0", "META-INF/LGPL2.1")
+      }
+    }
+
+    // TODO: Remove when https://issuetracker.google.com/issues/260059413 is resolved.
+    compilerOptions {
+      jvmTarget = JvmTarget.JVM_11
+    }
   }
+
   jvm()
 
   js {
@@ -99,8 +137,11 @@ kotlin {
 
     val androidMain by getting {
       dependsOn(jniMain)
+      dependencies {
+        api(projects.ziplineAndroidNdk)
+      }
     }
-    val androidInstrumentedTest by getting {
+    val androidDeviceTest by getting {
       dependsOn(jniTest)
       dependencies {
         implementation(libs.assertk)
@@ -162,6 +203,13 @@ kotlin {
   }
 }
 
+androidComponents {
+  onVariants(selector().withBuildType("release")) { variant ->
+    variant.sources.resources?.addStaticSourceDirectory("src/androidInstrumentationTest/resources/")
+    variant.sources.resources?.addGeneratedSourceDirectory(copyTestingJs, CopyTestingJsTask::destination)
+  }
+}
+
 buildConfig {
   useKotlinOutput {
     internalVisibility = true
@@ -193,93 +241,6 @@ cklib {
         "-D_Float16=short", // KT-69094
       )
     )
-  }
-}
-
-android {
-  namespace = "app.cash.zipline"
-  compileSdk = libs.versions.compileSdk.get().toInt()
-
-  defaultConfig {
-    minSdk = libs.versions.minSdk.get().toInt()
-    multiDexEnabled = true
-
-    testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-    consumerProguardFiles("proguard-rules.pro")
-
-    ndk {
-      abiFilters += listOf("x86", "x86_64", "armeabi-v7a", "arm64-v8a")
-    }
-
-    externalNativeBuild {
-      cmake {
-        arguments("-DANDROID_TOOLCHAIN=clang", "-DANDROID_STL=c++_static")
-        cFlags("-fstrict-aliasing", "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\"")
-        cppFlags("-fstrict-aliasing", "-DCONFIG_VERSION=\\\"${quickJsVersion()}\\\"")
-      }
-    }
-
-    packaging {
-      // We get multiple copies of some license files via JNA, which is a transitive dependency of
-      // kotlinx-coroutines-test. Don't fail the build on these duplicates.
-      resources {
-        excludes += listOf("META-INF/AL2.0", "META-INF/LGPL2.1")
-      }
-
-      // Keep debug symbols to get function names if QuickJS crashes in native code. This grows the
-      // release libquickjs.so artifact from 793 KiB to 2.1 MiB. (We expect that release builds of
-      // applications will strip these away later.)
-      jniLibs.keepDebugSymbols += "**/libquickjs.so"
-    }
-  }
-
-  // TODO: Remove when https://issuetracker.google.com/issues/260059413 is resolved.
-  compileOptions {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-  }
-
-  sourceSets {
-    getByName("androidTest") {
-      resources.srcDir("src/androidInstrumentationTest/resources/")
-      resources.srcDir(copyTestingJs)
-    }
-  }
-
-  // The above `resources.srcDir(copyTestingJs)` code is supposed to automatically add a task
-  // dependency, but it doesn't. So we add it ourselves using this nonsense.
-  afterEvaluate {
-    libraryVariants.onEach { libraryVariant ->
-      libraryVariant.testVariant?.processJavaResourcesProvider?.configure {
-        dependsOn(copyTestingJs)
-      }
-    }
-  }
-
-  buildTypes {
-    val release by getting {
-      externalNativeBuild {
-        cmake {
-          arguments("-DCMAKE_BUILD_TYPE=MinSizeRel")
-          cFlags("-g0", "-Os", "-fomit-frame-pointer", "-DNDEBUG", "-fvisibility=hidden")
-          cppFlags("-g0", "-Os", "-fomit-frame-pointer", "-DNDEBUG", "-fvisibility=hidden")
-        }
-      }
-    }
-    val debug by getting {
-      externalNativeBuild {
-        cmake {
-          cFlags("-g", "-DDEBUG", "-DDUMP_LEAKS")
-          cppFlags("-g", "-DDEBUG", "-DDUMP_LEAKS")
-        }
-      }
-    }
-  }
-
-  externalNativeBuild {
-    cmake {
-      path = file("src/androidMain/CMakeLists.txt")
-    }
   }
 }
 

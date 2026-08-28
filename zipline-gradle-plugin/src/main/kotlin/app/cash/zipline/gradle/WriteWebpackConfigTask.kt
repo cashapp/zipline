@@ -23,11 +23,13 @@ import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.TaskAction
+import org.gradle.work.DisableCachingByDefault
 
 /**
  * Write Zipline's required webpack config to a file in the project directory. (Unfortunately
  * there's no API to tell Webpack to load its configuration files from a build directory.)
  */
+@DisableCachingByDefault
 internal abstract class WriteWebpackConfigTask : DefaultTask() {
 
   @get:OutputFile

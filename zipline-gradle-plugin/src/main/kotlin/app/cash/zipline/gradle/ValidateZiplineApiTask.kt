@@ -25,10 +25,13 @@ import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.file.FileCollectionFactory
 import org.gradle.api.provider.Property
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.Classpath
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 import org.gradle.workers.WorkAction
@@ -36,6 +39,7 @@ import org.gradle.workers.WorkParameters
 import org.gradle.workers.WorkerExecutor
 
 @Suppress("unused") // Public API for Gradle plugin users.
+@CacheableTask
 abstract class ValidateZiplineApiTask @Inject constructor(
   fileCollectionFactory: FileCollectionFactory,
   @Input val mode: Mode,
@@ -57,6 +61,7 @@ abstract class ValidateZiplineApiTask @Inject constructor(
   abstract val jdkRelease: Property<Int>
 
   @get:InputFiles
+  @get:PathSensitive(PathSensitivity.RELATIVE)
   internal val sourcepath = fileCollectionFactory.configurableFiles("sourcepath")
 
   @get:Classpath

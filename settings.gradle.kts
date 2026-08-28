@@ -1,6 +1,7 @@
 rootProject.name = "zipline-root"
 
 include(":zipline")
+include(":zipline-android-ndk")
 include(":zipline-api-validator")
 include(":zipline-bytecode")
 include(":zipline-cli")
