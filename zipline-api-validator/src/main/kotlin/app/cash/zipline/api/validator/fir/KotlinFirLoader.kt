@@ -16,35 +16,36 @@
 package app.cash.zipline.api.validator.fir
 
 import java.io.File
-import org.jetbrains.kotlin.K1Deprecation
-import org.jetbrains.kotlin.KtVirtualFileSourceFile
-import org.jetbrains.kotlin.cli.common.GroupedKtSources
-import org.jetbrains.kotlin.cli.common.LegacyK2CliPipeline
+import org.jetbrains.kotlin.CoreEnvironmentDeprecation
 import org.jetbrains.kotlin.cli.common.config.addKotlinSourceRoots
+import org.jetbrains.kotlin.cli.common.diagnosticsCollector
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.ERROR
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.EXCEPTION
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSeverity.LOGGING
 import org.jetbrains.kotlin.cli.common.messages.CompilerMessageSourceLocation
 import org.jetbrains.kotlin.cli.common.messages.MessageCollector
+import org.jetbrains.kotlin.cli.common.moduleChunk
+import org.jetbrains.kotlin.cli.common.modules.ModuleChunk
+import org.jetbrains.kotlin.cli.diagnosticFactoriesStorage
+import org.jetbrains.kotlin.cli.extensionsStorage
 import org.jetbrains.kotlin.cli.jvm.compiler.EnvironmentConfigFiles
 import org.jetbrains.kotlin.cli.jvm.compiler.KotlinCoreEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.VfsBasedProjectEnvironment
-import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.IncrementalCompilationApi
-import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.ModuleCompilerInput
-import org.jetbrains.kotlin.cli.jvm.compiler.legacy.pipeline.compileModuleToAnalyzedFirViaLightTreeIncrementally
 import org.jetbrains.kotlin.cli.jvm.config.addJvmClasspathRoots
+import org.jetbrains.kotlin.cli.pipeline.ConfigurationPipelineArtifact
+import org.jetbrains.kotlin.cli.pipeline.jvm.JvmFrontendPipelinePhase
 import org.jetbrains.kotlin.com.intellij.openapi.util.Disposer
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.StandardFileSystems
 import org.jetbrains.kotlin.com.intellij.openapi.vfs.VirtualFileManager
-import org.jetbrains.kotlin.com.intellij.psi.search.GlobalSearchScope
+import org.jetbrains.kotlin.compiler.plugin.CompilerPluginRegistrar
+import org.jetbrains.kotlin.compiler.plugin.ExperimentalCompilerApi
 import org.jetbrains.kotlin.config.CommonConfigurationKeys
 import org.jetbrains.kotlin.config.CompilerConfiguration
 import org.jetbrains.kotlin.config.JVMConfigurationKeys
+import org.jetbrains.kotlin.config.MessageCollectorAccess
+import org.jetbrains.kotlin.diagnostics.KtRegisteredDiagnosticFactoriesStorage
 import org.jetbrains.kotlin.diagnostics.impl.DiagnosticsCollectorImpl
 import org.jetbrains.kotlin.fir.pipeline.AllModulesFrontendOutput
-import org.jetbrains.kotlin.metadata.jvm.deserialization.JvmProtoBufUtil
-import org.jetbrains.kotlin.modules.TargetId
 
 /**
  * Loads classes using the compiler tools into the Frontend Intermediate Representation (FIR), so
@@ -82,7 +83,10 @@ internal class KotlinFirLoader(
   /**
    * @param targetName an opaque identifier for this operation.
    */
-  @OptIn(K1Deprecation::class, CompilerConfiguration.Internals::class)
+  @OptIn(
+    CompilerConfiguration.Internals::class,
+    MessageCollectorAccess::class,
+  )
   fun load(targetName: String): AllModulesFrontendOutput {
     val configuration = CompilerConfiguration()
     configuration.put(CommonConfigurationKeys.MODULE_NAME, targetName)
@@ -92,61 +96,20 @@ internal class KotlinFirLoader(
     configuration.put(JVMConfigurationKeys.JDK_RELEASE, jdkRelease)
     configuration.addKotlinSourceRoots(sources.map { it.absolutePath })
     configuration.addJvmClasspathRoots(classpath.toList())
+    @OptIn(ExperimentalCompilerApi::class)
+    configuration.extensionsStorage = CompilerPluginRegistrar.ExtensionStorage()
+    configuration.diagnosticFactoriesStorage = KtRegisteredDiagnosticFactoriesStorage()
+    configuration.moduleChunk = ModuleChunk(emptyList())
+    configuration.diagnosticsCollector = DiagnosticsCollectorImpl()
 
-    val environment = KotlinCoreEnvironment.createForProduction(
-      disposable,
-      configuration,
-      EnvironmentConfigFiles.JVM_CONFIG_FILES,
-    )
-    val project = environment.project
-
-    val localFileSystem = VirtualFileManager.getInstance().getFileSystem(
-      StandardFileSystems.FILE_PROTOCOL,
-    )
-    val files = buildList {
-      for (source in sources) {
-        source.walkTopDown().filter { it.isFile }.forEach {
-          this += localFileSystem.findFileByPath(it.absolutePath)!!
-        }
-      }
-    }
-
-    val sourceFiles = files.mapTo(mutableSetOf(), ::KtVirtualFileSourceFile)
-
-    @OptIn(LegacyK2CliPipeline::class)
-    val input = ModuleCompilerInput(
-      targetId = TargetId(JvmProtoBufUtil.DEFAULT_MODULE_NAME, targetName),
-      groupedSources = GroupedKtSources(
-        platformSources = sourceFiles,
-        commonSources = emptyList(),
-        sourcesByModuleName = mapOf(JvmProtoBufUtil.DEFAULT_MODULE_NAME to sourceFiles),
+    val frontendOutput = JvmFrontendPipelinePhase.executePhase(
+      ConfigurationPipelineArtifact(
+        configuration = configuration,
+        rootDisposable = disposable,
       ),
-      configuration = configuration,
-    )
+    ) ?: throw IllegalStateException("Failed to run compiler frontend phase")
 
-    val reporter = DiagnosticsCollectorImpl()
-
-    val globalScope = GlobalSearchScope.allScope(project)
-    val packagePartProvider = environment.createPackagePartProvider(globalScope)
-    val projectEnvironment = VfsBasedProjectEnvironment(
-      project = project,
-      fileSystem = localFileSystem,
-      getPackagePartProviderFn = { packagePartProvider },
-    )
-
-    @OptIn(
-      // We are not within the Kotlin compiler.
-      IncrementalCompilationApi::class,
-      LegacyK2CliPipeline::class,
-    )
-    return compileModuleToAnalyzedFirViaLightTreeIncrementally(
-      projectEnvironment,
-      messageCollector,
-      configuration,
-      input,
-      reporter,
-      null,
-    )
+    return frontendOutput.frontendOutput
   }
 
   override fun close() {
