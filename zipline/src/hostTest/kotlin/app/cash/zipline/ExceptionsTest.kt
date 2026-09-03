@@ -70,10 +70,10 @@ class ExceptionsTest {
     assertThat(e.stackTraceToString()).matches(
       Regex(
         """(?s).*(java\.lang|kotlin)\.IllegalStateException: boom!""" +
-        """.*HostThrowingEchoService\.goBoom1""" +
-        """.*HostThrowingEchoService\.goBoom2""" +
-        """.*HostThrowingEchoService\.goBoom3""" +
-        """.*HostThrowingEchoService\.echo""" +
+        """.*HostThrowingEchoService[.#]goBoom1""" +
+        """.*HostThrowingEchoService[.#]goBoom2""" +
+        """.*HostThrowingEchoService[.#]goBoom3""" +
+        """.*HostThrowingEchoService[.#]echo""" +
         """.*""",
       ),
     )
@@ -92,10 +92,10 @@ class ExceptionsTest {
     assertThat(e.stackTraceToString()).matches(
       Regex(
         """(?s).*IllegalStateException: boom!""" +
-        """.*at .*HostThrowingEchoService\.goBoom1""" +
-        """.*at .*HostThrowingEchoService\.goBoom2""" +
-        """.*at .*HostThrowingEchoService\.goBoom3""" +
-        """.*at .*HostThrowingEchoService\.echo""" +
+        """.*at .*HostThrowingEchoService[.#]goBoom1""" +
+        """.*at .*HostThrowingEchoService[.#]goBoom2""" +
+        """.*at .*HostThrowingEchoService[.#]goBoom3""" +
+        """.*at .*HostThrowingEchoService[.#]echo""" +
         """.*at delegate1""" +
         """.*at delegate2""" +
         """.*at delegate3""" +
