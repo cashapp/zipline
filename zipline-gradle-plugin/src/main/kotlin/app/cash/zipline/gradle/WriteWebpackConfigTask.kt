@@ -57,10 +57,13 @@ internal abstract class WriteWebpackConfigTask : DefaultTask() {
         |// generated-zipline-webpack-config.js
         |//
         |config.optimization = config.optimization || {};
-        |const TerserPlugin = require("terser-webpack-plugin");
+        |const MinimizerPlugin = require("minimizer-webpack-plugin");
         |config.optimization.minimizer = [
-        |  new TerserPlugin({
-        |    terserOptions: $terserOptionsJson,
+        |  new MinimizerPlugin({
+        |    minify: {
+        |      implementation: MinimizerPlugin.terserMinify,
+        |      options: $terserOptionsJson,
+        |    },
         |  }),
         |];
         |
