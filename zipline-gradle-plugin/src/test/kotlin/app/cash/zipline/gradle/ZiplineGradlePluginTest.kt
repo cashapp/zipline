@@ -97,8 +97,7 @@ class ZiplineGradlePluginTest {
       Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
       Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
       Regex("""at [^ ]+ \(app/cash/zipline/tests/CrashService.kt\)"""),
-      Regex("""at [^ ]+ \(lib.js\)"""),
-      Regex("""at [^ ]+ \(app/cash/zipline/internal/bridge/InboundService.kt\)"""),
+      Regex("""at [^ ]+ \(webpack:///NATIVE_IMPLEMENTATIONS.kt/\)"""),
       Regex("""at [^ ]+ \(app/cash/zipline/internal/bridge/Endpoint.kt\)"""),
       Regex("""at app.cash.zipline.tests.CrashService[${'$'}]Companion[${'$'}]Adapter[${'$'}]GeneratedOutboundService.crash\(CrashService.kt:\d+\)"""),
     )
@@ -124,8 +123,7 @@ class ZiplineGradlePluginTest {
       Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt:\d+\)"""),
       Regex("""at [^ ]+ \(app/cash/zipline/tests/launchCrashServiceJs.kt\)"""),
       Regex("""at [^ ]+ \(app/cash/zipline/tests/CrashService.kt\)"""),
-      Regex("""at [^ ]+ \(lib.js\)"""),
-      Regex("""at [^ ]+ \(app/cash/zipline/internal/bridge/InboundService.kt:\d+\)"""),
+      Regex("""at [^ ]+ \(webpack:///NATIVE_IMPLEMENTATIONS.kt/\)"""),
       Regex("""at [^ ]+ \(app/cash/zipline/internal/bridge/Endpoint.kt:\d+\)"""),
       Regex("""at app.cash.zipline.tests.CrashService[${'$'}]Companion[${'$'}]Adapter[${'$'}]GeneratedOutboundService.crash\(CrashService.kt:\d+\)"""),
     )

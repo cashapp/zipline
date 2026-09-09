@@ -3,6 +3,7 @@
 ## Unreleased
 
 * Fix: Listen for manifest url changes after local (cached/embedded) manifest loaded.
+* Upgrade [Kotlin 2.4.20-Beta2](https://github.com/JetBrains/kotlin/releases/tag/v2.4.20-Beta2)
 
 ## [1.27.0] - 2026-04-02
 [1.27.0]: https://github.com/cashapp/zipline/releases/tag/1.27.0

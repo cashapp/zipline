@@ -1,3 +1,4 @@
+import co.touchlab.cklib.gradle.CompileToBitcode
 import co.touchlab.cklib.gradle.CompileToBitcode.Language.C
 import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
