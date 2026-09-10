@@ -193,7 +193,7 @@ jobs:
           script: ./gradlew connectedCheck
 
   ios-app:
-    runs-on: macos-15
+    runs-on: macos-26
 
     steps:
       - uses: actions/checkout@v6
