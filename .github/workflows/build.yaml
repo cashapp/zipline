@@ -62,7 +62,6 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - macos-15-intel
           - macos-15
           - ubuntu-24.04
           - ubuntu-24.04-arm
@@ -93,8 +92,6 @@ jobs:
       fail-fast: false
       matrix:
         platform:
-          - os: macos-15-intel
-            task: macosX64Test
           - os: macos-latest
             task: macosArm64Test
           - os: ubuntu-latest
@@ -146,9 +143,7 @@ jobs:
           -x :zipline:jvmTest
           -x linuxX64Test
           -x macosArm64Test
-          -x macosX64Test
           -x tvosSimulatorArm64Test
-          -x tvosX64Test
 
   sample-check:
     runs-on: macos-latest
