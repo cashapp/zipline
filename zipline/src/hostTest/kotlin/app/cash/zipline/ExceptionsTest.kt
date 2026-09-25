@@ -53,9 +53,9 @@ class ExceptionsTest {
     assertThat(e.stackTraceToString()).matches(
       Regex(
         """(?s).*IllegalStateException: boom!""" +
-        """.*at goBoom1""" +
-        """.*at goBoom2""" +
-        """.*at goBoom3""" +
+        $$""".*at .*\$goBoom1""" +
+        $$""".*at .*\$goBoom2""" +
+        $$""".*at .*\$goBoom3""" +
         """.*""",
       ),
     )
@@ -96,9 +96,9 @@ class ExceptionsTest {
         """.*at .*HostThrowingEchoService[.#]goBoom2""" +
         """.*at .*HostThrowingEchoService[.#]goBoom3""" +
         """.*at .*HostThrowingEchoService[.#]echo""" +
-        """.*at delegate1""" +
-        """.*at delegate2""" +
-        """.*at delegate3""" +
+        $$""".*at .*\$delegate1""" +
+        $$""".*at .*\$delegate2""" +
+        $$""".*at .*\$delegate3""" +
         """.*""",
       ),
     )
