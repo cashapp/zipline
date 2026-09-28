@@ -162,6 +162,8 @@ class ZiplineDevelopmentServerTest {
       skipEvents = arrayOf("onMessage(text=$HEARTBEAT_MESSAGE)"),
     )
 
+    // The server is concurrently opening the WebSocket connection with the client, so sleep to let it settle
+    Thread.sleep(1)
     server.sendReloadToAllWebSockets()
 
     listener.take(
