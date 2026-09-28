@@ -287,6 +287,11 @@ internal class AdapterGenerator(
       }
     }
 
+    // Register the adapter before generating its members. A function that returns this service
+    // type (directly, or through another service) looks this adapter up again while its
+    // serializers are generated, and that lookup must not start building a second adapter.
+    companion.declarations += adapterClass
+
     val serialNameProperty = irSerialNameProperty(adapterClass, constructor)
     adapterClass.declarations += serialNameProperty
 
@@ -335,7 +340,6 @@ internal class AdapterGenerator(
       ),
     )
 
-    companion.declarations += adapterClass
     companion.patchDeclarationParents(original)
     return adapterClass
   }

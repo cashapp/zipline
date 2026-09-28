@@ -416,6 +416,53 @@ class ZiplineKotlinPluginTest {
     )
     assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
   }
+
+  @Test
+  fun `service function returns its own type`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.ZiplineService
+
+        interface RecursiveService : ZiplineService {
+          fun next(name: String): RecursiveService
+          suspend fun suspendingNext(name: String): RecursiveService
+        }
+
+        interface GenericRecursiveService<T> : ZiplineService {
+          fun next(value: T): GenericRecursiveService<T>
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+  }
+
+  @Test
+  fun `services return each other`() {
+    val result = compile(
+      sourceFile = SourceFile.kotlin(
+        "main.kt",
+        """
+        package app.cash.zipline.testing
+
+        import app.cash.zipline.ZiplineService
+
+        interface PingService : ZiplineService {
+          fun ping(): PongService
+        }
+
+        interface PongService : ZiplineService {
+          fun pong(): PingService
+        }
+        """,
+      ),
+    )
+    assertEquals(KotlinCompilation.ExitCode.OK, result.exitCode, result.messages)
+  }
 }
 
 @ExperimentalCompilerApi

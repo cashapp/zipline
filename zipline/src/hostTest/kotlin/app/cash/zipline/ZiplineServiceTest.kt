@@ -150,12 +150,33 @@ internal class ZiplineServiceTest {
     factoryClient.create(null)
   }
 
+  @Test
+  fun serviceReturnsItsOwnType() = runBlocking(Unconfined) {
+    val (endpointA, endpointB) = newEndpointPair(this)
+
+    endpointA.bind<PathService>("root", RealPathService("root"))
+    val rootClient = endpointB.take<PathService>("root")
+
+    val childClient = rootClient.child("a").child("b")
+    assertEquals("root/a/b", childClient.path())
+  }
+
   interface ContextualNullableParameter : ZiplineService {
     fun create(string: @Contextual String?)
   }
 
   class RealContextualNullableParameter : ContextualNullableParameter {
     override fun create(string: String?) = Unit
+  }
+
+  interface PathService : ZiplineService {
+    fun child(name: String): PathService
+    fun path(): String
+  }
+
+  class RealPathService(private val path: String) : PathService {
+    override fun child(name: String): PathService = RealPathService("$path/$name")
+    override fun path(): String = path
   }
 
   interface EchoServiceFactory : ZiplineService {
