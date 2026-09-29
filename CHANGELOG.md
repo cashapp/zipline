@@ -2,10 +2,15 @@
 
 ## Unreleased
 
+Nothing yet!
+
+## [1.28.0] - 2026-09-29
+[1.28.0]: https://github.com/cashapp/zipline/releases/tag/1.28.0
+
 * Fix: Listen for manifest url changes after local (cached/embedded) manifest loaded.
 * Fix: Don't crash the Kotlin compiler plugin with a `StackOverflowError` when a `ZiplineService`
   function returns its own service type, or when two services return each other.
-* Upgrade [Kotlin 2.4.20-Beta2](https://github.com/JetBrains/kotlin/releases/tag/v2.4.20-Beta2)
+* Upgrade [Kotlin 2.4.20](https://github.com/JetBrains/kotlin/releases/tag/v2.4.20)
 * The minimum-supported API level for Android is now 23.
 
 ## [1.27.0] - 2026-04-02
