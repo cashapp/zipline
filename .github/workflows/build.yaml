@@ -22,13 +22,13 @@ jobs:
         with:
           version: 0.16.0
 
-      - run: zig build -p src/jvmMain/resources/jni
+      - run: zig build -p src/jvmMain/resources/app/cash/zipline/jni
         working-directory: zipline
 
       - uses: actions/upload-artifact@v7
         with:
           name: jni-binaries
-          path: zipline/src/jvmMain/resources/jni
+          path: zipline/src/jvmMain/resources/app/cash/zipline/jni
           if-no-files-found: error
 
   jvm-test-binary:
@@ -45,7 +45,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: jni-binaries
-          path: zipline/src/jvmMain/resources/jni
+          path: zipline/src/jvmMain/resources/app/cash/zipline/jni
 
       - run: ./gradlew :zipline:installJvmTestDistribution
 
@@ -134,7 +134,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: jni-binaries
-          path: zipline/src/jvmMain/resources/jni
+          path: zipline/src/jvmMain/resources/app/cash/zipline/jni
 
       # Disable Zipline jvmTest and native tests because they're run in jvm-tests and native-tests.
       - run: >
@@ -164,7 +164,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: jni-binaries
-          path: zipline/src/jvmMain/resources/jni
+          path: zipline/src/jvmMain/resources/app/cash/zipline/jni
 
       - run: ./gradlew -p samples check
 
@@ -242,7 +242,7 @@ jobs:
       - uses: actions/download-artifact@v8
         with:
           name: jni-binaries
-          path: zipline/src/jvmMain/resources/jni
+          path: zipline/src/jvmMain/resources/app/cash/zipline/jni
 
       - run: ./gradlew publishToMavenCentral
         env:
