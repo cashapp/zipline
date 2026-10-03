@@ -23,7 +23,7 @@ java.lang.ExceptionInInitializerError
 	at app.cash.zipline.ConsoleTest.<init>(ConsoleTest.kt:36)
 	at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
   ...
-Caused by: java.lang.IllegalStateException: Unable to read /jni/aarch64/libquickjs.dylib from JAR
+Caused by: java.lang.IllegalStateException: Unable to read /app/cash/zipline/jni/aarch64/libquickjs.dylib from JAR
 	at app.cash.zipline.QuickJsNativeLoaderKt.loadNativeLibrary(QuickJsNativeLoader.kt:36)
 	at app.cash.zipline.QuickJs.<clinit>(QuickJs.kt:35)
 	... 46 more
@@ -31,7 +31,7 @@ Caused by: java.lang.IllegalStateException: Unable to read /jni/aarch64/libquick
 
 For tests like `app.cash.zipline.ConsoleTest`, failures with the above stacktrace point to missing `.dylib` prebuilt C libraries necessary for using QuickJS from the JVM.
 
-Download [the latest `jni-binaries` artifact](https://nightly.link/cashapp/zipline/workflows/build.yaml/trunk/jni-binaries.zip) from our GitHub CI, and extract its contents to the `zipline/src/jvmMain/resources/jni/` directory.
+Download [the latest `jni-binaries` artifact](https://nightly.link/cashapp/zipline/workflows/build.yaml/trunk/jni-binaries.zip) from our GitHub CI, and extract its contents to the `zipline/src/jvmMain/resources/app/cash/zipline/jni/` directory.
 
 ## Build JNI Libraries Locally
 
@@ -43,5 +43,5 @@ Then, execute these commands:
 
 ```
 $ cd zipline
-$ zig build -p src/jvmMain/resources/jni/
+$ zig build -p src/jvmMain/resources/app/cash/zipline/jni/
 ```
