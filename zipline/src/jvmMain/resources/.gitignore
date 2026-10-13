@@ -1,2 +1,2 @@
 # Native libraries are copied into resources by CI and should never be committed.
-jni
+app/cash/zipline/jni
