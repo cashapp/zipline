@@ -37,7 +37,7 @@ jobs:
     runs-on: macos-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
@@ -74,7 +74,7 @@ jobs:
         with:
           sparse-checkout: .github/workflows/.java-version
           sparse-checkout-cone-mode: false
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
@@ -106,7 +106,7 @@ jobs:
     runs-on: ${{ matrix.platform.os }}
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
@@ -126,7 +126,7 @@ jobs:
       - zig
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
@@ -156,7 +156,7 @@ jobs:
       - zig
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
@@ -173,7 +173,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
@@ -197,7 +197,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
@@ -234,7 +234,7 @@ jobs:
       - final-status
     steps:
       - uses: actions/checkout@v7
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@v6
         with:
           distribution: 'zulu'
           java-version-file: .github/workflows/.java-version
