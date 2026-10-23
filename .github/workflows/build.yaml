@@ -140,6 +140,7 @@ jobs:
       - run: >
           ./gradlew
           check
+          :dokkaHtmlMultiModule
           -x allTests
           -x iosSimulatorArm64Test
           -x iosX64Test
