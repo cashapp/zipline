@@ -137,6 +137,7 @@ internal open class ZiplineDevelopmentServer internal constructor(
     @OnWebSocketOpen
     fun onWebSocketOpen(session: Session?) {
       this.session = session
+      session?.sendText(HEARTBEAT_MESSAGE, Callback.NOOP)
     }
   }
 

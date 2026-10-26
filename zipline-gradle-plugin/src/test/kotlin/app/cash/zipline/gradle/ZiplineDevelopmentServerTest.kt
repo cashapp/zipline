@@ -157,13 +157,9 @@ class ZiplineDevelopmentServerTest {
     val listener = RecordingWebSocketListener()
     val webSocket = httpClient.newWebSocket(request, listener)
 
-    listener.take(
-      event = "onOpen",
-      skipEvents = arrayOf("onMessage(text=$HEARTBEAT_MESSAGE)"),
-    )
+    listener.take(event = "onOpen")
+    listener.take(event = "onMessage(text=$HEARTBEAT_MESSAGE)")
 
-    // The server is concurrently opening the WebSocket connection with the client, so sleep to let it settle
-    Thread.sleep(1)
     server.sendReloadToAllWebSockets()
 
     listener.take(
