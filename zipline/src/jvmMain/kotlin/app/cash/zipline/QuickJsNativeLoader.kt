@@ -26,11 +26,11 @@ internal actual fun loadNativeLibrary() {
   val osName = System.getProperty("os.name").lowercase(US)
   val osArch = System.getProperty("os.arch").lowercase(US)
   val nativeLibraryJarPath = if (osName.contains("linux")) {
-    "/jni/$osArch/libquickjs.so"
+    "/app/cash/zipline/jni/$osArch/libquickjs.so"
   } else if (osName.contains("mac")) {
-    "/jni/$osArch/libquickjs.dylib"
+    "/app/cash/zipline/jni/$osArch/libquickjs.dylib"
   } else if (osName.contains("windows")) {
-    "/jni/$osArch/quickjs.dll"
+    "/app/cash/zipline/jni/$osArch/quickjs.dll"
   } else {
     throw IllegalStateException("Unsupported OS: $osName")
   }
