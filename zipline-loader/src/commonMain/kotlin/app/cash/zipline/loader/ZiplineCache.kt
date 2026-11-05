@@ -23,6 +23,9 @@ import app.cash.zipline.loader.internal.cache.SqlDriverFactory
 import app.cash.zipline.loader.internal.cache.createDatabase
 import app.cash.zipline.loader.internal.fetcher.LoadedManifest
 import kotlin.concurrent.Volatile
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.internal.SynchronizedObject
+import kotlinx.coroutines.internal.synchronized
 import okio.ByteString
 import okio.ByteString.Companion.decodeHex
 import okio.Closeable
@@ -42,8 +45,13 @@ import okio.Path
  * the cache and behavior is undefined.
  *
  * If multiple threads in a single process operate on a cache instance simultaneously, downloads may
- * be repeated but no thread will be blocked.
+ * be repeated but they won't block each other on the database. [close] is also safe to call
+ * concurrently with an in-flight operation: it acquires [lock], so it waits for any operation
+ * already touching the database to finish before it closes the [driver]. This prevents a
+ * use-after-free crash where the native SQLite driver is torn down while another thread is mid-query
+ * (for example, when the cache is closed during sign-out while a code load is still in flight).
  */
+@OptIn(InternalCoroutinesApi::class)
 class ZiplineCache private constructor(
   private val driver: SqlDriver,
   private val database: Database,
@@ -55,6 +63,13 @@ class ZiplineCache private constructor(
 ) : Closeable {
 
   @Volatile private var closed: Boolean = false
+
+  /**
+   * Guards all access to [driver] and [database], including [close]. This ensures the driver is
+   * never closed while another thread is executing a query against it. It is reentrant, so an
+   * operation that calls into another guarded operation won't deadlock.
+   */
+  private val lock = SynchronizedObject()
 
   /*
    * Files are named by their SHA-256 hashes. We use a SQLite database for file metadata: which
@@ -80,8 +95,10 @@ class ZiplineCache private constructor(
    */
 
   override fun close() {
-    closed = true
-    driver.close()
+    synchronized(lock) {
+      closed = true
+      driver.close()
+    }
   }
 
   private fun write(
@@ -92,15 +109,17 @@ class ZiplineCache private constructor(
     isManifest: Boolean = false,
     manifestFreshAtMs: Long? = null,
   ): Files? {
-    val metadata = openForWrite(
-      applicationName = applicationName,
-      sha256 = sha256,
-      nowEpochMs = nowEpochMs,
-      isManifest = isManifest,
-      manifestFreshAtMs = manifestFreshAtMs,
-    ) ?: return null
-    write(metadata, content, nowEpochMs)
-    return metadata
+    return synchronized(lock) {
+      val metadata = openForWrite(
+        applicationName = applicationName,
+        sha256 = sha256,
+        nowEpochMs = nowEpochMs,
+        isManifest = isManifest,
+        manifestFreshAtMs = manifestFreshAtMs,
+      ) ?: return null
+      write(metadata, content, nowEpochMs)
+      metadata
+    }
   }
 
   private fun write(metadata: Files, content: ByteString, nowEpochMs: Long) {
@@ -173,9 +192,11 @@ class ZiplineCache private constructor(
     sha256: ByteString,
     nowEpochMs: Long,
   ): ByteString? {
-    if (closed) return null
-    val metadata = database.filesQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
-    return read(metadata, nowEpochMs)
+    return synchronized(lock) {
+      if (closed) return null
+      val metadata = database.filesQueries.get(sha256.hex()).executeAsOneOrNull() ?: return null
+      read(metadata, nowEpochMs)
+    }
   }
 
   private fun read(
@@ -214,25 +235,29 @@ class ZiplineCache private constructor(
   }
 
   internal fun unpin(applicationName: String, sha256: ByteString) {
-    if (closed) return
-    val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
-    database.pinsQueries.delete_pin(applicationName, fileId)
+    synchronized(lock) {
+      if (closed) return
+      val fileId = database.filesQueries.get(sha256.hex()).executeAsOneOrNull()?.id ?: return
+      database.pinsQueries.delete_pin(applicationName, fileId)
+    }
   }
 
   /** Returns null if there is no pinned manifest. */
   internal fun getPinnedManifest(applicationName: String, nowEpochMs: Long): LoadedManifest? {
-    if (hasWriteFailures || closed) return null // This cache is broken.
+    return synchronized(lock) {
+      if (hasWriteFailures || closed) return null // This cache is broken.
 
-    try {
-      val manifestFile = database.filesQueries
-        .selectPinnedManifest(applicationName)
-        .executeAsOneOrNull() ?: return null
-      val manifestBytes = read(manifestFile, nowEpochMs) ?: return null
-      return LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms!!)
-    } catch (e: Exception) {
-      hasWriteFailures = true // Mark this cache as broken.
-      loaderEventListener.cacheStorageFailed(applicationName, e)
-      return null
+      try {
+        val manifestFile = database.filesQueries
+          .selectPinnedManifest(applicationName)
+          .executeAsOneOrNull() ?: return null
+        val manifestBytes = read(manifestFile, nowEpochMs) ?: return null
+        LoadedManifest(manifestBytes, manifestFile.fresh_at_epoch_ms!!)
+      } catch (e: Exception) {
+        hasWriteFailures = true // Mark this cache as broken.
+        loaderEventListener.cacheStorageFailed(applicationName, e)
+        null
+      }
     }
   }
 
@@ -242,33 +267,35 @@ class ZiplineCache private constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    if (hasWriteFailures || closed) return // This cache is broken.
+    synchronized(lock) {
+      if (hasWriteFailures || closed) return // This cache is broken.
 
-    try {
-      val manifestBytes = loadedManifest.manifestBytes
-      val manifestMetadata = getOrPutManifest(
-        applicationName = applicationName,
-        content = manifestBytes,
-        putFreshAtMs = loadedManifest.freshAtEpochMs,
-        nowEpochMs = nowEpochMs,
-      ) ?: return
+      try {
+        val manifestBytes = loadedManifest.manifestBytes
+        val manifestMetadata = getOrPutManifest(
+          applicationName = applicationName,
+          content = manifestBytes,
+          putFreshAtMs = loadedManifest.freshAtEpochMs,
+          nowEpochMs = nowEpochMs,
+        ) ?: return
 
-      database.transaction {
-        database.pinsQueries.delete_application_pins(applicationName)
+        database.transaction {
+          database.pinsQueries.delete_application_pins(applicationName)
 
-        // Pin all modules in this manifest.
-        loadedManifest.manifest.modules.forEach { (_, module) ->
-          database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.let { metadata ->
-            createPinIfNotExists(applicationName, metadata.id)
+          // Pin all modules in this manifest.
+          loadedManifest.manifest.modules.forEach { (_, module) ->
+            database.filesQueries.get(module.sha256.hex()).executeAsOneOrNull()?.let { metadata ->
+              createPinIfNotExists(applicationName, metadata.id)
+            }
           }
-        }
 
-        // Pin the manifest.
-        createPinIfNotExists(applicationName, manifestMetadata.id)
+          // Pin the manifest.
+          createPinIfNotExists(applicationName, manifestMetadata.id)
+        }
+      } catch (e: Exception) {
+        hasWriteFailures = true // Mark this cache as broken.
+        loaderEventListener.cacheStorageFailed(applicationName, e)
       }
-    } catch (e: Exception) {
-      hasWriteFailures = true // Mark this cache as broken.
-      loaderEventListener.cacheStorageFailed(applicationName, e)
     }
   }
 
@@ -281,42 +308,44 @@ class ZiplineCache private constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    if (hasWriteFailures || closed) return // This cache is broken.
+    synchronized(lock) {
+      if (hasWriteFailures || closed) return // This cache is broken.
 
-    try {
-      val unpinManifestBytes = loadedManifest.manifestBytes
-      val unpinManifestFile = database.filesQueries
-        .get(unpinManifestBytes.sha256().hex())
-        .executeAsOneOrNull()
-
-      // Get fallback manifest metadata.
-      val fallbackManifestFile: Files? = unpinManifestFile?.let {
-        database.filesQueries
-          .selectPinnedManifestNotFileId(applicationName, it.id)
+      try {
+        val unpinManifestBytes = loadedManifest.manifestBytes
+        val unpinManifestFile = database.filesQueries
+          .get(unpinManifestBytes.sha256().hex())
           .executeAsOneOrNull()
-      } ?: database.filesQueries
-        .selectPinnedManifest(applicationName)
-        .executeAsOneOrNull()
 
-      // There is no fallback manifest, delete all pins and return.
-      if (fallbackManifestFile == null) {
-        database.pinsQueries.delete_application_pins(applicationName)
-        return
-      }
+        // Get fallback manifest metadata.
+        val fallbackManifestFile: Files? = unpinManifestFile?.let {
+          database.filesQueries
+            .selectPinnedManifestNotFileId(applicationName, it.id)
+            .executeAsOneOrNull()
+        } ?: database.filesQueries
+          .selectPinnedManifest(applicationName)
+          .executeAsOneOrNull()
 
-      // Pin the fallback manifest, which removes all pins prior to pinning.
-      val fallbackManifestBytes = read(fallbackManifestFile, nowEpochMs)
-        ?: throw FileNotFoundException(
-          "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]",
+        // There is no fallback manifest, delete all pins and return.
+        if (fallbackManifestFile == null) {
+          database.pinsQueries.delete_application_pins(applicationName)
+          return
+        }
+
+        // Pin the fallback manifest, which removes all pins prior to pinning.
+        val fallbackManifestBytes = read(fallbackManifestFile, nowEpochMs)
+          ?: throw FileNotFoundException(
+            "No manifest file on disk with [fileName=${fallbackManifestFile.sha256_hex}]",
+          )
+        val fallbackManifest = LoadedManifest(
+          fallbackManifestBytes,
+          fallbackManifestFile.fresh_at_epoch_ms!!,
         )
-      val fallbackManifest = LoadedManifest(
-        fallbackManifestBytes,
-        fallbackManifestFile.fresh_at_epoch_ms!!,
-      )
-      pinManifest(applicationName, fallbackManifest, nowEpochMs)
-    } catch (e: Exception) {
-      hasWriteFailures = true // Mark this cache as broken.
-      loaderEventListener.cacheStorageFailed(applicationName, e)
+        pinManifest(applicationName, fallbackManifest, nowEpochMs)
+      } catch (e: Exception) {
+        hasWriteFailures = true // Mark this cache as broken.
+        loaderEventListener.cacheStorageFailed(applicationName, e)
+      }
     }
   }
 
@@ -417,12 +446,14 @@ class ZiplineCache private constructor(
    * It will also delete dirty files that were open when the previous run completed.
    */
   private fun initialize() {
-    try {
-      deleteDirtyFiles()
-      prune()
-    } catch (e: Exception) {
-      hasWriteFailures = true // Mark this cache as broken.
-      loaderEventListener.cacheStorageFailed(null, e)
+    synchronized(lock) {
+      try {
+        deleteDirtyFiles()
+        prune()
+      } catch (e: Exception) {
+        hasWriteFailures = true // Mark this cache as broken.
+        loaderEventListener.cacheStorageFailed(null, e)
+      }
     }
   }
 
@@ -444,28 +475,34 @@ class ZiplineCache private constructor(
    * have opened them.
    */
   internal fun prune(maxSizeInBytes: Long = this.maxSizeInBytes) {
-    if (closed) return
-    while (true) {
-      val currentSize = database.filesQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
-      if (currentSize <= maxSizeInBytes) return
+    synchronized(lock) {
+      if (closed) return
+      while (true) {
+        val currentSize = database.filesQueries.selectCacheSumBytes().executeAsOne().SUM ?: 0L
+        if (currentSize <= maxSizeInBytes) return
 
-      val toDelete = database.filesQueries.selectOldestReady().executeAsOneOrNull() ?: return
+        val toDelete = database.filesQueries.selectOldestReady().executeAsOneOrNull() ?: return
 
-      fileSystem.delete(path(toDelete))
-      database.filesQueries.delete(toDelete.id)
+        fileSystem.delete(path(toDelete))
+        database.filesQueries.delete(toDelete.id)
+      }
     }
   }
 
   /** Returns the number of files in the cache DB. */
   internal fun countFiles(): Int {
-    if (closed) return 0
-    return database.filesQueries.count().executeAsOne().toInt()
+    return synchronized(lock) {
+      if (closed) return 0
+      database.filesQueries.count().executeAsOne().toInt()
+    }
   }
 
   /** Returns the number of pins in the cache DB. */
   internal fun countPins(): Int {
-    if (closed) return 0
-    return database.pinsQueries.count().executeAsOne().toInt()
+    return synchronized(lock) {
+      if (closed) return 0
+      database.pinsQueries.count().executeAsOne().toInt()
+    }
   }
 
   private fun path(metadata: Files): Path = directory / "entry-${metadata.id}.bin"
@@ -478,23 +515,25 @@ class ZiplineCache private constructor(
     loadedManifest: LoadedManifest,
     nowEpochMs: Long,
   ) {
-    if (hasWriteFailures || closed) return // This cache is broken.
+    synchronized(lock) {
+      if (hasWriteFailures || closed) return // This cache is broken.
 
-    try {
-      val freshAtMs = loadedManifest.freshAtEpochMs
-      val manifestMetadata = getOrPutManifest(
-        applicationName = applicationName,
-        content = loadedManifest.manifestBytes,
-        putFreshAtMs = freshAtMs,
-        nowEpochMs = nowEpochMs,
-      ) ?: return
-      database.filesQueries.updateFresh(
-        id = manifestMetadata.id,
-        fresh_at_epoch_ms = freshAtMs,
-      )
-    } catch (e: Exception) {
-      hasWriteFailures = true // Mark this cache as broken.
-      loaderEventListener.cacheStorageFailed(applicationName, e)
+      try {
+        val freshAtMs = loadedManifest.freshAtEpochMs
+        val manifestMetadata = getOrPutManifest(
+          applicationName = applicationName,
+          content = loadedManifest.manifestBytes,
+          putFreshAtMs = freshAtMs,
+          nowEpochMs = nowEpochMs,
+        ) ?: return
+        database.filesQueries.updateFresh(
+          id = manifestMetadata.id,
+          fresh_at_epoch_ms = freshAtMs,
+        )
+      } catch (e: Exception) {
+        hasWriteFailures = true // Mark this cache as broken.
+        loaderEventListener.cacheStorageFailed(applicationName, e)
+      }
     }
   }
 
