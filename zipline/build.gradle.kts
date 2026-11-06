@@ -26,6 +26,11 @@ plugins {
   id("com.jakewharton.test-distribution")
 }
 
+// Track JNI buffer allocations for the JVM string-conversion regression test.
+tasks.withType<Test>().matching { it.name == "jvmTest" }.configureEach {
+  jvmArgs("-XX:NativeMemoryTracking=summary")
+}
+
 internal abstract class CopyTestingJsTask : Copy() {
   // We need a DirectoryProperty to supply to the Android Gradle Plugin to wire the outputs into the android test resources
   @get:OutputDirectory
