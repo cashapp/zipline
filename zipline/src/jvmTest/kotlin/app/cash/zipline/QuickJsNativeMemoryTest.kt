@@ -15,10 +15,11 @@
  */
 package app.cash.zipline
 
+import assertk.assertThat
+import assertk.assertions.isEqualTo
+import assertk.assertions.isLessThan
 import java.lang.management.ManagementFactory
 import javax.management.ObjectName
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 
@@ -45,18 +46,18 @@ class QuickJsNativeMemoryTest {
       val expected = "x".repeat(256 * 1024)
       val script = "'x'.repeat(262144)"
       repeat(32) {
-        assertEquals(expected, quickjs.evaluate(script))
+        assertThat(quickjs.evaluate(script)).isEqualTo(expected)
         internalMemoryKiB() // Warm up both string conversion and the diagnostic command.
       }
       val beforeKiB = internalMemoryKiB()
       repeat(256) {
-        assertEquals(expected, quickjs.evaluate(script))
+        assertThat(quickjs.evaluate(script)).isEqualTo(expected)
       }
       val growthKiB = internalMemoryKiB() - beforeKiB
 
       // JNI_COMMIT without a final release retains 64 MiB over these calls.
       // Allow 8 MiB of unrelated JVM allocation noise with the correct release mode.
-      assertTrue("JNI string conversion retained ${growthKiB} KiB", growthKiB < 8 * 1024)
+      assertThat(growthKiB, "JNI string conversion retained KiB").isLessThan(8L * 1024)
     }
   }
 }
