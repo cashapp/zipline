@@ -4,6 +4,7 @@ import com.vanniktech.maven.publish.JavadocJar
 import com.vanniktech.maven.publish.KotlinMultiplatform
 import com.vanniktech.maven.publish.MavenPublishBaseExtension
 import org.gradle.api.internal.file.copy.CopyAction
+import org.gradle.api.tasks.application.CreateStartScripts
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.plugin.NATIVE_COMPILER_PLUGIN_CLASSPATH_CONFIGURATION_NAME
 import org.jetbrains.kotlin.gradle.plugin.PLUGIN_CLASSPATH_CONFIGURATION_NAME
@@ -29,6 +30,10 @@ plugins {
 // Track JNI buffer allocations for the JVM string-conversion regression test.
 tasks.withType<Test>().matching { it.name == "jvmTest" }.configureEach {
   jvmArgs("-XX:NativeMemoryTracking=summary")
+}
+// CI runs the distributed test launchers instead of the Gradle test task.
+tasks.withType<CreateStartScripts>().matching { it.name == "scriptsJvmTest" }.configureEach {
+  defaultJvmOpts = listOf("-XX:NativeMemoryTracking=summary")
 }
 
 internal abstract class CopyTestingJsTask : Copy() {
