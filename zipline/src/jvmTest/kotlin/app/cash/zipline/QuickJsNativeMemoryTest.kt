@@ -18,16 +18,17 @@ package app.cash.zipline
 import assertk.assertThat
 import assertk.assertions.isEqualTo
 import assertk.assertions.isLessThan
+import assertk.assertions.isTrue
 import java.lang.management.ManagementFactory
 import javax.management.ObjectName
-import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class QuickJsNativeMemoryTest {
   @Test fun returningStringsReleasesCopiedJniBuffers() {
     val server = ManagementFactory.getPlatformMBeanServer()
     val diagnosticCommand = ObjectName("com.sun.management:type=DiagnosticCommand")
-    assumeTrue("Requires HotSpot native memory tracking", server.isRegistered(diagnosticCommand))
+    assertThat(server.isRegistered(diagnosticCommand), "Requires HotSpot native memory tracking")
+      .isTrue()
 
     fun internalMemoryKiB(): Long {
       val summary = server.invoke(
