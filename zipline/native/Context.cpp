@@ -509,7 +509,7 @@ jstring Context::toJavaString(JNIEnv* env, const JSValueConst& value) const {
   jbyteArray utf8BytesObject = env->NewByteArray(utf8Length);
   jbyte* utf8Bytes = env->GetByteArrayElements(utf8BytesObject, NULL);
   std::copy(string, string + utf8Length, utf8Bytes);
-  env->ReleaseByteArrayElements(utf8BytesObject, utf8Bytes, JNI_COMMIT);
+  env->ReleaseByteArrayElements(utf8BytesObject, utf8Bytes, 0);
   JS_FreeCString(jsContext, string);
   jstring result = static_cast<jstring>(env->NewObject(stringClass, stringConstructor, utf8BytesObject, stringUtf8));
   env->DeleteLocalRef(utf8BytesObject);
